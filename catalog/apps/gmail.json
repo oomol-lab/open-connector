@@ -1,0 +1,4059 @@
+{
+  "service": "gmail",
+  "displayName": "Gmail",
+  "categories": [
+    "Productivity"
+  ],
+  "authTypes": [
+    "oauth2"
+  ],
+  "auth": [
+    {
+      "type": "oauth2",
+      "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+      "tokenUrl": "https://oauth2.googleapis.com/token",
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/gmail.labels",
+        "https://www.googleapis.com/auth/gmail.settings.basic",
+        "https://www.googleapis.com/auth/gmail.settings.sharing"
+      ],
+      "redirectPath": "/oauth/callback/gmail",
+      "tokenEndpointAuthMethod": "client_secret_post",
+      "authorizationParams": {
+        "access_type": "offline",
+        "prompt": "consent"
+      }
+    }
+  ],
+  "homepageUrl": "https://mail.google.com",
+  "actions": [
+    {
+      "id": "gmail.add_label_to_email",
+      "service": "gmail",
+      "name": "add_label_to_email",
+      "description": "Add and/or remove labels on a single Gmail message.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject."
+          },
+          "sender": {
+            "type": "string",
+            "description": "Message sender."
+          },
+          "to": {
+            "type": "string",
+            "description": "Message recipients."
+          },
+          "messageTimestamp": {
+            "type": "string",
+            "description": "Message timestamp."
+          },
+          "preview": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Gmail API object."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messageText": {
+            "type": "string",
+            "description": "Extracted message body text."
+          },
+          "attachmentList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Gmail API object."
+            },
+            "description": "Message attachments."
+          },
+          "raw": {
+            "type": "string",
+            "description": "Raw RFC 2822 message when requested."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "messageId",
+          "threadId",
+          "labelIds",
+          "subject",
+          "sender",
+          "to",
+          "messageTimestamp"
+        ],
+        "description": "Normalized Gmail message."
+      }
+    },
+    {
+      "id": "gmail.batch_modify_messages",
+      "service": "gmail",
+      "name": "batch_modify_messages",
+      "description": "Add and/or remove labels on up to 1,000 Gmail messages.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Gmail message ID."
+            },
+            "description": "Message IDs to modify."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageIds"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation completed successfully."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "success"
+        ],
+        "description": "Operation result."
+      }
+    },
+    {
+      "id": "gmail.create_draft",
+      "service": "gmail",
+      "name": "create_draft",
+      "description": "Create a Gmail draft with a simplified input and output shape.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.compose"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "Created draft result."
+      }
+    },
+    {
+      "id": "gmail.create_email_draft",
+      "service": "gmail",
+      "name": "create_email_draft",
+      "description": "Create a Gmail draft with recipients, subject, body, and optional threading.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.compose"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "recipientEmail": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "to": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "extraRecipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional To recipients."
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Cc recipients."
+          },
+          "bcc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Bcc recipients."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line."
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content."
+          },
+          "messageBody": {
+            "type": "string",
+            "description": "Reply or draft body content."
+          },
+          "isHtml": {
+            "type": "boolean",
+            "description": "Whether the body is HTML."
+          },
+          "fromEmail": {
+            "type": "string",
+            "description": "Verified Gmail send-as alias."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          },
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "Created draft."
+      }
+    },
+    {
+      "id": "gmail.create_filter",
+      "service": "gmail",
+      "name": "create_filter",
+      "description": "Create a Gmail filter with matching criteria and resulting actions.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "action": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "criteria",
+          "action"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail filter ID."
+          },
+          "criteria": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "action": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id"
+        ],
+        "description": "Gmail filter."
+      }
+    },
+    {
+      "id": "gmail.create_label",
+      "service": "gmail",
+      "name": "create_label",
+      "description": "Create a new Gmail label and return its internal label ID.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.labels"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display name for the new label."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ]
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ]
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "Label display name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Label type."
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "description": "Whether messages with this label appear in the message list."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ],
+            "description": "Whether the label appears in the label list."
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "description": "Gmail label."
+      }
+    },
+    {
+      "id": "gmail.delete_draft",
+      "service": "gmail",
+      "name": "delete_draft",
+      "description": "Permanently delete a Gmail draft by draft ID.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.compose"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation completed successfully."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "success"
+        ],
+        "description": "Operation result."
+      }
+    },
+    {
+      "id": "gmail.delete_filter",
+      "service": "gmail",
+      "name": "delete_filter",
+      "description": "Permanently delete a Gmail filter by filter ID.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "filterId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail filter ID."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "filterId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation completed successfully."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "success"
+        ],
+        "description": "Operation result."
+      }
+    },
+    {
+      "id": "gmail.delete_label",
+      "service": "gmail",
+      "name": "delete_label",
+      "description": "Permanently delete a user-created Gmail label.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.labels"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "labelId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "labelId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation completed successfully."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "success"
+        ],
+        "description": "Operation result."
+      }
+    },
+    {
+      "id": "gmail.fetch_emails",
+      "service": "gmail",
+      "name": "fetch_emails",
+      "description": "List Gmail messages with optional query, label, and pagination filters. Use detail to choose IDs, summaries, or full messages.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Gmail search query."
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "includeSpamTrash": {
+            "type": "boolean",
+            "description": "Whether to include Spam and Trash."
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "ids",
+              "summary",
+              "full"
+            ],
+            "description": "Message detail level.",
+            "default": "summary"
+          },
+          "maxResults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of results to return."
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Opaque pagination token returned by Gmail."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "messageId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Gmail message ID."
+                    },
+                    "threadId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Gmail thread ID."
+                    },
+                    "labelIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Gmail label IDs."
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "Message subject."
+                    },
+                    "sender": {
+                      "type": "string",
+                      "description": "Message sender."
+                    },
+                    "to": {
+                      "type": "string",
+                      "description": "Message recipients."
+                    },
+                    "messageTimestamp": {
+                      "type": "string",
+                      "description": "Message timestamp."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "messageId",
+                    "threadId",
+                    "labelIds",
+                    "subject",
+                    "sender",
+                    "to",
+                    "messageTimestamp"
+                  ],
+                  "description": "Normalized Gmail message summary."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "messageId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Gmail message ID."
+                    },
+                    "threadId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Gmail thread ID."
+                    },
+                    "labelIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Gmail label IDs."
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "Message subject."
+                    },
+                    "sender": {
+                      "type": "string",
+                      "description": "Message sender."
+                    },
+                    "to": {
+                      "type": "string",
+                      "description": "Message recipients."
+                    },
+                    "messageTimestamp": {
+                      "type": "string",
+                      "description": "Message timestamp."
+                    },
+                    "preview": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Gmail API object."
+                    },
+                    "payload": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "description": "Gmail API object."
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "messageText": {
+                      "type": "string",
+                      "description": "Extracted message body text."
+                    },
+                    "attachmentList": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Gmail API object."
+                      },
+                      "description": "Message attachments."
+                    },
+                    "raw": {
+                      "type": "string",
+                      "description": "Raw RFC 2822 message when requested."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "messageId",
+                    "threadId",
+                    "labelIds",
+                    "subject",
+                    "sender",
+                    "to",
+                    "messageTimestamp"
+                  ],
+                  "description": "Normalized Gmail message."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                }
+              ]
+            },
+            "description": "Returned messages."
+          },
+          "nextPageToken": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque pagination token returned by Gmail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resultSizeEstimate": {
+            "type": "integer",
+            "description": "Approximate result count."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messages"
+        ],
+        "description": "Message list result."
+      }
+    },
+    {
+      "id": "gmail.fetch_message_by_message_id",
+      "service": "gmail",
+      "name": "fetch_message_by_message_id",
+      "description": "Fetch a Gmail message by message ID with a controllable response format.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "minimal",
+              "full",
+              "raw",
+              "metadata"
+            ],
+            "description": "Gmail response format to request."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject."
+          },
+          "sender": {
+            "type": "string",
+            "description": "Message sender."
+          },
+          "to": {
+            "type": "string",
+            "description": "Message recipients."
+          },
+          "messageTimestamp": {
+            "type": "string",
+            "description": "Message timestamp."
+          },
+          "preview": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Gmail API object."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messageText": {
+            "type": "string",
+            "description": "Extracted message body text."
+          },
+          "attachmentList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Gmail API object."
+            },
+            "description": "Message attachments."
+          },
+          "raw": {
+            "type": "string",
+            "description": "Raw RFC 2822 message when requested."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "messageId",
+          "threadId",
+          "labelIds",
+          "subject",
+          "sender",
+          "to",
+          "messageTimestamp"
+        ],
+        "description": "Normalized Gmail message."
+      }
+    },
+    {
+      "id": "gmail.fetch_message_by_thread_id",
+      "service": "gmail",
+      "name": "fetch_message_by_thread_id",
+      "description": "Fetch all messages in a Gmail thread.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threadId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "historyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Mailbox history checkpoint ID."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Thread snippet."
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "messageId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail message ID."
+                },
+                "threadId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail thread ID."
+                },
+                "labelIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Gmail label IDs."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Message subject."
+                },
+                "sender": {
+                  "type": "string",
+                  "description": "Message sender."
+                },
+                "to": {
+                  "type": "string",
+                  "description": "Message recipients."
+                },
+                "messageTimestamp": {
+                  "type": "string",
+                  "description": "Message timestamp."
+                },
+                "preview": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                },
+                "payload": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Gmail API object."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "messageText": {
+                  "type": "string",
+                  "description": "Extracted message body text."
+                },
+                "attachmentList": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Gmail API object."
+                  },
+                  "description": "Message attachments."
+                },
+                "raw": {
+                  "type": "string",
+                  "description": "Raw RFC 2822 message when requested."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "messageId",
+                "threadId",
+                "labelIds",
+                "subject",
+                "sender",
+                "to",
+                "messageTimestamp"
+              ],
+              "description": "Normalized Gmail message."
+            },
+            "description": "Messages in the thread."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "threadId"
+        ],
+        "description": "Gmail thread."
+      }
+    },
+    {
+      "id": "gmail.get_auto_forwarding",
+      "service": "gmail",
+      "name": "get_auto_forwarding",
+      "description": "Get the current Gmail auto-forwarding configuration.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.sharing"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.get_draft",
+      "service": "gmail",
+      "name": "get_draft",
+      "description": "Get a Gmail draft by draft ID.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.compose"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "minimal",
+              "full",
+              "raw",
+              "metadata"
+            ],
+            "description": "Gmail response format to request."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "messageId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Gmail message ID."
+              },
+              "threadId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Gmail thread ID."
+              },
+              "labelIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Gmail label IDs."
+              },
+              "subject": {
+                "type": "string",
+                "description": "Message subject."
+              },
+              "sender": {
+                "type": "string",
+                "description": "Message sender."
+              },
+              "to": {
+                "type": "string",
+                "description": "Message recipients."
+              },
+              "messageTimestamp": {
+                "type": "string",
+                "description": "Message timestamp."
+              },
+              "preview": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Gmail API object."
+              },
+              "payload": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Gmail API object."
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "messageText": {
+                "type": "string",
+                "description": "Extracted message body text."
+              },
+              "attachmentList": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                },
+                "description": "Message attachments."
+              },
+              "raw": {
+                "type": "string",
+                "description": "Raw RFC 2822 message when requested."
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "messageId",
+              "threadId",
+              "labelIds",
+              "subject",
+              "sender",
+              "to",
+              "messageTimestamp"
+            ],
+            "description": "Normalized Gmail message."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "message"
+        ],
+        "description": "Gmail draft."
+      }
+    },
+    {
+      "id": "gmail.get_filter",
+      "service": "gmail",
+      "name": "get_filter",
+      "description": "Get a Gmail filter by filter ID.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "filterId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail filter ID."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "filterId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail filter ID."
+          },
+          "criteria": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "action": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id"
+        ],
+        "description": "Gmail filter."
+      }
+    },
+    {
+      "id": "gmail.get_label",
+      "service": "gmail",
+      "name": "get_label",
+      "description": "Get details for a Gmail label.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.labels"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "labelId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "labelId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "Label display name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Label type."
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "description": "Whether messages with this label appear in the message list."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ],
+            "description": "Whether the label appears in the label list."
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "description": "Gmail label."
+      }
+    },
+    {
+      "id": "gmail.get_language_settings",
+      "service": "gmail",
+      "name": "get_language_settings",
+      "description": "Get the Gmail display language settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.get_message",
+      "service": "gmail",
+      "name": "get_message",
+      "description": "Get a Gmail message by message ID with a simplified normalized output.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "subject": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId",
+          "threadId"
+        ],
+        "description": "Simplified Gmail message."
+      }
+    },
+    {
+      "id": "gmail.get_profile",
+      "service": "gmail",
+      "name": "get_profile",
+      "description": "Get the connected Gmail profile, including mailbox totals and the current historyId.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "emailAddress": {
+            "type": "string"
+          },
+          "messagesTotal": {
+            "type": "integer"
+          },
+          "threadsTotal": {
+            "type": "integer"
+          },
+          "historyId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "emailAddress",
+          "messagesTotal",
+          "threadsTotal",
+          "historyId"
+        ],
+        "description": "Gmail profile."
+      }
+    },
+    {
+      "id": "gmail.get_vacation_settings",
+      "service": "gmail",
+      "name": "get_vacation_settings",
+      "description": "Get the Gmail vacation responder settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.list_drafts",
+      "service": "gmail",
+      "name": "list_drafts",
+      "description": "List Gmail drafts with pagination.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.compose"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "verbose": {
+            "type": "boolean",
+            "description": "Hydrate each draft."
+          },
+          "maxResults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of results to return."
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Opaque pagination token returned by Gmail."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "drafts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail draft ID."
+                },
+                "message": {
+                  "type": "object",
+                  "properties": {
+                    "messageId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Gmail message ID."
+                    },
+                    "threadId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Gmail thread ID."
+                    },
+                    "labelIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": "Gmail label IDs."
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "Message subject."
+                    },
+                    "sender": {
+                      "type": "string",
+                      "description": "Message sender."
+                    },
+                    "to": {
+                      "type": "string",
+                      "description": "Message recipients."
+                    },
+                    "messageTimestamp": {
+                      "type": "string",
+                      "description": "Message timestamp."
+                    },
+                    "preview": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Gmail API object."
+                    },
+                    "payload": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "description": "Gmail API object."
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "messageText": {
+                      "type": "string",
+                      "description": "Extracted message body text."
+                    },
+                    "attachmentList": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Gmail API object."
+                      },
+                      "description": "Message attachments."
+                    },
+                    "raw": {
+                      "type": "string",
+                      "description": "Raw RFC 2822 message when requested."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "messageId",
+                    "threadId",
+                    "labelIds",
+                    "subject",
+                    "sender",
+                    "to",
+                    "messageTimestamp"
+                  ],
+                  "description": "Normalized Gmail message."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "id",
+                "message"
+              ],
+              "description": "Gmail draft."
+            }
+          },
+          "nextPageToken": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque pagination token returned by Gmail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "drafts"
+        ],
+        "description": "Draft list result."
+      }
+    },
+    {
+      "id": "gmail.list_filters",
+      "service": "gmail",
+      "name": "list_filters",
+      "description": "List Gmail filters for the mailbox.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail filter ID."
+                },
+                "criteria": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                },
+                "action": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "id"
+              ],
+              "description": "Gmail filter."
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "filters"
+        ],
+        "description": "Filter list."
+      }
+    },
+    {
+      "id": "gmail.list_forwarding_addresses",
+      "service": "gmail",
+      "name": "list_forwarding_addresses",
+      "description": "List registered forwarding addresses.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.sharing"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.list_history",
+      "service": "gmail",
+      "name": "list_history",
+      "description": "List Gmail mailbox change history after a known startHistoryId.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "startHistoryId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "History checkpoint."
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Opaque pagination token returned by Gmail."
+          },
+          "maxResults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of results to return."
+          },
+          "labelId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "historyTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "History event types to include."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "startHistoryId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Gmail API object."
+            }
+          },
+          "historyId": {
+            "type": "string"
+          },
+          "nextPageToken": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque pagination token returned by Gmail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "history",
+          "historyId"
+        ],
+        "description": "Mailbox history result."
+      }
+    },
+    {
+      "id": "gmail.list_labels",
+      "service": "gmail",
+      "name": "list_labels",
+      "description": "List all system and user-created Gmail labels.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.labels"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail label ID."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Label display name."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Label type."
+                },
+                "messageListVisibility": {
+                  "type": "string",
+                  "enum": [
+                    "show",
+                    "hide"
+                  ],
+                  "description": "Whether messages with this label appear in the message list."
+                },
+                "labelListVisibility": {
+                  "type": "string",
+                  "enum": [
+                    "labelShow",
+                    "labelShowIfUnread",
+                    "labelHide"
+                  ],
+                  "description": "Whether the label appears in the label list."
+                },
+                "color": {
+                  "type": "object",
+                  "properties": {
+                    "textColor": {
+                      "type": "string",
+                      "description": "Hex text color."
+                    },
+                    "backgroundColor": {
+                      "type": "string",
+                      "description": "Hex background color."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "Gmail label color."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "id",
+                "name",
+                "type"
+              ],
+              "description": "Gmail label."
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "labels"
+        ],
+        "description": "Label list."
+      }
+    },
+    {
+      "id": "gmail.list_threads",
+      "service": "gmail",
+      "name": "list_threads",
+      "description": "List Gmail threads with optional query filtering and pagination.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Gmail search query."
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Hydrate each thread."
+          },
+          "maxResults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of results to return."
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Opaque pagination token returned by Gmail."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "threads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "threadId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail thread ID."
+                },
+                "historyId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "description": "Mailbox history checkpoint ID."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "snippet": {
+                  "type": "string",
+                  "description": "Thread snippet."
+                },
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "messageId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Gmail message ID."
+                      },
+                      "threadId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Gmail thread ID."
+                      },
+                      "labelIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": "Gmail label IDs."
+                      },
+                      "subject": {
+                        "type": "string",
+                        "description": "Message subject."
+                      },
+                      "sender": {
+                        "type": "string",
+                        "description": "Message sender."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Message recipients."
+                      },
+                      "messageTimestamp": {
+                        "type": "string",
+                        "description": "Message timestamp."
+                      },
+                      "preview": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Gmail API object."
+                      },
+                      "payload": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "description": "Gmail API object."
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "messageText": {
+                        "type": "string",
+                        "description": "Extracted message body text."
+                      },
+                      "attachmentList": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "description": "Gmail API object."
+                        },
+                        "description": "Message attachments."
+                      },
+                      "raw": {
+                        "type": "string",
+                        "description": "Raw RFC 2822 message when requested."
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "messageId",
+                      "threadId",
+                      "labelIds",
+                      "subject",
+                      "sender",
+                      "to",
+                      "messageTimestamp"
+                    ],
+                    "description": "Normalized Gmail message."
+                  },
+                  "description": "Messages in the thread."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "threadId"
+              ],
+              "description": "Gmail thread."
+            },
+            "description": "Returned threads."
+          },
+          "nextPageToken": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque pagination token returned by Gmail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resultSizeEstimate": {
+            "type": "integer",
+            "description": "Approximate result count."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threads"
+        ],
+        "description": "Thread list result."
+      }
+    },
+    {
+      "id": "gmail.modify_thread_labels",
+      "service": "gmail",
+      "name": "modify_thread_labels",
+      "description": "Add and/or remove labels on every message in a Gmail thread.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threadId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "historyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Mailbox history checkpoint ID."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Thread snippet."
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "messageId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail message ID."
+                },
+                "threadId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail thread ID."
+                },
+                "labelIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Gmail label IDs."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Message subject."
+                },
+                "sender": {
+                  "type": "string",
+                  "description": "Message sender."
+                },
+                "to": {
+                  "type": "string",
+                  "description": "Message recipients."
+                },
+                "messageTimestamp": {
+                  "type": "string",
+                  "description": "Message timestamp."
+                },
+                "preview": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                },
+                "payload": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Gmail API object."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "messageText": {
+                  "type": "string",
+                  "description": "Extracted message body text."
+                },
+                "attachmentList": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Gmail API object."
+                  },
+                  "description": "Message attachments."
+                },
+                "raw": {
+                  "type": "string",
+                  "description": "Raw RFC 2822 message when requested."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "messageId",
+                "threadId",
+                "labelIds",
+                "subject",
+                "sender",
+                "to",
+                "messageTimestamp"
+              ],
+              "description": "Normalized Gmail message."
+            },
+            "description": "Messages in the thread."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "threadId"
+        ],
+        "description": "Gmail thread."
+      }
+    },
+    {
+      "id": "gmail.move_thread_to_trash",
+      "service": "gmail",
+      "name": "move_thread_to_trash",
+      "description": "Move an entire Gmail thread to trash.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threadId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "historyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Mailbox history checkpoint ID."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Thread snippet."
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "messageId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail message ID."
+                },
+                "threadId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail thread ID."
+                },
+                "labelIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Gmail label IDs."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Message subject."
+                },
+                "sender": {
+                  "type": "string",
+                  "description": "Message sender."
+                },
+                "to": {
+                  "type": "string",
+                  "description": "Message recipients."
+                },
+                "messageTimestamp": {
+                  "type": "string",
+                  "description": "Message timestamp."
+                },
+                "preview": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                },
+                "payload": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Gmail API object."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "messageText": {
+                  "type": "string",
+                  "description": "Extracted message body text."
+                },
+                "attachmentList": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Gmail API object."
+                  },
+                  "description": "Message attachments."
+                },
+                "raw": {
+                  "type": "string",
+                  "description": "Raw RFC 2822 message when requested."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "messageId",
+                "threadId",
+                "labelIds",
+                "subject",
+                "sender",
+                "to",
+                "messageTimestamp"
+              ],
+              "description": "Normalized Gmail message."
+            },
+            "description": "Messages in the thread."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "threadId"
+        ],
+        "description": "Gmail thread."
+      }
+    },
+    {
+      "id": "gmail.move_to_trash",
+      "service": "gmail",
+      "name": "move_to_trash",
+      "description": "Move a Gmail message to trash.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject."
+          },
+          "sender": {
+            "type": "string",
+            "description": "Message sender."
+          },
+          "to": {
+            "type": "string",
+            "description": "Message recipients."
+          },
+          "messageTimestamp": {
+            "type": "string",
+            "description": "Message timestamp."
+          },
+          "preview": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Gmail API object."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messageText": {
+            "type": "string",
+            "description": "Extracted message body text."
+          },
+          "attachmentList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Gmail API object."
+            },
+            "description": "Message attachments."
+          },
+          "raw": {
+            "type": "string",
+            "description": "Raw RFC 2822 message when requested."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "messageId",
+          "threadId",
+          "labelIds",
+          "subject",
+          "sender",
+          "to",
+          "messageTimestamp"
+        ],
+        "description": "Normalized Gmail message."
+      }
+    },
+    {
+      "id": "gmail.patch_label",
+      "service": "gmail",
+      "name": "patch_label",
+      "description": "Patch a user-created Gmail label.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.labels"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "labelId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "Updated display name for the label."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ]
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ]
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "labelId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "Label display name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Label type."
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "description": "Whether messages with this label appear in the message list."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ],
+            "description": "Whether the label appears in the label list."
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "description": "Gmail label."
+      }
+    },
+    {
+      "id": "gmail.reply_email",
+      "service": "gmail",
+      "name": "reply_email",
+      "description": "Reply to an existing Gmail thread using the original message's reply headers.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.send"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "body": {
+            "type": "string",
+            "description": "Reply body."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threadId",
+          "messageId",
+          "body"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "Reply result."
+      }
+    },
+    {
+      "id": "gmail.reply_to_thread",
+      "service": "gmail",
+      "name": "reply_to_thread",
+      "description": "Reply to an existing Gmail thread while preserving Gmail threading.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.send"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "recipientEmail": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "to": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "extraRecipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional To recipients."
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Cc recipients."
+          },
+          "bcc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Bcc recipients."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line."
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content."
+          },
+          "messageBody": {
+            "type": "string",
+            "description": "Reply or draft body content."
+          },
+          "isHtml": {
+            "type": "boolean",
+            "description": "Whether the body is HTML."
+          },
+          "fromEmail": {
+            "type": "string",
+            "description": "Verified Gmail send-as alias."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threadId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "Thread reply result."
+      }
+    },
+    {
+      "id": "gmail.search_threads",
+      "service": "gmail",
+      "name": "search_threads",
+      "description": "Search Gmail threads by query and return lightweight thread summaries. Spam and trash stay excluded unless explicitly targeted in the query.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Gmail search query."
+          },
+          "maxResults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of results to return."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "threads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "threadId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail thread ID."
+                },
+                "historyId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "description": "Mailbox history checkpoint ID."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "snippet": {
+                  "type": "string",
+                  "description": "Thread snippet."
+                },
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "messageId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Gmail message ID."
+                      },
+                      "threadId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Gmail thread ID."
+                      },
+                      "labelIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": "Gmail label IDs."
+                      },
+                      "subject": {
+                        "type": "string",
+                        "description": "Message subject."
+                      },
+                      "sender": {
+                        "type": "string",
+                        "description": "Message sender."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Message recipients."
+                      },
+                      "messageTimestamp": {
+                        "type": "string",
+                        "description": "Message timestamp."
+                      },
+                      "preview": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Gmail API object."
+                      },
+                      "payload": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "description": "Gmail API object."
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "messageText": {
+                        "type": "string",
+                        "description": "Extracted message body text."
+                      },
+                      "attachmentList": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "description": "Gmail API object."
+                        },
+                        "description": "Message attachments."
+                      },
+                      "raw": {
+                        "type": "string",
+                        "description": "Raw RFC 2822 message when requested."
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "messageId",
+                      "threadId",
+                      "labelIds",
+                      "subject",
+                      "sender",
+                      "to",
+                      "messageTimestamp"
+                    ],
+                    "description": "Normalized Gmail message."
+                  },
+                  "description": "Messages in the thread."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "threadId"
+              ],
+              "description": "Gmail thread."
+            },
+            "description": "Matching thread summaries."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threads"
+        ],
+        "description": "Thread search result."
+      }
+    },
+    {
+      "id": "gmail.send_draft",
+      "service": "gmail",
+      "name": "send_draft",
+      "description": "Send an existing Gmail draft as-is.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.send"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "description": "Gmail thread ID."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "Sent draft result."
+      }
+    },
+    {
+      "id": "gmail.send_email",
+      "service": "gmail",
+      "name": "send_email",
+      "description": "Send an email from the connected Gmail account.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.send"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "recipientEmail": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "to": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "extraRecipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional To recipients."
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Cc recipients."
+          },
+          "bcc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Bcc recipients."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line."
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content."
+          },
+          "messageBody": {
+            "type": "string",
+            "description": "Reply or draft body content."
+          },
+          "isHtml": {
+            "type": "boolean",
+            "description": "Whether the body is HTML."
+          },
+          "fromEmail": {
+            "type": "string",
+            "description": "Verified Gmail send-as alias."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "Sent message result."
+      }
+    },
+    {
+      "id": "gmail.settings_get_imap",
+      "service": "gmail",
+      "name": "settings_get_imap",
+      "description": "Get the Gmail IMAP settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.settings_get_pop",
+      "service": "gmail",
+      "name": "settings_get_pop",
+      "description": "Get the Gmail POP settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.stop_watch",
+      "service": "gmail",
+      "name": "stop_watch",
+      "description": "Stop Gmail push watch notifications for the mailbox.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation completed successfully."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "success"
+        ],
+        "description": "Operation result."
+      }
+    },
+    {
+      "id": "gmail.untrash_message",
+      "service": "gmail",
+      "name": "untrash_message",
+      "description": "Restore a previously trashed Gmail message.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "messageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject."
+          },
+          "sender": {
+            "type": "string",
+            "description": "Message sender."
+          },
+          "to": {
+            "type": "string",
+            "description": "Message recipients."
+          },
+          "messageTimestamp": {
+            "type": "string",
+            "description": "Message timestamp."
+          },
+          "preview": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Gmail API object."
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Gmail API object."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messageText": {
+            "type": "string",
+            "description": "Extracted message body text."
+          },
+          "attachmentList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Gmail API object."
+            },
+            "description": "Message attachments."
+          },
+          "raw": {
+            "type": "string",
+            "description": "Raw RFC 2822 message when requested."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "messageId",
+          "threadId",
+          "labelIds",
+          "subject",
+          "sender",
+          "to",
+          "messageTimestamp"
+        ],
+        "description": "Normalized Gmail message."
+      }
+    },
+    {
+      "id": "gmail.untrash_thread",
+      "service": "gmail",
+      "name": "untrash_thread",
+      "description": "Restore a previously trashed Gmail thread.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.modify"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Gmail label IDs."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "threadId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          },
+          "historyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Mailbox history checkpoint ID."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Thread snippet."
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "messageId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail message ID."
+                },
+                "threadId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Gmail thread ID."
+                },
+                "labelIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Gmail label IDs."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Message subject."
+                },
+                "sender": {
+                  "type": "string",
+                  "description": "Message sender."
+                },
+                "to": {
+                  "type": "string",
+                  "description": "Message recipients."
+                },
+                "messageTimestamp": {
+                  "type": "string",
+                  "description": "Message timestamp."
+                },
+                "preview": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Gmail API object."
+                },
+                "payload": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Gmail API object."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "messageText": {
+                  "type": "string",
+                  "description": "Extracted message body text."
+                },
+                "attachmentList": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Gmail API object."
+                  },
+                  "description": "Message attachments."
+                },
+                "raw": {
+                  "type": "string",
+                  "description": "Raw RFC 2822 message when requested."
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "messageId",
+                "threadId",
+                "labelIds",
+                "subject",
+                "sender",
+                "to",
+                "messageTimestamp"
+              ],
+              "description": "Normalized Gmail message."
+            },
+            "description": "Messages in the thread."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "threadId"
+        ],
+        "description": "Gmail thread."
+      }
+    },
+    {
+      "id": "gmail.update_draft",
+      "service": "gmail",
+      "name": "update_draft",
+      "description": "Update an existing Gmail draft in place.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.compose"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          },
+          "recipientEmail": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "to": {
+            "type": "string",
+            "description": "Primary recipient email address."
+          },
+          "extraRecipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional To recipients."
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Cc recipients."
+          },
+          "bcc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Bcc recipients."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line."
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content."
+          },
+          "messageBody": {
+            "type": "string",
+            "description": "Reply or draft body content."
+          },
+          "isHtml": {
+            "type": "boolean",
+            "description": "Whether the body is HTML."
+          },
+          "fromEmail": {
+            "type": "string",
+            "description": "Verified Gmail send-as alias."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail draft ID."
+          },
+          "messageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail message ID."
+          },
+          "threadId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail thread ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "draftId"
+        ],
+        "description": "Updated draft."
+      }
+    },
+    {
+      "id": "gmail.update_imap_settings",
+      "service": "gmail",
+      "name": "update_imap_settings",
+      "description": "Update the Gmail IMAP settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "autoExpunge": {
+            "type": "boolean"
+          },
+          "expungeBehavior": {
+            "type": "string"
+          },
+          "maxFolderSize": {
+            "type": "integer"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.update_label",
+      "service": "gmail",
+      "name": "update_label",
+      "description": "Update an existing Gmail label.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.labels"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "labelId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "Updated display name for the label."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ]
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ]
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "labelId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Gmail label ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "Label display name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Label type."
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "description": "Whether messages with this label appear in the message list."
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ],
+            "description": "Whether the label appears in the label list."
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "textColor": {
+                "type": "string",
+                "description": "Hex text color."
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex background color."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gmail label color."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "description": "Gmail label."
+      }
+    },
+    {
+      "id": "gmail.update_language_settings",
+      "service": "gmail",
+      "name": "update_language_settings",
+      "description": "Update the Gmail display language settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "displayLanguage": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Language code."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "displayLanguage"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.update_pop_settings",
+      "service": "gmail",
+      "name": "update_pop_settings",
+      "description": "Update the Gmail POP settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "accessWindow": {
+            "type": "string"
+          },
+          "disposition": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    },
+    {
+      "id": "gmail.update_vacation_settings",
+      "service": "gmail",
+      "name": "update_vacation_settings",
+      "description": "Update the Gmail vacation responder settings.",
+      "requiredScopes": [
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "enableAutoReply": {
+            "type": "boolean"
+          },
+          "responseSubject": {
+            "type": "string"
+          },
+          "responseBodyPlainText": {
+            "type": "string"
+          },
+          "responseBodyHtml": {
+            "type": "string"
+          },
+          "restrictToContacts": {
+            "type": "boolean"
+          },
+          "restrictToDomain": {
+            "type": "boolean"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "endTime": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Gmail user ID. Omit to use the connected mailbox."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Gmail API object."
+      }
+    }
+  ]
+}

@@ -1,0 +1,2667 @@
+{
+  "service": "notion",
+  "displayName": "Notion",
+  "categories": [
+    "Productivity"
+  ],
+  "authTypes": [
+    "oauth2",
+    "api_key"
+  ],
+  "auth": [
+    {
+      "type": "oauth2",
+      "authorizationUrl": "https://api.notion.com/v1/oauth/authorize",
+      "tokenUrl": "https://api.notion.com/v1/oauth/token",
+      "scopes": [
+        "read_content",
+        "insert_content",
+        "update_content"
+      ],
+      "redirectPath": "/oauth/callback/notion",
+      "tokenEndpointAuthMethod": "client_secret_basic",
+      "tokenRequestFormat": "json",
+      "authorizationParams": {
+        "owner": "user"
+      }
+    },
+    {
+      "type": "api_key",
+      "label": "Internal Integration Secret",
+      "placeholder": "secret_...",
+      "description": "Notion internal integration secret used with the Authorization Bearer header. Create an internal integration from the Notion integrations dashboard, then share target pages or databases with it."
+    }
+  ],
+  "homepageUrl": "https://www.notion.so",
+  "actions": [
+    {
+      "id": "notion.append_block",
+      "service": "notion",
+      "name": "append_block",
+      "description": "Append a single paragraph block to a Notion page.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID to append to."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Paragraph text content."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId",
+          "text"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "const": "block",
+                  "type": "string",
+                  "description": "The Notion object type."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The block ID."
+                },
+                "parent": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "description": "A Notion API field value."
+                  },
+                  "description": "The official Notion parent object."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The block type."
+                },
+                "has_children": {
+                  "type": "boolean",
+                  "description": "Whether this block has child blocks."
+                },
+                "in_trash": {
+                  "type": "boolean",
+                  "description": "Whether the block is in the trash."
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Notion block object."
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Appended block children response."
+      }
+    },
+    {
+      "id": "notion.append_block_children",
+      "service": "notion",
+      "name": "append_block_children",
+      "description": "Append raw Notion child blocks to an existing parent block.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The parent block ID."
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Child block objects to append."
+          },
+          "position": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "blockId",
+          "children"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "const": "block",
+                  "type": "string",
+                  "description": "The Notion object type."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The block ID."
+                },
+                "parent": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "description": "A Notion API field value."
+                  },
+                  "description": "The official Notion parent object."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The block type."
+                },
+                "has_children": {
+                  "type": "boolean",
+                  "description": "Whether this block has child blocks."
+                },
+                "in_trash": {
+                  "type": "boolean",
+                  "description": "Whether the block is in the trash."
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Notion block object."
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Appended block children response."
+      }
+    },
+    {
+      "id": "notion.create_data_source",
+      "service": "notion",
+      "name": "create_data_source",
+      "description": "Create a Notion data source under a parent database.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Data source title rich text objects."
+          },
+          "icon": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "parent",
+          "properties"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "data_source",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source ID."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the data source.",
+            "format": "uri"
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the data source is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion data source object."
+      }
+    },
+    {
+      "id": "notion.create_database",
+      "service": "notion",
+      "name": "create_database",
+      "description": "Create a Notion database container under a parent page or workspace.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Database title rich text objects."
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Database description rich text objects."
+          },
+          "is_inline": {
+            "type": "boolean",
+            "description": "Whether the database is inline."
+          },
+          "initial_data_source": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "icon": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "cover": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "parent"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "database",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The database ID."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the database.",
+            "format": "uri"
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the database is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion database object."
+      }
+    },
+    {
+      "id": "notion.create_page",
+      "service": "notion",
+      "name": "create_page",
+      "description": "Create a Notion page under a parent page, data source, or workspace-level private area.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "page_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The parent page ID."
+                  },
+                  "type": {
+                    "const": "page_id",
+                    "type": "string",
+                    "description": "Always page_id."
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "page_id"
+                ],
+                "description": "Page parent."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data_source_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The parent data source ID."
+                  },
+                  "type": {
+                    "const": "data_source_id",
+                    "type": "string",
+                    "description": "Always data_source_id."
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "data_source_id"
+                ],
+                "description": "Data source parent."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "workspace": {
+                    "const": true,
+                    "type": "boolean",
+                    "description": "Create a private workspace page."
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "workspace"
+                ],
+                "description": "Workspace parent."
+              }
+            ],
+            "description": "The official Notion parent object."
+          },
+          "parentId": {
+            "type": "string",
+            "description": "Simple parent page ID."
+          },
+          "title": {
+            "type": "string",
+            "description": "Simple page title used with parentId."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Child blocks to create with the page."
+          },
+          "markdown": {
+            "type": "string",
+            "description": "Enhanced Markdown content for the page."
+          },
+          "icon": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "cover": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "template": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "page",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The page ID."
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time when the page was created.",
+            "format": "date-time"
+          },
+          "last_edited_time": {
+            "type": "string",
+            "description": "The time when the page was last edited.",
+            "format": "date-time"
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the page.",
+            "format": "uri"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the page is archived."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the page is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion page object."
+      }
+    },
+    {
+      "id": "notion.delete_block",
+      "service": "notion",
+      "name": "delete_block",
+      "description": "Archive a Notion block through the official delete endpoint.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The block ID to delete."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "blockId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "block",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The block ID."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "type": {
+            "type": "string",
+            "description": "The block type."
+          },
+          "has_children": {
+            "type": "boolean",
+            "description": "Whether this block has child blocks."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the block is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion block object."
+      }
+    },
+    {
+      "id": "notion.get_page",
+      "service": "notion",
+      "name": "get_page",
+      "description": "Get a Notion page together with its first-level child blocks. This is an aggregate helper over page retrieval plus block-children listing.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID to retrieve."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "const": "page",
+                "type": "string",
+                "description": "The Notion object type."
+              },
+              "id": {
+                "type": "string",
+                "description": "The page ID."
+              },
+              "created_time": {
+                "type": "string",
+                "description": "The time when the page was created.",
+                "format": "date-time"
+              },
+              "last_edited_time": {
+                "type": "string",
+                "description": "The time when the page was last edited.",
+                "format": "date-time"
+              },
+              "parent": {
+                "type": "object",
+                "additionalProperties": {
+                  "description": "A Notion API field value."
+                },
+                "description": "The official Notion parent object."
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "description": "A Notion API field value."
+                },
+                "description": "Notion properties keyed by property name."
+              },
+              "url": {
+                "type": "string",
+                "description": "The canonical Notion URL for the page.",
+                "format": "uri"
+              },
+              "archived": {
+                "type": "boolean",
+                "description": "Whether the page is archived."
+              },
+              "in_trash": {
+                "type": "boolean",
+                "description": "Whether the page is in the trash."
+              }
+            },
+            "additionalProperties": true,
+            "description": "A Notion page object."
+          },
+          "block_children": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "const": "list",
+                "type": "string",
+                "description": "The Notion object type."
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "const": "block",
+                      "type": "string",
+                      "description": "The Notion object type."
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "The block ID."
+                    },
+                    "parent": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "description": "A Notion API field value."
+                      },
+                      "description": "The official Notion parent object."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "The block type."
+                    },
+                    "has_children": {
+                      "type": "boolean",
+                      "description": "Whether this block has child blocks."
+                    },
+                    "in_trash": {
+                      "type": "boolean",
+                      "description": "Whether the block is in the trash."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "description": "A Notion block object."
+                },
+                "description": "Returned Notion objects."
+              },
+              "next_cursor": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "description": "Cursor for the next page."
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "has_more": {
+                "type": "boolean",
+                "description": "Whether more results are available."
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "object",
+              "results",
+              "has_more"
+            ],
+            "description": "First-level child blocks."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "page",
+          "block_children"
+        ],
+        "description": "Page with child block list."
+      }
+    },
+    {
+      "id": "notion.list_block_children",
+      "service": "notion",
+      "name": "list_block_children",
+      "description": "List the direct child blocks under a Notion block with pagination.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The parent block ID."
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "The number of results per page."
+          },
+          "startCursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "blockId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "const": "block",
+                  "type": "string",
+                  "description": "The Notion object type."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The block ID."
+                },
+                "parent": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "description": "A Notion API field value."
+                  },
+                  "description": "The official Notion parent object."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The block type."
+                },
+                "has_children": {
+                  "type": "boolean",
+                  "description": "Whether this block has child blocks."
+                },
+                "in_trash": {
+                  "type": "boolean",
+                  "description": "Whether the block is in the trash."
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Notion block object."
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Child blocks returned by Notion."
+      }
+    },
+    {
+      "id": "notion.list_data_source_templates",
+      "service": "notion",
+      "name": "list_data_source_templates",
+      "description": "List templates available on a Notion data source.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dataSourceId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The data source ID whose templates should be listed."
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "The number of results per page."
+          },
+          "startCursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "dataSourceId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Data source templates returned by Notion."
+      }
+    },
+    {
+      "id": "notion.list_users",
+      "service": "notion",
+      "name": "list_users",
+      "description": "List users in the Notion workspace with pagination.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "The number of results per page."
+          },
+          "startCursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          }
+        },
+        "additionalProperties": false,
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "const": "user",
+                  "type": "string",
+                  "description": "The Notion object type."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The Notion user ID."
+                },
+                "name": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "description": "The user's display name."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "avatar_url": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "description": "The user's avatar URL."
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "person",
+                    "bot"
+                  ],
+                  "description": "The user type."
+                },
+                "person": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "description": "The person's email address.",
+                      "format": "email"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "bot": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "description": "A Notion API field value."
+                  },
+                  "description": "A Notion API object."
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Notion user object."
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Workspace users returned by Notion."
+      }
+    },
+    {
+      "id": "notion.move_page",
+      "service": "notion",
+      "name": "move_page",
+      "description": "Move a Notion page under another page or data source.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID to move."
+          },
+          "parent": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "page_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The parent page ID."
+                  },
+                  "type": {
+                    "const": "page_id",
+                    "type": "string",
+                    "description": "Always page_id."
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "page_id"
+                ],
+                "description": "Page parent."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "data_source_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The parent data source ID."
+                  },
+                  "type": {
+                    "const": "data_source_id",
+                    "type": "string",
+                    "description": "Always data_source_id."
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "data_source_id"
+                ],
+                "description": "Data source parent."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "workspace": {
+                    "const": true,
+                    "type": "boolean",
+                    "description": "Create a private workspace page."
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "workspace"
+                ],
+                "description": "Workspace parent."
+              }
+            ],
+            "description": "The official Notion parent object."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId",
+          "parent"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "page",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The page ID."
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time when the page was created.",
+            "format": "date-time"
+          },
+          "last_edited_time": {
+            "type": "string",
+            "description": "The time when the page was last edited.",
+            "format": "date-time"
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the page.",
+            "format": "uri"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the page is archived."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the page is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion page object."
+      }
+    },
+    {
+      "id": "notion.query_data_source",
+      "service": "notion",
+      "name": "query_data_source",
+      "description": "Query a Notion data source with filters, sorts, pagination, and optional property filtering.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dataSourceId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The data source ID to query."
+          },
+          "filter": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The filter object to narrow results."
+          },
+          "sorts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "The sorts to apply."
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "The number of results per page."
+          },
+          "startCursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          },
+          "filterProperties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Property IDs to include."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether to query trashed pages."
+          },
+          "result_type": {
+            "type": "string",
+            "description": "The Notion result type filter."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "dataSourceId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "const": "page",
+                  "type": "string",
+                  "description": "The Notion object type."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The page ID."
+                },
+                "created_time": {
+                  "type": "string",
+                  "description": "The time when the page was created.",
+                  "format": "date-time"
+                },
+                "last_edited_time": {
+                  "type": "string",
+                  "description": "The time when the page was last edited.",
+                  "format": "date-time"
+                },
+                "parent": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "description": "A Notion API field value."
+                  },
+                  "description": "The official Notion parent object."
+                },
+                "properties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "description": "A Notion API field value."
+                  },
+                  "description": "Notion properties keyed by property name."
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The canonical Notion URL for the page.",
+                  "format": "uri"
+                },
+                "archived": {
+                  "type": "boolean",
+                  "description": "Whether the page is archived."
+                },
+                "in_trash": {
+                  "type": "boolean",
+                  "description": "Whether the page is in the trash."
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Notion page object."
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Data source query results returned by Notion."
+      }
+    },
+    {
+      "id": "notion.retrieve_block",
+      "service": "notion",
+      "name": "retrieve_block",
+      "description": "Retrieve a Notion block by block ID.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The block ID to retrieve."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "blockId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "block",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The block ID."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "type": {
+            "type": "string",
+            "description": "The block type."
+          },
+          "has_children": {
+            "type": "boolean",
+            "description": "Whether this block has child blocks."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the block is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion block object."
+      }
+    },
+    {
+      "id": "notion.retrieve_data_source",
+      "service": "notion",
+      "name": "retrieve_data_source",
+      "description": "Retrieve a Notion data source by data source ID.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dataSourceId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The data source ID to retrieve."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "dataSourceId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "data_source",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source ID."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the data source.",
+            "format": "uri"
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the data source is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion data source object."
+      }
+    },
+    {
+      "id": "notion.retrieve_database",
+      "service": "notion",
+      "name": "retrieve_database",
+      "description": "Retrieve a Notion database's metadata and schema by database ID.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The database ID to retrieve."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "databaseId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "database",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The database ID."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the database.",
+            "format": "uri"
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the database is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion database object."
+      }
+    },
+    {
+      "id": "notion.retrieve_page",
+      "service": "notion",
+      "name": "retrieve_page",
+      "description": "Retrieve a Notion page's properties and metadata by page ID.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID to retrieve."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "page",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The page ID."
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time when the page was created.",
+            "format": "date-time"
+          },
+          "last_edited_time": {
+            "type": "string",
+            "description": "The time when the page was last edited.",
+            "format": "date-time"
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the page.",
+            "format": "uri"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the page is archived."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the page is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion page object."
+      }
+    },
+    {
+      "id": "notion.retrieve_page_markdown",
+      "service": "notion",
+      "name": "retrieve_page_markdown",
+      "description": "Retrieve a Notion page or block subtree rendered as enhanced Markdown.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page or block ID."
+          },
+          "includeTranscript": {
+            "type": "boolean",
+            "description": "Whether to include meeting note transcripts."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": {
+          "description": "A Notion API field value."
+        },
+        "description": "A Notion API object."
+      }
+    },
+    {
+      "id": "notion.retrieve_page_property",
+      "service": "notion",
+      "name": "retrieve_page_property",
+      "description": "Retrieve a specific property item from a Notion page.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID."
+          },
+          "propertyId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The property ID."
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "The number of property items per page."
+          },
+          "startCursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId",
+          "propertyId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": {
+          "description": "A Notion API field value."
+        },
+        "description": "A Notion API object."
+      }
+    },
+    {
+      "id": "notion.retrieve_user",
+      "service": "notion",
+      "name": "retrieve_user",
+      "description": "Retrieve a Notion user by user ID.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The user ID to retrieve."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "userId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "user",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The Notion user ID."
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The user's display name."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The user's avatar URL."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "person",
+              "bot"
+            ],
+            "description": "The user type."
+          },
+          "person": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "description": "The person's email address.",
+                "format": "email"
+              }
+            },
+            "additionalProperties": true
+          },
+          "bot": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion user object."
+      }
+    },
+    {
+      "id": "notion.search",
+      "service": "notion",
+      "name": "search",
+      "description": "Search Notion pages and data sources with optional filter, sort, and pagination controls.",
+      "requiredScopes": [
+        "read_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query text."
+          },
+          "filter": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The filter object to narrow results."
+          },
+          "sort": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The sort object to order results."
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "The number of results per page."
+          },
+          "startCursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "list",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "const": "page",
+                      "type": "string",
+                      "description": "The Notion object type."
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "The page ID."
+                    },
+                    "created_time": {
+                      "type": "string",
+                      "description": "The time when the page was created.",
+                      "format": "date-time"
+                    },
+                    "last_edited_time": {
+                      "type": "string",
+                      "description": "The time when the page was last edited.",
+                      "format": "date-time"
+                    },
+                    "parent": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "description": "A Notion API field value."
+                      },
+                      "description": "The official Notion parent object."
+                    },
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "description": "A Notion API field value."
+                      },
+                      "description": "Notion properties keyed by property name."
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "The canonical Notion URL for the page.",
+                      "format": "uri"
+                    },
+                    "archived": {
+                      "type": "boolean",
+                      "description": "Whether the page is archived."
+                    },
+                    "in_trash": {
+                      "type": "boolean",
+                      "description": "Whether the page is in the trash."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "description": "A Notion page object."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "const": "data_source",
+                      "type": "string",
+                      "description": "The Notion object type."
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "The data source ID."
+                    },
+                    "title": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "description": "A Notion API field value."
+                        },
+                        "description": "A Notion API object."
+                      },
+                      "description": "Notion rich text objects."
+                    },
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "description": "A Notion API field value."
+                      },
+                      "description": "Notion properties keyed by property name."
+                    },
+                    "parent": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "description": "A Notion API field value."
+                      },
+                      "description": "The official Notion parent object."
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "The canonical Notion URL for the data source.",
+                      "format": "uri"
+                    },
+                    "in_trash": {
+                      "type": "boolean",
+                      "description": "Whether the data source is in the trash."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "description": "A Notion data source object."
+                }
+              ]
+            },
+            "description": "Returned Notion objects."
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Cursor for the next page."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more results are available."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "object",
+          "results",
+          "has_more"
+        ],
+        "description": "Search results returned by Notion."
+      }
+    },
+    {
+      "id": "notion.update_block",
+      "service": "notion",
+      "name": "update_block",
+      "description": "Update a Notion block using raw block fields.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The block ID to update."
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "blockId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "block",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The block ID."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "type": {
+            "type": "string",
+            "description": "The block type."
+          },
+          "has_children": {
+            "type": "boolean",
+            "description": "Whether this block has child blocks."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the block is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion block object."
+      }
+    },
+    {
+      "id": "notion.update_data_source",
+      "service": "notion",
+      "name": "update_data_source",
+      "description": "Update a Notion data source's title, icon, properties schema, parent, or trash status.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dataSourceId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The data source ID to update."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Data source title rich text objects."
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Data source description rich text objects."
+          },
+          "icon": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the data source is in the trash."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "dataSourceId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "data_source",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source ID."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the data source.",
+            "format": "uri"
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the data source is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion data source object."
+      }
+    },
+    {
+      "id": "notion.update_database",
+      "service": "notion",
+      "name": "update_database",
+      "description": "Update a Notion database container.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The database ID to update."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Database title rich text objects."
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Database description rich text objects."
+          },
+          "is_inline": {
+            "type": "boolean",
+            "description": "Whether the database is inline."
+          },
+          "icon": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "cover": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the database is in the trash."
+          },
+          "is_locked": {
+            "type": "boolean",
+            "description": "Whether the database is locked."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "databaseId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "database",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The database ID."
+          },
+          "title": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "A Notion API field value."
+              },
+              "description": "A Notion API object."
+            },
+            "description": "Notion rich text objects."
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the database.",
+            "format": "uri"
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the database is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion database object."
+      }
+    },
+    {
+      "id": "notion.update_page",
+      "service": "notion",
+      "name": "update_page",
+      "description": "Update a Notion page's properties, title, icon, cover, trash status, or locked state.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID to update."
+          },
+          "title": {
+            "type": "string",
+            "description": "The new page title."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "icon": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "cover": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "template": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the page is in the trash."
+          },
+          "is_locked": {
+            "type": "boolean",
+            "description": "Whether the page is locked."
+          },
+          "erase_content": {
+            "type": "boolean",
+            "description": "Whether to erase page content."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "const": "page",
+            "type": "string",
+            "description": "The Notion object type."
+          },
+          "id": {
+            "type": "string",
+            "description": "The page ID."
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time when the page was created.",
+            "format": "date-time"
+          },
+          "last_edited_time": {
+            "type": "string",
+            "description": "The time when the page was last edited.",
+            "format": "date-time"
+          },
+          "parent": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "The official Notion parent object."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "Notion properties keyed by property name."
+          },
+          "url": {
+            "type": "string",
+            "description": "The canonical Notion URL for the page.",
+            "format": "uri"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the page is archived."
+          },
+          "in_trash": {
+            "type": "boolean",
+            "description": "Whether the page is in the trash."
+          }
+        },
+        "additionalProperties": true,
+        "description": "A Notion page object."
+      }
+    },
+    {
+      "id": "notion.update_page_markdown",
+      "service": "notion",
+      "name": "update_page_markdown",
+      "description": "Update a Notion page's content as enhanced Markdown.",
+      "requiredScopes": [
+        "insert_content",
+        "update_content"
+      ],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The page ID to update."
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Markdown update operation type."
+          },
+          "insert_content": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "replace_content_range": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "update_content": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          },
+          "replace_content": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "A Notion API field value."
+            },
+            "description": "A Notion API object."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "pageId",
+          "type"
+        ],
+        "description": "The input payload for this action."
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": {
+          "description": "A Notion API field value."
+        },
+        "description": "A Notion API object."
+      }
+    }
+  ]
+}

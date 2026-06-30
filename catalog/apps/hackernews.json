@@ -1,0 +1,1042 @@
+{
+  "service": "hackernews",
+  "displayName": "Hacker News",
+  "categories": [
+    "Social"
+  ],
+  "authTypes": [
+    "no_auth"
+  ],
+  "auth": [
+    {
+      "type": "no_auth"
+    }
+  ],
+  "homepageUrl": "https://news.ycombinator.com",
+  "actions": [
+    {
+      "id": "hackernews.get_ask_stories",
+      "service": "hackernews",
+      "name": "get_ask_stories",
+      "description": "Get the latest Ask HN story IDs from Hacker News.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "story_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "description": "Hacker News item IDs."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "story_ids"
+        ],
+        "description": "Story ID list returned by the Hacker News Firebase API."
+      }
+    },
+    {
+      "id": "hackernews.get_best_stories",
+      "service": "hackernews",
+      "name": "get_best_stories",
+      "description": "Get the best story IDs from Hacker News ranked by score.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "story_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "description": "Hacker News item IDs."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "story_ids",
+          "count"
+        ],
+        "description": "Story ID list with the number of returned IDs."
+      }
+    },
+    {
+      "id": "hackernews.get_item",
+      "service": "hackernews",
+      "name": "get_item",
+      "description": "Get a Hacker News item by its numeric ID.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          },
+          "print": {
+            "const": "pretty",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "description": "Item lookup input."
+      },
+      "outputSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "by": {
+                "type": "string",
+                "description": "The username of the item author."
+              },
+              "descendants": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "id": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "kids": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "parent": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "poll": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "score": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "text": {
+                "type": "string"
+              },
+              "time": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "title": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "job",
+                  "story",
+                  "comment",
+                  "poll",
+                  "pollopt"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "dead": {
+                "type": "boolean"
+              },
+              "deleted": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "type"
+            ],
+            "description": "A Hacker News item from the Firebase API."
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hackernews.get_item_with_id",
+      "service": "hackernews",
+      "name": "get_item_with_id",
+      "description": "Get a Hacker News item with a bounded nested comment tree.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d+$",
+                "description": "A numeric item ID as a string."
+              }
+            ]
+          },
+          "max_depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "The maximum depth of the nested comment tree.",
+            "default": 2
+          },
+          "max_children": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "The maximum number of children per node.",
+            "default": 10
+          },
+          "truncate_text": {
+            "type": "boolean",
+            "description": "Whether to truncate long text content.",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "item_id",
+          "max_depth",
+          "max_children",
+          "truncate_text"
+        ],
+        "description": "Nested item lookup input."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "found": {
+            "type": "boolean"
+          },
+          "item": {
+            "$ref": "#/$defs/treeItem"
+          },
+          "error_message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "found"
+        ],
+        "$defs": {
+          "treeItem": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "url": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "job",
+                  "story",
+                  "comment",
+                  "poll",
+                  "pollopt"
+                ]
+              },
+              "title": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              },
+              "points": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/treeItem"
+                }
+              },
+              "story_id": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "parent_id": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "created_at_i": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "children_shown": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "max_depth_reached": {
+                "type": "boolean"
+              },
+              "children_truncated": {
+                "type": "boolean"
+              },
+              "total_children_count": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "type"
+            ],
+            "description": "A Hacker News item with bounded nested children."
+          }
+        },
+        "description": "Nested item lookup result."
+      }
+    },
+    {
+      "id": "hackernews.get_job_stories",
+      "service": "hackernews",
+      "name": "get_job_stories",
+      "description": "Get the latest job story IDs from Hacker News.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "story_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "description": "Hacker News item IDs."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "story_ids"
+        ],
+        "description": "Story ID list returned by the Hacker News Firebase API."
+      }
+    },
+    {
+      "id": "hackernews.get_latest_posts",
+      "service": "hackernews",
+      "name": "get_latest_posts",
+      "description": "Get the latest Hacker News posts via Algolia search_by_date.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "The page number to fetch.",
+            "default": 0
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20,
+            "description": "The number of results per page.",
+            "default": 5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Algolia filter tags."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "page",
+          "size"
+        ],
+        "description": "Algolia search input."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "author": {
+                  "type": "string"
+                },
+                "points": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "objectID": {
+                  "type": "string"
+                },
+                "story_id": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "story_text": {
+                  "type": "string"
+                },
+                "story_title": {
+                  "type": "string"
+                },
+                "story_url": {
+                  "type": "string"
+                },
+                "comment_text": {
+                  "type": "string"
+                },
+                "created_at_i": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "num_comments": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "_tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Hacker News search hit from the Algolia API."
+            }
+          },
+          "nbHits": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "page": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "nbPages": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "hitsPerPage": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "hits",
+          "nbHits",
+          "page",
+          "nbPages",
+          "hitsPerPage"
+        ],
+        "description": "The latest post hits."
+      }
+    },
+    {
+      "id": "hackernews.get_max_item_id",
+      "service": "hackernews",
+      "name": "get_max_item_id",
+      "description": "Get the current largest Hacker News item ID.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "max_item_id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "max_item_id"
+        ],
+        "description": "Current largest Hacker News item ID."
+      }
+    },
+    {
+      "id": "hackernews.get_new_stories",
+      "service": "hackernews",
+      "name": "get_new_stories",
+      "description": "Get the newest story IDs from Hacker News.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "story_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "description": "Hacker News item IDs."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "story_ids",
+          "count"
+        ],
+        "description": "Story ID list with the number of returned IDs."
+      }
+    },
+    {
+      "id": "hackernews.get_show_stories",
+      "service": "hackernews",
+      "name": "get_show_stories",
+      "description": "Get the latest Show HN story IDs from Hacker News.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "story_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "description": "Hacker News item IDs."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "story_ids"
+        ],
+        "description": "Story ID list returned by the Hacker News Firebase API."
+      }
+    },
+    {
+      "id": "hackernews.get_top_stories",
+      "service": "hackernews",
+      "name": "get_top_stories",
+      "description": "Get the top story IDs from Hacker News sorted by front page position.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "story_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "description": "Hacker News item IDs."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "story_ids",
+          "count"
+        ],
+        "description": "Story ID list with the number of returned IDs."
+      }
+    },
+    {
+      "id": "hackernews.get_updates",
+      "service": "hackernews",
+      "name": "get_updates",
+      "description": "Get recently changed items and user profiles from Hacker News.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "print": {
+            "const": "pretty",
+            "type": "string",
+            "description": "The pretty-print flag for Firebase responses."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional Firebase request options."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "profiles"
+        ],
+        "description": "Recently changed Hacker News items and profiles."
+      }
+    },
+    {
+      "id": "hackernews.get_user",
+      "service": "hackernews",
+      "name": "get_user",
+      "description": "Get a Hacker News user's public profile summary by username.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The username to look up."
+          },
+          "print": {
+            "const": "pretty",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "username"
+        ],
+        "description": "Hacker News user lookup input."
+      },
+      "outputSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "karma": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "about": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "username",
+              "karma"
+            ],
+            "description": "A Hacker News user profile summary."
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hackernews.get_user_by_username",
+      "service": "hackernews",
+      "name": "get_user_by_username",
+      "description": "Get a Hacker News user's detailed public profile by username.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The username to look up."
+          },
+          "print": {
+            "const": "pretty",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "username"
+        ],
+        "description": "Hacker News user lookup input."
+      },
+      "outputSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "about": {
+                "type": "string"
+              },
+              "karma": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "created": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "submitted": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "karma",
+              "created"
+            ],
+            "description": "A Hacker News user profile from the Firebase API."
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hackernews.search_posts",
+      "service": "hackernews",
+      "name": "search_posts",
+      "description": "Search Hacker News posts using Algolia full-text search.",
+      "requiredScopes": [],
+      "providerPermissions": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query text."
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "The page number to fetch.",
+            "default": 0
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20,
+            "description": "The number of results per page.",
+            "default": 5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Algolia filter tags."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query",
+          "page",
+          "size"
+        ],
+        "description": "Algolia search input."
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "author": {
+                  "type": "string"
+                },
+                "points": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "objectID": {
+                  "type": "string"
+                },
+                "story_id": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "story_text": {
+                  "type": "string"
+                },
+                "story_title": {
+                  "type": "string"
+                },
+                "story_url": {
+                  "type": "string"
+                },
+                "comment_text": {
+                  "type": "string"
+                },
+                "created_at_i": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "num_comments": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "_tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": true,
+              "description": "A Hacker News search hit from the Algolia API."
+            }
+          },
+          "nbHits": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "page": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "nbPages": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "hitsPerPage": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "query": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "hits",
+          "nbHits",
+          "page",
+          "nbPages",
+          "hitsPerPage"
+        ],
+        "description": "The search result hits."
+      }
+    }
+  ]
+}
