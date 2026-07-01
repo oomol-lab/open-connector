@@ -6,6 +6,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  requiredString,
 } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
@@ -971,11 +972,7 @@ function optionalStringMap(value: unknown) {
 }
 
 function requireString(input: JsonRecord, key: string) {
-  const value = optionalString(input[key]);
-  if (!value) {
-    throw new ProviderRequestError(400, `${key} is required`);
-  }
-  return value;
+  return requiredString(input[key], key, (message) => new ProviderRequestError(400, message));
 }
 
 function requireInteger(input: JsonRecord, key: string) {

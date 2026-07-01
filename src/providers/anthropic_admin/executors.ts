@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "anthropic_admin";
@@ -38,7 +38,7 @@ export const anthropicAdminActionHandlers: Record<string, AnthropicAdminActionHa
     );
   },
   list_workspace_members(input, context) {
-    const workspaceId = requireString(input.workspace_id, "workspace_id");
+    const workspaceId = requiredString(input.workspace_id, "workspace_id", providerInputError);
     const queryInput = { ...input };
     delete queryInput.workspace_id;
     return anthropicAdminRequest(
@@ -180,10 +180,6 @@ async function readAnthropicAdminError(response: Response) {
   }
 }
 
-function requireString(value: unknown, fieldName: string) {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required`);
-  }
-  return parsed;
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }

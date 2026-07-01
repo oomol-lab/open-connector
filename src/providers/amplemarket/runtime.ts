@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const amplemarketApiBaseUrl = "https://api.amplemarket.com";
@@ -293,11 +293,11 @@ function readAmplemarketErrorMessage(payload: unknown) {
 }
 
 function requireInputString(value: unknown, fieldName: string) {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required`);
-  }
-  return parsed;
+  return requiredString(value, fieldName, providerInputError);
+}
+
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }
 
 function requireRecord(value: unknown, label: string) {

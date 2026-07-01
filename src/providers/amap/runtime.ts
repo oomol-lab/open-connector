@@ -1,5 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
+import { requiredString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 export const amapApiBaseUrl = "https://restapi.amap.com";
@@ -530,11 +531,11 @@ function readUnexpectedMessage(error: unknown) {
 }
 
 function readRequiredString(value: unknown, key: string) {
-  const text = readOptionalString(value);
-  if (!text) {
-    throw new ProviderRequestError(400, `${key} is required`);
-  }
-  return text;
+  return requiredString(value, key, providerInputError);
+}
+
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }
 
 function readOptionalString(value: unknown) {

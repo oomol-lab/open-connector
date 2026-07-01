@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "anthropic";
@@ -83,7 +83,7 @@ async function anthropicGetModel(input: Record<string, unknown>, context: ApiKey
   return anthropicRequest(
     context.apiKey,
     {
-      path: `/v1/models/${encodeURIComponent(requireString(input.model_id, "model_id"))}`,
+      path: `/v1/models/${encodeURIComponent(requiredString(input.model_id, "model_id", providerInputError))}`,
     },
     context.fetcher,
     context.signal,
@@ -202,10 +202,6 @@ async function readAnthropicError(response: Response) {
   }
 }
 
-function requireString(value: unknown, fieldName: string) {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required`);
-  }
-  return parsed;
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }

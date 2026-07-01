@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const anchorBrowserApiBaseUrl = "https://api.anchorbrowser.io";
@@ -251,11 +251,11 @@ function buildAccountLabel(billing: ReturnType<typeof normalizeBillingPayload>) 
 }
 
 function requireInputString(value: unknown, fieldName: string) {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required`);
-  }
-  return parsed;
+  return requiredString(value, fieldName, providerInputError);
+}
+
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }
 
 function requireString(value: unknown, fieldName: string) {

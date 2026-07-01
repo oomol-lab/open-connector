@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const ambientWeatherApiBaseUrl = "https://rt.ambientweather.net";
@@ -44,8 +44,8 @@ export async function validateAmbientWeatherCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context: AmbientWeatherContext = {
-    apiKey: requireString(input.apiKey, "apiKey"),
-    applicationKey: requireString(input.values.applicationKey, "applicationKey"),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
+    applicationKey: requiredString(input.values.applicationKey, "applicationKey", providerInputError),
     fetcher,
     signal,
   };
@@ -345,10 +345,6 @@ function normalizeAmbientWeatherEndDate(value: unknown) {
   return timestamp;
 }
 
-function requireString(value: unknown, fieldName: string) {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required`);
-  }
-  return parsed;
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }
