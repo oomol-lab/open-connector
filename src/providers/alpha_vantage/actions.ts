@@ -899,10 +899,4 @@ export const alphaVantageActions: ActionDefinition[] = [
       data: s.unknown("The parsed JSON payload or raw text payload returned by Alpha Vantage."),
     }),
   }),
-] satisfies ActionDefinition[];
-
-export type AlphaVantageActionName = (typeof alphaVantageActions)[number]["name"];
-
-export const alphaVantageActionByName: Map<string, ActionDefinition> = new Map(
-  alphaVantageActions.map((action) => [action.name, action] as const),
-);
+];
