@@ -6,13 +6,13 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 const service = "apiverve";
 
 const wordField = s.nonEmptyString("The word to look up in the APIVerve endpoint.");
-const currencyCodeField = s.stringPattern("^[A-Z]{3}$", {
+const currencyCodeField = s.stringPattern("^[A-Za-z]{3}$", {
   description: "The ISO 4217 currency code used by APIVerve.",
 });
-const iataCodeField = s.stringPattern("^[A-Z]{3}$", {
+const iataCodeField = s.stringPattern("^[A-Za-z]{3}$", {
   description: "The IATA code used by APIVerve.",
 });
-const airlineIataCodeField = s.stringPattern("^[A-Z]{2}$", {
+const airlineIataCodeField = s.stringPattern("^[A-Za-z]{2}$", {
   description: "The airline IATA code used by APIVerve.",
 });
 

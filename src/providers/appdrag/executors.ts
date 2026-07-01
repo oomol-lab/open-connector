@@ -286,7 +286,10 @@ function createAppdragError(response: Response, body: unknown): ProviderRequestE
     `AppDrag request failed with status ${response.status}`;
 
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(response.status, message, body);
+    return new ProviderRequestError(400, message, {
+      status: response.status,
+      body,
+    });
   }
 
   return new ProviderRequestError(response.status, message, body);
