@@ -10,6 +10,7 @@ import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { ActionRunner } from "./action-runner.ts";
 import { ConnectServer } from "./connect-server.ts";
+import { logger } from "./logger.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
 import { createSecretCodec } from "./secret-codec.ts";
 import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
@@ -74,6 +75,7 @@ const app = new ConnectServer({
     verifyRuntimeToken: (token) => runtimeTokens.verifyToken(token),
   },
   actionPolicy,
+  logger,
 }).createApp();
 const runtimeAuthConfigured = Boolean(runtimeToken) || (await hasStoredRuntimeTokens());
 
@@ -93,18 +95,18 @@ serve(
     hostname,
   },
   (info) => {
-    console.log(`connect server listening on http://${hostname}:${info.port}`);
-    console.log(`runtime data directory: ${dataDir}`);
+    logger.info({ url: `http://${hostname}:${info.port}` }, "connect server listening");
+    logger.info({ dataDir }, "runtime data directory");
     if (!adminToken) {
-      console.warn("local admin authentication is disabled; set OOMOL_CONNECT_ADMIN_TOKEN to require bearer tokens");
+      logger.warn("local admin authentication is disabled; set OOMOL_CONNECT_ADMIN_TOKEN to require bearer tokens");
     }
     if (!runtimeAuthConfigured) {
-      console.warn(
+      logger.warn(
         "runtime API authentication is disabled; create a runtime token in the web console or set OOMOL_CONNECT_RUNTIME_TOKEN",
       );
     }
     if (!secretCodec.encrypted) {
-      console.warn(
+      logger.warn(
         "local credential encryption is disabled; set OOMOL_CONNECT_ENCRYPTION_KEY to encrypt stored credentials",
       );
     }

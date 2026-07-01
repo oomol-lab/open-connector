@@ -3,6 +3,7 @@ import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { LocalAuthOptions } from "./auth.ts";
+import type { Logger } from "./logger.ts";
 import type { RuntimeTokenService } from "./runtime-token-service.ts";
 import type { Context } from "hono";
 
@@ -45,6 +46,7 @@ export interface IConnectServerOptions {
   staticRoot: string;
   auth?: LocalAuthOptions;
   actionPolicy?: ActionPolicyService;
+  logger?: Logger;
 }
 
 /**
@@ -140,7 +142,17 @@ export class ConnectServer {
       await next();
     });
     registerStaticRoutes(app, this.options.staticRoot);
-    app.onError((error, context) => internalError(context, error));
+    app.onError((error, context) => {
+      this.options.logger?.error(
+        {
+          err: error,
+          method: context.req.method,
+          path: context.req.path,
+        },
+        "request failed",
+      );
+      return internalError(context, error);
+    });
 
     return app;
   }
