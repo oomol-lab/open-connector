@@ -22,30 +22,28 @@ const paginationSchema = s.object("Pagination information returned by Aviationst
 });
 
 const rawObjectSchema = s.looseObject("The raw Aviationstack object.");
-const nullableText = (description: string) => s.nullable(s.string(description));
-const nullableNumber = (description: string) => s.nullable(s.number(description));
 const optionalPositiveInteger = (description: string) => s.integer(description, { minimum: 1 });
 const optionalNonNegativeInteger = (description: string) => s.nonNegativeInteger(description);
 
 const airportEndpointSchema = s.object("Normalized airport timing details returned by Aviationstack.", {
-  airport: nullableText("Airport name returned by Aviationstack."),
-  timezone: nullableText("Airport timezone returned by Aviationstack."),
-  iata: nullableText("Airport IATA code returned by Aviationstack."),
-  icao: nullableText("Airport ICAO code returned by Aviationstack."),
-  terminal: nullableText("Terminal returned by Aviationstack."),
-  gate: nullableText("Gate returned by Aviationstack."),
-  baggage: nullableText("Baggage claim or belt returned by Aviationstack."),
+  airport: s.nullableString("Airport name returned by Aviationstack."),
+  timezone: s.nullableString("Airport timezone returned by Aviationstack."),
+  iata: s.nullableString("Airport IATA code returned by Aviationstack."),
+  icao: s.nullableString("Airport ICAO code returned by Aviationstack."),
+  terminal: s.nullableString("Terminal returned by Aviationstack."),
+  gate: s.nullableString("Gate returned by Aviationstack."),
+  baggage: s.nullableString("Baggage claim or belt returned by Aviationstack."),
   delay: s.nullable(s.integer("Delay in minutes returned by Aviationstack.")),
-  scheduled: nullableText("Scheduled timestamp returned by Aviationstack."),
-  estimated: nullableText("Estimated timestamp returned by Aviationstack."),
-  actual: nullableText("Actual timestamp returned by Aviationstack."),
-  estimatedRunway: nullableText("Estimated runway timestamp returned by Aviationstack."),
-  actualRunway: nullableText("Actual runway timestamp returned by Aviationstack."),
+  scheduled: s.nullableString("Scheduled timestamp returned by Aviationstack."),
+  estimated: s.nullableString("Estimated timestamp returned by Aviationstack."),
+  actual: s.nullableString("Actual timestamp returned by Aviationstack."),
+  estimatedRunway: s.nullableString("Estimated runway timestamp returned by Aviationstack."),
+  actualRunway: s.nullableString("Actual runway timestamp returned by Aviationstack."),
 });
 
 const flightSchema = s.object("Normalized flight returned by Aviationstack.", {
-  flightDate: nullableText("Flight date returned by Aviationstack."),
-  flightStatus: nullableText("Flight status returned by Aviationstack."),
+  flightDate: s.nullableString("Flight date returned by Aviationstack."),
+  flightStatus: s.nullableString("Flight status returned by Aviationstack."),
   departure: airportEndpointSchema,
   arrival: airportEndpointSchema,
   airline: s.looseObject("Normalized airline summary returned inside a flight."),
