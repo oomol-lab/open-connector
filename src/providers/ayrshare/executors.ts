@@ -4,6 +4,7 @@ import type { AyrshareActionName } from "./actions.ts";
 
 import {
   compactObject,
+  optionalBoolean,
   optionalInteger,
   optionalRecord,
   optionalString,
@@ -500,10 +501,6 @@ function normalizeAyrsharePostResult(object: Record<string, unknown>): Record<st
     errors: readObjectArray(object.errors),
     raw: object,
   };
-}
-
-function optionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function inferSuccessfulStatus(object: Record<string, unknown>): boolean {

@@ -193,13 +193,16 @@ function buildAxiomUrl(path: string, query?: Record<string, string | undefined>)
   return url;
 }
 
-function buildAxiomHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
-  return compactObject({
+function buildAxiomHeaders(apiKey: string, hasBody: boolean): Headers {
+  const headers = new Headers({
     accept: "application/json",
     authorization: `Bearer ${apiKey}`,
-    "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
-  }) as Record<string, string>;
+  });
+  if (hasBody) {
+    headers.set("content-type", "application/json");
+  }
+  return headers;
 }
 
 async function readAxiomPayload(response: Response): Promise<unknown> {

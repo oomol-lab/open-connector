@@ -4,7 +4,14 @@ import type { BannerbearActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   ProviderRequestError,
@@ -295,10 +302,6 @@ function stringifyOptional(value: unknown): string | undefined {
     return String(integer);
   }
   return optionalString(value);
-}
-
-function optionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function hashBannerbearApiKey(apiKey: string): string {
