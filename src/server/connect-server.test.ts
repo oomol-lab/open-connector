@@ -7,6 +7,9 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { IRunLogStore, RunLog } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
@@ -16,6 +19,7 @@ import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./action-runner.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
+import { TransitFileService } from "./transit-files.ts";
 
 const apiKeyProvider: ProviderDefinition = {
   service: "example",
@@ -582,6 +586,107 @@ describe("ConnectServer", () => {
       errorCode: "proxy_not_supported",
     });
   });
+
+  it("uploads, serves, and deletes local transit files", async () => {
+    const rootDir = await createTempDir();
+    try {
+      const app = createTestServer([apiKeyProvider], {
+        transitFiles: createTestTransitFiles(rootDir),
+      }).createApp();
+      const form = new FormData();
+      form.set("file", new File(["hello transit"], "report.TXT", { type: "text/plain" }));
+
+      const upload = await app.request("/api/files", {
+        method: "POST",
+        body: form,
+      });
+      expect(upload.status).toBe(200);
+      const uploadBody = (await upload.json()) as {
+        fileId: string;
+        downloadUrl: string;
+        sizeBytes: number;
+      };
+      expect(uploadBody.fileId).toMatch(/^[a-f0-9]{32}\.txt$/);
+      expect(uploadBody.downloadUrl).toBe(`http://localhost:3000/api/files/${uploadBody.fileId}`);
+      expect(uploadBody.sizeBytes).toBe(13);
+
+      const download = await app.request(`/api/files/${uploadBody.fileId}`);
+      expect(download.status).toBe(200);
+      expect(download.headers.get("content-type")).toBe("text/plain");
+      expect(download.headers.get("content-length")).toBe("13");
+      await expect(download.text()).resolves.toBe("hello transit");
+
+      const deleted = await app.request(`/api/files/${uploadBody.fileId}`, {
+        method: "DELETE",
+      });
+      expect(deleted.status).toBe(200);
+      await expect(deleted.json()).resolves.toEqual({ fileId: uploadBody.fileId, deleted: true });
+
+      const missing = await app.request(`/api/files/${uploadBody.fileId}`);
+      expect(missing.status).toBe(404);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps transit file downloads public when admin auth is enabled", async () => {
+    const rootDir = await createTempDir();
+    try {
+      const app = createTestServer([apiKeyProvider], {
+        auth: { adminToken: "local-token" },
+        transitFiles: createTestTransitFiles(rootDir),
+      }).createApp();
+      const form = new FormData();
+      form.set("file", new File(["download me"], "note.txt"));
+
+      const unauthorizedUpload = await app.request("/api/files", {
+        method: "POST",
+        body: form,
+      });
+      expect(unauthorizedUpload.status).toBe(401);
+
+      const authorizedForm = new FormData();
+      authorizedForm.set("file", new File(["download me"], "note.txt"));
+      const upload = await app.request("/api/files", {
+        method: "POST",
+        headers: { authorization: "Bearer local-token" },
+        body: authorizedForm,
+      });
+      expect(upload.status).toBe(200);
+      const uploadBody = (await upload.json()) as { fileId: string };
+
+      const download = await app.request(`/api/files/${uploadBody.fileId}`);
+      expect(download.status).toBe(200);
+      await expect(download.text()).resolves.toBe("download me");
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects transit files over the configured local limit", async () => {
+    const rootDir = await createTempDir();
+    try {
+      const app = createTestServer([apiKeyProvider], {
+        transitFiles: createTestTransitFiles(rootDir, { maxBytes: 4 }),
+      }).createApp();
+      const form = new FormData();
+      form.set("file", new File(["12345"], "large.bin"));
+
+      const response = await app.request("/api/files", {
+        method: "POST",
+        body: form,
+      });
+
+      expect(response.status).toBe(413);
+      await expect(response.json()).resolves.toMatchObject({
+        error: {
+          code: "file_too_large",
+        },
+      });
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
 });
 
 interface CreateTestServerOptions {
@@ -590,6 +695,7 @@ interface CreateTestServerOptions {
   providerLoader?: IProviderLoader;
   runtimeTokens?: RuntimeTokenService;
   runs?: MemoryRunLogStore;
+  transitFiles?: TransitFileService;
 }
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
@@ -629,6 +735,14 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       states: new MemoryOAuthStateStore(),
     }),
     actions: actionRunner,
+    transitFiles:
+      options.transitFiles ??
+      new TransitFileService({
+        rootDir: ".tmp/test-transit-files",
+        publicOrigin: "http://localhost:3000",
+        ttlSeconds: 60,
+        maxBytes: 1024 * 1024,
+      }),
     runtimeTokens,
     staticRoot: ".tmp/test-static",
     auth: {
@@ -637,6 +751,19 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       verifyRuntimeToken: (token) => runtimeTokens.verifyToken(token),
     },
     actionPolicy: options.actionPolicy,
+  });
+}
+
+async function createTempDir(): Promise<string> {
+  return mkdtemp(join(tmpdir(), "oomol-connect-files-"));
+}
+
+function createTestTransitFiles(rootDir: string, options: { maxBytes?: number } = {}): TransitFileService {
+  return new TransitFileService({
+    rootDir,
+    publicOrigin: "http://localhost:3000",
+    ttlSeconds: 60,
+    maxBytes: options.maxBytes ?? 1024 * 1024,
   });
 }
 

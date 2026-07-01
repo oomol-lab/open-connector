@@ -31,7 +31,12 @@ export async function readJsonBody(context: Context): Promise<JsonRequestBody> {
 /**
  * Write the standard JSON error envelope used by local HTTP routes.
  */
-export function jsonError(context: Context, status: 400 | 401 | 404 | 500, code: string, message: string): Response {
+export function jsonError(
+  context: Context,
+  status: 400 | 401 | 404 | 413 | 500,
+  code: string,
+  message: string,
+): Response {
   return context.json(
     {
       error: {

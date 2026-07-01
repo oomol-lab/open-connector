@@ -134,6 +134,8 @@ export function createOpenApiDocument(
     "/api/oauth/authorizations": createOAuthAuthorizationPath(),
     "/api/runtime-tokens": createRuntimeTokensPath(),
     "/api/runtime-tokens/{id}": createRuntimeTokenPath(),
+    "/api/files": createTransitFilesPath(),
+    "/api/files/{fileId}": createTransitFilePath(),
     "/api/actions/{actionId}/runs": runPath,
     "/api/runs": createRunsPath(),
     "/mcp": createMcpPath(),
@@ -158,6 +160,7 @@ export function createOpenApiDocument(
       { name: "Connections", description: "Local provider credentials and connection state." },
       { name: "OAuth", description: "Local OAuth client configuration and authorization flow." },
       { name: "Access", description: "Runtime bearer tokens for /v1 and MCP clients." },
+      { name: "Files", description: "Local temporary file transit for provider actions." },
       { name: "Runs", description: "Local action execution and recent run history." },
       { name: "MCP", description: "MCP Streamable HTTP endpoint and tool metadata." },
     ],
@@ -241,6 +244,17 @@ export function createOpenApiDocument(
             description: "Runtime token creation request.",
           },
         ),
+        TransitFileUpload: jsonSchema.object(
+          {
+            fileId: jsonSchema.string({ description: "Opaque local transit file identifier." }),
+            downloadUrl: jsonSchema.string({ description: "URL that serves the uploaded file." }),
+            sizeBytes: jsonSchema.number({ description: "Uploaded file size in bytes." }),
+          },
+          {
+            required: ["fileId", "downloadUrl", "sizeBytes"],
+            description: "Local transit file upload response.",
+          },
+        ),
         ProviderDefinition: jsonSchema.unknownObject("Public provider catalog definition."),
         RunLog: jsonSchema.object(
           {
@@ -267,6 +281,92 @@ export function createOpenApiDocument(
             description: "Recent action run entry.",
           },
         ),
+      },
+    },
+  };
+}
+
+function createTransitFilesPath(): Record<string, unknown> {
+  return {
+    post: {
+      tags: ["Files"],
+      summary: "Upload one local transit file.",
+      description: "Stores one temporary local file and returns a download URL for connector actions.",
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: jsonSchema.object(
+              {
+                file: { type: "string", format: "binary", description: "File content to upload." },
+              },
+              {
+                required: ["file"],
+                description: "Transit file upload request.",
+              },
+            ),
+          },
+        },
+      },
+      responses: {
+        200: jsonResponse({ $ref: "#/components/schemas/TransitFileUpload" }),
+        400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        413: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      },
+    },
+  };
+}
+
+function createTransitFilePath(): Record<string, unknown> {
+  return {
+    get: {
+      tags: ["Files"],
+      summary: "Download one local transit file.",
+      parameters: [
+        {
+          name: "fileId",
+          in: "path",
+          required: true,
+          schema: jsonSchema.string({ description: "Opaque local transit file identifier." }),
+        },
+      ],
+      responses: {
+        200: {
+          description: "Transit file bytes.",
+          content: {
+            "application/octet-stream": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+        404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      },
+    },
+    delete: {
+      tags: ["Files"],
+      summary: "Delete one local transit file.",
+      parameters: [
+        {
+          name: "fileId",
+          in: "path",
+          required: true,
+          schema: jsonSchema.string({ description: "Opaque local transit file identifier." }),
+        },
+      ],
+      responses: {
+        200: jsonResponse(
+          jsonSchema.object(
+            {
+              fileId: jsonSchema.string(),
+              deleted: jsonSchema.boolean(),
+            },
+            {
+              required: ["fileId", "deleted"],
+              description: "Transit file deletion response.",
+            },
+          ),
+        ),
+        404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
   };

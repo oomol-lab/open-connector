@@ -19,6 +19,7 @@ credentials, permissions, and execution history.
   providers.
 - Typed action schemas so agents can discover what they can call before they call it.
 - Connection identity and scopes so users and agents can see which account an action will run as.
+- Local temporary file transit for actions that need file URLs.
 - Recent run logs with redacted input summaries and provider errors.
 - A provider catalog with local executors that load only when an action is used.
 
@@ -331,6 +332,16 @@ For an OpenAI tool-call loop:
 OPENAI_API_KEY=sk-... OPENAI_MODEL=gpt-... node examples/openai-tools/run-hackernews.ts
 ```
 
+Upload a temporary local transit file for actions that accept a file URL:
+
+```bash
+curl -s -X POST http://localhost:3000/api/files \
+  -F "file=@./report.pdf"
+```
+
+The response includes a `downloadUrl` under `/api/files/:fileId`. Local transit files are stored
+under `OOMOL_CONNECT_DATA_DIR/files` and are cleaned up by age.
+
 ## Runtime API Surface
 
 Public runtime endpoints:
@@ -357,6 +368,9 @@ Local admin endpoints power the web console, examples, and setup scripts:
 - `GET /api/actions/:actionId`
 - `GET /api/actions/:actionId/agent.md`
 - `POST /api/actions/:actionId/runs`
+- `POST /api/files`
+- `GET /api/files/:fileId`
+- `DELETE /api/files/:fileId`
 - `GET /api/connections`
 - `PUT /api/connections/:service`
 - `DELETE /api/connections/:service`

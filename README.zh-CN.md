@@ -18,6 +18,7 @@ OOMOL Connect。
 - 本地凭据存储，支持 API key、自定义凭据、OAuth2 连接和无需认证的 provider。
 - 类型化 action schema，让 agent 在调用前先知道自己能调用什么。
 - 连接身份和 scope，让用户和 agent 都能看到 action 会以哪个账号执行。
+- 本地临时文件中转，供需要文件 URL 的 action 使用。
 - 最近运行记录，包含脱敏后的输入摘要和 provider 错误。
 - provider catalog 和本地 executor；executor 只在 action 被使用时才加载。
 
@@ -322,6 +323,16 @@ node examples/openai-tools/list-tools.ts
 OPENAI_API_KEY=sk-... OPENAI_MODEL=gpt-... node examples/openai-tools/run-hackernews.ts
 ```
 
+为接受文件 URL 的 action 上传一个本地临时中转文件：
+
+```bash
+curl -s -X POST http://localhost:3000/api/files \
+  -F "file=@./report.pdf"
+```
+
+响应会包含 `/api/files/:fileId` 下的 `downloadUrl`。本地中转文件保存在
+`OOMOL_CONNECT_DATA_DIR/files`，并会按时间清理。
+
 ## Runtime API
 
 公开 runtime endpoint：
@@ -347,6 +358,9 @@ OPENAI_API_KEY=sk-... OPENAI_MODEL=gpt-... node examples/openai-tools/run-hacker
 - `GET /api/actions/:actionId`
 - `GET /api/actions/:actionId/agent.md`
 - `POST /api/actions/:actionId/runs`
+- `POST /api/files`
+- `GET /api/files/:fileId`
+- `DELETE /api/files/:fileId`
 - `GET /api/connections`
 - `PUT /api/connections/:service`
 - `DELETE /api/connections/:service`

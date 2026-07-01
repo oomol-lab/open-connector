@@ -28,7 +28,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
 
   return async (context, next) => {
     const scope = readAuthScope(context.req.path);
-    if (isPublicPath(context.req.path) || (await hasValidToken(context, options, scope))) {
+    if (isPublicPath(context.req.path, context.req.method) || (await hasValidToken(context, options, scope))) {
       await next();
       return;
     }
@@ -51,8 +51,10 @@ export function installLocalAuthCookie(context: Context, options: LocalAuthOptio
   });
 }
 
-function isPublicPath(path: string): boolean {
-  return path === "/health" || path.startsWith("/oauth/callback/");
+function isPublicPath(path: string, method: string): boolean {
+  return (
+    path === "/health" || path.startsWith("/oauth/callback/") || (method === "GET" && path.startsWith("/api/files/"))
+  );
 }
 
 async function hasValidToken(context: Context, options: LocalAuthOptions, scope: AuthScope): Promise<boolean> {

@@ -14,11 +14,14 @@ import { logger } from "./logger.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
 import { createSecretCodec } from "./secret-codec.ts";
 import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
+import { TransitFileService } from "./transit-files.ts";
 
 const port = Number(process.env.PORT ?? 3000);
 const hostname = process.env.HOST ?? "127.0.0.1";
 const publicOrigin = process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${port}`;
 const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data");
+const transitFileTtlSeconds = Number(process.env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS ?? 86_400);
+const transitFileMaxBytes = Number(process.env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES ?? 100 * 1024 * 1024);
 const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
 const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
 const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
@@ -55,6 +58,13 @@ const actions = new ActionRunner({
   runs: runtimeDatabase.runLogStore,
   actionPolicy,
 });
+const transitFiles = new TransitFileService({
+  rootDir: join(dataDir, "files"),
+  publicOrigin,
+  ttlSeconds: transitFileTtlSeconds,
+  maxBytes: transitFileMaxBytes,
+});
+await transitFiles.cleanupExpired();
 const app = new ConnectServer({
   catalog,
   providerLoader,
@@ -66,6 +76,7 @@ const app = new ConnectServer({
     states: runtimeDatabase.oauthStateStore,
   }),
   actions,
+  transitFiles,
   runtimeTokens,
   staticRoot,
   auth: {

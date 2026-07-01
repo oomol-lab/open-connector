@@ -31,6 +31,7 @@ import {
   writeRuntimeSuccess,
 } from "./runtime-api.ts";
 import { registerStaticRoutes } from "./static-routes.ts";
+import { createTransitFileResponse, TransitFileError, TransitFileService } from "./transit-files.ts";
 
 /**
  * Dependencies required to construct the local connector server.
@@ -43,6 +44,7 @@ export interface IConnectServerOptions {
   oauthFlow: OAuthFlowService;
   runtimeTokens: RuntimeTokenService;
   actions: ActionRunner;
+  transitFiles: TransitFileService;
   staticRoot: string;
   auth?: LocalAuthOptions;
   actionPolicy?: ActionPolicyService;
@@ -124,6 +126,9 @@ export class ConnectServer {
     app.delete("/api/connections/:service", (context) => this.disconnect(context, context.req.param("service")));
 
     app.get("/api/runs", (context) => context.json(this.options.actions.listRuns()));
+    app.post("/api/files", (context) => this.createTransitFile(context));
+    app.get("/api/files/:fileId", (context) => this.getTransitFile(context, context.req.param("fileId")));
+    app.delete("/api/files/:fileId", (context) => this.deleteTransitFile(context, context.req.param("fileId")));
     app.get("/api/runtime-tokens", (context) => this.listRuntimeTokens(context));
     app.post("/api/runtime-tokens", (context) => this.createRuntimeToken(context));
     app.delete("/api/runtime-tokens/:id", (context) => this.revokeRuntimeToken(context, context.req.param("id")));
@@ -164,6 +169,45 @@ export class ConnectServer {
     }
 
     return context.json(provider);
+  }
+
+  private async createTransitFile(context: Context): Promise<Response> {
+    try {
+      const form = await context.req.raw.formData();
+      const file = form.get("file");
+      if (!(file instanceof File)) {
+        return jsonError(context, 400, "invalid_input", "file is required.");
+      }
+      const upload = await this.options.transitFiles.create(file);
+      return context.json(upload);
+    } catch (error) {
+      return this.handleTransitFileError(context, error);
+    }
+  }
+
+  private async getTransitFile(context: Context, fileId: string): Promise<Response> {
+    try {
+      const file = await this.options.transitFiles.read(fileId);
+      return createTransitFileResponse(file);
+    } catch (error) {
+      return this.handleTransitFileError(context, error);
+    }
+  }
+
+  private async deleteTransitFile(context: Context, fileId: string): Promise<Response> {
+    try {
+      const deleted = await this.options.transitFiles.delete(fileId);
+      return context.json({ fileId, deleted });
+    } catch (error) {
+      return this.handleTransitFileError(context, error);
+    }
+  }
+
+  private handleTransitFileError(context: Context, error: unknown): Response {
+    if (error instanceof TransitFileError) {
+      return jsonError(context, error.status, error.code, error.message);
+    }
+    throw error;
   }
 
   private getAction(context: Context, actionId: string): Response {
