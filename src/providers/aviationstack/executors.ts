@@ -4,7 +4,6 @@ import type { AviationstackActionName } from "./actions.ts";
 
 import {
   compactObject,
-  optionalInteger,
   optionalNumber,
   optionalRecord,
   optionalString,
