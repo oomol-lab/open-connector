@@ -369,6 +369,21 @@ export async function requireOAuthCredential(
 }
 
 /**
+ * Return configured custom credential values for a provider.
+ */
+export async function requireCustomCredential(
+  context: ExecutionContext,
+  service: string,
+): Promise<Extract<ResolvedCredential, { authType: "custom_credential" }>> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "custom_credential") {
+    return credential;
+  }
+
+  throw new ProviderRequestError(401, `Configure ${service} custom credentials first.`);
+}
+
+/**
  * Return a bearer token from either OAuth or API key credentials.
  */
 export async function requireBearerCredential(context: ExecutionContext, service: string): Promise<BearerCredential> {
