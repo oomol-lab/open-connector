@@ -1,8 +1,8 @@
-import type { CredentialValidationResult } from "../../core/types.ts";
+import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { AgentyActionName } from "./actions.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const agentyApiBaseUrl = "https://api.agenty.com/v2";
@@ -10,9 +10,10 @@ export const agentyBrowserBaseUrl = "https://browser.agenty.com/api";
 const agentyValidationPath = "/agents";
 const agentyTimeoutMs = 30_000;
 
-type AgentyRuntimeContext = {
+export type AgentyRuntimeContext = {
   apiKey: string;
   fetcher: ProviderFetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 };
 
@@ -24,6 +25,12 @@ export const agentyActionHandlers: Record<AgentyActionName, AgentyActionHandler>
   },
   extract_structured_data(input, context) {
     return extractStructuredData(input, context);
+  },
+  capture_screenshot(input, context) {
+    return captureScreenshot(input, context);
+  },
+  convert_url_to_pdf(input, context) {
+    return convertUrlToPdf(input, context);
   },
   get_redirects(input, context) {
     return getRedirects(input, context);
@@ -103,6 +110,9 @@ export const agentyActionHandlers: Record<AgentyActionName, AgentyActionHandler>
   list_job_files(input, context) {
     return listJobFiles(input, context);
   },
+  download_job_file(input, context) {
+    return downloadJobFile(input, context);
+  },
 };
 
 export async function validateAgentyApiKey(
@@ -165,6 +175,28 @@ async function extractStructuredData(input: Record<string, unknown>, context: Ag
     jsonld: readStructuredDataValue(record.jsonld),
     metatags: readStructuredDataValue(record.metatags),
     microdata: readStructuredDataValue(record.microdata),
+  };
+}
+
+async function captureScreenshot(input: Record<string, unknown>, context: AgentyRuntimeContext) {
+  const response = await requestAgentyBrowser({
+    path: "/screenshot",
+    input: input,
+    context,
+  });
+  return {
+    screenshot: await uploadAgentyTransitFile(context, response, "agenty-screenshot.png"),
+  };
+}
+
+async function convertUrlToPdf(input: Record<string, unknown>, context: AgentyRuntimeContext) {
+  const response = await requestAgentyBrowser({
+    path: "/pdf",
+    input: input,
+    context,
+  });
+  return {
+    pdf: await uploadAgentyTransitFile(context, response, "agenty-document.pdf"),
   };
 }
 
@@ -525,6 +557,35 @@ async function listJobFiles(input: Record<string, unknown>, context: AgentyRunti
         size: asRequiredInteger(value.size, "files[].size"),
       };
     }),
+  };
+}
+
+async function downloadJobFile(input: Record<string, unknown>, context: AgentyRuntimeContext) {
+  const jobId = asRequiredInteger(input.job_id, "job_id");
+  const name = asRequiredIdentifier(input.name, "name");
+  const query = new URLSearchParams();
+  query.set("name", name);
+  const response = await requestAgentyApiResponse({
+    path: `/jobs/${jobId}/files`,
+    query,
+    context,
+  });
+  return {
+    file: await uploadAgentyTransitFile(context, response, name),
+  };
+}
+
+async function uploadAgentyTransitFile(context: AgentyRuntimeContext, response: Response, name: string) {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(500, "agenty file output requires local transit files");
+  }
+
+  const mimeType = response.headers.get("content-type") ?? "application/octet-stream";
+  const upload = await context.transitFiles.create(new File([await response.arrayBuffer()], name, { type: mimeType }));
+  return {
+    name,
+    mimetype: mimeType,
+    s3url: upload.downloadUrl,
   };
 }
 

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { AgentyRuntimeContext } from "./runtime.ts";
 
 import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import { agentyActionHandlers, validateAgentyApiKey } from "./runtime.ts";
@@ -10,11 +11,15 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   handlers: agentyActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
-    return {
+    const providerContext: AgentyRuntimeContext = {
       apiKey: credential.apiKey,
       fetcher,
       signal: context.signal,
     };
+    if (context.transitFiles) {
+      providerContext.transitFiles = context.transitFiles;
+    }
+    return providerContext;
   },
 });
 

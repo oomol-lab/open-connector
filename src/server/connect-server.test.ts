@@ -239,6 +239,53 @@ describe("ConnectServer", () => {
     ]);
   });
 
+  it("passes local transit files to action executors", async () => {
+    const rootDir = await createTempDir();
+    try {
+      const app = createTestServer(
+        [
+          {
+            ...apiKeyProvider,
+            actions: [echoAction],
+          },
+        ],
+        {
+          providerLoader: new TransitEchoProviderLoader(),
+          transitFiles: createTestTransitFiles(rootDir),
+        },
+      ).createApp();
+
+      await app.request("/api/connections/example", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+      });
+
+      const response = await app.request("/api/actions/example.echo/runs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ input: {} }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toMatchObject({
+        ok: true,
+        output: {
+          fileId: expect.stringMatching(/^[a-f0-9]{32}\.txt$/),
+          downloadUrl: expect.stringContaining("http://localhost:3000/api/files/"),
+          sizeBytes: 13,
+        },
+      });
+
+      const download = await app.request(new URL(body.output.downloadUrl).pathname);
+      expect(download.status).toBe(200);
+      await expect(download.text()).resolves.toBe("from executor");
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   it("creates named connections and runs actions with aliases", async () => {
     const runs = new MemoryRunLogStore();
     const app = createTestServer(
@@ -715,12 +762,21 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     origin: "http://localhost:3000",
     store: new MemoryOAuthClientConfigStore(),
   });
+  const transitFiles =
+    options.transitFiles ??
+    new TransitFileService({
+      rootDir: ".tmp/test-transit-files",
+      publicOrigin: "http://localhost:3000",
+      ttlSeconds: 60,
+      maxBytes: 1024 * 1024,
+    });
 
   const actionRunner = new ActionRunner({
     catalog,
     providerLoader,
     connections,
     runs,
+    transitFiles,
     actionPolicy: options.actionPolicy,
   });
 
@@ -735,14 +791,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       states: new MemoryOAuthStateStore(),
     }),
     actions: actionRunner,
-    transitFiles:
-      options.transitFiles ??
-      new TransitFileService({
-        rootDir: ".tmp/test-transit-files",
-        publicOrigin: "http://localhost:3000",
-        ttlSeconds: 60,
-        maxBytes: 1024 * 1024,
-      }),
+    transitFiles,
     runtimeTokens,
     staticRoot: ".tmp/test-static",
     auth: {
@@ -804,6 +853,16 @@ class EchoProviderLoader implements IProviderLoader {
           },
         };
       },
+    };
+  }
+}
+
+class TransitEchoProviderLoader extends EchoProviderLoader {
+  override async loadActionExecutor(): Promise<ActionExecutor> {
+    return async (_input, context) => {
+      await context.getCredential("example");
+      const upload = await context.transitFiles?.create(new File(["from executor"], "executor.txt"));
+      return { ok: true, output: upload };
     };
   }
 }

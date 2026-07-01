@@ -4,6 +4,7 @@ import type {
   ExecutionResult,
   ProviderExecutors,
   ResolvedCredential,
+  TransitFileWriter,
 } from "../core/types.ts";
 
 import { CastError } from "../core/cast.ts";
@@ -47,6 +48,7 @@ export interface BearerCredential {
 export interface ApiKeyProviderContext {
   apiKey: string;
   fetcher: ProviderFetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 }
 
@@ -54,6 +56,7 @@ export interface OAuthProviderContext {
   accessToken: string;
   tokenType?: string;
   fetcher: ProviderFetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 }
 
@@ -61,6 +64,7 @@ export interface BearerProviderContext {
   accessToken: string;
   tokenType?: string;
   fetcher: ProviderFetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 }
 
@@ -185,11 +189,15 @@ export function defineApiKeyProviderExecutors(
     handlers,
     async createContext(context, fetcher): Promise<ApiKeyProviderContext> {
       const credential = await requireApiKeyCredential(context, service);
-      return {
+      const providerContext: ApiKeyProviderContext = {
         apiKey: credential.apiKey,
         fetcher,
         signal: context.signal,
       };
+      if (context.transitFiles) {
+        providerContext.transitFiles = context.transitFiles;
+      }
+      return providerContext;
     },
   });
 }
@@ -206,12 +214,16 @@ export function defineOAuthProviderExecutors(
     handlers,
     async createContext(context, fetcher): Promise<OAuthProviderContext> {
       const credential = await requireOAuthCredential(context, service);
-      return {
+      const providerContext: OAuthProviderContext = {
         accessToken: credential.accessToken,
         tokenType: credential.tokenType,
         fetcher,
         signal: context.signal,
       };
+      if (context.transitFiles) {
+        providerContext.transitFiles = context.transitFiles;
+      }
+      return providerContext;
     },
   });
 }
@@ -228,12 +240,16 @@ export function defineBearerProviderExecutors(
     handlers,
     async createContext(context, fetcher): Promise<BearerProviderContext> {
       const credential = await requireBearerCredential(context, service);
-      return {
+      const providerContext: BearerProviderContext = {
         accessToken: credential.accessToken,
         tokenType: credential.tokenType,
         fetcher,
         signal: context.signal,
       };
+      if (context.transitFiles) {
+        providerContext.transitFiles = context.transitFiles;
+      }
+      return providerContext;
     },
   });
 }

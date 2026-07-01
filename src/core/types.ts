@@ -204,18 +204,28 @@ export type ResolvedCredential =
       metadata: Record<string, unknown>;
     };
 
+export interface TransitFileWriter {
+  create(file: File): Promise<{
+    fileId: string;
+    downloadUrl: string;
+    sizeBytes: number;
+  }>;
+}
+
 /**
  * Runtime services available to action executors.
  *
  * Executors receive resolved credentials through this interface instead of
  * depending on a concrete storage implementation.
  */
-export type ExecutionContext = {
+export interface ExecutionContext {
   /** Resolve the credential currently configured for a provider service id. */
   getCredential(service: string): Promise<ResolvedCredential | undefined>;
+  /** Optional local temporary file storage for actions that produce downloadable files. */
+  transitFiles?: TransitFileWriter;
   /** Optional cancellation signal propagated from the HTTP request or runner. */
   signal?: AbortSignal;
-};
+}
 
 /**
  * Optional metadata returned by provider credential validation.

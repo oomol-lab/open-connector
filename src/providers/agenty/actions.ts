@@ -602,6 +602,8 @@ export const agentyActions: ActionDefinition[] = [
 export type AgentyActionName =
   | "get_page_content"
   | "extract_structured_data"
+  | "capture_screenshot"
+  | "convert_url_to_pdf"
   | "get_redirects"
   | "list_agents"
   | "get_agent"
@@ -627,4 +629,5 @@ export type AgentyActionName =
   | "get_job_logs"
   | "get_job_result"
   | "download_job_result"
-  | "list_job_files";
+  | "list_job_files"
+  | "download_job_file";

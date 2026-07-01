@@ -51,18 +51,19 @@ const connections = new ConnectionService({
   providerLoader,
   store: runtimeDatabase.connectionStore,
 });
-const actions = new ActionRunner({
-  catalog,
-  providerLoader,
-  connections,
-  runs: runtimeDatabase.runLogStore,
-  actionPolicy,
-});
 const transitFiles = new TransitFileService({
   rootDir: join(dataDir, "files"),
   publicOrigin,
   ttlSeconds: transitFileTtlSeconds,
   maxBytes: transitFileMaxBytes,
+});
+const actions = new ActionRunner({
+  catalog,
+  providerLoader,
+  connections,
+  runs: runtimeDatabase.runLogStore,
+  transitFiles,
+  actionPolicy,
 });
 await transitFiles.cleanupExpired();
 const app = new ConnectServer({
