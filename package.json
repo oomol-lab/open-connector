@@ -28,6 +28,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@scalar/hono-api-reference": "^0.11.7",
     "ajv": "^8.20.0",
+    "ali-oss": "^6.23.0",
     "hono": "^4.12.27",
     "mdast-util-from-markdown": "^2.0.3",
     "mdast-util-gfm": "^3.1.0",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@hyrious/configs": "^0.1.6",
+    "@types/ali-oss": "^6.23.3",
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.0.1",
     "oxfmt": "^0.56.0",
