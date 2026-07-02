@@ -7,6 +7,7 @@ import { loadCatalog } from "../catalog-store.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executableActionIds } from "../providers/registry.generated.ts";
+import { isConsoleShellPath } from "./api/console-paths.ts";
 import { readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { R2TransitFileService } from "./files/r2-transit-files.ts";
@@ -93,13 +94,5 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
 }
 
 function shouldServeAsset(request: Request): boolean {
-  const { pathname } = new URL(request.url);
-  return (
-    !pathname.startsWith("/api") &&
-    !pathname.startsWith("/v1") &&
-    !pathname.startsWith("/mcp") &&
-    !pathname.startsWith("/oauth") &&
-    pathname !== "/docs" &&
-    pathname !== "/openapi.json"
-  );
+  return isConsoleShellPath(new URL(request.url).pathname);
 }

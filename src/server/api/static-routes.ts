@@ -1,6 +1,9 @@
 import type { Hono } from "hono";
 
 import { serveStatic } from "@hono/node-server/serve-static";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { isConsoleShellRequest } from "./console-paths.ts";
 import { notFound } from "./http-utils.ts";
 
 /**
@@ -19,19 +22,19 @@ export function registerStaticRoutes(app: Hono, root: string): void {
     }),
   );
 
-  app.notFound((context) => {
+  app.notFound(async (context) => {
     const requestUrl = new URL(context.req.url);
-    if (
-      requestUrl.pathname.startsWith("/api") ||
-      requestUrl.pathname.startsWith("/v1") ||
-      requestUrl.pathname.startsWith("/mcp")
-    ) {
+    if (!isConsoleShellRequest(requestUrl.pathname, context.req.method)) {
       return notFound(context);
     }
 
-    return context.json({
-      ok: true,
-      message: "Server is running. Build the web workspace to enable the local console.",
-    });
+    try {
+      return context.html(await readFile(join(root, "index.html"), "utf8"));
+    } catch {
+      return context.json({
+        ok: true,
+        message: "Server is running. Build the web workspace to enable the local console.",
+      });
+    }
   });
 }

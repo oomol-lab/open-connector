@@ -147,14 +147,10 @@ export class ConnectServer {
       this.deleteOAuthConfig(context, context.req.param("service")),
     );
     app.post("/api/oauth/authorizations", (context) => this.createOAuthAuthorization(context));
-    app.get("/oauth/callback/:service", (context) => this.completeOAuth(context, context.req.param("service")));
+    app.get("/oauth/callback", (context) => this.completeOAuth(context));
     app.all("/mcp", (context) => this.handleMcp(context));
     app.get("/mcp/tools", (context) => context.json({ tools: listMcpToolSummaries() }));
 
-    app.use("*", async (context, next) => {
-      installLocalAuthCookie(context, auth);
-      await next();
-    });
     this.options.registerStaticRoutes?.(app);
     app.onError((error, context) => {
       if (error instanceof HttpRequestError) {
@@ -564,16 +560,16 @@ export class ConnectServer {
     return this.writeOAuthResult(context, this.options.oauthClientConfigs.deleteConfig(service));
   }
 
-  private async completeOAuth(context: Context, service: string): Promise<Response> {
+  private async completeOAuth(context: Context): Promise<Response> {
     const state = context.req.query("state");
     const code = context.req.query("code");
     if (!state || !code) {
       return jsonError(context, 400, "invalid_oauth_callback", "OAuth callback requires state and code.");
     }
 
-    let result: { service: string; connected: true };
+    let service: string;
     try {
-      result = await this.options.oauthFlow.completeAuthorization({ service, state, code });
+      service = (await this.options.oauthFlow.completeAuthorization({ state, code })).service;
     } catch (error) {
       if (error instanceof OAuthFlowError) {
         return jsonError(context, 400, error.code, error.message);
@@ -582,7 +578,7 @@ export class ConnectServer {
     }
 
     return context.html(
-      `<html><body><h1>Connected ${escapeHtml(result.service)}</h1><p>You can close this window and return to OOMOL Connect.</p></body></html>`,
+      `<html><body><h1>Connected ${escapeHtml(service)}</h1><p>You can close this window and return to OOMOL Connect.</p></body></html>`,
     );
   }
 

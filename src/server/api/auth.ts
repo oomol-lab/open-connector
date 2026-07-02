@@ -1,6 +1,7 @@
 import type { Context, MiddlewareHandler } from "hono";
 
 import { getCookie, setCookie } from "hono/cookie";
+import { isConsoleShellRequest } from "./console-paths.ts";
 import { jsonError } from "./http-utils.ts";
 
 const authCookieName = "oomol_connect_admin_token";
@@ -28,11 +29,21 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
 
   return async (context, next) => {
     const scope = readAuthScope(context.req.path);
-    if (
-      isPublicPath(context.req.path, context.req.method) ||
-      (await hasValidToken(context, options, scope)) ||
-      (canUseAdminAuth(context.req.path, context.req.method) && (await hasValidToken(context, options, "admin")))
-    ) {
+    if (isPublicPath(context.req.path, context.req.method)) {
+      await next();
+      return;
+    }
+
+    if (await hasValidToken(context, options, scope)) {
+      if (scope === "admin") {
+        installAdminCookieForBearer(context, options);
+      }
+      await next();
+      return;
+    }
+
+    if (canUseAdminAuth(context.req.path, context.req.method) && (await hasValidToken(context, options, "admin"))) {
+      installAdminCookieForBearer(context, options);
       await next();
       return;
     }
@@ -41,7 +52,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
   };
 }
 
-export function installLocalAuthCookie(context: Context, options: LocalAuthOptions): void {
+function installLocalAuthCookie(context: Context, options: LocalAuthOptions): void {
   const token = normalizeToken(options.adminToken);
   if (!token) {
     return;
@@ -57,8 +68,18 @@ export function installLocalAuthCookie(context: Context, options: LocalAuthOptio
 
 function isPublicPath(path: string, method: string): boolean {
   return (
-    path === "/health" || path.startsWith("/oauth/callback/") || (method === "GET" && path.startsWith("/api/files/"))
+    path === "/health" ||
+    path.startsWith("/oauth/callback/") ||
+    (method === "GET" && path.startsWith("/api/files/")) ||
+    isConsoleShellRequest(path, method)
   );
+}
+
+function installAdminCookieForBearer(context: Context, options: LocalAuthOptions): void {
+  const token = normalizeToken(options.adminToken);
+  if (token && context.req.header("authorization") === `Bearer ${token}`) {
+    installLocalAuthCookie(context, options);
+  }
 }
 
 async function hasValidToken(context: Context, options: LocalAuthOptions, scope: AuthScope): Promise<boolean> {

@@ -8,7 +8,7 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./storage/runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-token-service.ts";
 
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -331,6 +331,73 @@ describe("ConnectServer", () => {
       },
     });
     expect(JSON.stringify(body)).not.toContain("secret-token");
+  });
+
+  it("serves the web console shell for deep frontend routes", async () => {
+    const staticRoot = await createTestStaticRoot();
+    try {
+      const app = createTestServer([apiKeyProvider], { staticRoot }).createApp();
+
+      const response = await app.request("/providers/github");
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain("text/html");
+      await expect(response.text()).resolves.toContain('<div id="root"></div>');
+    } finally {
+      await rm(staticRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("does not serve the console shell for API and docs routes", async () => {
+    const staticRoot = await createTestStaticRoot();
+    try {
+      const app = createTestServer([apiKeyProvider], { staticRoot }).createApp();
+
+      expect((await app.request("/api/missing")).status).toBe(404);
+      expect((await app.request("/v1/missing")).status).toBe(404);
+      expect((await app.request("/mcp/missing")).status).toBe(404);
+      expect((await app.request("/oauth/missing")).status).toBe(404);
+      await expect((await app.request("/docs")).text()).resolves.not.toContain('<div id="root"></div>');
+      expect((await app.request("/openapi.json")).headers.get("content-type")).toContain("application/json");
+    } finally {
+      await rm(staticRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts the shared OAuth callback route without a service path segment", async () => {
+    const app = createTestServer([apiKeyProvider]).createApp();
+
+    const response = await app.request("/oauth/callback?state=missing&code=example-code");
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "invalid_oauth_state",
+        message: "OAuth state is missing or expired.",
+      },
+    });
+  });
+
+  it("keeps the console shell public while protecting admin APIs", async () => {
+    const staticRoot = await createTestStaticRoot();
+    try {
+      const app = createTestServer([apiKeyProvider], {
+        staticRoot,
+        auth: { adminToken: "local-token" },
+      }).createApp();
+
+      expect((await app.request("/overview")).status).toBe(200);
+      expect((await app.request("/assets/console.js")).status).toBe(200);
+      expect((await app.request("/api/providers")).status).toBe(401);
+      expect((await app.request("/docs")).status).toBe(401);
+
+      const authorized = await app.request("/api/providers", {
+        headers: { authorization: "Bearer local-token" },
+      });
+      expect(authorized.status).toBe(200);
+      expect(authorized.headers.get("set-cookie")).toContain("oomol_connect_admin_token=");
+    } finally {
+      await rm(staticRoot, { recursive: true, force: true });
+    }
   });
 
   it("does not accept the admin token for stored runtime token access", async () => {
@@ -1147,6 +1214,14 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
 
 async function createTempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "oomol-connect-files-"));
+}
+
+async function createTestStaticRoot(): Promise<string> {
+  const root = await createTempDir();
+  await mkdir(join(root, "assets"), { recursive: true });
+  await writeFile(join(root, "index.html"), '<!doctype html><div id="root"></div>');
+  await writeFile(join(root, "assets", "console.js"), "console.log('ok');");
+  return root;
 }
 
 function createTestTransitFiles(rootDir: string, options: { maxBytes?: number } = {}): TransitFileService {
