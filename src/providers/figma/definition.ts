@@ -26,7 +26,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://www.figma.com/oauth",
       tokenUrl: "https://api.figma.com/v1/oauth/token",
       scopes: figmaProviderScopes,
-      redirectPath: "/oauth/callback/figma",
       tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],

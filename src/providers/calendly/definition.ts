@@ -18,7 +18,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://calendly.com/oauth/authorize",
       tokenUrl: "https://calendly.com/oauth/token",
       scopes: calendlyProviderScopes,
-      redirectPath: "/oauth/callback/calendly",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

@@ -20,7 +20,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://slack.com/api/oauth.v2.access",
       scopes: slackOAuthScopes,
       scopeSeparator: ",",
-      redirectPath: "/oauth/callback/slack",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

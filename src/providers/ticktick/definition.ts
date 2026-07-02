@@ -15,7 +15,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://ticktick.com/oauth/authorize",
       tokenUrl: "https://ticktick.com/oauth/token",
       scopes: ["tasks:read", "tasks:write"],
-      redirectPath: "/oauth/callback/ticktick",
       tokenEndpointAuthMethod: "client_secret_basic",
     },
     {

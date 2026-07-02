@@ -17,7 +17,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "{+baseUrl}/ccx/oauth2/{tenant}/token",
       refreshTokenUrl: "{+baseUrl}/ccx/oauth2/{tenant}/token",
       scopes: workdayOAuthScopes,
-      redirectPath: "/oauth/callback/workday",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {

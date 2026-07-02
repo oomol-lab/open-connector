@@ -43,6 +43,8 @@ export interface IOAuthClientConfigStore {
  * OAuth app. Managed OAuth clients are intentionally outside this local runtime.
  */
 export class OAuthClientConfigService {
+  private static readonly callbackPath = "/oauth/callback";
+
   private readonly catalog: CatalogStore;
   private readonly origin: string;
   private readonly store: IOAuthClientConfigStore;
@@ -113,8 +115,8 @@ export class OAuthClientConfigService {
   }
 
   expectedRedirectUri(service: string): string {
-    const auth = this.getOAuthDefinition(service);
-    return `${this.origin}${auth.redirectPath}`;
+    this.getOAuthDefinition(service);
+    return `${this.origin}${OAuthClientConfigService.callbackPath}`;
   }
 
   resolveEndpointUrl(service: string, endpointUrl: string, config: OAuthClientConfig): string {

@@ -119,7 +119,7 @@ curl -s http://localhost:3000/api/oauth/configs
 With the default port, GitHub expects this callback URL:
 
 ```text
-http://localhost:3000/oauth/callback/github
+http://localhost:3000/oauth/callback
 ```
 
 Store the OAuth client locally:

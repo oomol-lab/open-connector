@@ -20,7 +20,6 @@ export interface OAuthAuthorizationStartInput {
 export interface OAuthAuthorizationCompleteInput {
   state: string;
   code: string;
-  service?: string;
 }
 
 /**
@@ -115,9 +114,6 @@ export class OAuthFlowService {
     const pending = await this.states.take(input.state);
     if (!pending) {
       throw new OAuthFlowError("invalid_oauth_state", "OAuth state is missing or expired.");
-    }
-    if (input.service && input.service !== pending.service) {
-      throw new OAuthFlowError("invalid_oauth_state", "OAuth callback service does not match the pending state.");
     }
     if (isExpiredOAuthState(pending, this.stateMaxAgeMs)) {
       throw new OAuthFlowError("invalid_oauth_state", "OAuth state is missing or expired.");

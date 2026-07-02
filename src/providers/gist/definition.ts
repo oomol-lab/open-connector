@@ -18,7 +18,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://github.com/login/oauth/authorize",
       tokenUrl: "https://github.com/login/oauth/access_token",
       scopes: gistOAuthScopes,
-      redirectPath: "/oauth/callback/gist",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

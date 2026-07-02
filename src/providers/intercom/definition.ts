@@ -21,7 +21,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://app.intercom.com/oauth",
       tokenUrl: "https://api.intercom.io/auth/eagle/token",
       scopes: [],
-      redirectPath: "/oauth/callback/intercom",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

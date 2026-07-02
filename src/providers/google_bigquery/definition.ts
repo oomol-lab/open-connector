@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: googleBigQueryOAuthScopes,
-      redirectPath: "/oauth/callback/google_bigquery",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

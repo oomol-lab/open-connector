@@ -17,7 +17,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://api.vimeo.com/oauth/access_token",
       refreshTokenUrl: "https://api.vimeo.com/oauth/access_token",
       scopes: vimeoProviderScopes,
-      redirectPath: "/oauth/callback/vimeo",
       tokenEndpointAuthMethod: "client_secret_basic",
       tokenRequestFormat: "json",
     },

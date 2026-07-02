@@ -16,7 +16,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://todoist.com/oauth/access_token",
       scopes: ["todoist.read", "todoist.write"],
       scopeSeparator: ",",
-      redirectPath: "/oauth/callback/todoist",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

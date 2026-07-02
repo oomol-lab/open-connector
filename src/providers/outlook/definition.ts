@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize",
       tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       scopes: outlookOAuthScopes,
-      redirectPath: "/oauth/callback/outlook",
       tokenEndpointAuthMethod: "client_secret_post",
       pkce: {
         method: "S256",

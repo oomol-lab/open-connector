@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://app.hubspot.com/oauth/authorize",
       tokenUrl: "https://api.hubapi.com/oauth/v3/token",
       scopes: hubspotOAuthScopes,
-      redirectPath: "/oauth/callback/hubspot",
       tokenEndpointAuthMethod: "client_secret_post",
       tokenRequestFormat: "form",
       authorizationParams: {},

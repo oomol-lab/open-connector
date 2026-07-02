@@ -21,7 +21,6 @@ const oauthProvider: ProviderDefinition = {
       authorizationUrl: "https://example.com/oauth/authorize",
       tokenUrl: "https://example.com/oauth/token",
       scopes: ["read", "write"],
-      redirectPath: "/oauth/callback/example",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {
@@ -46,7 +45,6 @@ const pkceOAuthProvider: ProviderDefinition = {
       authorizationUrl: "https://pkce.example.com/oauth/authorize",
       tokenUrl: "https://pkce.example.com/oauth/token",
       scopes: ["read"],
-      redirectPath: "/oauth/callback/pkce",
       tokenEndpointAuthMethod: "client_secret_basic",
       pkce: {
         method: "S256",
@@ -76,7 +74,6 @@ const customOAuthProvider: ProviderDefinition = {
       refreshTokenUrl: "https://example.com/{tenant}/refresh",
       scopes: ["read", "write"],
       scopeSeparator: ",",
-      redirectPath: "/oauth/callback/custom_oauth",
       tokenEndpointAuthMethod: "client_secret_post",
       tokenRequestFormat: "json",
       authorizationRequestFields: {
@@ -121,7 +118,6 @@ const baseUrlOAuthProvider: ProviderDefinition = {
       authorizationUrl: "{+baseUrl}/oauth/{tenant}/authorize",
       tokenUrl: "{+baseUrl}/oauth/{tenant}/token",
       scopes: ["read"],
-      redirectPath: "/oauth/callback/base_url_oauth",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {
@@ -152,7 +148,6 @@ const overrideAuthorizationParamsProvider: ProviderDefinition = {
       authorizationUrl: "https://example.com/oauth/authorize",
       tokenUrl: "https://example.com/oauth/token",
       scopes: ["read"],
-      redirectPath: "/oauth/callback/override_oauth",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         client_id: "static-client-id",
@@ -195,7 +190,7 @@ describe("OAuthFlowService", () => {
 
     expect(authorizationUrl.origin).toBe("https://example.com");
     expect(authorizationUrl.searchParams.get("client_id")).toBe("client-id");
-    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe("http://localhost:3000/oauth/callback/example");
+    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe("http://localhost:3000/oauth/callback");
     expect(authorizationUrl.searchParams.get("scope")).toBe("read write");
     expect(authorizationUrl.searchParams.get("state")).toBe(started.state);
     expect(await services.states.take(started.state)).toMatchObject({
@@ -239,9 +234,7 @@ describe("OAuthFlowService", () => {
     const authorizationUrl = new URL(started.authorizationUrl);
 
     expect(authorizationUrl.searchParams.get("client_id")).toBe("client-id");
-    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe(
-      "http://localhost:3000/oauth/callback/override_oauth",
-    );
+    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe("http://localhost:3000/oauth/callback");
     expect(authorizationUrl.searchParams.get("state")).toBe(started.state);
     expect(authorizationUrl.searchParams.get("code_challenge")).not.toBe("static-code-challenge");
   });
@@ -272,27 +265,6 @@ describe("OAuthFlowService", () => {
       accessToken: "access-token",
     });
     await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
-  });
-
-  it("rejects OAuth callbacks for a different service than the pending state", async () => {
-    const services = createServices([oauthProvider]);
-    await services.clientConfigs.upsertConfig({
-      service: "example",
-      clientId: "client-id",
-      clientSecret: "client-secret",
-      extra: {
-        tenant: "default",
-      },
-    });
-
-    const started = await services.flow.startAuthorization({ service: "example" });
-
-    await expect(
-      services.flow.completeAuthorization({ service: "other", state: started.state, code: "code" }),
-    ).rejects.toMatchObject({
-      code: "invalid_oauth_state",
-      message: "OAuth callback service does not match the pending state.",
-    });
   });
 
   it("rejects expired OAuth authorization states", async () => {

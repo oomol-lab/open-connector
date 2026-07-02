@@ -26,7 +26,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://www.strava.com/oauth/token",
       scopes: stravaOauthScopes,
       scopeSeparator: ",",
-      redirectPath: "/oauth/callback/strava",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         approval_prompt: "auto",

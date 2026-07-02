@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://sentry.io/oauth/authorize/",
       tokenUrl: "https://sentry.io/oauth/token/",
       scopes: [...sentryProviderScopes],
-      redirectPath: "/oauth/callback/sentry",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

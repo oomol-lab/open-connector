@@ -22,7 +22,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       scopes: [...notionReadScopes, ...notionWriteScopes],
-      redirectPath: "/oauth/callback/notion",
       tokenEndpointAuthMethod: "client_secret_basic",
       tokenRequestFormat: "json",
       authorizationParams: {

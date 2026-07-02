@@ -15,7 +15,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://identity.apaleo.com/connect/authorize",
       tokenUrl: "https://identity.apaleo.com/connect/token",
       scopes: ["openid", "profile", "offline_access", "setup.read", "setup.manage"],
-      redirectPath: "/oauth/callback/apaleo",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

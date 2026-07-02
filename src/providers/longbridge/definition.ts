@@ -15,7 +15,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://openapi.longbridge.com/oauth2/authorize",
       tokenUrl: "https://openapi.longbridge.com/oauth2/token",
       scopes: longbridgeOAuthScopes,
-      redirectPath: "/oauth/callback/longbridge",
       tokenEndpointAuthMethod: "none",
       pkce: {
         method: "S256",

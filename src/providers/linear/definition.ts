@@ -20,7 +20,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://api.linear.app/oauth/token",
       scopes: linearOAuthScopes,
       scopeSeparator: ",",
-      redirectPath: "/oauth/callback/linear",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {},
     },

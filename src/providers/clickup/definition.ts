@@ -18,7 +18,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://app.clickup.com/api",
       tokenUrl: "https://api.clickup.com/api/v2/oauth/token",
       scopes: [],
-      redirectPath: "/oauth/callback/clickup",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

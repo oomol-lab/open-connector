@@ -91,7 +91,7 @@ curl -s http://localhost:3000/api/oauth/configs
 Paste that exact callback URL into your provider OAuth app. With the default port, GitHub uses:
 
 ```text
-http://localhost:3000/oauth/callback/github
+http://localhost:3000/oauth/callback
 ```
 
 If you expose the runtime through another origin, set `OOMOL_CONNECT_ORIGIN` before starting it.

@@ -18,7 +18,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://app.netlify.com/authorize",
       tokenUrl: "https://api.netlify.com/oauth/token",
       scopes: [...netlifyConnectorScopes],
-      redirectPath: "/oauth/callback/netlify",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

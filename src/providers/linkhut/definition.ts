@@ -15,7 +15,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://ln.ht/_/oauth/authorize",
       tokenUrl: "https://api.ln.ht/v1/oauth/token",
       scopes: linkhutOAuthScopes,
-      redirectPath: "/oauth/callback/linkhut",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

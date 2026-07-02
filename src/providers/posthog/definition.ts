@@ -39,7 +39,6 @@ export const provider: ProviderDefinition = {
         "feature_flag:read",
         "feature_flag:write",
       ],
-      redirectPath: "/oauth/callback/posthog",
       tokenEndpointAuthMethod: "none",
       pkce: {
         method: "S256",

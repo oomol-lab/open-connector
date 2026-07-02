@@ -16,7 +16,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://accounts.spotify.com/authorize",
       tokenUrl: "https://accounts.spotify.com/api/token",
       scopes: spotifyOAuthScopes,
-      redirectPath: "/oauth/callback/spotify",
       tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],

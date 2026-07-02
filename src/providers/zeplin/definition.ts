@@ -16,7 +16,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://api.zeplin.dev/v1/oauth/authorize",
       tokenUrl: "https://api.zeplin.dev/v1/oauth/token",
       scopes: zeplinProviderScopes,
-      redirectPath: "/oauth/callback/zeplin",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

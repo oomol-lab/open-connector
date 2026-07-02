@@ -17,7 +17,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://api.typeform.com/oauth/authorize",
       tokenUrl: "https://api.typeform.com/oauth/token",
       scopes: typeformRequestedProviderScopes,
-      redirectPath: "/oauth/typeform/callback",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

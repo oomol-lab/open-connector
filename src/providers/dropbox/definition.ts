@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://www.dropbox.com/oauth2/authorize",
       tokenUrl: "https://api.dropboxapi.com/oauth2/token",
       scopes: dropboxOAuthScopes,
-      redirectPath: "/oauth/callback/dropbox",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         token_access_type: "offline",

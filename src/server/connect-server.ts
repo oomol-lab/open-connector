@@ -21,7 +21,7 @@ import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { renderActionMarkdown } from "./api/action-markdown.ts";
-import { createLocalAuthMiddleware, installLocalAuthCookie } from "./api/auth.ts";
+import { createLocalAuthMiddleware } from "./api/auth.ts";
 import { escapeHtml, HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { createOpenApiDocument } from "./api/openapi.ts";
 import {

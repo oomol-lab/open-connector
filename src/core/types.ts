@@ -100,8 +100,6 @@ export type OAuth2AuthDefinition = {
   scopes: string[];
   /** Separator used when joining OAuth scopes. Defaults to a space. */
   scopeSeparator?: " " | ",";
-  /** Local callback path appended to the configured runtime origin. */
-  redirectPath: string;
   /** How the runtime sends client credentials to the token endpoint. */
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
   /** Token request body encoding. Defaults to OAuth form encoding. */

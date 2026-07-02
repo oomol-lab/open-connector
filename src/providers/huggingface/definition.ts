@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://huggingface.co/oauth/authorize",
       tokenUrl: "https://huggingface.co/oauth/token",
       scopes: huggingfaceOAuthScopes,
-      redirectPath: "/oauth/callback/huggingface",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

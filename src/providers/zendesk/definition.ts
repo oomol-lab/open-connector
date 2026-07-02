@@ -17,7 +17,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://{subdomain}.zendesk.com/oauth/tokens",
       refreshTokenUrl: "https://{subdomain}.zendesk.com/oauth/tokens",
       scopes: zendeskOAuthScopes,
-      redirectPath: "/oauth/callback/zendesk",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {

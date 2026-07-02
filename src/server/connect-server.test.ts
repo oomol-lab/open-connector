@@ -45,7 +45,6 @@ const oauthProvider: ProviderDefinition = {
       authorizationUrl: "https://example.com/oauth/authorize",
       tokenUrl: "https://example.com/oauth/token",
       scopes: ["read"],
-      redirectPath: "/oauth/callback/oauth_example",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {
@@ -364,7 +363,7 @@ describe("ConnectServer", () => {
   });
 
   it("accepts the shared OAuth callback route without a service path segment", async () => {
-    const app = createTestServer([apiKeyProvider]).createApp();
+    const app = createTestServer([apiKeyProvider], { auth: { adminToken: "local-token" } }).createApp();
 
     const response = await app.request("/oauth/callback?state=missing&code=example-code");
 

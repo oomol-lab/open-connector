@@ -69,6 +69,7 @@ function installLocalAuthCookie(context: Context, options: LocalAuthOptions): vo
 function isPublicPath(path: string, method: string): boolean {
   return (
     path === "/health" ||
+    path === "/oauth/callback" ||
     path.startsWith("/oauth/callback/") ||
     (method === "GET" && path.startsWith("/api/files/")) ||
     isConsoleShellRequest(path, method)

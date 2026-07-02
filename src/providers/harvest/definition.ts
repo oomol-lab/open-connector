@@ -16,7 +16,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://id.getharvest.com/oauth2/authorize",
       tokenUrl: "https://id.getharvest.com/api/v2/oauth2/token",
       scopes: harvestOAuthScopes,
-      redirectPath: "/oauth/callback/harvest",
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

@@ -15,7 +15,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://www.linkedin.com/oauth/v2/authorization",
       tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
       scopes: linkedinOAuthScopes,
-      redirectPath: "/oauth/callback/linkedin",
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

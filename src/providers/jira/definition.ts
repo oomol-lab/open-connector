@@ -19,7 +19,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://auth.atlassian.com/authorize",
       tokenUrl: "https://auth.atlassian.com/oauth/token",
       scopes: jiraOAuthScopes,
-      redirectPath: "/oauth/callback/jira",
       tokenEndpointAuthMethod: "client_secret_post",
       tokenRequestFormat: "json",
       authorizationParams: {

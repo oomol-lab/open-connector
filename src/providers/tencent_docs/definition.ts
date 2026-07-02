@@ -25,7 +25,6 @@ export const provider: ProviderDefinition = {
         tencentDocsProviderScopes.smartsheetReadonly,
         tencentDocsProviderScopes.form,
       ],
-      redirectPath: "/oauth/callback/tencent_docs",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         scope: "all",

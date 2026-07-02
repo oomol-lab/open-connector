@@ -17,7 +17,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://zoom.us/oauth/token",
       refreshTokenUrl: "https://zoom.us/oauth/token",
       scopes: zoomProviderScopes,
-      redirectPath: "/oauth/callback/zoom",
       tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],

@@ -36,7 +36,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://x.com/i/oauth2/authorize",
       tokenUrl: "https://api.x.com/2/oauth2/token",
       scopes: twitterOAuthScopes,
-      redirectPath: "/oauth/callback/twitter",
       tokenEndpointAuthMethod: "client_secret_basic",
       pkce: {
         method: "S256",

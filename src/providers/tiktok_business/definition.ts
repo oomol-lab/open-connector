@@ -14,7 +14,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/",
       refreshTokenUrl: "https://business-api.tiktok.com/open_api/v1.3/tt_user/oauth2/refresh_token/",
       scopes: [],
-      redirectPath: "/oauth/callback/tiktok_business",
       tokenEndpointAuthMethod: "client_secret_post",
       tokenRequestFormat: "json",
       authorizationParams: {},
