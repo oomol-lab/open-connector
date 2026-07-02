@@ -17,6 +17,7 @@
   "assets": {
     "directory": "dist/web",
     "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
   },
   "d1_databases": [
     {
