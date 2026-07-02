@@ -32,6 +32,7 @@ describe("D1RuntimeDatabase", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
       extra: { tenant: "default" },
+      secretExtra: {},
     });
 
     expect(d1.value("connections", "service", "github")).not.toContain("github-token");

@@ -73,6 +73,9 @@ export class OAuthFlowService {
     });
 
     const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));
+    for (const [key, value] of Object.entries(auth.authorizationParams ?? {})) {
+      authorizationUrl.searchParams.set(key, value);
+    }
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.clientId, "client_id", config.clientId);
     setAuthorizationParam(
       authorizationUrl,
@@ -87,9 +90,6 @@ export class OAuthFlowService {
         auth.authorizationRequestFields?.scope ?? "scope",
         auth.scopes.join(auth.scopeSeparator ?? " "),
       );
-    }
-    for (const [key, value] of Object.entries(auth.authorizationParams ?? {})) {
-      authorizationUrl.searchParams.set(key, value);
     }
     if (pkceCodeVerifier) {
       authorizationUrl.searchParams.set("code_challenge", createPkceCodeChallenge(pkceCodeVerifier));

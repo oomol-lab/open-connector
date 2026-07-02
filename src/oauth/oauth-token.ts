@@ -61,7 +61,9 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
   let body: BodyInit;
 
   if (input.tokenEndpointAuthMethod === "client_secret_basic") {
-    headers.authorization = `Basic ${btoa(`${input.clientId}:${input.clientSecret}`)}`;
+    headers.authorization = `Basic ${Buffer.from(
+      `${encodeOAuthBasicCredential(input.clientId)}:${encodeOAuthBasicCredential(input.clientSecret)}`,
+    ).toString("base64")}`;
   } else if (input.tokenEndpointAuthMethod === "client_secret_post") {
     const clientSecretField = input.tokenRequestFields?.clientSecret;
     if (clientSecretField !== false) {
@@ -121,7 +123,12 @@ function createTokenMetadata(payload: Record<string, unknown>): Record<string, u
 }
 
 function isSensitiveTokenResponseField(key: string): boolean {
-  return /^(access_token|refresh_token|id_token|token|client_secret|secret)$/i.test(key);
+  const normalized = key.replaceAll("_", "").replaceAll("-", "").toLowerCase();
+  return ["accesstoken", "refreshtoken", "idtoken", "token", "clientsecret", "secret"].includes(normalized);
+}
+
+function encodeOAuthBasicCredential(value: string): string {
+  return new URLSearchParams({ value }).toString().slice("value=".length);
 }
 
 function createAuthorizationCodeFields(input: AuthorizationCodeTokenRequest): Record<string, string> {

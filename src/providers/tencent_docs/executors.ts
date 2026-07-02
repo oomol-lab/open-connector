@@ -80,7 +80,7 @@ export const credentialValidators: CredentialValidators = {
       },
       metadata: {
         ...input.metadata,
-        clientId: optionalString(input.metadata.oauthClientId) ?? input.metadata.clientId,
+        clientId: optionalString(input.metadata.oauthClientId) ?? optionalString(input.metadata.clientId),
         openID,
         nick,
       },

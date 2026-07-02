@@ -174,11 +174,14 @@ describe("ConnectServer", () => {
     });
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
+    const body = await response.json();
+    expect(body).toMatchObject({
       service: "oauth_example",
       configured: true,
       clientId: "client-id",
     });
+    expect(body).not.toHaveProperty("secretExtra");
+    expect(JSON.stringify(body)).not.toContain("app-token");
   });
 
   it("does not accept the admin token for stored runtime token access", async () => {

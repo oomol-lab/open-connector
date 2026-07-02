@@ -207,6 +207,7 @@ describe("SqliteRuntimeDatabase", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
       extra: {},
+      secretExtra: {},
     });
     await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
     await database.rotateSecretCodec(new AesGcmSecretCodec("new-key"));

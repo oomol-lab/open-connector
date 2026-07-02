@@ -112,6 +112,30 @@ const customOAuthProvider: ProviderDefinition = {
   ],
 };
 
+const overrideAuthorizationParamsProvider: ProviderDefinition = {
+  ...oauthProvider,
+  service: "override_oauth",
+  auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://example.com/oauth/authorize",
+      tokenUrl: "https://example.com/oauth/token",
+      scopes: ["read"],
+      redirectPath: "/oauth/callback/override_oauth",
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationParams: {
+        client_id: "static-client-id",
+        code_challenge: "static-code-challenge",
+        redirect_uri: "https://evil.example.com/callback",
+        state: "static-state",
+      },
+      pkce: {
+        method: "S256",
+      },
+    },
+  ],
+};
+
 describe("OAuthFlowService", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -169,6 +193,25 @@ describe("OAuthFlowService", () => {
       code: "invalid_input",
       message: "tenant is required.",
     });
+  });
+
+  it("does not let static authorization params override generated OAuth invariants", async () => {
+    const services = createServices([overrideAuthorizationParamsProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "override_oauth",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+
+    const started = await services.flow.startAuthorization({ service: "override_oauth" });
+    const authorizationUrl = new URL(started.authorizationUrl);
+
+    expect(authorizationUrl.searchParams.get("client_id")).toBe("client-id");
+    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe(
+      "http://localhost:3000/oauth/callback/override_oauth",
+    );
+    expect(authorizationUrl.searchParams.get("state")).toBe(started.state);
+    expect(authorizationUrl.searchParams.get("code_challenge")).not.toBe("static-code-challenge");
   });
 
   it("stores completed OAuth credentials under the requested connection name", async () => {
@@ -231,8 +274,8 @@ describe("OAuthFlowService", () => {
     const services = createServices([pkceOAuthProvider]);
     await services.clientConfigs.upsertConfig({
       service: "pkce",
-      clientId: "client-id",
-      clientSecret: "client-secret",
+      clientId: "client:id",
+      clientSecret: "client:secret",
     });
     const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
       Response.json({ access_token: "access-token", token_type: "Bearer" }),
@@ -248,6 +291,9 @@ describe("OAuthFlowService", () => {
 
     const tokenRequest = fetcher.mock.calls[0]?.[1] as RequestInit | undefined;
     const tokenBody = tokenRequest?.body;
+    expect(tokenRequest?.headers).toMatchObject({
+      authorization: `Basic ${Buffer.from("client%3Aid:client%3Asecret").toString("base64")}`,
+    });
     expect(tokenBody).toBeInstanceOf(URLSearchParams);
     expect((tokenBody as URLSearchParams).get("code_verifier")).toMatch(/^[A-Za-z0-9_-]+$/);
   });
@@ -291,7 +337,10 @@ describe("OAuthFlowService", () => {
         code: 0,
         data: {
           access_token: "custom-access-token",
+          accessToken: "camel-access-token",
           refresh_token: "custom-refresh-token",
+          refreshToken: "camel-refresh-token",
+          idToken: "id-token",
           token_type: "Bearer",
           posthog_base_url: "https://eu.posthog.com",
         },
@@ -331,7 +380,10 @@ describe("OAuthFlowService", () => {
     expect(credential?.authType).toBe("oauth2");
     if (credential?.authType === "oauth2") {
       expect(credential.metadata).not.toHaveProperty("access_token");
+      expect(credential.metadata).not.toHaveProperty("accessToken");
       expect(credential.metadata).not.toHaveProperty("refresh_token");
+      expect(credential.metadata).not.toHaveProperty("refreshToken");
+      expect(credential.metadata).not.toHaveProperty("idToken");
     }
   });
 });

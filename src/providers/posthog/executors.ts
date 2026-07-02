@@ -56,15 +56,25 @@ export const executors: ProviderExecutors = defineProviderExecutors<PosthogRunti
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, options) {
-    return validatePosthogCredential(
-      {
-        apiKey: input.accessToken,
-        values: {
-          baseUrl: optionalString(input.metadata.posthog_base_url) ?? "https://us.posthog.com",
+    try {
+      return await validatePosthogCredential(
+        {
+          apiKey: input.accessToken,
+          values: {
+            baseUrl: optionalString(input.metadata.posthog_base_url) ?? "https://us.posthog.com",
+          },
         },
-      },
-      options.fetcher,
-    );
+        options.fetcher,
+      );
+    } catch (error) {
+      if (error instanceof ProviderRequestError) {
+        throw error;
+      }
+      throw new ProviderRequestError(
+        502,
+        error instanceof Error ? error.message : "PostHog credential validation failed",
+      );
+    }
   },
 
   async apiKey(input, options) {
