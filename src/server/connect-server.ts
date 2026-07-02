@@ -3,9 +3,11 @@ import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
-import type { LocalAuthOptions } from "./auth.ts";
+import type { LocalAuthOptions } from "./api/auth.ts";
+import type { ITransitFileService } from "./files/transit-file-store.ts";
 import type { Logger } from "./logger.ts";
-import type { RuntimeTokenService } from "./runtime-token-service.ts";
+import type { RunLogListInput } from "./storage/runtime-store.ts";
+import type { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 import type { Context } from "hono";
 
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -17,11 +19,11 @@ import { optionalRecord, optionalString, requiredString } from "../core/cast.ts"
 import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
-import { renderActionMarkdown } from "./action-markdown.ts";
-import { ActionRunner } from "./action-runner.ts";
-import { createLocalAuthMiddleware, installLocalAuthCookie } from "./auth.ts";
-import { escapeHtml, internalError, jsonError, notFound, readJsonBody } from "./http-utils.ts";
-import { createOpenApiDocument } from "./openapi.ts";
+import { ActionRunner } from "./actions/action-runner.ts";
+import { renderActionMarkdown } from "./api/action-markdown.ts";
+import { createLocalAuthMiddleware, installLocalAuthCookie } from "./api/auth.ts";
+import { escapeHtml, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
+import { createOpenApiDocument } from "./api/openapi.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeAction,
@@ -31,9 +33,9 @@ import {
   writeRuntimeActionResult,
   writeRuntimeFailure,
   writeRuntimeSuccess,
-} from "./runtime-api.ts";
-import { registerStaticRoutes } from "./static-routes.ts";
-import { createTransitFileResponse, TransitFileError, TransitFileService } from "./transit-files.ts";
+} from "./api/runtime-api.ts";
+import { createTransitFileResponse, TransitFileError } from "./files/transit-file-store.ts";
+import { decodeRunLogCursor } from "./storage/runtime-store.ts";
 
 /**
  * Dependencies required to construct the local connector server.
@@ -46,11 +48,12 @@ export interface IConnectServerOptions {
   oauthFlow: OAuthFlowService;
   runtimeTokens: RuntimeTokenService;
   actions: ActionRunner;
-  transitFiles: TransitFileService;
-  staticRoot: string;
+  transitFiles: ITransitFileService;
+  staticRoot?: string;
   auth?: LocalAuthOptions;
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
+  registerStaticRoutes?: (app: Hono) => void;
   logger?: Logger;
 }
 
@@ -126,13 +129,12 @@ export class ConnectServer {
       this.getActionMarkdown(context, context.req.param("actionId")),
     );
     app.get("/api/actions/:actionId", (context) => this.getAction(context, context.req.param("actionId")));
-    app.post("/api/actions/:actionId/runs", (context) => this.createRun(context, context.req.param("actionId")));
 
     app.get("/api/connections", (context) => this.listConnections(context));
     app.put("/api/connections/:service", (context) => this.upsertConnection(context, context.req.param("service")));
     app.delete("/api/connections/:service", (context) => this.disconnect(context, context.req.param("service")));
 
-    app.get("/api/runs", (context) => context.json(this.options.actions.listRuns()));
+    app.get("/api/runs", (context) => this.listRuns(context));
     app.post("/api/files", (context) => this.createTransitFile(context));
     app.get("/api/files/:fileId", (context) => this.getTransitFile(context, context.req.param("fileId")));
     app.delete("/api/files/:fileId", (context) => this.deleteTransitFile(context, context.req.param("fileId")));
@@ -153,7 +155,7 @@ export class ConnectServer {
       installLocalAuthCookie(context, auth);
       await next();
     });
-    registerStaticRoutes(app, this.options.staticRoot);
+    this.options.registerStaticRoutes?.(app);
     app.onError((error, context) => {
       this.options.logger?.error(
         {
@@ -194,6 +196,10 @@ export class ConnectServer {
 
   private async getTransitFile(context: Context, fileId: string): Promise<Response> {
     try {
+      if (this.options.transitFiles.response) {
+        return await this.options.transitFiles.response(fileId);
+      }
+
       const file = await this.options.transitFiles.read(fileId);
       return createTransitFileResponse(file);
     } catch (error) {
@@ -224,6 +230,15 @@ export class ConnectServer {
     }
 
     return context.json(action);
+  }
+
+  private async listRuns(context: Context): Promise<Response> {
+    const query = readRunLogListInput(context);
+    if (!query.ok) {
+      return jsonError(context, 400, "invalid_input", query.message);
+    }
+
+    return context.json(await this.options.actions.listRuns(query.input));
   }
 
   private async searchApiActions(context: Context): Promise<Response> {
@@ -257,26 +272,6 @@ export class ConnectServer {
         "content-type": "text/markdown; charset=utf-8",
       },
     );
-  }
-
-  private async createRun(context: Context, actionId: string): Promise<Response> {
-    const action = this.options.catalog.actionsById.get(actionId);
-    if (!action) {
-      return notFound(context);
-    }
-
-    const body = await readJsonBody(context);
-    const result = await this.options.actions.run({
-      actionId,
-      input: body.input ?? {},
-      caller: "http",
-      connectionName: readConnectionName(context, body),
-    });
-    if (!result) {
-      return notFound(context);
-    }
-
-    return context.json(result.result, result.result.ok ? 200 : 400);
   }
 
   private listRuntimeProviders(context: Context): Response {
@@ -624,6 +619,40 @@ type SearchQuery =
       ok: false;
       message: string;
     };
+
+type RunLogListQuery =
+  | {
+      ok: true;
+      input: RunLogListInput;
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+
+function readRunLogListInput(context: Context): RunLogListQuery {
+  const rawLimit = optionalString(context.req.query("limit"));
+  const limit = rawLimit === undefined ? 50 : Number(rawLimit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+    return { ok: false, message: "limit must be an integer between 1 and 100." };
+  }
+
+  const cursor = optionalString(context.req.query("cursor"));
+  if (cursor !== undefined) {
+    try {
+      decodeRunLogCursor(cursor);
+    } catch {
+      return { ok: false, message: "cursor is invalid." };
+    }
+  }
+
+  const input: RunLogListInput = { limit };
+  if (cursor !== undefined) {
+    input.cursor = cursor;
+  }
+
+  return { ok: true, input };
+}
 
 function readSearchQuery(context: Context, defaultLimit = DEFAULT_ACTION_SEARCH_LIMIT): SearchQuery {
   const q = optionalString(context.req.query("q") ?? context.req.query("query"));

@@ -1,0 +1,24 @@
+import type { AssetsBinding, D1DatabaseBinding, R2BucketBinding } from "./cloudflare-bindings.ts";
+
+export interface CloudflareEnv {
+  DB: D1DatabaseBinding;
+  TRANSIT_FILES: R2BucketBinding;
+  ASSETS?: AssetsBinding;
+  OOMOL_CONNECT_ORIGIN?: string;
+  OOMOL_CONNECT_ADMIN_TOKEN?: string;
+  OOMOL_CONNECT_RUNTIME_TOKEN?: string;
+  OOMOL_CONNECT_ENCRYPTION_KEY?: string;
+  OOMOL_CONNECT_ALLOWED_ACTIONS?: string;
+  OOMOL_CONNECT_BLOCKED_ACTIONS?: string;
+  OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS?: string;
+  OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES?: string;
+}
+
+export function resolvePublicOrigin(request: Request, env: CloudflareEnv): string {
+  return (env.OOMOL_CONNECT_ORIGIN ?? new URL(request.url).origin).replace(/\/+$/, "");
+}
+
+export function readNumber(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}

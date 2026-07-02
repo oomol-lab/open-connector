@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oomol-connect",
+  "main": "src/server/cloudflare.ts",
+  "compatibility_date": "2026-07-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "find_additional_modules": true,
+  "base_dir": ".",
+  "preserve_file_names": true,
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["catalog/apps/**/*.json"],
+      "fallthrough": false,
+    },
+  ],
+  "assets": {
+    "directory": "dist/web",
+    "binding": "ASSETS",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "oomol-connect",
+      "database_id": "replace-with-cloudflare-d1-database-id",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "TRANSIT_FILES",
+      "bucket_name": "oomol-connect-transit-files",
+    },
+  ],
+}

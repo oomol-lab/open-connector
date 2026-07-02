@@ -1,11 +1,11 @@
-import type { CatalogStore } from "../catalog-store.ts";
-import type { ConnectionService } from "../connection-service.ts";
-import type { ActionPolicyService } from "../core/action-policy.ts";
-import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../core/types.ts";
-import type { IProviderLoader } from "../providers/provider-loader.ts";
-import type { IRunLogStore, RunLog, RunLogCaller } from "./runtime-store.ts";
+import type { CatalogStore } from "../../catalog-store.ts";
+import type { ConnectionService } from "../../connection-service.ts";
+import type { ActionPolicyService } from "../../core/action-policy.ts";
+import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
+import type { IProviderLoader } from "../../providers/provider-loader.ts";
+import type { IRunLogStore, RunLogListInput, RunLogPage, RunLogCaller } from "../storage/runtime-store.ts";
 
-import { executeAction as executeProviderAction } from "../core/execution.ts";
+import { executeAction as executeProviderAction } from "../../core/execution.ts";
 import { summarizeForRunLog } from "./run-log-summary.ts";
 
 export interface ActionRunnerOptions {
@@ -65,7 +65,7 @@ export class ActionRunner {
     const completedAtMs = Date.now();
     const executionId = crypto.randomUUID();
 
-    this.options.runs.add({
+    await this.options.runs.add({
       id: executionId,
       actionId: input.actionId,
       caller: input.caller,
@@ -82,8 +82,8 @@ export class ActionRunner {
     return { executionId, result };
   }
 
-  listRuns(): RunLog[] {
-    return this.options.runs.list();
+  listRuns(input?: RunLogListInput): Promise<RunLogPage> {
+    return this.options.runs.list(input);
   }
 
   private createExecutionContext(connectionName: string | undefined): ExecutionContext {

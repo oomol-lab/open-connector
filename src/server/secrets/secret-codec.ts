@@ -1,28 +1,13 @@
+import type { ISecretCodec } from "./secret-codec-core.ts";
+
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
+import { PlainTextSecretCodec } from "./secret-codec-core.ts";
+
+export type { ISecretCodec } from "./secret-codec-core.ts";
+export { PlainTextSecretCodec } from "./secret-codec-core.ts";
 
 const encryptedPrefix = "enc:v1:";
 const keySalt = "oomol-connect-local-secret-store-v1";
-
-/**
- * Encodes sensitive local runtime records before they are written to disk.
- */
-export interface ISecretCodec {
-  readonly encrypted: boolean;
-  encode(plaintext: string): string;
-  decode(stored: string): string;
-}
-
-export class PlainTextSecretCodec implements ISecretCodec {
-  readonly encrypted = false;
-
-  encode(plaintext: string): string {
-    return plaintext;
-  }
-
-  decode(stored: string): string {
-    return stored;
-  }
-}
 
 export class AesGcmSecretCodec implements ISecretCodec {
   readonly encrypted = true;
@@ -35,7 +20,7 @@ export class AesGcmSecretCodec implements ISecretCodec {
     this.key = scryptSync(passphrase, keySalt, 32);
   }
 
-  encode(plaintext: string): string {
+  async encode(plaintext: string): Promise<string> {
     const iv = randomBytes(12);
     const cipher = createCipheriv("aes-256-gcm", this.key, iv);
     const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
@@ -50,7 +35,7 @@ export class AesGcmSecretCodec implements ISecretCodec {
     ].join("");
   }
 
-  decode(stored: string): string {
+  async decode(stored: string): Promise<string> {
     if (!stored.startsWith(encryptedPrefix)) {
       return stored;
     }

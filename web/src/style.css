@@ -880,6 +880,12 @@ pre,
   overflow: auto;
 }
 
+.table-footer {
+  display: flex;
+  justify-content: center;
+  padding: 14px 0 4px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

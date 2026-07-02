@@ -28,7 +28,11 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
 
   return async (context, next) => {
     const scope = readAuthScope(context.req.path);
-    if (isPublicPath(context.req.path, context.req.method) || (await hasValidToken(context, options, scope))) {
+    if (
+      isPublicPath(context.req.path, context.req.method) ||
+      (await hasValidToken(context, options, scope)) ||
+      (canUseAdminAuth(context.req.path, context.req.method) && (await hasValidToken(context, options, "admin")))
+    ) {
       await next();
       return;
     }
@@ -88,6 +92,10 @@ function normalizeToken(token: string | undefined): string | undefined {
 
 function readAuthScope(path: string): AuthScope {
   return path.startsWith("/mcp") || path.startsWith("/v1/") ? "runtime" : "admin";
+}
+
+function canUseAdminAuth(path: string, method: string): boolean {
+  return method === "POST" && /^\/v1\/actions\/[^/]+$/.test(path);
 }
 
 function tokenForScope(options: LocalAuthOptions, scope: AuthScope): string | undefined {

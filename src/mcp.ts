@@ -4,12 +4,12 @@ import type { ActionPolicyService } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
-import type { ActionRunner } from "./server/action-runner.ts";
+import type { ActionRunner } from "./server/actions/action-runner.ts";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
-import { renderActionMarkdown } from "./server/action-markdown.ts";
+import { renderActionMarkdown } from "./server/api/action-markdown.ts";
 
 /**
  * Dependencies required by the local MCP server.

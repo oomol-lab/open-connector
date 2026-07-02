@@ -1,7 +1,8 @@
 # Credentials And Local Storage
 
-The local runtime stores connections, OAuth client configuration, pending OAuth states, and recent
-run logs in SQLite.
+The local Node runtime stores connections, OAuth client configuration, pending OAuth states, and
+recent run logs in SQLite. The Cloudflare Workers runtime stores the same runtime records in D1 and
+temporary transit files in R2.
 
 By default the database lives at:
 
@@ -194,35 +195,12 @@ curl -s -X POST "http://localhost:3000/v1/actions/github.get_authenticated_user?
   -d '{"input":{}}'
 ```
 
-## Backup, Import, And Reset
-
-Export encrypted runtime data:
-
-```bash
-OOMOL_CONNECT_BACKUP_KEY="replace-with-a-long-random-secret" \
-npm run runtime:data -- export --output ./backup/oomol-connect-runtime.json
-```
-
-Import an encrypted backup into the configured data directory:
-
-```bash
-OOMOL_CONNECT_BACKUP_KEY="replace-with-a-long-random-secret" \
-npm run runtime:data -- import --input ./backup/oomol-connect-runtime.json
-```
+## Reset And Key Rotation
 
 Reset local runtime data:
 
 ```bash
 npm run runtime:data -- reset --yes
-```
-
-Backups include local connections, OAuth client configuration, and recent run logs. Pending OAuth
-callback states are intentionally not exported.
-
-Plaintext export is available only when explicitly requested:
-
-```bash
-npm run runtime:data -- export --output ./backup/plain-runtime.json --plain
 ```
 
 Rotate the local SQLite credential encryption key:
@@ -239,6 +217,9 @@ Remove local SQLite credential encryption only when you intentionally want plain
 OOMOL_CONNECT_ENCRYPTION_KEY="old-secret" \
 npm run runtime:data -- rotate-key --plain
 ```
+
+`runtime:data` is for the local SQLite runtime only. For Cloudflare, back up and restore D1/R2
+directly with Cloudflare tooling.
 
 ## OAuth Token Refresh
 

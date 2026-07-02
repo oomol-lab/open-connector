@@ -2,19 +2,15 @@ import { serve } from "@hono/node-server";
 import { access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { loadCatalog } from "../catalog-store.ts";
-import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
-import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
-import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
-import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { ActionRunner } from "./action-runner.ts";
-import { ConnectServer } from "./connect-server.ts";
+import { executableActionIds } from "../providers/registry.generated.ts";
+import { registerStaticRoutes } from "./api/static-routes.ts";
+import { createConnectApp } from "./connect-app.ts";
+import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
-import { RuntimeTokenService } from "./runtime-token-service.ts";
-import { createSecretCodec } from "./secret-codec.ts";
-import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
-import { TransitFileService } from "./transit-files.ts";
+import { createSecretCodec } from "./secrets/secret-codec.ts";
+import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
 
 const port = Number(process.env.PORT ?? 3000);
 const hostname = process.env.HOST ?? "127.0.0.1";
@@ -33,23 +29,12 @@ const sourceRoot = join(process.cwd(), "web");
 const builtRoot = join(process.cwd(), "dist/web");
 const staticRoot = await resolveStaticRoot(builtRoot, sourceRoot);
 await mkdir(dataDir, { recursive: true });
-const catalog = await loadCatalog();
+const catalog = await loadCatalog(undefined, {
+  executableActionIds: Object.values(executableActionIds).flat(),
+});
 const providerLoader = new ProviderLoader();
 const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"), {
   secretCodec,
-});
-const runtimeTokens = new RuntimeTokenService(runtimeDatabase.runtimeTokenStore);
-const hasStoredRuntimeTokens = async (): Promise<boolean> => (await runtimeTokens.listTokens()).length > 0;
-const oauthClientConfigs = new OAuthClientConfigService({
-  catalog,
-  origin: publicOrigin,
-  store: runtimeDatabase.oauthClientConfigStore,
-});
-const connections = new ConnectionService({
-  catalog,
-  oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs),
-  providerLoader,
-  store: runtimeDatabase.connectionStore,
 });
 const transitFiles = new TransitFileService({
   rootDir: join(dataDir, "files"),
@@ -57,39 +42,20 @@ const transitFiles = new TransitFileService({
   ttlSeconds: transitFileTtlSeconds,
   maxBytes: transitFileMaxBytes,
 });
-const actions = new ActionRunner({
-  catalog,
-  providerLoader,
-  connections,
-  runs: runtimeDatabase.runLogStore,
-  transitFiles,
-  actionPolicy,
-});
 await transitFiles.cleanupExpired();
-const app = new ConnectServer({
+const { app, runtimeAuthConfigured } = await createConnectApp({
   catalog,
   providerLoader,
-  connections,
-  oauthClientConfigs,
-  oauthFlow: new OAuthFlowService({
-    clientConfigs: oauthClientConfigs,
-    connections,
-    states: runtimeDatabase.oauthStateStore,
-  }),
-  actions,
+  runtimeDatabase,
   transitFiles,
-  runtimeTokens,
-  staticRoot,
-  auth: {
-    adminToken,
-    runtimeToken,
-    hasRuntimeTokens: hasStoredRuntimeTokens,
-    verifyRuntimeToken: (token) => runtimeTokens.verifyToken(token),
-  },
+  publicOrigin,
+  secretCodec,
+  adminToken,
+  runtimeToken,
   actionPolicy,
+  registerStaticRoutes: (app) => registerStaticRoutes(app, staticRoot),
   logger,
-}).createApp();
-const runtimeAuthConfigured = Boolean(runtimeToken) || (await hasStoredRuntimeTokens());
+});
 
 process.once("SIGINT", () => {
   runtimeDatabase.close();

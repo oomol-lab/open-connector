@@ -290,7 +290,7 @@ OOMOL_CONNECT_BLOCKED_ACTIONS="github.delete_repository" \
 docker compose up --build
 ```
 
-See [docs/credentials.md](docs/credentials.md) for credential storage, backups, key rotation, and
+See [docs/credentials.md](docs/credentials.md) for credential storage, key rotation, and
 OAuth token refresh behavior.
 
 ## Run From Source
@@ -308,6 +308,28 @@ npm run dev
 
 When running from source, runtime state is stored in `./data/connect.sqlite` by default. Set
 `OOMOL_CONNECT_DATA_DIR` to use another directory.
+
+## Deploy To Cloudflare Workers
+
+Cloudflare Workers is supported as a metadata and runtime-state deployment target:
+
+```bash
+npm run generate:catalog
+npm run build:web
+npx wrangler d1 create oomol-connect
+npx wrangler r2 bucket create oomol-connect-transit-files
+npx wrangler d1 migrations apply oomol-connect --remote
+npm run deploy:cloudflare
+```
+
+Update `wrangler.jsonc` with the D1 `database_id` returned by Cloudflare before deploying. Set
+secrets with `wrangler secret put`, especially `OOMOL_CONNECT_ADMIN_TOKEN` and, when credential
+encryption is needed, `OOMOL_CONNECT_ENCRYPTION_KEY`.
+
+The Cloudflare runtime serves catalog metadata, `/api` and `/v1` metadata endpoints, connections,
+runtime tokens, OAuth config/state, R2-backed transit files, and the same generated provider action
+executor registry used by the Node runtime. Configure an R2 lifecycle rule for the transit bucket if
+you want unread expired transit files cleaned up automatically.
 
 ## Examples
 
@@ -367,7 +389,6 @@ Local admin endpoints power the web console, examples, and setup scripts:
 - `GET /api/actions`
 - `GET /api/actions/:actionId`
 - `GET /api/actions/:actionId/agent.md`
-- `POST /api/actions/:actionId/runs`
 - `POST /api/files`
 - `GET /api/files/:fileId`
 - `DELETE /api/files/:fileId`

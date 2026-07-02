@@ -4,8 +4,8 @@ import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCred
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-flow-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
-import type { IRunLogStore, RunLog } from "./runtime-store.ts";
-import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./storage/runtime-store.ts";
+import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-token-service.ts";
 
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -16,10 +16,12 @@ import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
-import { ActionRunner } from "./action-runner.ts";
+import { ActionRunner } from "./actions/action-runner.ts";
+import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
-import { RuntimeTokenService } from "./runtime-token-service.ts";
-import { TransitFileService } from "./transit-files.ts";
+import { TransitFileService } from "./files/transit-files.ts";
+import { decodeRunLogCursor, encodeRunLogCursor } from "./storage/runtime-store.ts";
+import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 
 const apiKeyProvider: ProviderDefinition = {
   service: "example",
@@ -105,6 +107,27 @@ describe("ConnectServer", () => {
       headers: { authorization: "Bearer runtime-token" },
     });
     expect(runtimeAuthorized.status).toBe(200);
+
+    const adminActionRun = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer local-token",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ input: {} }),
+    });
+    expect(adminActionRun.status).toBe(404);
+  });
+
+  it("serves API routes when static routes are disabled", async () => {
+    const app = createTestServer([apiKeyProvider], { staticRoot: false }).createApp();
+
+    expect((await app.request("/health")).status).toBe(200);
+    const provider = await app.request("/api/providers/example");
+    expect(provider.status).toBe(200);
+    await expect(provider.json()).resolves.toMatchObject({
+      service: "example",
+    });
   });
 
   it("does not accept the admin token for stored runtime token access", async () => {
@@ -207,7 +230,7 @@ describe("ConnectServer", () => {
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
 
-    const response = await app.request("/api/actions/example.echo/runs", {
+    const response = await app.request("/v1/actions/example.echo", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -220,23 +243,25 @@ describe("ConnectServer", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(runs.list()).toMatchObject([
-      {
-        actionId: "example.echo",
-        caller: "http",
-        ok: true,
-        connectionProfile: {
-          accountId: "example-account",
-          displayName: "Example Account",
-          grantedScopes: [],
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [
+        {
+          actionId: "example.echo",
+          caller: "http",
+          ok: true,
+          connectionProfile: {
+            accountId: "example-account",
+            displayName: "Example Account",
+            grantedScopes: [],
+          },
+          inputSummary: {
+            query: "hello",
+            apiKey: "[redacted]",
+            nested: { password: "[redacted]" },
+          },
         },
-        inputSummary: {
-          query: "hello",
-          apiKey: "[redacted]",
-          nested: { password: "[redacted]" },
-        },
-      },
-    ]);
+      ],
+    });
   });
 
   it("passes local transit files to action executors", async () => {
@@ -261,7 +286,7 @@ describe("ConnectServer", () => {
         body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
       });
 
-      const response = await app.request("/api/actions/example.echo/runs", {
+      const response = await app.request("/v1/actions/example.echo", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ input: {} }),
@@ -270,15 +295,15 @@ describe("ConnectServer", () => {
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body).toMatchObject({
-        ok: true,
-        output: {
+        success: true,
+        data: {
           fileId: expect.stringMatching(/^[a-f0-9]{32}\.txt$/),
           downloadUrl: expect.stringContaining("http://localhost:3000/api/files/"),
           sizeBytes: 13,
         },
       });
 
-      const download = await app.request(new URL(body.output.downloadUrl).pathname);
+      const download = await app.request(new URL(body.data.downloadUrl).pathname);
       expect(download.status).toBe(200);
       await expect(download.text()).resolves.toBe("from executor");
     } finally {
@@ -330,13 +355,15 @@ describe("ConnectServer", () => {
       success: true,
       data: { message: "hello" },
     });
-    expect(runs.list()).toMatchObject([
-      {
-        connectionProfile: {
-          displayName: "Example Account",
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [
+        {
+          connectionProfile: {
+            displayName: "Example Account",
+          },
         },
-      },
-    ]);
+      ],
+    });
   });
 
   it("renders agent guides with current connection and provider permissions", async () => {
@@ -426,7 +453,7 @@ describe("ConnectServer", () => {
       },
     ).createApp();
 
-    const response = await app.request("/api/actions/example.echo/runs", {
+    const response = await app.request("/v1/actions/example.echo", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ input: {} }),
@@ -434,18 +461,18 @@ describe("ConnectServer", () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
-      ok: false,
-      error: {
-        code: "action_blocked",
-      },
+      success: false,
+      errorCode: "action_blocked",
     });
-    expect(runs.list()).toMatchObject([
-      {
-        actionId: "example.echo",
-        ok: false,
-        errorCode: "action_blocked",
-      },
-    ]);
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [
+        {
+          actionId: "example.echo",
+          ok: false,
+          errorCode: "action_blocked",
+        },
+      ],
+    });
   });
 
   it("serves the public v1 runtime catalog and action envelope", async () => {
@@ -761,6 +788,30 @@ describe("ConnectServer", () => {
       await rm(rootDir, { recursive: true, force: true });
     }
   });
+
+  it("paginates run logs through the web console API", async () => {
+    const runs = new MemoryRunLogStore();
+    await runs.add(createRunLog("run-1", "2026-06-30T00:00:00.000Z"));
+    await runs.add(createRunLog("run-2", "2026-06-30T00:00:01.000Z"));
+    await runs.add(createRunLog("run-3", "2026-06-30T00:00:02.000Z"));
+    const app = createTestServer([apiKeyProvider], { runs }).createApp();
+
+    const first = await app.request("/api/runs?limit=2");
+    expect(first.status).toBe(200);
+    const firstBody = (await first.json()) as RunLogPage;
+    expect(firstBody.items.map((run) => run.id)).toEqual(["run-3", "run-2"]);
+    expect(firstBody.nextCursor).toBeTruthy();
+
+    const query = new URLSearchParams({ limit: "2", cursor: firstBody.nextCursor! });
+    const second = await app.request(`/api/runs?${query}`);
+    expect(second.status).toBe(200);
+    const secondBody = (await second.json()) as RunLogPage;
+    expect(secondBody.items.map((run) => run.id)).toEqual(["run-1"]);
+    expect(secondBody.nextCursor).toBeUndefined();
+
+    const invalid = await app.request("/api/runs?limit=500");
+    expect(invalid.status).toBe(400);
+  });
 });
 
 interface CreateTestServerOptions {
@@ -769,6 +820,7 @@ interface CreateTestServerOptions {
   providerLoader?: IProviderLoader;
   runtimeTokens?: RuntimeTokenService;
   runs?: MemoryRunLogStore;
+  staticRoot?: string | false;
   transitFiles?: TransitFileService;
 }
 
@@ -806,6 +858,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     transitFiles,
     actionPolicy: options.actionPolicy,
   });
+  const staticRoot = options.staticRoot === false ? undefined : (options.staticRoot ?? ".tmp/test-static");
 
   return new ConnectServer({
     catalog,
@@ -820,7 +873,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     actions: actionRunner,
     transitFiles,
     runtimeTokens,
-    staticRoot: ".tmp/test-static",
+    registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, staticRoot) : undefined,
     auth: {
       ...options.auth,
       hasRuntimeTokens: async () => (await runtimeTokens.listTokens()).length > 0,
@@ -989,11 +1042,35 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
 class MemoryRunLogStore implements IRunLogStore {
   private readonly runs: RunLog[] = [];
 
-  add(run: RunLog): void {
+  async add(run: RunLog): Promise<void> {
     this.runs.unshift(run);
   }
 
-  list(): RunLog[] {
-    return this.runs;
+  async list(input: RunLogListInput = {}): Promise<RunLogPage> {
+    const defaultLimit = this.runs.length || 1;
+    const limit = Math.max(1, Math.min(input.limit ?? defaultLimit, defaultLimit));
+    const cursor = decodeRunLogCursor(input.cursor);
+    const start = cursor
+      ? this.runs.findIndex((run) => run.startedAt === cursor.startedAt && run.id === cursor.id) + 1
+      : 0;
+    const runs = this.runs.slice(start < 0 ? 0 : start, start + limit + 1);
+    const items = runs.slice(0, limit);
+
+    return {
+      items,
+      nextCursor: runs.length > limit && items.length > 0 ? encodeRunLogCursor(items[items.length - 1]) : undefined,
+    };
   }
+}
+
+function createRunLog(id: string, startedAt: string): RunLog {
+  return {
+    id,
+    actionId: "example.echo",
+    caller: "web",
+    startedAt,
+    completedAt: startedAt,
+    durationMs: 0,
+    ok: true,
+  };
 }

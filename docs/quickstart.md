@@ -124,6 +124,29 @@ npm run build:web
 npm run dev
 ```
 
+## Cloudflare Workers Preview
+
+Create the Cloudflare resources, apply the D1 schema, and start a local Worker preview:
+
+```bash
+npm run generate:catalog
+npm run build:web
+npx wrangler d1 create oomol-connect
+npx wrangler r2 bucket create oomol-connect-transit-files
+npx wrangler d1 migrations apply oomol-connect --local
+npm run dev:cloudflare
+```
+
+For remote deploys, replace `database_id` in `wrangler.jsonc`, run the migration with `--remote`,
+set secrets with `wrangler secret put`, then run:
+
+```bash
+npm run deploy:cloudflare
+```
+
+The Worker runtime exposes catalog metadata, connection/token/OAuth state APIs, R2-backed transit
+files, and the same generated provider action executor registry used by the Node runtime.
+
 ## Runtime Settings
 
 Local runtime state is stored in `./data/connect.sqlite` by default. Override the directory with:
@@ -159,11 +182,4 @@ Constrain executable actions with comma-separated action ids or provider wildcar
 
 ```bash
 OOMOL_CONNECT_ALLOWED_ACTIONS="hackernews.*,github.get_current_user" npm run dev
-```
-
-Export an encrypted local backup:
-
-```bash
-OOMOL_CONNECT_BACKUP_KEY="replace-with-a-long-random-secret" \
-npm run runtime:data -- export --output ./backup/oomol-connect-runtime.json
 ```

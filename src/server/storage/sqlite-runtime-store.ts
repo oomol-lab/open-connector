@@ -1,15 +1,15 @@
-import type { IConnectionStore } from "../connection-service.ts";
-import type { ResolvedCredential } from "../core/types.ts";
-import type { IOAuthClientConfigStore, OAuthClientConfig } from "../oauth/oauth-client-config-service.ts";
-import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-flow-service.ts";
-import type { RuntimeConnectionSnapshot, RuntimeDataSnapshot } from "./runtime-data-backup.ts";
-import type { IRunLogStore, RunLog } from "./runtime-store.ts";
+import type { IConnectionStore } from "../../connection-service.ts";
+import type { ResolvedCredential } from "../../core/types.ts";
+import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
+import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
+import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
+import type { RuntimeDatabase } from "./runtime-database.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
-import type { ISecretCodec } from "./secret-codec.ts";
 
 import { DatabaseSync } from "node:sqlite";
-import { createRuntimeDataSnapshot } from "./runtime-data-backup.ts";
-import { PlainTextSecretCodec } from "./secret-codec.ts";
+import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
+import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
 type RuntimeRow = Record<string, unknown>;
 type SecretJsonTable = "oauth_client_configs";
@@ -41,10 +41,21 @@ interface SetServiceJsonInput extends SecretJsonInput {
   value: unknown;
 }
 
+interface RotatedConnectionSecret {
+  service: string;
+  connectionName: string;
+  value: string;
+}
+
+interface RotatedServiceSecret {
+  service: string;
+  value: string;
+}
+
 /**
  * Shared SQLite connection for local runtime state.
  */
-export class SqliteRuntimeDatabase {
+export class SqliteRuntimeDatabase implements RuntimeDatabase {
   readonly connectionStore: SqliteConnectionStore;
   readonly oauthClientConfigStore: SqliteOAuthClientConfigStore;
   readonly oauthStateStore: SqliteOAuthStateStore;
@@ -69,38 +80,17 @@ export class SqliteRuntimeDatabase {
     this.database.close();
   }
 
-  async exportSnapshot(): Promise<RuntimeDataSnapshot> {
-    return createRuntimeDataSnapshot({
-      connections: await this.connectionStore.list(),
-      oauthClientConfigs: await this.oauthClientConfigStore.list(),
-      runs: this.runLogStore.list(),
-    });
-  }
-
-  restoreSnapshot(snapshot: RuntimeDataSnapshot): void {
+  async rotateSecretCodec(nextSecretCodec: ISecretCodec): Promise<void> {
+    const connections = await readRotatedConnectionSecrets(this.database, this.secretCodec, nextSecretCodec);
+    const oauthConfigs = await readRotatedServiceSecrets(
+      this.database,
+      this.secretCodec,
+      nextSecretCodec,
+      "oauth_client_configs",
+    );
     runInTransaction(this.database, () => {
-      this.resetRuntimeData();
-      for (const connection of snapshot.connections) {
-        setConnectionJson({
-          database: this.database,
-          secretCodec: this.secretCodec,
-          service: connection.service,
-          connectionName: connection.connectionName,
-          value: connection.credential,
-        });
-      }
-      for (const config of snapshot.oauthClientConfigs) {
-        setServiceJson({
-          database: this.database,
-          secretCodec: this.secretCodec,
-          table: "oauth_client_configs",
-          service: config.service,
-          value: config,
-        });
-      }
-      for (const run of snapshot.runs) {
-        insertRun(this.database, run);
-      }
+      writeRotatedConnectionSecrets(this.database, connections);
+      writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
     });
   }
 
@@ -164,7 +154,7 @@ export class SqliteConnectionStore implements IConnectionStore {
   }
 
   async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
-    return getConnectionJson<ResolvedCredential>({
+    return await getConnectionJson<ResolvedCredential>({
       database: this.database,
       secretCodec: this.secretCodec,
       service,
@@ -173,7 +163,7 @@ export class SqliteConnectionStore implements IConnectionStore {
   }
 
   async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    setConnectionJson({
+    await setConnectionJson({
       database: this.database,
       secretCodec: this.secretCodec,
       service,
@@ -188,15 +178,17 @@ export class SqliteConnectionStore implements IConnectionStore {
       .run(service, connectionName);
   }
 
-  async list(): Promise<RuntimeConnectionSnapshot[]> {
-    return this.database
+  async list(): Promise<Array<{ service: string; connectionName: string; credential: ResolvedCredential }>> {
+    const rows = this.database
       .prepare("select service, connection_name, value from connections order by service, connection_name")
-      .all()
-      .map((row) => ({
+      .all();
+    return await Promise.all(
+      rows.map(async (row) => ({
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
-        credential: parseJson<ResolvedCredential>(this.secretCodec.decode(readString(row, "value"))),
-      }));
+        credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
+      })),
+    );
   }
 }
 
@@ -210,7 +202,7 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
   }
 
   async get(service: string): Promise<OAuthClientConfig | undefined> {
-    return getSecretJson<OAuthClientConfig>({
+    return await getSecretJson<OAuthClientConfig>({
       database: this.database,
       secretCodec: this.secretCodec,
       table: "oauth_client_configs",
@@ -219,7 +211,7 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
   }
 
   async set(config: OAuthClientConfig): Promise<void> {
-    setServiceJson({
+    await setServiceJson({
       database: this.database,
       secretCodec: this.secretCodec,
       table: "oauth_client_configs",
@@ -233,10 +225,10 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
   }
 
   async list(): Promise<OAuthClientConfig[]> {
-    return this.database
-      .prepare("select value from oauth_client_configs order by service")
-      .all()
-      .map((row) => parseJson<OAuthClientConfig>(this.secretCodec.decode(readString(row, "value"))));
+    const rows = this.database.prepare("select value from oauth_client_configs order by service").all();
+    return await Promise.all(
+      rows.map(async (row) => parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value")))),
+    );
   }
 }
 
@@ -334,7 +326,7 @@ export class SqliteRunLogStore implements IRunLogStore {
     this.limit = limit;
   }
 
-  add(run: RunLog): void {
+  async add(run: RunLog): Promise<void> {
     insertRun(this.database, run);
 
     this.database
@@ -351,11 +343,28 @@ export class SqliteRunLogStore implements IRunLogStore {
       .run(this.limit);
   }
 
-  list(): RunLog[] {
-    return this.database
-      .prepare("select value from runs order by started_at desc, id desc limit ?")
-      .all(this.limit)
-      .map((row) => parseJson<RunLog>(readString(row, "value")));
+  async list(input: RunLogListInput = {}): Promise<RunLogPage> {
+    const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
+    const cursor = decodeRunLogCursor(input.cursor);
+    const rows = cursor
+      ? this.database
+          .prepare(
+            `
+            select value from runs
+            where started_at < ? or (started_at = ? and id < ?)
+            order by started_at desc, id desc
+            limit ?
+          `,
+          )
+          .all(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
+      : this.database.prepare("select value from runs order by started_at desc, id desc limit ?").all(limit + 1);
+    const runs = rows.map((row) => parseJson<RunLog>(readString(row, "value")));
+    const items = runs.slice(0, limit);
+
+    return {
+      items,
+      nextCursor: runs.length > limit && items.length > 0 ? encodeRunLogCursor(items[items.length - 1]) : undefined,
+    };
   }
 }
 
@@ -376,6 +385,54 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
     .run(run.id, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run));
 }
 
+async function readRotatedConnectionSecrets(
+  database: DatabaseSync,
+  currentCodec: ISecretCodec,
+  nextCodec: ISecretCodec,
+): Promise<RotatedConnectionSecret[]> {
+  const rows = database.prepare("select service, connection_name, value from connections").all();
+  return await Promise.all(
+    rows.map(async (row) => ({
+      service: readString(row, "service"),
+      connectionName: readString(row, "connection_name"),
+      value: await nextCodec.encode(await currentCodec.decode(readString(row, "value"))),
+    })),
+  );
+}
+
+function writeRotatedConnectionSecrets(database: DatabaseSync, connections: RotatedConnectionSecret[]): void {
+  const statement = database.prepare("update connections set value = ? where service = ? and connection_name = ?");
+  for (const connection of connections) {
+    statement.run(connection.value, connection.service, connection.connectionName);
+  }
+}
+
+async function readRotatedServiceSecrets(
+  database: DatabaseSync,
+  currentCodec: ISecretCodec,
+  nextCodec: ISecretCodec,
+  table: SecretJsonTable,
+): Promise<RotatedServiceSecret[]> {
+  const rows = database.prepare(`select service, value from ${table}`).all();
+  return await Promise.all(
+    rows.map(async (row) => ({
+      service: readString(row, "service"),
+      value: await nextCodec.encode(await currentCodec.decode(readString(row, "value"))),
+    })),
+  );
+}
+
+function writeRotatedServiceSecrets(
+  database: DatabaseSync,
+  table: SecretJsonTable,
+  services: RotatedServiceSecret[],
+): void {
+  const statement = database.prepare(`update ${table} set value = ? where service = ?`);
+  for (const service of services) {
+    statement.run(service.value, service.service);
+  }
+}
+
 function runInTransaction(database: DatabaseSync, work: () => void): void {
   database.exec("begin immediate");
   try {
@@ -392,16 +449,16 @@ function getJson<T>(database: DatabaseSync, table: "oauth_states", keyColumn: "s
   return row ? parseJson<T>(readString(row, "value")) : undefined;
 }
 
-function getSecretJson<T>(input: SecretJsonInput): T | undefined {
+async function getSecretJson<T>(input: SecretJsonInput): Promise<T | undefined> {
   const stored = getStoredValue(input.database, input.table, "service", input.service);
-  return stored ? parseJson<T>(input.secretCodec.decode(stored)) : undefined;
+  return stored ? parseJson<T>(await input.secretCodec.decode(stored)) : undefined;
 }
 
-function getConnectionJson<T>(input: ConnectionJsonInput): T | undefined {
+async function getConnectionJson<T>(input: ConnectionJsonInput): Promise<T | undefined> {
   const row = input.database
     .prepare("select value from connections where service = ? and connection_name = ?")
     .get(input.service, input.connectionName) as RuntimeRow | undefined;
-  return row ? parseJson<T>(input.secretCodec.decode(readString(row, "value"))) : undefined;
+  return row ? parseJson<T>(await input.secretCodec.decode(readString(row, "value"))) : undefined;
 }
 
 function getStoredValue(
@@ -414,7 +471,7 @@ function getStoredValue(
   return row ? readString(row, "value") : undefined;
 }
 
-function setConnectionJson(input: SetConnectionJsonInput): void {
+async function setConnectionJson(input: SetConnectionJsonInput): Promise<void> {
   input.database
     .prepare(
       `
@@ -428,12 +485,12 @@ function setConnectionJson(input: SetConnectionJsonInput): void {
     .run(
       input.service,
       input.connectionName,
-      input.secretCodec.encode(JSON.stringify(input.value)),
+      await input.secretCodec.encode(JSON.stringify(input.value)),
       new Date().toISOString(),
     );
 }
 
-function setServiceJson(input: SetServiceJsonInput): void {
+async function setServiceJson(input: SetServiceJsonInput): Promise<void> {
   input.database
     .prepare(
       `
@@ -442,7 +499,7 @@ function setServiceJson(input: SetServiceJsonInput): void {
       on conflict(service) do update set value = excluded.value, updated_at = excluded.updated_at
     `,
     )
-    .run(input.service, input.secretCodec.encode(JSON.stringify(input.value)), new Date().toISOString());
+    .run(input.service, await input.secretCodec.encode(JSON.stringify(input.value)), new Date().toISOString());
 }
 
 function readString(row: unknown, key: string): string {

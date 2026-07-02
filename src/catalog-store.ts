@@ -3,7 +3,6 @@ import type { ActionDefinition, AuthType, ProviderDefinition } from "./core/type
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { sortProviders } from "./core/catalog.ts";
-import { executableActionIds } from "./providers/registry.generated.ts";
 
 export type ActionExecutionStatus = {
   locallyExecutable: boolean;
@@ -39,12 +38,13 @@ export type CatalogStore = {
   executableActionIds: Set<string>;
 };
 
-export function createCatalogStore(
-  providers: ProviderDefinition[],
-  options: { executableActionIds?: Iterable<string> } = {},
-): CatalogStore {
+export interface LoadCatalogOptions {
+  executableActionIds?: Iterable<string>;
+}
+
+export function createCatalogStore(providers: ProviderDefinition[], options: LoadCatalogOptions = {}): CatalogStore {
   const sortedProviders = sortProviders(providers);
-  const executableActions = new Set(options.executableActionIds ?? Object.values(executableActionIds).flat());
+  const executableActions = new Set(options.executableActionIds ?? []);
   const runtimeProviders = sortedProviders.map((provider): RuntimeProviderDefinition => {
     const actions = provider.actions.map(
       (action): RuntimeActionDefinition => ({
@@ -76,7 +76,10 @@ export function createCatalogStore(
 /**
  * Load generated provider catalog files from disk.
  */
-export async function loadCatalog(catalogDir: string = join(process.cwd(), "catalog/apps")): Promise<CatalogStore> {
+export async function loadCatalog(
+  catalogDir: string = join(process.cwd(), "catalog/apps"),
+  options: LoadCatalogOptions = {},
+): Promise<CatalogStore> {
   const entries = await readdir(catalogDir, { withFileTypes: true });
   const providers = await Promise.all(
     entries
@@ -86,7 +89,7 @@ export async function loadCatalog(catalogDir: string = join(process.cwd(), "cata
         return JSON.parse(content) as ProviderDefinition;
       }),
   );
-  return createCatalogStore(providers);
+  return createCatalogStore(providers, options);
 }
 
 function createActionExecutionStatus(

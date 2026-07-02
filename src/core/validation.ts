@@ -1,29 +1,36 @@
 import type { ActionDefinition } from "./types.ts";
-import type { ErrorObject } from "ajv";
+import type { OutputUnit, Schema } from "@cfworker/json-schema";
 
-import AjvModule from "ajv";
+import { Validator } from "@cfworker/json-schema";
 
-const Ajv = AjvModule.default;
-const ajv = new Ajv({ allErrors: true, strict: false });
+const validators = new WeakMap<ActionDefinition, Validator>();
 
 /**
  * Result of validating an action input against its JSON Schema.
  */
 export type ActionInputValidationResult = {
-  valid: boolean | PromiseLike<unknown>;
-  errors: ErrorObject[];
+  valid: boolean;
+  errors: OutputUnit[];
 };
 
 /**
  * Validate unknown user input against an action's declared input schema.
  */
 export function validateActionInput(action: ActionDefinition, input: unknown): ActionInputValidationResult {
-  const validate = ajv.compile(action.inputSchema);
-  const valid = validate(input);
-  const errors = validate.errors ?? [];
+  const result = validatorFor(action).validate(input);
 
   return {
-    valid,
-    errors,
+    valid: result.valid,
+    errors: result.errors,
   };
+}
+
+function validatorFor(action: ActionDefinition): Validator {
+  let validator = validators.get(action);
+  if (validator === undefined) {
+    validator = new Validator(action.inputSchema as Schema, "2020-12");
+    validators.set(action, validator);
+  }
+
+  return validator;
 }

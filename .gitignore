@@ -1,5 +1,6 @@
 .private-docs/
 .tmp/
+.wrangler/
 node_modules/
 dist/
 coverage/

@@ -1,6 +1,6 @@
-import type { ActionDefinition, JsonSchema, ProviderDefinition } from "../core/types.ts";
+import type { ActionDefinition, JsonSchema, ProviderDefinition } from "../../core/types.ts";
 
-import { jsonSchema } from "../core/json-schema.ts";
+import { jsonSchema } from "../../core/json-schema.ts";
 
 /**
  * Minimal OpenAPI document shape returned by the local runtime.
@@ -47,20 +47,6 @@ const errorResponseSchema = jsonSchema.object(
   {
     required: ["error"],
     description: "Standard error response.",
-  },
-);
-
-const executionResultSchema = jsonSchema.object(
-  {
-    ok: jsonSchema.boolean({ description: "Whether execution succeeded." }),
-    output: {
-      description: "Action output matching the selected action's output schema.",
-    },
-    error: errorPayloadSchema,
-  },
-  {
-    required: ["ok"],
-    description: "Action execution result.",
   },
 );
 
@@ -150,7 +136,7 @@ export function createOpenApiDocument(
     "/api/runtime-tokens/{id}": createRuntimeTokenPath(),
     "/api/files": createTransitFilesPath(),
     "/api/files/{fileId}": createTransitFilePath(),
-    "/api/actions/{actionId}/runs": runPath,
+    "/v1/actions/{actionId}": runPath,
     "/api/runs": createRunsPath(),
     "/mcp": createMcpPath(),
     "/mcp/tools": getOperation("MCP", "List discovery-oriented MCP tool summaries.", {
@@ -239,7 +225,6 @@ export function createOpenApiDocument(
           },
         ),
         ErrorResponse: errorResponseSchema,
-        ExecutionResult: executionResultSchema,
         ConnectionUpsertRequest: createConnectionUpsertRequestSchema(),
         OAuthClientConfigSummary: jsonSchema.object(
           {
@@ -318,6 +303,20 @@ export function createOpenApiDocument(
           {
             required: ["id", "actionId", "caller", "startedAt", "completedAt", "durationMs", "ok"],
             description: "Recent action run entry.",
+          },
+        ),
+        RunLogPage: jsonSchema.object(
+          {
+            items: {
+              type: "array",
+              items: { $ref: "#/components/schemas/RunLog" },
+              description: "Run entries for this page.",
+            },
+            nextCursor: jsonSchema.string({ description: "Cursor for the next page, when more runs are available." }),
+          },
+          {
+            required: ["items"],
+            description: "Paginated action run list.",
           },
         ),
       },
@@ -502,11 +501,24 @@ function createRunsPath(): Record<string, unknown> {
     get: {
       tags: ["Runs"],
       summary: "List recent local action runs.",
+      parameters: [
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          schema: { type: "integer", minimum: 1, maximum: 100, default: 50 },
+          description: "Maximum number of runs to return.",
+        },
+        {
+          name: "cursor",
+          in: "query",
+          required: false,
+          schema: { type: "string" },
+          description: "Cursor returned by the previous page.",
+        },
+      ],
       responses: {
-        200: jsonResponse({
-          type: "array",
-          items: { $ref: "#/components/schemas/RunLog" },
-        }),
+        200: jsonResponse({ $ref: "#/components/schemas/RunLogPage" }),
       },
     },
   };
@@ -516,7 +528,7 @@ function createRunPath(): Record<string, unknown> {
   return {
     post: {
       tags: ["Runs"],
-      summary: "Create a local action run.",
+      summary: "Execute a runtime action.",
       description:
         "Use the action catalog to discover provider-specific input and output schemas. For a compact strongly typed OpenAPI document for one action, request /openapi.json?actionId=<actionId>.",
       parameters: [
@@ -544,9 +556,10 @@ function createRunPath(): Record<string, unknown> {
         },
       },
       responses: {
-        200: jsonResponse({ $ref: "#/components/schemas/ExecutionResult" }),
-        400: jsonResponse({ $ref: "#/components/schemas/ExecutionResult" }),
-        404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        200: jsonResponse(runtimeSuccessSchema(jsonSchema.unknown("Action output matching the catalog schema."))),
+        400: jsonResponse(runtimeFailureSchema()),
+        404: jsonResponse(runtimeFailureSchema()),
+        500: jsonResponse(runtimeFailureSchema()),
       },
     },
   };
@@ -724,7 +737,7 @@ function createConnectionUpsertRequestSchema(): JsonSchema {
 function createConcreteRunOperation(action: ActionDefinition): Record<string, unknown> {
   return {
     tags: ["Runs"],
-    summary: `Create a local run for ${action.id}.`,
+    summary: `Execute ${action.id}.`,
     description: action.description,
     requestBody: {
       required: true,
@@ -743,22 +756,43 @@ function createConcreteRunOperation(action: ActionDefinition): Record<string, un
       },
     },
     responses: {
-      200: jsonResponse(
-        jsonSchema.object(
-          {
-            ok: { const: true, type: "boolean" },
-            output: action.outputSchema,
-          },
-          {
-            required: ["ok", "output"],
-            description: `Successful execution result for ${action.id}.`,
-          },
-        ),
-      ),
-      400: jsonResponse({ $ref: "#/components/schemas/ExecutionResult" }),
-      404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      200: jsonResponse(runtimeSuccessSchema(action.outputSchema)),
+      400: jsonResponse(runtimeFailureSchema()),
+      404: jsonResponse(runtimeFailureSchema()),
+      500: jsonResponse(runtimeFailureSchema()),
     },
   };
+}
+
+function runtimeSuccessSchema(data: JsonSchema): JsonSchema {
+  return jsonSchema.object(
+    {
+      success: { const: true, type: "boolean" },
+      message: { const: "OK", type: "string" },
+      data,
+      meta: { type: "object", additionalProperties: true },
+    },
+    {
+      required: ["success", "message", "data", "meta"],
+      description: "Runtime success envelope.",
+    },
+  );
+}
+
+function runtimeFailureSchema(): JsonSchema {
+  return jsonSchema.object(
+    {
+      success: { const: false, type: "boolean" },
+      message: jsonSchema.string({ description: "Human-readable error message." }),
+      data: jsonSchema.unknown("Provider or validation error details."),
+      errorCode: jsonSchema.string({ description: "Stable machine-readable error code." }),
+      meta: { type: "object", additionalProperties: true },
+    },
+    {
+      required: ["success", "message", "data", "errorCode", "meta"],
+      description: "Runtime failure envelope.",
+    },
+  );
 }
 
 function jsonResponse(schema: JsonSchema): Record<string, unknown> {

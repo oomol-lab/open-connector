@@ -116,6 +116,11 @@ interface RunLog {
   errorMessage?: string;
 }
 
+interface RunLogPage {
+  items: RunLog[];
+  nextCursor?: string;
+}
+
 interface ExecutionResult {
   ok: boolean;
   output?: unknown;
@@ -126,12 +131,20 @@ interface ExecutionResult {
   };
 }
 
+interface RuntimeActionResponse {
+  success: boolean;
+  message?: string;
+  data?: unknown;
+  errorCode?: string;
+}
+
 interface AppData {
   providers: ProviderDefinition[];
   connections: ConnectionRecord[];
   oauthConfigs: OAuthConfig[];
   runtimeTokens: RuntimeTokenSummary[];
   runs: RunLog[];
+  runsNextCursor?: string;
 }
 
 interface ProvidersViewProps {
@@ -216,20 +229,30 @@ export function App(): ReactNode {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
+  const [loadingMoreRuns, setLoadingMoreRuns] = useState(false);
+  const [runsError, setRunsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setRunsError(null);
     Promise.all([
       apiGet<ProviderDefinition[]>("/api/providers"),
       apiGet<ConnectionRecord[]>("/api/connections"),
       apiGet<OAuthConfig[]>("/api/oauth/configs"),
       apiGet<RuntimeTokenSummary[]>("/api/runtime-tokens"),
-      apiGet<RunLog[]>("/api/runs"),
+      apiGet<RunLogPage>("/api/runs"),
     ])
-      .then(([providers, connections, oauthConfigs, runtimeTokens, runs]) => {
+      .then(([providers, connections, oauthConfigs, runtimeTokens, runPage]) => {
         if (!cancelled) {
-          setData({ providers, connections, oauthConfigs, runtimeTokens, runs });
+          setData({
+            providers,
+            connections,
+            oauthConfigs,
+            runtimeTokens,
+            runs: runPage.items,
+            runsNextCursor: runPage.nextCursor,
+          });
           const firstProvider = firstProviderByConnectionStatus(providers, connections);
           setSelectedService((current) => current ?? firstProvider?.service ?? null);
           setSelectedActionId((current) => current ?? firstProvider?.actions[0]?.id ?? null);
@@ -247,6 +270,28 @@ export function App(): ReactNode {
       cancelled = true;
     };
   }, [refreshToken]);
+
+  async function loadMoreRuns(): Promise<void> {
+    if (!data.runsNextCursor || loadingMoreRuns) {
+      return;
+    }
+
+    setLoadingMoreRuns(true);
+    setRunsError(null);
+    try {
+      const query = new URLSearchParams({ limit: "50", cursor: data.runsNextCursor });
+      const page = await apiGet<RunLogPage>(`/api/runs?${query}`);
+      setData((current) => ({
+        ...current,
+        runs: [...current.runs, ...page.items],
+        runsNextCursor: page.nextCursor,
+      }));
+    } catch (caught) {
+      setRunsError(caught instanceof Error ? caught.message : "Failed to load more runs.");
+    } finally {
+      setLoadingMoreRuns(false);
+    }
+  }
 
   const connectionsByService = useMemo(
     () => new Map(data.connections.map((connection) => [connection.service, connection])),
@@ -363,7 +408,15 @@ export function App(): ReactNode {
           />
         ) : null}
 
-        {activeTab === "runs" ? <RunsView runs={data.runs} /> : null}
+        {activeTab === "runs" ? (
+          <RunsView
+            runs={data.runs}
+            nextCursor={data.runsNextCursor}
+            loadingMore={loadingMoreRuns}
+            error={runsError}
+            onLoadMore={loadMoreRuns}
+          />
+        ) : null}
 
         {activeTab === "access" ? <RuntimeTokensView tokens={data.runtimeTokens} onRefresh={refresh} /> : null}
 
@@ -682,40 +735,61 @@ function ActionDetail(props: { action: ActionDefinition }): ReactNode {
   );
 }
 
-function RunsView(props: { runs: RunLog[] }): ReactNode {
+function RunsView(props: {
+  runs: RunLog[];
+  nextCursor?: string;
+  loadingMore: boolean;
+  error: string | null;
+  onLoadMore(): Promise<void>;
+}): ReactNode {
   if (props.runs.length === 0) {
     return <EmptyState title="No runs yet" description="Run an action to see recent execution history." />;
   }
 
   return (
-    <section className="table-panel">
-      <table>
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Caller</th>
-            <th>Status</th>
-            <th>Started</th>
-            <th>Duration</th>
-            <th>Input</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody>
-          {props.runs.map((run) => (
-            <tr key={run.id}>
-              <td className="mono">{run.actionId}</td>
-              <td className="mono">{run.caller}</td>
-              <td>{run.ok ? <Badge tone="success">Success</Badge> : <Badge tone="error">Failed</Badge>}</td>
-              <td>{formatDate(run.startedAt)}</td>
-              <td>{formatDuration(run)}</td>
-              <td className="mono">{compactJson(run.inputSummary)}</td>
-              <td>{run.errorMessage ?? run.errorCode ?? ""}</td>
+    <>
+      <section className="table-panel">
+        <table>
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Caller</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Duration</th>
+              <th>Input</th>
+              <th>Error</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+          </thead>
+          <tbody>
+            {props.runs.map((run) => (
+              <tr key={run.id}>
+                <td className="mono">{run.actionId}</td>
+                <td className="mono">{run.caller}</td>
+                <td>{run.ok ? <Badge tone="success">Success</Badge> : <Badge tone="error">Failed</Badge>}</td>
+                <td>{formatDate(run.startedAt)}</td>
+                <td>{formatDuration(run)}</td>
+                <td className="mono">{compactJson(run.inputSummary)}</td>
+                <td>{run.errorMessage ?? run.errorCode ?? ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      {props.error ? <InlineError message={props.error} /> : null}
+      {props.nextCursor ? (
+        <div className="table-footer">
+          <button
+            className="secondary-button compact"
+            onClick={() => void props.onLoadMore()}
+            disabled={props.loadingMore}
+          >
+            {props.loadingMore ? <Loader2 size={14} className="spin" /> : null}
+            Load more
+          </button>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -973,10 +1047,23 @@ function RunActionModal(props: { action: ActionDefinition; onClose(): void }): R
     setResult(null);
     try {
       const parsed = input.trim() ? (JSON.parse(input) as unknown) : {};
+      const response = await fetch(`/v1/actions/${props.action.id}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ input: parsed }),
+      });
+      const payload = (await response.json()) as RuntimeActionResponse;
       setResult(
-        await apiPost<ExecutionResult>(`/api/actions/${props.action.id}/runs`, {
-          input: parsed,
-        }),
+        payload.success
+          ? { ok: true, output: payload.data }
+          : {
+              ok: false,
+              error: {
+                code: payload.errorCode ?? `http_${response.status}`,
+                message: payload.message ?? "Action failed.",
+                details: payload.data,
+              },
+            },
       );
     } catch (error) {
       setResult({
@@ -1048,7 +1135,7 @@ function buildAgentPrompt(action: ActionDefinition): { prompt: string } {
   const markdownUrl = `${window.location.origin}/api/actions/${action.id}/agent.md`;
   const prompt = [
     `Read ${markdownUrl} to discover the local request contract for ${action.name}.`,
-    `Then call ${window.location.origin}/api/actions/${action.id}/runs with JSON shaped as { "input": ... }.`,
+    `Then call ${window.location.origin}/v1/actions/${action.id} with JSON shaped as { "input": ... }.`,
     "Use the localhost runtime endpoint. Do not call the provider API directly unless I explicitly ask.",
   ].join("\n");
 
@@ -1253,12 +1340,12 @@ function buildActionExamples(action: ActionDefinition): { curl: string; typescri
   const bodyText = JSON.stringify(body, null, 2);
   return {
     curl: [
-      `curl -s http://localhost:3000/api/actions/${action.id}/runs \\`,
+      `curl -s http://localhost:3000/v1/actions/${action.id} \\`,
       "  -H 'content-type: application/json' \\",
       `  -d '${JSON.stringify(body)}'`,
     ].join("\n"),
     typescript: [
-      `const response = await fetch("http://localhost:3000/api/actions/${action.id}/runs", {`,
+      `const response = await fetch("http://localhost:3000/v1/actions/${action.id}", {`,
       `  method: "POST",`,
       `  headers: { "content-type": "application/json" },`,
       `  body: JSON.stringify(${bodyText}),`,

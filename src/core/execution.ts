@@ -27,6 +27,16 @@ export async function executeAction(
     };
   }
 
+  if (!executor) {
+    return {
+      ok: false,
+      error: {
+        code: "executor_unavailable",
+        message: "Execution for this action is not available in the local runtime yet.",
+      },
+    };
+  }
+
   const validation = validateActionInput(action, input);
   if (!validation.valid) {
     return {
@@ -35,16 +45,6 @@ export async function executeAction(
         code: "invalid_input",
         message: "Action input does not match the action schema.",
         details: validation.errors,
-      },
-    };
-  }
-
-  if (!executor) {
-    return {
-      ok: false,
-      error: {
-        code: "executor_unavailable",
-        message: "Execution for this action is not available in the local runtime yet.",
       },
     };
   }

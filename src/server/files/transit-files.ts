@@ -1,9 +1,12 @@
+import type { ITransitFileService, TransitFileRead, TransitFileUpload } from "./transit-file-store.ts";
+
 import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { createWriteStream } from "node:fs";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { finished } from "node:stream/promises";
+import { contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
 
 export interface TransitFileOptions {
   rootDir: string;
@@ -12,38 +15,12 @@ export interface TransitFileOptions {
   maxBytes: number;
 }
 
-export interface TransitFileUpload {
-  fileId: string;
-  downloadUrl: string;
-  sizeBytes: number;
-  name: string;
-  mimeType: string;
-}
-
-export interface TransitFileRead {
-  file: File;
-  sizeBytes: number;
-  name: string;
-  mimeType: string;
-}
-
 interface TransitFileMetadata {
   name: string;
   mimeType: string;
 }
 
-export class TransitFileError extends Error {
-  readonly status: 400 | 404 | 413;
-  readonly code: string;
-
-  constructor(status: 400 | 404 | 413, code: string, message: string) {
-    super(message);
-    this.status = status;
-    this.code = code;
-  }
-}
-
-export class TransitFileService {
+export class TransitFileService implements ITransitFileService {
   private readonly rootDir: string;
   private readonly publicOrigin: string;
   private readonly ttlMs: number;
@@ -182,16 +159,6 @@ export class TransitFileService {
   }
 }
 
-export function createTransitFileResponse(file: TransitFileRead): Response {
-  return new Response(file.file.stream(), {
-    headers: {
-      "content-length": String(file.sizeBytes),
-      "content-type": file.mimeType,
-      "content-disposition": `attachment; filename="${escapeHeaderValue(file.name)}"`,
-    },
-  });
-}
-
 function assertSafeFileId(fileId: string): void {
   if (!isSafeFileId(fileId)) {
     throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
@@ -215,56 +182,6 @@ function safeExtension(name: string): string {
   return /^\.[a-z0-9]{1,16}$/.test(extension) ? extension : "";
 }
 
-function contentTypeFromFileId(fileId: string): string {
-  switch (extname(fileId).toLowerCase()) {
-    case ".css":
-      return "text/css";
-    case ".csv":
-      return "text/csv";
-    case ".gif":
-      return "image/gif";
-    case ".gz":
-      return "application/gzip";
-    case ".html":
-      return "text/html";
-    case ".jpeg":
-    case ".jpg":
-      return "image/jpeg";
-    case ".js":
-      return "text/javascript";
-    case ".json":
-      return "application/json";
-    case ".md":
-      return "text/markdown";
-    case ".mp3":
-      return "audio/mpeg";
-    case ".mp4":
-      return "video/mp4";
-    case ".pdf":
-      return "application/pdf";
-    case ".png":
-      return "image/png";
-    case ".svg":
-      return "image/svg+xml";
-    case ".tar":
-      return "application/x-tar";
-    case ".txt":
-      return "text/plain";
-    case ".wav":
-      return "audio/wav";
-    case ".webm":
-      return "video/webm";
-    case ".webp":
-      return "image/webp";
-    case ".xml":
-      return "application/xml";
-    case ".zip":
-      return "application/zip";
-    default:
-      return "application/octet-stream";
-  }
-}
-
 function metadataPath(path: string): string {
   return `${path}.meta.json`;
 }
@@ -277,8 +194,4 @@ function normalizeMetadata(
   const mimeType =
     typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : fallback.mimeType;
   return { name, mimeType };
-}
-
-function escapeHeaderValue(value: string): string {
-  return value.replace(/["\\\r\n]/g, "_");
 }

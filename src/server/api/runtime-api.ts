@@ -1,6 +1,6 @@
-import type { RuntimeActionDefinition } from "../catalog-store.ts";
-import type { ConnectionError, ConnectionSummary } from "../connection-service.ts";
-import type { ExecutionResult, ProviderDefinition } from "../core/types.ts";
+import type { RuntimeActionDefinition } from "../../catalog-store.ts";
+import type { ConnectionError, ConnectionSummary } from "../../connection-service.ts";
+import type { ExecutionResult, ProviderDefinition } from "../../core/types.ts";
 import type { Context } from "hono";
 
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 429 | 500 | 501;

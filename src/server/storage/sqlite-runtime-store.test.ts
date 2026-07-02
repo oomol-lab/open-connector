@@ -2,8 +2,8 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
-import { AesGcmSecretCodec } from "./secret-codec.ts";
 import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
 
 const tempDirs: string[] = [];
@@ -40,7 +40,7 @@ describe("SqliteRuntimeDatabase", () => {
       state: "state-1",
       createdAt: "2026-06-30T00:00:00.000Z",
     });
-    first.runLogStore.add({
+    await first.runLogStore.add({
       id: "run-1",
       actionId: "hackernews.get_top_stories",
       caller: "http",
@@ -67,17 +67,19 @@ describe("SqliteRuntimeDatabase", () => {
       state: "state-1",
     });
     await expect(second.oauthStateStore.take("state-1")).resolves.toBeUndefined();
-    expect(second.runLogStore.list()).toEqual([
-      {
-        id: "run-1",
-        actionId: "hackernews.get_top_stories",
-        caller: "http",
-        startedAt: "2026-06-30T00:00:00.000Z",
-        completedAt: "2026-06-30T00:00:01.000Z",
-        durationMs: 1000,
-        ok: true,
-      },
-    ]);
+    await expect(second.runLogStore.list()).resolves.toEqual({
+      items: [
+        {
+          id: "run-1",
+          actionId: "hackernews.get_top_stories",
+          caller: "http",
+          startedAt: "2026-06-30T00:00:00.000Z",
+          completedAt: "2026-06-30T00:00:01.000Z",
+          durationMs: 1000,
+          ok: true,
+        },
+      ],
+    });
     second.close();
   });
 
@@ -85,11 +87,31 @@ describe("SqliteRuntimeDatabase", () => {
     const databasePath = await createDatabasePath();
     const database = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
 
-    database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
-    database.runLogStore.add(createRun("run-2", "2026-06-30T00:00:01.000Z"));
-    database.runLogStore.add(createRun("run-3", "2026-06-30T00:00:02.000Z"));
+    await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    await database.runLogStore.add(createRun("run-2", "2026-06-30T00:00:01.000Z"));
+    await database.runLogStore.add(createRun("run-3", "2026-06-30T00:00:02.000Z"));
 
-    expect(database.runLogStore.list().map((run) => run.id)).toEqual(["run-3", "run-2"]);
+    await expect(database.runLogStore.list()).resolves.toMatchObject({
+      items: [{ id: "run-3" }, { id: "run-2" }],
+    });
+    database.close();
+  });
+
+  it("paginates recent runs with a cursor", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath, { runLimit: 4 });
+
+    await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    await database.runLogStore.add(createRun("run-2", "2026-06-30T00:00:01.000Z"));
+    await database.runLogStore.add(createRun("run-3", "2026-06-30T00:00:02.000Z"));
+
+    const first = await database.runLogStore.list({ limit: 2 });
+    expect(first.items.map((run) => run.id)).toEqual(["run-3", "run-2"]);
+    expect(first.nextCursor).toBeTruthy();
+
+    const second = await database.runLogStore.list({ limit: 2, cursor: first.nextCursor });
+    expect(second.items.map((run) => run.id)).toEqual(["run-1"]);
+    expect(second.nextCursor).toBeUndefined();
     database.close();
   });
 
@@ -146,54 +168,48 @@ describe("SqliteRuntimeDatabase", () => {
     database.close();
   });
 
-  it("exports, restores, and resets runtime data snapshots", async () => {
-    const sourcePath = await createDatabasePath();
-    const source = new SqliteRuntimeDatabase(sourcePath);
-    await source.connectionStore.set("github", "default", {
+  it("resets runtime data", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath);
+    await database.connectionStore.set("github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
       profile: githubProfile,
       metadata: {},
     });
-    source.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
-    const snapshot = await source.exportSnapshot();
-    source.resetRuntimeData();
-    await expect(source.connectionStore.get("github", "default")).resolves.toBeUndefined();
-    expect(source.runLogStore.list()).toEqual([]);
-    source.close();
+    await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
 
-    const targetPath = await createDatabasePath();
-    const target = new SqliteRuntimeDatabase(targetPath);
-    target.restoreSnapshot(snapshot);
-    await expect(target.connectionStore.get("github", "default")).resolves.toMatchObject({
-      authType: "api_key",
-      apiKey: "github-token",
-    });
-    expect(target.runLogStore.list().map((run) => run.id)).toEqual(["run-1"]);
-    target.close();
+    database.resetRuntimeData();
+
+    await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
+    await expect(database.runLogStore.list()).resolves.toEqual({ items: [] });
+    database.close();
   });
 
-  it("supports re-encrypting runtime data with a new codec", async () => {
+  it("rotates stored secret encryption without resetting other runtime data", async () => {
     const databasePath = await createDatabasePath();
-    const oldDatabase = new SqliteRuntimeDatabase(databasePath, {
+    const database = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("old-key"),
     });
-    await oldDatabase.connectionStore.set("github", "default", {
+    const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+    const token = await tokens.createToken("Claude Desktop");
+    await database.connectionStore.set("github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
       profile: githubProfile,
       metadata: {},
     });
-    const snapshot = await oldDatabase.exportSnapshot();
-    oldDatabase.close();
-
-    const newDatabase = new SqliteRuntimeDatabase(databasePath, {
-      secretCodec: new AesGcmSecretCodec("new-key"),
+    await database.oauthClientConfigStore.set({
+      service: "gmail",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: {},
     });
-    newDatabase.restoreSnapshot(snapshot);
-    newDatabase.close();
+    await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    await database.rotateSecretCodec(new AesGcmSecretCodec("new-key"));
+    database.close();
 
     const withOldKey = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("old-key"),
@@ -208,6 +224,11 @@ describe("SqliteRuntimeDatabase", () => {
       authType: "api_key",
       apiKey: "github-token",
     });
+    await expect(withNewKey.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
+      clientSecret: "client-secret",
+    });
+    await expect(withNewKey.runtimeTokenStore.list()).resolves.toMatchObject([{ id: token.record.id }]);
+    await expect(withNewKey.runLogStore.list()).resolves.toMatchObject({ items: [{ id: "run-1" }] });
     withNewKey.close();
   });
 });

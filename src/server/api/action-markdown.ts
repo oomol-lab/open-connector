@@ -1,5 +1,5 @@
-import type { ConnectionSummary } from "../connection-service.ts";
-import type { ActionDefinition, JsonSchema } from "../core/types.ts";
+import type { ConnectionSummary } from "../../connection-service.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import type { BlockContent, DefinitionContent, ListItem, PhrasingContent, Root, TableCell, TableRow } from "mdast";
 
 import { fromMarkdown } from "mdast-util-from-markdown";
@@ -29,7 +29,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       code(
         "bash",
         [
-          `curl -s http://localhost:3000/api/actions/${action.id}/runs \\`,
+          `curl -s http://localhost:3000/v1/actions/${action.id} \\`,
           "  -H 'content-type: application/json' \\",
           `  -d '${JSON.stringify({ input: exampleInput })}'`,
         ].join("\n"),
@@ -37,7 +37,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       code(
         "ts",
         [
-          `const response = await fetch("http://localhost:3000/api/actions/${action.id}/runs", {`,
+          `const response = await fetch("http://localhost:3000/v1/actions/${action.id}", {`,
           `  method: "POST",`,
           `  headers: { "content-type": "application/json" },`,
           `  body: JSON.stringify(${indentMultiline(exampleBody, 2)}),`,

@@ -1,0 +1,331 @@
+import type { IConnectionStore } from "../../connection-service.ts";
+import type { ResolvedCredential } from "../../core/types.ts";
+import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
+import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
+import type { D1DatabaseBinding } from "../cloudflare/cloudflare-bindings.ts";
+import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
+import type { RuntimeDatabase } from "./runtime-database.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
+import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
+
+import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
+import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
+
+type RuntimeRow = Record<string, unknown>;
+type SecretJsonTable = "oauth_client_configs";
+
+export interface D1RuntimeDatabaseOptions {
+  runLimit?: number;
+  secretCodec?: ISecretCodec;
+}
+
+export class D1RuntimeDatabase implements RuntimeDatabase {
+  readonly connectionStore: D1ConnectionStore;
+  readonly oauthClientConfigStore: D1OAuthClientConfigStore;
+  readonly oauthStateStore: D1OAuthStateStore;
+  readonly runtimeTokenStore: D1RuntimeTokenStore;
+  readonly runLogStore: D1RunLogStore;
+
+  constructor(database: D1DatabaseBinding, options: D1RuntimeDatabaseOptions = {}) {
+    const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
+    this.connectionStore = new D1ConnectionStore(database, secretCodec);
+    this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
+    this.oauthStateStore = new D1OAuthStateStore(database);
+    this.runtimeTokenStore = new D1RuntimeTokenStore(database);
+    this.runLogStore = new D1RunLogStore(database, options.runLimit ?? 100);
+  }
+}
+
+export class D1ConnectionStore implements IConnectionStore {
+  private readonly database: D1DatabaseBinding;
+  private readonly secretCodec: ISecretCodec;
+
+  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
+    this.database = database;
+    this.secretCodec = secretCodec;
+  }
+
+  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+    const row = await this.database
+      .prepare("select value from connections where service = ? and connection_name = ?")
+      .bind(service, connectionName)
+      .first<RuntimeRow>();
+    return row ? parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))) : undefined;
+  }
+
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
+    await this.database
+      .prepare(
+        `
+        insert into connections (service, connection_name, value, updated_at)
+        values (?, ?, ?, ?)
+        on conflict(service, connection_name) do update set
+          value = excluded.value,
+          updated_at = excluded.updated_at
+      `,
+      )
+      .bind(
+        service,
+        connectionName,
+        await this.secretCodec.encode(JSON.stringify(credential)),
+        new Date().toISOString(),
+      )
+      .run();
+  }
+
+  async delete(service: string, connectionName: string): Promise<void> {
+    await this.database
+      .prepare("delete from connections where service = ? and connection_name = ?")
+      .bind(service, connectionName)
+      .run();
+  }
+
+  async list(): Promise<Array<{ service: string; connectionName: string; credential: ResolvedCredential }>> {
+    const { results } = await this.database
+      .prepare("select service, connection_name, value from connections order by service, connection_name")
+      .all<RuntimeRow>();
+    return await Promise.all(
+      results.map(async (row) => ({
+        service: readString(row, "service"),
+        connectionName: readString(row, "connection_name"),
+        credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
+      })),
+    );
+  }
+}
+
+export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
+  private readonly database: D1DatabaseBinding;
+  private readonly secretCodec: ISecretCodec;
+
+  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
+    this.database = database;
+    this.secretCodec = secretCodec;
+  }
+
+  async get(service: string): Promise<OAuthClientConfig | undefined> {
+    return await getSecretJson<OAuthClientConfig>(this.database, this.secretCodec, "oauth_client_configs", service);
+  }
+
+  async set(config: OAuthClientConfig): Promise<void> {
+    await this.database
+      .prepare(
+        `
+        insert into oauth_client_configs (service, value, updated_at)
+        values (?, ?, ?)
+        on conflict(service) do update set value = excluded.value, updated_at = excluded.updated_at
+      `,
+      )
+      .bind(config.service, await this.secretCodec.encode(JSON.stringify(config)), new Date().toISOString())
+      .run();
+  }
+
+  async delete(service: string): Promise<void> {
+    await this.database.prepare("delete from oauth_client_configs where service = ?").bind(service).run();
+  }
+
+  async list(): Promise<OAuthClientConfig[]> {
+    const { results } = await this.database
+      .prepare("select value from oauth_client_configs order by service")
+      .all<RuntimeRow>();
+    return await Promise.all(
+      results.map(async (row) => parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value")))),
+    );
+  }
+}
+
+export class D1OAuthStateStore implements IOAuthStateStore {
+  private readonly database: D1DatabaseBinding;
+
+  constructor(database: D1DatabaseBinding) {
+    this.database = database;
+  }
+
+  async set(state: OAuthAuthorizationState): Promise<void> {
+    await this.database
+      .prepare(
+        `
+        insert into oauth_states (state, value, created_at)
+        values (?, ?, ?)
+        on conflict(state) do update set value = excluded.value, created_at = excluded.created_at
+      `,
+      )
+      .bind(state.state, JSON.stringify(state), state.createdAt)
+      .run();
+  }
+
+  async take(state: string): Promise<OAuthAuthorizationState | undefined> {
+    const row = await this.database
+      .prepare("delete from oauth_states where state = ? returning value")
+      .bind(state)
+      .first<RuntimeRow>();
+    return row ? parseJson<OAuthAuthorizationState>(readString(row, "value")) : undefined;
+  }
+}
+
+export class D1RuntimeTokenStore implements IRuntimeTokenStore {
+  private readonly database: D1DatabaseBinding;
+
+  constructor(database: D1DatabaseBinding) {
+    this.database = database;
+  }
+
+  async add(record: RuntimeTokenRecord): Promise<void> {
+    await this.database
+      .prepare(
+        `
+        insert into runtime_tokens (id, name, token_hash, created_at, last_used_at, revoked_at)
+        values (?, ?, ?, ?, ?, ?)
+      `,
+      )
+      .bind(
+        record.id,
+        record.name,
+        record.tokenHash,
+        record.createdAt,
+        record.lastUsedAt ?? null,
+        record.revokedAt ?? null,
+      )
+      .run();
+  }
+
+  async list(): Promise<RuntimeTokenRecord[]> {
+    const { results } = await this.database
+      .prepare(
+        `
+        select id, name, token_hash, created_at, last_used_at, revoked_at
+        from runtime_tokens
+        order by created_at desc, id desc
+      `,
+      )
+      .all<RuntimeRow>();
+    return results.map((row) => ({
+      id: readString(row, "id"),
+      name: readString(row, "name"),
+      tokenHash: readString(row, "token_hash"),
+      createdAt: readString(row, "created_at"),
+      lastUsedAt: readOptionalString(row, "last_used_at"),
+      revokedAt: readOptionalString(row, "revoked_at"),
+    }));
+  }
+
+  async revoke(id: string, revokedAt: string): Promise<boolean> {
+    const result = await this.database
+      .prepare("update runtime_tokens set revoked_at = ? where id = ? and revoked_at is null")
+      .bind(revokedAt, id)
+      .run();
+    return (result.meta.changes ?? 0) > 0;
+  }
+
+  async markUsed(id: string, usedAt: string): Promise<void> {
+    await this.database
+      .prepare("update runtime_tokens set last_used_at = ? where id = ? and revoked_at is null")
+      .bind(usedAt, id)
+      .run();
+  }
+}
+
+export class D1RunLogStore implements IRunLogStore {
+  private readonly database: D1DatabaseBinding;
+  private readonly limit: number;
+
+  constructor(database: D1DatabaseBinding, limit: number) {
+    this.database = database;
+    this.limit = limit;
+  }
+
+  async add(run: RunLog): Promise<void> {
+    await this.database
+      .prepare(
+        `
+        insert into runs (id, action_id, started_at, completed_at, ok, value)
+        values (?, ?, ?, ?, ?, ?)
+        on conflict(id) do update set
+          action_id = excluded.action_id,
+          started_at = excluded.started_at,
+          completed_at = excluded.completed_at,
+          ok = excluded.ok,
+          value = excluded.value
+      `,
+      )
+      .bind(run.id, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run))
+      .run();
+
+    await this.database
+      .prepare(
+        `
+        delete from runs
+        where id in (
+          select id from runs
+          order by started_at desc, id desc
+          limit -1 offset ?
+        )
+      `,
+      )
+      .bind(this.limit)
+      .run();
+  }
+
+  async list(input: RunLogListInput = {}): Promise<RunLogPage> {
+    const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
+    const cursor = decodeRunLogCursor(input.cursor);
+    const { results } = cursor
+      ? await this.database
+          .prepare(
+            `
+            select value from runs
+            where started_at < ? or (started_at = ? and id < ?)
+            order by started_at desc, id desc
+            limit ?
+          `,
+          )
+          .bind(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
+          .all<RuntimeRow>()
+      : await this.database
+          .prepare("select value from runs order by started_at desc, id desc limit ?")
+          .bind(limit + 1)
+          .all<RuntimeRow>();
+    const runs = results.map((row) => parseJson<RunLog>(readString(row, "value")));
+    const items = runs.slice(0, limit);
+
+    return {
+      items,
+      nextCursor: runs.length > limit && items.length > 0 ? encodeRunLogCursor(items[items.length - 1]) : undefined,
+    };
+  }
+}
+
+async function getSecretJson<T>(
+  database: D1DatabaseBinding,
+  secretCodec: ISecretCodec,
+  table: SecretJsonTable,
+  service: string,
+): Promise<T | undefined> {
+  const row = await database.prepare(`select value from ${table} where service = ?`).bind(service).first<RuntimeRow>();
+  return row ? parseJson<T>(await secretCodec.decode(readString(row, "value"))) : undefined;
+}
+
+function readString(row: RuntimeRow, key: string): string {
+  const value = row[key];
+  if (typeof value !== "string") {
+    throw new Error(`Expected D1 column ${key} to be a string.`);
+  }
+
+  return value;
+}
+
+function readOptionalString(row: RuntimeRow, key: string): string | undefined {
+  const value = row[key];
+  if (value == null) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`Expected D1 column ${key} to be a string.`);
+  }
+
+  return value;
+}
+
+function parseJson<T>(value: string): T {
+  return JSON.parse(value) as T;
+}
