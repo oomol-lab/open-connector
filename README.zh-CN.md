@@ -284,7 +284,7 @@ OOMOL_CONNECT_BLOCKED_ACTIONS="github.delete_repository" \
 docker compose up --build
 ```
 
-凭据存储、备份、密钥轮换和 OAuth token 刷新行为见 [docs/credentials.md](docs/credentials.md)。
+凭据存储、密钥轮换和 OAuth token 刷新行为见 [docs/credentials.md](docs/credentials.md)。
 
 ## 从源码运行
 
@@ -299,6 +299,28 @@ npm run dev
 `npm install` 和 `npm run dev` 会在生成文件缺失或过期时创建本地文件。
 
 从源码运行时，运行时状态默认保存在 `./data/connect.sqlite`。可以设置 `OOMOL_CONNECT_DATA_DIR` 使用其它目录。
+
+## 部署到 Cloudflare Workers
+
+Cloudflare Workers 支持作为 metadata 和运行时状态的部署目标：
+
+```bash
+cp wrangler.example.jsonc wrangler.local.jsonc
+npm run generate:catalog
+npm run build:web
+npx wrangler d1 create oomol-connect
+npx wrangler r2 bucket create oomol-connect-transit-files
+npx wrangler d1 migrations apply oomol-connect --remote
+npm run deploy:cloudflare
+```
+
+部署前，把 Cloudflare 返回的 D1 `database_id` 填入被忽略的 `wrangler.local.jsonc`。使用
+`wrangler secret put` 设置 secret，尤其是 `OOMOL_CONNECT_ADMIN_TOKEN`；需要凭据加密时，还要设置
+`OOMOL_CONNECT_ENCRYPTION_KEY`。
+
+Cloudflare runtime 会提供 catalog metadata、`/api` 和 `/v1` metadata endpoint、连接、runtime
+token、OAuth config/state、基于 R2 的中转文件，以及和 Node runtime 相同的生成版 provider action
+executor registry。如果希望自动清理未读取的过期中转文件，请为 transit bucket 配置 R2 lifecycle rule。
 
 ## 示例
 
@@ -357,7 +379,6 @@ curl -s -X POST http://localhost:3000/api/files \
 - `GET /api/actions`
 - `GET /api/actions/:actionId`
 - `GET /api/actions/:actionId/agent.md`
-- `POST /api/actions/:actionId/runs`
 - `POST /api/files`
 - `GET /api/files/:fileId`
 - `DELETE /api/files/:fileId`

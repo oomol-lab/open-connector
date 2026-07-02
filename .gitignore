@@ -1,6 +1,7 @@
 .private-docs/
 .tmp/
 .wrangler/
+wrangler.local.jsonc
 node_modules/
 dist/
 coverage/

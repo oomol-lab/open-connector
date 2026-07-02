@@ -22,7 +22,7 @@
     {
       "binding": "DB",
       "database_name": "oomol-connect",
-      "database_id": "replace-with-cloudflare-d1-database-id",
+      "database_id": "<your-d1-database-id>",
       "migrations_dir": "migrations",
     },
   ],

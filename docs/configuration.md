@@ -37,7 +37,9 @@ Cloudflare uses the same environment variable names for origin, auth tokens, act
 file limits, and credential encryption. `PORT`, `HOST`, and `OOMOL_CONNECT_DATA_DIR` are local
 Node-only settings on Workers.
 
-The Worker runtime also requires these bindings in `wrangler.jsonc`:
+The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
+`wrangler.example.jsonc` to `wrangler.local.jsonc` and fill in your own Cloudflare resource IDs
+before running Wrangler commands.
 
 - `DB`: D1 database for connections, OAuth config/state, runtime tokens, and run logs.
 - `TRANSIT_FILES`: R2 bucket for temporary transit files.

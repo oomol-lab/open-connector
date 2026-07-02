@@ -314,6 +314,7 @@ When running from source, runtime state is stored in `./data/connect.sqlite` by 
 Cloudflare Workers is supported as a metadata and runtime-state deployment target:
 
 ```bash
+cp wrangler.example.jsonc wrangler.local.jsonc
 npm run generate:catalog
 npm run build:web
 npx wrangler d1 create oomol-connect
@@ -322,9 +323,9 @@ npx wrangler d1 migrations apply oomol-connect --remote
 npm run deploy:cloudflare
 ```
 
-Update `wrangler.jsonc` with the D1 `database_id` returned by Cloudflare before deploying. Set
-secrets with `wrangler secret put`, especially `OOMOL_CONNECT_ADMIN_TOKEN` and, when credential
-encryption is needed, `OOMOL_CONNECT_ENCRYPTION_KEY`.
+Update ignored `wrangler.local.jsonc` with the D1 `database_id` returned by Cloudflare before
+deploying. Set secrets with `wrangler secret put`, especially `OOMOL_CONNECT_ADMIN_TOKEN` and, when
+credential encryption is needed, `OOMOL_CONNECT_ENCRYPTION_KEY`.
 
 The Cloudflare runtime serves catalog metadata, `/api` and `/v1` metadata endpoints, connections,
 runtime tokens, OAuth config/state, R2-backed transit files, and the same generated provider action
