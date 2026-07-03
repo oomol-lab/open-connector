@@ -12,7 +12,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-t
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
@@ -78,6 +78,10 @@ const followUpAction: ActionDefinition = {
   id: "example.follow_up",
   name: "follow_up",
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("ConnectServer", () => {
   it("serves catalog and standard connection errors without opening a port", async () => {

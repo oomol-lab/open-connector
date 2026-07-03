@@ -15,6 +15,17 @@ interface AccessPageProps {
   onRefresh(): void;
 }
 
+interface CreateTokenDialogProps {
+  name: string;
+  created: RuntimeTokenCreation | null;
+  status: string | null;
+  copied: boolean;
+  onNameChange(name: string): void;
+  onSubmit(event: FormEvent): Promise<void>;
+  onCopy(token: string): void;
+  onClose(): void;
+}
+
 export function createTokenDialogMode(created: RuntimeTokenCreation | null): "form" | "created" {
   return created ? "created" : "form";
 }
@@ -156,16 +167,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   );
 }
 
-function CreateTokenDialog(props: {
-  name: string;
-  created: RuntimeTokenCreation | null;
-  status: string | null;
-  copied: boolean;
-  onNameChange(name: string): void;
-  onSubmit(event: FormEvent): Promise<void>;
-  onCopy(token: string): void;
-  onClose(): void;
-}): ReactNode {
+function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
   const t = useTranslate();
   const mode = createTokenDialogMode(props.created);
   const created = mode === "created" ? props.created : null;
