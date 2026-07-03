@@ -312,18 +312,37 @@ When running from source, runtime state is stored in `./data/connect.sqlite` by 
 Cloudflare Workers is supported as a metadata and runtime-state deployment target:
 
 ```bash
+git clone https://github.com/oomol-lab/open-connector.git
+cd open-connector
+npm install
 cp wrangler.example.jsonc wrangler.local.jsonc
-npm run generate:catalog
-npm run build:web
+npx wrangler login
 npx wrangler d1 create oomol-connect
 npx wrangler r2 bucket create oomol-connect-transit-files
-npx wrangler d1 migrations apply oomol-connect --remote
-npm run deploy:cloudflare
 ```
 
 Update ignored `wrangler.local.jsonc` with the D1 `database_id` returned by Cloudflare before
-deploying. Set secrets with `wrangler secret put`, especially `OOMOL_CONNECT_ADMIN_TOKEN` and, when
-credential encryption is needed, `OOMOL_CONNECT_ENCRYPTION_KEY`.
+running remote migrations or deploying. All Wrangler commands that read the Worker config should use
+`--config wrangler.local.jsonc`.
+
+Set secrets with Wrangler instead of committing them to config:
+
+```bash
+npx wrangler secret put OOMOL_CONNECT_ADMIN_TOKEN --config wrangler.local.jsonc
+npx wrangler secret put OOMOL_CONNECT_ENCRYPTION_KEY --config wrangler.local.jsonc
+```
+
+`OOMOL_CONNECT_ADMIN_TOKEN` is recommended for protecting the admin API, docs, and web console.
+`OOMOL_CONNECT_ENCRYPTION_KEY` is required when credential encryption is needed. Then apply the D1
+schema and deploy:
+
+```bash
+npx wrangler d1 migrations apply oomol-connect --remote --config wrangler.local.jsonc
+npm run deploy:cloudflare
+```
+
+`npm run deploy:cloudflare` generates the catalog, builds the web console, copies catalog assets, and
+runs `wrangler deploy --config wrangler.local.jsonc`.
 
 The Cloudflare runtime serves catalog metadata, `/api` and `/v1` metadata endpoints, connections,
 runtime tokens, OAuth config/state, R2-backed transit files, and the same generated provider action

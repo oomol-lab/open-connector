@@ -303,18 +303,36 @@ npm run dev
 Cloudflare Workers 支持作为 metadata 和运行时状态的部署目标：
 
 ```bash
+git clone https://github.com/oomol-lab/open-connector.git
+cd open-connector
+npm install
 cp wrangler.example.jsonc wrangler.local.jsonc
-npm run generate:catalog
-npm run build:web
+npx wrangler login
 npx wrangler d1 create oomol-connect
 npx wrangler r2 bucket create oomol-connect-transit-files
-npx wrangler d1 migrations apply oomol-connect --remote
+```
+
+运行远程 migration 或部署前，把 Cloudflare 返回的 D1 `database_id` 填入被忽略的
+`wrangler.local.jsonc`。所有需要读取 Worker 配置的 Wrangler 命令都应显式使用
+`--config wrangler.local.jsonc`。
+
+使用 Wrangler 设置 secret，不要把它们提交到配置文件：
+
+```bash
+npx wrangler secret put OOMOL_CONNECT_ADMIN_TOKEN --config wrangler.local.jsonc
+npx wrangler secret put OOMOL_CONNECT_ENCRYPTION_KEY --config wrangler.local.jsonc
+```
+
+建议设置 `OOMOL_CONNECT_ADMIN_TOKEN` 来保护 admin API、docs 和 web console。需要凭据加密时，必须设置
+`OOMOL_CONNECT_ENCRYPTION_KEY`。然后应用 D1 schema 并部署：
+
+```bash
+npx wrangler d1 migrations apply oomol-connect --remote --config wrangler.local.jsonc
 npm run deploy:cloudflare
 ```
 
-部署前，把 Cloudflare 返回的 D1 `database_id` 填入被忽略的 `wrangler.local.jsonc`。使用
-`wrangler secret put` 设置 secret，尤其是 `OOMOL_CONNECT_ADMIN_TOKEN`；需要凭据加密时，还要设置
-`OOMOL_CONNECT_ENCRYPTION_KEY`。
+`npm run deploy:cloudflare` 会生成 catalog、构建 web console、复制 catalog assets，并运行
+`wrangler deploy --config wrangler.local.jsonc`。
 
 Cloudflare runtime 会提供 catalog metadata、`/api` 和 `/v1` metadata endpoint、连接、runtime
 token、OAuth config/state、基于 R2 的中转文件，以及和 Node runtime 相同的生成版 provider action
