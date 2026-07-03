@@ -143,11 +143,7 @@ function appendCommonQuery(url: URL, input: Record<string, unknown>): void {
   }
 }
 
-function appendMappedStringQuery(
-  url: URL,
-  input: Record<string, unknown>,
-  mapping: Record<string, string>,
-): void {
+function appendMappedStringQuery(url: URL, input: Record<string, unknown>, mapping: Record<string, string>): void {
   for (const [inputKey, queryKey] of Object.entries(mapping)) {
     const value = optionalString(input[inputKey]);
     if (value) {

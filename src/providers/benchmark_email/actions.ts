@@ -139,7 +139,9 @@ export const benchmarkEmailActions: ActionDefinition[] = [
       "The input payload for reading paginated contacts from a Benchmark Email list.",
       {
         list_id: s.nonEmptyString("The contact list identifier to query."),
-        language: s.nonEmptyString("The Benchmark Email language code forwarded to listGetFilteredContacts when needed."),
+        language: s.nonEmptyString(
+          "The Benchmark Email language code forwarded to listGetFilteredContacts when needed.",
+        ),
         filter: contactFilterSchema,
         order_by: contactOrderBySchema,
         sort_order: sortOrderSchema,

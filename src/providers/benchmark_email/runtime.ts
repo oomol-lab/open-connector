@@ -10,7 +10,6 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const service = "benchmark_email";
 const benchmarkEmailDefaultRequestTimeoutMs = 30_000;
 const benchmarkEmailValidationMethod = "clientGetProfileDetails";
 
@@ -258,7 +257,10 @@ function normalizeBaseUrl(value: unknown): string {
   return url.toString().replace(/\/+$/u, "");
 }
 
-export function resolveBenchmarkEmailBaseUrl(values: Record<string, string>, metadata: Record<string, unknown>): string {
+export function resolveBenchmarkEmailBaseUrl(
+  values: Record<string, string>,
+  metadata: Record<string, unknown>,
+): string {
   return normalizeBaseUrl(optionalString(metadata.baseUrl) ?? optionalString(values.baseUrl));
 }
 

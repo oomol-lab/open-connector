@@ -169,9 +169,13 @@ const listPostsInputSchema = s.object(
 const createPostInputSchema = s.object(
   "The JSON body for creating one Beamer changelog post.",
   {
-    title: s.array("The translated post titles in Beamer order.", s.string("One translated post title.", { minLength: 1 }), {
-      minItems: 1,
-    }),
+    title: s.array(
+      "The translated post titles in Beamer order.",
+      s.string("One translated post title.", { minLength: 1 }),
+      {
+        minItems: 1,
+      },
+    ),
     content: s.array(
       "The translated post content values in the same order as the titles.",
       s.string("One translated post content string.", { minLength: 1 }),

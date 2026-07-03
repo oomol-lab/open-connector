@@ -16,10 +16,7 @@ const optionalPageSizeSchema = s.integer("The number of results to return per pa
 });
 const optionalShowSchema = nonEmptyString("A comma-separated list of upstream fields to include in the response.");
 const optionalSortSchema = nonEmptyString("The Best Buy sort expression, such as name.asc or salePrice.dsc.");
-const skuInputSchema = s.anyOf("The product SKU.", [
-  s.integer("The product SKU."),
-  nonEmptyString("The product SKU."),
-]);
+const skuInputSchema = s.anyOf("The product SKU.", [s.integer("The product SKU."), nonEmptyString("The product SKU.")]);
 const storeIdInputSchema = s.anyOf("The store identifier.", [
   s.integer("The store identifier."),
   nonEmptyString("The store identifier."),
@@ -102,9 +99,15 @@ const productSchema = s.looseRequiredObject(
 const reviewSchema = s.looseRequiredObject(
   "A Best Buy review object.",
   {
-    id: s.anyOf("The unique review identifier.", [s.integer("The review identifier."), nonEmptyString("The review identifier.")]),
+    id: s.anyOf("The unique review identifier.", [
+      s.integer("The review identifier."),
+      nonEmptyString("The review identifier."),
+    ]),
     productId: s.string("The reviewed product identifier."),
-    sku: s.anyOf("The reviewed product SKU.", [s.integer("The reviewed product SKU."), nonEmptyString("The reviewed product SKU.")]),
+    sku: s.anyOf("The reviewed product SKU.", [
+      s.integer("The reviewed product SKU."),
+      nonEmptyString("The reviewed product SKU."),
+    ]),
     reviewer: s.string("The reviewer display name."),
     reviewerLocation: s.string("The reviewer location string."),
     title: s.string("The review title."),
@@ -135,7 +138,10 @@ const reviewSchema = s.looseRequiredObject(
 const storeSchema = s.looseRequiredObject(
   "A Best Buy store object.",
   {
-    storeId: s.anyOf("The store identifier.", [s.integer("The store identifier."), nonEmptyString("The store identifier.")]),
+    storeId: s.anyOf("The store identifier.", [
+      s.integer("The store identifier."),
+      nonEmptyString("The store identifier."),
+    ]),
     name: s.string("The store display name."),
     type: s.string("The upstream store type alias."),
     storeType: s.string("The upstream store type."),
@@ -255,10 +261,16 @@ const productsInputSchema = s.object(
   {
     sku: skuInputSchema,
     upc: nonEmptyString("The product UPC to filter by."),
-    name: nonEmptyString("The product name filter. Plain values are converted into a name clause, and raw Best Buy name expressions are also accepted."),
-    salePrice: nonEmptyString("The salePrice filter. Values such as >100 are converted into a Best Buy comparison clause, and raw salePrice expressions are also accepted."),
+    name: nonEmptyString(
+      "The product name filter. Plain values are converted into a name clause, and raw Best Buy name expressions are also accepted.",
+    ),
+    salePrice: nonEmptyString(
+      "The salePrice filter. Values such as >100 are converted into a Best Buy comparison clause, and raw salePrice expressions are also accepted.",
+    ),
     categoryPathId: nonEmptyString("The Best Buy category identifier to filter products by."),
-    "categoryPath.id": nonEmptyString("The Best Buy category identifier alias used by the toolkit to filter products by."),
+    "categoryPath.id": nonEmptyString(
+      "The Best Buy category identifier alias used by the toolkit to filter products by.",
+    ),
     ...listOptions,
   },
   { optional: ["sku", "upc", "name", "salePrice", "categoryPathId", "categoryPath.id", ...listOptionKeys] },

@@ -90,7 +90,9 @@ export const beeminderActions: ActionDefinition[] = [
         username: usernameSchema,
         associations: s.boolean("Whether to include full goal and datapoint objects instead of only goal slugs."),
         diff_since: unixTimestampSchema,
-        skinny: s.boolean("Whether to return slimmer goal attributes and only each goal's latest datapoint with diff_since."),
+        skinny: s.boolean(
+          "Whether to return slimmer goal attributes and only each goal's latest datapoint with diff_since.",
+        ),
         datapoints_count: s.integer("Number of the most recently added datapoints to include for each goal.", {
           minimum: 1,
         }),
@@ -201,7 +203,9 @@ export const beeminderActions: ActionDefinition[] = [
         timestamp: unixTimestampSchema,
         daystamp: s.nonEmptyString("The datapoint daystamp in YYYYMMDD format."),
         comment: s.nonEmptyString("The datapoint comment."),
-        requestid: s.nonEmptyString("A caller-supplied idempotency key scoped to the goal. Reusing it avoids duplicate datapoints."),
+        requestid: s.nonEmptyString(
+          "A caller-supplied idempotency key scoped to the goal. Reusing it avoids duplicate datapoints.",
+        ),
       },
       { optional: ["timestamp", "daystamp", "comment", "requestid"] },
     ),

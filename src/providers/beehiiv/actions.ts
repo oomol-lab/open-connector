@@ -323,7 +323,10 @@ const subscriptionSchema = s.looseRequiredObject(
       }),
     ),
     tags: s.array("Tags set on the subscription.", s.string("One subscription tag.")),
-    newsletter_lists: s.array("Newsletter list IDs the subscription is actively subscribed to.", s.string("One newsletter list ID.")),
+    newsletter_lists: s.array(
+      "Newsletter list IDs the subscription is actively subscribed to.",
+      s.string("One newsletter list ID."),
+    ),
   },
   {
     optional: [

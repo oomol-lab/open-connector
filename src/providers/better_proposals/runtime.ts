@@ -170,9 +170,7 @@ async function getJson(
   } catch (error) {
     throw new ProviderRequestError(
       502,
-      error instanceof Error
-        ? `better_proposals request failed: ${error.message}`
-        : "better_proposals request failed",
+      error instanceof Error ? `better_proposals request failed: ${error.message}` : "better_proposals request failed",
     );
   }
 

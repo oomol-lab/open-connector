@@ -61,10 +61,7 @@ export async function validateBeaconchainCredential(
   };
 }
 
-async function getStakingQueues(
-  input: Record<string, unknown>,
-  context: BeaconchainActionContext,
-): Promise<unknown> {
+async function getStakingQueues(input: Record<string, unknown>, context: BeaconchainActionContext): Promise<unknown> {
   const payload = await requestBeaconchainJson(
     "/api/v2/ethereum/queues",
     {
@@ -183,7 +180,10 @@ async function getNetworkPerformance(
           successful: readRequiredInteger(proposal.successful, "data.duties.proposal.successful"),
           assigned: readRequiredInteger(proposal.assigned, "data.duties.proposal.assigned"),
           missed: readRequiredInteger(proposal.missed, "data.duties.proposal.missed"),
-          includedSlashings: readRequiredInteger(proposal.included_slashings, "data.duties.proposal.included_slashings"),
+          includedSlashings: readRequiredInteger(
+            proposal.included_slashings,
+            "data.duties.proposal.included_slashings",
+          ),
         },
       },
     },
