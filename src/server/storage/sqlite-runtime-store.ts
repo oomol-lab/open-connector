@@ -7,6 +7,7 @@ import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
+import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
@@ -105,42 +106,9 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   }
 
   private initialize(): void {
-    this.database.exec(`
-      pragma journal_mode = wal;
-      create table if not exists connections (
-        service text not null,
-        connection_name text not null,
-        value text not null,
-        updated_at text not null,
-        primary key (service, connection_name)
-      );
-      create table if not exists oauth_client_configs (
-        service text primary key,
-        value text not null,
-        updated_at text not null
-      );
-      create table if not exists oauth_states (
-        state text primary key,
-        value text not null,
-        created_at text not null
-      );
-      create table if not exists runtime_tokens (
-        id text primary key,
-        name text not null,
-        token_hash text not null unique,
-        created_at text not null,
-        last_used_at text,
-        revoked_at text
-      );
-      create table if not exists runs (
-        id text primary key,
-        action_id text not null,
-        started_at text not null,
-        completed_at text not null,
-        ok integer not null,
-        value text not null
-      );
-    `);
+    this.database.exec("pragma journal_mode = wal;");
+    const migrationSql = readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8");
+    this.database.exec(migrationSql);
   }
 }
 
