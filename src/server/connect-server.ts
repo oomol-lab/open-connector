@@ -253,7 +253,7 @@ export class ConnectServer {
 
     const index = await this.actionSearch.get();
     return context.json(
-      this.serializeSearchResults(
+      await this.serializeSearchResults(
         searchActions(index, query.q, {
           service: query.service,
           limit: query.limit,
@@ -326,16 +326,19 @@ export class ConnectServer {
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, this.serializeSearchResults(results));
+    return writeRuntimeSuccess(context, await this.serializeSearchResults(results));
   }
 
-  private serializeSearchResults(results: ActionSearchResult[]): RuntimeActionSearchResult[] {
+  private async serializeSearchResults(results: ActionSearchResult[]): Promise<RuntimeActionSearchResult[]> {
+    const authenticated = new Set(
+      await this.options.connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
+    );
     return results.flatMap((result) => {
       const action = this.options.catalog.actionsById.get(result.id);
       if (!action) {
         return [];
       }
-      return [serializeActionSearchResult(result, action)];
+      return [serializeActionSearchResult(result, action, authenticated.has(action.service))];
     });
   }
 
@@ -770,6 +773,7 @@ interface RuntimeActionSearchResult {
   service: string;
   name: string;
   description: string;
+  authenticated: boolean;
   inputSchema: RuntimeActionDefinition["inputSchema"];
   outputSchema: RuntimeActionDefinition["outputSchema"];
 }
@@ -777,12 +781,14 @@ interface RuntimeActionSearchResult {
 function serializeActionSearchResult(
   result: ActionSearchResult,
   action: RuntimeActionDefinition,
+  authenticated: boolean,
 ): RuntimeActionSearchResult {
   return {
     id: result.id,
     service: result.service,
     name: result.name,
     description: result.description,
+    authenticated,
     inputSchema: action.inputSchema,
     outputSchema: action.outputSchema,
   };

@@ -1168,6 +1168,7 @@ describe("ConnectServer", () => {
       id: string;
       service: string;
       name: string;
+      authenticated: boolean;
       inputSchema: Record<string, unknown>;
       outputSchema: Record<string, unknown>;
     }>;
@@ -1175,6 +1176,7 @@ describe("ConnectServer", () => {
       id: "example.echo",
       service: "example",
       name: "echo",
+      authenticated: true,
       inputSchema: { type: "object" },
       outputSchema: { type: "object" },
     });
@@ -1188,6 +1190,7 @@ describe("ConnectServer", () => {
         service: string;
         name: string;
         description: string;
+        authenticated: boolean;
         inputSchema: Record<string, unknown>;
         outputSchema: Record<string, unknown>;
       }>;
@@ -1198,6 +1201,7 @@ describe("ConnectServer", () => {
       service: "example",
       name: "echo",
       description: "Echo input.",
+      authenticated: true,
       inputSchema: { type: "object" },
       outputSchema: { type: "object" },
     });
@@ -1258,16 +1262,18 @@ describe("ConnectServer", () => {
     expect(apiSearch.status).toBe(200);
     const apiResults = (await apiSearch.json()) as Array<{ id: string; inputSchema: Record<string, unknown> }>;
     expect(apiResults.map((result) => result.id)).toEqual(["example.echo"]);
+    expect(apiResults[0]).toMatchObject({ authenticated: false });
     expect(apiResults[0]?.inputSchema).toEqual({ type: "object" });
 
     const runtimeSearch = await app.request("/v1/actions/search?q=echo");
     expect(runtimeSearch.status).toBe(200);
     const runtimeBody = (await runtimeSearch.json()) as {
       success: boolean;
-      data: Array<{ id: string; outputSchema: Record<string, unknown> }>;
+      data: Array<{ id: string; authenticated: boolean; outputSchema: Record<string, unknown> }>;
     };
     expect(runtimeBody.success).toBe(true);
     expect(runtimeBody.data.map((result) => result.id)).toEqual(["example.echo"]);
+    expect(runtimeBody.data[0]).toMatchObject({ authenticated: false });
     expect(runtimeBody.data[0]?.outputSchema).toEqual({ type: "object" });
   });
 

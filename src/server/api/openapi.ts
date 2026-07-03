@@ -210,11 +210,14 @@ export function createOpenApiDocument(
             service: jsonSchema.string({ description: "The provider service that owns the action." }),
             name: jsonSchema.string({ description: "The provider-scoped action name." }),
             description: jsonSchema.string({ description: "The action description." }),
+            authenticated: jsonSchema.boolean({
+              description: "Whether the provider service has an authenticated local connection.",
+            }),
             inputSchema: jsonSchema.unknownObject("The normalized JSON Schema for the action input."),
             outputSchema: jsonSchema.unknownObject("The normalized JSON Schema for the action output."),
           },
           {
-            required: ["id", "service", "name", "description", "inputSchema", "outputSchema"],
+            required: ["id", "service", "name", "description", "authenticated", "inputSchema", "outputSchema"],
             description: "A single action returned by fuzzy keyword search.",
           },
         ),
@@ -223,11 +226,14 @@ export function createOpenApiDocument(
             service: jsonSchema.string({ description: "The provider service that owns the action." }),
             name: jsonSchema.string({ description: "The provider-scoped action name." }),
             description: jsonSchema.string({ description: "The action description." }),
+            authenticated: jsonSchema.boolean({
+              description: "Whether the provider service has an authenticated local connection.",
+            }),
             inputSchema: jsonSchema.unknownObject("The normalized JSON Schema for the action input."),
             outputSchema: jsonSchema.unknownObject("The normalized JSON Schema for the action output."),
           },
           {
-            required: ["service", "name", "description", "inputSchema", "outputSchema"],
+            required: ["service", "name", "description", "authenticated", "inputSchema", "outputSchema"],
             description: "A single action returned by the /v1 keyword search endpoint.",
           },
         ),
