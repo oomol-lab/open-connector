@@ -33,6 +33,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # No step needs the persisted GITHUB_TOKEN in git config; dropping it
+          # keeps `npm ci` postinstall scripts from reading it (zizmor hardening).
+          persist-credentials: false
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
