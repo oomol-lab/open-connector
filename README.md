@@ -14,7 +14,7 @@
 OpenConnector is an open-source alternative to Composio for agent-ready SaaS auth, tools, and
 integrations. It is a connector layer for agents that need reliable access to user accounts in
 external apps. It handles auth, tool execution, and agent-ready integrations. The open-source catalog
-currently includes 680+ providers and 7,000+ prebuilt Actions, runs locally or on
+currently includes 840+ providers and 8,300+ prebuilt Actions, runs locally or on
 Cloudflare-compatible infrastructure, and exposes the same tools through the
 [Connector SDK](https://github.com/oomol-lab/connector-sdk), MCP, HTTP, OpenAPI, and a local Web
 Console.
@@ -36,7 +36,7 @@ Console paths below.
 
 ## What OpenConnector Provides
 
-- A working connector catalog: [680+ providers and 7,000+ prebuilt Actions](docs/providers.md)
+- A working connector catalog: [840+ providers and 8,300+ prebuilt Actions](docs/providers.md)
   across products such as GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable,
   Slack, and more.
 - Credential handling in one runtime: API keys, OAuth2, custom credentials, and providers that do
@@ -95,7 +95,7 @@ flowchart LR
   Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
-  Actions --> Providers["680+ Providers"]
+  Actions --> Providers["840+ Providers"]
   Console["Web Console"] --> Gateway
   Cloudflare["Cloudflare Workers, D1, R2"] -. deploy .-> Gateway
 ```
