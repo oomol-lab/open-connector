@@ -1,0 +1,60 @@
+name: CI
+
+# PR quality gates for OOMOL Connect, run serially in a single job:
+#   1) Lint (oxlint + oxfmt)  ->  2) Typecheck (build)  ->  3) Unit tests (vitest)
+# Serial keeps it simple and fail-fast: dependencies install once and a failing
+# earlier step short-circuits the rest. Also runs on pushes to main so the default
+# branch stays green and the npm cache stays warm for PR runs.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs for the same ref (e.g. new push to an open PR).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: this job only reads the repository.
+permissions:
+  contents: read
+
+env:
+  # This project runs TypeScript directly with `node` (native type stripping) and
+  # forbids `tsx` / `--experimental-strip-types` (see AGENTS.md). Type stripping is
+  # on by default only on Node >= 22.18 / >= 23.6, so pin an LTS that supports it.
+  # Do NOT downgrade below 22.18 — `npm ci` (postinstall codegen) and typecheck fail.
+  NODE_VERSION: "24"
+
+jobs:
+  ci:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # Runs postinstall codegen (provider registry + catalog).
+      - name: Install dependencies
+        run: npm ci
+
+      # 1) Lint
+      - name: Lint (oxlint)
+        run: npm run lint
+
+      - name: Check formatting (oxfmt)
+        run: npm run format
+
+      # 2) Typecheck (build): regenerates the registry, type-checks src/scripts/examples.
+      - name: Typecheck
+        run: npm run typecheck
+
+      # 3) Unit tests (vitest): covers src and the web workspace.
+      - name: Run tests (vitest)
+        run: npm test
