@@ -15,62 +15,47 @@
 
 </div>
 
-OpenConnector は、Agent 向けの SaaS 認証、ツール、インテグレーションを提供する
-Composio のオープンソース代替です。外部アプリ内のユーザーアカウントへ Agent が確実にアクセスするための
-connector レイヤーであり、認証、ツール実行、Agent 向けインテグレーションを扱います。現在のオープンソース
-catalog には 1,000 の provider と 9,400+ の事前定義済み Action が含まれ、ローカルまたは Cloudflare
-互換インフラで実行できます。同じツールは
-[Connector SDK](https://github.com/oomol-lab/connector-sdk)、[oo CLI](https://github.com/oomol-lab/oo-cli)、MCP、HTTP、OpenAPI、ローカル Web Console
-から利用できます。
+OpenConnector は AI Agent 向けのオープンソース connector gateway であり、Composio の代替です。
+ユーザーのアプリアカウントを一度接続すれば、1,000 の provider と 9,400+ の事前定義済み Action からその機能を使えます。
 
-OpenConnector は、Agent が実際の製品へ制御された経路でアクセスできるようにしながら、credential、scope、
-schema、policy、実行ログを検査可能な runtime 内に保持します。gateway、provider catalog、Action executor
-はオープンソースであるため、チームは契約をレビューし、provider を拡張し、デプロイ境界を管理できます。
+アプリコードには [Connector SDK](https://github.com/oomol-lab/connector-sdk)、ローカル
+Agent の relay には [oo CLI](https://github.com/oomol-lab/oo-cli)、Agent host には
+MCP、custom client には HTTP/OpenAPI、管理とデバッグにはローカル Web Console を使います。
 
-provider と Action catalog は保守可能な provider 定義と executor への移行が完了しており、contract はオープンソース
-runtime と OOMOL の commercial SaaS runtime の間で揃っています。同じ provider id、Action id、schema、SDK model、CLI
-connector command、MCP、HTTP、OpenAPI surface により、チームは hosted、private、self-hosted runtime infrastructure
-の間を integration contract を変えずに移動できます。
+- credential、scope、schema、policy、実行ログを検査可能な runtime 内に保持します。
+- ローカル、Cloudflare 互換 infrastructure、または OOMOL hosted runtime で実行できます。
+- オープンソース版と commercial SaaS 版で同じ provider id、Action id、schema、contract を使います。
 
-## OpenConnector が提供するもの
+## 提供するもの
 
 - すぐに使える connector catalog：[1,000 の provider と 9,400+ の事前定義済み Action](providers.md)。
   GitHub、Gmail、Notion、BigQuery、Google Analytics、Supabase、Airtable、Slack などをカバーします。
 - 1 つの runtime に集約された credential 管理：API key、OAuth2、custom credential、認証不要の provider。
-- 検査可能な Action contract：request/response schema、required scope、遅延読み込みされる executor がソース内にあります。
-- runtime 境界に応じたデプロイ方法：開発用のローカル Docker または Node.js、Cloudflare Workers、D1、R2、
-  Static Assets への Cloudflare 互換デプロイ。
-- Agent 向けインターフェイス：[Connector SDK](https://github.com/oomol-lab/connector-sdk)、
-  [oo CLI](https://github.com/oomol-lab/oo-cli)、MCP、HTTP API、OpenAPI、ローカル Web Console。
-- 本番利用向けの runtime guardrail：connection identity、scope、runtime token、action allow/block
+- 検査、拡張できる Action contract：request/response schema、required scope、遅延読み込みされる executor source。
+- 本番利用向けの runtime control：connection identity、scope、runtime token、action allow/block
   policy、一時ファイル転送、redacted run log。
+- ローカル Docker / Node.js、Cloudflare Workers / D1 / R2 / Static Assets、OOMOL hosted runtime へのデプロイ。
 
 ## 適している場面
 
-OpenConnector は、Agent がユーザーの既存ツール内で作業する必要があり、credential、scope、schema、実行ログに明確な runtime
-境界を求める製品に適しています。ホスト版とオープンソース版は provider と Action contract が揃っているため、同じ connector
-レイヤーを OOMOL のホストサービスから private または self-hosted infrastructure へ移行できます。
+OpenConnector は、provider credential を Agent process に渡さずに、Agent がユーザーの既存ツールへ継続的にアクセスする必要がある製品に適しています。
 
 - work app、developer tool、data system、communication platform、AI service を横断して再利用可能なアクセスを必要とする
   Agent 製品。
 - ユーザーアプリへのアクセスに、安定して検査可能な Action contract を必要とする Agent workflow 搭載製品。
-- 素早く始めるためにホスト版を使いながら、将来的な private または self-hosted runtime control を確保したいチーム。
+- hosted auth で素早く始めつつ、将来的な private または self-hosted runtime control を確保したいチーム。
 
 ## 開発者向けツール
 
-| ツール                                                      | 用途                                                                                                                                                                                                                                     |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | TypeScript app や Agent runtime から connector Action を呼び出し、upstream API を proxy し、catalog を確認します。self-hosted runtime には `OpenConnector`、OOMOL hosted runtime には `Connector` または `ProjectConnector` を使います。 |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | ローカル Agent が connector Action を発見、確認、実行できる CLI です。connector command は OOMOL hosted runtime または self-hosted OpenConnector runtime にルーティングできます。                                                        |
-| MCP                                                         | `http://localhost:3000/mcp` から MCP 対応 Agent host へ app Action を公開します。                                                                                                                                                        |
-| HTTP / OpenAPI                                              | `/v1/actions/*` を直接呼び出すか、生成された `/openapi.json` document を確認します。                                                                                                                                                     |
+| ツール                                                      | 用途                                                                                                                                                                       |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | 軽量 TypeScript HTTP client。self-hosted runtime には `OpenConnector`、OOMOL hosted personal / SaaS end-user connection には `Connector` / `ProjectConnector` を使います。 |
+| [oo CLI](https://github.com/oomol-lab/oo-cli)               | ローカル Agent の connector Action relay です。`oo connector` は OOMOL hosted または self-hosted OpenConnector runtime の Action を検索、確認、実行できます。              |
+| MCP                                                         | `http://localhost:3000/mcp` から MCP 対応 Agent host へ app Action を公開します。                                                                                          |
+| HTTP / OpenAPI                                              | `/v1/actions/*` を直接呼び出すか、生成された `/openapi.json` document を確認します。                                                                                       |
 
-## 関連オープンソースプロジェクト
-
-| プロジェクト                                                | 役割                                                                                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | connector gateway 向けの軽量 TypeScript HTTP client です。provider logic はローカルで実行せず、OAuth、credential、provider call、response envelope は gateway 側に残ります。hosted personal connection には `Connector`、SaaS end-user connection には `ProjectConnector`、self-hosted runtime には `OpenConnector` を使います。 |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | ローカル Agent 向けの command surface です。`oo connector` command は OOMOL hosted runtime または self-hosted OpenConnector runtime に対して Action の検索、schema 確認、実行を行えます。`OO_CONNECTOR_URL` と `OO_CONNECTOR_TOKEN` は headless / CI routing に使えます。                                                        |
+Endpoint、response envelope、auth header、MCP tool、Action guide の例は
+[runtime-api.md](runtime-api.md) を参照してください。
 
 ## Provider カバレッジプレビュー
 
@@ -159,21 +144,6 @@ curl -s -X POST http://localhost:3000/v1/actions/github.get_current_user \
 
 OAuth2 app、named connection、credential encryption、token refresh、action policy については、
 [credentials.md](credentials.md) と [configuration.md](configuration.md) を参照してください。
-
-## Agent ツールインターフェイス
-
-OpenConnector は同じ Action catalog を複数の Agent 向けインターフェイスから公開します。
-
-- SDK：`@oomol-lab/connector` の `OpenConnector`
-- oo CLI：`oo connector login`、`oo connector search`、`oo connector schema`、`oo connector run`
-- MCP：`http://localhost:3000/mcp`
-- HTTP runtime API：`/v1/actions`
-- OpenAPI document：`/openapi.json`
-- Action guide：`/api/actions/:actionId/agent.md`
-- Web Console examples：各 Action の cURL、TypeScript、Agent prompt snippet
-
-Endpoint、response envelope、auth header、MCP tool、Action guide の例は
-[runtime-api.md](runtime-api.md) を参照してください。
 
 ## Web Console
 

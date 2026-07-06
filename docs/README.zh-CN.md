@@ -15,55 +15,45 @@
 
 </div>
 
-OpenConnector 是 Composio 的开源替代方案，用于面向 Agent 的 SaaS 鉴权、工具和集成。它是一层开源
-connector，用于让 Agent 可靠访问用户在外部应用中的账号。它负责鉴权、工具执行和面向 Agent 的集成。当前开源
-catalog 已经覆盖 1,000 个 provider 和 9,400+ 个预置 Action，支持本地运行或部署到 Cloudflare 兼容基础设施，并通过
-[Connector SDK](https://github.com/oomol-lab/connector-sdk)、[oo CLI](https://github.com/oomol-lab/oo-cli)、MCP、HTTP、OpenAPI 和本地 Web 控制台暴露同一组工具。
+OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Composio 的开源替代方案。
+连接一次用户应用账号，就可以通过 1,000 个 provider 和 9,400+ 个预置 Action 使用这些账号能力。
 
-OpenConnector 让 Agent 能以受控方式进入真实产品工作流，同时把 credential、scope、schema、policy 和运行日志留在可检查、可运维的运行时内。
-Gateway、provider catalog 和 Action executors 都在源码中，团队可以审查契约、扩展 provider，并掌控部署边界。
+应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
+[oo CLI](https://github.com/oomol-lab/oo-cli) 中继，Agent host 使用 MCP，自定义客户端使用
+HTTP/OpenAPI；管理和调试使用本地 Web 控制台。
 
-Provider 和 Action catalog 已经完成工程迁移，进入可维护的 provider definition 和 executor 结构；它的契约也已经在开源 runtime
-和 OOMOL 商业 SaaS runtime 之间对齐。两种形态共享 provider id、Action id、schema、SDK 模型、CLI connector 命令、MCP、HTTP 和 OpenAPI
-接口，团队可以在托管、私有化和自托管运行时之间迁移，而不需要改集成契约。
+- 把 credential、scope、schema、policy 和运行日志保留在可检查的 runtime 里。
+- 支持本地运行、Cloudflare 兼容基础设施部署，也可以使用 OOMOL 托管 runtime。
+- 开源版和商业 SaaS 版共享同一套 provider id、Action id、schema 和契约。
 
-## OpenConnector 提供什么
+## 提供什么
 
 - 一套可直接使用的 connector catalog：[1,000 个 provider 和 9,400+ 个预置 Action](providers.md)，覆盖
   GitHub、Gmail、Notion、BigQuery、Google Analytics、Supabase、Airtable、Slack 等常见产品。
-- 集中在一个 runtime 里的凭据管理：API key、OAuth2、自定义凭据，以及无需鉴权的 provider。
-- 可以审查和扩展的 Action 契约：请求/响应 schema、required scope 和按需加载的 executor 都在源码中。
-- 适配不同运行时边界的部署方式：开发时可用本地 Docker 或 Node.js，也可部署到 Cloudflare Workers、D1、R2 和
-  Static Assets。
-- 面向 Agent 的调用入口：[Connector SDK](https://github.com/oomol-lab/connector-sdk)、[oo CLI](https://github.com/oomol-lab/oo-cli)、
-  MCP、HTTP API、OpenAPI 和本地 Web 控制台。
-- 面向生产使用的运行时控制：connection identity、scope、runtime token、action allow/block policy、临时文件中转和脱敏运行日志。
+- 支持 API key、OAuth2、自定义凭据，以及无需鉴权的 provider。
+- 可以审查和扩展的 Action 契约：请求/响应 schema、required scope 和按需加载的 executor 源码。
+- 面向生产的 runtime 控制：connection identity、scope、runtime token、action allow/block policy、临时文件中转和脱敏运行日志。
+- 部署方式覆盖本地 Docker 或 Node.js、Cloudflare Workers/D1/R2/Static Assets，以及 OOMOL 托管 runtime。
 
 ## 适合什么场景
 
-OpenConnector 适合需要让 Agent 进入用户现有工具的产品，同时为 credential、scope、schema
-和执行日志保留清晰的运行时边界。托管版和开源版使用对齐的 provider 和 Action 契约，同一层 connector 可以随着部署需求变化，从 OOMOL
-托管服务迁到私有化或自托管基础设施。
+OpenConnector 适合需要让 Agent 持续访问用户现有工具、但不想把 provider credential 交给 Agent 进程的产品。
 
 - 需要在工作应用、开发者工具、数据系统、沟通平台和 AI 服务之间复用接入层的 Agent 产品。
 - 正在加入 Agent workflow，并希望通过稳定、可审查的 Action 契约接入用户应用的产品。
-- 希望先用托管服务快速上线，同时保留未来掌控私有化或自托管 runtime 的团队。
+- 希望先用托管鉴权快速上线，同时保留未来私有化或自托管 runtime 控制权的团队。
 
 ## 开发者工具
 
-| 工具                                                        | 用途                                                                                                                                                                                     |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | 在 TypeScript 应用和 Agent runtime 中调用 connector Action、代理上游 API、读取 catalog。自托管 runtime 使用 `OpenConnector`，OOMOL 托管 runtime 使用 `Connector` 或 `ProjectConnector`。 |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | 让本地 Agent 发现、检查和运行 connector Action；connector 命令可以路由到 OOMOL 托管 runtime 或自托管 OpenConnector runtime。                                                             |
-| MCP                                                         | 通过 `http://localhost:3000/mcp` 把应用 Action 暴露给支持 MCP 的 agent host。                                                                                                            |
-| HTTP / OpenAPI                                              | 直接调用 `/v1/actions/*`，或查看生成的 `/openapi.json` 文档。                                                                                                                            |
+| 工具                                                        | 用途                                                                                                                                              |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | 轻量 TypeScript HTTP client。自托管 runtime 使用 `OpenConnector`，OOMOL 托管的个人连接和 SaaS 终端用户连接使用 `Connector` / `ProjectConnector`。 |
+| [oo CLI](https://github.com/oomol-lab/oo-cli)               | 本地 Agent 的 connector Action 中继线。`oo connector` 可以搜索、查看和运行 OOMOL 托管或自托管 OpenConnector runtime 中的 Action。                 |
+| MCP                                                         | 通过 `http://localhost:3000/mcp` 把应用 Action 暴露给支持 MCP 的 agent host。                                                                     |
+| HTTP / OpenAPI                                              | 直接调用 `/v1/actions/*`，或查看生成的 `/openapi.json` 文档。                                                                                     |
 
-## 配套开源项目
-
-| 项目                                                        | 说明                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | 面向 connector gateway 的轻量 TypeScript HTTP client。SDK 本地不运行 provider 逻辑；OAuth、credential、provider 调用和 response envelope 都留在 gateway。托管个人连接用 `Connector`，SaaS 终端用户连接用 `ProjectConnector`，自托管 runtime 用 `OpenConnector`。 |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | 给本地 Agent 使用的命令入口。`oo connector` 命令可以对 OOMOL 托管 runtime 或自托管 OpenConnector runtime 做 Action 搜索、schema 查看和执行；`OO_CONNECTOR_URL` 与 `OO_CONNECTOR_TOKEN` 支持无头环境和 CI 路由。                                                  |
+Endpoint、response envelope、鉴权 header、MCP tools 和 Action guide 示例见
+[runtime-api.md](runtime-api.md)。
 
 ## Provider 覆盖预览
 
@@ -151,21 +141,6 @@ curl -s -X POST http://localhost:3000/v1/actions/github.get_current_user \
 
 OAuth2 应用、命名连接、凭据加密、token 刷新和 action policy 见
 [credentials.md](credentials.md) 与 [configuration.md](configuration.md)。
-
-## Agent 工具接口
-
-OpenConnector 通过多种面向 Agent 的接口暴露同一份 Action catalog：
-
-- SDK：`@oomol-lab/connector` 中的 `OpenConnector`
-- oo CLI：`oo connector login`、`oo connector search`、`oo connector schema` 和 `oo connector run`
-- MCP：`http://localhost:3000/mcp`
-- HTTP runtime API：`/v1/actions`
-- OpenAPI 文档：`/openapi.json`
-- Action guide：`/api/actions/:actionId/agent.md`
-- Web 控制台示例：每个 Action 都可以复制 cURL、TypeScript 和 agent prompt 示例
-
-Endpoint、response envelope、鉴权 header、MCP tools 和 Action guide 示例见
-[runtime-api.md](runtime-api.md)。
 
 ## Web 控制台
 

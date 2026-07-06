@@ -15,71 +15,54 @@
 
 </div>
 
-OpenConnector is an open-source alternative to Composio for agent-ready SaaS auth, tools, and
-integrations. It is a connector layer for agents that need reliable access to user accounts in
-external apps. It handles auth, tool execution, and agent-ready integrations. The open-source catalog
-currently includes 1,000 providers and 9,400+ prebuilt Actions, runs locally or on
-Cloudflare-compatible infrastructure, and exposes the same tools through the
-[Connector SDK](https://github.com/oomol-lab/connector-sdk),
-[oo CLI](https://github.com/oomol-lab/oo-cli), MCP, HTTP, OpenAPI, and a local Web Console.
+OpenConnector is an open-source connector gateway for AI agents and an alternative to Composio.
+Connect user app accounts once, then use them through 1,000 providers and 9,400+ prebuilt Actions.
 
-OpenConnector gives agents a controlled path into real products while keeping credentials, scopes,
-schemas, policies, and run logs inside an inspectable runtime. The gateway, provider catalog, and
-Action executors are open source, so teams can review contracts, extend providers, and control the
-deployment boundary.
+Use the [Connector SDK](https://github.com/oomol-lab/connector-sdk) from app code,
+[oo CLI](https://github.com/oomol-lab/oo-cli) as the local-agent relay, MCP from agent hosts,
+HTTP/OpenAPI from custom clients, and the Web Console for administration and debugging.
 
-The provider and Action catalog has completed migration into maintainable provider definitions and
-executors, and its contracts are aligned across the open-source runtime and OOMOL's commercial SaaS
-runtime. The same provider ids, Action ids, schemas, SDK model, CLI connector commands, MCP, HTTP,
-and OpenAPI surfaces let teams move between hosted, private, and self-hosted runtime infrastructure
-without changing the integration contract.
+- Keep credentials, scopes, schemas, policies, and run logs inside an inspectable runtime.
+- Run locally, on Cloudflare-compatible infrastructure, or through OOMOL's hosted runtime.
+- Use the same provider ids, Action ids, schemas, and contracts across open-source and commercial
+  SaaS deployments.
 
-## What OpenConnector Provides
+## What It Provides
 
 - A working connector catalog: [1,000 providers and 9,400+ prebuilt Actions](docs/providers.md)
   across products such as GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable,
   Slack, and more.
-- Credential handling in one runtime: API keys, OAuth2, custom credentials, and providers that do
-  not require auth.
-- Inspectable Action contracts: request/response schemas, required scopes, and
-  lazy-loaded executors live in source.
-- Deployment options for different runtime boundaries: local Docker or Node.js for development, plus
-  Cloudflare-compatible deployment on Workers, D1, R2, and Static Assets.
-- Agent-facing interfaces: [Connector SDK](https://github.com/oomol-lab/connector-sdk),
-  [oo CLI](https://github.com/oomol-lab/oo-cli), MCP, HTTP API, OpenAPI, and a local Web Console.
-- Runtime guardrails for production use: connection identity, scopes, runtime tokens, action
-  allow/block policies, temporary file transit, and redacted run logs.
+- Credential handling for API keys, OAuth2, custom credentials, and no-auth providers.
+- Inspectable Action contracts: request/response schemas, required scopes, and lazy-loaded executor
+  source.
+- Runtime controls for connection identity, scopes, runtime tokens, action allow/block policies,
+  temporary file transit, and redacted run logs.
+- Deployment options for local Docker or Node.js, Cloudflare Workers with D1/R2/Static Assets, and
+  OOMOL's hosted runtime.
 
 ## Where It Fits
 
-OpenConnector fits products where agents need to work inside the tools users already use, with a
-clear operating boundary for credentials, scopes, schemas, and execution logs. The hosted and
-open-source versions use aligned provider and Action contracts, so the same connector layer can move
-from OOMOL's hosted service to private or self-hosted infrastructure as deployment requirements
-change.
+OpenConnector fits products where agents need durable access to the tools users already use, without
+handing provider credentials to the agent process.
 
 - Agent products that need reusable access across work apps, developer tools, data systems,
   communication platforms, and AI services.
 - Products adding agent workflows that need stable, inspectable Action contracts for user app
   access.
-- Teams that want to start hosted for speed and keep a path toward private or self-hosted runtime
+- Teams that want hosted auth for speed while keeping a path to private or self-hosted runtime
   control.
 
 ## Developer Tools
 
-| Tool                                                        | Purpose                                                                                                                                                                                                                     |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Call connector Actions, proxy upstream APIs, and inspect the catalog from TypeScript apps and agent runtimes. Use `OpenConnector` for self-hosted runtimes and `Connector` or `ProjectConnector` for OOMOL-hosted runtimes. |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Let local agents discover, inspect, and run connector Actions. It can route connector commands to OOMOL-hosted or self-hosted OpenConnector runtimes.                                                                       |
-| MCP                                                         | Expose app Actions to MCP-capable agent hosts through `http://localhost:3000/mcp`.                                                                                                                                          |
-| HTTP / OpenAPI                                              | Call `/v1/actions/*` directly or inspect the generated `/openapi.json` document.                                                                                                                                            |
+| Tool                                                        | Purpose                                                                                                                                                                 |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Thin TypeScript HTTP client. Use `OpenConnector` for self-hosted runtimes, or `Connector` / `ProjectConnector` for OOMOL-hosted personal and SaaS end-user connections. |
+| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Local agent relay for connector Actions. `oo connector` can search, inspect, and run Actions against OOMOL-hosted or self-hosted OpenConnector runtimes.                |
+| MCP                                                         | Expose app Actions to MCP-capable agent hosts through `http://localhost:3000/mcp`.                                                                                      |
+| HTTP / OpenAPI                                              | Call `/v1/actions/*` directly or inspect the generated `/openapi.json` document.                                                                                        |
 
-## Companion Open-Source Projects
-
-| Project                                                     | Role                                                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Thin TypeScript HTTP client for connector gateways. It runs no provider logic locally: OAuth, credentials, provider calls, and envelopes stay on the gateway. Use `Connector` for hosted personal connections, `ProjectConnector` for SaaS end-user connections, and `OpenConnector` for self-hosted runtimes. |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Local command surface for agents. `oo connector` commands can search, inspect, and run Actions against OOMOL-hosted or self-hosted OpenConnector runtimes; `OO_CONNECTOR_URL` and `OO_CONNECTOR_TOKEN` support headless and CI routing.                                                                        |
+Endpoint details, response envelopes, auth headers, MCP tools, and Action guide examples are in
+[docs/runtime-api.md](docs/runtime-api.md).
 
 ## Provider Coverage Preview
 
@@ -172,21 +155,6 @@ curl -s -X POST http://localhost:3000/v1/actions/github.get_current_user \
 
 For OAuth2 apps, named connections, credential encryption, token refresh, and action policies, see
 [docs/credentials.md](docs/credentials.md) and [docs/configuration.md](docs/configuration.md).
-
-## Agent Tool Interfaces
-
-OpenConnector exposes the same Action catalog through several agent-facing interfaces:
-
-- SDK: `OpenConnector` from `@oomol-lab/connector`
-- oo CLI: `oo connector login`, `oo connector search`, `oo connector schema`, and `oo connector run`
-- MCP: `http://localhost:3000/mcp`
-- HTTP runtime API: `/v1/actions`
-- OpenAPI document: `/openapi.json`
-- Action guides: `/api/actions/:actionId/agent.md`
-- Web Console examples: cURL, TypeScript, and agent prompt snippets for each Action
-
-See [docs/runtime-api.md](docs/runtime-api.md) for endpoint details, response envelopes, auth
-headers, MCP tools, and Action guide examples.
 
 ## Web Console
 

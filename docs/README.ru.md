@@ -15,71 +15,55 @@
 
 </div>
 
-OpenConnector — open-source альтернатива Composio для SaaS-аутентификации, инструментов и
-интеграций, готовых для агентов. Это connector-слой для агентов, которым нужен надежный доступ к
-пользовательским аккаунтам во внешних приложениях. Он отвечает за аутентификацию, выполнение
-инструментов и интеграции для агентов. Текущий open-source catalog включает 1 000 providers и 9 400+
-готовых Actions, работает локально или в Cloudflare-совместимой инфраструктуре и предоставляет один
-и тот же набор инструментов через
-[Connector SDK](https://github.com/oomol-lab/connector-sdk),
-[oo CLI](https://github.com/oomol-lab/oo-cli), MCP, HTTP, OpenAPI и локальную Web Console.
+OpenConnector — open-source connector gateway для AI agents и альтернатива Composio. Подключите
+пользовательские аккаунты приложений один раз, а затем используйте их через 1 000 providers и
+9 400+ готовых Actions.
 
-OpenConnector дает агентам контролируемый путь к реальным продуктам, оставляя credentials, scopes,
-schemas, policies и журналы запусков внутри проверяемого runtime. Gateway, provider catalog и
-Action executors открыты в исходном коде, поэтому команды могут проверять контракты, расширять
-providers и контролировать границу развертывания.
+В application code используйте [Connector SDK](https://github.com/oomol-lab/connector-sdk), для
+local-agent relay — [oo CLI](https://github.com/oomol-lab/oo-cli), для agent hosts — MCP, для
+custom clients — HTTP/OpenAPI, а для администрирования и отладки — локальную Web Console.
 
-Provider и Action catalog уже перенесены в поддерживаемые provider definitions и executors, а их
-contracts выровнены между open-source runtime и коммерческим SaaS runtime OOMOL. Одни и те же
-provider ids, Action ids, schemas, SDK model, CLI connector commands, MCP, HTTP и OpenAPI surfaces
-позволяют командам переходить между hosted, private и self-hosted runtime infrastructure без
-изменения integration contract.
+- Держите credentials, scopes, schemas, policies и run logs внутри проверяемого runtime.
+- Запускайте локально, в Cloudflare-совместимой инфраструктуре или через hosted runtime OOMOL.
+- Используйте одни и те же provider ids, Action ids, schemas и contracts в open-source и
+  commercial SaaS deployments.
 
-## Что Дает OpenConnector
+## Что Дает
 
 - Рабочий connector catalog: [1 000 providers и 9 400+ готовых Actions](providers.md) для GitHub,
   Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable, Slack и других продуктов.
 - Управление credentials в одном runtime: API keys, OAuth2, custom credentials и providers без
   аутентификации.
-- Проверяемые Action contracts: request/response schemas, required scopes и executors с ленивой
-  загрузкой находятся в исходном коде.
-- Варианты развертывания под разные runtime-границы: локальный Docker или Node.js для разработки,
-  а также Cloudflare-совместимое развертывание на Workers, D1, R2 и Static Assets.
-- Интерфейсы для агентов: [Connector SDK](https://github.com/oomol-lab/connector-sdk),
-  [oo CLI](https://github.com/oomol-lab/oo-cli), MCP, HTTP API, OpenAPI и локальная Web Console.
-- Runtime-ограничения для production: connection identity, scopes, runtime tokens, action
-  allow/block policies, временный транзит файлов и редактированные журналы запусков.
+- Проверяемые и расширяемые Action contracts: request/response schemas, required scopes и
+  lazy-loaded executor source.
+- Runtime controls для production: connection identity, scopes, runtime tokens, action allow/block
+  policies, временный транзит файлов и редактированные журналы запусков.
+- Развертывание через локальный Docker или Node.js, Cloudflare Workers / D1 / R2 / Static Assets и
+  hosted runtime OOMOL.
 
 ## Где Это Уместно
 
-OpenConnector подходит продуктам, где агентам нужно работать внутри инструментов, которыми уже
-пользуются пользователи, сохраняя четкую операционную границу для credentials, scopes, schemas и
-журналов выполнения. Хостинговая и open-source версии используют выровненные provider и Action contracts, поэтому
-один и тот же connector-слой можно перенести из хостингового сервиса OOMOL в приватную или
-self-hosted инфраструктуру по мере изменения требований к развертыванию.
+OpenConnector подходит продуктам, где агентам нужен длительный доступ к инструментам пользователей
+без передачи provider credentials в процесс агента.
 
 - Агентские продукты, которым нужен переиспользуемый доступ к рабочим приложениям, инструментам
   разработчика, системам данных, коммуникационным платформам и AI-сервисам.
 - Продукты, добавляющие agent workflows и нуждающиеся в стабильных, проверяемых Action contracts
   для доступа к пользовательским приложениям.
-- Команды, которые хотят быстро стартовать с хостингового решения и сохранить путь к приватному или
-  self-hosted контролю runtime.
+- Команды, которые хотят быстро стартовать с hosted auth и сохранить путь к private или self-hosted
+  runtime control.
 
 ## Инструменты Разработчика
 
-| Инструмент                                                  | Назначение                                                                                                                                                                                                                                      |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Вызывать connector Actions, проксировать upstream APIs и просматривать catalog из TypeScript-приложений и runtimes агентов. Для self-hosted runtime используйте `OpenConnector`, для OOMOL-hosted runtime — `Connector` или `ProjectConnector`. |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Позволяет локальным агентам находить, проверять и запускать connector Actions. Connector commands могут идти в OOMOL-hosted runtime или self-hosted OpenConnector runtime.                                                                      |
-| MCP                                                         | Экспортировать app Actions в MCP-совместимые hosts агентов через `http://localhost:3000/mcp`.                                                                                                                                                   |
-| HTTP / OpenAPI                                              | Вызывать `/v1/actions/*` напрямую или просматривать сгенерированный документ `/openapi.json`.                                                                                                                                                   |
+| Инструмент                                                  | Назначение                                                                                                                                                                    |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Легкий TypeScript HTTP client. Для self-hosted runtime используйте `OpenConnector`, для OOMOL-hosted personal и SaaS end-user connections — `Connector` / `ProjectConnector`. |
+| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Connector Action relay для локальных агентов. `oo connector` может искать, проверять и запускать Actions в OOMOL-hosted или self-hosted OpenConnector runtime.                |
+| MCP                                                         | Экспортировать app Actions в MCP-совместимые hosts агентов через `http://localhost:3000/mcp`.                                                                                 |
+| HTTP / OpenAPI                                              | Вызывать `/v1/actions/*` напрямую или просматривать сгенерированный документ `/openapi.json`.                                                                                 |
 
-## Связанные Open-Source Проекты
-
-| Проект                                                      | Роль                                                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Легкий TypeScript HTTP client для connector gateways. Он не выполняет provider logic локально: OAuth, credentials, provider calls и response envelopes остаются на gateway. Используйте `Connector` для hosted personal connections, `ProjectConnector` для SaaS end-user connections и `OpenConnector` для self-hosted runtimes. |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Локальная command surface для агентов. `oo connector` commands могут искать, проверять и запускать Actions на OOMOL-hosted или self-hosted OpenConnector runtimes; `OO_CONNECTOR_URL` и `OO_CONNECTOR_TOKEN` поддерживают headless и CI routing.                                                                                  |
+Подробности об endpoints, response envelopes, auth headers, MCP tools и примерах Action guide см. в
+[runtime-api.md](runtime-api.md).
 
 ## Обзор Покрытия Providers
 
@@ -172,21 +156,6 @@ curl -s -X POST http://localhost:3000/v1/actions/github.get_current_user \
 
 OAuth2 apps, named connections, credential encryption, token refresh и action policies описаны в
 [credentials.md](credentials.md) и [configuration.md](configuration.md).
-
-## Интерфейсы Инструментов Для Агентов
-
-OpenConnector предоставляет один и тот же Action catalog через несколько интерфейсов для агентов:
-
-- SDK: `OpenConnector` из `@oomol-lab/connector`
-- oo CLI: `oo connector login`, `oo connector search`, `oo connector schema` и `oo connector run`
-- MCP: `http://localhost:3000/mcp`
-- HTTP runtime API: `/v1/actions`
-- OpenAPI document: `/openapi.json`
-- Action guides: `/api/actions/:actionId/agent.md`
-- Примеры Web Console: cURL, TypeScript и agent prompt snippets для каждой Action
-
-Подробности об endpoints, response envelopes, auth headers, MCP tools и примерах Action guide см. в
-[runtime-api.md](runtime-api.md).
 
 ## Web Console
 
