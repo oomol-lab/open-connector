@@ -61,17 +61,31 @@ After the callback completes, the Gmail provider page shows the connected OAuth 
 
 ![Gmail connected state](../assets/gmail-connected.png)
 
-## 3. Verify Gmail Through HTTP
+## 3. Create A Runtime Token
 
-Run a Gmail Action through the runtime API:
+Before calling the runtime from your own code, create a runtime token from the local console. Open
+the Access page, choose **Create Token**, name the client, and copy the token when it is shown.
+
+![Create runtime token dialog](../assets/create-runtime-token.png)
+
+Set the copied token in the shell that runs your app:
+
+```bash
+export OOMOL_CONNECT_RUNTIME_TOKEN="oct_..."
+```
+
+## 4. Verify Gmail Through HTTP
+
+Run a Gmail Action through the runtime API with the runtime token created above:
 
 ```bash
 curl -s -X POST http://localhost:3000/v1/actions/gmail.search_threads \
+  -H "authorization: Bearer $OOMOL_CONNECT_RUNTIME_TOKEN" \
   -H 'content-type: application/json' \
   -d '{"input":{"query":"newer_than:7d","maxResults":5}}'
 ```
 
-## 4. Call Gmail From The SDK
+## 5. Call Gmail From The SDK
 
 Install the SDK in your TypeScript project:
 
@@ -80,7 +94,7 @@ npm install @oomol-lab/connector
 ```
 
 Use `OpenConnector` for a self-hosted OpenConnector runtime. `baseUrl` is the server origin, not a
-`/v1` URL.
+`/v1` URL. Pass the runtime token you created above.
 
 ```ts
 import { OpenConnector } from "@oomol-lab/connector";
@@ -125,5 +139,7 @@ import "@oomol-lab/connector-types/gmail";
 - `oauth_client_config_not_found`: save the Gmail OAuth client in the local console before starting
   authorization.
 - `connection_not_found`: finish the browser authorization step before calling Gmail Actions.
+- `unauthorized`: create a runtime token from the Access page and pass it as
+  `OOMOL_CONNECT_RUNTIME_TOKEN`.
 - `insufficient_permissions`: reconnect Gmail after the OAuth app has the scopes needed by the
   Action you are calling.
