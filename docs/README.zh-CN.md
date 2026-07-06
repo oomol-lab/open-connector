@@ -16,7 +16,8 @@
 </div>
 
 OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Composio 的开源替代方案。
-连接一次用户应用账号，就可以通过 1,000+ 个 provider 和 9,400+ 个预置 Action 使用这些账号能力。
+连接一次用户应用账号，就可以把包含 1,000+ 个 provider 和 9,400+ 个预置 Action 的共享 catalog 暴露给
+Agent 和应用。
 
 应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
 [oo CLI](https://github.com/oomol-lab/oo-cli) 中继，Agent host 使用 MCP，自定义客户端使用
@@ -28,8 +29,8 @@ HTTP/OpenAPI；管理和调试使用本地 Web 控制台。
 
 ## 提供什么
 
-- 一套可直接使用的 connector catalog：1,000+ 个 provider 和 9,400+ 个预置 Action，覆盖 GitHub、Gmail、Notion、BigQuery、Google
-  Analytics、Supabase、Airtable、Slack 等常见产品。
+- 一套可直接使用的 connector catalog，覆盖 GitHub、Gmail、Notion、BigQuery、Google Analytics、Supabase、Airtable、Slack
+  等常见产品。
 - 支持 API key、OAuth2、自定义凭据，以及无需鉴权的 provider。
 - 可以审查和扩展的 Action 契约：请求/响应 schema、required scope 和按需加载的 executor 源码。
 - 面向生产的 runtime 控制：connection identity、scope、runtime token、action allow/block policy、临时文件中转和脱敏运行日志。
