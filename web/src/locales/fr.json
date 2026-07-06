@@ -1,0 +1,292 @@
+{
+  "common": {
+    "active": "Actif",
+    "apiUnavailable": "API indisponible",
+    "catalogOnly": "Catalogue uniquement",
+    "clear": "Effacer",
+    "close": "Fermer",
+    "connected": "Connecté",
+    "copied": "{{label}} copié",
+    "copy": "Copier {{label}}",
+    "credential": "Identifiant",
+    "currentSelection": "Sélection actuelle",
+    "docs": "Docs",
+    "failed": "Échec",
+    "loadingRuntimeData": "Chargement des données du runtime...",
+    "local": "Local",
+    "noAuth": "Sans auth",
+    "notConnected": "Non connecté",
+    "open": "Ouvrir",
+    "refresh": "Actualiser",
+    "required": "Requis",
+    "revoked": "Révoqué",
+    "runtimeReady": "Runtime prêt",
+    "showMore": "Afficher plus",
+    "showing": "{{shown}} sur {{total}} affichés",
+    "success": "Succès"
+  },
+  "brand": {
+    "subtitle": "Console du runtime local",
+    "adminAccess": "Accès administrateur"
+  },
+  "language": {
+    "label": "Langue",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "fr": "Français"
+  },
+  "nav": {
+    "overview": "Vue d’ensemble",
+    "providers": "Fournisseurs",
+    "actions": "Actions",
+    "runs": "Exécutions",
+    "access": "Accès",
+    "docs": "Docs"
+  },
+  "shell": {
+    "invalidUnlockToken": "Le token administrateur est invalide ou manquant.",
+    "loadRuntimeFailed": "Échec du chargement des données du runtime.",
+    "logoutFailed": "Échec de la déconnexion.",
+    "primaryNav": "Principal",
+    "refreshData": "Actualiser les données",
+    "logout": "Se déconnecter",
+    "headings": {
+      "overview": {
+        "title": "Vue d’ensemble",
+        "subtitle": "État du runtime, santé et opérations courantes."
+      },
+      "providers": {
+        "title": "Fournisseurs",
+        "subtitle": "Connectez des fournisseurs et examinez leurs capacités."
+      },
+      "actions": {
+        "title": "Actions",
+        "subtitle": "Recherchez, inspectez et déboguez les actions du runtime local."
+      },
+      "runs": {
+        "title": "Exécutions",
+        "subtitle": "Exécutions récentes des actions locales."
+      },
+      "access": {
+        "title": "Accès",
+        "subtitle": "Gérez les tokens d’API runtime pour les agents et les clients."
+      },
+      "resources": {
+        "title": "Ressources",
+        "subtitle": "Références d’API générées et métadonnées d’outils."
+      }
+    }
+  },
+  "unlock": {
+    "token": "Token administrateur",
+    "unlockConsole": "Déverrouiller la console"
+  },
+  "overview": {
+    "runtimeReady": "Runtime prêt",
+    "connectedProviders": "{{count}} fournisseurs connectés",
+    "metrics": {
+      "providers": "Fournisseurs",
+      "actions": "Actions",
+      "connected": "Connectés",
+      "tokens": "Tokens"
+    },
+    "connectionHealth": "Santé des connexions",
+    "catalogValue": "{{count}} fournisseurs",
+    "connectedValue": "{{count}} actifs",
+    "executable": "Exécutables",
+    "executableValue": "{{count}} actions",
+    "commonEntries": "Entrées courantes",
+    "connectProvider": "Connecter un fournisseur",
+    "searchActions": "Rechercher des actions",
+    "createToken": "Créer un token",
+    "openDocs": "Ouvrir la documentation",
+    "recentFailures": "Échecs récents",
+    "noFailedRunsTitle": "Aucun échec",
+    "noFailedRunsDescription": "Les exécutions récentes sont propres.",
+    "recentRuns": "Exécutions récentes",
+    "noRunsTitle": "Aucune exécution",
+    "noRunsDescription": "Exécutez une action pour voir l’historique.",
+    "table": {
+      "action": "Action",
+      "status": "Statut",
+      "started": "Début",
+      "duration": "Durée",
+      "input": "Entrée"
+    }
+  },
+  "providers": {
+    "searchPlaceholder": "Rechercher des fournisseurs",
+    "statusFilterLabel": "Statut du fournisseur",
+    "filters": {
+      "all": "Tous",
+      "connected": "Connectés",
+      "notConnected": "Non connectés",
+      "oauthNeedsConfig": "OAuth à configurer"
+    },
+    "providerMeta": "{{service}} · {{authTypes}} · {{count}} actions",
+    "noAuth": "sans auth",
+    "oauthConfigBadge": "Config OAuth",
+    "noProvidersTitle": "Aucun fournisseur trouvé",
+    "noProvidersDescription": "Essayez une autre recherche ou un autre filtre de statut.",
+    "providerNotFoundTitle": "Fournisseur introuvable",
+    "providerNotFoundDescription": "La route du fournisseur ne correspond pas au catalogue actuel.",
+    "selectProviderTitle": "Sélectionner un fournisseur",
+    "selectProviderDescription": "Choisissez un fournisseur pour inspecter les paramètres de connexion.",
+    "connectedBy": "Connecté via {{authType}}",
+    "summary": {
+      "actions": "Actions",
+      "auth": "Auth",
+      "oauthConfig": "Config OAuth",
+      "configured": "Configuré",
+      "required": "Requis",
+      "notUsed": "Non utilisé"
+    },
+    "connection": "Connexion",
+    "connectionMethod": "Méthode de connexion",
+    "noConnectionMethodTitle": "Aucune méthode de connexion",
+    "noConnectionMethodDescription": "Ce fournisseur n’a pas besoin d’identifiants locaux.",
+    "oauthClient": "Client OAuth",
+    "scopes": "Scopes",
+    "actions": "Actions",
+    "noScopes": "Aucun scope",
+    "noActions": "Aucune action.",
+    "authLabels": {
+      "apiKey": "Clé API",
+      "oauth": "OAuth",
+      "custom": "Personnalisé",
+      "noAuth": "Sans auth"
+    },
+    "connectionMessages": {
+      "noAuth": "Ce fournisseur s’exécute sans identifiants locaux.",
+      "needsOAuthClient": "{{name}} nécessite un client OAuth local avant la connexion.",
+      "connectedOAuth": "{{name}} est connecté via OAuth.",
+      "connectOAuth": "Connectez {{name}} avec son flux d’autorisation OAuth.",
+      "saving": "Enregistrement de la connexion...",
+      "openingOAuth": "Ouverture d’OAuth...",
+      "configureOAuthFirst": "Configurez le client OAuth avant de vous connecter.",
+      "oauthWindowOpened": "Fenêtre OAuth ouverte.",
+      "updated": "Connexion mise à jour.",
+      "failed": "Échec de la connexion.",
+      "disconnecting": "Déconnexion...",
+      "disconnected": "Déconnecté.",
+      "disconnectFailed": "Échec de la déconnexion."
+    },
+    "buttons": {
+      "configureOAuthClient": "Configurer le client OAuth",
+      "editOAuthClient": "Modifier le client OAuth",
+      "saveConnection": "Enregistrer la connexion",
+      "connectProvider": "Connecter {{name}}",
+      "reconnectProvider": "Reconnecter {{name}}",
+      "disconnect": "Déconnecter",
+      "saveOAuthClient": "Enregistrer le client OAuth",
+      "updateOAuthClient": "Mettre à jour le client OAuth"
+    },
+    "oauthClientSettings": {
+      "configuredTitle": "Client OAuth configuré",
+      "requiredTitle": "Client OAuth requis",
+      "missingDescription": "{{name}} nécessite un client OAuth local avant la connexion.",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "storedSecretHint": "Le secret enregistré n’est pas affiché. Saisissez-le à nouveau pour enregistrer les modifications.",
+      "saving": "Enregistrement du client OAuth...",
+      "saved": "Client OAuth enregistré.",
+      "failed": "Échec de l’enregistrement du client OAuth."
+    },
+    "execution": {
+      "executable": "Exécutable",
+      "catalogOnly": "Catalogue uniquement"
+    }
+  },
+  "actions": {
+    "searchPlaceholder": "Rechercher des actions par nom, ID ou fournisseur",
+    "provider": "Fournisseur",
+    "allProviders": "Tous les fournisseurs",
+    "actionsCount": "{{count}} actions",
+    "noActionsTitle": "Aucune action trouvée",
+    "noActionsDescription": "Essayez une autre recherche ou un autre filtre de fournisseur.",
+    "actionNotFoundTitle": "Action introuvable",
+    "noActionSelectedTitle": "Aucune action sélectionnée",
+    "actionNotFoundDescription": "La route de l’action ne correspond pas au catalogue actuel.",
+    "selectActionDescription": "Sélectionnez une action à inspecter et exécuter.",
+    "locallyExecutable": "Exécutable localement",
+    "needsCredential": "Identifiant requis",
+    "debugAction": "Déboguer l’action",
+    "requiredScopes": "Scopes requis",
+    "parameters": "Paramètres",
+    "fieldsCount": "{{count}} champs",
+    "noInputParameters": "Aucun paramètre d’entrée.",
+    "required": "Requis",
+    "optional": "Facultatif",
+    "actionExamples": "Exemples d’action",
+    "open": "Ouvrir",
+    "copyExample": "Copier {{label}}",
+    "copiedExample": "{{label}} copié",
+    "closeDebugAction": "Fermer le débogage d’action",
+    "input": "Entrée",
+    "run": "Exécuter",
+    "running": "Exécution",
+    "runningAction": "Exécution de l’action...",
+    "actionFailed": "Échec de l’action."
+  },
+  "runs": {
+    "noRunsTitle": "Aucune exécution",
+    "noRunsDescription": "Exécutez une action pour voir l’historique récent.",
+    "loadMore": "Charger plus",
+    "loadMoreFailed": "Échec du chargement d’exécutions supplémentaires.",
+    "table": {
+      "action": "Action",
+      "caller": "Appelant",
+      "status": "Statut",
+      "started": "Début",
+      "duration": "Durée",
+      "input": "Entrée",
+      "error": "Erreur"
+    }
+  },
+  "access": {
+    "title": "Tokens runtime",
+    "description": "Émettez des bearer tokens pour les clients /v1 et MCP. Les nouveaux tokens ne sont affichés qu’une seule fois.",
+    "name": "Nom",
+    "namePlaceholder": "Client MCP local",
+    "createToken": "Créer un token",
+    "createTokenDescription": "Nommez le client qui utilisera ce token runtime.",
+    "closeCreateToken": "Fermer la boîte de création de token",
+    "creating": "Création du token...",
+    "created": "Token créé.",
+    "createFailed": "Échec de la création du token.",
+    "revoking": "Révocation du token...",
+    "revoked": "Token révoqué.",
+    "revokeFailed": "Échec de la révocation du token.",
+    "newToken": "Nouveau token",
+    "tokenShownOnce": "Ce token est affiché une seule fois. Copiez-le avant de fermer cette boîte.",
+    "copyToken": "Copier le token",
+    "copiedToken": "Copié",
+    "copyRuntimeToken": "Copier le token runtime",
+    "copiedRuntimeToken": "Token runtime copié",
+    "noTokensTitle": "Aucun token runtime",
+    "noTokensDescription": "Créez-en un avant de connecter un client MCP ou un script local. Le token est affiché une seule fois.",
+    "table": {
+      "name": "Nom",
+      "status": "Statut",
+      "created": "Créé",
+      "lastUsed": "Dernière utilisation"
+    },
+    "revoke": "Révoquer"
+  },
+  "resources": {
+    "apiReference": {
+      "title": "Référence API",
+      "description": "Parcourez les routes du runtime local dans Scalar."
+    },
+    "mcpTools": {
+      "title": "Outils MCP",
+      "description": "{{count}} actions exposées comme outils locaux."
+    },
+    "openapi": {
+      "title": "JSON OpenAPI",
+      "description": "Utilisez la spec générée depuis des scripts ou des importateurs d’outils."
+    }
+  }
+}

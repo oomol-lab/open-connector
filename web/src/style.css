@@ -226,14 +226,19 @@ h3 {
 
 .sidebar-footer {
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 8px;
   padding: 12px 6px 0;
   border-top: 1px solid var(--border);
 }
 
 .language-select {
   display: grid;
-  gap: 6px;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
 }
 
 .language-select span {
@@ -244,24 +249,33 @@ h3 {
 
 .language-select select {
   width: 100%;
-  height: 34px;
-  padding: 0 10px;
+  height: 30px;
+  padding: 0 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
   color: var(--ink);
+  font-size: 13px;
   cursor: pointer;
 }
 
 .runtime-status {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 8px;
   color: var(--muted);
   font-size: 13px;
 }
 
+.runtime-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .status-dot {
+  flex: 0 0 auto;
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -1511,8 +1525,29 @@ tr:last-child td {
   }
 
   .sidebar-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 0;
     border-top: 0;
+  }
+
+  .language-select {
+    display: block;
+    min-width: 128px;
+  }
+
+  .language-select span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .language-select select {
+    height: 32px;
   }
 
   .runtime-status {

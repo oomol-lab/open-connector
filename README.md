@@ -2,7 +2,7 @@
 
 # OpenConnector
 
-[English](README.md) | [简体中文](docs/README.zh-CN.md) | [日本語](docs/README.ja.md)
+[English](README.md) | [简体中文](docs/README.zh-CN.md) | [日本語](docs/README.ja.md) | [Русский](docs/README.ru.md) | [Français](docs/README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)

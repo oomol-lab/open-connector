@@ -33,7 +33,9 @@
     "label": "Language",
     "en": "English",
     "zh-CN": "简体中文",
-    "ja": "日本語"
+    "ja": "日本語",
+    "ru": "Русский",
+    "fr": "Français"
   },
   "nav": {
     "overview": "Overview",

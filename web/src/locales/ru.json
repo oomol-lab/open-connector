@@ -1,0 +1,292 @@
+{
+  "common": {
+    "active": "Активен",
+    "apiUnavailable": "API недоступен",
+    "catalogOnly": "Только каталог",
+    "clear": "Очистить",
+    "close": "Закрыть",
+    "connected": "Подключено",
+    "copied": "{{label}} скопировано",
+    "copy": "Копировать {{label}}",
+    "credential": "Учетные данные",
+    "currentSelection": "Текущий выбор",
+    "docs": "Документы",
+    "failed": "Ошибка",
+    "loadingRuntimeData": "Загрузка данных runtime...",
+    "local": "Локально",
+    "noAuth": "Без auth",
+    "notConnected": "Не подключено",
+    "open": "Открыть",
+    "refresh": "Обновить",
+    "required": "Обязательно",
+    "revoked": "Отозван",
+    "runtimeReady": "Runtime готов",
+    "showMore": "Показать еще",
+    "showing": "Показано {{shown}} из {{total}}",
+    "success": "Успех"
+  },
+  "brand": {
+    "subtitle": "Консоль локального runtime",
+    "adminAccess": "Администраторский доступ"
+  },
+  "language": {
+    "label": "Язык",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "fr": "Français"
+  },
+  "nav": {
+    "overview": "Обзор",
+    "providers": "Провайдеры",
+    "actions": "Действия",
+    "runs": "Запуски",
+    "access": "Доступ",
+    "docs": "Документы"
+  },
+  "shell": {
+    "invalidUnlockToken": "Администраторский token недействителен или отсутствует.",
+    "loadRuntimeFailed": "Не удалось загрузить данные runtime.",
+    "logoutFailed": "Не удалось выйти.",
+    "primaryNav": "Основная навигация",
+    "refreshData": "Обновить данные",
+    "logout": "Выйти",
+    "headings": {
+      "overview": {
+        "title": "Обзор",
+        "subtitle": "Состояние runtime, здоровье и частые операции."
+      },
+      "providers": {
+        "title": "Провайдеры",
+        "subtitle": "Подключайте провайдеры и проверяйте их возможности."
+      },
+      "actions": {
+        "title": "Действия",
+        "subtitle": "Ищите, проверяйте и отлаживайте действия локального runtime."
+      },
+      "runs": {
+        "title": "Запуски",
+        "subtitle": "Недавние локальные выполнения действий."
+      },
+      "access": {
+        "title": "Доступ",
+        "subtitle": "Управляйте runtime API token для агентов и клиентов."
+      },
+      "resources": {
+        "title": "Ресурсы",
+        "subtitle": "Сгенерированные API reference и метаданные инструментов."
+      }
+    }
+  },
+  "unlock": {
+    "token": "Администраторский token",
+    "unlockConsole": "Разблокировать консоль"
+  },
+  "overview": {
+    "runtimeReady": "Runtime готов",
+    "connectedProviders": "{{count}} подключенных провайдеров",
+    "metrics": {
+      "providers": "Провайдеры",
+      "actions": "Действия",
+      "connected": "Подключено",
+      "tokens": "Tokens"
+    },
+    "connectionHealth": "Состояние подключений",
+    "catalogValue": "{{count}} провайдеров",
+    "connectedValue": "{{count}} активно",
+    "executable": "Выполняемые",
+    "executableValue": "{{count}} действий",
+    "commonEntries": "Частые входы",
+    "connectProvider": "Подключить провайдера",
+    "searchActions": "Искать действия",
+    "createToken": "Создать token",
+    "openDocs": "Открыть документы",
+    "recentFailures": "Недавние ошибки",
+    "noFailedRunsTitle": "Ошибок нет",
+    "noFailedRunsDescription": "Недавние запуски действий прошли чисто.",
+    "recentRuns": "Недавние запуски",
+    "noRunsTitle": "Запусков пока нет",
+    "noRunsDescription": "Запустите действие, чтобы увидеть историю выполнения.",
+    "table": {
+      "action": "Действие",
+      "status": "Статус",
+      "started": "Начато",
+      "duration": "Длительность",
+      "input": "Ввод"
+    }
+  },
+  "providers": {
+    "searchPlaceholder": "Искать провайдеры",
+    "statusFilterLabel": "Статус провайдера",
+    "filters": {
+      "all": "Все",
+      "connected": "Подключено",
+      "notConnected": "Не подключено",
+      "oauthNeedsConfig": "OAuth требует настройки"
+    },
+    "providerMeta": "{{service}} · {{authTypes}} · {{count}} действий",
+    "noAuth": "без auth",
+    "oauthConfigBadge": "Настройка OAuth",
+    "noProvidersTitle": "Провайдеры не найдены",
+    "noProvidersDescription": "Попробуйте другой поиск или фильтр статуса.",
+    "providerNotFoundTitle": "Провайдер не найден",
+    "providerNotFoundDescription": "Маршрут провайдера не соответствует текущему каталогу.",
+    "selectProviderTitle": "Выберите провайдера",
+    "selectProviderDescription": "Выберите провайдера, чтобы проверить настройки подключения.",
+    "connectedBy": "Подключено через {{authType}}",
+    "summary": {
+      "actions": "Действия",
+      "auth": "Auth",
+      "oauthConfig": "Настройка OAuth",
+      "configured": "Настроено",
+      "required": "Обязательно",
+      "notUsed": "Не используется"
+    },
+    "connection": "Подключение",
+    "connectionMethod": "Способ подключения",
+    "noConnectionMethodTitle": "Нет способа подключения",
+    "noConnectionMethodDescription": "Этому провайдеру не нужны локальные учетные данные.",
+    "oauthClient": "OAuth Client",
+    "scopes": "Scopes",
+    "actions": "Действия",
+    "noScopes": "Scopes отсутствуют",
+    "noActions": "Действий нет.",
+    "authLabels": {
+      "apiKey": "API key",
+      "oauth": "OAuth",
+      "custom": "Пользовательский",
+      "noAuth": "Без auth"
+    },
+    "connectionMessages": {
+      "noAuth": "Этот провайдер работает без локальных учетных данных.",
+      "needsOAuthClient": "{{name}} требует локальный OAuth client перед подключением.",
+      "connectedOAuth": "{{name}} подключен через OAuth.",
+      "connectOAuth": "Подключите {{name}} через OAuth authorization flow.",
+      "saving": "Сохранение подключения...",
+      "openingOAuth": "Открытие OAuth...",
+      "configureOAuthFirst": "Настройте OAuth client перед подключением.",
+      "oauthWindowOpened": "Окно OAuth открыто.",
+      "updated": "Подключение обновлено.",
+      "failed": "Не удалось подключиться.",
+      "disconnecting": "Отключение...",
+      "disconnected": "Отключено.",
+      "disconnectFailed": "Не удалось отключиться."
+    },
+    "buttons": {
+      "configureOAuthClient": "Настроить OAuth Client",
+      "editOAuthClient": "Изменить OAuth Client",
+      "saveConnection": "Сохранить подключение",
+      "connectProvider": "Подключить {{name}}",
+      "reconnectProvider": "Переподключить {{name}}",
+      "disconnect": "Отключить",
+      "saveOAuthClient": "Сохранить OAuth Client",
+      "updateOAuthClient": "Обновить OAuth Client"
+    },
+    "oauthClientSettings": {
+      "configuredTitle": "OAuth client настроен",
+      "requiredTitle": "Требуется OAuth client",
+      "missingDescription": "{{name}} требует локальный OAuth client перед подключением.",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "storedSecretHint": "Сохраненный secret не отображается. Введите его снова при сохранении изменений.",
+      "saving": "Сохранение OAuth client...",
+      "saved": "OAuth client сохранен.",
+      "failed": "Не удалось сохранить OAuth client."
+    },
+    "execution": {
+      "executable": "Выполняемое",
+      "catalogOnly": "Только каталог"
+    }
+  },
+  "actions": {
+    "searchPlaceholder": "Искать действия по имени, ID или провайдеру",
+    "provider": "Провайдер",
+    "allProviders": "Все провайдеры",
+    "actionsCount": "{{count}} действий",
+    "noActionsTitle": "Действия не найдены",
+    "noActionsDescription": "Попробуйте другой поиск или фильтр провайдера.",
+    "actionNotFoundTitle": "Действие не найдено",
+    "noActionSelectedTitle": "Действие не выбрано",
+    "actionNotFoundDescription": "Маршрут действия не соответствует текущему каталогу.",
+    "selectActionDescription": "Выберите действие, чтобы проверить и запустить его.",
+    "locallyExecutable": "Локально выполняемое",
+    "needsCredential": "Нужны учетные данные",
+    "debugAction": "Отладить действие",
+    "requiredScopes": "Обязательные Scopes",
+    "parameters": "Параметры",
+    "fieldsCount": "{{count}} полей",
+    "noInputParameters": "Входных параметров нет.",
+    "required": "Обязательно",
+    "optional": "Необязательно",
+    "actionExamples": "Примеры действий",
+    "open": "Открыть",
+    "copyExample": "Копировать {{label}}",
+    "copiedExample": "{{label}} скопировано",
+    "closeDebugAction": "Закрыть отладку действия",
+    "input": "Ввод",
+    "run": "Запустить",
+    "running": "Выполняется",
+    "runningAction": "Выполнение действия...",
+    "actionFailed": "Действие завершилось ошибкой."
+  },
+  "runs": {
+    "noRunsTitle": "Запусков пока нет",
+    "noRunsDescription": "Запустите действие, чтобы увидеть недавнюю историю выполнения.",
+    "loadMore": "Загрузить еще",
+    "loadMoreFailed": "Не удалось загрузить больше запусков.",
+    "table": {
+      "action": "Действие",
+      "caller": "Вызывающий",
+      "status": "Статус",
+      "started": "Начато",
+      "duration": "Длительность",
+      "input": "Ввод",
+      "error": "Ошибка"
+    }
+  },
+  "access": {
+    "title": "Runtime Tokens",
+    "description": "Выдавайте bearer tokens для клиентов /v1 и MCP. Новые tokens показываются один раз.",
+    "name": "Имя",
+    "namePlaceholder": "Локальный MCP client",
+    "createToken": "Создать token",
+    "createTokenDescription": "Назовите client, который будет использовать этот runtime token.",
+    "closeCreateToken": "Закрыть окно создания token",
+    "creating": "Создание token...",
+    "created": "Token создан.",
+    "createFailed": "Не удалось создать token.",
+    "revoking": "Отзыв token...",
+    "revoked": "Token отозван.",
+    "revokeFailed": "Не удалось отозвать token.",
+    "newToken": "Новый token",
+    "tokenShownOnce": "Этот token показывается один раз. Скопируйте его перед закрытием окна.",
+    "copyToken": "Копировать Token",
+    "copiedToken": "Скопировано",
+    "copyRuntimeToken": "Копировать runtime token",
+    "copiedRuntimeToken": "Runtime token скопирован",
+    "noTokensTitle": "Runtime tokens пока нет",
+    "noTokensDescription": "Создайте token перед подключением MCP client или локального script. Token показывается один раз.",
+    "table": {
+      "name": "Имя",
+      "status": "Статус",
+      "created": "Создан",
+      "lastUsed": "Последнее использование"
+    },
+    "revoke": "Отозвать"
+  },
+  "resources": {
+    "apiReference": {
+      "title": "API Reference",
+      "description": "Просматривайте маршруты локального runtime в Scalar."
+    },
+    "mcpTools": {
+      "title": "MCP Tools",
+      "description": "{{count}} действий доступны как локальные инструменты."
+    },
+    "openapi": {
+      "title": "OpenAPI JSON",
+      "description": "Используйте сгенерированную spec в scripts или импортерах инструментов."
+    }
+  }
+}

@@ -2,18 +2,22 @@ import type { LocaleLang, Locales } from "@embra/i18n";
 
 import { I18n, detectLang } from "@embra/i18n";
 import en from "./locales/en.json";
+import fr from "./locales/fr.json";
 import ja from "./locales/ja.json";
+import ru from "./locales/ru.json";
 import zhCN from "./locales/zh-CN.json";
 
-export type AppLang = "en" | "zh-CN" | "ja";
+export type AppLang = "en" | "zh-CN" | "ja" | "ru" | "fr";
 
-export const supportedLangs = ["en", "zh-CN", "ja"] as const satisfies readonly AppLang[];
+export const supportedLangs = ["en", "zh-CN", "ja", "ru", "fr"] as const satisfies readonly AppLang[];
 export const langStorageKey = "oomol-connect.lang";
 
 const locales = {
   en,
   "zh-CN": zhCN,
   ja,
+  ru,
+  fr,
 } satisfies Locales;
 
 export function createAppI18n(initialLang: AppLang): I18n {
