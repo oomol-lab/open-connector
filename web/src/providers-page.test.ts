@@ -12,6 +12,7 @@ import {
   oauthClientActionLabel,
   oauthConfigForProvider,
   ProvidersPage,
+  shouldClearOAuthClientStatus,
   shouldEnableConnectionSubmit,
   shouldShowConnectionActions,
   shouldShowDisconnectAction,
@@ -115,6 +116,16 @@ describe("ProvidersPage OAuth client settings", () => {
     );
 
     expect(markup).toContain("Reset OAuth Client");
+  });
+});
+
+describe("shouldClearOAuthClientStatus", () => {
+  it("keeps the reset status when refresh removes the OAuth config for the same provider", () => {
+    expect(shouldClearOAuthClientStatus({ providerChanged: false, skipNextConfigClear: true })).toBe(false);
+  });
+
+  it("clears the reset status when the selected provider changes", () => {
+    expect(shouldClearOAuthClientStatus({ providerChanged: true, skipNextConfigClear: true })).toBe(true);
   });
 });
 
