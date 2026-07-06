@@ -445,11 +445,11 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   );
 
   useEffect(() => {
-    if (connected) {
+    if (props.connection) {
       stopOAuthRefreshPolling.current?.();
       stopOAuthRefreshPolling.current = undefined;
     }
-  }, [connected]);
+  }, [props.connection]);
 
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault();
