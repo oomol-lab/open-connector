@@ -137,7 +137,7 @@ curl -s -X POST http://localhost:3000/v1/actions/hackernews.get_top_stories \
 See [docs/quickstart.md](docs/quickstart.md) for the full local setup, first provider connection,
 OAuth flow, and runtime settings.
 
-## Connect A Provider
+## Connect a Provider
 
 GitHub is the simplest credentialed example because it can use a personal access token:
 
@@ -162,13 +162,13 @@ debugging, recent run review, and access to the generated OpenAPI and MCP metada
 
 ## Cloudflare Deployment
 
-OpenConnector supports Cloudflare Workers as a metadata and runtime-state deployment target using
-Workers, D1, R2, and Static Assets.
+OpenConnector can run on Cloudflare with Workers for the runtime, D1 for state, R2 for transit
+files, and Static Assets for the Web Console.
 
 See [docs/cloudflare.md](docs/cloudflare.md) for resource creation, migrations, secrets, local Worker
 preview, and remote deployment.
 
-## Want To Use It Directly?
+## Want to Use It Directly?
 
 The paths above are for teams integrating connectors into their own products, runtimes, or
 infrastructure. If you want to try the SaaS connection experience first, or use it directly in
@@ -179,7 +179,7 @@ first.
 SaaS/provider coverage. Connect accounts once, then use natural language to search, organize,
 create, and sync across connected tools.
 
-| If You Want To                           | Wanta Provides                                                                                                                  |
+| If You Want to                           | Wanta Provides                                                                                                                  |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Try 1,000+ SaaS connections directly     | Use the same SaaS/provider coverage without deploying a runtime or integrating SDK/CLI first.                                   |
 | Use Agents in daily work                 | Work across email, chat, docs, data, projects, support, developer tools, and marketing tools in natural language.               |

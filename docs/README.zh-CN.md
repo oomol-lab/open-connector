@@ -149,8 +149,8 @@ MCP metadata。
 
 ## Cloudflare 部署
 
-OpenConnector 支持使用 Cloudflare Workers 作为 metadata 和运行时状态部署目标，配套使用 Workers、
-D1、R2 和 Static Assets。
+OpenConnector 可以部署到 Cloudflare：Workers 运行 runtime，D1 保存状态，R2 处理中转文件，Static
+Assets 承载 Web 控制台。
 
 Cloudflare 资源创建、migration、secret、本地 Worker preview 和远程部署步骤见
 [cloudflare.md](cloudflare.md)。

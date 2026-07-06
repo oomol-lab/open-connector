@@ -152,8 +152,8 @@ client configuration、runtime token 作成、Action schema inspection、Action 
 
 ## Cloudflare デプロイ
 
-OpenConnector は、Workers、D1、R2、Static Assets を使用して Cloudflare Workers を metadata と runtime
-state のデプロイ先として利用できます。
+OpenConnector は Cloudflare にデプロイできます。Workers が runtime を実行し、D1 が state を保存し、R2 が transit file
+を扱い、Static Assets が Web Console を配信します。
 
 resource 作成、migration、secret、ローカル Worker preview、remote deployment については
 [cloudflare.md](cloudflare.md) を参照してください。

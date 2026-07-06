@@ -168,13 +168,13 @@ générées.
 
 ## Déploiement Cloudflare
 
-OpenConnector prend en charge Cloudflare Workers comme cible de déploiement pour les metadata et
-l'état runtime avec Workers, D1, R2 et Static Assets.
+OpenConnector peut être déployé sur Cloudflare : Workers exécute le runtime, D1 stocke l'état, R2
+gère les fichiers de transit et Static Assets sert la Web Console.
 
 Consultez [cloudflare.md](cloudflare.md) pour la création des ressources, les migrations, les
 secrets, la preview Worker locale et le déploiement distant.
 
-## Vous Voulez L'utiliser Directement ?
+## Vous voulez l'utiliser directement ?
 
 Les parcours ci-dessus s'adressent aux équipes qui intègrent le connector dans leurs produits,
 runtimes ou infrastructures d'entreprise. Si vous voulez d'abord essayer l'expérience de connexion
