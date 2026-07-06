@@ -41,20 +41,26 @@
     "providers": "Providers",
     "actions": "Actions",
     "runs": "Runs",
-    "access": "Access",
+    "access": "API Key",
     "docs": "Docs"
   },
   "shell": {
-    "invalidUnlockToken": "Admin token is invalid or missing.",
-    "loadRuntimeFailed": "Failed to load runtime data.",
-    "logoutFailed": "Failed to log out.",
+    "invalidUnlockToken": "Enter a valid admin token to unlock the console.",
+    "loadRuntimeFailed": "Could not load runtime data. Refresh or check that the runtime is running.",
+    "logoutFailed": "Could not log out. Try again.",
     "primaryNav": "Primary",
     "refreshData": "Refresh data",
     "logout": "Log out",
+    "theme": "Theme",
+    "themeMode": {
+      "auto": "Auto",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "headings": {
       "overview": {
         "title": "Overview",
-        "subtitle": "Runtime status, health, and common operations."
+        "subtitle": "Runtime status and health."
       },
       "providers": {
         "title": "Providers",
@@ -69,7 +75,7 @@
         "subtitle": "Recent local action executions."
       },
       "access": {
-        "title": "Access",
+        "title": "API Key",
         "subtitle": "Manage runtime API tokens for agents and clients."
       },
       "resources": {
@@ -85,22 +91,19 @@
   "overview": {
     "runtimeReady": "Runtime ready",
     "connectedProviders": "{{count}} connected providers",
+    "capabilityStatus": "Capability Status",
     "metrics": {
       "providers": "Providers",
       "actions": "Actions",
-      "connected": "Connected",
-      "tokens": "Tokens"
+      "executable": "Executable",
+      "runHealth": "Run Health"
     },
-    "connectionHealth": "Connection Health",
-    "catalogValue": "{{count}} providers",
-    "connectedValue": "{{count}} active",
-    "executable": "Executable",
-    "executableValue": "{{count}} actions",
-    "commonEntries": "Common Entries",
-    "connectProvider": "Connect provider",
-    "searchActions": "Search actions",
-    "createToken": "Create token",
-    "openDocs": "Open docs",
+    "availableServices": "Available services",
+    "localActions": "Local actions",
+    "recentFailuresMeta": "Recent failures",
+    "ready": "Ready",
+    "unavailable": "Unavailable",
+    "needsAttention": "Needs attention",
     "recentFailures": "Recent Failures",
     "noFailedRunsTitle": "No failed runs",
     "noFailedRunsDescription": "Recent action runs are clean.",
@@ -116,6 +119,7 @@
     }
   },
   "providers": {
+    "catalogTitle": "Providers",
     "searchPlaceholder": "Search providers",
     "statusFilterLabel": "Provider status",
     "filters": {
@@ -129,11 +133,20 @@
     "oauthConfigBadge": "OAuth config",
     "noProvidersTitle": "No providers found",
     "noProvidersDescription": "Try a different search or status filter.",
+    "resultCount": "Showing {{shown}} / {{total}}",
+    "showMore": "Show more",
+    "resetFilters": "Reset filters",
     "providerNotFoundTitle": "Provider not found",
-    "providerNotFoundDescription": "The provider route does not match the current catalog.",
+    "providerNotFoundDescription": "{{service}} does not match the current catalog.",
+    "backToProviders": "Back to providers",
+    "providerHomepage": "Homepage",
     "selectProviderTitle": "Select a provider",
     "selectProviderDescription": "Choose a provider to inspect connection settings.",
     "connectedBy": "Connected by {{authType}}",
+    "configuredBadge": "Configured",
+    "noSetupBadge": "No setup",
+    "unconfiguredBadge": "Not connected",
+    "oauthClientRequiredBadge": "OAuth client required",
     "summary": {
       "actions": "Actions",
       "auth": "Auth",
@@ -144,11 +157,19 @@
     },
     "connection": "Connection",
     "connectionMethod": "Connection method",
+    "connectionDescriptions": {
+      "noSetup": "This provider can run without local credentials.",
+      "connected": "Local credentials are configured with {{authType}}.",
+      "oauthClientRequired": "{{name}} needs a local OAuth client before OAuth can start.",
+      "notConnected": "Configure local credentials before running credentialed {{name}} actions."
+    },
     "noConnectionMethodTitle": "No connection method",
     "noConnectionMethodDescription": "This provider does not need local credentials.",
     "oauthClient": "OAuth Client",
     "scopes": "Scopes",
+    "scopesDescription": "Scopes requested by this provider's local actions.",
     "actions": "Actions",
+    "actionsDescription": "{{count}} local runtime actions in the catalog.",
     "noScopes": "No scopes",
     "noActions": "No actions.",
     "authLabels": {
@@ -176,6 +197,9 @@
       "configureOAuthClient": "Configure OAuth Client",
       "editOAuthClient": "Edit OAuth Client",
       "saveConnection": "Save Connection",
+      "connect": "Connect",
+      "details": "Details",
+      "manageConnection": "Manage",
       "connectProvider": "Connect {{name}}",
       "reconnectProvider": "Reconnect {{name}}",
       "disconnect": "Disconnect",

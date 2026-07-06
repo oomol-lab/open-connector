@@ -41,20 +41,26 @@
     "providers": "Провайдеры",
     "actions": "Действия",
     "runs": "Запуски",
-    "access": "Доступ",
+    "access": "API Key",
     "docs": "Документы"
   },
   "shell": {
-    "invalidUnlockToken": "Администраторский token недействителен или отсутствует.",
-    "loadRuntimeFailed": "Не удалось загрузить данные runtime.",
-    "logoutFailed": "Не удалось выйти.",
+    "invalidUnlockToken": "Введите действительный token администратора, чтобы разблокировать консоль.",
+    "loadRuntimeFailed": "Не удалось загрузить данные runtime. Обновите страницу или проверьте, что runtime запущен.",
+    "logoutFailed": "Не удалось выйти. Повторите попытку.",
     "primaryNav": "Основная навигация",
     "refreshData": "Обновить данные",
     "logout": "Выйти",
+    "theme": "Тема",
+    "themeMode": {
+      "auto": "Авто",
+      "light": "Светлая",
+      "dark": "Тёмная"
+    },
     "headings": {
       "overview": {
         "title": "Обзор",
-        "subtitle": "Состояние runtime, здоровье и частые операции."
+        "subtitle": "Состояние и здоровье runtime."
       },
       "providers": {
         "title": "Провайдеры",
@@ -69,7 +75,7 @@
         "subtitle": "Недавние локальные выполнения действий."
       },
       "access": {
-        "title": "Доступ",
+        "title": "API Key",
         "subtitle": "Управляйте runtime API token для агентов и клиентов."
       },
       "resources": {
@@ -85,22 +91,19 @@
   "overview": {
     "runtimeReady": "Runtime готов",
     "connectedProviders": "{{count}} подключенных провайдеров",
+    "capabilityStatus": "Статус возможностей",
     "metrics": {
       "providers": "Провайдеры",
       "actions": "Действия",
-      "connected": "Подключено",
-      "tokens": "Tokens"
+      "executable": "Выполняемые",
+      "runHealth": "Состояние запусков"
     },
-    "connectionHealth": "Состояние подключений",
-    "catalogValue": "{{count}} провайдеров",
-    "connectedValue": "{{count}} активно",
-    "executable": "Выполняемые",
-    "executableValue": "{{count}} действий",
-    "commonEntries": "Частые входы",
-    "connectProvider": "Подключить провайдера",
-    "searchActions": "Искать действия",
-    "createToken": "Создать token",
-    "openDocs": "Открыть документы",
+    "availableServices": "Доступные сервисы",
+    "localActions": "Локальные действия",
+    "recentFailuresMeta": "Недавние ошибки",
+    "ready": "Готово",
+    "unavailable": "Недоступно",
+    "needsAttention": "Требует внимания",
     "recentFailures": "Недавние ошибки",
     "noFailedRunsTitle": "Ошибок нет",
     "noFailedRunsDescription": "Недавние запуски действий прошли чисто.",
@@ -116,6 +119,7 @@
     }
   },
   "providers": {
+    "catalogTitle": "Провайдеры",
     "searchPlaceholder": "Искать провайдеры",
     "statusFilterLabel": "Статус провайдера",
     "filters": {
@@ -129,11 +133,20 @@
     "oauthConfigBadge": "Настройка OAuth",
     "noProvidersTitle": "Провайдеры не найдены",
     "noProvidersDescription": "Попробуйте другой поиск или фильтр статуса.",
+    "resultCount": "Показано {{shown}} / {{total}}",
+    "showMore": "Показать еще",
+    "resetFilters": "Сбросить фильтры",
     "providerNotFoundTitle": "Провайдер не найден",
-    "providerNotFoundDescription": "Маршрут провайдера не соответствует текущему каталогу.",
+    "providerNotFoundDescription": "{{service}} не найден в текущем каталоге.",
+    "backToProviders": "Назад к провайдерам",
+    "providerHomepage": "Сайт",
     "selectProviderTitle": "Выберите провайдера",
     "selectProviderDescription": "Выберите провайдера, чтобы проверить настройки подключения.",
     "connectedBy": "Подключено через {{authType}}",
+    "configuredBadge": "Настроено",
+    "noSetupBadge": "Без настройки",
+    "unconfiguredBadge": "Не подключено",
+    "oauthClientRequiredBadge": "Требуется OAuth client",
     "summary": {
       "actions": "Действия",
       "auth": "Auth",
@@ -144,11 +157,19 @@
     },
     "connection": "Подключение",
     "connectionMethod": "Способ подключения",
+    "connectionDescriptions": {
+      "noSetup": "Этот провайдер может работать без локальных учетных данных.",
+      "connected": "Локальные учетные данные настроены через {{authType}}.",
+      "oauthClientRequired": "{{name}} требует локальный OAuth client перед запуском OAuth.",
+      "notConnected": "Настройте локальные учетные данные перед запуском действий {{name}}, которым они нужны."
+    },
     "noConnectionMethodTitle": "Нет способа подключения",
     "noConnectionMethodDescription": "Этому провайдеру не нужны локальные учетные данные.",
     "oauthClient": "OAuth Client",
     "scopes": "Scopes",
+    "scopesDescription": "Scopes, которые запрашивают локальные действия этого провайдера.",
     "actions": "Действия",
+    "actionsDescription": "{{count}} действий локального runtime в каталоге.",
     "noScopes": "Scopes отсутствуют",
     "noActions": "Действий нет.",
     "authLabels": {
@@ -176,11 +197,15 @@
       "configureOAuthClient": "Настроить OAuth Client",
       "editOAuthClient": "Изменить OAuth Client",
       "saveConnection": "Сохранить подключение",
+      "connect": "Подключить",
+      "details": "Детали",
+      "manageConnection": "Управлять",
       "connectProvider": "Подключить {{name}}",
       "reconnectProvider": "Переподключить {{name}}",
       "disconnect": "Отключить",
       "saveOAuthClient": "Сохранить OAuth Client",
-      "updateOAuthClient": "Обновить OAuth Client"
+      "updateOAuthClient": "Обновить OAuth Client",
+      "resetOAuthClient": "Сбросить OAuth Client"
     },
     "oauthClientSettings": {
       "configuredTitle": "OAuth client настроен",
@@ -191,7 +216,10 @@
       "storedSecretHint": "Сохраненный secret не отображается. Введите его снова при сохранении изменений.",
       "saving": "Сохранение OAuth client...",
       "saved": "OAuth client сохранен.",
-      "failed": "Не удалось сохранить OAuth client."
+      "failed": "Не удалось сохранить OAuth client.",
+      "resetting": "Сброс OAuth client...",
+      "reset": "OAuth client сброшен.",
+      "resetFailed": "Не удалось сбросить OAuth client."
     },
     "execution": {
       "executable": "Выполняемое",

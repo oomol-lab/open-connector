@@ -41,20 +41,26 @@
     "providers": "Fournisseurs",
     "actions": "Actions",
     "runs": "Exécutions",
-    "access": "Accès",
+    "access": "API Key",
     "docs": "Docs"
   },
   "shell": {
-    "invalidUnlockToken": "Le token administrateur est invalide ou manquant.",
-    "loadRuntimeFailed": "Échec du chargement des données du runtime.",
-    "logoutFailed": "Échec de la déconnexion.",
+    "invalidUnlockToken": "Saisissez un token administrateur valide pour déverrouiller la console.",
+    "loadRuntimeFailed": "Impossible de charger les données du runtime. Actualisez ou vérifiez que le runtime est lancé.",
+    "logoutFailed": "Impossible de se déconnecter. Réessayez.",
     "primaryNav": "Principal",
     "refreshData": "Actualiser les données",
     "logout": "Se déconnecter",
+    "theme": "Thème",
+    "themeMode": {
+      "auto": "Automatique",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
     "headings": {
       "overview": {
         "title": "Vue d’ensemble",
-        "subtitle": "État du runtime, santé et opérations courantes."
+        "subtitle": "État et santé du runtime."
       },
       "providers": {
         "title": "Fournisseurs",
@@ -69,7 +75,7 @@
         "subtitle": "Exécutions récentes des actions locales."
       },
       "access": {
-        "title": "Accès",
+        "title": "API Key",
         "subtitle": "Gérez les tokens d’API runtime pour les agents et les clients."
       },
       "resources": {
@@ -85,22 +91,19 @@
   "overview": {
     "runtimeReady": "Runtime prêt",
     "connectedProviders": "{{count}} fournisseurs connectés",
+    "capabilityStatus": "État des capacités",
     "metrics": {
       "providers": "Fournisseurs",
       "actions": "Actions",
-      "connected": "Connectés",
-      "tokens": "Tokens"
+      "executable": "Exécutables",
+      "runHealth": "Santé des exécutions"
     },
-    "connectionHealth": "Santé des connexions",
-    "catalogValue": "{{count}} fournisseurs",
-    "connectedValue": "{{count}} actifs",
-    "executable": "Exécutables",
-    "executableValue": "{{count}} actions",
-    "commonEntries": "Entrées courantes",
-    "connectProvider": "Connecter un fournisseur",
-    "searchActions": "Rechercher des actions",
-    "createToken": "Créer un token",
-    "openDocs": "Ouvrir la documentation",
+    "availableServices": "Services disponibles",
+    "localActions": "Actions locales",
+    "recentFailuresMeta": "Échecs récents",
+    "ready": "Prêt",
+    "unavailable": "Indisponible",
+    "needsAttention": "À traiter",
     "recentFailures": "Échecs récents",
     "noFailedRunsTitle": "Aucun échec",
     "noFailedRunsDescription": "Les exécutions récentes sont propres.",
@@ -116,6 +119,7 @@
     }
   },
   "providers": {
+    "catalogTitle": "Fournisseurs",
     "searchPlaceholder": "Rechercher des fournisseurs",
     "statusFilterLabel": "Statut du fournisseur",
     "filters": {
@@ -129,11 +133,20 @@
     "oauthConfigBadge": "Config OAuth",
     "noProvidersTitle": "Aucun fournisseur trouvé",
     "noProvidersDescription": "Essayez une autre recherche ou un autre filtre de statut.",
+    "resultCount": "{{shown}} / {{total}} affichés",
+    "showMore": "Afficher plus",
+    "resetFilters": "Réinitialiser les filtres",
     "providerNotFoundTitle": "Fournisseur introuvable",
-    "providerNotFoundDescription": "La route du fournisseur ne correspond pas au catalogue actuel.",
+    "providerNotFoundDescription": "{{service}} ne correspond pas au catalogue actuel.",
+    "backToProviders": "Retour aux fournisseurs",
+    "providerHomepage": "Site web",
     "selectProviderTitle": "Sélectionner un fournisseur",
     "selectProviderDescription": "Choisissez un fournisseur pour inspecter les paramètres de connexion.",
     "connectedBy": "Connecté via {{authType}}",
+    "configuredBadge": "Configuré",
+    "noSetupBadge": "Sans configuration",
+    "unconfiguredBadge": "Non connecté",
+    "oauthClientRequiredBadge": "Client OAuth requis",
     "summary": {
       "actions": "Actions",
       "auth": "Auth",
@@ -144,11 +157,19 @@
     },
     "connection": "Connexion",
     "connectionMethod": "Méthode de connexion",
+    "connectionDescriptions": {
+      "noSetup": "Ce fournisseur peut s’exécuter sans identifiants locaux.",
+      "connected": "Les identifiants locaux sont configurés avec {{authType}}.",
+      "oauthClientRequired": "{{name}} nécessite un client OAuth local avant de lancer OAuth.",
+      "notConnected": "Configurez des identifiants locaux avant d’exécuter les actions {{name}} qui en ont besoin."
+    },
     "noConnectionMethodTitle": "Aucune méthode de connexion",
     "noConnectionMethodDescription": "Ce fournisseur n’a pas besoin d’identifiants locaux.",
     "oauthClient": "Client OAuth",
     "scopes": "Scopes",
+    "scopesDescription": "Scopes demandés par les actions locales de ce fournisseur.",
     "actions": "Actions",
+    "actionsDescription": "{{count}} actions de runtime local dans le catalogue.",
     "noScopes": "Aucun scope",
     "noActions": "Aucune action.",
     "authLabels": {
@@ -176,6 +197,9 @@
       "configureOAuthClient": "Configurer le client OAuth",
       "editOAuthClient": "Modifier le client OAuth",
       "saveConnection": "Enregistrer la connexion",
+      "connect": "Connecter",
+      "details": "Détails",
+      "manageConnection": "Gérer",
       "connectProvider": "Connecter {{name}}",
       "reconnectProvider": "Reconnecter {{name}}",
       "disconnect": "Déconnecter",

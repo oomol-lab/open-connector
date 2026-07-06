@@ -7,15 +7,29 @@ import type {
   RunLogPage,
   RuntimeTokenSummary,
 } from "./model";
+import type { ThemeMode } from "./theme";
 import type { FormEvent, ReactNode } from "react";
 
 import { useI18n, useLang, useTranslate } from "@embra/i18n/react";
-import { Activity, AppWindow, BookOpen, KeyRound, Loader2, RefreshCw, TerminalSquare } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  Cable,
+  Home,
+  KeyRound,
+  Loader2,
+  Monitor,
+  Moon,
+  RefreshCw,
+  Sun,
+  TerminalSquare,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
 import { AccessPage } from "./access-page";
 import { ActionsPage } from "./actions-page";
 import { ApiError, apiGet, apiPost } from "./api";
+import oomolConnectLogoUrl from "./assets/oomol-connect-logo.png";
 import { persistLang, supportedLangs } from "./i18n";
 import { emptyData } from "./model";
 import { OverviewPage } from "./overview-page";
@@ -23,10 +37,15 @@ import { ProvidersPage } from "./providers-page";
 import { ResourcesPage } from "./resources-page";
 import { RunsPage } from "./runs-page";
 import { InlineError, StatusDot } from "./shared-ui";
+import { useThemeMode } from "./theme";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const navItems = [
-  { path: "/overview", labelKey: "nav.overview", icon: Activity },
-  { path: "/providers", labelKey: "nav.providers", icon: AppWindow },
+  { path: "/overview", labelKey: "nav.overview", icon: Home },
+  { path: "/providers", labelKey: "nav.providers", icon: Cable },
   { path: "/actions", labelKey: "nav.actions", icon: TerminalSquare },
   { path: "/runs", labelKey: "nav.runs", icon: Activity },
   { path: "/access", labelKey: "nav.access", icon: KeyRound },
@@ -35,6 +54,12 @@ const navItems = [
 
 const oauthCompletionChannelName = "oomol-connect-oauth";
 const oauthCompletedType = "oauth.completed";
+
+const themeOptions = [
+  { value: "auto", labelKey: "shell.themeMode.auto", icon: Monitor },
+  { value: "light", labelKey: "shell.themeMode.light", icon: Sun },
+  { value: "dark", labelKey: "shell.themeMode.dark", icon: Moon },
+] as const;
 
 export interface AuthSession {
   adminAuthConfigured: boolean;
@@ -128,6 +153,7 @@ export async function loadRuntimeData(unlockToken: string): Promise<RuntimeLoadR
 
 export function App(): ReactNode {
   const t = useTranslate();
+  const { theme, setTheme } = useThemeMode();
   const [data, setData] = useState<AppData>(emptyData);
   const [authSession, setAuthSession] = useState<AuthSession>({
     adminAuthConfigured: false,
@@ -220,7 +246,7 @@ export function App(): ReactNode {
   }
 
   if (locked) {
-    return <UnlockView loading={loading} message={error} onUnlock={unlock} />;
+    return <UnlockView loading={loading} message={error} theme={theme} onThemeChange={setTheme} onUnlock={unlock} />;
   }
 
   if (!runtimeChecked) {
@@ -233,7 +259,9 @@ export function App(): ReactNode {
       showLogout={authSession.adminAuthConfigured && authSession.authenticated}
       loading={loading}
       error={error}
+      theme={theme}
       onRefresh={refresh}
+      onThemeChange={setTheme}
       onLogout={logout}
     />
   );
@@ -257,7 +285,9 @@ function AppShell(props: {
   showLogout: boolean;
   loading: boolean;
   error: string | null;
+  theme: ThemeMode;
   onRefresh(): void;
+  onThemeChange(theme: ThemeMode): void;
   onLogout(): void;
 }): ReactNode {
   const t = useTranslate();
@@ -265,13 +295,19 @@ function AppShell(props: {
   const actions = useMemo(() => props.data.providers.flatMap((provider) => provider.actions), [props.data.providers]);
   const heading = headingForPath(location.pathname);
   const section = location.pathname.split("/").filter(Boolean)[0];
-  const isBrowserPage = section === "actions" || section === "providers";
+  const isOverviewPage = heading === "overview";
+  const isBrowserPage = section === "actions";
+  const mainClassName = [isBrowserPage ? "main main-browser" : "main", isOverviewPage ? "overview-main" : ""]
+    .filter(Boolean)
+    .join(" ");
+  const currentNavItem = navItems.find((item) => item.path.slice(1) === heading) ?? navItems[0];
+  const CurrentNavIcon = currentNavItem.icon;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">OC</div>
+          <img className="brand-mark" src={oomolConnectLogoUrl} alt="" />
           <div>
             <div className="brand-name">OOMOL Connect</div>
             <div className="brand-subtitle">{t("brand.subtitle")}</div>
@@ -296,28 +332,29 @@ function AppShell(props: {
 
         <div className="sidebar-footer">
           <LanguageSelect />
+          <ThemeControl theme={props.theme} onThemeChange={props.onThemeChange} />
           <div className="runtime-status">
             <StatusDot ok={!props.error} />
             <span>{props.error ? t("common.apiUnavailable") : t("common.runtimeReady")}</span>
           </div>
           <div className="button-row tight">
-            <button className="icon-button compact" onClick={props.onRefresh} aria-label={t("shell.refreshData")}>
+            <Button variant="outline" size="icon-sm" onClick={props.onRefresh} aria-label={t("shell.refreshData")}>
               {props.loading ? <Loader2 className="spin" size={15} /> : <RefreshCw size={15} />}
-            </button>
+            </Button>
             {props.showLogout ? (
-              <button className="secondary-button compact" onClick={props.onLogout}>
+              <Button variant="outline" size="sm" onClick={props.onLogout}>
                 {t("shell.logout")}
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
       </aside>
 
-      <main className={isBrowserPage ? "main main-browser" : "main"}>
-        <section className="page-header">
-          <div>
+      <div className={isBrowserPage ? "main-region main-region-browser" : "main-region"}>
+        <header className="shell-header">
+          <div className="shell-header-title">
+            <CurrentNavIcon size={16} />
             <h1>{t(`shell.headings.${heading}.title`)}</h1>
-            <p>{t(`shell.headings.${heading}.subtitle`)}</p>
           </div>
           {props.loading ? (
             <div className="loading-panel page-loading">
@@ -325,34 +362,45 @@ function AppShell(props: {
               {t("common.loadingRuntimeData")}
             </div>
           ) : null}
-        </section>
+        </header>
 
-        {props.error ? <InlineError message={props.error} /> : null}
+        <main className={mainClassName}>
+          {props.error ? <InlineError message={props.error} /> : null}
 
-        <Routes>
-          <Route index element={<Navigate to="/overview" replace />} />
-          <Route path="/overview" element={<OverviewPage data={props.data} onRefresh={props.onRefresh} />} />
-          <Route path="/providers" element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />} />
-          <Route path="/providers/:service" element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />} />
-          <Route path="/actions" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
-          <Route path="/actions/:actionId" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
-          <Route
-            path="/runs"
-            element={<RunsPage initialRuns={props.data.runs} nextCursor={props.data.runsNextCursor} />}
-          />
-          <Route
-            path="/access"
-            element={<AccessPage tokens={props.data.runtimeTokens} onRefresh={props.onRefresh} />}
-          />
-          <Route path="/resources" element={<ResourcesPage actions={actions} />} />
-          <Route path="*" element={<Navigate to="/overview" replace />} />
-        </Routes>
-      </main>
+          <Routes>
+            <Route index element={<Navigate to="/overview" replace />} />
+            <Route path="/overview" element={<OverviewPage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route path="/providers" element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route
+              path="/providers/:service"
+              element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />}
+            />
+            <Route path="/actions" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route path="/actions/:actionId" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route
+              path="/runs"
+              element={<RunsPage initialRuns={props.data.runs} nextCursor={props.data.runsNextCursor} />}
+            />
+            <Route
+              path="/access"
+              element={<AccessPage tokens={props.data.runtimeTokens} onRefresh={props.onRefresh} />}
+            />
+            <Route path="/resources" element={<ResourcesPage actions={actions} />} />
+            <Route path="*" element={<Navigate to="/overview" replace />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }
 
-function UnlockView(props: { loading: boolean; message: string | null; onUnlock(token: string): void }): ReactNode {
+function UnlockView(props: {
+  loading: boolean;
+  message: string | null;
+  theme: ThemeMode;
+  onThemeChange(theme: ThemeMode): void;
+  onUnlock(token: string): void;
+}): ReactNode {
   const t = useTranslate();
   const [token, setToken] = useState("");
 
@@ -365,32 +413,63 @@ function UnlockView(props: { loading: boolean; message: string | null; onUnlock(
     <main className="unlock-screen">
       <section className="unlock-panel">
         <div className="brand">
-          <div className="brand-mark">OC</div>
+          <img className="brand-mark" src={oomolConnectLogoUrl} alt="" />
           <div>
             <div className="brand-name">OOMOL Connect</div>
             <div className="brand-subtitle">{t("brand.adminAccess")}</div>
           </div>
         </div>
         <LanguageSelect />
+        <ThemeControl theme={props.theme} onThemeChange={props.onThemeChange} />
         <form className="form-grid" onSubmit={submit}>
-          <label className="field">
+          <Label className="field">
             <span>{t("unlock.token")}</span>
-            <input
+            <Input
               type="password"
               value={token}
               onChange={(event) => setToken(event.target.value)}
               autoFocus
               autoComplete="current-password"
             />
-          </label>
-          <button className="primary-button" type="submit" disabled={!token.trim() || props.loading}>
+          </Label>
+          <Button type="submit" disabled={!token.trim() || props.loading}>
             {props.loading ? <Loader2 className="spin" size={16} /> : null}
             {t("unlock.unlockConsole")}
-          </button>
+          </Button>
         </form>
         {props.message ? <InlineError message={props.message} /> : null}
       </section>
     </main>
+  );
+}
+
+function ThemeControl(props: { theme: ThemeMode; onThemeChange(theme: ThemeMode): void }): ReactNode {
+  const t = useTranslate();
+
+  return (
+    <div className="theme-control" aria-label={t("shell.theme")}>
+      <span>{t("shell.theme")}</span>
+      <div className="theme-segmented-control" role="radiogroup" aria-label={t("shell.theme")}>
+        {themeOptions.map((item) => {
+          const Icon = item.icon;
+          const selected = props.theme === item.value;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              className={selected ? "theme-segment active" : "theme-segment"}
+              role="radio"
+              aria-checked={selected}
+              aria-label={t(item.labelKey)}
+              title={t(item.labelKey)}
+              onClick={() => props.onThemeChange(item.value)}
+            >
+              <Icon size={14} />
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -405,16 +484,21 @@ function LanguageSelect(): ReactNode {
   }
 
   return (
-    <label className="language-select">
-      <span>{t("language.label")}</span>
-      <select value={lang} onChange={(event) => switchLang(event.target.value as AppLang)}>
-        {supportedLangs.map((item) => (
-          <option key={item} value={item}>
-            {t(`language.${item}`)}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className="language-select">
+      <span className="language-select-label">{t("language.label")}</span>
+      <Select value={lang} onValueChange={(value) => switchLang(value as AppLang)}>
+        <SelectTrigger className="language-select-trigger" size="sm" aria-label={t("language.label")}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="language-select-content" position="popper" align="start">
+          {supportedLangs.map((item) => (
+            <SelectItem key={item} value={item}>
+              {t(`language.${item}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 

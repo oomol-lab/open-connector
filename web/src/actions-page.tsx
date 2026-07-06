@@ -8,6 +8,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { buildActionExamples, exampleInput, filterActions, parameterSummaries } from "./model";
 import { Badge, EmptyState, TagList } from "./shared-ui";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ActionsPageProps {
   data: AppData;
@@ -26,6 +33,7 @@ interface ExampleTabsProps {
 }
 
 const actionPageSize = 120;
+const allProvidersFilterValue = "__all_providers__";
 
 export function ActionsPage(props: ActionsPageProps): ReactNode {
   const t = useTranslate();
@@ -67,6 +75,10 @@ export function ActionsPage(props: ActionsPageProps): ReactNode {
     setSelectedService(null);
   }
 
+  function selectService(value: string): void {
+    setSelectedService(value === allProvidersFilterValue ? null : value);
+  }
+
   function renderActionRow(action: ActionDefinition): ReactNode {
     const selected = selectedAction?.id === action.id;
     return (
@@ -93,25 +105,32 @@ export function ActionsPage(props: ActionsPageProps): ReactNode {
   return (
     <div className="page-stack actions-page">
       <section className="page-toolbar actions-toolbar">
-        <label className="search-box">
-          <Search size={16} />
-          <input
+        <label className="relative flex min-w-56 flex-1 items-center">
+          <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+          <Input
+            className="pl-9"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("actions.searchPlaceholder")}
+            aria-label={t("actions.searchPlaceholder")}
           />
         </label>
-        <label className="select-filter">
-          <span>{t("actions.provider")}</span>
-          <select value={selectedService ?? ""} onChange={(event) => setSelectedService(event.target.value || null)}>
-            <option value="">{t("actions.allProviders")}</option>
-            {props.data.providers.map((provider) => (
-              <option key={provider.service} value={provider.service}>
-                {provider.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="select-filter">
+          <span className="select-filter-label">{t("actions.provider")}</span>
+          <Select value={selectedService ?? allProvidersFilterValue} onValueChange={selectService}>
+            <SelectTrigger className="select-filter-trigger" size="sm" aria-label={t("actions.provider")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="select-filter-content" position="popper" align="start">
+              <SelectItem value={allProvidersFilterValue}>{t("actions.allProviders")}</SelectItem>
+              {props.data.providers.map((provider) => (
+                <SelectItem key={provider.service} value={provider.service}>
+                  {provider.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </section>
 
       <div className="split-view actions-layout">
@@ -122,9 +141,9 @@ export function ActionsPage(props: ActionsPageProps): ReactNode {
               <span>{selectedProviderName}</span>
             </div>
             {query || selectedService ? (
-              <button className="secondary-button compact" onClick={clearFilters}>
+              <Button variant="outline" size="sm" onClick={clearFilters}>
                 {t("common.clear")}
-              </button>
+              </Button>
             ) : null}
           </div>
           {visibleActions.length === 0 ? (
@@ -141,12 +160,13 @@ export function ActionsPage(props: ActionsPageProps): ReactNode {
               {hasMoreActions ? (
                 <div className="list-panel-footer">
                   <span>{t("common.showing", { shown: renderedActions.length, total: visibleActions.length })}</span>
-                  <button
-                    className="secondary-button compact"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setVisibleLimit((value) => value + actionPageSize)}
                   >
                     {t("common.showMore")}
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </>
@@ -202,26 +222,19 @@ function ActionDetail(props: ActionDetailProps): ReactNode {
       </div>
       <p className="detail-description">{props.action.description}</p>
       <div className="button-row action-command-row">
-        <button
-          className="primary-button"
-          disabled={!props.action.execution.locallyExecutable}
-          onClick={() => setDebugOpen(true)}
-        >
+        <Button disabled={!props.action.execution.locallyExecutable} onClick={() => setDebugOpen(true)}>
           <Play size={16} />
           {t("actions.debugAction")}
-        </button>
-        <a
-          className="secondary-link"
-          href={`/api/actions/${props.action.id}/agent.md`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <ExternalLink size={15} />
-          Agent.md
-        </a>
-        <Link className="secondary-link" to={`/providers/${props.action.service}`}>
-          {t("actions.provider")}
-        </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <a href={`/api/actions/${props.action.id}/agent.md`} target="_blank" rel="noreferrer">
+            <ExternalLink size={15} />
+            Agent.md
+          </a>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link to={`/providers/${props.action.service}`}>{t("actions.provider")}</Link>
+        </Button>
       </div>
       <div className="panel-section">
         <h3>{t("actions.requiredScopes")}</h3>
@@ -281,46 +294,44 @@ function ExampleTabs(props: ExampleTabsProps): ReactNode {
 
   return (
     <section className="example-card">
-      <div className="tab-row">
-        <div className="segmented-control" role="tablist" aria-label={t("actions.actionExamples")}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={active === tab.id ? "segment active" : "segment"}
-              onClick={() => setActive(tab.id)}
-              role="tab"
-              aria-selected={active === tab.id}
+      <Tabs value={active} onValueChange={(value) => setActive(value as typeof active)}>
+        <div className="tab-row">
+          <TabsList aria-label={t("actions.actionExamples")}>
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <div className="button-row tight">
+            {active === "agent" ? (
+              <Button asChild variant="outline" size="sm">
+                <a href={`/api/actions/${props.action.id}/agent.md`} target="_blank" rel="noreferrer">
+                  <ExternalLink size={15} />
+                  {t("actions.open")}
+                </a>
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => void copy(selected.code)}
+              aria-label={
+                copied
+                  ? t("actions.copiedExample", { label: selected.label })
+                  : t("actions.copyExample", { label: selected.label })
+              }
             >
-              {tab.label}
-            </button>
-          ))}
+              {copied ? <Check size={15} /> : <Copy size={15} />}
+            </Button>
+          </div>
         </div>
-        <div className="button-row tight">
-          {active === "agent" ? (
-            <a
-              className="secondary-link"
-              href={`/api/actions/${props.action.id}/agent.md`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <ExternalLink size={15} />
-              {t("actions.open")}
-            </a>
-          ) : null}
-          <button
-            className="icon-button subtle"
-            onClick={() => void copy(selected.code)}
-            aria-label={
-              copied
-                ? t("actions.copiedExample", { label: selected.label })
-                : t("actions.copyExample", { label: selected.label })
-            }
-          >
-            {copied ? <Check size={15} /> : <Copy size={15} />}
-          </button>
-        </div>
-      </div>
-      <pre>{selected.code}</pre>
+        {tabs.map((tab) => (
+          <TabsContent key={tab.id} value={tab.id}>
+            <pre>{tab.code}</pre>
+          </TabsContent>
+        ))}
+      </Tabs>
     </section>
   );
 }
@@ -381,32 +392,35 @@ function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; on
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="modal-panel" role="dialog" aria-modal="true" aria-labelledby="run-action-title">
-        <div className="modal-header">
+    <Dialog open onOpenChange={(open) => (!open ? props.onClose() : undefined)}>
+      <DialogContent
+        className="run-action-dialog max-w-[min(920px,calc(100vw-2rem))] gap-0 overflow-hidden p-0 sm:max-w-[min(920px,calc(100vw-2rem))]"
+        showCloseButton={false}
+      >
+        <DialogHeader className="run-action-dialog-header">
           <div>
-            <h3 id="run-action-title">{t("actions.debugAction")}</h3>
-            <p>{props.action.id}</p>
+            <DialogTitle>{t("actions.debugAction")}</DialogTitle>
+            <DialogDescription className="font-mono text-xs">{props.action.id}</DialogDescription>
           </div>
-          <button className="icon-button subtle" onClick={props.onClose} aria-label={t("actions.closeDebugAction")}>
+          <Button variant="ghost" size="icon-sm" onClick={props.onClose} aria-label={t("actions.closeDebugAction")}>
             <X size={16} />
-          </button>
-        </div>
-        <div className={result ? "modal-body has-result" : "modal-body"}>
-          <label className="field">
+          </Button>
+        </DialogHeader>
+        <div className={result ? "run-action-dialog-body has-result" : "run-action-dialog-body"}>
+          <Label className="field">
             <span>{t("actions.input")}</span>
-            <textarea
-              className="json-input"
+            <Textarea
+              className="run-json-input font-mono text-xs leading-relaxed"
               value={input}
               onChange={(event) => setInput(event.target.value)}
               spellCheck={false}
             />
-          </label>
+          </Label>
           <div className="button-row">
-            <button className="primary-button" onClick={() => void run()} disabled={running}>
+            <Button type="button" onClick={() => void run()} disabled={running}>
               {running ? <Loader2 className="spin" size={16} /> : <Play size={16} />}
               {running ? t("actions.running") : t("actions.run")}
-            </button>
+            </Button>
           </div>
           {running ? (
             <div className="loading-panel">
@@ -416,8 +430,8 @@ function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; on
           ) : null}
           {result ? <ResultPanel actionId={props.action.id} result={result} /> : null}
         </div>
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

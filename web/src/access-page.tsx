@@ -7,7 +7,12 @@ import { Check, Copy, KeyRound, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { apiDelete, apiPost } from "./api";
 import { formatDate } from "./model";
-import { Badge, EmptyState } from "./shared-ui";
+import { Badge, EmptyState, FormStatus } from "./shared-ui";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface AccessPageProps {
   tokens: RuntimeTokenSummary[];
@@ -90,13 +95,13 @@ export function AccessPage(props: AccessPageProps): ReactNode {
           </div>
         </div>
 
-        <button className="primary-button" type="button" onClick={openCreate}>
+        <Button type="button" onClick={openCreate}>
           <KeyRound size={16} />
           {t("access.createToken")}
-        </button>
+        </Button>
       </div>
 
-      {!createOpen && status ? <p className="form-status">{status}</p> : null}
+      {!createOpen && status ? <FormStatus message={status} /> : null}
 
       <section className="table-panel">
         {props.tokens.length === 0 ? (
@@ -106,37 +111,37 @@ export function AccessPage(props: AccessPageProps): ReactNode {
             description={t("access.noTokensDescription")}
           />
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>{t("access.table.name")}</th>
-                <th>{t("access.table.status")}</th>
-                <th>{t("access.table.created")}</th>
-                <th>{t("access.table.lastUsed")}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("access.table.name")}</TableHead>
+                <TableHead>{t("access.table.status")}</TableHead>
+                <TableHead>{t("access.table.created")}</TableHead>
+                <TableHead>{t("access.table.lastUsed")}</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {props.tokens.map((token) => (
-                <tr key={token.id}>
-                  <td>
+                <TableRow key={token.id}>
+                  <TableCell>
                     <strong>{token.name}</strong>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Badge tone="success">{t("common.active")}</Badge>
-                  </td>
-                  <td>{formatDate(token.createdAt)}</td>
-                  <td>{token.lastUsedAt ? formatDate(token.lastUsedAt) : ""}</td>
-                  <td className="table-actions">
-                    <button className="secondary-button compact" onClick={() => void revoke(token.id)}>
+                  </TableCell>
+                  <TableCell>{formatDate(token.createdAt)}</TableCell>
+                  <TableCell>{token.lastUsedAt ? formatDate(token.lastUsedAt) : ""}</TableCell>
+                  <TableCell className="table-actions">
+                    <Button variant="outline" size="sm" onClick={() => void revoke(token.id)}>
                       <Trash2 size={15} />
                       {t("access.revoke")}
-                    </button>
-                  </td>
-                </tr>
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </section>
 
@@ -162,70 +167,71 @@ function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
   const created = mode === "created" ? props.created : null;
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section
-        className="modal-panel token-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="create-token-title"
+    <Dialog open onOpenChange={(open) => (!open ? props.onClose() : undefined)}>
+      <DialogContent
+        className="token-dialog max-w-[min(640px,calc(100vw-2rem))] gap-0 overflow-hidden p-0 sm:max-w-[min(640px,calc(100vw-2rem))]"
+        showCloseButton={false}
       >
-        <div className="modal-header">
+        <DialogHeader className="token-dialog-header">
           <div>
-            <h3 id="create-token-title">{mode === "created" ? t("access.newToken") : t("access.createToken")}</h3>
-            <p>{mode === "created" ? t("access.tokenShownOnce") : t("access.createTokenDescription")}</p>
+            <DialogTitle>{mode === "created" ? t("access.newToken") : t("access.createToken")}</DialogTitle>
+            <DialogDescription>
+              {mode === "created" ? t("access.tokenShownOnce") : t("access.createTokenDescription")}
+            </DialogDescription>
           </div>
-          <button className="icon-button subtle" onClick={props.onClose} aria-label={t("access.closeCreateToken")}>
+          <Button variant="ghost" size="icon-sm" onClick={props.onClose} aria-label={t("access.closeCreateToken")}>
             <X size={16} />
-          </button>
-        </div>
-        <div className="modal-body">
+          </Button>
+        </DialogHeader>
+        <div className="token-dialog-body">
           {created ? (
             <>
               <section className="example-card token-result">
                 <div className="tab-row">
                   <strong>{t("access.newToken")}</strong>
-                  <button
-                    className="secondary-button compact"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => props.onCopy(created.token)}
                     aria-label={props.copied ? t("access.copiedRuntimeToken") : t("access.copyRuntimeToken")}
                   >
                     {props.copied ? <Check size={15} /> : <Copy size={15} />}
                     {props.copied ? t("access.copiedToken") : t("access.copyToken")}
-                  </button>
+                  </Button>
                 </div>
                 <pre>{created.token}</pre>
               </section>
-              <p className="form-status">{t("access.tokenShownOnce")}</p>
+              <FormStatus message={t("access.tokenShownOnce")} />
               <div className="button-row">
-                <button className="secondary-button" type="button" onClick={props.onClose}>
+                <Button variant="outline" type="button" onClick={props.onClose}>
                   {t("common.close")}
-                </button>
+                </Button>
               </div>
             </>
           ) : (
             <form className="token-dialog-form" onSubmit={(event) => void props.onSubmit(event)}>
-              <label className="field">
+              <Label className="field">
                 <span>{t("access.name")}</span>
-                <input
+                <Input
                   value={props.name}
                   onChange={(event) => props.onNameChange(event.target.value)}
                   placeholder={t("access.namePlaceholder")}
                 />
-              </label>
+              </Label>
               <div className="button-row">
-                <button className="primary-button" type="submit" disabled={!props.name.trim()}>
+                <Button type="submit" disabled={!props.name.trim()}>
                   <KeyRound size={16} />
                   {t("access.createToken")}
-                </button>
-                <button className="secondary-button" type="button" onClick={props.onClose}>
+                </Button>
+                <Button variant="outline" type="button" onClick={props.onClose}>
                   {t("common.close")}
-                </button>
+                </Button>
               </div>
-              {props.status ? <p className="form-status">{props.status}</p> : null}
+              {props.status ? <FormStatus message={props.status} /> : null}
             </form>
           )}
         </div>
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

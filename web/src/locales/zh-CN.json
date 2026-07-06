@@ -41,20 +41,26 @@
     "providers": "提供商",
     "actions": "操作",
     "runs": "运行记录",
-    "access": "访问",
+    "access": "API Key",
     "docs": "文档"
   },
   "shell": {
-    "invalidUnlockToken": "管理员 token 无效或缺失。",
-    "loadRuntimeFailed": "加载运行时数据失败。",
-    "logoutFailed": "登出失败。",
+    "invalidUnlockToken": "请输入有效的管理员 token 来解锁控制台。",
+    "loadRuntimeFailed": "无法加载运行时数据。请刷新，或确认运行时已启动。",
+    "logoutFailed": "无法登出，请重试。",
     "primaryNav": "主导航",
     "refreshData": "刷新数据",
     "logout": "登出",
+    "theme": "主题",
+    "themeMode": {
+      "auto": "自动",
+      "light": "浅色",
+      "dark": "深色"
+    },
     "headings": {
       "overview": {
         "title": "概览",
-        "subtitle": "查看运行时状态、健康情况和常用操作。"
+        "subtitle": "查看运行时状态和健康情况。"
       },
       "providers": {
         "title": "提供商",
@@ -69,7 +75,7 @@
         "subtitle": "最近的本地操作执行记录。"
       },
       "access": {
-        "title": "访问",
+        "title": "API Key",
         "subtitle": "管理 agent 和客户端使用的运行时 API token。"
       },
       "resources": {
@@ -85,22 +91,19 @@
   "overview": {
     "runtimeReady": "运行时就绪",
     "connectedProviders": "{{count}} 个已连接提供商",
+    "capabilityStatus": "能力状态",
     "metrics": {
       "providers": "提供商",
       "actions": "操作",
-      "connected": "已连接",
-      "tokens": "Token"
+      "executable": "可执行",
+      "runHealth": "运行健康"
     },
-    "connectionHealth": "连接健康",
-    "catalogValue": "{{count}} 个提供商",
-    "connectedValue": "{{count}} 个启用",
-    "executable": "可执行",
-    "executableValue": "{{count}} 个操作",
-    "commonEntries": "常用入口",
-    "connectProvider": "连接提供商",
-    "searchActions": "搜索操作",
-    "createToken": "创建 token",
-    "openDocs": "打开文档",
+    "availableServices": "可连接服务",
+    "localActions": "本地可执行操作",
+    "recentFailuresMeta": "最近失败",
+    "ready": "就绪",
+    "unavailable": "暂不可用",
+    "needsAttention": "需处理",
     "recentFailures": "最近失败",
     "noFailedRunsTitle": "暂无失败运行",
     "noFailedRunsDescription": "最近的操作运行都正常。",
@@ -116,6 +119,7 @@
     }
   },
   "providers": {
+    "catalogTitle": "提供商",
     "searchPlaceholder": "搜索提供商",
     "statusFilterLabel": "提供商状态",
     "filters": {
@@ -129,11 +133,20 @@
     "oauthConfigBadge": "OAuth 配置",
     "noProvidersTitle": "没有找到提供商",
     "noProvidersDescription": "试试其他搜索词或状态筛选。",
+    "resultCount": "显示 {{shown}} / {{total}}",
+    "showMore": "显示更多",
+    "resetFilters": "重置筛选",
     "providerNotFoundTitle": "未找到提供商",
-    "providerNotFoundDescription": "当前目录中没有匹配这个提供商路由。",
+    "providerNotFoundDescription": "{{service}} 不在当前目录中。",
+    "backToProviders": "返回提供商",
+    "providerHomepage": "主页",
     "selectProviderTitle": "选择提供商",
     "selectProviderDescription": "选择一个提供商来查看连接设置。",
     "connectedBy": "通过 {{authType}} 连接",
+    "configuredBadge": "已配置",
+    "noSetupBadge": "无需设置",
+    "unconfiguredBadge": "未连接",
+    "oauthClientRequiredBadge": "需要 OAuth client",
     "summary": {
       "actions": "操作",
       "auth": "鉴权",
@@ -144,11 +157,19 @@
     },
     "connection": "连接",
     "connectionMethod": "连接方式",
+    "connectionDescriptions": {
+      "noSetup": "这个提供商无需本地凭证即可运行。",
+      "connected": "本地凭证已通过 {{authType}} 配置。",
+      "oauthClientRequired": "{{name}} 需要先配置本地 OAuth client 才能开始 OAuth。",
+      "notConnected": "运行需要凭证的 {{name}} 操作前，请先配置本地凭证。"
+    },
     "noConnectionMethodTitle": "没有连接方式",
     "noConnectionMethodDescription": "这个提供商不需要本地凭证。",
     "oauthClient": "OAuth Client",
     "scopes": "Scopes",
+    "scopesDescription": "这个提供商的本地操作需要的 scopes。",
     "actions": "操作",
+    "actionsDescription": "目录中有 {{count}} 个本地运行时操作。",
     "noScopes": "没有 scopes",
     "noActions": "没有操作。",
     "authLabels": {
@@ -176,11 +197,15 @@
       "configureOAuthClient": "配置 OAuth Client",
       "editOAuthClient": "编辑 OAuth Client",
       "saveConnection": "保存连接",
+      "connect": "连接",
+      "details": "详情",
+      "manageConnection": "管理",
       "connectProvider": "连接 {{name}}",
       "reconnectProvider": "重新连接 {{name}}",
       "disconnect": "断开连接",
       "saveOAuthClient": "保存 OAuth Client",
-      "updateOAuthClient": "更新 OAuth Client"
+      "updateOAuthClient": "更新 OAuth Client",
+      "resetOAuthClient": "重置 OAuth Client"
     },
     "oauthClientSettings": {
       "configuredTitle": "OAuth client 已配置",
@@ -191,7 +216,10 @@
       "storedSecretHint": "已保存的 secret 不会显示；保存变更时需要重新输入。",
       "saving": "正在保存 OAuth client...",
       "saved": "OAuth client 已保存。",
-      "failed": "保存 OAuth client 失败。"
+      "failed": "保存 OAuth client 失败。",
+      "resetting": "正在重置 OAuth client...",
+      "reset": "OAuth client 已重置。",
+      "resetFailed": "重置 OAuth client 失败。"
     },
     "execution": {
       "executable": "可执行",

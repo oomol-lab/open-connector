@@ -41,20 +41,26 @@
     "providers": "プロバイダー",
     "actions": "アクション",
     "runs": "実行履歴",
-    "access": "アクセス",
+    "access": "API Key",
     "docs": "ドキュメント"
   },
   "shell": {
-    "invalidUnlockToken": "管理者 token が無効、または指定されていません。",
-    "loadRuntimeFailed": "ランタイムデータの読み込みに失敗しました。",
-    "logoutFailed": "ログアウトに失敗しました。",
+    "invalidUnlockToken": "有効な管理者 token を入力してコンソールをロック解除してください。",
+    "loadRuntimeFailed": "ランタイムデータを読み込めませんでした。更新するか、ランタイムが起動していることを確認してください。",
+    "logoutFailed": "ログアウトできませんでした。もう一度お試しください。",
     "primaryNav": "メインナビゲーション",
     "refreshData": "データを更新",
     "logout": "ログアウト",
+    "theme": "テーマ",
+    "themeMode": {
+      "auto": "自動",
+      "light": "ライト",
+      "dark": "ダーク"
+    },
     "headings": {
       "overview": {
         "title": "概要",
-        "subtitle": "ランタイムの状態、ヘルス、よく使う操作を確認します。"
+        "subtitle": "ランタイムの状態とヘルスを確認します。"
       },
       "providers": {
         "title": "プロバイダー",
@@ -69,7 +75,7 @@
         "subtitle": "最近のローカルアクション実行です。"
       },
       "access": {
-        "title": "アクセス",
+        "title": "API Key",
         "subtitle": "Agent とクライアント向けの runtime API token を管理します。"
       },
       "resources": {
@@ -85,22 +91,19 @@
   "overview": {
     "runtimeReady": "ランタイム準備完了",
     "connectedProviders": "{{count}} 件の接続済みプロバイダー",
+    "capabilityStatus": "能力ステータス",
     "metrics": {
       "providers": "プロバイダー",
       "actions": "アクション",
-      "connected": "接続済み",
-      "tokens": "Token"
+      "executable": "実行可能",
+      "runHealth": "実行ヘルス"
     },
-    "connectionHealth": "接続ヘルス",
-    "catalogValue": "{{count}} 件のプロバイダー",
-    "connectedValue": "{{count}} 件が有効",
-    "executable": "実行可能",
-    "executableValue": "{{count}} 件のアクション",
-    "commonEntries": "よく使う入口",
-    "connectProvider": "プロバイダーを接続",
-    "searchActions": "アクションを検索",
-    "createToken": "Token を作成",
-    "openDocs": "ドキュメントを開く",
+    "availableServices": "利用可能なサービス",
+    "localActions": "ローカルアクション",
+    "recentFailuresMeta": "最近の失敗",
+    "ready": "準備完了",
+    "unavailable": "利用不可",
+    "needsAttention": "要対応",
     "recentFailures": "最近の失敗",
     "noFailedRunsTitle": "失敗した実行はありません",
     "noFailedRunsDescription": "最近のアクション実行は正常です。",
@@ -116,6 +119,7 @@
     }
   },
   "providers": {
+    "catalogTitle": "プロバイダー",
     "searchPlaceholder": "プロバイダーを検索",
     "statusFilterLabel": "プロバイダーのステータス",
     "filters": {
@@ -129,11 +133,20 @@
     "oauthConfigBadge": "OAuth 設定",
     "noProvidersTitle": "プロバイダーが見つかりません",
     "noProvidersDescription": "別の検索語句またはステータスフィルターを試してください。",
+    "resultCount": "{{shown}} / {{total}} を表示",
+    "showMore": "さらに表示",
+    "resetFilters": "フィルターをリセット",
     "providerNotFoundTitle": "プロバイダーが見つかりません",
-    "providerNotFoundDescription": "現在の catalog に、この provider route と一致する項目はありません。",
+    "providerNotFoundDescription": "{{service}} は現在の catalog にありません。",
+    "backToProviders": "プロバイダーに戻る",
+    "providerHomepage": "ホームページ",
     "selectProviderTitle": "プロバイダーを選択",
     "selectProviderDescription": "接続設定を確認するプロバイダーを選択してください。",
     "connectedBy": "{{authType}} で接続済み",
+    "configuredBadge": "設定済み",
+    "noSetupBadge": "設定不要",
+    "unconfiguredBadge": "未接続",
+    "oauthClientRequiredBadge": "OAuth client が必要",
     "summary": {
       "actions": "アクション",
       "auth": "認証",
@@ -144,11 +157,19 @@
     },
     "connection": "接続",
     "connectionMethod": "接続方式",
+    "connectionDescriptions": {
+      "noSetup": "このプロバイダーはローカル認証情報なしで実行できます。",
+      "connected": "ローカル認証情報は {{authType}} で設定済みです。",
+      "oauthClientRequired": "{{name}} で OAuth を開始するには、ローカル OAuth client が必要です。",
+      "notConnected": "認証情報が必要な {{name}} アクションを実行する前に、ローカル認証情報を設定してください。"
+    },
     "noConnectionMethodTitle": "接続方式はありません",
     "noConnectionMethodDescription": "このプロバイダーはローカル認証情報を必要としません。",
     "oauthClient": "OAuth Client",
     "scopes": "Scopes",
+    "scopesDescription": "このプロバイダーのローカルアクションが要求する scopes です。",
     "actions": "アクション",
+    "actionsDescription": "Catalog 内のローカルランタイムアクションは {{count}} 件です。",
     "noScopes": "Scopes はありません",
     "noActions": "アクションはありません。",
     "authLabels": {
@@ -176,11 +197,15 @@
       "configureOAuthClient": "OAuth Client を設定",
       "editOAuthClient": "OAuth Client を編集",
       "saveConnection": "接続を保存",
+      "connect": "接続",
+      "details": "詳細",
+      "manageConnection": "管理",
       "connectProvider": "{{name}} に接続",
       "reconnectProvider": "{{name}} に再接続",
       "disconnect": "切断",
       "saveOAuthClient": "OAuth Client を保存",
-      "updateOAuthClient": "OAuth Client を更新"
+      "updateOAuthClient": "OAuth Client を更新",
+      "resetOAuthClient": "OAuth Client をリセット"
     },
     "oauthClientSettings": {
       "configuredTitle": "OAuth client 設定済み",
@@ -191,7 +216,10 @@
       "storedSecretHint": "保存済みの secret は表示されません。変更を保存するときは再入力してください。",
       "saving": "OAuth client を保存中...",
       "saved": "OAuth client を保存しました。",
-      "failed": "OAuth client の保存に失敗しました。"
+      "failed": "OAuth client の保存に失敗しました。",
+      "resetting": "OAuth client をリセット中...",
+      "reset": "OAuth client をリセットしました。",
+      "resetFailed": "OAuth client のリセットに失敗しました。"
     },
     "execution": {
       "executable": "実行可能",

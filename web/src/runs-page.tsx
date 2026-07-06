@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { apiGet } from "./api";
 import { compactJson, formatDate, formatDuration } from "./model";
 import { Badge, EmptyState, InlineError } from "./shared-ui";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface RunsPageProps {
   initialRuns: RunLog[];
@@ -46,52 +48,52 @@ export function RunsPage(props: RunsPageProps): ReactNode {
   }
 
   if (runs.length === 0) {
-    return <EmptyState title={t("runs.noRunsTitle")} description={t("runs.noRunsDescription")} />;
+    return <EmptyState title={t("runs.noRunsTitle")} description={t("runs.noRunsDescription")} icon={null} />;
   }
 
   return (
     <>
       <section className="table-panel">
-        <table>
-          <thead>
-            <tr>
-              <th>{t("runs.table.action")}</th>
-              <th>{t("runs.table.caller")}</th>
-              <th>{t("runs.table.status")}</th>
-              <th>{t("runs.table.started")}</th>
-              <th>{t("runs.table.duration")}</th>
-              <th>{t("runs.table.input")}</th>
-              <th>{t("runs.table.error")}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("runs.table.action")}</TableHead>
+              <TableHead>{t("runs.table.caller")}</TableHead>
+              <TableHead>{t("runs.table.status")}</TableHead>
+              <TableHead>{t("runs.table.started")}</TableHead>
+              <TableHead>{t("runs.table.duration")}</TableHead>
+              <TableHead>{t("runs.table.input")}</TableHead>
+              <TableHead>{t("runs.table.error")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {runs.map((run) => (
-              <tr key={run.id}>
-                <td className="mono">{run.actionId}</td>
-                <td className="mono">{run.caller}</td>
-                <td>
+              <TableRow key={run.id}>
+                <TableCell className="mono">{run.actionId}</TableCell>
+                <TableCell className="mono">{run.caller}</TableCell>
+                <TableCell>
                   {run.ok ? (
                     <Badge tone="success">{t("common.success")}</Badge>
                   ) : (
                     <Badge tone="error">{t("common.failed")}</Badge>
                   )}
-                </td>
-                <td>{formatDate(run.startedAt)}</td>
-                <td>{formatDuration(run)}</td>
-                <td className="mono">{compactJson(run.inputSummary)}</td>
-                <td>{run.errorMessage ?? run.errorCode ?? ""}</td>
-              </tr>
+                </TableCell>
+                <TableCell>{formatDate(run.startedAt)}</TableCell>
+                <TableCell>{formatDuration(run)}</TableCell>
+                <TableCell className="mono">{compactJson(run.inputSummary)}</TableCell>
+                <TableCell>{run.errorMessage ?? run.errorCode ?? ""}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </section>
       {runsError ? <InlineError message={runsError} /> : null}
       {nextCursor ? (
         <div className="table-footer">
-          <button className="secondary-button compact" onClick={() => void loadMoreRuns()} disabled={loadingMore}>
+          <Button variant="outline" size="sm" onClick={() => void loadMoreRuns()} disabled={loadingMore}>
             {loadingMore ? <Loader2 size={14} className="spin" /> : null}
             {t("runs.loadMore")}
-          </button>
+          </Button>
         </div>
       ) : null}
     </>

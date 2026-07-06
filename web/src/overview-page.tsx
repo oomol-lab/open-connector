@@ -1,161 +1,213 @@
-import type { AppData } from "./model";
+import type { AppData, ProviderDefinition } from "./model";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
-import { Activity, AppWindow, FileText, KeyRound, PlugZap, RefreshCw, TerminalSquare } from "lucide-react";
+import { Activity, Cable, RefreshCw, TerminalSquare } from "lucide-react";
 import { Link } from "react-router";
-import { compactJson, createOverviewSummary, formatDate, formatDuration } from "./model";
-import { Badge, EmptyState, InfoBlock, Metric } from "./shared-ui";
+import { compactJson, createOverviewSummary, formatDate, formatDuration, sortProviders } from "./model";
+import { Badge, EmptyState, ProviderIcon } from "./shared-ui";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface OverviewPageProps {
   data: AppData;
   onRefresh(): void;
 }
 
+interface CapabilityStatusCellProps {
+  icon: LucideIcon;
+  providerIcons?: ProviderDefinition[];
+  label: string;
+  value: string;
+  meta: string;
+  badgeLabel: string;
+  badgeTone: CapabilityStatusBadgeTone;
+  to: string;
+}
+
+type CapabilityStatusBadgeTone = "success" | "warning";
+
+const capabilityProviderIconLimit = 4;
+
 export function OverviewPage(props: OverviewPageProps): ReactNode {
   const t = useTranslate();
   const summary = createOverviewSummary(props.data);
   const recentRuns = props.data.runs.slice(0, 6);
+  const connectionsByService = new Map(props.data.connections.map((connection) => [connection.service, connection]));
+  const providerIconSources = sortProviders(props.data.providers, connectionsByService).slice(
+    0,
+    capabilityProviderIconLimit,
+  );
+  const capabilityCells: CapabilityStatusCellProps[] = [
+    {
+      icon: Cable,
+      providerIcons: providerIconSources,
+      label: t("overview.metrics.providers"),
+      value: String(summary.providerCount),
+      meta: t("overview.availableServices"),
+      badgeLabel: summary.providerCount > 0 ? t("overview.ready") : t("overview.unavailable"),
+      badgeTone: summary.providerCount > 0 ? "success" : "warning",
+      to: "/providers",
+    },
+    {
+      icon: TerminalSquare,
+      label: t("overview.metrics.executable"),
+      value: String(summary.locallyExecutableActionCount),
+      meta: t("overview.localActions"),
+      badgeLabel: summary.locallyExecutableActionCount > 0 ? t("overview.ready") : t("overview.unavailable"),
+      badgeTone: summary.locallyExecutableActionCount > 0 ? "success" : "warning",
+      to: "/actions",
+    },
+    {
+      icon: Activity,
+      label: t("overview.metrics.runHealth"),
+      value: String(summary.failedRunCount),
+      meta: t("overview.recentFailuresMeta"),
+      badgeLabel: summary.failedRunCount === 0 ? t("overview.ready") : t("overview.needsAttention"),
+      badgeTone: summary.failedRunCount === 0 ? "success" : "warning",
+      to: "/runs",
+    },
+  ];
 
   return (
-    <div className="page-stack">
-      <section className="runtime-strip">
+    <div className="page-stack overview-page">
+      <Card className="runtime-strip">
         <div>
           <strong>{t("overview.runtimeReady")}</strong>
           <span>{t("overview.connectedProviders", { count: summary.connectedCount })}</span>
         </div>
-        <button className="secondary-button compact" onClick={props.onRefresh}>
+        <Button variant="outline" size="sm" onClick={props.onRefresh}>
           <RefreshCw size={15} />
           {t("common.refresh")}
-        </button>
-      </section>
-
-      <section className="metrics">
-        <Metric label={t("overview.metrics.providers")} value={summary.providerCount} />
-        <Metric label={t("overview.metrics.actions")} value={summary.actionCount} />
-        <Metric label={t("overview.metrics.connected")} value={summary.connectedCount} />
-        <Metric label={t("overview.metrics.tokens")} value={summary.activeTokenCount} />
-      </section>
+        </Button>
+      </Card>
 
       <section className="content-grid">
-        <div className="detail-panel">
+        <Card className="detail-panel overview-capability-panel">
           <div className="section-heading-row">
-            <h2>{t("overview.connectionHealth")}</h2>
-            <Link className="secondary-link" to="/providers">
-              <PlugZap size={15} />
-              {t("nav.providers")}
-            </Link>
+            <h2>{t("overview.capabilityStatus")}</h2>
           </div>
-          <div className="section-grid">
-            <InfoBlock
-              icon={<AppWindow size={18} />}
-              label={t("overview.metrics.providers")}
-              value={t("overview.catalogValue", { count: summary.providerCount })}
-            />
-            <InfoBlock
-              icon={<PlugZap size={18} />}
-              label={t("overview.metrics.connected")}
-              value={t("overview.connectedValue", { count: summary.connectedCount })}
-            />
-            <InfoBlock
-              icon={<TerminalSquare size={18} />}
-              label={t("overview.executable")}
-              value={t("overview.executableValue", {
-                count: props.data.providers
-                  .flatMap((provider) => provider.actions)
-                  .filter((action) => action.execution.locallyExecutable).length,
-              })}
-            />
+          <div className="overview-capability-grid">
+            {capabilityCells.map((cell) => (
+              <CapabilityStatusCell
+                key={cell.to}
+                icon={cell.icon}
+                providerIcons={cell.providerIcons}
+                label={cell.label}
+                value={cell.value}
+                meta={cell.meta}
+                badgeLabel={cell.badgeLabel}
+                badgeTone={cell.badgeTone}
+                to={cell.to}
+              />
+            ))}
           </div>
-        </div>
-
-        <div className="detail-panel">
-          <div className="section-heading-row">
-            <h2>{t("overview.commonEntries")}</h2>
-          </div>
-          <div className="quick-link-grid">
-            <Link className="quick-link" to="/providers">
-              <PlugZap size={16} />
-              {t("overview.connectProvider")}
-            </Link>
-            <Link className="quick-link" to="/actions">
-              <TerminalSquare size={16} />
-              {t("overview.searchActions")}
-            </Link>
-            <Link className="quick-link" to="/access">
-              <KeyRound size={16} />
-              {t("overview.createToken")}
-            </Link>
-            <Link className="quick-link" to="/resources">
-              <FileText size={16} />
-              {t("overview.openDocs")}
-            </Link>
-          </div>
-        </div>
+        </Card>
       </section>
 
-      <section className="content-grid">
-        <div className="table-panel">
-          <div className="table-panel-heading">
-            <h2>{t("overview.recentFailures")}</h2>
-            <Badge tone={summary.failedRuns.length ? "error" : "success"}>{summary.failedRuns.length}</Badge>
-          </div>
-          {summary.failedRuns.length === 0 ? (
-            <EmptyState title={t("overview.noFailedRunsTitle")} description={t("overview.noFailedRunsDescription")} />
-          ) : (
-            <RunSummaryTable runs={summary.failedRuns} />
-          )}
-        </div>
-
-        <div className="table-panel">
+      <section className="content-grid overview-recent-runs-section">
+        <Card className="table-panel overview-recent-runs-panel">
           <div className="table-panel-heading">
             <h2>{t("overview.recentRuns")}</h2>
-            <Link className="secondary-link" to="/runs">
-              <Activity size={15} />
-              {t("nav.runs")}
-            </Link>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/runs">
+                <Activity size={15} />
+                {t("nav.runs")}
+              </Link>
+            </Button>
           </div>
           {recentRuns.length === 0 ? (
-            <EmptyState title={t("overview.noRunsTitle")} description={t("overview.noRunsDescription")} />
+            <EmptyState
+              title={t("overview.noRunsTitle")}
+              description={t("overview.noRunsDescription")}
+              icon={null}
+              density="compact"
+            />
           ) : (
             <RunSummaryTable runs={recentRuns} />
           )}
-        </div>
+        </Card>
       </section>
     </div>
+  );
+}
+
+function CapabilityStatusCell(props: CapabilityStatusCellProps): ReactNode {
+  return (
+    <Link className="overview-capability-cell" to={props.to}>
+      <div className="overview-capability-cell-header">
+        <CapabilityStatusIcon icon={props.icon} providers={props.providerIcons} />
+        <span className={`overview-capability-badge ${props.badgeTone}`}>{props.badgeLabel}</span>
+      </div>
+      <div className="overview-capability-cell-body">
+        <span className="overview-capability-label">{props.label}</span>
+        <strong className="overview-capability-value">{props.value}</strong>
+        <span className="overview-capability-meta">{props.meta}</span>
+      </div>
+    </Link>
+  );
+}
+
+function CapabilityStatusIcon(props: { icon: LucideIcon; providers?: ProviderDefinition[] }): ReactNode {
+  const Icon = props.icon;
+  const providers = props.providers?.slice(0, capabilityProviderIconLimit) ?? [];
+
+  if (providers.length === 0) {
+    return (
+      <span className="overview-capability-icon" aria-hidden="true">
+        <Icon size={18} />
+      </span>
+    );
+  }
+
+  return (
+    <span className="overview-capability-icon-shell" aria-hidden="true">
+      <span className="overview-capability-icon overview-capability-static-icon">
+        <Icon size={18} />
+      </span>
+      <span className="overview-capability-provider-icons">
+        {providers.map((provider) => (
+          <span key={provider.service} className="overview-capability-provider-icon">
+            <ProviderIcon provider={provider} />
+          </span>
+        ))}
+      </span>
+    </span>
   );
 }
 
 function RunSummaryTable(props: { runs: AppData["runs"] }): ReactNode {
   const t = useTranslate();
   return (
-    <table className="summary-table">
-      <thead>
-        <tr>
-          <th>{t("overview.table.action")}</th>
-          <th>{t("overview.table.status")}</th>
-          <th>{t("overview.table.started")}</th>
-          <th>{t("overview.table.duration")}</th>
-          <th>{t("overview.table.input")}</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table className="summary-table">
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("overview.table.action")}</TableHead>
+          <TableHead>{t("overview.table.status")}</TableHead>
+          <TableHead>{t("overview.table.started")}</TableHead>
+          <TableHead>{t("overview.table.duration")}</TableHead>
+          <TableHead>{t("overview.table.input")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {props.runs.map((run) => (
-          <tr key={run.id}>
-            <td className="mono">{run.actionId}</td>
-            <td>
+          <TableRow key={run.id}>
+            <TableCell className="mono">{run.actionId}</TableCell>
+            <TableCell>
               {run.ok ? (
                 <Badge tone="success">{t("common.success")}</Badge>
               ) : (
                 <Badge tone="error">{t("common.failed")}</Badge>
               )}
-            </td>
-            <td>{formatDate(run.startedAt)}</td>
-            <td>{formatDuration(run)}</td>
-            <td className="mono">{compactJson(run.inputSummary)}</td>
-          </tr>
+            </TableCell>
+            <TableCell>{formatDate(run.startedAt)}</TableCell>
+            <TableCell>{formatDuration(run)}</TableCell>
+            <TableCell className="mono">{compactJson(run.inputSummary)}</TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

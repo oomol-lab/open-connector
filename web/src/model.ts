@@ -55,8 +55,14 @@ export interface ProviderDefinition {
 }
 
 export interface ConnectionRecord {
+  id?: string;
   service: string;
+  connectionName?: string;
   authType: string;
+  configured?: boolean;
+  virtual?: boolean;
+  default?: boolean;
+  profile?: Record<string, unknown> | null;
   metadata: Record<string, unknown>;
 }
 
@@ -127,12 +133,76 @@ export interface AppData {
 export interface OverviewSummary {
   providerCount: number;
   actionCount: number;
+  locallyExecutableActionCount: number;
   connectedCount: number;
   activeTokenCount: number;
+  failedRunCount: number;
   failedRuns: RunLog[];
 }
 
+export interface ProviderConnectionStatus {
+  noSetupRequired: boolean;
+  connected: boolean;
+  oauthClientRequired: boolean;
+  connection?: ConnectionRecord;
+}
+
 const firstProviderService = "fusion-api";
+const recommendedProviderServices = [
+  "googlesheets",
+  "gmail",
+  "slack",
+  "googlecalendar",
+  "googledrive",
+  "github",
+  "notion",
+  "hubspot",
+  "googleforms",
+  "airtable",
+  "trello",
+  "asana",
+  "jira",
+  "linear",
+  "clickup",
+  "monday",
+  "googledocs",
+  "googleslides",
+  "dropbox",
+  "box",
+  "confluence",
+  "outlook",
+  "discord",
+  "telegram",
+  "twilio",
+  "sendgrid",
+  "mailchimp",
+  "shopify",
+  "stripe",
+  "googleanalytics",
+  "googlesearchconsole",
+  "facebookleadads",
+  "metaads",
+  "linkedin",
+  "salesforce",
+  "pipedrive",
+  "zendesk",
+  "intercom",
+  "openai",
+  "anthropic",
+  "gemini",
+  "perplexity",
+  "deepseek",
+  "gitlab",
+  "dockerhub",
+  "vercel",
+  "cloudflareworker",
+  "awss3",
+  "cloudflarer2",
+  "googlebigquery",
+] as const;
+const recommendedProviderServiceRank = new Map(
+  recommendedProviderServices.map((service, index) => [compactProviderService(service), index]),
+);
 
 export const emptyData: AppData = {
   providers: [],
@@ -144,13 +214,59 @@ export const emptyData: AppData = {
 
 export function createOverviewSummary(data: AppData): OverviewSummary {
   const actions = data.providers.flatMap((provider) => provider.actions);
+  const failedRuns = data.runs.filter((run) => !run.ok);
   return {
     providerCount: data.providers.length,
     actionCount: actions.length,
-    connectedCount: data.connections.length,
+    locallyExecutableActionCount: actions.filter((action) => action.execution.locallyExecutable).length,
+    connectedCount: data.connections.filter(isUsableCredentialConnection).length,
     activeTokenCount: data.runtimeTokens.length,
-    failedRuns: data.runs.filter((run) => !run.ok).slice(0, 5),
+    failedRunCount: failedRuns.length,
+    failedRuns: failedRuns.slice(0, 5),
   };
+}
+
+export function resolveProviderConnectionStatus(
+  provider: ProviderDefinition,
+  connections: ConnectionRecord[],
+  oauthConfigs: OAuthConfig[],
+): ProviderConnectionStatus {
+  const noSetupRequired = isNoAuthOnlyProvider(provider);
+  const serviceConnections = connections.filter((connection) => connection.service === provider.service);
+  const connection = noSetupRequired ? undefined : pickUsableCredentialConnection(serviceConnections);
+  return {
+    noSetupRequired,
+    connected: connection != null,
+    oauthClientRequired: providerHasOAuth(provider) && !oauthClientConfigured(provider.service, oauthConfigs),
+    connection,
+  };
+}
+
+export function isNoAuthOnlyProvider(provider: ProviderDefinition): boolean {
+  const authTypes = provider.auth.length > 0 ? provider.auth.map((auth) => auth.type) : provider.authTypes;
+  return authTypes.length === 0 || authTypes.every((authType) => authType === "no_auth");
+}
+
+function pickUsableCredentialConnection(connections: ConnectionRecord[]): ConnectionRecord | undefined {
+  const usableConnections = connections.filter(isUsableCredentialConnection);
+  return usableConnections.find((connection) => connection.default) ?? usableConnections[0];
+}
+
+function isUsableCredentialConnection(connection: ConnectionRecord | undefined): connection is ConnectionRecord {
+  return (
+    connection != null &&
+    connection.authType !== "no_auth" &&
+    connection.virtual !== true &&
+    connection.configured !== false
+  );
+}
+
+function providerHasOAuth(provider: ProviderDefinition): boolean {
+  return provider.auth.some((auth) => auth.type === "oauth2") || provider.authTypes.includes("oauth2");
+}
+
+function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): boolean {
+  return oauthConfigs.some((config) => config.service === service && config.configured);
 }
 
 export function credentialFieldsFor(auth: AuthDefinition): CredentialField[] {
@@ -194,14 +310,30 @@ export function sortProviders(
       return leftPinned ? -1 : 1;
     }
 
-    const leftConnected = connectionsByService.has(left.service);
-    const rightConnected = connectionsByService.has(right.service);
+    const leftConnected = isUsableCredentialConnection(connectionsByService.get(left.service));
+    const rightConnected = isUsableCredentialConnection(connectionsByService.get(right.service));
     if (leftConnected !== rightConnected) {
       return leftConnected ? -1 : 1;
     }
 
+    const recommendedRank =
+      getRecommendedProviderServiceRank(left.service) - getRecommendedProviderServiceRank(right.service);
+    if (recommendedRank !== 0) return recommendedRank;
+
     return left.displayName.localeCompare(right.displayName);
   });
+}
+
+function getRecommendedProviderServiceRank(service: string): number {
+  return recommendedProviderServiceRank.get(compactProviderService(service)) ?? Number.MAX_SAFE_INTEGER;
+}
+
+function compactProviderService(service: string): string {
+  return service
+    .toLowerCase()
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/g, "");
 }
 
 export function firstProviderByConnectionStatus(

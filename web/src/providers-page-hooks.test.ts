@@ -3,7 +3,7 @@ import type { AppData, ProviderDefinition } from "./model";
 import { I18nProvider } from "@embra/i18n/react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
 import { ProvidersPage } from "./providers-page";
@@ -31,7 +31,14 @@ describe("ProvidersPage OAuth polling effects", () => {
         createElement(
           MemoryRouter,
           { initialEntries: ["/providers/gmail"] },
-          createElement(ProvidersPage, { data: connectedProviderData, onRefresh() {} }),
+          createElement(
+            Routes,
+            null,
+            createElement(Route, {
+              path: "/providers/:service",
+              element: createElement(ProvidersPage, { data: connectedProviderData, onRefresh() {} }),
+            }),
+          ),
         ),
       ),
     );
