@@ -497,6 +497,10 @@ class FakeProviderLoader implements IProviderLoader {
     return undefined;
   }
 
+  async loadProxyExecutor(): Promise<undefined> {
+    return undefined;
+  }
+
   async loadCredentialValidators(_service: string): Promise<CredentialValidators | undefined> {
     return this.validators;
   }

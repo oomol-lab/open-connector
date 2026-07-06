@@ -3,11 +3,15 @@ import type {
   ExecutionContext,
   ExecutionResult,
   ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+  ProxyRequestInput,
+  ProxyResponse,
   ResolvedCredential,
   TransitFileWriter,
 } from "../core/types.ts";
 
-import { CastError, optionalRecord, optionalString, requiredString } from "../core/cast.ts";
+import { CastError, optionalRecord, optionalScalarString, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
 
 /**
@@ -103,6 +107,152 @@ export interface ProviderTimeout {
   signal: AbortSignal;
   didTimeout(): boolean;
   cleanup(): void;
+}
+
+export interface BearerProviderProxyDefinition {
+  service: string;
+  baseUrl: string;
+  allowedEndpoint?: (endpoint: string) => boolean;
+}
+
+const blockedProxyRequestHeaders = new Set([
+  "authorization",
+  "connection",
+  "content-length",
+  "host",
+  "transfer-encoding",
+]);
+
+export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, queryInput?: unknown): URL {
+  const endpoint = normalizeProviderProxyEndpoint(endpointInput);
+  const base = new URL(baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
+  const url = new URL(endpoint.slice(1), base);
+  for (const [key, value] of Object.entries(normalizeProviderProxyQuery(queryInput))) {
+    url.searchParams.set(key, value);
+  }
+  return url;
+}
+
+export function normalizeProviderProxyEndpoint(endpointInput: unknown): string {
+  const endpoint = requiredString(endpointInput, "endpoint", (message) => new ProviderRequestError(400, message));
+  if (!endpoint.startsWith("/") || endpoint.startsWith("//")) {
+    throw new ProviderRequestError(400, "endpoint must be a relative path starting with /");
+  }
+  try {
+    new URL(endpoint);
+    throw new ProviderRequestError(400, "endpoint must be a relative path");
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+  }
+  if (endpoint.includes("\\") || endpoint.split("/").includes("..")) {
+    throw new ProviderRequestError(400, "endpoint must not contain path traversal segments");
+  }
+  return endpoint;
+}
+
+export function normalizeProviderProxyQuery(queryInput: unknown): Record<string, string> {
+  const query = optionalRecord(queryInput);
+  if (!query) {
+    return {};
+  }
+
+  const output: Record<string, string> = {};
+  for (const [key, value] of Object.entries(query)) {
+    const scalar = optionalScalarString(value);
+    if (scalar !== undefined) {
+      output[key] = scalar;
+    }
+  }
+  return output;
+}
+
+export function normalizeProviderProxyHeaders(headersInput: unknown): Headers {
+  const headers = new Headers();
+  const input = optionalRecord(headersInput);
+  if (!input) {
+    return headers;
+  }
+
+  for (const [name, value] of Object.entries(input)) {
+    const normalizedName = name.toLowerCase();
+    const headerValue = optionalString(value);
+    if (headerValue && !blockedProxyRequestHeaders.has(normalizedName)) {
+      headers.set(normalizedName, headerValue);
+    }
+  }
+  return headers;
+}
+
+export async function readProviderProxyResponse(response: Response): Promise<ProxyResponse> {
+  const headers = Object.fromEntries(response.headers.entries());
+  const text = await response.text();
+  const contentType = response.headers.get("content-type") ?? "";
+  return {
+    status: response.status,
+    headers,
+    data: contentType.includes("json") && text ? JSON.parse(text) : text || null,
+  };
+}
+
+export function toProviderProxyError(error: unknown, fallbackMessage: string): ProxyExecutionResult {
+  const result = toProviderExecutionError(error, fallbackMessage);
+  if (result.ok) {
+    return {
+      ok: false,
+      error: {
+        code: "provider_error",
+        message: fallbackMessage,
+      },
+    };
+  }
+  return {
+    ok: false,
+    error: result.error!,
+  };
+}
+
+export function defineBearerProviderProxy(input: BearerProviderProxyDefinition): ProviderProxyExecutor {
+  return async (proxyInput: ProxyRequestInput, context: ExecutionContext): Promise<ProxyExecutionResult> => {
+    try {
+      const endpoint = normalizeProviderProxyEndpoint(proxyInput.endpoint);
+      if (input.allowedEndpoint && !input.allowedEndpoint(endpoint)) {
+        throw new ProviderRequestError(400, "endpoint is not supported for this provider");
+      }
+
+      const credential = await requireBearerCredential(context, input.service);
+      const url = createProviderProxyUrl(input.baseUrl, endpoint, proxyInput.query);
+      const headers = normalizeProviderProxyHeaders(proxyInput.headers);
+      headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
+      headers.set("user-agent", providerUserAgent);
+
+      const init: RequestInit = {
+        method: proxyInput.method,
+        headers,
+        signal: context.signal,
+      };
+      if (proxyInput.body !== undefined) {
+        init.body = typeof proxyInput.body === "string" ? proxyInput.body : JSON.stringify(proxyInput.body);
+        if (!headers.has("content-type") && typeof proxyInput.body !== "string") {
+          headers.set("content-type", "application/json");
+        }
+      }
+
+      const response = await fetch(url, init);
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+      }
+
+      return {
+        ok: true,
+        response: await readProviderProxyResponse(response),
+      };
+    } catch (error) {
+      return toProviderProxyError(error, "provider request failed");
+    }
+  };
 }
 
 /**

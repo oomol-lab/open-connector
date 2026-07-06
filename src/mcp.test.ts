@@ -159,6 +159,10 @@ class EchoProviderLoader implements IProviderLoader {
     return async (input) => ({ ok: true, output: input });
   }
 
+  async loadProxyExecutor(): Promise<undefined> {
+    return undefined;
+  }
+
   async loadCredentialValidators(): Promise<undefined> {
     return undefined;
   }

@@ -17,12 +17,13 @@ function propertyName(service: string): string {
 }
 
 const lines = [
-  'import type { CredentialValidators, ProviderExecutors } from "../core/types.ts";',
+  'import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../core/types.ts";',
   "",
   "/** Lazy-loaded provider executor module shape. */",
   "export type ExecutorModule = {",
   "  credentialValidators?: CredentialValidators;",
   "  executors: ProviderExecutors;",
+  "  proxy?: ProviderProxyExecutor;",
   "};",
   "",
   "/** Generated lazy imports for provider executors. Do not hand-edit. */",

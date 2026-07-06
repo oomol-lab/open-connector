@@ -402,6 +402,39 @@ export type ActionExecutor<TInput = unknown, TOutput = unknown> = (
   context: ExecutionContext,
 ) => Promise<ExecutionResult<TOutput>>;
 
+export interface ProxyRequestInput {
+  endpoint: string;
+  method: string;
+  query?: Record<string, unknown>;
+  headers?: Record<string, unknown>;
+  body?: unknown;
+}
+
+export interface ProxyResponse {
+  status: number;
+  headers: Record<string, string>;
+  data: unknown;
+}
+
+export type ProxyExecutionResult =
+  | {
+      ok: true;
+      response: ProxyResponse;
+    }
+  | {
+      ok: false;
+      error: {
+        code: string;
+        message: string;
+        details?: unknown;
+      };
+    };
+
+export type ProviderProxyExecutor = (
+  input: ProxyRequestInput,
+  context: ExecutionContext,
+) => Promise<ProxyExecutionResult>;
+
 /**
  * Executor map for one provider.
  *

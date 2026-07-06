@@ -1,7 +1,13 @@
 import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
-import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "../core/types.ts";
+import type {
+  ActionDefinition,
+  ActionExecutor,
+  ProviderDefinition,
+  ProviderProxyExecutor,
+  ResolvedCredential,
+} from "../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-flow-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
@@ -1434,6 +1440,97 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("executes provider proxy requests through the v1 runtime envelope", async () => {
+    const app = createTestServer([apiKeyProvider], {
+      providerLoader: new ProxyProviderLoader(),
+    }).createApp();
+
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" }, connectionName: "work" }),
+    });
+
+    const response = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-oomol-connector-alias": "work",
+      },
+      body: JSON.stringify({
+        endpoint: "/items",
+        method: "post",
+        query: { limit: 2 },
+        headers: { accept: "application/json" },
+        body: { name: "Example" },
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      message: "OK",
+      data: {
+        status: 202,
+        headers: { "content-type": "application/json" },
+        data: {
+          endpoint: "/items",
+          method: "POST",
+          query: { limit: 2 },
+          headers: { accept: "application/json" },
+          body: { name: "Example" },
+          authType: "api_key",
+        },
+      },
+      meta: {},
+    });
+  });
+
+  it("rejects invalid provider proxy endpoints", async () => {
+    const app = createTestServer([apiKeyProvider], {
+      providerLoader: new ProxyProviderLoader(),
+    }).createApp();
+
+    const response = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "https://evil.test/a", method: "GET" }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "invalid_input",
+    });
+  });
+
+  it("maps provider proxy failures to stable v1 envelopes", async () => {
+    const app = createTestServer([apiKeyProvider], {
+      providerLoader: new ProxyProviderLoader(async () => ({
+        ok: false,
+        error: {
+          code: "authorization_failed",
+          message: "Provider rejected the credential.",
+          details: { status: 401 },
+        },
+      })),
+    }).createApp();
+
+    const response = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    });
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "authorization_failed",
+      message: "Provider rejected the credential.",
+      data: { status: 401 },
+    });
+  });
+
   it("uploads, serves, and deletes local transit files", async () => {
     const rootDir = await createTempDir();
     try {
@@ -1689,6 +1786,10 @@ class EmptyProviderLoader implements IProviderLoader {
     throw new Error("No actions are available in this test.");
   }
 
+  async loadProxyExecutor(): Promise<ProviderProxyExecutor | undefined> {
+    return undefined;
+  }
+
   async loadCredentialValidators(): Promise<undefined> {
     return undefined;
   }
@@ -1700,6 +1801,10 @@ class EchoProviderLoader implements IProviderLoader {
       await context.getCredential("example");
       return { ok: true, output: input };
     };
+  }
+
+  async loadProxyExecutor(): Promise<ProviderProxyExecutor | undefined> {
+    return undefined;
   }
 
   async loadCredentialValidators(): Promise<{
@@ -1722,6 +1827,39 @@ class EchoProviderLoader implements IProviderLoader {
         };
       },
     };
+  }
+}
+
+class ProxyProviderLoader extends EchoProviderLoader {
+  private readonly proxy?: ProviderProxyExecutor;
+
+  constructor(proxy?: ProviderProxyExecutor) {
+    super();
+    this.proxy = proxy;
+  }
+
+  override async loadProxyExecutor(): Promise<ProviderProxyExecutor> {
+    return (
+      this.proxy ??
+      (async (input, context) => {
+        const credential = await context.getCredential("example");
+        return {
+          ok: true,
+          response: {
+            status: 202,
+            headers: { "content-type": "application/json" },
+            data: {
+              endpoint: input.endpoint,
+              method: input.method,
+              query: input.query,
+              headers: input.headers,
+              body: input.body,
+              authType: credential?.authType,
+            },
+          },
+        };
+      })
+    );
   }
 }
 

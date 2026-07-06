@@ -35,6 +35,7 @@ import {
   writeRuntimeSuccess,
 } from "./api/runtime-api.ts";
 import { createTransitFileResponse, TransitFileError } from "./files/transit-file-store.ts";
+import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { decodeRunLogCursor } from "./storage/runtime-store.ts";
 
 const oauthCompletionChannelName = "oomol-connect-oauth";
@@ -67,10 +68,17 @@ export interface IConnectServerOptions {
 export class ConnectServer {
   private readonly options: IConnectServerOptions;
   private readonly actionSearch: ActionSearchIndexProvider;
+  private readonly proxyRunner: ProxyRunner;
 
   constructor(options: IConnectServerOptions) {
     this.options = options;
     this.actionSearch = options.actionSearch ?? createActionSearchIndexProvider(options.catalog.actions);
+    this.proxyRunner = new ProxyRunner({
+      catalog: options.catalog,
+      providerLoader: options.providerLoader,
+      connections: options.connections,
+      logger: options.logger,
+    });
   }
 
   createApp(): Hono {
@@ -90,14 +98,7 @@ export class ConnectServer {
     app.get("/v1/apps/services/:service", (context) =>
       this.listRuntimeAppsByService(context, context.req.param("service")),
     );
-    app.post("/v1/proxy/:service", (context) =>
-      writeRuntimeFailure(context, {
-        status: 501,
-        errorCode: "proxy_not_supported",
-        message: `Proxy execution is not supported for ${context.req.param("service")}.`,
-        meta: { service: context.req.param("service") },
-      }),
-    );
+    app.post("/v1/proxy/:service", (context) => this.createRuntimeProxyRequest(context, context.req.param("service")));
 
     app.get("/openapi.json", (context) =>
       context.json(
@@ -401,6 +402,41 @@ export class ConnectServer {
 
       throw error;
     }
+  }
+
+  private async createRuntimeProxyRequest(context: Context, service: string): Promise<Response> {
+    let body: Record<string, unknown>;
+    try {
+      body = await readJsonBody(context);
+    } catch (error) {
+      if (error instanceof HttpRequestError) {
+        return writeRuntimeFailure(context, {
+          status: 400,
+          errorCode: "invalid_input",
+          message: error.message,
+          meta: { service },
+        });
+      }
+
+      throw error;
+    }
+
+    const result = await this.proxyRunner.run({
+      service,
+      input: body,
+      connectionName: readConnectionName(context, body),
+    });
+    if (result.ok) {
+      return writeRuntimeSuccess(context, result.response);
+    }
+
+    return writeRuntimeFailure(context, {
+      status: result.status,
+      errorCode: result.errorCode,
+      message: result.message,
+      data: result.data,
+      meta: result.meta,
+    });
   }
 
   private async listRuntimeApps(context: Context): Promise<Response> {

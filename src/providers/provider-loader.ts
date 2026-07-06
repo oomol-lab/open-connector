@@ -1,4 +1,4 @@
-import type { ActionExecutor, CredentialValidators, ProviderExecutors } from "../core/types.ts";
+import type { ActionExecutor, CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../core/types.ts";
 
 import { withProviderFallbackMessage } from "./provider-runtime.ts";
 import { executorModules } from "./registry.generated.ts";
@@ -19,6 +19,11 @@ export interface IProviderLoader {
     actionId: string,
     providerDisplayName?: string,
   ): Promise<ActionExecutor | undefined>;
+
+  /**
+   * Load a provider proxy executor only when a proxy request is executed.
+   */
+  loadProxyExecutor(service: string, providerDisplayName?: string): Promise<ProviderProxyExecutor | undefined>;
 
   /**
    * Load a provider credential validator only when a connection is created.
@@ -43,6 +48,16 @@ export class ProviderLoader implements IProviderLoader {
     const module = await loadExecutors();
     const executor = this._findActionExecutor(service, actionId, module.executors);
     return executor && providerDisplayName ? withProviderFallbackMessage(executor, providerDisplayName) : executor;
+  }
+
+  async loadProxyExecutor(service: string, _providerDisplayName?: string): Promise<ProviderProxyExecutor | undefined> {
+    const loadExecutors = executorModules[service];
+    if (!loadExecutors) {
+      return undefined;
+    }
+
+    const module = await loadExecutors();
+    return module.proxy;
   }
 
   async loadCredentialValidators(service: string): Promise<CredentialValidators | undefined> {

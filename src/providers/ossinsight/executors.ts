@@ -1,8 +1,21 @@
-import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { OssinsightActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "ossinsight";
 const ossinsightBaseUrl = "https://api.ossinsight.io/v1";
@@ -233,6 +246,40 @@ export const executors: ProviderExecutors = defineProviderExecutors<OssinsightAc
   },
   fallbackMessage: "ossinsight request failed",
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    if (input.method !== "GET") {
+      throw new ProviderRequestError(400, "OSSInsight proxy only supports GET requests.");
+    }
+
+    const url = createProviderProxyUrl(ossinsightBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
+    headers.set("user-agent", providerUserAgent);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const message = await readErrorMessage(response);
+      const status =
+        response.status === 400 || response.status === 404 || response.status === 422 ? 400 : response.status;
+      throw new ProviderRequestError(status, message);
+    }
+
+    return {
+      ok: true,
+      response: await readProviderProxyResponse(response),
+    };
+  } catch (error) {
+    return toProviderProxyError(error, "ossinsight request failed");
+  }
+};
 
 async function rankCollectionRepositories(
   input: Record<string, unknown>,

@@ -1,7 +1,19 @@
-import type { TransitFileRead, TransitFileWriter } from "../core/types.ts";
+import type { ExecutionContext, ResolvedCredential, TransitFileRead, TransitFileWriter } from "../core/types.ts";
 
-import { describe, expect, it } from "vitest";
-import { ProviderRequestError, uploadProviderUrlToTransitFile } from "./provider-runtime.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  createProviderProxyUrl,
+  defineBearerProviderProxy,
+  normalizeProviderProxyHeaders,
+  normalizeProviderProxyQuery,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  uploadProviderUrlToTransitFile,
+} from "./provider-runtime.ts";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("provider runtime file helpers", () => {
   it("bounds provider URL downloads before creating transit files", async () => {
@@ -48,6 +60,132 @@ describe("provider runtime file helpers", () => {
       sizeBytes: 5,
     });
     await expect(transitFiles.createdFiles[0]?.text()).resolves.toBe("hello");
+  });
+});
+
+describe("provider proxy helpers", () => {
+  it("builds provider-owned URLs from relative endpoints and scalar query values", () => {
+    const url = createProviderProxyUrl("https://api.example.com/v1", "/items", {
+      limit: 10,
+      includeArchived: false,
+      empty: "",
+      nested: { rejected: true },
+    });
+
+    expect(url.toString()).toBe("https://api.example.com/v1/items?limit=10&includeArchived=false&empty=");
+  });
+
+  it("rejects absolute, protocol-relative, and parent-traversal endpoints", () => {
+    expect(() => createProviderProxyUrl("https://api.example.com", "https://evil.test/a")).toThrow(
+      ProviderRequestError,
+    );
+    expect(() => createProviderProxyUrl("https://api.example.com", "//evil.test/a")).toThrow(ProviderRequestError);
+    expect(() => createProviderProxyUrl("https://api.example.com/v1", "/../admin")).toThrow(ProviderRequestError);
+  });
+
+  it("normalizes caller headers without forwarding hop-by-hop or auth headers", () => {
+    const headers = normalizeProviderProxyHeaders({
+      accept: "application/json",
+      authorization: "Bearer caller-token",
+      host: "evil.test",
+      "x-trace-id": " trace-1 ",
+      ignored: 123,
+    });
+
+    expect(Object.fromEntries(headers.entries())).toEqual({
+      accept: "application/json",
+      "x-trace-id": "trace-1",
+    });
+  });
+
+  it("normalizes scalar query values", () => {
+    expect(
+      normalizeProviderProxyQuery({
+        page: 2,
+        exact: true,
+        search: "oomol",
+        nested: { value: "ignored" },
+      }),
+    ).toEqual({
+      page: "2",
+      exact: "true",
+      search: "oomol",
+    });
+  });
+
+  it("reads JSON proxy responses and preserves response headers", async () => {
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 201,
+      headers: { "content-type": "application/json", "x-request-id": "req_1" },
+    });
+
+    await expect(readProviderProxyResponse(response)).resolves.toEqual({
+      status: 201,
+      headers: {
+        "content-type": "application/json",
+        "x-request-id": "req_1",
+      },
+      data: { ok: true },
+    });
+  });
+
+  it("executes bearer proxy requests with runtime credentials", async () => {
+    const fetcher = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
+        new Response(JSON.stringify({ id: "item_1" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const credential: ResolvedCredential = {
+      authType: "api_key",
+      apiKey: "provider-token",
+      values: { apiKey: "provider-token" },
+      profile: { accountId: "acct_1", displayName: "Example", grantedScopes: [] },
+      metadata: {},
+    };
+    const context: ExecutionContext = {
+      getCredential: async () => credential,
+    };
+
+    const proxy = defineBearerProviderProxy({
+      service: "example",
+      baseUrl: "https://api.example.com/v1",
+    });
+    const result = await proxy(
+      {
+        endpoint: "/items",
+        method: "POST",
+        headers: { accept: "application/json" },
+        body: { name: "example" },
+      },
+      context,
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      response: {
+        status: 200,
+        headers: { "content-type": "application/json" },
+        data: { id: "item_1" },
+      },
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      new URL("https://api.example.com/v1/items"),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "example" }),
+      }),
+    );
+    const init = fetcher.mock.calls[0]![1] as RequestInit;
+    expect(Object.fromEntries((init.headers as Headers).entries())).toMatchObject({
+      accept: "application/json",
+      authorization: "Bearer provider-token",
+      "content-type": "application/json",
+      "user-agent": "oomol-connect/0.1",
+    });
   });
 });
 

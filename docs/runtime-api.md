@@ -132,8 +132,25 @@ under `OOMOL_CONNECT_DATA_DIR/files` and are cleaned up by age.
 - `GET /v1/apps/authenticated`
 - `POST /v1/proxy/:service`
 
-`POST /v1/proxy/:service` currently returns `proxy_not_supported` until a provider proxy runtime is
-implemented.
+`POST /v1/proxy/:service` proxies one provider API request when that provider exports a local proxy
+executor. Providers without a proxy executor return `proxy_not_supported`.
+
+Request body:
+
+```json
+{
+  "endpoint": "/provider/path",
+  "method": "GET",
+  "query": { "limit": "10" },
+  "headers": { "accept": "application/json" },
+  "body": { "name": "example" }
+}
+```
+
+`endpoint` must be a relative path beginning with `/`; absolute URLs are rejected. The runtime keeps
+stored credentials local and lets the provider proxy executor apply provider-specific authentication.
+Successful responses use the standard `/v1` success envelope with `data.status`, `data.headers`, and
+`data.data`.
 
 ## Local Admin Endpoints
 
