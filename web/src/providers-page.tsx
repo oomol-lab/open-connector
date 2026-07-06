@@ -39,6 +39,8 @@ interface OAuthConfigFormProps {
 type ProviderStatusFilter = "all" | "connected" | "not_connected" | "oauth_needs_config";
 
 const providerPageSize = 120;
+const oauthRefreshPollingIntervalMs = 1_000;
+const oauthRefreshPollingMaxAttempts = 30;
 
 export function ProvidersPage(props: ProvidersPageProps): ReactNode {
   const t = useTranslate();
@@ -386,7 +388,21 @@ export function createOAuthPopupFeatures(placement: OAuthPopupPlacement): string
     `top=${top}`,
     "resizable=yes",
     "scrollbars=yes",
+    "noopener",
+    "noreferrer",
   ].join(",");
+}
+
+export function startOAuthRefreshPolling(onRefresh: () => void): () => void {
+  let remainingAttempts = oauthRefreshPollingMaxAttempts;
+  const interval = setInterval(() => {
+    onRefresh();
+    remainingAttempts -= 1;
+    if (remainingAttempts === 0) {
+      clearInterval(interval);
+    }
+  }, oauthRefreshPollingIntervalMs);
+  return () => clearInterval(interval);
 }
 
 function initialAuthType(
@@ -408,6 +424,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
   const [values, setValues] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<string | null>(null);
+  const stopOAuthRefreshPolling = useRef<(() => void) | undefined>(undefined);
   const fields = credentialFieldsFor(props.auth);
   const showActions = shouldShowConnectionActions(props.auth);
   const connected = props.connection != null;
@@ -419,6 +436,20 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           name: props.provider.displayName,
         })
       : t("providers.buttons.saveConnection");
+
+  useEffect(
+    () => () => {
+      stopOAuthRefreshPolling.current?.();
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (connected) {
+      stopOAuthRefreshPolling.current?.();
+      stopOAuthRefreshPolling.current = undefined;
+    }
+  }, [connected]);
 
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -453,6 +484,8 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
               outerHeight: window.outerHeight,
             }),
           );
+          stopOAuthRefreshPolling.current?.();
+          stopOAuthRefreshPolling.current = startOAuthRefreshPolling(props.onRefresh);
         }
         setStatus(t("providers.connectionMessages.oauthWindowOpened"));
         return;

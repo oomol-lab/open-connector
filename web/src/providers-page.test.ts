@@ -4,7 +4,7 @@ import { I18nProvider } from "@embra/i18n/react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
 import {
   connectionSubmitLabel,
@@ -17,7 +17,12 @@ import {
   shouldShowConnectionActions,
   shouldShowDisconnectAction,
   shouldShowOAuthClientForm,
+  startOAuthRefreshPolling,
 } from "./providers-page";
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("shouldShowOAuthClientForm", () => {
   it("keeps OAuth client settings collapsed until the user expands them", () => {
@@ -138,7 +143,34 @@ describe("createOAuthPopupFeatures", () => {
         outerWidth: 1200,
         outerHeight: 900,
       }),
-    ).toBe("popup=yes,width=520,height=720,left=440,top=140,resizable=yes,scrollbars=yes");
+    ).toBe("popup=yes,width=520,height=720,left=440,top=140,resizable=yes,scrollbars=yes,noopener,noreferrer");
+  });
+});
+
+describe("startOAuthRefreshPolling", () => {
+  it("refreshes once per second while the OAuth callback may complete", () => {
+    vi.useFakeTimers();
+    const refresh = vi.fn();
+
+    startOAuthRefreshPolling(refresh);
+    vi.advanceTimersByTime(1_000);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(29_000);
+    expect(refresh).toHaveBeenCalledTimes(30);
+    vi.advanceTimersByTime(1_000);
+    expect(refresh).toHaveBeenCalledTimes(30);
+  });
+
+  it("stops refreshing when cancelled", () => {
+    vi.useFakeTimers();
+    const refresh = vi.fn();
+
+    const stop = startOAuthRefreshPolling(refresh);
+    vi.advanceTimersByTime(1_000);
+    stop();
+    vi.advanceTimersByTime(5_000);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 });
 

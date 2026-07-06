@@ -894,7 +894,7 @@ code {
     <p class="close-note">Automatically closing in 5 seconds.</p>
   </div>
 </main>
-<script>(()=>{const message=${payload};if(window.opener){window.opener.postMessage(message,"*");}else if("BroadcastChannel" in window){const channel=new BroadcastChannel(${scriptJson(oauthCompletionChannelName)});channel.postMessage(message);channel.close();}setTimeout(()=>window.close(),5000);})();</script>
+<script>(()=>{if("BroadcastChannel" in window){const channel=new BroadcastChannel(${scriptJson(oauthCompletionChannelName)});channel.postMessage(${payload});channel.close();}setTimeout(()=>window.close(),5000);})();</script>
 </body>
 </html>`;
 }

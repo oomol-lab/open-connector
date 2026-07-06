@@ -66,27 +66,8 @@ describe("nextAuthLoadState", () => {
 });
 
 describe("subscribeToOAuthCompletions", () => {
-  it("refreshes when the OAuth callback posts completion to the opener", () => {
-    let listener: ((event: MessageEvent) => void) | undefined;
-    const addEventListener = vi.fn((type: string, nextListener: (event: MessageEvent) => void) => {
-      if (type === "message") {
-        listener = nextListener;
-      }
-    });
-    const removeEventListener = vi.fn();
-    vi.stubGlobal("addEventListener", addEventListener);
-    vi.stubGlobal("removeEventListener", removeEventListener);
-    const refresh = vi.fn();
-
-    const unsubscribe = subscribeToOAuthCompletions(refresh);
-    listener?.({ data: { type: "oauth.completed", service: "gmail" } } as MessageEvent);
-
-    expect(refresh).toHaveBeenCalledWith({ type: "oauth.completed", service: "gmail" });
-    unsubscribe();
-    expect(removeEventListener).toHaveBeenCalledWith("message", listener);
-  });
-
   it("refreshes when the OAuth callback broadcasts completion", () => {
+    const addEventListener = vi.fn();
     class FakeBroadcastChannel {
       static instance: FakeBroadcastChannel | undefined;
       private listener: ((event: MessageEvent) => void) | undefined;
@@ -110,6 +91,7 @@ describe("subscribeToOAuthCompletions", () => {
         this.listener?.({ data } as MessageEvent);
       }
     }
+    vi.stubGlobal("addEventListener", addEventListener);
     vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
     const refresh = vi.fn();
 
@@ -117,6 +99,7 @@ describe("subscribeToOAuthCompletions", () => {
     FakeBroadcastChannel.instance?.emit({ type: "oauth.completed", service: "gmail" });
 
     expect(FakeBroadcastChannel.instance?.name).toBe("oomol-connect-oauth");
+    expect(addEventListener).not.toHaveBeenCalled();
     expect(refresh).toHaveBeenCalledWith({ type: "oauth.completed", service: "gmail" });
     unsubscribe();
     expect(FakeBroadcastChannel.instance?.closed).toBe(true);

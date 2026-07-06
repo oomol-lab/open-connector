@@ -47,29 +47,19 @@ export interface OAuthCompletionMessage {
 }
 
 export function subscribeToOAuthCompletions(onComplete: (message: OAuthCompletionMessage) => void): () => void {
-  const cleanups: Array<() => void> = [];
   const handleMessage = (event: MessageEvent<unknown>): void => {
     if (isOAuthCompletionMessage(event.data)) {
       onComplete(event.data);
     }
   };
 
-  if (typeof addEventListener === "function" && typeof removeEventListener === "function") {
-    addEventListener("message", handleMessage);
-    cleanups.push(() => removeEventListener("message", handleMessage));
+  if (typeof BroadcastChannel === "undefined") {
+    return () => {};
   }
 
-  if (typeof BroadcastChannel !== "undefined") {
-    const channel = new BroadcastChannel(oauthCompletionChannelName);
-    channel.addEventListener("message", handleMessage);
-    cleanups.push(() => channel.close());
-  }
-
-  return () => {
-    for (const cleanup of cleanups) {
-      cleanup();
-    }
-  };
+  const channel = new BroadcastChannel(oauthCompletionChannelName);
+  channel.addEventListener("message", handleMessage);
+  return () => channel.close();
 }
 
 function isOAuthCompletionMessage(value: unknown): value is OAuthCompletionMessage {
