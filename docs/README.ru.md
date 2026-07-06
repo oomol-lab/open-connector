@@ -191,6 +191,7 @@ CLI, MCP либо HTTP API.
 
 - [Быстрый старт](quickstart.md)
 - [Инструменты разработчика](sdk-cli.md)
+- [Руководство Gmail OAuth и SDK (на английском)](gmail-oauth-sdk.md)
 - [Runtime API и MCP](runtime-api.md)
 - [Развертывание Cloudflare](cloudflare.md)
 - [Configuration](configuration.md)

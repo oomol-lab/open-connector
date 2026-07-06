@@ -195,6 +195,7 @@ synchroniser dans les outils connectés en natural language.
 
 - [Démarrage rapide](quickstart.md)
 - [Outils développeur](sdk-cli.md)
+- [Tutoriel Gmail OAuth et SDK (anglais)](gmail-oauth-sdk.md)
 - [Runtime API et MCP](runtime-api.md)
 - [Déploiement Cloudflare](cloudflare.md)
 - [Configuration](configuration.md)

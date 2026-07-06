@@ -189,6 +189,7 @@ create, and sync across connected tools.
 
 - [Quickstart](docs/quickstart.md)
 - [Developer tools](docs/sdk-cli.md)
+- [Gmail OAuth and SDK tutorial](docs/gmail-oauth-sdk.md)
 - [Runtime API and MCP](docs/runtime-api.md)
 - [Cloudflare deployment](docs/cloudflare.md)
 - [Configuration](docs/configuration.md)
