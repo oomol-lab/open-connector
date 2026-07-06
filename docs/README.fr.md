@@ -32,9 +32,8 @@ l'administration et le débogage.
 
 ## Ce Qu'il Fournit
 
-- Un connector catalog prêt à l'emploi : [1,000+ providers et 9 400+ Actions prêtes à l'emploi](providers.md),
-  couvrant GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable, Slack et d'autres
-  produits.
+- Un connector catalog prêt à l'emploi : 1,000+ providers et 9 400+ Actions prêtes à l'emploi,
+  couvrant GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable, Slack et d'autres produits.
 - Une gestion centralisée des credentials dans un seul runtime : API keys, OAuth2, custom
   credentials et providers sans authentification.
 - Des Action contracts inspectables et extensibles : request/response schemas, required scopes et
@@ -70,9 +69,8 @@ outils MCP et exemples d'Action guide.
 
 ## Aperçu De La Couverture Provider
 
-Pour planifier la couverture, la liste complète des providers est disponible dans
-[providers.md](providers.md). Cet aperçu met en avant des apps de productivité, outils développeur,
-produits d'analytics et services d'IA reconnaissables dans le catalog.
+Cet aperçu met en avant des apps de productivité, outils développeur, produits d'analytics et
+services d'IA reconnaissables dans le catalog.
 
 ![Aperçu de la couverture provider](../assets/saas-logo-wall.png)
 
@@ -197,7 +195,6 @@ synchroniser dans les outils connectés en natural language.
 
 - [Démarrage rapide](quickstart.md)
 - [Outils développeur](sdk-cli.md)
-- [Couverture provider](providers.md)
 - [Runtime API et MCP](runtime-api.md)
 - [Déploiement Cloudflare](cloudflare.md)
 - [Configuration](configuration.md)

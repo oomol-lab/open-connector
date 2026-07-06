@@ -29,9 +29,8 @@ HTTP/OpenAPI from custom clients, and the Web Console for administration and deb
 
 ## What It Provides
 
-- A working connector catalog: [1,000+ providers and 9,400+ prebuilt Actions](docs/providers.md)
-  across products such as GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable,
-  Slack, and more.
+- A working connector catalog: 1,000+ providers and 9,400+ prebuilt Actions across products such as
+  GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable, Slack, and more.
 - Credential handling for API keys, OAuth2, custom credentials, and no-auth providers.
 - Inspectable Action contracts: request/response schemas, required scopes, and lazy-loaded executor
   source.
@@ -66,9 +65,8 @@ Endpoint details, response envelopes, auth headers, MCP tools, and Action guide 
 
 ## Provider Coverage Preview
 
-For coverage planning, the full provider list is available in
-[docs/providers.md](docs/providers.md). This preview highlights recognizable productivity apps,
-developer tools, analytics products, and AI services from the catalog.
+This preview highlights recognizable productivity apps, developer tools, analytics products, and AI
+services from the catalog.
 
 ![Provider coverage preview](assets/saas-logo-wall.png)
 
@@ -191,7 +189,6 @@ create, and sync across connected tools.
 
 - [Quickstart](docs/quickstart.md)
 - [Developer tools](docs/sdk-cli.md)
-- [Provider coverage](docs/providers.md)
 - [Runtime API and MCP](docs/runtime-api.md)
 - [Cloudflare deployment](docs/cloudflare.md)
 - [Configuration](docs/configuration.md)
