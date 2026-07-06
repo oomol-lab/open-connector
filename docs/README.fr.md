@@ -16,7 +16,7 @@
 </div>
 
 OpenConnector est un connector gateway open source pour AI agents, et une alternative à Composio.
-Connectez les comptes d'apps utilisateur une fois, puis utilisez-les via 1 000 providers et 9 400+
+Connectez les comptes d'apps utilisateur une fois, puis utilisez-les via 1,000+ providers et 9 400+
 Actions prêtes à l'emploi.
 
 Utilisez le [Connector SDK](https://github.com/oomol-lab/connector-sdk) dans le code applicatif,
@@ -32,7 +32,7 @@ l'administration et le débogage.
 
 ## Ce Qu'il Fournit
 
-- Un connector catalog prêt à l'emploi : [1 000 providers et 9 400+ Actions prêtes à l'emploi](providers.md),
+- Un connector catalog prêt à l'emploi : [1,000+ providers et 9 400+ Actions prêtes à l'emploi](providers.md),
   couvrant GitHub, Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable, Slack et d'autres
   produits.
 - Une gestion centralisée des credentials dans un seul runtime : API keys, OAuth2, custom
@@ -61,7 +61,7 @@ utilisateurs sans donner les provider credentials au processus agent.
 | Outil                                                       | Rôle                                                                                                                                                                                           |
 | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Connector SDK](https://github.com/oomol-lab/connector-sdk) | Client HTTP TypeScript léger. Utilisez `OpenConnector` pour un runtime self-hosted, et `Connector` / `ProjectConnector` pour les connexions personnelles et SaaS end-user hébergées par OOMOL. |
-| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Relay de connector Actions pour agents locaux. `oo connector` peut chercher, inspecter et exécuter des Actions sur les runtimes OOMOL-hosted ou OpenConnector self-hosted.                     |
+| [oo CLI](https://github.com/oomol-lab/oo-cli)               | Relais de connector Actions pour agents locaux. `oo connector` peut chercher, inspecter et exécuter des Actions sur les runtimes OOMOL-hosted ou OpenConnector self-hosted.                    |
 | MCP                                                         | Exposer les Actions d'app à des hosts d'agents compatibles MCP via `http://localhost:3000/mcp`.                                                                                                |
 | HTTP / OpenAPI                                              | Appeler directement `/v1/actions/*` ou inspecter le document `/openapi.json` généré.                                                                                                           |
 
@@ -89,7 +89,7 @@ flowchart LR
   Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
-  Actions --> Providers["1,000 Providers"]
+  Actions --> Providers["1,000+ Providers"]
   Console["Web Console"] --> Gateway
   Cloudflare["Cloudflare Workers, D1, R2"] -. deploy .-> Gateway
 ```
@@ -176,17 +176,22 @@ l'état runtime avec Workers, D1, R2 et Static Assets.
 Consultez [cloudflare.md](cloudflare.md) pour la création des ressources, les migrations, les
 secrets, la preview Worker locale et le déploiement distant.
 
-## OOMOL Et Wanta
+## Vous Voulez L'utiliser Directement ?
 
-Les équipes peuvent choisir le parcours produit correspondant au niveau de propriété runtime
-souhaité. [OpenConnector](https://github.com/oomol-lab/open-connector) fournit le self-hosting open
-source et le contrôle du déploiement. [OOMOL](https://oomol.com/) fournit l'auth hébergée,
-l'infrastructure runtime et les mêmes provider et Action contracts tout en conservant des connector
-interfaces compatibles.
+Les parcours ci-dessus s'adressent aux équipes qui intègrent le connector dans leurs produits,
+runtimes ou infrastructures d'entreprise. Si vous voulez d'abord essayer l'expérience de connexion
+SaaS, ou l'utiliser directement dans le travail quotidien, vous n'avez pas besoin de déployer
+OpenConnector ni d'intégrer d'abord le SDK, la CLI, MCP ou l'API HTTP.
 
-Pour les petites équipes ou les individus utilisant directement un Agent desktop,
-[Wanta](https://wanta.ai/) connecte les apps via une expérience produit desktop avec team app
-sharing, permission control, multiple connected accounts et workspace-specific connections.
+[Wanta](https://wanta.ai/) est le point d'entrée desktop product qui utilise la même couverture
+1,000+ SaaS/providers. Après avoir connecté des comptes, vous pouvez chercher, organiser, créer et
+synchroniser dans les outils connectés en natural language.
+
+| Si Vous Voulez                                       | Wanta Fournit                                                                                                                       |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Essayer directement les connexions 1,000+ SaaS       | Utiliser la même couverture SaaS/provider sans déployer un runtime ni intégrer d'abord le SDK/la CLI.                               |
+| Utiliser des Agents dans le travail quotidien        | Travailler en natural language à travers email, chat, docs, data, projets, support, developer tools et marketing tools.             |
+| Partager des capabilities connectées avec une équipe | Configurer connections et access scopes une fois ; les teammates les utilisent sans setup, avec keys, tokens et credentials cachés. |
 
 ## Documentation
 

@@ -16,7 +16,7 @@
 </div>
 
 OpenConnector — open-source connector gateway для AI agents и альтернатива Composio. Подключите
-пользовательские аккаунты приложений один раз, а затем используйте их через 1 000 providers и
+пользовательские аккаунты приложений один раз, а затем используйте их через 1,000+ providers и
 9 400+ готовых Actions.
 
 В application code используйте [Connector SDK](https://github.com/oomol-lab/connector-sdk), для
@@ -30,7 +30,7 @@ custom clients — HTTP/OpenAPI, а для администрирования и
 
 ## Что Дает
 
-- Рабочий connector catalog: [1 000 providers и 9 400+ готовых Actions](providers.md) для GitHub,
+- Рабочий connector catalog: [1,000+ providers и 9 400+ готовых Actions](providers.md) для GitHub,
   Gmail, Notion, BigQuery, Google Analytics, Supabase, Airtable, Slack и других продуктов.
 - Управление credentials в одном runtime: API keys, OAuth2, custom credentials и providers без
   аутентификации.
@@ -86,7 +86,7 @@ flowchart LR
   Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
-  Actions --> Providers["1,000 Providers"]
+  Actions --> Providers["1,000+ Providers"]
   Console["Web Console"] --> Gateway
   Cloudflare["Cloudflare Workers, D1, R2"] -. deploy .-> Gateway
 ```
@@ -171,16 +171,22 @@ OpenConnector поддерживает Cloudflare Workers как цель раз
 Создание ресурсов, migrations, secrets, локальная Worker preview и remote deployment описаны в
 [cloudflare.md](cloudflare.md).
 
-## OOMOL И Wanta
+## Хотите Использовать Напрямую?
 
-Команды могут выбрать продуктовый путь, соответствующий желаемому уровню владения runtime.
-[OpenConnector](https://github.com/oomol-lab/open-connector) предоставляет open-source self-hosting
-и контроль развертывания. [OOMOL](https://oomol.com/) предоставляет hosted auth, runtime
-infrastructure и те же provider и Action contracts, сохраняя совместимые connector interfaces.
+Пути выше предназначены для команд, которые интегрируют connector в свои продукты, runtimes или
+enterprise infrastructure. Если вы хотите сначала попробовать SaaS connection experience или сразу
+использовать это в работе, вам не обязательно сначала deploy OpenConnector или интегрировать SDK,
+CLI, MCP либо HTTP API.
 
-Для небольших команд или отдельных пользователей, которые напрямую используют desktop Agent,
-[Wanta](https://wanta.ai/) подключает приложения через desktop-продукт с team app sharing,
-permission control, multiple connected accounts и workspace-specific connections.
+[Wanta](https://wanta.ai/) — desktop product entry point с тем же 1,000+ SaaS/provider coverage.
+После подключения accounts можно через natural language искать, организовывать, создавать и
+синхронизировать данные между connected tools.
+
+| Если Вы Хотите                          | Что Дает Wanta                                                                                                          |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Попробовать 1,000+ SaaS connections     | Использовать то же SaaS/provider coverage без runtime deploy или предварительной SDK/CLI integration.                   |
+| Использовать Agents в ежедневной работе | Работать через natural language с email, chat, docs, data, projects, support, developer tools и marketing tools.        |
+| Делиться подключенными capabilities     | Один раз настроить connections и access scopes; teammates используют их без setup, а keys, tokens и credentials скрыты. |
 
 ## Документация
 

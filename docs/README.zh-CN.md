@@ -16,7 +16,7 @@
 </div>
 
 OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Composio 的开源替代方案。
-连接一次用户应用账号，就可以通过 1,000 个 provider 和 9,400+ 个预置 Action 使用这些账号能力。
+连接一次用户应用账号，就可以通过 1,000+ 个 provider 和 9,400+ 个预置 Action 使用这些账号能力。
 
 应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
 [oo CLI](https://github.com/oomol-lab/oo-cli) 中继，Agent host 使用 MCP，自定义客户端使用
@@ -28,7 +28,7 @@ HTTP/OpenAPI；管理和调试使用本地 Web 控制台。
 
 ## 提供什么
 
-- 一套可直接使用的 connector catalog：[1,000 个 provider 和 9,400+ 个预置 Action](providers.md)，覆盖
+- 一套可直接使用的 connector catalog：[1,000+ 个 provider 和 9,400+ 个预置 Action](providers.md)，覆盖
   GitHub、Gmail、Notion、BigQuery、Google Analytics、Supabase、Airtable、Slack 等常见产品。
 - 支持 API key、OAuth2、自定义凭据，以及无需鉴权的 provider。
 - 可以审查和扩展的 Action 契约：请求/响应 schema、required scope 和按需加载的 executor 源码。
@@ -74,7 +74,7 @@ flowchart LR
   Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
-  Actions --> Providers["1,000 Providers"]
+  Actions --> Providers["1,000+ Providers"]
   Console["Web Console"] --> Gateway
   Cloudflare["Cloudflare Workers, D1, R2"] -. deploy .-> Gateway
 ```
@@ -156,14 +156,20 @@ D1、R2 和 Static Assets。
 Cloudflare 资源创建、migration、secret、本地 Worker preview 和远程部署步骤见
 [cloudflare.md](cloudflare.md)。
 
-## OOMOL 和 Wanta
+## 不想先接入？可以直接使用 Wanta
 
-团队可以按当前希望掌控的 runtime 基础设施范围选择产品路径。[OpenConnector](https://github.com/oomol-lab/open-connector)
-提供开源自托管和部署控制能力。[OOMOL](https://oomol.com/) 提供托管鉴权和运行时基础设施，同时保持同一套 provider 和
-Action 契约以及兼容的 connector 接口。
+上面的路径更适合把 connector 接入自己的产品、runtime 或企业基础设施。如果你只是想先体验连接各种
+SaaS 的效果，或者想直接在业务中使用这些能力，不一定要先部署 OpenConnector，也不一定要接入 SDK、CLI、MCP 或
+HTTP API。
 
-针对直接使用桌面端 Agent 的小团队或个人，[Wanta](https://wanta.ai/)
-通过桌面端产品体验连接应用，并提供团队应用共享、权限控制、多账号连接、按 workspace 隔离连接等能力。
+[Wanta](https://wanta.ai/) 是使用同一套 1,000+ SaaS/provider 覆盖的桌面端产品入口。用户连接账号后，就可以用自然语言让 AI
+跨已连接工具查询、整理、生成和同步。
+
+| 如果你想要             | Wanta 提供                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| 直接体验 SaaS 连接能力 | 使用同一套 1,000+ SaaS/provider 覆盖，不需要先部署 runtime 或接入 SDK/CLI。              |
+| 直接在业务中使用       | 用自然语言跨邮件、沟通、文档、数据、项目、客服、开发和营销等工具查询、整理、生成和同步。 |
+| 团队一起使用           | 一人配置连接和授权范围，成员免配置使用；Key、Token 和账号凭据不外露。                    |
 
 ## 文档
 

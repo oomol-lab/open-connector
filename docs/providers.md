@@ -2,10 +2,11 @@
 
 This repository currently contains:
 
-- 1,000 providers
+- 1,000+ providers
 - 9,487 prebuilt Actions
 
-These numbers are counted from `src/providers` in this repository. Recount them with:
+OpenConnector, OOMOL, and Wanta share this provider coverage. The repository count and Action total
+are counted from `src/providers`. Recount them with:
 
 ```bash
 node --input-type=module <<'NODE'
@@ -37,10 +38,11 @@ more.
 
 当前仓库包含：
 
-- 1,000 个 provider
+- 1,000+ 个 provider
 - 9,487 个预置 Action
 
-这些数字来自本仓库的 `src/providers`。可以使用上面的命令重新统计。
+OpenConnector、OOMOL 和 Wanta 共享同一套 provider 覆盖。仓库内的 provider 数和 Action 总数来自
+`src/providers`，可以使用上面的命令重新统计。
 
 代表性 provider 包括 GitHub、Gmail、Notion、Google BigQuery、Google Analytics、Supabase、Airtable、
 Slack、Google Drive、Google Sheets、Google Calendar、Postman、GitLab 等。
