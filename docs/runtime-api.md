@@ -6,15 +6,15 @@ of the README.
 
 ## Access Surfaces
 
-| Surface          | Endpoint                              | Use it for                                                                               |
-| ---------------- | ------------------------------------- | ---------------------------------------------------------------------------------------- |
-| MCP              | `POST /mcp`                           | Agent hosts that can call MCP tools.                                                     |
-| MCP metadata     | `GET /mcp/tools`                      | Preview the discovery-oriented MCP tool set.                                             |
-| HTTP runtime API | `/v1/*`                               | SDK-style clients, scripts, and direct Action execution.                                 |
-| Await async action | `POST /v1/actions/:actionId/await`  | Run a pollable asyncLifecycle action to completion within a bounded wait.                |
-| OpenAPI          | `GET /openapi.json`                   | API importers, reference generation, and strongly scoped one-Action specs.               |
-| Action guide     | `GET /api/actions/:actionId/agent.md` | Agent-readable markdown guide for one Action.                                            |
-| Web Console      | `GET /`                               | Browser workflow for browsing providers, configuring credentials, and debugging Actions. |
+| Surface            | Endpoint                              | Use it for                                                                               |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| MCP                | `POST /mcp`                           | Agent hosts that can call MCP tools.                                                     |
+| MCP metadata       | `GET /mcp/tools`                      | Preview the discovery-oriented MCP tool set.                                             |
+| HTTP runtime API   | `/v1/*`                               | SDK-style clients, scripts, and direct Action execution.                                 |
+| Await async action | `POST /v1/actions/:actionId/await`    | Run a pollable asyncLifecycle action to completion within a bounded wait.                |
+| OpenAPI            | `GET /openapi.json`                   | API importers, reference generation, and strongly scoped one-Action specs.               |
+| Action guide       | `GET /api/actions/:actionId/agent.md` | Agent-readable markdown guide for one Action.                                            |
+| Web Console        | `GET /`                               | Browser workflow for browsing providers, configuring credentials, and debugging Actions. |
 
 When `OOMOL_CONNECT_RUNTIME_TOKEN` or persistent runtime tokens are configured, `/v1/*` and `/mcp`
 callers should send:

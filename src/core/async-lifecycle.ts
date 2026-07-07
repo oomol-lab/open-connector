@@ -24,9 +24,9 @@ export function isPollableAsyncLifecycle(
 ): asyncLifecycle is PollableAsyncLifecycle {
   return Boolean(
     asyncLifecycle?.jobIdOutputPath &&
-      asyncLifecycle.jobIdInputField &&
-      asyncLifecycle.completionPath &&
-      asyncLifecycle.completionValues &&
-      asyncLifecycle.completionValues.done.length > 0,
+    asyncLifecycle.jobIdInputField &&
+    asyncLifecycle.completionPath &&
+    asyncLifecycle.completionValues &&
+    asyncLifecycle.completionValues.done.length > 0,
   );
 }
