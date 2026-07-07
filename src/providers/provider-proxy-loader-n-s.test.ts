@@ -243,6 +243,31 @@ describe("ProviderLoader proxy executors (N-S)", () => {
     });
   });
 
+  it("normalizes Prerender proxy methods before adding tokens to JSON bodies", async () => {
+    const fetcher = stubProviderFetch();
+    const proxy = await new ProviderLoader().loadProxyExecutor("prerender");
+
+    expect(proxy).toEqual(expect.any(Function));
+
+    await proxy?.(
+      {
+        endpoint: "/recache",
+        method: "post",
+        body: { urls: ["https://example.com/"] },
+      },
+      {
+        getCredential: async () => apiKeyCredential("prerender-token"),
+      },
+    );
+
+    const [_url, init] = fetcher.mock.calls[0] as [URL, RequestInit];
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({
+      urls: ["https://example.com/"],
+      prerenderToken: "prerender-token",
+    });
+  });
+
   it("loads explicit Prerender proxy executors with cache status tokens in paths", async () => {
     const fetcher = stubProviderFetch();
     const proxy = await new ProviderLoader().loadProxyExecutor("prerender");

@@ -86,13 +86,14 @@ export const proxy: ProviderProxyExecutor = async (
   try {
     const credential = await requireApiKeyCredential(context, service);
     const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
-    const proxyRequest = buildPrerenderProxyRequest(input, endpoint, credential.apiKey);
+    const method = input.method.toUpperCase();
+    const proxyRequest = buildPrerenderProxyRequest(input, endpoint, credential.apiKey, method);
     const url = createProviderProxyUrl(prerenderApiBaseUrl, proxyRequest.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("user-agent", providerUserAgent);
 
     const init: RequestInit = {
-      method: input.method,
+      method,
       headers,
       signal: context.signal,
     };
@@ -185,11 +186,12 @@ function buildPrerenderProxyRequest(
   input: ProxyRequestInput,
   endpoint: string,
   apiKey: string,
+  method: string,
 ): { endpoint: string; body?: unknown } {
-  if (input.method === "GET" && (endpoint === "/cache-clear-status" || endpoint.startsWith("/cache-clear-status/"))) {
+  if (method === "GET" && (endpoint === "/cache-clear-status" || endpoint.startsWith("/cache-clear-status/"))) {
     return { endpoint: buildCacheClearStatusPath(apiKey) };
   }
-  if (input.method === "POST") {
+  if (method === "POST") {
     return { endpoint, body: buildPrerenderProxyBody(input.body, apiKey) };
   }
   return { endpoint, body: input.body };
