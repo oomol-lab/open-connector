@@ -343,7 +343,14 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
     name: "start_test",
     description: "Start a new GTmetrix performance test for a URL.",
     followUpActions: ["gtmetrix.get_test"],
-    asyncLifecycle: { startActionId: "gtmetrix.start_test", statusActionId: "gtmetrix.get_test" },
+    asyncLifecycle: {
+      startActionId: "gtmetrix.start_test",
+      statusActionId: "gtmetrix.get_test",
+      jobIdOutputPath: "test.id",
+      jobIdInputField: "test_id",
+      completionPath: "is_complete",
+      completionValues: { done: [true] },
+    },
     inputSchema: startTestInputSchema,
     outputSchema: s.actionOutput(
       {
@@ -364,7 +371,14 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
     name: "get_test",
     description: "Get the current state of a GTmetrix test and detect when it has completed.",
     followUpActions: ["gtmetrix.get_report"],
-    asyncLifecycle: { startActionId: "gtmetrix.start_test", statusActionId: "gtmetrix.get_test" },
+    asyncLifecycle: {
+      startActionId: "gtmetrix.start_test",
+      statusActionId: "gtmetrix.get_test",
+      jobIdOutputPath: "test.id",
+      jobIdInputField: "test_id",
+      completionPath: "is_complete",
+      completionValues: { done: [true] },
+    },
     inputSchema: s.actionInput({ test_id: testIdSchema }, ["test_id"], "Input payload for a GTmetrix test."),
     outputSchema: s.object(
       "The GTmetrix test status result.",

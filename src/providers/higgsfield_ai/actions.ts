@@ -37,6 +37,10 @@ export const higgsfieldAiActions: ProviderActionDefinition[] = [
       startActionId: "higgsfield_ai.submit_image_generation",
       statusActionId: "higgsfield_ai.get_request_status",
       cancelActionId: "higgsfield_ai.cancel_request",
+      jobIdOutputPath: "requestId",
+      jobIdInputField: "requestId",
+      completionPath: "status",
+      completionValues: { done: ["completed"], failed: ["failed", "nsfw"] },
     },
     inputSchema: s.actionInput(
       {
@@ -61,6 +65,10 @@ export const higgsfieldAiActions: ProviderActionDefinition[] = [
       startActionId: "higgsfield_ai.submit_video_generation",
       statusActionId: "higgsfield_ai.get_request_status",
       cancelActionId: "higgsfield_ai.cancel_request",
+      jobIdOutputPath: "requestId",
+      jobIdInputField: "requestId",
+      completionPath: "status",
+      completionValues: { done: ["completed"], failed: ["failed", "nsfw"] },
     },
     inputSchema: s.actionInput(
       {
