@@ -10,7 +10,7 @@ The Longbridge provider should be verified at two levels:
 After changing `actions.ts`, `readonly-action-specs.ts`, `runtime.ts`, or verification samples, run:
 
 ```sh
-npm test -- src/providers/longbridge/runtime.test.ts scripts/longbridge-oauth-registration.test.ts
+npm test -- src/providers/longbridge/runtime.test.ts
 npm run generate:catalog
 npm run fix-check
 ```
@@ -40,49 +40,45 @@ export OOMOL_CONNECT_RUNTIME_TOKEN="<runtime-token>"
 
 `OOMOL_CONNECT_ADMIN_TOKEN` is used by OAuth client configuration and authorization APIs. `OOMOL_CONNECT_RUNTIME_TOKEN` is used by `/v1/actions/*` calls. Leave them unset when the matching runtime auth is disabled.
 
-## Authorize Longbridge OAuth In One Command
+## Configure Longbridge OAuth
 
-Longbridge supports dynamic OAuth client registration, so local verification can create a client on demand:
-
-```sh
-node examples/longbridge/authorize-oauth.ts --runtime-origin http://localhost:3000
-```
-
-The script will:
-
-1. Read the Longbridge OAuth callback URL exposed by the current runtime.
-2. Create a Longbridge OAuth client through `/oauth2/register`.
-3. Store the returned `clientId` and `clientSecret` in the local runtime's Longbridge OAuth config.
-4. Open the browser for user authorization and wait until the Longbridge connection is ready.
-
-To print the authorization URL without opening a browser:
+Longbridge supports dynamic OAuth client registration. Use the runtime callback URL as the registered redirect URI. For the default local runtime, the registration request is:
 
 ```sh
-node examples/longbridge/authorize-oauth.ts --runtime-origin http://localhost:3000 --no-open
+curl -s -X POST "https://openapi.longbridge.com/oauth2/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "redirect_uris": ["http://localhost:3000/oauth/callback"],
+    "token_endpoint_auth_method": "none",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "client_name": "OpenConnector Longbridge"
+  }'
 ```
 
-## Batch Verify New Actions
-
-After authorization completes, run:
+Store the returned OAuth client in the local runtime:
 
 ```sh
-node examples/longbridge/verify-actions.ts --runtime-origin http://localhost:3000 --output longbridge-verification-report.json
+curl -s -X PUT "http://localhost:3000/api/oauth/configs/longbridge" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OOMOL_CONNECT_ADMIN_TOKEN" \
+  -d '{"clientId":"<client-id>","clientSecret":"<client-secret>"}'
 ```
 
-By default, the script verifies only the newly added Longbridge readonly REST actions. Common options:
+Then start the authorization flow and open the returned `authorizationUrl` in a browser:
 
 ```sh
-# Verify every Longbridge action, including pre-existing account/order/content actions.
-node examples/longbridge/verify-actions.ts --runtime-origin http://localhost:3000 --include-existing
-
-# Verify only selected actions.
-node examples/longbridge/verify-actions.ts --runtime-origin http://localhost:3000 --actions dividend,news,screener_search
-
-# Strict mode: exit non-zero when a successful action returns empty normalized output.
-node examples/longbridge/verify-actions.ts --runtime-origin http://localhost:3000 --fail-on-empty
+curl -s -X POST "http://localhost:3000/api/oauth/authorizations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OOMOL_CONNECT_ADMIN_TOKEN" \
+  -d '{"service":"longbridge"}'
 ```
 
-Sample inputs live in `verification-samples.ts`. If an endpoint depends on a real account, order, screener strategy, or currently available upstream data, update the corresponding sample with a valid value before running the integration check.
+If local admin auth is disabled, remove the `Authorization` header from the `/api/*` requests.
+
+## Verify Actions Through Runtime
+
+After authorization completes, use the Web Console action debugger or call `/v1/actions/longbridge.<action>` directly. Sample inputs live in `verification-samples.ts`. If an endpoint depends on a real account, order, screener strategy, or currently available upstream data, update the corresponding sample with a valid value before running the integration check.
 
 ## Debug A Single Action
 
