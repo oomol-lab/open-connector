@@ -10,7 +10,7 @@ The Longbridge provider should be verified at two levels:
 After changing `actions.ts`, `readonly-action-specs.ts`, `runtime.ts`, or verification samples, run:
 
 ```sh
-npm test -- src/providers/longbridge/runtime.test.ts
+npm test -- src/providers/longbridge/runtime.test.ts src/providers/longbridge/tests/oauth-registration.test.ts
 npm run generate:catalog
 npm run fix-check
 ```
@@ -40,45 +40,42 @@ export OOMOL_CONNECT_RUNTIME_TOKEN="<runtime-token>"
 
 `OOMOL_CONNECT_ADMIN_TOKEN` is used by OAuth client configuration and authorization APIs. `OOMOL_CONNECT_RUNTIME_TOKEN` is used by `/v1/actions/*` calls. Leave them unset when the matching runtime auth is disabled.
 
-## Configure Longbridge OAuth
+## Authorize Longbridge OAuth
 
-Longbridge supports dynamic OAuth client registration. Use the runtime callback URL as the registered redirect URI. For the default local runtime, the registration request is:
-
-```sh
-curl -s -X POST "https://openapi.longbridge.com/oauth2/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "redirect_uris": ["http://localhost:3000/oauth/callback"],
-    "token_endpoint_auth_method": "none",
-    "grant_types": ["authorization_code", "refresh_token"],
-    "response_types": ["code"],
-    "client_name": "OpenConnector Longbridge"
-  }'
-```
-
-Store the returned OAuth client in the local runtime:
+Longbridge supports dynamic OAuth client registration, so local verification can create a client on demand:
 
 ```sh
-curl -s -X PUT "http://localhost:3000/api/oauth/configs/longbridge" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OOMOL_CONNECT_ADMIN_TOKEN" \
-  -d '{"clientId":"<client-id>","clientSecret":"<client-secret>"}'
+node src/providers/longbridge/tests/authorize-oauth.ts --runtime-origin http://localhost:3000
 ```
 
-Then start the authorization flow and open the returned `authorizationUrl` in a browser:
+The script reads the runtime callback URL, creates a Longbridge OAuth client through `/oauth2/register`, stores it in the local runtime, opens the authorization URL, and waits until the Longbridge connection is ready. To print the authorization URL without opening a browser:
 
 ```sh
-curl -s -X POST "http://localhost:3000/api/oauth/authorizations" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OOMOL_CONNECT_ADMIN_TOKEN" \
-  -d '{"service":"longbridge"}'
+node src/providers/longbridge/tests/authorize-oauth.ts --runtime-origin http://localhost:3000 --no-open
 ```
 
-If local admin auth is disabled, remove the `Authorization` header from the `/api/*` requests.
+## Batch Verify Actions
 
-## Verify Actions Through Runtime
+After authorization completes, run:
 
-After authorization completes, use the Web Console action debugger or call `/v1/actions/longbridge.<action>` directly. Sample inputs live in `verification-samples.ts`. If an endpoint depends on a real account, order, screener strategy, or currently available upstream data, update the corresponding sample with a valid value before running the integration check.
+```sh
+node src/providers/longbridge/tests/verify-actions.ts --runtime-origin http://localhost:3000 --output longbridge-verification-report.json
+```
+
+By default, the script verifies only the newly added Longbridge readonly REST actions. Common options:
+
+```sh
+# Verify every Longbridge action, including pre-existing account/order/content actions.
+node src/providers/longbridge/tests/verify-actions.ts --runtime-origin http://localhost:3000 --include-existing
+
+# Verify only selected actions.
+node src/providers/longbridge/tests/verify-actions.ts --runtime-origin http://localhost:3000 --actions dividend,news,screener_search
+
+# Strict mode: exit non-zero when a successful action returns empty normalized output.
+node src/providers/longbridge/tests/verify-actions.ts --runtime-origin http://localhost:3000 --fail-on-empty
+```
+
+These helper scripts live under `src/providers/longbridge/tests` because they are provider verification fixtures, not public examples. Sample inputs live in `verification-samples.ts`. If an endpoint depends on a real account, order, screener strategy, or currently available upstream data, update the corresponding sample with a valid value before running the integration check.
 
 ## Debug A Single Action
 
