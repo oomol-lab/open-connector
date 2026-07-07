@@ -121,7 +121,9 @@ export async function verifyLongbridgeActions(options: VerifyCliOptions = {}): P
   const results: LongbridgeVerificationResult[] = [];
   for (const actionName of actionNames) {
     const input = longbridgeVerificationSamples[actionName as LongbridgeActionName] ?? {};
-    const result = await runLongbridgeAction(runtimeOrigin, actionName, input);
+    const result = await runLongbridgeAction(runtimeOrigin, actionName, input).catch((error: unknown) =>
+      failedLongbridgeVerificationResult(actionName, error),
+    );
     results.push(result);
     printResult(result);
     if (options.delayMs !== 0) {
@@ -143,6 +145,17 @@ export async function verifyLongbridgeActions(options: VerifyCliOptions = {}): P
     await writeFile(options.output, `${JSON.stringify(report, null, 2)}\n`);
   }
   return report;
+}
+
+function failedLongbridgeVerificationResult(actionName: string, error: unknown): LongbridgeVerificationResult {
+  return {
+    actionName,
+    ok: false,
+    status: 0,
+    emptyOutputKeys: [],
+    errorCode: "request_failed",
+    message: error instanceof Error ? error.message : String(error),
+  };
 }
 
 function normalizeRuntimeOrigin(value: string | undefined): string {

@@ -6,12 +6,12 @@ const defaultRuntimeOrigin = "http://localhost:3000";
 const longbridgeRegistrationUrl = "https://openapi.longbridge.com/oauth2/register";
 const defaultClientName = "OpenConnector";
 
-interface OAuthClientConfigSummary {
+export interface OAuthClientConfigSummary {
   service: string;
   expectedRedirectUri: string;
 }
 
-interface OAuthAuthorizationStart {
+export interface OAuthAuthorizationStart {
   authorizationUrl?: string;
 }
 
@@ -28,10 +28,43 @@ export interface RegisteredLongbridgeOAuthClient {
   clientSecret: string;
 }
 
-export function buildLongbridgeOAuthRegistrationBody(input: {
+export interface BuildLongbridgeOAuthRegistrationBodyInput {
   redirectUri: string;
   clientName?: string;
-}): LongbridgeOAuthRegistrationBody {
+}
+
+export interface RegisterAndStoreLongbridgeOAuthClientInput {
+  runtimeOrigin: string;
+  clientName?: string;
+}
+
+export interface StartLongbridgeOAuthAuthorizationInput {
+  runtimeOrigin: string;
+  connectionName?: string;
+}
+
+export function normalizeLongbridgeRuntimeOrigin(value: string | undefined): string {
+  return (value?.trim() || defaultRuntimeOrigin).replace(/\/+$/, "");
+}
+
+export function buildLongbridgeAuthorizationStartBody(connectionName?: string): Record<string, string> {
+  const trimmedConnectionName = connectionName?.trim();
+  return trimmedConnectionName
+    ? { service: "longbridge", connectionName: trimmedConnectionName }
+    : { service: "longbridge" };
+}
+
+export function readLongbridgeOAuthConfig(configs: OAuthClientConfigSummary[]): OAuthClientConfigSummary {
+  const config = configs.find((item) => item.service === "longbridge");
+  if (!config) {
+    throw new Error("The running OpenConnector runtime does not expose a Longbridge OAuth config.");
+  }
+  return config;
+}
+
+export function buildLongbridgeOAuthRegistrationBody(
+  input: BuildLongbridgeOAuthRegistrationBodyInput,
+): LongbridgeOAuthRegistrationBody {
   const clientName = input.clientName?.trim() || defaultClientName;
   return {
     redirect_uris: [input.redirectUri],
@@ -40,6 +73,50 @@ export function buildLongbridgeOAuthRegistrationBody(input: {
     response_types: ["code"],
     client_name: clientName,
   };
+}
+
+export async function registerAndStoreLongbridgeOAuthClient(
+  input: RegisterAndStoreLongbridgeOAuthClientInput,
+): Promise<RegisteredLongbridgeOAuthClient> {
+  const config = readLongbridgeOAuthConfig(
+    await fetchJson<OAuthClientConfigSummary[]>(`${input.runtimeOrigin}/api/oauth/configs`, {
+      headers: adminHeaders(),
+    }),
+  );
+
+  const registered = readRegisteredLongbridgeOAuthClient(
+    await fetchJson(longbridgeRegistrationUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(
+        buildLongbridgeOAuthRegistrationBody({
+          redirectUri: config.expectedRedirectUri,
+          clientName: input.clientName,
+        }),
+      ),
+    }),
+  );
+
+  await fetchJson(`${input.runtimeOrigin}/api/oauth/configs/longbridge`, {
+    method: "PUT",
+    headers: adminHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({
+      clientId: registered.clientId,
+      clientSecret: registered.clientSecret,
+    }),
+  });
+
+  return registered;
+}
+
+export async function startLongbridgeOAuthAuthorization(
+  input: StartLongbridgeOAuthAuthorizationInput,
+): Promise<OAuthAuthorizationStart> {
+  return await fetchJson<OAuthAuthorizationStart>(`${input.runtimeOrigin}/api/oauth/authorizations`, {
+    method: "POST",
+    headers: adminHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify(buildLongbridgeAuthorizationStartBody(input.connectionName)),
+  });
 }
 
 export function readRegisteredLongbridgeOAuthClient(payload: unknown): RegisteredLongbridgeOAuthClient {
@@ -52,42 +129,12 @@ export function readRegisteredLongbridgeOAuthClient(payload: unknown): Registere
 }
 
 export async function registerLongbridgeOAuthClient(): Promise<void> {
-  const runtimeOrigin = readRuntimeOrigin();
-  const configs = await fetchJson<OAuthClientConfigSummary[]>(`${runtimeOrigin}/api/oauth/configs`, {
-    headers: adminHeaders(),
+  const runtimeOrigin = normalizeLongbridgeRuntimeOrigin(process.env.OOMOL_CONNECT_API_ORIGIN);
+  const registered = await registerAndStoreLongbridgeOAuthClient({
+    runtimeOrigin,
+    clientName: process.env.LONGBRIDGE_CLIENT_NAME,
   });
-  const longbridgeConfig = configs.find((config) => config.service === "longbridge");
-  if (!longbridgeConfig) {
-    throw new Error("The running OpenConnector runtime does not expose a Longbridge OAuth config.");
-  }
-
-  const registered = readRegisteredLongbridgeOAuthClient(
-    await fetchJson(longbridgeRegistrationUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(
-        buildLongbridgeOAuthRegistrationBody({
-          redirectUri: longbridgeConfig.expectedRedirectUri,
-          clientName: process.env.LONGBRIDGE_CLIENT_NAME,
-        }),
-      ),
-    }),
-  );
-
-  await fetchJson(`${runtimeOrigin}/api/oauth/configs/longbridge`, {
-    method: "PUT",
-    headers: adminHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({
-      clientId: registered.clientId,
-      clientSecret: registered.clientSecret,
-    }),
-  });
-
-  const started = await fetchJson<OAuthAuthorizationStart>(`${runtimeOrigin}/api/oauth/authorizations`, {
-    method: "POST",
-    headers: adminHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({ service: "longbridge" }),
-  });
+  const started = await startLongbridgeOAuthAuthorization({ runtimeOrigin });
 
   console.log("Registered the Longbridge OAuth client and stored it in OpenConnector.");
   console.log(`Client ID: ${registered.clientId}`);
@@ -95,10 +142,6 @@ export async function registerLongbridgeOAuthClient(): Promise<void> {
     console.log("Open this URL in a browser to finish Longbridge authorization:");
     console.log(started.authorizationUrl);
   }
-}
-
-function readRuntimeOrigin(): string {
-  return (process.env.OOMOL_CONNECT_API_ORIGIN?.trim() || defaultRuntimeOrigin).replace(/\/+$/, "");
 }
 
 function readRecord(value: unknown, fieldName: string): Record<string, unknown> {

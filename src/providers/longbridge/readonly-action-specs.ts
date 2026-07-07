@@ -515,7 +515,12 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
       requiredSymbol,
       param("report", "report", reportPeriodSchema, "string"),
       param("fiscalYear", "fiscal_year", s.integer("The fiscal year to query."), "integer"),
-      param("fiscalPeriod", "fiscal_period", s.nonEmptyString("The fiscal period to query."), "string"),
+      param(
+        "fiscalPeriod",
+        "fiscal_period",
+        s.stringEnum("The fiscal quarter to query.", ["1", "2", "3", "4"]),
+        "string",
+      ),
     ],
     outputKey: "snapshot",
     outputMode: "object",

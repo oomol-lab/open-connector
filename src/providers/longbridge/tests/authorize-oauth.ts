@@ -2,23 +2,19 @@ import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { adminHeaders, fetchJson } from "./http-client.ts";
-import { buildLongbridgeOAuthRegistrationBody, readRegisteredLongbridgeOAuthClient } from "./register-oauth-client.ts";
+import {
+  buildLongbridgeAuthorizationStartBody,
+  normalizeLongbridgeRuntimeOrigin,
+  readLongbridgeOAuthConfig,
+  registerAndStoreLongbridgeOAuthClient,
+  startLongbridgeOAuthAuthorization,
+} from "./register-oauth-client.ts";
 
-const defaultRuntimeOrigin = "http://localhost:3000";
-const longbridgeRegistrationUrl = "https://openapi.longbridge.com/oauth2/register";
+export { buildLongbridgeAuthorizationStartBody, normalizeLongbridgeRuntimeOrigin, readLongbridgeOAuthConfig };
+
 const defaultClientName = "OpenConnector Longbridge Verification";
 const defaultTimeoutMs = 5 * 60 * 1000;
 const defaultPollIntervalMs = 1000;
-
-interface OAuthClientConfigSummary {
-  service: string;
-  expectedRedirectUri: string;
-}
-
-interface OAuthAuthorizationStart {
-  authorizationUrl?: string;
-  state?: string;
-}
 
 interface ConnectionSummary {
   service?: string;
@@ -40,23 +36,11 @@ interface LongbridgeOAuthAuthorizeCliOptions extends LongbridgeOAuthAuthorizeOpt
   help?: boolean;
 }
 
-export function normalizeLongbridgeRuntimeOrigin(value: string | undefined): string {
-  return (value?.trim() || defaultRuntimeOrigin).replace(/\/+$/, "");
-}
-
-export function buildLongbridgeAuthorizationStartBody(connectionName?: string): Record<string, string> {
-  const trimmedConnectionName = connectionName?.trim();
-  return trimmedConnectionName
-    ? { service: "longbridge", connectionName: trimmedConnectionName }
-    : { service: "longbridge" };
-}
-
-export function readLongbridgeOAuthConfig(configs: OAuthClientConfigSummary[]): OAuthClientConfigSummary {
-  const config = configs.find((item) => item.service === "longbridge");
-  if (!config) {
-    throw new Error("The running OpenConnector runtime does not expose a Longbridge OAuth config.");
-  }
-  return config;
+interface WaitForLongbridgeConnectionInput {
+  runtimeOrigin: string;
+  connectionName?: string;
+  timeoutMs: number;
+  pollIntervalMs: number;
 }
 
 export function isLongbridgeConnectionReady(
@@ -81,39 +65,11 @@ export async function authorizeLongbridgeOAuth(options: LongbridgeOAuthAuthorize
   const timeoutMs = options.timeoutMs ?? defaultTimeoutMs;
   const pollIntervalMs = options.pollIntervalMs ?? defaultPollIntervalMs;
 
-  const config = readLongbridgeOAuthConfig(
-    await fetchJson<OAuthClientConfigSummary[]>(`${runtimeOrigin}/api/oauth/configs`, {
-      headers: adminHeaders(),
-    }),
-  );
-
-  const registered = readRegisteredLongbridgeOAuthClient(
-    await fetchJson(longbridgeRegistrationUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(
-        buildLongbridgeOAuthRegistrationBody({
-          redirectUri: config.expectedRedirectUri,
-          clientName,
-        }),
-      ),
-    }),
-  );
-
-  await fetchJson(`${runtimeOrigin}/api/oauth/configs/longbridge`, {
-    method: "PUT",
-    headers: adminHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({
-      clientId: registered.clientId,
-      clientSecret: registered.clientSecret,
-    }),
+  const registered = await registerAndStoreLongbridgeOAuthClient({
+    runtimeOrigin,
+    clientName,
   });
-
-  const authorization = await fetchJson<OAuthAuthorizationStart>(`${runtimeOrigin}/api/oauth/authorizations`, {
-    method: "POST",
-    headers: adminHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify(buildLongbridgeAuthorizationStartBody(connectionName)),
-  });
+  const authorization = await startLongbridgeOAuthAuthorization({ runtimeOrigin, connectionName });
   if (!authorization.authorizationUrl) {
     throw new Error("OpenConnector did not return an authorization URL.");
   }
@@ -138,19 +94,18 @@ export async function authorizeLongbridgeOAuth(options: LongbridgeOAuthAuthorize
   }
 }
 
-async function waitForLongbridgeConnection(input: {
-  runtimeOrigin: string;
-  connectionName?: string;
-  timeoutMs: number;
-  pollIntervalMs: number;
-}): Promise<void> {
+async function waitForLongbridgeConnection(input: WaitForLongbridgeConnectionInput): Promise<void> {
   const startedAt = Date.now();
   while (Date.now() - startedAt <= input.timeoutMs) {
-    const connections = await fetchJson<ConnectionSummary[]>(`${input.runtimeOrigin}/api/connections`, {
-      headers: adminHeaders(),
-    });
-    if (isLongbridgeConnectionReady(connections, input.connectionName)) {
-      return;
+    try {
+      const connections = await fetchJson<ConnectionSummary[]>(`${input.runtimeOrigin}/api/connections`, {
+        headers: adminHeaders(),
+      });
+      if (isLongbridgeConnectionReady(connections, input.connectionName)) {
+        return;
+      }
+    } catch {
+      // The runtime can restart while the user is completing OAuth; retry until the timeout elapses.
     }
     await delay(input.pollIntervalMs);
   }
@@ -160,8 +115,9 @@ async function waitForLongbridgeConnection(input: {
 }
 
 async function openExternalUrl(url: string): Promise<void> {
-  const command = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
-  const args = process.platform === "win32" ? ["/c", "start", "", url] : [url];
+  assertHttpsUrl(url);
+  const command = process.platform === "darwin" ? "open" : process.platform === "win32" ? "rundll32" : "xdg-open";
+  const args = process.platform === "win32" ? ["url.dll,FileProtocolHandler", url] : [url];
   await new Promise<void>((resolvePromise) => {
     const child = spawn(command, args, {
       detached: true,
@@ -173,6 +129,18 @@ async function openExternalUrl(url: string): Promise<void> {
       resolvePromise();
     });
   });
+}
+
+function assertHttpsUrl(url: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Refusing to open a malformed URL: ${url}`);
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error(`Refusing to open a non-https URL: ${url}`);
+  }
 }
 
 function delay(ms: number): Promise<void> {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildLongbridgeAuthorizationStartBody,
   isLongbridgeConnectionReady,
@@ -11,9 +11,15 @@ import {
   classifyLongbridgeVerificationResponse,
   findLongbridgeEmptyOutputKeys,
   selectLongbridgeVerificationActionNames,
+  verifyLongbridgeActions,
 } from "./verify-actions.ts";
 
 describe("Longbridge OAuth client registration verification", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
   it("builds the Dynamic Client Registration request expected by Longbridge", () => {
     expect(
       buildLongbridgeOAuthRegistrationBody({
@@ -189,5 +195,50 @@ describe("Longbridge OAuth client registration verification", () => {
         count: 0,
       }),
     ).toEqual(["dividends", "profile"]);
+  });
+
+  it("continues batch action verification after a request failure", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new Error("network down"))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              news: [{ title: "Longbridge verification" }],
+              raw: { code: 0 },
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const report = await verifyLongbridgeActions({
+      actions: ["dividend", "news"],
+      delayMs: 0,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(report).toMatchObject({
+      actionCount: 2,
+      passed: 1,
+      failed: 1,
+      empty: 0,
+    });
+    expect(report.results[0]).toMatchObject({
+      actionName: "dividend",
+      ok: false,
+      status: 0,
+      errorCode: "request_failed",
+      message: "network down",
+    });
+    expect(report.results[1]).toMatchObject({
+      actionName: "news",
+      ok: true,
+      status: 200,
+      emptyOutputKeys: [],
+    });
   });
 });

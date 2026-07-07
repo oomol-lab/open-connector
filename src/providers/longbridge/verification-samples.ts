@@ -131,7 +131,7 @@ export const longbridgeVerificationSamples: Record<LongbridgeActionName, Record<
     symbol: "AAPL.US",
     report: "qf",
     fiscalYear: 2026,
-    fiscalPeriod: "Q2",
+    fiscalPeriod: "2",
   },
   financial_statement: {
     symbol: "AAPL.US",
@@ -297,7 +297,7 @@ export const longbridgeVerificationSamples: Record<LongbridgeActionName, Record<
 };
 
 export const longbridgeVerificationSampleNotes: Partial<Record<LongbridgeActionName, string>> = {
-  order_detail: "Override orderId with a real order ID to verify a successful detail response.",
+  get_order_detail: "Override orderId with a real order ID to verify a successful detail response.",
   screener_strategy: "Override id with a real screener strategy ID if strategy 1 is not visible.",
   shareholder_detail: "Override objectId with an object_id returned by shareholder_top for the same symbol.",
 };

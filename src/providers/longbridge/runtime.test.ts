@@ -664,13 +664,13 @@ describe("Longbridge runtime", () => {
         symbol: "AAPL.US",
         report: "qf",
         fiscalYear: 2026,
-        fiscalPeriod: "Q2",
+        fiscalPeriod: "2",
       },
       context,
     );
 
     expect(calls[0]?.url).toBe(
-      "https://openapi.longbridge.com/v1/quote/financials/earnings-snapshot?counter_id=ST%2FUS%2FAAPL&report=qf&fiscal_year=2026&fiscal_period=Q2",
+      "https://openapi.longbridge.com/v1/quote/financials/earnings-snapshot?counter_id=ST%2FUS%2FAAPL&report=qf&fiscal_year=2026&fiscal_period=2",
     );
   });
 
