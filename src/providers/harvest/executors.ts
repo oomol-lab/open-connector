@@ -2,12 +2,21 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
 import type { HarvestActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 import { harvestOAuthScopes } from "./scopes.ts";
 
 const service = "harvest";
@@ -129,6 +138,40 @@ export const executors: ProviderExecutors = defineProviderExecutors<HarvestActio
   },
 });
 
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    const auth = readHarvestProxyAuth(credential);
+    const url = createProviderProxyUrl(harvestApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `Bearer ${auth.accessToken}`);
+    headers.set("harvest-account-id", auth.accountId);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw createHarvestError(response.status, parseHarvestPayload(text), text);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "harvest request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const accountId = requireHarvestAccountId(input.values.accountId);
@@ -155,6 +198,23 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+function readHarvestProxyAuth(credential: ResolvedCredential | undefined): { accessToken: string; accountId: string } {
+  if (credential?.authType === "api_key") {
+    return {
+      accessToken: credential.apiKey,
+      accountId: requireHarvestAccountId(credential.values.accountId ?? credential.metadata.accountId),
+    };
+  }
+  if (credential?.authType === "oauth2") {
+    return {
+      accessToken: credential.accessToken,
+      accountId: requireHarvestAccountId(credential.metadata.accountId),
+    };
+  }
+
+  throw new ProviderRequestError(401, "Configure Harvest OAuth or API key credentials first.");
+}
 
 async function getCurrentUser(context: HarvestActionContext): Promise<unknown> {
   const payload = await requestHarvestJson<Record<string, unknown>>({

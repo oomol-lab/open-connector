@@ -124,7 +124,7 @@ const manualProxyDefinitions = new Map<string, Omit<GeneratedProxyDefinition, "s
     "teamtailor",
     { baseUrl: "https://api.teamtailor.com", auth: { type: "api_key_authorization", prefix: "Token token=" } },
   ],
-  ["ticketmaster", { baseUrl: "https://app.ticketmaster.com", auth: { type: "api_key_header", name: "apikey" } }],
+  ["ticketmaster", { baseUrl: "https://app.ticketmaster.com", auth: { type: "api_key_query", name: "apikey" } }],
   [
     "v2ex",
     {
@@ -462,7 +462,7 @@ function readApiKeyQueryAuth(source: string): GeneratedProxyAuth | undefined {
   }
 
   for (const match of source.matchAll(
-    /\b(api_key|apikey|access_key|api_token)\s*:\s*(?:(?:input\.)?(?:context\.)?(?:input\.context\.)?(?:options\.)?apiKey|apiKey)\b/gu,
+    /\b(api_key|apikey|access_key|access_token|api_token)\s*:\s*(?:(?:input\.)?(?:context\.)?(?:input\.context\.)?(?:options\.)?apiKey|apiKey)\b/gu,
   )) {
     return { type: "api_key_query", name: match[1]! };
   }
@@ -471,7 +471,7 @@ function readApiKeyQueryAuth(source: string): GeneratedProxyAuth | undefined {
 }
 
 function isLikelyApiKeyQueryName(name: string): boolean {
-  return ["api_key", "apikey", "access_key", "key", "token"].includes(name.toLowerCase());
+  return ["api_key", "apikey", "access_key", "access_token", "key", "token"].includes(name.toLowerCase());
 }
 
 function renderGeneratedProxyDefinition(definition: GeneratedProxyDefinition): string {

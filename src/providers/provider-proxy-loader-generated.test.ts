@@ -114,4 +114,69 @@ describe("ProviderLoader proxy executors (generated)", () => {
       "x-api-key": "gamma-key",
     });
   });
+
+  it("keeps generated query API keys out of request headers", async () => {
+    const fetcher = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
+        new Response(JSON.stringify({ data: [] }), {
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const proxy = await new ProviderLoader().loadProxyExecutor("mapbox");
+
+    const credential: ResolvedCredential = {
+      authType: "api_key",
+      apiKey: "mapbox-token",
+      values: { apiKey: "mapbox-token" },
+      profile: { accountId: "acct_1", displayName: "Mapbox", grantedScopes: [] },
+      metadata: {},
+    };
+    await proxy?.(
+      {
+        endpoint: "/search/geocode/v6/forward",
+        method: "GET",
+        query: { q: "Tokyo" },
+      },
+      { getCredential: async () => credential },
+    );
+
+    const url = fetcher.mock.calls[0]![0] as URL;
+    const init = fetcher.mock.calls[0]![1] as RequestInit;
+    expect(url.searchParams.get("access_token")).toBe("mapbox-token");
+    expect((init.headers as Headers).has("access_token")).toBe(false);
+  });
+
+  it("uses provider-specific proxy auth when one credential field is not enough", async () => {
+    const fetcher = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
+        new Response(JSON.stringify({ user: { id: 1 } }), {
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const proxy = await new ProviderLoader().loadProxyExecutor("harvest");
+
+    const credential: ResolvedCredential = {
+      authType: "api_key",
+      apiKey: "harvest-token",
+      values: { apiKey: "harvest-token", accountId: "12345" },
+      profile: { accountId: "acct_1", displayName: "Harvest", grantedScopes: [] },
+      metadata: { accountId: "12345" },
+    };
+    await proxy?.(
+      {
+        endpoint: "/v2/users/me",
+        method: "GET",
+      },
+      { getCredential: async () => credential },
+    );
+
+    const init = fetcher.mock.calls[0]![1] as RequestInit;
+    expect(Object.fromEntries((init.headers as Headers).entries())).toMatchObject({
+      authorization: "Bearer harvest-token",
+      "harvest-account-id": "12345",
+    });
+    expect((init.headers as Headers).has("accesstoken")).toBe(false);
+  });
 });

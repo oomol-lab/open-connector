@@ -11,6 +11,7 @@ import type {
   TransitFileWriter,
 } from "../core/types.ts";
 
+import { Buffer } from "node:buffer";
 import { CastError, optionalRecord, optionalScalarString, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
 
@@ -141,6 +142,7 @@ const blockedProxyRequestHeaders = new Set([
   "host",
   "transfer-encoding",
 ]);
+const defaultProviderProxyMaxResponseBytes = 20 * 1024 * 1024;
 
 export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, queryInput?: unknown): URL {
   const endpoint = normalizeProviderProxyEndpoint(endpointInput);
@@ -218,15 +220,59 @@ export function normalizeProviderProxyHeaders(headersInput: unknown): Headers {
   return headers;
 }
 
-export async function readProviderProxyResponse(response: Response): Promise<ProxyResponse> {
+export interface ReadProviderProxyResponseOptions {
+  maxBytes?: number;
+}
+
+export async function readProviderProxyResponse(
+  response: Response,
+  options: ReadProviderProxyResponseOptions = {},
+): Promise<ProxyResponse> {
   const headers = Object.fromEntries(response.headers.entries());
-  const text = await response.text();
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: options.maxBytes ?? defaultProviderProxyMaxResponseBytes,
+    fieldName: "proxy response",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
   const contentType = response.headers.get("content-type") ?? "";
+  const normalizedContentType = contentType.toLowerCase();
+  if (bytes.byteLength === 0) {
+    return {
+      status: response.status,
+      headers,
+      data: null,
+    };
+  }
+  if (normalizedContentType.includes("json")) {
+    return {
+      status: response.status,
+      headers,
+      data: JSON.parse(new TextDecoder().decode(bytes)),
+    };
+  }
+  if (isTextProxyContentType(normalizedContentType)) {
+    return {
+      status: response.status,
+      headers,
+      data: new TextDecoder().decode(bytes),
+    };
+  }
   return {
     status: response.status,
     headers,
-    data: contentType.includes("json") && text ? JSON.parse(text) : text || null,
+    bodyEncoding: "base64",
+    data: Buffer.from(bytes).toString("base64"),
   };
+}
+
+function isTextProxyContentType(contentType: string): boolean {
+  const normalized = contentType.toLowerCase();
+  return (
+    normalized.startsWith("text/") ||
+    normalized.includes("xml") ||
+    normalized.includes("javascript") ||
+    normalized.includes("x-www-form-urlencoded")
+  );
 }
 
 export function toProviderProxyError(error: unknown, fallbackMessage: string): ProxyExecutionResult {

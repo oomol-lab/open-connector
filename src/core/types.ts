@@ -413,6 +413,7 @@ export interface ProxyRequestInput {
 export interface ProxyResponse {
   status: number;
   headers: Record<string, string>;
+  bodyEncoding?: "base64";
   data: unknown;
 }
 

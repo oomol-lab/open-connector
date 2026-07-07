@@ -132,6 +132,33 @@ describe("provider proxy helpers", () => {
     });
   });
 
+  it("reads binary proxy responses as bounded base64 payloads", async () => {
+    const response = new Response(Uint8Array.from([0, 1, 2, 255]), {
+      status: 200,
+      headers: { "content-type": "application/octet-stream" },
+    });
+
+    await expect(readProviderProxyResponse(response, { maxBytes: 4 })).resolves.toEqual({
+      status: 200,
+      headers: {
+        "content-type": "application/octet-stream",
+      },
+      bodyEncoding: "base64",
+      data: "AAEC/w==",
+    });
+  });
+
+  it("rejects proxy responses over the configured byte limit", async () => {
+    const response = new Response("12345", {
+      headers: { "content-type": "text/plain" },
+    });
+
+    await expect(readProviderProxyResponse(response, { maxBytes: 4 })).rejects.toMatchObject({
+      status: 413,
+      message: "proxy response exceeds 4 bytes",
+    });
+  });
+
   it("executes bearer proxy requests with runtime credentials", async () => {
     const fetcher = vi.fn(
       async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
