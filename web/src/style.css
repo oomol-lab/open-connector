@@ -2188,22 +2188,39 @@ tr:last-child td {
 }
 
 .inline-error {
+  --inline-error-border: var(--border);
+  --inline-error-background: var(--card);
+  --inline-error-foreground: var(--foreground);
+
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
   min-height: 0;
   margin-bottom: 16px;
   padding: 10px 12px;
-  border-left: 3px solid var(--destructive);
-  background: color-mix(in oklab, var(--destructive) 10%, var(--background));
-  color: var(--destructive);
+  border-color: var(--inline-error-border);
+  background: var(--inline-error-background);
+  color: var(--inline-error-foreground);
   line-height: 1.45;
   text-align: left;
+}
+
+@supports (color: color-mix(in oklab, black, white)) {
+  .inline-error {
+    --inline-error-border: color-mix(in oklab, var(--destructive) 32%, var(--border));
+    --inline-error-background: color-mix(in oklab, var(--destructive) 9%, var(--card));
+    --inline-error-foreground: color-mix(in oklab, var(--destructive) 82%, var(--foreground));
+  }
+}
+
+.inline-error [data-slot="alert-description"] {
+  color: inherit;
 }
 
 .inline-error svg {
   flex: 0 0 auto;
   margin-top: 1px;
+  opacity: 0.9;
 }
 
 .unlock-screen {
