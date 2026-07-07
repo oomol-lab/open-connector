@@ -11,6 +11,7 @@ of the README.
 | MCP              | `POST /mcp`                           | Agent hosts that can call MCP tools.                                                     |
 | MCP metadata     | `GET /mcp/tools`                      | Preview the discovery-oriented MCP tool set.                                             |
 | HTTP runtime API | `/v1/*`                               | SDK-style clients, scripts, and direct Action execution.                                 |
+| Await async action | `POST /v1/actions/:actionId/await`  | Run a pollable asyncLifecycle action to completion within a bounded wait.                |
 | OpenAPI          | `GET /openapi.json`                   | API importers, reference generation, and strongly scoped one-Action specs.               |
 | Action guide     | `GET /api/actions/:actionId/agent.md` | Agent-readable markdown guide for one Action.                                            |
 | Web Console      | `GET /`                               | Browser workflow for browsing providers, configuring credentials, and debugging Actions. |
@@ -42,6 +43,7 @@ The MCP server exposes a small discovery-oriented tool set:
 - `search_actions`
 - `get_action_guide`
 - `execute_action`
+- `await_action`
 
 Preview MCP tool metadata:
 
@@ -95,6 +97,26 @@ curl -s -X POST "http://localhost:3000/v1/actions/github.get_current_user?alias=
   -d '{"input":{}}'
 ```
 
+## Await Async Actions
+
+Some actions declare `asyncLifecycle` with a full job-id and completion mapping
+(`asyncLifecycle.pollable: true` in `GET /v1/actions/:actionId`). For those,
+`POST /v1/actions/:actionId/await` runs the start action, then polls the status action with backoff
+until it settles or a bounded wait budget runs out:
+
+```bash
+curl -s -X POST http://localhost:3000/v1/actions/gtmetrix.start_test/await \
+  -H 'content-type: application/json' \
+  -d '{"input":{"url":"https://example.com"},"maxWaitMs":20000}'
+```
+
+`maxWaitMs` is clamped to 1000-55000ms (default 25000ms) so the request stays safe on both
+Node/Docker and Cloudflare Workers deployments. If the action doesn't settle in time, the response
+is `{"status":"pending","jobId":"...","statusActionId":"..."}` — fall back to calling the status
+action directly (or `/await` again) to keep checking. Actions without a pollable `asyncLifecycle`
+mapping return a `not_pollable_async_lifecycle` error. The `await_action` MCP tool mirrors this
+endpoint.
+
 ## Action Guides
 
 Each Action has a local markdown guide that includes the input schema, scopes, provider
@@ -127,6 +149,7 @@ under `OOMOL_CONNECT_DATA_DIR/files` and are cleaned up by age.
 - `GET /v1/actions?service=<service>`
 - `GET /v1/actions/:actionId`
 - `POST /v1/actions/:actionId`
+- `POST /v1/actions/:actionId/await`
 - `GET /v1/apps`
 - `GET /v1/apps/services/:service`
 - `GET /v1/apps/authenticated`
