@@ -10,6 +10,7 @@ import { createCatalogStore } from "./catalog-store.ts";
 import { ConnectionService } from "./connection-service.ts";
 import { createMcpServer } from "./mcp.ts";
 import { ActionRunner } from "./server/actions/action-runner.ts";
+import { AwaitActionRunner } from "./server/actions/await-action-runner.ts";
 
 const echoAction: ActionDefinition = {
   id: "example.echo",
@@ -29,13 +30,35 @@ const echoAction: ActionDefinition = {
   outputSchema: { type: "object" },
 };
 
+const asyncStartAction: ActionDefinition = {
+  ...echoAction,
+  id: "example.start_job",
+  name: "start_job",
+  inputSchema: { type: "object" },
+  asyncLifecycle: {
+    startActionId: "example.start_job",
+    statusActionId: "example.get_job",
+    jobIdOutputPath: "job.id",
+    jobIdInputField: "job_id",
+    completionPath: "status",
+    completionValues: { done: ["completed"] },
+  },
+};
+
+const asyncStatusAction: ActionDefinition = {
+  ...echoAction,
+  id: "example.get_job",
+  name: "get_job",
+  inputSchema: { type: "object" },
+};
+
 const exampleProvider: ProviderDefinition = {
   service: "example",
   displayName: "Example",
   categories: ["Developer Tools"],
   authTypes: ["no_auth"],
   auth: [{ type: "no_auth" }],
-  actions: [echoAction],
+  actions: [echoAction, asyncStartAction, asyncStatusAction],
 };
 
 describe("MCP server", () => {
@@ -48,6 +71,7 @@ describe("MCP server", () => {
         "search_actions",
         "get_action_guide",
         "execute_action",
+        "await_action",
       ]);
     });
   });
@@ -101,6 +125,36 @@ describe("MCP server", () => {
     });
   });
 
+  it("awaits a pollable async action to completion", async () => {
+    await withMcpClient(async (client) => {
+      const run = await client.callTool({
+        name: "await_action",
+        arguments: { actionId: "example.start_job", input: {}, maxWaitMs: 1000 },
+      });
+
+      expect(run.isError).toBeUndefined();
+      expect(run.structuredContent).toMatchObject({
+        ok: true,
+        data: { status: "completed" },
+      });
+    });
+  });
+
+  it("marks non-pollable await_action calls as MCP tool errors", async () => {
+    await withMcpClient(async (client) => {
+      const result = await client.callTool({
+        name: "await_action",
+        arguments: { actionId: "example.echo", input: { message: "hi" } },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        ok: false,
+        error: { code: "not_pollable_async_lifecycle" },
+      });
+    });
+  });
+
   it("marks unknown action guides as MCP tool errors", async () => {
     await withMcpClient(async (client) => {
       const result = await client.callTool({
@@ -122,7 +176,7 @@ describe("MCP server", () => {
 
 async function withMcpClient(run: (client: Client) => Promise<void>): Promise<void> {
   const catalog = createCatalogStore([exampleProvider], {
-    executableActionIds: ["example.echo"],
+    executableActionIds: ["example.echo", "example.start_job", "example.get_job"],
   });
   const providerLoader = new EchoProviderLoader();
   const connections = new ConnectionService({
@@ -136,11 +190,13 @@ async function withMcpClient(run: (client: Client) => Promise<void>): Promise<vo
     connections,
     runs: new MemoryRunLogStore(),
   });
+  const awaitActions = new AwaitActionRunner({ catalog, actions });
   const server = createMcpServer({
     catalog,
     providerLoader,
     connections,
     actions,
+    awaitActions,
   });
   const client = new Client({ name: "mcp-test", version: "0.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -155,7 +211,13 @@ async function withMcpClient(run: (client: Client) => Promise<void>): Promise<vo
 }
 
 class EchoProviderLoader implements IProviderLoader {
-  async loadActionExecutor(): Promise<ActionExecutor> {
+  async loadActionExecutor(_service: string, actionId: string): Promise<ActionExecutor> {
+    if (actionId === "example.start_job") {
+      return async () => ({ ok: true, output: { job: { id: "job-1" } } });
+    }
+    if (actionId === "example.get_job") {
+      return async () => ({ ok: true, output: { status: "completed" } });
+    }
     return async (input) => ({ ok: true, output: input });
   }
 

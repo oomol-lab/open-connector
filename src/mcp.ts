@@ -5,6 +5,7 @@ import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 import type { ActionRunner } from "./server/actions/action-runner.ts";
+import type { AwaitActionRunner } from "./server/actions/await-action-runner.ts";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -20,6 +21,7 @@ export interface IMcpServerOptions {
   providerLoader: IProviderLoader;
   connections: ConnectionService;
   actions: ActionRunner;
+  awaitActions: AwaitActionRunner;
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
 }
@@ -53,6 +55,12 @@ const mcpToolSummaries: IMcpToolSummary[] = [
     name: "execute_action",
     title: "Execute Action",
     description: "Execute one local provider action by id with a JSON input object.",
+  },
+  {
+    name: "await_action",
+    title: "Await Action",
+    description:
+      "Run one pollable async-lifecycle action to completion within a bounded wait, or return a pending handle.",
   },
 ];
 
@@ -137,6 +145,27 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
       },
     },
     async ({ actionId, input }) => toolResult(await executeAction(options, actionId, input)),
+  );
+
+  server.registerTool(
+    "await_action",
+    {
+      title: "Await Action",
+      description:
+        "Run one pollable asyncLifecycle action (start, then poll status) to completion within a bounded wait. Returns a pending handle if the action doesn't settle in time. Check get_action_guide for asyncLifecycle.pollable before calling this.",
+      inputSchema: {
+        actionId: z.string().describe("The start action's full id, for example gtmetrix.start_test."),
+        input: z.record(z.string(), z.unknown()).default({}).describe("Input for the start action."),
+        maxWaitMs: z
+          .number()
+          .int()
+          .min(1000)
+          .max(55000)
+          .optional()
+          .describe("Maximum time to poll before returning a pending handle. Defaults to 25000ms, capped at 55000ms."),
+      },
+    },
+    async ({ actionId, input, maxWaitMs }) => toolResult(await awaitAction(options, actionId, input, maxWaitMs)),
   );
 
   return server;
@@ -236,6 +265,36 @@ async function executeAction(
     };
   }
   return successPayload(run.result.output);
+}
+
+async function awaitAction(
+  options: IMcpServerOptions,
+  actionId: string,
+  input: Record<string, unknown>,
+  maxWaitMs: number | undefined,
+): Promise<ToolPayload> {
+  const action = options.catalog.actionsById.get(actionId);
+  if (!action) {
+    return errorPayload("unknown_action", `Unknown action: ${actionId}`);
+  }
+
+  const outcome = await options.awaitActions.run({ actionId, input, caller: "mcp", maxWaitMs });
+  if (!outcome) {
+    return errorPayload("unknown_action", `Unknown action: ${actionId}`);
+  }
+  if (outcome.kind === "not_pollable") {
+    return errorPayload("not_pollable_async_lifecycle", `Action ${actionId} does not support await_action.`);
+  }
+  if (outcome.kind === "pending") {
+    return successPayload({ status: "pending", jobId: outcome.jobId, statusActionId: outcome.statusActionId });
+  }
+  if (!outcome.result.ok) {
+    return {
+      ok: false,
+      error: outcome.result.error ?? { code: "execution_failed", message: "Action execution failed." },
+    };
+  }
+  return successPayload(outcome.result.output);
 }
 
 function summarizeInputSchema(schema: JsonSchema): unknown {

@@ -551,6 +551,7 @@ export class ConnectServer {
       providerLoader: this.options.providerLoader,
       connections: this.options.connections,
       actions: this.options.actions,
+      awaitActions: this.options.awaitActions,
       actionPolicy: this.options.actionPolicy,
       actionSearch: this.actionSearch,
     });
