@@ -17,5 +17,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://textcortex.com/",
-  actions: [...textcortexActions],
+  actions: textcortexActions,
 };

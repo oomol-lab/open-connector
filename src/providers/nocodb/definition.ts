@@ -31,5 +31,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://nocodb.com",
-  actions: [...nocodbActions],
+  actions: nocodbActions,
 };

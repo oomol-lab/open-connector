@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://codemagic.io",
-  actions: [...codemagicActions],
+  actions: codemagicActions,
 };

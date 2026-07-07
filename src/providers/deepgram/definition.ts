@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://deepgram.com/",
-  actions: [...deepgramActions],
+  actions: deepgramActions,
 };

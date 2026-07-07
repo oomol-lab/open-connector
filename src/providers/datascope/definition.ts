@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.mydatascope.com",
-  actions: [...datascopeActions],
+  actions: datascopeActions,
 };

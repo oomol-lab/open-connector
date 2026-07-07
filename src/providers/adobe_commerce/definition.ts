@@ -41,5 +41,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://business.adobe.com/products/magento/magento-commerce.html",
-  actions: [...adobeCommerceActions],
+  actions: adobeCommerceActions,
 };

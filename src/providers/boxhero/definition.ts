@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.boxhero-app.com",
-  actions: [...boxheroActions],
+  actions: boxheroActions,
 };

@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.workpath.com/",
-  actions: [...workpathActions],
+  actions: workpathActions,
 };

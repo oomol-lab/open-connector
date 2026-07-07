@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://neverbounce.com",
-  actions: [...neverbounceActions],
+  actions: neverbounceActions,
 };

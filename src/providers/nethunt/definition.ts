@@ -33,5 +33,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://nethunt.com",
-  actions: [...nethuntActions],
+  actions: nethuntActions,
 };

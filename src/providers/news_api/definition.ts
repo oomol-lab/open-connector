@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://newsapi.org",
-  actions: [...newsApiActions],
+  actions: newsApiActions,
 };

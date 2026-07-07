@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://sign.dropbox.com",
-  actions: [...dropboxSignActions],
+  actions: dropboxSignActions,
 };

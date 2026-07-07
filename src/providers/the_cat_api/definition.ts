@@ -17,5 +17,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://thecatapi.com/",
-  actions: [...theCatApiActions],
+  actions: theCatApiActions,
 };

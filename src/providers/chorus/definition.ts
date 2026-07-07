@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.chorus.ai",
-  actions: [...chorusActions],
+  actions: chorusActions,
 };

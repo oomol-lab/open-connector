@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://sendfox.com",
-  actions: [...sendfoxActions],
+  actions: sendfoxActions,
 };

@@ -1,0 +1,192 @@
+import type { UnifapiOperationDefinition } from "../operations.ts";
+
+export const threadsOperations: readonly UnifapiOperationDefinition[] = [
+  {
+    name: "search_threads_profiles",
+    operationId: "getThreadsSearchProfiles",
+    description: "Search Threads users by keyword.",
+    method: "GET",
+    path: "/threads/search/profiles",
+    pathFields: [],
+    queryFields: ["q"],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        q: {
+          type: "string",
+          minLength: 1,
+          description: "Search keyword.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for Search Threads users by keyword.",
+      required: ["q"],
+    },
+    paginated: false,
+  },
+  {
+    name: "search_threads_recent",
+    operationId: "getThreadsSearchRecent",
+    description: "Search recent Threads posts.",
+    method: "GET",
+    path: "/threads/search/recent",
+    pathFields: [],
+    queryFields: ["cursor", "q"],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        cursor: {
+          type: "string",
+          description: "The cursor value.",
+        },
+        q: {
+          type: "string",
+          minLength: 1,
+          description: "Search keyword.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for Search recent Threads posts.",
+      required: ["q"],
+    },
+    paginated: true,
+  },
+  {
+    name: "search_threads_top",
+    operationId: "getThreadsSearchTop",
+    description: "Search top Threads posts.",
+    method: "GET",
+    path: "/threads/search/top",
+    pathFields: [],
+    queryFields: ["cursor", "q"],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        cursor: {
+          type: "string",
+          description: "The cursor value.",
+        },
+        q: {
+          type: "string",
+          minLength: 1,
+          description: "Search keyword.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for Search top Threads posts.",
+      required: ["q"],
+    },
+    paginated: true,
+  },
+  {
+    name: "list_threads_user_posts",
+    operationId: "getThreadsUsersByUsernamePosts",
+    description: "List Threads posts authored by a user.",
+    method: "GET",
+    path: "/threads/users/{username}/posts",
+    pathFields: ["username"],
+    queryFields: ["cursor"],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        username: {
+          type: "string",
+          minLength: 1,
+          description: "The username value.",
+        },
+        cursor: {
+          type: "string",
+          description: "The cursor value.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for List Threads posts authored by a user.",
+      required: ["username"],
+    },
+    paginated: true,
+  },
+  {
+    name: "list_threads_user_replies",
+    operationId: "getThreadsUsersByUsernameReplies",
+    description: "List Threads replies authored by a user.",
+    method: "GET",
+    path: "/threads/users/{username}/replies",
+    pathFields: ["username"],
+    queryFields: ["cursor"],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        username: {
+          type: "string",
+          minLength: 1,
+          description: "The username value.",
+        },
+        cursor: {
+          type: "string",
+          description: "The cursor value.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for List Threads replies authored by a user.",
+      required: ["username"],
+    },
+    paginated: true,
+  },
+  {
+    name: "list_threads_user_reposts",
+    operationId: "getThreadsUsersByUsernameReposts",
+    description: "List Threads reposts by a user.",
+    method: "GET",
+    path: "/threads/users/{username}/reposts",
+    pathFields: ["username"],
+    queryFields: ["cursor"],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        username: {
+          type: "string",
+          minLength: 1,
+          description: "The username value.",
+        },
+        cursor: {
+          type: "string",
+          description: "The cursor value.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for List Threads reposts by a user.",
+      required: ["username"],
+    },
+    paginated: true,
+  },
+  {
+    name: "get_threads_user",
+    operationId: "getThreadsUsersByUsername",
+    description: "Get a Threads user profile by username.",
+    method: "GET",
+    path: "/threads/users/{username}",
+    pathFields: ["username"],
+    queryFields: [],
+    bodyFields: [],
+    inputSchema: {
+      type: "object",
+      properties: {
+        username: {
+          type: "string",
+          minLength: 1,
+          description: "The username value.",
+        },
+      },
+      additionalProperties: false,
+      description: "The input payload for Get a Threads user profile by username.",
+      required: ["username"],
+    },
+    paginated: false,
+  },
+];

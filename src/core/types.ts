@@ -211,7 +211,7 @@ export type ProviderDefinition = {
   /** Optional linked icon URL; third-party brand rights remain with their owners. */
   iconUrl?: string;
   /** Public action catalog for this provider. */
-  actions: ActionDefinition[];
+  actions: readonly ActionDefinition[];
 };
 
 /**

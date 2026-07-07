@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://dub.co",
-  actions: [...dubActions],
+  actions: dubActions,
 };

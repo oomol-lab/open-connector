@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.moosend.com/",
-  actions: [...moosendActions],
+  actions: moosendActions,
 };

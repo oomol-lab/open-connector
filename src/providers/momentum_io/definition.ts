@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.momentum.io",
-  actions: [...momentumIoActions],
+  actions: momentumIoActions,
 };

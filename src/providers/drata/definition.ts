@@ -31,5 +31,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://drata.com",
-  actions: [...drataActions],
+  actions: drataActions,
 };

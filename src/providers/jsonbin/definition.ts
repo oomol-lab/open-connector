@@ -22,5 +22,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://jsonbin.io/",
-  actions: [...jsonbinActions],
+  actions: jsonbinActions,
 };

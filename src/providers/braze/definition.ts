@@ -31,5 +31,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.braze.com",
-  actions: [...brazeActions],
+  actions: brazeActions,
 };

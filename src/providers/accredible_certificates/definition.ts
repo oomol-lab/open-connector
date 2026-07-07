@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.accredible.com/",
-  actions: [...accredibleCertificatesActions],
+  actions: accredibleCertificatesActions,
 };

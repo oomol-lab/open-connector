@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://dovetail.com",
-  actions: [...dovetailActions],
+  actions: dovetailActions,
 };

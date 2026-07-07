@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://writer.com",
-  actions: [...writerActions],
+  actions: writerActions,
 };

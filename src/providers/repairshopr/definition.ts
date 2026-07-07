@@ -31,5 +31,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.repairshopr.com",
-  actions: [...repairshoprActions],
+  actions: repairshoprActions,
 };

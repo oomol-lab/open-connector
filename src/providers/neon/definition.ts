@@ -22,5 +22,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://neon.com",
-  actions: [...neonActions],
+  actions: neonActions,
 };

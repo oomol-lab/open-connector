@@ -30,5 +30,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://sendgrid.com",
-  actions: [...sendgridActions],
+  actions: sendgridActions,
 };

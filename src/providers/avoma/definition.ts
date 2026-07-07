@@ -20,5 +20,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.avoma.com/",
-  actions: [...avomaActions],
+  actions: avomaActions,
 };

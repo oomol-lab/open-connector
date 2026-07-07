@@ -22,5 +22,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://ably.com",
-  actions: [...ablyControlActions],
+  actions: ablyControlActions,
 };

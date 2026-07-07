@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.deck.co",
-  actions: [...deckCoActions],
+  actions: deckCoActions,
 };

@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://radar.com",
-  actions: [...radarActions],
+  actions: radarActions,
 };

@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.breathehr.com/",
-  actions: [...breatheActions],
+  actions: breatheActions,
 };

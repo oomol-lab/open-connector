@@ -37,5 +37,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://dataforseo.com",
-  actions: [...dataForSeoActions],
+  actions: dataForSeoActions,
 };

@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.doppler.com",
-  actions: [...dopplerActions],
+  actions: dopplerActions,
 };

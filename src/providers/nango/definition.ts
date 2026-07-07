@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://nango.dev",
-  actions: [...nangoActions],
+  actions: nangoActions,
 };

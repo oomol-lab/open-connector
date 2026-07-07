@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://chatarmin.com/",
-  actions: [...chatarminActions],
+  actions: chatarminActions,
 };

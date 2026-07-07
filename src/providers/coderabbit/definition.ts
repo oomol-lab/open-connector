@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.coderabbit.ai",
-  actions: [...coderabbitActions],
+  actions: coderabbitActions,
 };

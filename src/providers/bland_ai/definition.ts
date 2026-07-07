@@ -20,5 +20,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.bland.ai/",
-  actions: [...blandAiActions],
+  actions: blandAiActions,
 };

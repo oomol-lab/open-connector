@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.activetrail.com/",
-  actions: [...activeTrailActions],
+  actions: activeTrailActions,
 };

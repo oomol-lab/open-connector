@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.modjo.ai",
-  actions: [...modjoAiActions],
+  actions: modjoAiActions,
 };

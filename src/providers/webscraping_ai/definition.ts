@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://webscraping.ai",
-  actions: [...webscrapingAiActions],
+  actions: webscrapingAiActions,
 };

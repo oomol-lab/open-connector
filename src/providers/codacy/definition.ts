@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.codacy.com",
-  actions: [...codacyActions],
+  actions: codacyActions,
 };

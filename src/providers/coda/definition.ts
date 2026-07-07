@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://coda.io",
-  actions: [...codaActions],
+  actions: codaActions,
 };

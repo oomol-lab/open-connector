@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://moceanapi.com",
-  actions: [...moceanActions],
+  actions: moceanActions,
 };

@@ -31,5 +31,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://codegen.com",
-  actions: [...codegenActions],
+  actions: codegenActions,
 };

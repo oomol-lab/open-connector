@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.deepl.com",
-  actions: [...deeplActions],
+  actions: deeplActions,
 };

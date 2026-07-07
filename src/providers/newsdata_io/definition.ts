@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://newsdata.io",
-  actions: [...newsdataIoActions],
+  actions: newsdataIoActions,
 };

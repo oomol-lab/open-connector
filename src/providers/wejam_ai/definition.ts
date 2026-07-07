@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://wejam.ai",
-  actions: [...wejamAiActions],
+  actions: wejamAiActions,
 };

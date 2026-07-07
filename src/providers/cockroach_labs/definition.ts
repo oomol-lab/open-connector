@@ -19,5 +19,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.cockroachlabs.com",
-  actions: [...cockroachLabsActions],
+  actions: cockroachLabsActions,
 };
