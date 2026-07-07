@@ -1,16 +1,106 @@
 import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
+import type { LongbridgeReadonlyActionName } from "./readonly-action-specs.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { defineLongbridgeReadonlyActions } from "./readonly-action-specs.ts";
 
 const service = "longbridge";
 
 export const longbridgeOAuthScopes: string[] = ["4", "6", "10", "11"];
 
-export type LongbridgeActionName = "list_securities" | "list_account_cash" | "list_stock_positions";
+export type LongbridgeActionName =
+  | "list_securities"
+  | "list_account_cash"
+  | "list_stock_positions"
+  | "get_market_temperature"
+  | "list_market_temperature"
+  | "list_filings"
+  | "list_news"
+  | "list_watchlist_groups"
+  | "list_cash_flow"
+  | "list_fund_positions"
+  | "list_history_executions"
+  | "get_order_detail"
+  | "estimate_max_buy_quantity"
+  | "list_history_orders"
+  | "list_today_executions"
+  | "list_today_orders"
+  | LongbridgeReadonlyActionName;
 
 const nonEmptyString = (description: string): JsonSchema => s.string({ minLength: 1, pattern: "\\S", description });
 const rawObjectSchema = s.looseObject("The raw object returned by Longbridge.");
+const marketSchema = s.stringEnum("The Longbridge market code.", ["HK", "US", "CN", "SG"]);
+const tradeMarketSchema = s.stringEnum("The Longbridge trade market code.", [
+  "UnknownMarket",
+  "DE",
+  "JP",
+  "SH",
+  "SZ",
+  "UK",
+  "AU",
+  "HK",
+  "SG",
+  "US",
+]);
+const orderSideSchema = s.stringEnum("The Longbridge order side.", ["UnknownSide", "Buy", "Sell"]);
+const orderStatusSchema = s.stringEnum("A Longbridge order status.", [
+  "NotReported",
+  "VarietiesNotReported",
+  "FilledStatus",
+  "WaitToNew",
+  "ReplacedStatus",
+  "PartialFilledStatus",
+  "CanceledStatus",
+  "ExpiredStatus",
+  "UnknownOrderStatus",
+  "RejectedStatus",
+  "PartialWithdrawal",
+  "ReplacedNotReported",
+  "ProtectedNotReported",
+  "NewStatus",
+  "WaitToReplace",
+  "PendingReplaceStatus",
+  "PendingCancelStatus",
+  "WaitToCancel",
+]);
+const orderTypeSchema = s.stringEnum("The Longbridge order type used for buy quantity estimates.", [
+  "LO",
+  "ELO",
+  "MO",
+  "LIT",
+  "MIT",
+  "TSLPAMT",
+  "TSMAMT",
+  "TSMPCT",
+  "UnknownOrderType",
+  "AO",
+  "ALO",
+  "ODD",
+  "TSLPPCT",
+  "SLO",
+]);
+const unixTimeSchema = s.integer("A Unix timestamp in seconds.");
+const pageSchema = s.positiveInteger("The 1-based page number.");
+const pageSizeSchema = s.positiveInteger("The number of records per page.");
+const symbolsSchema = s.array("Longbridge symbols to filter by.", nonEmptyString("One Longbridge symbol."), {
+  minItems: 1,
+  maxItems: 100,
+});
+
+function listOutputSchema(description: string, key: string, itemDescription: string): JsonSchema {
+  return s.object(description, {
+    [key]: s.array(itemDescription, rawObjectSchema),
+    raw: rawObjectSchema,
+  });
+}
+
+function objectOutputSchema(description: string, key: string, objectDescription: string): JsonSchema {
+  return s.object(description, {
+    [key]: s.looseObject(objectDescription),
+    raw: rawObjectSchema,
+  });
+}
 
 const securitySchema = s.looseObject("A Longbridge tradable security record.", {
   symbol: s.string("The Longbridge security symbol."),
@@ -107,4 +197,245 @@ export const longbridgeActions: ActionDefinition[] = [
       raw: rawObjectSchema,
     }),
   }),
+  defineProviderAction(service, {
+    name: "get_market_temperature",
+    description: "Get the current Longbridge market sentiment temperature for a market.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object("Input parameters for querying the current Longbridge market temperature.", {
+      market: marketSchema,
+    }),
+    outputSchema: objectOutputSchema(
+      "The normalized Longbridge current market temperature response.",
+      "temperature",
+      "The current market temperature snapshot returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_market_temperature",
+    description: "List historical Longbridge market sentiment temperature values for a market and date range.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object("Input parameters for querying Longbridge historical market temperature.", {
+      market: marketSchema,
+      startDate: nonEmptyString("The start date in YYYYMMDD format."),
+      endDate: nonEmptyString("The end date in YYYYMMDD format."),
+    }),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge historical market temperature response.",
+      "temperatures",
+      "The historical market temperature records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_filings",
+    description: "List Longbridge regulatory filings and disclosure documents for a symbol.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object("Input parameters for querying Longbridge filings.", {
+      symbol: nonEmptyString("The Longbridge security symbol, such as AAPL.US or 700.HK."),
+    }),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge filings response.",
+      "list_filings",
+      "The filing records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_news",
+    description: "List Longbridge news articles for a symbol.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object("Input parameters for querying Longbridge news.", {
+      symbol: nonEmptyString("The Longbridge security symbol, such as AAPL.US or 700.HK."),
+    }),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge news response.",
+      "list_news",
+      "The news records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_watchlist_groups",
+    description: "List Longbridge watchlist groups for the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object("Input parameters for listing Longbridge watchlist groups.", {}),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge watchlist groups response.",
+      "groups",
+      "The watchlist groups returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_cash_flow",
+    description: "List Longbridge account cash flow records visible to the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for querying Longbridge account cash flow records.",
+      {
+        startTime: unixTimeSchema,
+        endTime: unixTimeSchema,
+        businessType: s.integer("The Longbridge business type filter."),
+        symbols: symbolsSchema,
+        page: pageSchema,
+        size: pageSizeSchema,
+      },
+      { optional: ["startTime", "endTime", "businessType", "symbols", "page", "size"] },
+    ),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge cash flow response.",
+      "cashFlows",
+      "The cash flow records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_fund_positions",
+    description: "List Longbridge fund positions visible to the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for querying Longbridge fund positions.",
+      {
+        symbols: symbolsSchema,
+      },
+      { optional: ["symbols"] },
+    ),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge fund positions response.",
+      "positionGroups",
+      "The fund position groups returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_history_executions",
+    description: "List historical Longbridge execution records visible to the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for querying historical Longbridge executions.",
+      {
+        startAt: unixTimeSchema,
+        endAt: unixTimeSchema,
+        orderId: nonEmptyString("The Longbridge order ID to filter by."),
+        symbol: nonEmptyString("The Longbridge security symbol to filter by."),
+        page: pageSchema,
+      },
+      { optional: ["startAt", "endAt", "orderId", "symbol", "page"] },
+    ),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge historical executions response.",
+      "executions",
+      "The historical execution records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "get_order_detail",
+    description: "Get a Longbridge order detail record by order ID.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object("Input parameters for querying a Longbridge order detail.", {
+      orderId: nonEmptyString("The Longbridge order ID to query."),
+    }),
+    outputSchema: objectOutputSchema(
+      "The normalized Longbridge order detail response.",
+      "order",
+      "The order detail returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "estimate_max_buy_quantity",
+    description: "Estimate the maximum Longbridge buy quantity for a security without submitting an order.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for estimating Longbridge maximum buy quantity.",
+      {
+        symbol: nonEmptyString("The Longbridge security symbol to estimate."),
+        orderType: orderTypeSchema,
+        side: orderSideSchema,
+        price: nonEmptyString("The limit or trigger price, when required by the order type."),
+        currency: nonEmptyString("The settlement currency override, such as USD or HKD."),
+        market: tradeMarketSchema,
+        fractionalShares: s.boolean("Whether to allow fractional share quantities in the estimate."),
+        orderId: nonEmptyString("The original order ID when estimating for an order modification scenario."),
+      },
+      { optional: ["price", "currency", "market", "fractionalShares", "orderId"] },
+    ),
+    outputSchema: objectOutputSchema(
+      "The normalized Longbridge maximum buy quantity estimate response.",
+      "estimate",
+      "The maximum buy quantity estimate returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_history_orders",
+    description: "List historical Longbridge orders visible to the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for querying historical Longbridge orders.",
+      {
+        startAt: unixTimeSchema,
+        endAt: unixTimeSchema,
+        symbol: nonEmptyString("The Longbridge security symbol to filter by."),
+        market: tradeMarketSchema,
+        side: orderSideSchema,
+        statuses: s.array("Longbridge order statuses to filter by.", orderStatusSchema, { minItems: 1 }),
+        page: pageSchema,
+        size: pageSizeSchema,
+      },
+      { optional: ["startAt", "endAt", "symbol", "market", "side", "statuses", "page", "size"] },
+    ),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge historical orders response.",
+      "orders",
+      "The historical order records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_today_executions",
+    description: "List today's Longbridge execution records visible to the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for querying today's Longbridge executions.",
+      {
+        orderId: nonEmptyString("The Longbridge order ID to filter by."),
+        symbol: nonEmptyString("The Longbridge security symbol to filter by."),
+      },
+      { optional: ["orderId", "symbol"] },
+    ),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge today's executions response.",
+      "executions",
+      "Today's execution records returned by Longbridge.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_today_orders",
+    description: "List today's Longbridge orders visible to the connected OAuth user.",
+    requiredScopes: longbridgeOAuthScopes,
+    providerPermissions: ["openapi"],
+    inputSchema: s.object(
+      "Input parameters for querying today's Longbridge orders.",
+      {
+        symbol: nonEmptyString("The Longbridge security symbol to filter by."),
+        market: tradeMarketSchema,
+        side: orderSideSchema,
+        statuses: s.array("Longbridge order statuses to filter by.", orderStatusSchema, { minItems: 1 }),
+        orderId: nonEmptyString("The Longbridge order ID to filter by."),
+        page: pageSchema,
+        size: pageSizeSchema,
+      },
+      { optional: ["symbol", "market", "side", "statuses", "orderId", "page", "size"] },
+    ),
+    outputSchema: listOutputSchema(
+      "The normalized Longbridge today's orders response.",
+      "orders",
+      "Today's order records returned by Longbridge.",
+    ),
+  }),
+  ...defineLongbridgeReadonlyActions(longbridgeOAuthScopes),
 ];
