@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { StoryblokActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -127,6 +128,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<StoryblokAct
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    const region = normalizeStoryblokRegion(credential.values.region ?? credential.metadata.region);
+    return storyblokApiBaseUrlByRegion[region];
+  },
+  auth: { type: "api_key_query", name: "token" },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -5,7 +5,7 @@ import type { TwilioActionName } from "./actions.ts";
 import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const twilioApiBaseUrl = "https://api.twilio.com/2010-04-01";
+export const twilioApiBaseUrl: string = "https://api.twilio.com/2010-04-01";
 
 interface TwilioActionContext {
   accountSid: string;
@@ -190,7 +190,7 @@ async function twilioRequest<T>(input: TwilioRequestInput): Promise<T> {
     response = await input.fetcher(url.toString(), {
       method: input.method ?? (input.body ? "POST" : "GET"),
       headers: {
-        authorization: `Basic ${Buffer.from(`${input.accountSid}:${input.authToken}`).toString("base64")}`,
+        authorization: buildTwilioAuthorizationHeader(input.accountSid, input.authToken),
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
       },
@@ -262,6 +262,10 @@ async function readTwilioError(response: Response): Promise<string> {
   } catch {
     return (await response.text().catch(() => "")) || `Twilio request failed with ${response.status}`;
   }
+}
+
+export function buildTwilioAuthorizationHeader(accountSid: string, authToken: string): string {
+  return `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`;
 }
 
 function requireTwilioField(value: unknown, name: string): string {

@@ -1,8 +1,18 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { plausibleAnalyticsActionHandlers, validatePlausibleAnalyticsCredential } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  normalizePlausibleBaseUrl,
+  plausibleAnalyticsActionHandlers,
+  plausibleDefaultBaseUrl,
+  validatePlausibleAnalyticsCredential,
+} from "./runtime.ts";
 
 const service = "plausible_analytics";
 
@@ -32,3 +42,16 @@ export const credentialValidators: CredentialValidators = {
     );
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: plausibleAnalyticsProxyBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
+
+async function plausibleAnalyticsProxyBaseUrl(context: ExecutionContext): Promise<string> {
+  const credential = await requireApiKeyCredential(context, service);
+  return normalizePlausibleBaseUrl(
+    optionalString(credential.values.baseUrl) ?? optionalString(credential.metadata.baseUrl) ?? plausibleDefaultBaseUrl,
+  );
+}

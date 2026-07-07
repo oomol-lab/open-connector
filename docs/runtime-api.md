@@ -132,8 +132,8 @@ under `OOMOL_CONNECT_DATA_DIR/files` and are cleaned up by age.
 - `GET /v1/apps/authenticated`
 - `POST /v1/proxy/:service`
 
-`POST /v1/proxy/:service` proxies one provider API request when that provider exports a local proxy
-executor. Providers without a proxy executor return `proxy_not_supported`.
+`POST /v1/proxy/:service` proxies one provider API request when that provider has an explicit or
+generated local proxy executor. Providers without a proxy executor return `proxy_not_supported`.
 
 Request body:
 

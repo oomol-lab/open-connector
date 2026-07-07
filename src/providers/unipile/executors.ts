@@ -1,8 +1,18 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
-import { unipileActionHandlers, validateUnipileCredential } from "./runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
+import { buildUnipileBaseUrl, unipileActionHandlers, validateUnipileCredential } from "./runtime.ts";
 
 const service = "unipile";
 
@@ -28,6 +38,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<UnipileExecu
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildUnipileBaseUrl(credential.values.dsn);
+  },
+  auth: { type: "api_key_header", name: "X-API-KEY" },
 });
 
 export const credentialValidators: CredentialValidators = {

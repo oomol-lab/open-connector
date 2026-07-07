@@ -1,10 +1,26 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { requireApiKeyCredential } from "../provider-runtime.ts";
-import { roamScimActionHandlers, toRoamScimExecutionError, validateRoamScimCredential } from "./runtime.ts";
+import { defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  roamScimActionHandlers,
+  roamScimApiBaseUrl,
+  toRoamScimExecutionError,
+  validateRoamScimCredential,
+} from "./runtime.ts";
 
 const service = "roam_scim";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: roamScimApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const executors: ProviderExecutors = Object.fromEntries(
   Object.entries(roamScimActionHandlers).map(([name, handler]) => [

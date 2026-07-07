@@ -1,10 +1,20 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireApiKeyCredential,
   requireOAuthCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 import { validateZendeskCredential, zendeskActionHandlers } from "./runtime.ts";
 
@@ -39,6 +49,37 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   },
 });
 
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    const url = createProviderProxyUrl(resolveProxyBaseUrl(credential), input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", buildProxyAuthorization(credential));
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Zendesk request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Zendesk request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
     return validateZendeskCredential(input.apiKey, input.values, fetcher, signal);
@@ -47,6 +88,30 @@ export const credentialValidators: CredentialValidators = {
     return validateZendeskCredential(input.accessToken, input.metadata, fetcher, signal, "oauth2");
   },
 };
+
+function resolveProxyBaseUrl(credential: Awaited<ReturnType<ExecutionContext["getCredential"]>>): string {
+  if (credential?.authType === "oauth2") {
+    return resolveBaseUrl(credential.metadata);
+  }
+  if (credential?.authType === "api_key") {
+    return resolveBaseUrl(credential.metadata, credential.values);
+  }
+  throw new ProviderRequestError(401, "Configure zendesk credentials first.");
+}
+
+function buildProxyAuthorization(credential: Awaited<ReturnType<ExecutionContext["getCredential"]>>): string {
+  if (credential?.authType === "oauth2") {
+    return `Bearer ${credential.accessToken}`;
+  }
+  if (credential?.authType === "api_key") {
+    const email = requireValue(
+      credential.values.email ?? stringMetadata(credential.metadata.email),
+      "Zendesk email is required",
+    );
+    return `Basic ${btoa(`${email}/token:${credential.apiKey}`)}`;
+  }
+  throw new ProviderRequestError(401, "Configure zendesk credentials first.");
+}
 
 function resolveBaseUrl(metadata: Record<string, unknown>, values?: Record<string, unknown>): string {
   const existing = stringMetadata(metadata.baseUrl);

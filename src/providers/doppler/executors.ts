@@ -1,13 +1,19 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { DopplerActionName } from "./actions.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { dopplerChangeRequestActionHandlers } from "./runtime.change-requests.ts";
 import { dopplerIntegrationActionHandlers } from "./runtime.integrations.ts";
 import { dopplerLogActionHandlers } from "./runtime.logs.ts";
 import { dopplerProjectActionHandlers, validateDopplerCredential } from "./runtime.projects.ts";
 import { dopplerSecretActionHandlers } from "./runtime.secrets.ts";
+import { dopplerApiBaseUrl } from "./runtime.shared.ts";
 import { dopplerTokenActionHandlers } from "./runtime.tokens.ts";
 
 interface DopplerActionContext {
@@ -39,6 +45,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<DopplerActio
       fetcher: withDefaultSignal(fetcher, context.signal),
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: dopplerApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
 
 export const credentialValidators: CredentialValidators = {

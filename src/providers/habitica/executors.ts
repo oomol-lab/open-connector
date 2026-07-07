@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderProxyExecutor } from "../../core/types.ts";
 import type { HabiticaActionName } from "./actions.ts";
 
 import {
@@ -13,10 +14,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "habitica";
@@ -107,6 +111,48 @@ export const executors: ProviderExecutors = defineProviderExecutors<HabiticaActi
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const habiticaCredential: HabiticaCredential = {
+      apiKey: credential.apiKey,
+      userId: readCredentialString(credential.values.userId ?? credential.metadata.userId, "userId"),
+      xClient: readCredentialString(credential.values.xClient ?? credential.metadata.xClient, "xClient"),
+    };
+    const url = createProviderProxyUrl(habiticaApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    for (const [key, value] of Object.entries(buildHabiticaHeaders(habiticaCredential, input.body !== undefined))) {
+      headers.set(key, value);
+    }
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    }
+
+    const response = await fetch(url, init);
+    const payload = await readHabiticaPayload(response);
+    if (!response.ok) {
+      throw createHabiticaError(response.status, payload, "execute");
+    }
+
+    return {
+      ok: true,
+      response: {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        data: payload,
+      },
+    };
+  } catch (error) {
+    return toProviderProxyError(error, "Habitica request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

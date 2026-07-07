@@ -115,6 +115,25 @@ export interface BearerProviderProxyDefinition {
   allowedEndpoint?: (endpoint: string) => boolean;
 }
 
+export type ProviderProxyAuth =
+  | { type: "none" }
+  | { type: "bearer" }
+  | { type: "oauth_bearer" }
+  | { type: "api_key_header"; name: string }
+  | { type: "api_key_query"; name: string }
+  | { type: "api_key_basic"; suffix?: string }
+  | { type: "api_key_authorization"; prefix: string; suffix?: string };
+
+export type ProviderProxyBaseUrlResolver = (context: ExecutionContext, service: string) => Promise<string> | string;
+export type ProviderProxyBaseUrl = string | ProviderProxyBaseUrlResolver;
+
+export interface ProviderProxyDefinition {
+  service: string;
+  baseUrl: ProviderProxyBaseUrl;
+  auth: ProviderProxyAuth;
+  allowedEndpoint?: (endpoint: string) => boolean;
+}
+
 const blockedProxyRequestHeaders = new Set([
   "authorization",
   "connection",
@@ -213,7 +232,7 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
   };
 }
 
-export function defineBearerProviderProxy(input: BearerProviderProxyDefinition): ProviderProxyExecutor {
+export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
   return async (proxyInput: ProxyRequestInput, context: ExecutionContext): Promise<ProxyExecutionResult> => {
     try {
       const endpoint = normalizeProviderProxyEndpoint(proxyInput.endpoint);
@@ -221,11 +240,14 @@ export function defineBearerProviderProxy(input: BearerProviderProxyDefinition):
         throw new ProviderRequestError(400, "endpoint is not supported for this provider");
       }
 
-      const credential = await requireBearerCredential(context, input.service);
-      const url = createProviderProxyUrl(input.baseUrl, endpoint, proxyInput.query);
+      const url = createProviderProxyUrl(
+        await resolveProviderProxyBaseUrl(input.baseUrl, context, input.service),
+        endpoint,
+        proxyInput.query,
+      );
       const headers = normalizeProviderProxyHeaders(proxyInput.headers);
-      headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
       headers.set("user-agent", providerUserAgent);
+      await applyProviderProxyAuth(input, context, url, headers);
 
       const init: RequestInit = {
         method: proxyInput.method,
@@ -253,6 +275,87 @@ export function defineBearerProviderProxy(input: BearerProviderProxyDefinition):
       return toProviderProxyError(error, "provider request failed");
     }
   };
+}
+
+export function defineBearerProviderProxy(input: BearerProviderProxyDefinition): ProviderProxyExecutor {
+  return defineProviderProxy({
+    ...input,
+    auth: { type: "bearer" },
+  });
+}
+
+export function credentialProviderProxyBaseUrl(...fields: string[]): ProviderProxyBaseUrlResolver {
+  return async (context: ExecutionContext, service: string): Promise<string> => {
+    const credential = await context.getCredential(service);
+    if (!credential || credential.authType === "no_auth") {
+      throw new ProviderRequestError(401, `Configure ${service} credentials first.`);
+    }
+
+    for (const field of fields) {
+      const metadataValue = optionalString(credential.metadata[field]);
+      if (metadataValue) {
+        return metadataValue;
+      }
+      if ("values" in credential) {
+        const value = optionalString(credential.values[field]);
+        if (value) {
+          return value;
+        }
+      }
+    }
+
+    throw new ProviderRequestError(400, `credential metadata is missing ${fields.join(", ")}`);
+  };
+}
+
+async function resolveProviderProxyBaseUrl(
+  baseUrl: ProviderProxyBaseUrl,
+  context: ExecutionContext,
+  service: string,
+): Promise<string> {
+  return typeof baseUrl === "string" ? baseUrl : await baseUrl(context, service);
+}
+
+async function applyProviderProxyAuth(
+  input: ProviderProxyDefinition,
+  context: ExecutionContext,
+  url: URL,
+  headers: Headers,
+): Promise<void> {
+  switch (input.auth.type) {
+    case "none":
+      return;
+    case "bearer": {
+      const credential = await requireBearerCredential(context, input.service);
+      headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
+      return;
+    }
+    case "oauth_bearer": {
+      const credential = await requireOAuthCredential(context, input.service);
+      headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
+      return;
+    }
+    case "api_key_header": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      headers.set(input.auth.name, credential.apiKey);
+      return;
+    }
+    case "api_key_query": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      url.searchParams.set(input.auth.name, credential.apiKey);
+      return;
+    }
+    case "api_key_basic": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      headers.set("authorization", `Basic ${btoa(`${credential.apiKey}${input.auth.suffix ?? ""}`)}`);
+      return;
+    }
+    case "api_key_authorization": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      headers.set("authorization", `${input.auth.prefix}${credential.apiKey}${input.auth.suffix ?? ""}`);
+      return;
+    }
+  }
 }
 
 /**

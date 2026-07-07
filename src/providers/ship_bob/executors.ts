@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ShipBobActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -134,6 +135,12 @@ export const shipBobActionHandlers: Record<ShipBobActionName, ShipBobActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, shipBobActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: `${shipBobApiBaseUrl}${shipBobApiVersionPath}`,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

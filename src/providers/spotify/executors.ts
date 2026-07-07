@@ -1,12 +1,18 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
-import { spotifyActionHandlers, spotifyJsonRequest } from "./runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { spotifyActionHandlers, spotifyApiBaseUrl, spotifyJsonRequest } from "./runtime.ts";
 
 const service = "spotify";
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, spotifyActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: spotifyApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {

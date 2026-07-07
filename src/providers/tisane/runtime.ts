@@ -13,8 +13,8 @@ import {
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const tisaneApiBaseUrl = "https://api.tisane.ai";
-const tisaneApiKeyHeader = "Ocp-Apim-Subscription-Key";
+export const tisaneApiBaseUrl: string = "https://api.tisane.ai";
+export const tisaneApiKeyHeader: string = "Ocp-Apim-Subscription-Key";
 
 type TisaneRequestPhase = "validate" | "execute";
 type TisaneResponseMode = "json" | "text" | "number";

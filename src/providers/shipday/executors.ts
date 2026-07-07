@@ -1,8 +1,13 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ShipdayActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "shipday";
 const shipdayBaseUrl = "https://api.shipday.com";
@@ -50,6 +55,12 @@ export const shipdayActionHandlers: Record<ShipdayActionName, ShipdayActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, shipdayActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: shipdayBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Basic " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

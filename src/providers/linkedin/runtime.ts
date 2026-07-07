@@ -6,9 +6,10 @@ import { compactObject, optionalBoolean, optionalRecord, optionalString } from "
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { linkedinOAuthScopes } from "./actions.ts";
 
-const linkedinUserinfoUrl = "https://api.linkedin.com/v2/userinfo";
-const linkedinPostsUrl = "https://api.linkedin.com/rest/posts";
-const linkedinApiVersion = "202605";
+export const linkedinApiBaseUrl = "https://api.linkedin.com";
+const linkedinUserinfoUrl = `${linkedinApiBaseUrl}/v2/userinfo`;
+const linkedinPostsUrl = `${linkedinApiBaseUrl}/rest/posts`;
+export const linkedinApiVersion = "202605";
 
 type LinkedinActionContext = OAuthProviderContext;
 type LinkedinActionHandler = (input: Record<string, unknown>, context: LinkedinActionContext) => Promise<unknown>;

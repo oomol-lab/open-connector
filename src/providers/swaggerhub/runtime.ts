@@ -5,7 +5,7 @@ import type { SwaggerHubActionName } from "./actions.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const swaggerhubApiOrigin = "https://api.swaggerhub.com";
+export const swaggerhubApiOrigin: string = "https://api.swaggerhub.com";
 const swaggerhubValidationPath = "/apis";
 
 type SwaggerhubPhase = "validate" | "execute";

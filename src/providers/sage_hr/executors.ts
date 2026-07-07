@@ -1,10 +1,15 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { objectPayload, requestJson } from "../http-json-runtime.ts";
-import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 
 const service = "sage_hr";
 
@@ -82,6 +87,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<SageHrContex
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeSageHrApiBaseUrl(credential.values.domain);
+  },
+  auth: { type: "api_key_header", name: "x-auth-token" },
 });
 
 export const credentialValidators: CredentialValidators = {

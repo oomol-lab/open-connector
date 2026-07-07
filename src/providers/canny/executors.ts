@@ -1,9 +1,23 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { CannyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "canny";
 const cannyApiBaseUrl = "https://canny.io/api";
@@ -47,6 +61,29 @@ export const cannyActionHandlers: Record<CannyActionName, CannyActionHandler> = 
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, cannyActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(cannyApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("content-type", "application/json");
+    headers.set("user-agent", providerUserAgent);
+    const response = await fetch(url.toString(), {
+      method: input.method,
+      headers,
+      body: JSON.stringify({ ...optionalRecord(input.body), apiKey: credential.apiKey }),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

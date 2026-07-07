@@ -13,7 +13,7 @@ import {
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const meetGeekApiBaseUrls = {
+export const meetGeekApiBaseUrls = {
   default: "https://api.meetgeek.ai",
   eu: "https://api-eu.meetgeek.ai",
   us: "https://api-us.meetgeek.ai",

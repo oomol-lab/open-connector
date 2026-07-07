@@ -1,13 +1,18 @@
-import type { CredentialValidationResult } from "../core/types.ts";
+import type { CredentialValidationResult, ProviderProxyExecutor, ProxyExecutionResult } from "../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "./provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../core/cast.ts";
 import {
   createProviderTimeout,
+  createProviderProxyUrl,
   isAbortLikeError,
+  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
 } from "./provider-runtime.ts";
 
 export const blazeMeterApiBaseUrl = "https://a.blazemeter.com/api/v4";
@@ -136,6 +141,43 @@ export function requireStoredBlazeMeterApiKeyId(value: unknown): string {
     throw new ProviderRequestError(500, "BlazeMeter apiKeyId is missing");
   }
   return apiKeyId;
+}
+
+export function createBlazeMeterProxyExecutor(service: string): ProviderProxyExecutor {
+  return async (input, context): Promise<ProxyExecutionResult> => {
+    try {
+      const credential = await requireApiKeyCredential(context, service);
+      const apiKeyId = requireStoredBlazeMeterApiKeyId(
+        optionalString(credential.values.apiKeyId) ?? optionalString(credential.metadata.apiKeyId),
+      );
+      const url = createProviderProxyUrl(blazeMeterApiBaseUrl, input.endpoint, input.query);
+      const headers = normalizeProviderProxyHeaders(input.headers);
+      headers.set("authorization", buildBasicAuthorizationHeader(apiKeyId, credential.apiKey));
+      headers.set("user-agent", providerUserAgent);
+      if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+
+      const response = await fetch(url, {
+        method: input.method,
+        headers,
+        body:
+          input.body === undefined
+            ? undefined
+            : typeof input.body === "string"
+              ? input.body
+              : JSON.stringify(input.body),
+        signal: context.signal,
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+      }
+      return { ok: true, response: await readProviderProxyResponse(response) };
+    } catch (error) {
+      return toProviderProxyError(error, "provider request failed");
+    }
+  };
 }
 
 async function requestBlazeMeter(

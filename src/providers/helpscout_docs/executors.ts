@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { HelpscoutDocsActionName } from "./actions.ts";
 
@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "helpscout_docs";
 const helpscoutDocsApiBaseUrl = "https://docsapi.helpscout.net/v1";
@@ -80,6 +85,15 @@ export const helpscoutDocsActionHandlers: Record<HelpscoutDocsActionName, Helpsc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, helpscoutDocsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: helpscoutDocsApiBaseUrl,
+  auth: {
+    type: "api_key_basic",
+    suffix: ":X",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

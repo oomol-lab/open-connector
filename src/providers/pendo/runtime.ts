@@ -1,4 +1,4 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { PendoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
@@ -88,6 +88,11 @@ export const executors: ProviderExecutors = defineProviderExecutors<PendoActionC
     };
   },
 });
+
+export async function pendoApiBaseUrl(context: ExecutionContext): Promise<string> {
+  const credential = await requireApiKeyCredential(context, "pendo");
+  return readBaseUrl(credential.metadata, credential.values.region);
+}
 
 export async function validatePendoCredential(
   input: Record<string, string>,

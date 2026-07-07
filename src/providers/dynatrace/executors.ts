@@ -3,11 +3,12 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { DynatraceContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { dynatraceActionHandlers, normalizeDynatraceEnvironmentUrl, validateDynatraceCredential } from "./runtime.ts";
 
 const service = "dynatrace";
@@ -26,6 +27,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<DynatraceCon
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeDynatraceEnvironmentUrl(
+      credential.values.environmentUrl ?? optionalString(credential.metadata.environmentUrl),
+    );
+  },
+  auth: { type: "api_key_authorization", prefix: "Api-Token " },
 });
 
 export const credentialValidators: CredentialValidators = {

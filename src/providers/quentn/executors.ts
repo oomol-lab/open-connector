@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { QuentnActionName } from "./actions.ts";
 
 import {
@@ -16,6 +21,7 @@ import {
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -249,6 +255,21 @@ export const executors: ProviderExecutors = defineProviderExecutors<QuentnAction
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: quentnProxyBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
+
+async function quentnProxyBaseUrl(context: ExecutionContext): Promise<string> {
+  const credential = await requireApiKeyCredential(context, service);
+  return readStoredCredential({
+    apiKey: credential.apiKey,
+    values: credential.values,
+    metadata: credential.metadata,
+  }).apiBaseUrl;
+}
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

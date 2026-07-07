@@ -4,7 +4,7 @@ import type { TrelloActionName } from "./actions.ts";
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const trelloApiBaseUrl = "https://api.trello.com/1";
+export const trelloApiBaseUrl: string = "https://api.trello.com/1";
 
 export interface TrelloActionContext {
   apiKey: string;

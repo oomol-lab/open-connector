@@ -33,7 +33,7 @@ interface TushareRequestInput {
 
 type TushareActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const tushareApiBaseUrl = "https://api.tushare.pro";
+export const tushareApiBaseUrl: string = "https://api.tushare.pro";
 const tushareRequestTimeoutMs = 30_000;
 
 const stockBasicFields = [

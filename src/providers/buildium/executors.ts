@@ -1,9 +1,24 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { BuildiumActionContext } from "./runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
-import { buildiumActionHandlers, validateBuildiumCredential } from "./runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
+import { buildiumActionHandlers, buildiumApiBaseUrl, validateBuildiumCredential } from "./runtime.ts";
 
 const service = "buildium";
 
@@ -20,6 +35,32 @@ export const executors: ProviderExecutors = defineProviderExecutors<BuildiumActi
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(buildiumApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("x-buildium-client-id", readClientId(credential.values));
+    headers.set("x-buildium-client-secret", credential.apiKey);
+    headers.set("user-agent", providerUserAgent);
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body:
+        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

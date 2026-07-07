@@ -1,8 +1,8 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const stsEndpoint = "https://sts.aliyuncs.com/";
-const stsApiVersion = "2015-04-01";
+export const aliyunStsEndpoint = "https://sts.aliyuncs.com/";
+export const aliyunStsApiVersion = "2015-04-01";
 const stsTimeoutMs = 10_000;
 const defaultRoleSessionName = "oomol-connect";
 
@@ -54,16 +54,16 @@ export async function assumeAliyunRole(
 ): Promise<AliyunStsCredential> {
   const fetcher = deps.fetcher ?? fetch;
   const now = deps.now ?? (() => new Date());
-  const nonce = deps.nonce ?? createSignatureNonce;
+  const nonce = deps.nonce ?? createAliyunStsSignatureNonce;
   const params = buildAssumeRoleParams(input, now(), nonce());
-  const body = buildSignedRpcBody(params, input.accessKeySecret);
+  const body = buildAliyunStsSignedRpcBody(params, input.accessKeySecret);
   const timeoutSignal = AbortSignal.timeout(stsTimeoutMs);
   const signal = deps.signal ? AbortSignal.any([deps.signal, timeoutSignal]) : timeoutSignal;
 
   let response: Response;
   let payload: AliyunStsResponse;
   try {
-    response = await fetcher(stsEndpoint, {
+    response = await fetcher(aliyunStsEndpoint, {
       method: "POST",
       headers: {
         accept: "application/json",
@@ -105,8 +105,8 @@ function buildAssumeRoleParams(input: AssumeAliyunRoleInput, now: Date, nonce: s
     SignatureMethod: "HMAC-SHA1",
     SignatureNonce: nonce,
     SignatureVersion: "1.0",
-    Timestamp: formatRpcTimestamp(now),
-    Version: stsApiVersion,
+    Timestamp: formatAliyunStsRpcTimestamp(now),
+    Version: aliyunStsApiVersion,
   };
 
   if (input.durationSeconds != null) {
@@ -119,7 +119,7 @@ function buildAssumeRoleParams(input: AssumeAliyunRoleInput, now: Date, nonce: s
   return params;
 }
 
-function buildSignedRpcBody(params: Record<string, string>, accessKeySecret: string): string {
+export function buildAliyunStsSignedRpcBody(params: Record<string, string>, accessKeySecret: string): string {
   const signedParams: Record<string, string> = {
     ...params,
     Signature: signAliyunRpcParams(params, accessKeySecret),
@@ -143,7 +143,7 @@ function rpcPercentEncode(value: string): string {
   return encodeURIComponent(value).replaceAll("+", "%20").replaceAll("*", "%2A").replaceAll("%7E", "~");
 }
 
-function formatRpcTimestamp(value: Date): string {
+export function formatAliyunStsRpcTimestamp(value: Date): string {
   const iso = value.toISOString();
   const dotIndex = iso.lastIndexOf(".");
   if (dotIndex === -1 || !iso.endsWith("Z")) {
@@ -152,7 +152,7 @@ function formatRpcTimestamp(value: Date): string {
   return `${iso.slice(0, dotIndex)}Z`;
 }
 
-function createSignatureNonce(): string {
+export function createAliyunStsSignatureNonce(): string {
   return randomBytes(16).toString("hex");
 }
 

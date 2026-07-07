@@ -3,6 +3,8 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { CrispActionName } from "./actions.ts";
 
@@ -17,10 +19,14 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "crisp";
@@ -113,6 +119,39 @@ export const executors: ProviderExecutors = defineProviderExecutors<CrispContext
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const crispCredential = readCrispCredential({
+      apiKey: credential.apiKey,
+      values: credential.values,
+      metadata: credential.metadata,
+    });
+    const url = createProviderProxyUrl(crispApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+    applyCrispAuthHeaders(headers, crispCredential);
+    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body:
+        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

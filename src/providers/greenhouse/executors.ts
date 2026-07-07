@@ -1,10 +1,15 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { GreenhouseActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "greenhouse";
 const greenhouseBaseUrl = "https://harvest.greenhouse.io/v1";
@@ -56,6 +61,15 @@ export const greenhouseActionHandlers: Record<GreenhouseActionName, GreenhouseAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, greenhouseActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: greenhouseBaseUrl,
+  auth: {
+    type: "api_key_basic",
+    suffix: ":",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

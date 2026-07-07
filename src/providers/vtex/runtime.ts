@@ -267,7 +267,7 @@ export function normalizeVtexEnvironment(value: unknown): string {
   return environment;
 }
 
-function buildVtexApiBaseUrl(accountName: string, environment: string): string {
+export function buildVtexApiBaseUrl(accountName: string, environment: string): string {
   return `https://${accountName}.${environment}.com.br`;
 }
 

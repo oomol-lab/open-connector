@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { LeverActionName } from "./actions.ts";
 
@@ -7,6 +12,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -126,6 +132,15 @@ export const leverActionHandlers: Record<LeverActionName, LeverActionHandler> = 
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, leverActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: leverApiBaseUrl,
+  auth: {
+    type: "api_key_basic",
+    suffix: ":",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

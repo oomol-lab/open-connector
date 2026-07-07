@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { FoursquareActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "foursquare";
 const foursquareApiBaseUrl = "https://api.foursquare.com";
@@ -114,6 +119,15 @@ export const foursquareActionHandlers: Record<FoursquareActionName, FoursquareAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, foursquareActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: foursquareApiBaseUrl,
+  auth: {
+    type: "api_key_authorization",
+    prefix: "fsq3 ",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

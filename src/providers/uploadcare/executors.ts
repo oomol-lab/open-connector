@@ -1,10 +1,28 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { UploadcareContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 import {
   readRequiredUploadcareCredentialField,
+  signUploadcareRequest,
   uploadcareActionHandlers,
+  uploadcareApiBaseUrl,
+  uploadcareJsonContentType,
+  uploadcareRestAcceptHeader,
   validateUploadcareCredential,
 } from "./runtime.ts";
 
@@ -23,6 +41,48 @@ export const executors: ProviderExecutors = defineProviderExecutors<UploadcareCo
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(uploadcareApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("accept", uploadcareRestAcceptHeader);
+    if (!headers.has("content-type")) {
+      headers.set("content-type", uploadcareJsonContentType);
+    }
+    headers.set("user-agent", providerUserAgent);
+
+    const body =
+      input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    signUploadcareRequest({
+      method: input.method,
+      url,
+      headers,
+      body,
+      publicKey: readRequiredUploadcareCredentialField(credential.values, "publicKey"),
+      secretKey: credential.apiKey,
+    });
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (body !== undefined) {
+      init.body = body;
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Uploadcare request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Uploadcare request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

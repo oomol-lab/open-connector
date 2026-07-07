@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { JiraActionName } from "./actions.ts";
 
 import {
@@ -11,6 +16,7 @@ import {
 import {
   ProviderRequestError,
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   requireOAuthCredential,
 } from "../provider-runtime.ts";
@@ -188,6 +194,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<JiraActionCo
       fetcher,
       providerMetadata: credential.metadata,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "jira",
+  baseUrl: async (context) => {
+    const credential = await requireOAuthCredential(context, "jira");
+    return resolveJiraApiBaseUrl(credential.metadata);
+  },
+  auth: {
+    type: "oauth_bearer",
   },
 });
 

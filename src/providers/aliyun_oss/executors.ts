@@ -3,13 +3,22 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { AliyunOssActionName } from "./actions.ts";
 
 import AliOss from "ali-oss";
 import { isIP } from "node:net";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "aliyun_oss";
 const sourceFetchTimeoutMs = 15_000;
@@ -74,6 +83,12 @@ interface AliyunOssClient {
   listV2(query?: Record<string, unknown> | null): Promise<AliyunListObjectsResult>;
   put(name: string, body: string | Buffer, options?: Record<string, unknown>): Promise<AliyunPutResult>;
   delete(name: string, options?: Record<string, unknown>): Promise<unknown>;
+  authorization(
+    method: string,
+    resource: string,
+    subres: Record<string, string>,
+    headers: Record<string, string>,
+  ): string;
   signatureUrl(
     name: string,
     options?: {
@@ -101,6 +116,64 @@ interface AliyunOssContext {
 }
 
 type AliyunOssActionHandler = (input: Record<string, unknown>, context: AliyunOssContext) => Promise<unknown>;
+
+const aliyunOssProxySignedQueryParameters = new Set([
+  "acl",
+  "append",
+  "bucketInfo",
+  "callback",
+  "callback-var",
+  "cname",
+  "comp",
+  "continuation-token",
+  "cors",
+  "delete",
+  "encryption",
+  "endTime",
+  "img",
+  "inventory",
+  "inventoryId",
+  "lifecycle",
+  "live",
+  "location",
+  "logging",
+  "objectMeta",
+  "partNumber",
+  "policy",
+  "position",
+  "qos",
+  "referer",
+  "replication",
+  "replicationLocation",
+  "replicationProgress",
+  "requestPayment",
+  "response-cache-control",
+  "response-content-disposition",
+  "response-content-encoding",
+  "response-content-language",
+  "response-content-type",
+  "response-expires",
+  "restore",
+  "security-token",
+  "sequential",
+  "startTime",
+  "status",
+  "style",
+  "styleName",
+  "symlink",
+  "tagging",
+  "uploadId",
+  "uploads",
+  "versionId",
+  "versioning",
+  "vod",
+  "website",
+  "worm",
+  "wormExtend",
+  "wormId",
+  "x-oss-process",
+  "x-oss-traffic-limit",
+]);
 
 export const aliyunOssActionHandlers: Record<AliyunOssActionName, AliyunOssActionHandler> = {
   list_buckets(input, context) {
@@ -139,6 +212,66 @@ export const executors: ProviderExecutors = defineProviderExecutors<AliyunOssCon
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    if (credential?.authType !== "custom_credential") {
+      throw new ProviderRequestError(401, "Configure aliyun_oss custom credentials first.");
+    }
+
+    const endpoint = requireAliyunField(credential.metadata.endpoint ?? credential.values.endpoint, "endpoint");
+    const bucket = optionalString(credential.metadata.bucket) ?? optionalString(credential.values.bucket);
+    const securityToken = optionalString(credential.values.securityToken);
+    const url = createProviderProxyUrl(buildAliyunOssProxyBaseUrl(endpoint, bucket), input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+    headers.set("x-oss-date", new Date().toUTCString());
+    if (securityToken) {
+      headers.set("x-oss-security-token", securityToken);
+    }
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const client = createAliyunOssClient({
+      accessKeyId: requireAliyunField(credential.values.accessKeyId, "accessKeyId"),
+      accessKeySecret: requireAliyunField(credential.values.accessKeySecret, "accessKeySecret"),
+      endpoint,
+    });
+    headers.set(
+      "authorization",
+      client.authorization(
+        input.method,
+        buildAliyunOssProxyResource(url, bucket),
+        buildAliyunOssProxySubres(url),
+        Object.fromEntries(headers.entries()),
+      ),
+    );
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(
+        response.status,
+        text || `Alibaba Cloud OSS request failed with HTTP ${response.status}`,
+      );
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Alibaba Cloud OSS request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input): Promise<CredentialValidationResult> {
@@ -192,6 +325,25 @@ function createAliyunOssClient(input: AliyunClientOptions): AliyunOssClient {
     ...(input.bucket ? { bucket: input.bucket } : {}),
     secure: true,
   }) as unknown as AliyunOssClient;
+}
+
+function buildAliyunOssProxyBaseUrl(endpoint: string, bucket: string | undefined): string {
+  const endpointUrl = new URL(normalizeEndpoint(endpoint));
+  return bucket ? `https://${bucket}.${endpointUrl.host}` : endpointUrl.toString();
+}
+
+function buildAliyunOssProxyResource(url: URL, bucket: string | undefined): string {
+  return bucket ? `/${bucket}${url.pathname}` : url.pathname;
+}
+
+function buildAliyunOssProxySubres(url: URL): Record<string, string> {
+  const subres: Record<string, string> = {};
+  for (const [key, value] of url.searchParams.entries()) {
+    if (aliyunOssProxySignedQueryParameters.has(key)) {
+      subres[key] = value;
+    }
+  }
+  return subres;
 }
 
 async function aliyunListBuckets(input: Record<string, unknown>, context: AliyunOssContext): Promise<unknown> {

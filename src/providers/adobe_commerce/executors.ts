@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { AdobeCommerceActionName } from "./actions.ts";
 
 import {
@@ -11,6 +16,7 @@ import {
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   providerUserAgent,
   ProviderRequestError,
@@ -132,6 +138,20 @@ export const executors: ProviderExecutors = defineProviderExecutors<AdobeCommerc
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    const baseUrl = normalizeAdobeCommerceBaseUrl(credential.metadata.baseUrl ?? credential.values.baseUrl);
+    const storeCode = normalizeOptionalStoreCode(credential.metadata.storeCode ?? credential.values.storeCode);
+    const url = new URL(baseUrl);
+    const segments = [...splitPathSegments(url.pathname), "rest", ...(storeCode ? [storeCode] : []), "V1"];
+    url.pathname = `/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`;
+    return url.toString();
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
 
 export const credentialValidators: CredentialValidators = {

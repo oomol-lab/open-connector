@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { Jin10ActionName } from "./actions.ts";
 
@@ -7,9 +7,15 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { createHash } from "node:crypto";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "jin10";
+const jin10McpOrigin = "https://mcp.jin10.com";
 const jin10McpEndpoint = "https://mcp.jin10.com/mcp";
 const jin10QuoteCodesResourceUri = "quote://codes";
 const jin10RequestTimeoutMs = 30_000;
@@ -54,6 +60,16 @@ export const jin10ActionHandlers: Record<Jin10ActionName, Jin10ActionHandler> = 
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, jin10ActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: jin10McpOrigin,
+  auth: {
+    type: "api_key_authorization",
+    prefix: "Bearer ",
+  },
+  allowedEndpoint: (endpoint) => endpoint === "/mcp",
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

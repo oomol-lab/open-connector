@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { FullenrichActionName } from "./actions.ts";
 
@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -78,6 +79,15 @@ export const fullenrichActionHandlers: Record<FullenrichActionName, FullenrichAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, fullenrichActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: fullenrichApiBaseUrl,
+  auth: {
+    type: "api_key_authorization",
+    prefix: "Bearer ",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

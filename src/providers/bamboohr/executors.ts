@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { BamboohrActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
@@ -96,6 +97,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<BamboohrCont
       transitFiles: context.transitFiles,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildBamboohrApiBaseUrl(credential.values.companyDomain ?? credential.metadata.companyDomain);
+  },
+  auth: { type: "api_key_basic", suffix: ":x" },
 });
 
 export const credentialValidators: CredentialValidators = {

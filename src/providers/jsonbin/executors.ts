@@ -1,8 +1,13 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { JsonbinActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "jsonbin";
 const jsonbinApiBaseUrl = "https://api.jsonbin.io/v3";
@@ -36,6 +41,15 @@ export const jsonbinActionHandlers: Record<JsonbinActionName, JsonbinActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, jsonbinActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: jsonbinApiBaseUrl,
+  auth: {
+    type: "api_key_header",
+    name: "X-Master-Key",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

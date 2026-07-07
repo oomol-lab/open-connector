@@ -556,7 +556,7 @@ export function normalizeShopDomain(value: string | undefined): string {
   return normalized;
 }
 
-function buildShopifyAdminApiBaseUrl(shopDomain: string): string {
+export function buildShopifyAdminApiBaseUrl(shopDomain: string): string {
   return `https://${shopDomain}/admin/api/${shopifyAdminApiVersion}`;
 }
 

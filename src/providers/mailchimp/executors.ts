@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { MailchimpActionName } from "./actions.ts";
 
@@ -12,7 +17,16 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 type MailchimpJsonObject = Record<string, unknown>;
 type MailchimpRequestMode = "validate" | "execute";
@@ -183,6 +197,36 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, mailchimpActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(mailchimpApiBaseUrl(credential.apiKey), input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    for (const [name, value] of Object.entries(mailchimpHeaders(credential.apiKey, input.body !== undefined))) {
+      headers.set(name, value);
+    }
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Mailchimp request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Mailchimp request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

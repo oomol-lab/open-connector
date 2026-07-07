@@ -1,15 +1,25 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { DingtalkBotActionName } from "./actions.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, objectArray, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
+  createProviderProxyUrl,
   defineProviderExecutors,
   isAbortLikeError,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "dingtalk_bot";
@@ -114,6 +124,41 @@ export const executors: ProviderExecutors = defineProviderExecutors<DingtalkBotC
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(apiBaseUrl, input.endpoint, input.query);
+    if (url.pathname !== webhookPath) {
+      throw new ProviderRequestError(400, "DingTalk Bot proxy endpoint must be /robot/send");
+    }
+    applyWebhookAuthentication(
+      url,
+      normalizeApiKey(credential.apiKey),
+      optionalString(credential.values.signingSecret),
+    );
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body:
+        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
@@ -302,6 +347,11 @@ function normalizeApiKey(value: string): string {
 
 function buildWebhookUrl(accessToken: string, signingSecret?: string): string {
   const url = new URL(webhookPath, apiBaseUrl);
+  applyWebhookAuthentication(url, accessToken, signingSecret);
+  return url.toString();
+}
+
+function applyWebhookAuthentication(url: URL, accessToken: string, signingSecret?: string): void {
   url.searchParams.set("access_token", accessToken);
   if (signingSecret) {
     const timestamp = Date.now().toString();
@@ -311,7 +361,6 @@ function buildWebhookUrl(accessToken: string, signingSecret?: string): string {
       createHmac("sha256", signingSecret).update(`${timestamp}\n${signingSecret}`).digest("base64"),
     );
   }
-  return url.toString();
 }
 
 function buildProviderAccountId(accessToken: string): string {

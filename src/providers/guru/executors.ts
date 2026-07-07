@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { GuruActionName } from "./actions.ts";
 
@@ -10,10 +11,14 @@ import { Buffer } from "node:buffer";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "guru";
@@ -85,6 +90,41 @@ export const executors: ProviderExecutors = defineProviderExecutors<GuruActionCo
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(guruApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set(
+      "authorization",
+      `Basic ${Buffer.from(`${readGuruUsername(credential.values)}:${credential.apiKey}`).toString("base64")}`,
+    );
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const payload = await readGuruPayload(response);
+      throw createGuruError(response, payload, "execute");
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Guru request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

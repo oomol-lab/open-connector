@@ -18,7 +18,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "pandadoc";
-const apiBaseUrl = "https://api.pandadoc.com";
+export const pandadocApiBaseUrl = "https://api.pandadoc.com";
 const validationPath = "/public/v1/templates";
 
 type PandadocPhase = "validate" | "execute";
@@ -301,7 +301,7 @@ export async function validatePandadocCredential(
   return {
     profile: { accountId: "pandadoc-api-key", displayName: "PandaDoc API Key", grantedScopes: [] },
     metadata: compactObject({
-      apiBaseUrl,
+      apiBaseUrl: pandadocApiBaseUrl,
       validationEndpoint: validationPath,
       templateCount: optionalInteger(payload?.count),
     }),
@@ -348,7 +348,7 @@ async function requestPandadocJson(
 }
 
 function buildUrl(path: string, query: Record<string, PandadocQueryValue> = {}, rawQuery?: string): URL {
-  const url = new URL(path, apiBaseUrl);
+  const url = new URL(path, pandadocApiBaseUrl);
   if (rawQuery) {
     url.search = rawQuery;
   }

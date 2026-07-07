@@ -1,7 +1,21 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
-import { twilioActionHandlers, validateTwilioCredential } from "./runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireCustomCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
+import {
+  buildTwilioAuthorizationHeader,
+  twilioActionHandlers,
+  twilioApiBaseUrl,
+  validateTwilioCredential,
+} from "./runtime.ts";
 
 const service = "twilio";
 
@@ -18,6 +32,40 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const url = createProviderProxyUrl(twilioApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set(
+      "authorization",
+      buildTwilioAuthorizationHeader(credential.values.accountSid, credential.values.authToken),
+    );
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Twilio request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Twilio request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher, signal }) {

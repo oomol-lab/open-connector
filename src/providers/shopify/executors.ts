@@ -1,8 +1,18 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { normalizeShopDomain, shopifyActionHandlers, validateShopifyCredential } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  buildShopifyRestApiBaseUrl,
+  normalizeShopDomain,
+  shopifyActionHandlers,
+  validateShopifyCredential,
+} from "./runtime.ts";
 
 const service = "shopify";
 
@@ -18,6 +28,15 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildShopifyRestApiBaseUrl(normalizeShopDomain(optionalString(credential.values.shopDomain)));
+  },
+  auth: { type: "api_key_header", name: "x-shopify-access-token" },
 });
 
 export const credentialValidators: CredentialValidators = {

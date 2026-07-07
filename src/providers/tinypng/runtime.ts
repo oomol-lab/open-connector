@@ -13,7 +13,7 @@ import {
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const tinypngApiBaseUrl = "https://api.tinify.com";
+export const tinypngApiBaseUrl: string = "https://api.tinify.com";
 const tinypngShrinkUrl = `${tinypngApiBaseUrl}/shrink`;
 
 type TinypngActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -158,10 +158,14 @@ async function outputImage(input: Record<string, unknown>, context: ApiKeyProvid
 
 function tinypngHeaders(apiKey: string, input: { contentType?: string } = {}) {
   return {
-    authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
+    authorization: buildTinypngAuthorizationHeader(apiKey),
     "user-agent": providerUserAgent,
     ...(input.contentType ? { "content-type": input.contentType } : {}),
   };
+}
+
+export function buildTinypngAuthorizationHeader(apiKey: string): string {
+  return `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`;
 }
 
 function buildTinypngOutputRequest(input: Record<string, unknown>) {

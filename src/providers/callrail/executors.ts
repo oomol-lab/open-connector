@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { CallrailActionName } from "./actions.ts";
 
@@ -6,6 +6,7 @@ import { compactObject, optionalNumber, optionalRecord, optionalString, required
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -98,6 +99,12 @@ const callrailActionHandlers: Record<CallrailActionName, CallrailActionHandler> 
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, callrailActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: callrailApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: 'Token token="', suffix: '"' },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

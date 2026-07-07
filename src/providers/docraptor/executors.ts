@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { DocraptorActionName } from "./actions.ts";
 
@@ -8,6 +8,7 @@ import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -37,6 +38,12 @@ export const docraptorActionHandlers: Record<DocraptorActionName, DocraptorActio
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, docraptorActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: docraptorApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

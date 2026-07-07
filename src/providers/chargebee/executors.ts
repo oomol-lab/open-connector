@@ -4,6 +4,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ChargebeeActionName } from "./actions.ts";
 
@@ -11,6 +12,7 @@ import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   providerUserAgent,
   ProviderRequestError,
@@ -108,6 +110,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<ChargebeeCon
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildChargebeeApiBaseUrl(
+      normalizeChargebeeSite(credential.values.site ?? optionalString(credential.metadata.site)),
+    );
+  },
+  auth: { type: "api_key_basic", suffix: ":" },
 });
 
 export const credentialValidators: CredentialValidators = {

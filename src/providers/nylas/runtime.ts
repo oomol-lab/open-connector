@@ -29,7 +29,7 @@ interface NylasRequestOptions {
   phase: NylasPhase;
 }
 
-const nylasApiBaseUrl = "https://api.us.nylas.com/v3";
+export const nylasApiBaseUrl = "https://api.us.nylas.com/v3";
 const nylasDefaultRequestTimeoutMs = 30_000;
 
 export const nylasActionHandlers: Record<NylasActionName, NylasActionHandler> = {

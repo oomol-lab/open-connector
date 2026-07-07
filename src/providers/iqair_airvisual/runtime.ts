@@ -5,7 +5,7 @@ import type { IqairAirvisualActionName } from "./actions.ts";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const iqairAirvisualApiBaseUrl = "https://api.airvisual.com/v2";
+export const iqairAirvisualApiBaseUrl = "https://api.airvisual.com/v2";
 
 type IqairAirvisualPhase = "validate" | "execute";
 type IqairAirvisualQueryValue = string | number | undefined;

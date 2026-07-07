@@ -1,14 +1,24 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type { FeishuAppBotActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireCustomCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 import { feishuAppBotProviderScopes } from "./scopes.ts";
 
@@ -147,6 +157,72 @@ export const executors: ProviderExecutors = defineProviderExecutors<FeishuAppBot
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const accessToken = await fetchTenantAccessToken(
+      readFeishuAppBotCredential(credential.values),
+      fetch,
+      "execute",
+      context.signal,
+    );
+    const url = createProviderProxyUrl(feishuOpenBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `Bearer ${accessToken}`);
+    headers.set("user-agent", providerUserAgent);
+
+    const requestSignal = createFeishuRequestSignal(context.signal);
+    try {
+      const init: RequestInit = {
+        method: input.method,
+        headers,
+        signal: requestSignal.signal,
+      };
+      if (input.body !== undefined) {
+        init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+        if (!headers.has("content-type") && typeof input.body !== "string") {
+          headers.set("content-type", "application/json; charset=utf-8");
+        }
+      }
+
+      const response = await fetch(url, init);
+      if (!response.ok) {
+        const rawText = await response.text().catch(() => "");
+        let envelope: FeishuApiEnvelope<unknown>;
+        try {
+          envelope = readFeishuEnvelope<unknown>(rawText);
+        } catch {
+          throw new ProviderRequestError(
+            response.status >= 500 ? 502 : response.status,
+            rawText.trim() || `Feishu request failed with status ${response.status}`,
+          );
+        }
+        throw normalizeFeishuError({
+          phase: "execute",
+          status: response.status,
+          rawText,
+          envelope,
+        });
+      }
+
+      return {
+        ok: true,
+        response: await readProviderProxyResponse(response),
+      };
+    } finally {
+      requestSignal.cleanup();
+    }
+  } catch (error) {
+    if (isAbortError(error)) {
+      return toProviderProxyError(
+        new ProviderRequestError(504, "timed out while requesting Feishu"),
+        "Feishu request failed",
+      );
+    }
+    return toProviderProxyError(error, "Feishu request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {

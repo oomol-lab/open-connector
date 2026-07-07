@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { IpinfoIoActionName } from "./actions.ts";
 
@@ -10,7 +10,17 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "ipinfo_io";
 const ipinfoLegacyBaseUrl = "https://ipinfo.io";
@@ -125,6 +135,43 @@ export const ipinfoIoActionHandlers: Record<IpinfoIoActionName, IpinfoIoActionHa
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipinfoIoActionHandlers);
 
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
+    const { baseUrl, endpoint: proxiedEndpoint, authInQuery } = resolveIpinfoProxyTarget(endpoint);
+    const url = createProviderProxyUrl(baseUrl, proxiedEndpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+    if (authInQuery) {
+      url.searchParams.set("token", credential.apiKey);
+    } else {
+      headers.set("authorization", `Bearer ${credential.apiKey}`);
+    }
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      throw createIpinfoError(response, await readIpinfoPayload(response, true), "execute");
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "ipinfo request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const tokenInfo = await getTokenInfo(
@@ -154,6 +201,22 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+function resolveIpinfoProxyTarget(endpoint: string): { baseUrl: string; endpoint: string; authInQuery?: boolean } {
+  if (endpoint === "/me") {
+    return { baseUrl: ipinfoLegacyBaseUrl, endpoint, authInQuery: true };
+  }
+  if (endpoint === "/lite" || endpoint.startsWith("/lite/")) {
+    return { baseUrl: ipinfoLiteBaseUrl, endpoint: endpoint.slice("/lite".length) || "/" };
+  }
+  if (endpoint === "/lookup" || endpoint.startsWith("/lookup/")) {
+    return { baseUrl: ipinfoLookupBaseUrl, endpoint: endpoint.slice("/lookup".length) || "/" };
+  }
+  if (endpoint === "/batch/lite" || endpoint.startsWith("/batch/lite/")) {
+    return { baseUrl: ipinfoBatchLiteBaseUrl, endpoint };
+  }
+  return { baseUrl: ipinfoLegacyBaseUrl, endpoint };
+}
 
 async function getLiteIpInfo(
   input: Record<string, unknown>,

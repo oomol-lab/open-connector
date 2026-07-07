@@ -3,13 +3,23 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { RocketChatActionName } from "./actions.ts";
 
 import { isIP } from "node:net";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { defineProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "rocket_chat";
 const requestTimeoutMs = 30_000;
@@ -195,6 +205,42 @@ export const credentialValidators: CredentialValidators = {
       }),
     };
   },
+};
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await context.getCredential(service);
+    if (credential?.authType !== "custom_credential") {
+      throw new ProviderRequestError(401, "Configure rocket_chat custom credentials first.");
+    }
+    const rocketChatCredential = readRocketChatCredential(credential.values);
+    const url = createProviderProxyUrl(rocketChatCredential.apiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+    headers.set("X-Auth-Token", rocketChatCredential.authToken);
+    headers.set("X-User-Id", rocketChatCredential.userId);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
 };
 
 async function requestRocketChatObject(options: {

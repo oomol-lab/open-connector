@@ -5,7 +5,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString } from "
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 const tencentDocsUserInfoUrl = "https://docs.qq.com/oauth/v2/userinfo";
-const tencentDocsApiBaseUrl = "https://docs.qq.com";
+export const tencentDocsApiBaseUrl: string = "https://docs.qq.com";
 
 interface TencentDocsActionContext extends Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal"> {
   clientId: string;

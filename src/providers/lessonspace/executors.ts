@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { LessonspaceActionName } from "./actions.ts";
 
@@ -10,6 +11,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -66,6 +68,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<LessonspaceC
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: lessonspaceApiBaseUrl,
+  auth: {
+    type: "api_key_authorization",
+    prefix: "Organisation ",
   },
 });
 

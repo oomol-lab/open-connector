@@ -1,8 +1,13 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { BtcpayServerContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { btcpayServerActionHandlers, normalizeBtcpayBaseUrl, validateBtcpayServerCredential } from "./runtime.ts";
 
 const service = "btcpay_server";
@@ -21,6 +26,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<BtcpayServer
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return `${normalizeBtcpayBaseUrl(
+      optionalString(credential.values.baseUrl) ?? optionalString(credential.metadata.baseUrl),
+    )}/api/v1`;
+  },
+  auth: { type: "api_key_authorization", prefix: "token " },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ElasticsearchActionName } from "./actions.ts";
 
@@ -10,11 +11,15 @@ import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
   requireApiKeyCredential,
   requireCustomCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 import { elasticsearchExpandWildcardValues } from "./actions.ts";
 
@@ -105,6 +110,55 @@ export const executors: ProviderExecutors = defineProviderExecutors<Elasticsearc
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential("elasticsearch");
+    let baseUrl: string;
+    let authorization: string;
+    if (credential?.authType === "api_key") {
+      const apiKeyCredential = await requireApiKeyCredential(context, "elasticsearch");
+      baseUrl = normalizeElasticsearchBaseUrl(apiKeyCredential.values.baseUrl ?? apiKeyCredential.metadata.baseUrl);
+      authorization = buildApiKeyAuthHeader(requireElasticsearchField(apiKeyCredential.apiKey, "apiKey"));
+    } else {
+      const customCredential = await requireCustomCredential(context, "elasticsearch");
+      baseUrl = normalizeElasticsearchBaseUrl(customCredential.values.baseUrl ?? customCredential.metadata.baseUrl);
+      authorization = buildBasicAuthHeader(
+        requireElasticsearchField(customCredential.values.username, "username"),
+        requireElasticsearchField(customCredential.values.password, "password"),
+      );
+    }
+
+    const url = createProviderProxyUrl(baseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", authorization);
+    headers.set("user-agent", elasticsearchUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      throw new ProviderRequestError(response.status, await readElasticsearchError(response));
+    }
+
+    return {
+      ok: true,
+      response: await readProviderProxyResponse(response),
+    };
+  } catch (error) {
+    return toProviderProxyError(error, "elasticsearch request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

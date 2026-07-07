@@ -15,7 +15,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-export const timelinkApiBaseUrl = "https://api.timelink.io/api/v1";
+export const timelinkApiBaseUrl: string = "https://api.timelink.io/api/v1";
 const timelinkRequestTimeoutMs = 30_000;
 
 type TimelinkPhase = "validate" | "execute";

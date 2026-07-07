@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { SmsAlertActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
+  defineProviderProxy,
   defineProviderExecutors,
   isAbortLikeError,
   providerUserAgent,
@@ -87,6 +93,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<SmsAlertActi
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: `${smsAlertApiOrigin}${smsAlertApiBasePath}`,
+  auth: { type: "api_key_query", name: "apikey" },
 });
 
 export const credentialValidators: CredentialValidators = {

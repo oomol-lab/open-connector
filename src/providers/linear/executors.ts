@@ -1,9 +1,23 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { LinearActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { ProviderRequestError, defineProviderExecutors } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  ProviderRequestError,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
+const linearApiBaseUrl = "https://api.linear.app";
 const linearGraphqlUrl = "https://api.linear.app/graphql";
 
 const pageInfoFields = `
@@ -1313,6 +1327,47 @@ export const executors: ProviderExecutors = defineProviderExecutors<LinearAction
     throw new ProviderRequestError(401, "Configure linear OAuth or API key credentials first.");
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential("linear");
+    let authorization: string;
+    if (credential?.authType === "oauth2") {
+      authorization = `Bearer ${credential.accessToken}`;
+    } else if (credential?.authType === "api_key") {
+      authorization = credential.apiKey;
+    } else {
+      throw new ProviderRequestError(401, "Configure linear OAuth or API key credentials first.");
+    }
+
+    const url = createProviderProxyUrl(linearApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", authorization);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `linear request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "linear request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {

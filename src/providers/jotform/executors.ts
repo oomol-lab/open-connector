@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { JotformActionName } from "./actions.ts";
 
@@ -13,6 +13,7 @@ import {
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -206,6 +207,15 @@ export const jotformActionHandlers: Record<JotformActionName, JotformActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, jotformActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: jotformApiBaseUrl,
+  auth: {
+    type: "api_key_header",
+    name: "APIKEY",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

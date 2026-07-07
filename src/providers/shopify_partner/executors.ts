@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { ShopifyPartnerActionName } from "./actions.ts";
 
@@ -6,6 +11,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import { compactJson } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -254,6 +260,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<ShopifyPartn
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildShopifyPartnerApiBaseUrl(requiredCredentialValue(credential.values.organizationId, "organizationId"));
+  },
+  auth: { type: "api_key_header", name: "x-shopify-access-token" },
 });
 
 export const credentialValidators = {

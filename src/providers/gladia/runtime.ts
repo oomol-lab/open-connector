@@ -15,7 +15,7 @@ import {
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, readTransitFileInput } from "../provider-runtime.ts";
 
-const gladiaApiBaseUrl = "https://api.gladia.io";
+export const gladiaApiBaseUrl = "https://api.gladia.io";
 const gladiaPreRecordedPath = "/v2/pre-recorded";
 const gladiaUploadPath = "/v2/upload";
 const maxGladiaUploadSourceBytes = 100 * 1024 * 1024;

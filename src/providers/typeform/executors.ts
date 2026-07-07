@@ -1,11 +1,22 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineBearerProviderExecutors } from "../provider-runtime.ts";
-import { fetchTypeformCurrentAccount, typeformActionHandlers, validateTypeformCredential } from "./runtime.ts";
+import { defineBearerProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import {
+  fetchTypeformCurrentAccount,
+  typeformActionHandlers,
+  typeformApiBaseUrl,
+  validateTypeformCredential,
+} from "./runtime.ts";
 
 const service = "typeform";
 
 export const executors: ProviderExecutors = defineBearerProviderExecutors(service, typeformActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: typeformApiBaseUrl,
+  auth: { type: "bearer" },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

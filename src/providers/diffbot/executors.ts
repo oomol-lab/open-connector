@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { DiffbotActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "diffbot";
 const diffbotApiOrigin = "https://api.diffbot.com";
@@ -25,6 +30,12 @@ export const diffbotActionHandlers: Record<DiffbotActionName, DiffbotActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, diffbotActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: diffbotApiOrigin,
+  auth: { type: "api_key_query", name: "token" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

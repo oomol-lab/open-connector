@@ -3,12 +3,24 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { JimengAiActionName } from "./actions.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
+  normalizeProviderProxyQuery,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireCustomCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "jimeng_ai";
 const jimengApiHost = "visual.volcengineapi.com";
@@ -163,6 +175,48 @@ export const executors: ProviderExecutors = defineProviderExecutors<JimengAction
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const credentials = resolveJimengCredentials(credential.values);
+    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
+    const query = normalizeProviderProxyQuery(input.query);
+    const body =
+      input.body === undefined ? "" : typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    const signed = signVolcRequest({
+      method: input.method,
+      path: endpoint,
+      query,
+      body,
+      credentials,
+    });
+    const url = createProviderProxyUrl(jimengApiOrigin, endpoint, query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    for (const [name, value] of Object.entries(signed.headers)) {
+      headers.set(name, value);
+    }
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = body;
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Jimeng AI request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Jimeng AI request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input): Promise<CredentialValidationResult> {

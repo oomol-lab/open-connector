@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { MixpanelActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
@@ -10,12 +15,16 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
   isAbortLikeError,
+  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "mixpanel";
@@ -121,6 +130,50 @@ export const executors: ProviderExecutors = defineProviderExecutors<MixpanelActi
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const baseUrl = normalizeMixpanelBaseUrl(
+      optionalString(credential.values.baseUrl) ?? optionalString(credential.metadata.baseUrl),
+      mixpanelDefaultBaseUrl,
+      "Base URL",
+    );
+    const serviceAccountUsername = normalizeRequiredString(
+      credential.values.serviceAccountUsername ?? credential.metadata.serviceAccountUsername,
+      "Service account username",
+    );
+    const url = createProviderProxyUrl(baseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set(
+      "authorization",
+      `Basic ${Buffer.from(`${serviceAccountUsername}:${credential.apiKey}`).toString("base64")}`,
+    );
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `mixpanel request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "mixpanel request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

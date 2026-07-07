@@ -1,7 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { normalizeWorkableSubdomain, validateWorkableCredential, workableActionHandlers } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  buildWorkableApiBaseUrl,
+  normalizeWorkableSubdomain,
+  validateWorkableCredential,
+  workableActionHandlers,
+} from "./runtime.ts";
 
 const service = "workable";
 
@@ -18,6 +28,15 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     };
   },
   fallbackMessage: "workable request failed",
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildWorkableApiBaseUrl(normalizeWorkableSubdomain(credential.values.subdomain));
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
 
 export const credentialValidators: CredentialValidators = {

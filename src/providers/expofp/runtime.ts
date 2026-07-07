@@ -10,7 +10,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const expofpApiBaseUrl = "https://app.expofp.com/api/v1";
+export const expofpApiBaseUrl = "https://app.expofp.com/api/v1";
 const expofpDefaultRequestTimeoutMs = 30_000;
 
 type ExpofpPhase = "validate" | "execute";

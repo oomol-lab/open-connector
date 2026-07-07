@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const openHandsApiBaseUrl = "https://app.all-hands.dev";
+export const openHandsApiBaseUrl = "https://app.all-hands.dev";
 const openHandsValidationPath = "/api/v1/app-conversations/search";
 
 type OpenHandsRequestMethod = "GET" | "POST";

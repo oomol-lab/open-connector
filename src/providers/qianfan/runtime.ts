@@ -11,8 +11,8 @@ import {
   readTransitFileInput,
 } from "../provider-runtime.ts";
 
-const qianfanApiOrigin = "https://qianfan.baidubce.com";
-const qianfanApiBaseUrl = `${qianfanApiOrigin}/v2`;
+export const qianfanApiOrigin: string = "https://qianfan.baidubce.com";
+export const qianfanApiBaseUrl: string = `${qianfanApiOrigin}/v2`;
 const qianfanUserAgent = providerUserAgent;
 
 interface ApiKeyProviderActionInput {

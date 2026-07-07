@@ -400,7 +400,7 @@ function buildNetsuiteUrl(
   return url;
 }
 
-function buildOAuthAuthorizationHeader(input: OAuthHeaderInput): string {
+export function buildOAuthAuthorizationHeader(input: OAuthHeaderInput): string {
   const oauthParams: Record<string, string> = {
     oauth_consumer_key: input.credential.consumerKey,
     oauth_token: input.credential.tokenId,

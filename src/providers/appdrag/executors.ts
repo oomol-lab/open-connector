@@ -1,9 +1,23 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { AppdragActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "appdrag";
 const appdragHomepageUrl = "https://appdrag.com";
@@ -28,6 +42,38 @@ export const appdragActionHandlers: Record<AppdragActionName, AppdragActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, appdragActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(appdragHomepageUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.method.toUpperCase() === "GET") {
+      url.searchParams.set("APIKey", credential.apiKey);
+    } else {
+      init.body = JSON.stringify(buildProxyRequestBody(credential.apiKey, input.body));
+      if (!headers.has("content-type")) {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {
@@ -127,6 +173,25 @@ function mergeApiKeyIntoParameters(apiKey: string, parametersInput: unknown): Re
   }
   parameterRecord.APIKey = apiKey;
   return parameterRecord;
+}
+
+function buildProxyRequestBody(apiKey: string, bodyInput: unknown): Record<string, unknown> {
+  if (bodyInput === undefined) {
+    return { APIKey: apiKey };
+  }
+
+  const body = optionalRecord(bodyInput);
+  if (!body) {
+    throw new ProviderRequestError(400, "body must be a JSON object for AppDrag proxy requests");
+  }
+  const existingApiKey = optionalString(body.APIKey);
+  if (existingApiKey && existingApiKey !== apiKey) {
+    throw new ProviderRequestError(400, "body.APIKey must match the connected AppDrag API key");
+  }
+  return {
+    ...body,
+    APIKey: apiKey,
+  };
 }
 
 function buildFunctionRoute(input: { folder: string; functionName: string; environment: AppdragEnvironment }): URL {

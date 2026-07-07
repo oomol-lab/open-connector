@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { ScrapingantActionName } from "./actions.ts";
 
@@ -10,7 +15,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "scrapingant";
 const scrapingantApiOrigin = "https://api.scrapingant.com";
@@ -47,6 +57,12 @@ export const scrapingantActionHandlers: Record<ScrapingantActionName, Scrapingan
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, scrapingantActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: scrapingantApiBaseUrl,
+  auth: { type: "api_key_query", name: "x-api-key" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

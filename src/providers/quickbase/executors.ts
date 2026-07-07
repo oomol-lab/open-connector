@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -13,7 +13,16 @@ import {
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { arrayPayload, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
-import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "quickbase";
 const apiBaseUrl = "https://api.quickbase.com/v1";
@@ -136,6 +145,45 @@ export const executors: ProviderExecutors = defineProviderExecutors<QuickbaseCon
   },
 });
 
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(apiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `QB-USER-TOKEN ${credential.apiKey}`);
+    headers.set("qb-realm-hostname", normalizeRealmHostname(credential.values.realmHostname));
+    headers.set("user-agent", providerUserAgent);
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+
+    return {
+      ok: true,
+      response: await readProviderProxyResponse(response),
+    };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const realmHostname = normalizeRealmHostname(input.values.realmHostname);
@@ -193,7 +241,7 @@ function quickbaseRequest(
 
 function normalizeRealmHostname(value: unknown): string {
   const hostname = requiredString(value, "realmHostname").toLowerCase();
-  if (!/^[a-z0-9.-]+\\.quickbase\\.(com|eu)$/.test(hostname)) {
+  if (!/^[a-z0-9.-]+\.quickbase\.(com|eu)$/.test(hostname)) {
     throw new ProviderRequestError(
       400,
       "realmHostname must be a Quickbase realm hostname such as example.quickbase.com",

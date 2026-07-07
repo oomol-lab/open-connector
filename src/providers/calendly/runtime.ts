@@ -22,7 +22,7 @@ type CalendlyRequestOptions = {
   notFoundAsInvalidInput?: boolean;
 };
 
-const calendlyApiOrigin = "https://api.calendly.com";
+export const calendlyApiOrigin: string = "https://api.calendly.com";
 const calendlyValidationPath = "/users/me";
 
 export const calendlyActionHandlers: Record<CalendlyActionName, CalendlyActionHandler> = {

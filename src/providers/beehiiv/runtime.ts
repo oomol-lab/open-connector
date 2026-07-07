@@ -7,7 +7,7 @@ import { encodePathSegment } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const beehiivApiOrigin = "https://api.beehiiv.com";
-const beehiivApiBaseUrl = `${beehiivApiOrigin}/v2`;
+export const beehiivApiBaseUrl: string = `${beehiivApiOrigin}/v2`;
 
 type BeehiivPhase = "validate" | "execute";
 type BeehiivContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;

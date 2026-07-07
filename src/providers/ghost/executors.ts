@@ -1,8 +1,14 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { GhostActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   providerUserAgent,
   ProviderRequestError,
@@ -77,6 +83,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<GhostActionC
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return requireGhostContentBaseUrl(credential.values, credential.metadata);
+  },
+  auth: {
+    type: "api_key_query",
+    name: "key",
   },
 });
 

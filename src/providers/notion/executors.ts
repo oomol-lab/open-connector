@@ -1,9 +1,24 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError, requireBearerCredential } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  requireBearerCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "notion";
+const notionApiBaseUrl = "https://api.notion.com/v1";
 const notionCoreVersion = "2026-03-11";
 
 type NotionObject = Record<string, unknown>;
@@ -108,6 +123,39 @@ export const executors: ProviderExecutors = defineProviderExecutors<NotionAction
     return { accessToken: credential.accessToken, fetcher };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireBearerCredential(context, service);
+    const url = createProviderProxyUrl(notionApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
+    headers.set("notion-version", notionCoreVersion);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Notion request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Notion request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {

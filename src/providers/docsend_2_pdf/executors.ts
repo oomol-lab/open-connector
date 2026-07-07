@@ -1,13 +1,24 @@
-import type { ExecutionContext, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type {
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type { Docsend2PdfActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "docsend_2_pdf";
 const convertUrl = "https://docsend2pdf.com/api/convert";
+const docsend2PdfApiBaseUrl = "https://docsend2pdf.com/api";
 const pdfMimeType = "application/pdf";
 
 interface Docsend2PdfContext {
@@ -32,6 +43,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<Docsend2PdfC
     if (context.transitFiles) providerContext.transitFiles = context.transitFiles;
     return providerContext;
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: docsend2PdfApiBaseUrl,
+  auth: { type: "none" },
 });
 
 async function convert(input: Record<string, unknown>, context: Docsend2PdfContext): Promise<unknown> {

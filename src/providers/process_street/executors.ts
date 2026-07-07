@@ -1,8 +1,13 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "process_street";
 const baseUrl = "https://public-api.process.st/api/v1.1";
@@ -146,6 +151,12 @@ export const processStreetActionHandlers: Record<string, ProcessStreetActionHand
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, processStreetActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl,
+  auth: { type: "api_key_header", name: "X-API-Key" },
+});
 
 export async function validateProcessStreetCredential(
   input: Record<string, string>,

@@ -1,10 +1,20 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { IpqualityscoreActionName } from "./actions.ts";
 
 import { isIP } from "node:net";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "ipqualityscore";
 const ipqualityscoreApiBaseUrl = "https://www.ipqualityscore.com";
@@ -78,6 +88,43 @@ export const ipqualityscoreActionHandlers: Record<IpqualityscoreActionName, Ipqu
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipqualityscoreActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    if (input.method !== "GET") {
+      throw new ProviderRequestError(400, "IPQualityScore proxy only supports GET");
+    }
+    const credential = await requireApiKeyCredential(context, service);
+    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
+    const parts = endpoint.split("/");
+    const family = parts[3];
+    const valuePath = parts.slice(4).join("/");
+    if (parts[1] !== "api" || parts[2] !== "json" || !isIpqualityscoreFamily(family) || !valuePath) {
+      throw new ProviderRequestError(400, "IPQualityScore proxy endpoint must be /api/json/{family}/{value}");
+    }
+
+    const url = createProviderProxyUrl(
+      ipqualityscoreApiBaseUrl,
+      `/api/json/${family}/${encodeURIComponent(credential.apiKey)}/${valuePath}`,
+      input.query,
+    );
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      throw createIpqualityscoreError(response, await readIpqualityscorePayload(response), "execute");
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "IPQualityScore request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
@@ -171,6 +218,10 @@ function buildIpqualityscoreUrl(
     }
   }
   return url;
+}
+
+function isIpqualityscoreFamily(value: string | undefined): value is IpqualityscoreFamily {
+  return value === "email" || value === "ip" || value === "phone" || value === "url";
 }
 
 async function readIpqualityscorePayload(response: Response): Promise<unknown> {

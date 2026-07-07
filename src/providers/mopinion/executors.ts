@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { MopinionActionName } from "./actions.ts";
@@ -11,10 +12,15 @@ import { Buffer } from "node:buffer";
 import { createHmac } from "node:crypto";
 import { optionalRecord, optionalScalarString, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireCustomCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "mopinion";
@@ -191,6 +197,48 @@ export const executors: ProviderExecutors = defineProviderExecutors<MopinionActi
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const credentials = resolveMopinionCredentials(credential.values);
+    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
+    const url = createProviderProxyUrl(mopinionApiBaseUrl, endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    const body =
+      input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    headers.set("version", mopinionApiVersion);
+    headers.set("user-agent", providerUserAgent);
+    headers.set(
+      "x-auth-token",
+      createMopinionAuthToken({
+        ...credentials,
+        path: endpoint,
+        body,
+      }),
+    );
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      body,
+      signal: context.signal,
+    };
+    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Mopinion request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Mopinion request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {

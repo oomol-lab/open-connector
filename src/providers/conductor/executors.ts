@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { ConductorActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "conductor";
 const conductorApiBaseUrl = "https://api.cm.conductor.com";
@@ -110,6 +115,12 @@ export const conductorActionHandlers: Record<ConductorActionName, ConductorActio
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, conductorActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: conductorApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "token " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

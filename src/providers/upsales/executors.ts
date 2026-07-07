@@ -1,10 +1,10 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { arrayPayload, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 
 const service = "upsales";
 const apiBaseUrl = "https://integration.upsales.com/api/v2";
@@ -81,6 +81,12 @@ export const upsalesActionHandlers: Record<string, Handler> = {
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, upsalesActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiBaseUrl,
+  auth: { type: "api_key_query", name: "token" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

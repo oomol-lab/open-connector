@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { EagleDocActionName } from "./actions.ts";
 
@@ -11,7 +16,12 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const eagleDocApiBaseUrl = "https://de.eagle-doc.com";
 const eagleDocFinanceProcessingPath = "/api/finance/v1/processing";
@@ -43,6 +53,12 @@ export const eagleDocActionHandlers: Record<EagleDocActionName, EagleDocActionHa
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("eagle_doc", eagleDocActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "eagle_doc",
+  baseUrl: eagleDocApiBaseUrl,
+  auth: { type: "api_key_header", name: "api-key" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

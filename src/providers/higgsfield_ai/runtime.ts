@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const higgsfieldAiApiBaseUrl = "https://platform.higgsfield.ai";
+export const higgsfieldAiApiBaseUrl = "https://platform.higgsfield.ai";
 const higgsfieldAiValidationRequestId = "validation";
 const higgsfieldAiValidationPath = `/requests/${higgsfieldAiValidationRequestId}/status`;
 const higgsfieldAiValidationNotFoundStatus = "request_not_found";

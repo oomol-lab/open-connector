@@ -1,12 +1,21 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { OnePageCrmActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireCustomCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "one_page_crm";
@@ -101,6 +110,39 @@ export const executors: ProviderExecutors = defineProviderExecutors<OnePageCrmAc
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const onePageCrmCredential = readOnePageCrmCredential(credential.values);
+    const url = createProviderProxyUrl(onePageCrmApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", buildOnePageCrmAuthorizationHeader(onePageCrmCredential));
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `OnePageCRM request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "OnePageCRM request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {

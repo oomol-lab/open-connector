@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { ElevenlabsActionName } from "./actions.ts";
 
@@ -11,7 +16,12 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const elevenlabsApiOrigin = "https://api.elevenlabs.io";
 const elevenlabsApiBaseUrl = `${elevenlabsApiOrigin}/v1`;
@@ -68,6 +78,12 @@ export const elevenlabsActionHandlers: Record<ElevenlabsActionName, ElevenlabsAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("elevenlabs", elevenlabsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "elevenlabs",
+  baseUrl: elevenlabsApiOrigin,
+  auth: { type: "api_key_header", name: "xi-api-key" },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

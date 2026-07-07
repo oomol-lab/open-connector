@@ -5,7 +5,7 @@ import type { BirdActionName } from "./actions.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const birdApiBaseUrl = "https://api.bird.com";
+export const birdApiBaseUrl: string = "https://api.bird.com";
 const birdRequestTimeoutMs = 30_000;
 
 type BirdRequestPhase = "validate" | "execute";

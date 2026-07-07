@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { FilloutActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "fillout";
 const filloutApiBaseUrl = "https://api.fillout.com";
@@ -34,6 +39,12 @@ export const filloutActionHandlers: Record<FilloutActionName, FilloutActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, filloutActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: filloutApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

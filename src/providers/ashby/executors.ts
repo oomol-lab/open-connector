@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { AshbyActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, objectArray, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
@@ -101,6 +102,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<ApiKeyProvid
       transitFiles: context.transitFiles,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: ashbyApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
 });
 
 export const credentialValidators: CredentialValidators = {

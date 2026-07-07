@@ -15,10 +15,10 @@ export const blueskyApiBaseUrl = "https://bsky.social";
 const blueskyDefaultRequestTimeoutMs = 30_000;
 const createSessionPath = "/xrpc/com.atproto.server.createSession";
 
-type BlueskyRequestPhase = "validate" | "execute";
+export type BlueskyRequestPhase = "validate" | "execute";
 type BlueskyActionHandler = (input: Record<string, unknown>, context: BlueskyContext) => Promise<unknown>;
 
-interface BlueskySession {
+export interface BlueskySession {
   accessJwt: string;
   refreshJwt: string;
   handle: string;
@@ -155,7 +155,7 @@ export function requireBlueskyHandle(value: unknown): string {
   return handle;
 }
 
-async function createBlueskySession(input: {
+export async function createBlueskySession(input: {
   identifier: string;
   appPassword: string;
   fetcher: ProviderFetch;

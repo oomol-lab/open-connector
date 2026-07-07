@@ -1,9 +1,18 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { FraudlabsproActionName } from "./actions.ts";
 
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "fraudlabspro";
 const fraudlabsproApiBaseUrl = "https://api.fraudlabspro.com/v2";
@@ -75,6 +84,51 @@ export const fraudlabsproActionHandlers: Record<FraudlabsproActionName, Fraudlab
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, fraudlabsproActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    if (input.method !== "GET" && input.method !== "POST") {
+      throw new ProviderRequestError(400, "FraudLabs Pro proxy only supports GET and POST");
+    }
+
+    const commonParams = {
+      key: credential.apiKey,
+      format: "json",
+    };
+    const url =
+      input.method === "GET"
+        ? createProviderProxyUrl(fraudlabsproApiBaseUrl, input.endpoint, { ...commonParams, ...input.query })
+        : createProviderProxyUrl(fraudlabsproApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.method === "POST") {
+      headers.set("content-type", "application/json");
+      init.body = JSON.stringify({
+        ...commonParams,
+        ...(optionalRecord(input.body) ?? {}),
+      });
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      throw buildFraudlabsproError(response.status, await readFraudlabsproPayload(response), "execute");
+    }
+
+    return {
+      ok: true,
+      response: await readProviderProxyResponse(response),
+    };
+  } catch (error) {
+    return toProviderProxyError(error, "FraudLabs Pro request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

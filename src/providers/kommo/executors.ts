@@ -1,7 +1,12 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { KommoActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { kommoActionHandlers, readKommoApiBaseUrl, validateKommoCredential } from "./runtime.ts";
 
 const service = "kommo";
@@ -19,6 +24,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<KommoActionC
     };
   },
   fallbackMessage: "Kommo request failed",
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return readKommoApiBaseUrl({ ...credential.values, ...credential.metadata });
+  },
+  auth: {
+    type: "api_key_authorization",
+    prefix: "Bearer ",
+  },
 });
 
 export const credentialValidators: CredentialValidators = {

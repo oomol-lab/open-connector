@@ -302,7 +302,7 @@ async function requestPartnerstackJson<T>(input: {
   return payload as T;
 }
 
-function buildBasicAuthHeader(publicKey: string, secretKey: string) {
+export function buildBasicAuthHeader(publicKey: string, secretKey: string): string {
   return `Basic ${Buffer.from(`${publicKey}:${secretKey}`).toString("base64")}`;
 }
 

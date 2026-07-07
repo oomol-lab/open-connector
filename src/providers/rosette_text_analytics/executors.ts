@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { RosetteTextAnalyticsActionName } from "./actions.ts";
 
@@ -11,7 +11,12 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "rosette_text_analytics";
 const rosetteTextAnalyticsApiBaseUrl = "https://analytics.babelstreet.com/rest/v1";
@@ -45,6 +50,12 @@ export const rosetteTextAnalyticsActionHandlers: Record<
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, rosetteTextAnalyticsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: rosetteTextAnalyticsApiBaseUrl,
+  auth: { type: "api_key_header", name: rosetteTextAnalyticsApiKeyHeader },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

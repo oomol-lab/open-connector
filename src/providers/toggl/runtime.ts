@@ -4,7 +4,7 @@ import type { TogglActionName } from "./actions.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const togglApiBaseUrl = "https://api.track.toggl.com/api/v9";
+export const togglApiBaseUrl: string = "https://api.track.toggl.com/api/v9";
 const defaultCreatedWith = "oomol-connect";
 
 type TogglRequestPhase = "validate" | "execute";
@@ -420,14 +420,17 @@ function requestContext(context: ApiKeyProviderContext): {
 }
 
 function togglHeaders(apiKey: string, hasJsonBody: boolean): Headers {
-  const authorization = Buffer.from(`${apiKey}:api_token`).toString("base64");
   const headers = new Headers({
-    Authorization: `Basic ${authorization}`,
+    Authorization: buildTogglAuthorizationHeader(apiKey),
     Accept: "application/json",
     "User-Agent": providerUserAgent,
   });
   if (hasJsonBody) headers.set("Content-Type", "application/json");
   return headers;
+}
+
+export function buildTogglAuthorizationHeader(apiKey: string): string {
+  return `Basic ${Buffer.from(`${apiKey}:api_token`).toString("base64")}`;
 }
 
 async function readTogglPayload(response: Response): Promise<unknown> {

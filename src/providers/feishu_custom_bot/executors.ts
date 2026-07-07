@@ -1,14 +1,23 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { FeishuCustomBotActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "feishu_custom_bot";
@@ -135,6 +144,81 @@ export const executors: ProviderExecutors = defineProviderExecutors<FeishuCustom
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    if (input.method !== "POST") {
+      throw new ProviderRequestError(400, "Feishu custom bot proxy only supports POST");
+    }
+
+    const endpointUrl = createProviderProxyUrl(feishuCustomBotApiBaseUrl, input.endpoint, input.query);
+    if (endpointUrl.pathname !== feishuCustomBotWebhookPathPrefix.slice(0, -1)) {
+      throw new ProviderRequestError(400, "Feishu custom bot proxy endpoint must be /open-apis/bot/v2/hook");
+    }
+
+    const credential = await requireApiKeyCredential(context, service);
+    const webhook = parseFeishuCustomBotWebhookUrl(resolveFeishuCustomBotApiKey(credential.apiKey).webhookUrl);
+    for (const [key, value] of endpointUrl.searchParams) {
+      webhook.searchParams.set(key, value);
+    }
+
+    const payload = optionalRecord(input.body);
+    if (!payload) {
+      throw new ProviderRequestError(400, "Feishu custom bot proxy body must be a JSON object");
+    }
+
+    const requestBody = JSON.stringify(
+      buildFeishuCustomBotRequestPayload(payload, readOptionalFeishuCustomBotField(credential.values.signingSecret)),
+    );
+    if (Buffer.byteLength(requestBody, "utf8") > feishuCustomBotMaxPayloadBytes) {
+      throw new ProviderRequestError(400, "Feishu custom bot request body must not exceed 20 KB");
+    }
+
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("content-type", "application/json");
+    headers.set("user-agent", providerUserAgent);
+
+    const requestSignal = createFeishuCustomBotRequestSignal(context.signal);
+    try {
+      const response = await fetch(webhook, {
+        method: "POST",
+        headers,
+        body: requestBody,
+        signal: requestSignal.signal,
+      });
+      if (!response.ok) {
+        const rawText = await response.text();
+        throw normalizeFeishuCustomBotError(
+          {
+            status: response.status,
+            envelope: normalizeFeishuCustomBotEnvelope(parseFeishuCustomBotResponseText(rawText)),
+            rawText,
+          },
+          "execute",
+        );
+      }
+
+      return { ok: true, response: await readProviderProxyResponse(response) };
+    } finally {
+      requestSignal.cleanup();
+    }
+  } catch (error) {
+    if (isAbortError(error)) {
+      return toProviderProxyError(
+        new ProviderRequestError(504, "Feishu custom bot request timed out"),
+        "provider request failed",
+      );
+    }
+    if (error instanceof ProviderRequestError) {
+      return toProviderProxyError(error, "provider request failed");
+    }
+    const message = error instanceof Error && error.message ? error.message : "unknown error";
+    return toProviderProxyError(
+      new ProviderRequestError(502, `Feishu custom bot request failed: ${message}`),
+      "provider request failed",
+    );
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

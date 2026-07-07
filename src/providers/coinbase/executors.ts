@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { CoinbaseActionName } from "./actions.ts";
 
@@ -7,10 +12,14 @@ import { createPrivateKey, createSign, randomBytes } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "coinbase";
@@ -49,6 +58,44 @@ export const executors: ProviderExecutors = defineProviderExecutors<CoinbaseActi
     return createCoinbaseContext(context, fetcher);
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const jwtBuilder = createCoinbaseJwtBuilder({
+      apiKey: credential.apiKey,
+      keyName: requiredString(credential.values.keyName, "keyName", providerInputError),
+      now: () => Date.now(),
+      nonce: () => randomBytes(16).toString("hex"),
+    });
+    const url = createProviderProxyUrl(coinbaseApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `Bearer ${jwtBuilder({ method: input.method, path: url.pathname + url.search })}`);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `Coinbase request failed with HTTP ${response.status}`);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Coinbase request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

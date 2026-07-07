@@ -1,11 +1,17 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
-import { beehiivActionHandlers, validateBeehiivCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { beehiivActionHandlers, beehiivApiBaseUrl, validateBeehiivCredential } from "./runtime.ts";
 
 const service = "beehiiv";
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, beehiivActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: beehiivApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

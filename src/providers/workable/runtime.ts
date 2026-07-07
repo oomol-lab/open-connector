@@ -142,7 +142,7 @@ export function normalizeWorkableSubdomain(value: unknown): string {
   return host.toLowerCase();
 }
 
-function buildWorkableApiBaseUrl(subdomain: string): string {
+export function buildWorkableApiBaseUrl(subdomain: string): string {
   return `https://${subdomain}.workable.com/spi/v3`;
 }
 

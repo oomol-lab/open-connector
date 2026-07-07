@@ -10,7 +10,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const buildiumApiBaseUrl = "https://api.buildium.com";
+export const buildiumApiBaseUrl: string = "https://api.buildium.com";
 const rentalsPath = "/v1/rentals";
 const buildiumDefaultRequestTimeoutMs = 30_000;
 

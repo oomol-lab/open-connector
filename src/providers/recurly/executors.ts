@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { RecurlyActionName } from "./actions.ts";
 
@@ -12,7 +17,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "recurly";
 const recurlyApiBaseUrl = "https://v3.recurly.com";
@@ -138,6 +148,12 @@ export const recurlyActionHandlers: Record<RecurlyActionName, RecurlyActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, recurlyActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: recurlyApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
+});
 
 export async function validateRecurlyCredential(
   input: Record<string, string>,

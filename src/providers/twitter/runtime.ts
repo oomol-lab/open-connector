@@ -5,7 +5,7 @@ import { base64Bytes } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const twitterApiBaseUrl = "https://api.x.com/2";
+export const twitterApiBaseUrl: string = "https://api.x.com/2";
 const twitterMediaUploadUrl = "https://api.x.com/2/media/upload";
 const twitterMediaUploadInitializeUrl = `${twitterMediaUploadUrl}/initialize`;
 const twitterRequiredAuthorizationScopes = "tweet.read, users.read, offline.access";

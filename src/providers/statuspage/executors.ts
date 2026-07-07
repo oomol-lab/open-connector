@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { StatuspageActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "statuspage";
 const statuspageApiBaseUrl = "https://api.statuspage.io/v1";
@@ -130,6 +135,12 @@ export const statuspageActionHandlers: Record<StatuspageActionName, StatuspageAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, statuspageActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: statuspageApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "OAuth " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

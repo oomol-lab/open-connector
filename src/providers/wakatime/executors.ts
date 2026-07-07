@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { WakatimeActionName } from "./actions.ts";
 
@@ -7,6 +7,7 @@ import { compactObject, optionalBoolean, optionalInteger, optionalRecord, option
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -39,6 +40,12 @@ export const wakatimeActionHandlers: Record<WakatimeActionName, ProviderRuntimeH
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, wakatimeActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: wakatimeApiBaseUrl,
+  auth: { type: "api_key_basic" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

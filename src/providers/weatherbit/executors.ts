@@ -1,9 +1,19 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { WeatherbitActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "weatherbit";
 const weatherbitApiBaseUrl = "https://api.weatherbit.io";
@@ -25,6 +35,12 @@ const weatherbitActionHandlers: Record<WeatherbitActionName, WeatherbitActionHan
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, weatherbitActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: weatherbitApiBaseUrl,
+  auth: { type: "api_key_query", name: "key" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

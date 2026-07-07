@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { FindymailActionName } from "./actions.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "findymail";
 const findymailApiBaseUrl = "https://app.findymail.com";
@@ -30,6 +35,12 @@ export const findymailActionHandlers: Record<FindymailActionName, FindymailActio
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, findymailActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: findymailApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

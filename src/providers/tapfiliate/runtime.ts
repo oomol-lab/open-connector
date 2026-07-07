@@ -10,7 +10,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const tapfiliateApiBaseUrl = "https://api.tapfiliate.com/1.6";
+export const tapfiliateApiBaseUrl: string = "https://api.tapfiliate.com/1.6";
 const tapfiliateDefaultRequestTimeoutMs = 30_000;
 
 type TapfiliatePhase = "validate" | "execute";

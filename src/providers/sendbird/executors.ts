@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { SendbirdActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRawString, pickOptionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -132,6 +138,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<SendbirdActi
       fetcher,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "sendbird",
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, "sendbird");
+    return buildSendbirdApiBaseUrl(requireSendbirdApplicationId(credential.values));
+  },
+  auth: { type: "api_key_header", name: "Api-Token" },
 });
 
 export const credentialValidators: CredentialValidators = {

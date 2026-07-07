@@ -1,7 +1,13 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { BlazeMeterFunctionalContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
+import { createBlazeMeterProxyExecutor } from "../blaze-meter-runtime.ts";
 import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import {
   blazeMeterFunctionalActionHandlers,
@@ -26,6 +32,8 @@ export const executors: ProviderExecutors = defineProviderExecutors<BlazeMeterFu
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = createBlazeMeterProxyExecutor(service);
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

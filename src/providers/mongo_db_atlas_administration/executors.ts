@@ -4,6 +4,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { MongoDbAtlasAdministrationActionName } from "./actions.ts";
@@ -12,11 +13,15 @@ import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import {
+  createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
   isAbortLikeError,
+  normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "mongo_db_atlas_administration";
@@ -111,6 +116,71 @@ export const executors: ProviderExecutors = defineProviderExecutors<AtlasActionC
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    if (credential?.authType !== "api_key") {
+      throw new ProviderRequestError(401, "Configure mongo_db_atlas_administration API key credentials first.");
+    }
+
+    const url = createProviderProxyUrl(mongoDbAtlasAdministrationApiBaseUrl, input.endpoint, input.query);
+    const privateKey = readPrivateKey(credential.values);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    for (const [name, value] of Object.entries(buildAtlasHeaders())) {
+      headers.set(name, value);
+    }
+    const body =
+      input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      body,
+      signal: context.signal,
+    };
+
+    const unauthenticatedResponse = await fetch(url, init);
+    if (unauthenticatedResponse.status !== 401) {
+      if (!unauthenticatedResponse.ok) {
+        const text = await unauthenticatedResponse.text().catch(() => "");
+        throw new ProviderRequestError(
+          unauthenticatedResponse.status,
+          text || `MongoDB Atlas request failed with HTTP ${unauthenticatedResponse.status}`,
+        );
+      }
+      return { ok: true, response: await readProviderProxyResponse(unauthenticatedResponse) };
+    }
+
+    const challenge = parseDigestChallenge(unauthenticatedResponse.headers.get("www-authenticate"));
+    const authorizedHeaders = new Headers(headers);
+    authorizedHeaders.set(
+      "authorization",
+      buildDigestAuthorization({
+        challenge,
+        method: input.method,
+        url,
+        username: credential.apiKey,
+        password: privateKey,
+      }),
+    );
+
+    const response = await fetch(url, {
+      ...init,
+      headers: authorizedHeaders,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(
+        response.status,
+        text || `MongoDB Atlas request failed with HTTP ${response.status}`,
+      );
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "MongoDB Atlas request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

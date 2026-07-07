@@ -569,7 +569,7 @@ function normalizeSupportbeeLabel(value: unknown): Record<string, unknown> {
   };
 }
 
-function readSupportbeeCompany(value: unknown): string {
+export function readSupportbeeCompany(value: unknown): string {
   const company = requiredString(value, "supportbee company", providerInputError).toLowerCase();
   if (company.startsWith("-") || company.endsWith("-")) {
     throw new ProviderRequestError(400, "supportbee company must be a single subdomain label");
@@ -585,7 +585,7 @@ function readSupportbeeCompany(value: unknown): string {
   return company;
 }
 
-function buildSupportbeeBaseUrl(company: string): string {
+export function buildSupportbeeBaseUrl(company: string): string {
   return `https://${company}.supportbee.com`;
 }
 

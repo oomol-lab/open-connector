@@ -1,4 +1,10 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { FlomoActionName, FlomoMcpToolName } from "./actions.ts";
 
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
@@ -7,7 +13,15 @@ import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontex
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { createHash } from "node:crypto";
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "flomo";
 const flomoWebhookHost = "flomoapp.com";
@@ -121,6 +135,39 @@ export const executors: ProviderExecutors = defineProviderExecutors<FlomoActionC
   },
 });
 
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    if (credential?.authType === "api_key") {
+      const endpointUrl = createProviderProxyUrl(`https://${flomoWebhookHost}`, input.endpoint, input.query);
+      if (endpointUrl.pathname !== flomoWebhookPathPrefix.slice(0, -1)) {
+        throw new ProviderRequestError(400, "flomo webhook proxy endpoint must be /iwh");
+      }
+
+      const webhookUrl = parseFlomoWebhookUrl(credential.apiKey);
+      for (const [key, value] of endpointUrl.searchParams) {
+        webhookUrl.searchParams.set(key, value);
+      }
+      return await requestFlomoProxy(webhookUrl, input, new Headers(), context.signal);
+    }
+
+    if (credential?.authType === "custom_credential") {
+      const url = createProviderProxyUrl(`https://${flomoWebhookHost}`, input.endpoint, input.query);
+      if (url.pathname !== new URL(flomoMcpEndpoint).pathname) {
+        throw new ProviderRequestError(400, "flomo MCP proxy endpoint must be /mcp");
+      }
+
+      const headers = new Headers();
+      headers.set("authorization", `Bearer ${requireFlomoMcpToken(credential.values)}`);
+      return await requestFlomoProxy(url, input, headers, context.signal);
+    }
+
+    throw new ProviderRequestError(401, "Configure flomo credentials first.");
+  } catch (error) {
+    return toProviderProxyError(error, "flomo request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {
     const webhookUrl = parseFlomoWebhookUrl(input.apiKey);
@@ -224,6 +271,59 @@ async function createFlomoMemo(input: {
     throw new ProviderRequestError(
       502,
       error instanceof Error ? `flomo webhook request failed: ${error.message}` : "flomo webhook request failed",
+      error,
+    );
+  }
+}
+
+async function requestFlomoProxy(
+  url: URL,
+  input: { method: string; headers?: Record<string, unknown>; body?: unknown },
+  headers: Headers,
+  signal?: AbortSignal,
+): Promise<ProxyExecutionResult> {
+  const proxyHeaders = normalizeProviderProxyHeaders(input.headers);
+  for (const [key, value] of headers) {
+    proxyHeaders.set(key, value);
+  }
+  proxyHeaders.set("user-agent", providerUserAgent);
+
+  const init: RequestInit = {
+    method: input.method,
+    headers: proxyHeaders,
+  };
+  if (input.body !== undefined) {
+    init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+    if (!proxyHeaders.has("content-type") && typeof input.body !== "string") {
+      proxyHeaders.set("content-type", "application/json");
+    }
+  }
+
+  const timeoutSignal = AbortSignal.timeout(flomoRequestTimeoutMs);
+  init.signal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
+
+  try {
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(
+        response.status >= 400 && response.status < 500 ? 400 : 502,
+        buildFlomoHttpErrorMessage(response.status, text),
+        text,
+      );
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    if (timeoutSignal.aborted && isAbortError(error)) {
+      throw new ProviderRequestError(504, "flomo request timed out", error);
+    }
+    throw new ProviderRequestError(
+      502,
+      error instanceof Error ? `flomo request failed: ${error.message}` : "flomo request failed",
       error,
     );
   }

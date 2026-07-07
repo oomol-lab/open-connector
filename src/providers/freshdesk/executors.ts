@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { FreshdeskActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   providerUserAgent,
   ProviderRequestError,
@@ -122,6 +128,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<FreshdeskAct
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return resolveFreshdeskBaseUrl(credential.values, credential.metadata);
+  },
+  auth: {
+    type: "api_key_basic",
+    suffix: ":X",
   },
 });
 

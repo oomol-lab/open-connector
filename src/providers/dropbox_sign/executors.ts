@@ -1,10 +1,15 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { DropboxSignActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "dropbox_sign";
 export const dropboxSignApiBaseUrl = "https://api.hellosign.com/v3";
@@ -31,6 +36,12 @@ export const dropboxSignActionHandlers: Record<DropboxSignActionName, DropboxSig
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, dropboxSignActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: dropboxSignApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

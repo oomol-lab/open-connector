@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { NamelyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -81,6 +82,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<NamelyContex
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildNamelyApiBaseUrl(readNamelyCompany(credential.metadata.company ?? credential.values.company));
+  },
+  auth: {
+    type: "api_key_authorization",
+    prefix: "Bearer ",
   },
 });
 

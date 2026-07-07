@@ -22,8 +22,8 @@ import {
 
 export const uploadcareApiBaseUrl = "https://api.uploadcare.com";
 
-const uploadcareRestAcceptHeader = "application/vnd.uploadcare-v0.7+json";
-const uploadcareJsonContentType = "application/json";
+export const uploadcareRestAcceptHeader: string = "application/vnd.uploadcare-v0.7+json";
+export const uploadcareJsonContentType: string = "application/json";
 const uploadcareDefaultRequestTimeoutMs = 30_000;
 
 type UploadcareRequestPhase = "validate" | "execute";
@@ -217,7 +217,7 @@ async function requestUploadcareJson(
   }
 }
 
-function signUploadcareRequest(input: {
+export function signUploadcareRequest(input: {
   method: string;
   url: URL;
   headers: Headers;

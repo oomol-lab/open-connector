@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
 import type { FuxinActionName } from "./actions.ts";
@@ -15,15 +16,21 @@ import {
   optionalInteger,
   optionalNumber,
   optionalRecord,
+  optionalScalarString,
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
+  normalizeProviderProxyQuery,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyResponse,
   requireCustomCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "fuxin";
@@ -161,6 +168,56 @@ export const executors: ProviderExecutors = defineProviderExecutors<FuxinActionC
     return actionContext;
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const clientId = requireFuxinField(credential.values.clientId, "clientId");
+    const secret = requireFuxinField(credential.values.secret, "secret");
+    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
+    const query = normalizeProviderProxyQuery(input.query);
+    const bodyParams = readFuxinProxyParams(input.body);
+    const sn = buildFuxinSn(
+      {
+        clientId,
+        ...query,
+        ...bodyParams,
+      },
+      secret,
+    );
+    const url = new URL(normalizeFuxinPath(endpoint), fuxinApiBaseUrl);
+    appendFuxinQueryParam(url, "clientId", clientId);
+    appendFuxinQueryParam(url, "sn", sn);
+    for (const [key, value] of Object.entries(query)) {
+      appendFuxinQueryParam(url, key, value);
+    }
+
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const payload = await readFuxinPayload(response);
+      throw normalizeFuxinError(response, payload, "execute");
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Foxit Cloud API request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {
@@ -1191,6 +1248,22 @@ function buildFuxinSn(input: Record<string, FuxinQueryValue>, secret: string): s
 
   const canonical = stringifyQuery(Object.fromEntries(sortedEntries)).split("%20").join("+");
   return createHash("md5").update(`${canonical}&sk=${secret}`).digest("hex");
+}
+
+function readFuxinProxyParams(input: unknown): Record<string, string> {
+  const record = optionalRecord(input);
+  if (!record) {
+    return {};
+  }
+
+  const output: Record<string, string> = {};
+  for (const [key, value] of Object.entries(record)) {
+    const resolved = optionalScalarString(value);
+    if (resolved !== undefined) {
+      output[key] = resolved;
+    }
+  }
+  return output;
 }
 
 function appendFuxinQueryParam(url: URL, key: string, value: FuxinQueryValue): void {

@@ -1,6 +1,16 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  credentialProviderProxyBaseUrl,
+  defineProviderExecutors,
+  defineProviderProxy,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 import { createPrtgClassicActionContext, prtgClassicActionHandlers, validatePrtgClassicCredential } from "./runtime.ts";
 
 const service = "prtg_classic";
@@ -17,6 +27,12 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       signal: context.signal,
     });
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: credentialProviderProxyBaseUrl("apiBaseUrl"),
+  auth: { type: "api_key_query", name: "apitoken" },
 });
 
 export const credentialValidators: CredentialValidators = {

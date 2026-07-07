@@ -1,15 +1,24 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { BarkActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
-import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "bark";
@@ -69,6 +78,37 @@ export const executors: ProviderExecutors = defineProviderExecutors<BarkContext>
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const resolved = resolveBarkCredential(
+      credential.apiKey,
+      optionalString(credential.values.baseUrl) ?? optionalString(credential.metadata.baseUrl),
+    );
+    const url = createProviderProxyUrl(resolved.baseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("user-agent", providerUserAgent);
+    const body = buildBarkProxyBody(input.endpoint, input.body, resolved.deviceKey);
+    if (body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body,
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
@@ -248,6 +288,10 @@ function resolveBarkCredential(apiKey: string, baseUrlInput?: string): BarkCrede
 }
 
 function parseBarkPushUrl(value: string): BarkCredential | undefined {
+  if (!value.includes("://")) {
+    return undefined;
+  }
+
   let url: URL;
   try {
     url = assertPublicHttpUrl(value, {
@@ -307,6 +351,20 @@ function buildBarkHeaders(hasBody: boolean): Record<string, string> {
     "User-Agent": providerUserAgent,
     ...(hasBody ? { "Content-Type": "application/json" } : {}),
   };
+}
+
+function buildBarkProxyBody(endpoint: unknown, body: unknown, deviceKey: string): BodyInit | undefined {
+  if (body === undefined) {
+    return undefined;
+  }
+  if (typeof body === "string") {
+    return body;
+  }
+  const record = optionalRecord(body);
+  if (endpoint === "/push" && record && !Array.isArray(record.device_keys)) {
+    return JSON.stringify({ ...record, device_key: deviceKey });
+  }
+  return JSON.stringify(body);
 }
 
 function buildBarkPushPayload(deviceKey: string, input: Record<string, unknown>): Record<string, unknown> {

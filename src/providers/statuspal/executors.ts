@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { StatuspalActionName } from "./actions.ts";
 
 import { objectArray, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "statuspal";
 const statuspalApiOrigin = "https://statuspal.io";
@@ -81,6 +86,12 @@ export const statuspalActionHandlers: Record<StatuspalActionName, StatuspalActio
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, statuspalActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: `${statuspalApiOrigin}${statuspalApiPrefix}`,
+  auth: { type: "api_key_authorization", prefix: "" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

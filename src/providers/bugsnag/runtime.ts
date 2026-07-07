@@ -10,7 +10,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const bugsnagApiBaseUrl = "https://api.bugsnag.com";
+export const bugsnagApiBaseUrl: string = "https://api.bugsnag.com";
 const bugsnagDefaultRequestTimeoutMs = 30_000;
 
 type BugsnagQueryValue = string | number | boolean | undefined;

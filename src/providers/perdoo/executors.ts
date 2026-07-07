@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { PerdooActionName } from "./actions.ts";
 
@@ -10,7 +10,12 @@ import {
   optionalRecord,
   positiveInteger,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "perdoo";
 const perdooGraphqlUrl = "https://eu.perdoo.com/graphql/";
@@ -235,6 +240,12 @@ export const perdooActionHandlers: Record<PerdooActionName, PerdooActionHandler>
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, perdooActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: perdooGraphqlUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

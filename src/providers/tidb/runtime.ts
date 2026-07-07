@@ -15,7 +15,8 @@ const tidbApiBaseUrlByFamily = {
   iam: "https://iam.tidbapi.com/v1beta1",
 } as const;
 
-type TiDBApiFamily = keyof Omit<typeof tidbApiBaseUrlByFamily, "iam">;
+export type TiDBApiFamily = keyof Omit<typeof tidbApiBaseUrlByFamily, "iam">;
+export type TiDBProxyFamily = TiDBApiFamily | "iam";
 
 type TiDBCredentialContext = {
   publicKey: string;
@@ -34,7 +35,7 @@ type TiDBDigestChallenge = {
 };
 
 type TiDBRequestInput = {
-  family: TiDBApiFamily | "iam";
+  family: TiDBProxyFamily;
   method?: string;
   path: string;
   query?: Array<[string, string | number | undefined]>;
@@ -42,6 +43,19 @@ type TiDBRequestInput = {
   context: TiDBCredentialContext;
   phase: "validate" | "execute";
 };
+
+export interface TiDBProxyRequestInput {
+  family: TiDBProxyFamily;
+  path: string;
+  method: string;
+  headers: Headers;
+  publicKey: string;
+  privateKey: string;
+  fetcher: typeof fetch;
+  query?: Record<string, string>;
+  body?: BodyInit;
+  signal?: AbortSignal;
+}
 
 type TiDBApiKeyPayload = {
   name?: unknown;
@@ -155,6 +169,79 @@ export async function validateTiDBCredential(
       ...(role ? { role } : {}),
     },
   };
+}
+
+export function resolveTiDBProxyTarget(endpoint: string): { family: TiDBProxyFamily; path: string } {
+  const [, family, ...pathSegments] = endpoint.split("/");
+  if (!isTiDBProxyFamily(family)) {
+    throw new ProviderRequestError(400, "tidb proxy endpoint must start with /iam, /dedicated, or /starter_essential");
+  }
+  if (pathSegments.length === 0) {
+    throw new ProviderRequestError(400, "tidb proxy endpoint must include an API path");
+  }
+  return {
+    family,
+    path: `/${pathSegments.join("/")}`,
+  };
+}
+
+function isTiDBProxyFamily(value: string | undefined): value is TiDBProxyFamily {
+  return value === "iam" || value === "dedicated" || value === "starter_essential";
+}
+
+export async function requestTiDBProxy(input: TiDBProxyRequestInput): Promise<Response> {
+  const method = input.method;
+  const url = buildTiDBUrl({
+    family: input.family,
+    path: input.path,
+    query: Object.entries(input.query ?? {}),
+    context: {
+      publicKey: input.publicKey,
+      privateKey: input.privateKey,
+      fetcher: input.fetcher,
+    },
+    phase: "execute",
+  });
+  const headers = new Headers(input.headers);
+  if (!headers.has("accept")) {
+    headers.set("accept", "application/json");
+  }
+  headers.set("user-agent", providerUserAgent);
+
+  const initialResponse = await input.fetcher(url, {
+    method,
+    headers,
+    body: input.body,
+    signal: input.signal,
+  });
+
+  if (initialResponse.status !== 401) {
+    return initialResponse;
+  }
+
+  const challenge = parseDigestChallenge(initialResponse.headers.get("www-authenticate"));
+  if (!challenge) {
+    return initialResponse;
+  }
+
+  const authorizedHeaders = new Headers(headers);
+  authorizedHeaders.set(
+    "authorization",
+    buildDigestAuthorization({
+      challenge,
+      method,
+      uri: buildDigestUri(url),
+      username: input.publicKey,
+      password: input.privateKey,
+    }),
+  );
+
+  return input.fetcher(url, {
+    method,
+    headers: authorizedHeaders,
+    body: input.body,
+    signal: input.signal,
+  });
 }
 
 async function tidbListApiKeys(input: Record<string, unknown>, context: TiDBCredentialContext) {

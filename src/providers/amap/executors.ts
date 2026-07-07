@@ -1,7 +1,12 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { amapActionHandlers, validateAmapCredential } from "./runtime.ts";
+import { defineProviderProxy, defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { amapActionHandlers, amapApiBaseUrl, validateAmapCredential } from "./runtime.ts";
 
 const service = "amap";
 
@@ -16,6 +21,12 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: amapApiBaseUrl,
+  auth: { type: "api_key_query", name: "key" },
 });
 
 export const credentialValidators: CredentialValidators = {

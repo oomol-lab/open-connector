@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { HelloleadsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "helloleads";
 const helloleadsApiBaseUrl = "https://app.helloleads.io";
@@ -125,6 +130,15 @@ export const helloleadsActionHandlers: Record<HelloleadsActionName, HelloleadsAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, helloleadsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: helloleadsApiBaseUrl,
+  auth: {
+    type: "api_key_query",
+    name: "key",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

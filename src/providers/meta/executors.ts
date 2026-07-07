@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 import type { MetaActionName } from "./actions.ts";
 
@@ -6,6 +6,7 @@ import { optionalInteger, optionalRecord, optionalString, requiredString } from 
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -47,6 +48,15 @@ export const metaActionHandlers: Record<MetaActionName, MetaActionHandler> = {
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, metaActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: metaGraphApiBaseUrl,
+  auth: {
+    type: "api_key_authorization",
+    prefix: "Bearer ",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

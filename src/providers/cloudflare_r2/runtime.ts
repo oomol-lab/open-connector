@@ -37,7 +37,7 @@ interface CloudflareR2Account {
   type?: string;
 }
 
-const cloudflareApiBaseUrl = "https://api.cloudflare.com/client/v4";
+export const cloudflareR2ApiBaseUrl = "https://api.cloudflare.com/client/v4";
 
 export const cloudflareR2ActionHandlers: Record<CloudflareR2ActionName, ProviderRuntimeHandler<CloudflareR2Context>> = {
   list_accounts(input, context) {
@@ -380,7 +380,7 @@ function cloudflareR2Headers(apiToken: string, request: CloudflareR2RequestInput
 }
 
 function buildCloudflareR2Url(path: string, query?: Record<string, string | number | boolean | undefined>): string {
-  const url = new URL(`${cloudflareApiBaseUrl}${path}`);
+  const url = new URL(`${cloudflareR2ApiBaseUrl}${path}`);
   for (const [key, value] of Object.entries(queryParams(query ?? {}))) {
     url.searchParams.set(key, value);
   }

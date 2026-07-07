@@ -35,7 +35,7 @@ type ClickupRequestOptions = {
   notFoundAsInvalidInput?: boolean;
 };
 
-const clickupApiOrigin = "https://api.clickup.com";
+export const clickupApiOrigin: string = "https://api.clickup.com";
 const clickupApiV2BaseUrl = `${clickupApiOrigin}/api/v2`;
 const clickupApiV3BaseUrl = `${clickupApiOrigin}/api/v3`;
 export const clickupGrantedScopes: string[] = ["clickup.read", "clickup.write"];

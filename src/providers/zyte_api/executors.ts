@@ -1,8 +1,13 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ZyteApiContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { validateZyteApiCredential, zyteApiActionHandlers } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { validateZyteApiCredential, zyteApiActionHandlers, zyteApiBaseUrl } from "./runtime.ts";
 
 const service = "zyte_api";
 
@@ -17,6 +22,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<ZyteApiConte
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: zyteApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
 });
 
 export const credentialValidators: CredentialValidators = {

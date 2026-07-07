@@ -1,10 +1,15 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { StreakActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "streak";
 const streakApiBaseUrl = "https://api.streak.com/api/v1";
@@ -55,6 +60,12 @@ export const streakActionHandlers: Record<StreakActionName, StreakActionHandler>
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, streakActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: streakApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

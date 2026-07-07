@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { NocrmIoActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
@@ -6,6 +11,7 @@ import { compactJson, queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -138,6 +144,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<NocrmContext
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildNocrmBaseUrl(normalizeNocrmSubdomain(credential.values.subdomain));
+  },
+  auth: {
+    type: "api_key_header",
+    name: "x-api-key",
   },
 });
 

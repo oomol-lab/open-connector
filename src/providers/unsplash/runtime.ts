@@ -10,7 +10,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const unsplashApiBaseUrl = "https://api.unsplash.com";
+export const unsplashApiBaseUrl: string = "https://api.unsplash.com";
 const unsplashValidationPath = "/photos";
 const unsplashTimeoutMs = 30_000;
 

@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { DropboxActionName } from "./actions.ts";
 
@@ -9,11 +9,31 @@ import {
   optionalString as asOptionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineOAuthProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  requireOAuthCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const dropboxApiBaseUrl = "https://api.dropboxapi.com/2";
 const dropboxContentBaseUrl = "https://content.dropboxapi.com/2";
 const dropboxMaxSimpleUploadBytes = 150 * 1024 * 1024;
+const dropboxContentEndpointPrefixes = [
+  "/files/download",
+  "/files/export",
+  "/files/get_preview",
+  "/files/get_thumbnail",
+  "/files/get_thumbnail_v2",
+  "/files/upload",
+  "/files/upload_session",
+  "/sharing/get_shared_link_file",
+];
 
 type ActionContext = OAuthProviderContext;
 
@@ -105,6 +125,44 @@ export const dropboxActionHandlers: Record<DropboxActionName, ActionHandler> = {
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors("dropbox", dropboxActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireOAuthCredential(context, "dropbox");
+    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
+    const url = createProviderProxyUrl(dropboxProxyBaseUrl(endpoint), endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      throw await normalizeDropboxHttpError(response, "Dropbox request failed");
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Dropbox request failed");
+  }
+};
+
+function dropboxProxyBaseUrl(endpoint: string): string {
+  return dropboxContentEndpointPrefixes.some((prefix) => endpoint === prefix || endpoint.startsWith(`${prefix}/`))
+    ? dropboxContentBaseUrl
+    : dropboxApiBaseUrl;
+}
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {

@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { DiscordActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
@@ -11,7 +11,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "discord";
 const discordApiBaseUrl = "https://discord.com/api";
@@ -116,6 +116,12 @@ export const discordActionHandlers: Record<DiscordActionName, DiscordActionHandl
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, discordActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: discordApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {

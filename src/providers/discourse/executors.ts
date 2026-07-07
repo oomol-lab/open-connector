@@ -3,6 +3,8 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { DiscourseActionName } from "./actions.ts";
 
@@ -11,10 +13,14 @@ import { compactObject, optionalBoolean, optionalInteger, optionalString } from 
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
+  createProviderProxyUrl,
   defineProviderExecutors,
+  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
   requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 export const discourseDefaultRequestTimeoutMs = 30_000;
@@ -197,6 +203,43 @@ export const executors: ProviderExecutors = defineProviderExecutors<DiscourseAct
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, "discourse");
+    const discourseCredential: DiscourseCredential = {
+      baseUrl: normalizeDiscourseBaseUrl(credential.values.baseUrl ?? credential.metadata.baseUrl),
+      apiKey: credential.apiKey,
+      apiUsername: requireCredentialField(
+        credential.values.apiUsername ?? credential.metadata.apiUsername,
+        "apiUsername",
+      ),
+    };
+    const url = createProviderProxyUrl(discourseCredential.baseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("api-key", discourseCredential.apiKey);
+    headers.set("api-username", discourseCredential.apiUsername);
+    headers.set("user-agent", providerUserAgent);
+    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body:
+        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

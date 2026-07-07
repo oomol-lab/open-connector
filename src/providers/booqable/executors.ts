@@ -1,9 +1,19 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { BooqableContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { booqableActionHandlers, normalizeBooqableCompanySlug, validateBooqableCredential } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  booqableActionHandlers,
+  buildBooqableApiBaseUrl,
+  normalizeBooqableCompanySlug,
+  validateBooqableCredential,
+} from "./runtime.ts";
 
 const service = "booqable";
 
@@ -21,6 +31,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<BooqableCont
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    const companySlug = normalizeBooqableCompanySlug(
+      optionalString(credential.metadata.companySlug) ?? optionalString(credential.values.companySlug),
+    );
+    return buildBooqableApiBaseUrl(companySlug);
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
 
 export const credentialValidators: CredentialValidators = {

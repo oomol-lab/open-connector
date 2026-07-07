@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { IpregistryActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -100,6 +101,15 @@ export const ipregistryActionHandlers: Record<IpregistryActionName, IpregistryAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipregistryActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: ipregistryBaseUrl,
+  auth: {
+    type: "api_key_authorization",
+    prefix: "ApiKey ",
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

@@ -5,7 +5,7 @@ import { compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { sentryProviderScopes } from "./scopes.ts";
 
-const sentryApiBaseUrl = "https://sentry.io/api/0/";
+export const sentryApiBaseUrl: string = "https://sentry.io/api/0/";
 const sentryOrganizationsUrl = `${sentryApiBaseUrl}organizations/`;
 
 type SentryJsonResponse = {

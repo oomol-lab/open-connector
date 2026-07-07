@@ -4,7 +4,7 @@ import type { TextrazorActionName } from "./actions.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-export const textrazorApiBaseUrl = "https://api.textrazor.com";
+export const textrazorApiBaseUrl: string = "https://api.textrazor.com";
 const defaultAnalyzeExtractors = [
   "entities",
   "topics",

@@ -5,7 +5,7 @@ import type { SimpleAnalyticsActionName } from "./actions.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const simpleAnalyticsBaseUrl = "https://simpleanalytics.com";
+export const simpleAnalyticsBaseUrl: string = "https://simpleanalytics.com";
 const simpleAnalyticsEventsUrl = "https://queue.simpleanalyticscdn.com/events";
 const simpleAnalyticsStatsFields = [
   "pageviews",

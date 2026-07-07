@@ -1,6 +1,11 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { databricksActionHandlers, normalizeDatabricksHost, validateDatabricksCredential } from "./runtime.ts";
 
 const service = "databricks";
@@ -24,6 +29,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<DatabricksCo
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeDatabricksHost(credential.values.host || String(credential.metadata.host ?? ""));
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
 
 export const credentialValidators: CredentialValidators = {

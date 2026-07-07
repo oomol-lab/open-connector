@@ -5,7 +5,7 @@ import type { LinguapopActionName } from "./actions.ts";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const linguapopApiBaseUrl = "https://app.linguapop.eu";
+export const linguapopApiBaseUrl = "https://app.linguapop.eu";
 const getLanguagesPath = "/api/actions/getLanguages";
 const sendInvitationPath = "/api/actions/sendInvitation";
 

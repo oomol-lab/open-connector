@@ -5,9 +5,9 @@ import type { BotsonicActionName } from "./actions.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const botsonicApiBaseUrl = "https://api.botsonic.ai";
+export const botsonicApiBaseUrl = "https://api.botsonic.ai";
 const botsonicValidationPath = "/v1/business/bot-faq/all";
-const botsonicAuthHeader = "X-BOT-KEY";
+export const botsonicAuthHeader = "X-BOT-KEY";
 
 type BotsonicContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 

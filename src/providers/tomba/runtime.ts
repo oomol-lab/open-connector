@@ -9,7 +9,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const tombaApiBaseUrl = "https://api.tomba.io/v1";
+export const tombaApiBaseUrl: string = "https://api.tomba.io/v1";
 const tombaDefaultRequestTimeoutMs = 30_000;
 
 type TombaMode = "validate" | "execute";

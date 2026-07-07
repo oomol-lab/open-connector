@@ -1,10 +1,16 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { FilesComActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -108,6 +114,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<FilesComActi
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    const subdomain = requireFilesComSubdomain(credential.values.subdomain ?? credential.metadata.subdomain);
+    return buildFilesComApiBaseUrl(subdomain);
+  },
+  auth: { type: "api_key_header", name: "x-filesapi-key" },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -27,6 +27,7 @@ interface SearchApiAccountInfo {
 
 const searchApiOrigin = "https://www.searchapi.io";
 const searchApiBasePath = "/api/v1/";
+export const searchApiBaseUrl: string = "https://www.searchapi.io/api/v1";
 
 export const searchApiActionHandlers: Record<SearchApiActionName, SearchApiActionHandler> = {
   get_account_info(_input, context) {
@@ -94,7 +95,7 @@ export async function validateSearchApiCredential(
     grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/me",
-      apiBaseUrl: "https://www.searchapi.io/api/v1",
+      apiBaseUrl: searchApiBaseUrl,
       currentMonthUsage: accountInfo.account.current_month_usage,
       monthlyAllowance: accountInfo.account.monthly_allowance,
       remainingCredits: accountInfo.account.remaining_credits,

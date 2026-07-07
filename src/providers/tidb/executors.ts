@@ -1,13 +1,24 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
-import { tidbActionHandlers, validateTiDBCredential } from "./runtime.ts";
+import {
+  defineProviderExecutors,
+  normalizeProviderProxyEndpoint,
+  normalizeProviderProxyHeaders,
+  normalizeProviderProxyQuery,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  requireCustomCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
+import { requestTiDBProxy, resolveTiDBProxyTarget, tidbActionHandlers, validateTiDBCredential } from "./runtime.ts";
+
+const service = "tidb";
 
 export const executors: ProviderExecutors = defineProviderExecutors({
-  service: "tidb",
+  service,
   handlers: tidbActionHandlers,
   async createContext(context, fetcher) {
-    const credential = await requireCustomCredential(context, "tidb");
+    const credential = await requireCustomCredential(context, service);
     return {
       publicKey: credential.values.publicKey,
       privateKey: credential.values.privateKey,
@@ -15,6 +26,42 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireCustomCredential(context, service);
+    const target = resolveTiDBProxyTarget(normalizeProviderProxyEndpoint(input.endpoint));
+    const headers = normalizeProviderProxyHeaders(input.headers);
+
+    let body: BodyInit | undefined;
+    if (input.body !== undefined) {
+      body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await requestTiDBProxy({
+      ...target,
+      method: input.method,
+      headers,
+      query: normalizeProviderProxyQuery(input.query),
+      body,
+      publicKey: credential.values.publicKey,
+      privateKey: credential.values.privateKey,
+      fetcher: fetch,
+      signal: context.signal,
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `tidb request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "tidb request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher }): ReturnType<typeof validateTiDBCredential> {

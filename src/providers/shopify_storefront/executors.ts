@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ShopifyStorefrontActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -364,6 +370,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<ShopifyStore
     };
   },
   fallbackMessage: "shopify_storefront request failed",
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return buildShopifyStorefrontApiBaseUrl(normalizeShopDomain(optionalString(credential.values.shopDomain)));
+  },
+  auth: { type: "api_key_header", name: "x-shopify-storefront-access-token" },
 });
 
 export const credentialValidators: CredentialValidators = {

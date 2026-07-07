@@ -24,7 +24,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "sendspark";
-const sendsparkApiBaseUrl = "https://api-gw.sendspark.com";
+export const sendsparkApiBaseUrl: string = "https://api-gw.sendspark.com";
 const sendsparkHealthPath = "/v1/auth/health";
 
 type SendsparkPhase = "validate" | "execute";

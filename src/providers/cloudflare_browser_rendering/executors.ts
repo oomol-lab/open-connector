@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { CloudflareBrowserRenderingActionName } from "./actions.ts";
 
@@ -14,6 +14,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -82,6 +83,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareBr
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: cloudflareBrowserRenderingApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
 
 export const credentialValidators: CredentialValidators = {

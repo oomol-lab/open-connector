@@ -1,14 +1,20 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { UptimerobotActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderProxyUrl,
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  normalizeProviderProxyHeaders,
+  normalizeProviderProxyQuery,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "uptimerobot";
@@ -88,6 +94,41 @@ export const uptimerobotActionHandlers: Record<UptimerobotActionName, Uptimerobo
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, uptimerobotActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(uptimerobotApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("accept", "application/json");
+    headers.set("content-type", "application/x-www-form-urlencoded");
+    headers.set("user-agent", providerUserAgent);
+
+    const body =
+      typeof input.body === "string"
+        ? new URLSearchParams(input.body)
+        : new URLSearchParams(normalizeProviderProxyQuery(input.body));
+    body.set("api_key", credential.apiKey);
+    body.set("format", "json");
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body,
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(
+        response.status,
+        text || `uptimerobot request failed with HTTP ${response.status}`,
+      );
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "uptimerobot request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

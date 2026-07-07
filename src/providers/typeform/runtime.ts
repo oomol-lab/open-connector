@@ -11,7 +11,7 @@ import {
 } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const typeformApiBaseUrl = "https://api.typeform.com";
+export const typeformApiBaseUrl: string = "https://api.typeform.com";
 const typeformValidationPath = "/me";
 const typeformDefaultRequestTimeoutMs = 30_000;
 

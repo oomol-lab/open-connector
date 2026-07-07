@@ -5,7 +5,7 @@ import type { TwelveDataActionName } from "./actions.ts";
 import { compactObject } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-export const twelveDataApiBaseUrl = "https://api.twelvedata.com";
+export const twelveDataApiBaseUrl: string = "https://api.twelvedata.com";
 
 type QueryValue = string | number | boolean | undefined;
 type TwelveDataRequestPhase = "validate" | "execute";

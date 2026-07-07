@@ -3,13 +3,22 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { AwsActionName } from "./actions.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { isIP } from "node:net";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 type AwsActionContext = {
   values: Record<string, string>;
@@ -74,6 +83,7 @@ class AwsS3HttpError extends Error {
 const sourceFetchTimeoutMs = 15_000;
 const maxSourceBytes = 20 * 1024 * 1024;
 const awsServiceName = "s3";
+const service = "aws_s3";
 
 export const awsActionHandlers: Record<AwsActionName, AwsActionHandler> = {
   list_buckets(input, context) {
@@ -97,10 +107,10 @@ export const awsActionHandlers: Record<AwsActionName, AwsActionHandler> = {
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<AwsActionContext>({
-  service: "aws_s3",
+  service,
   handlers: awsActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<AwsActionContext> {
-    const credential = await context.getCredential("aws_s3");
+    const credential = await context.getCredential(service);
     if (credential?.authType !== "custom_credential") {
       throw new ProviderRequestError(401, "Configure aws_s3 custom credentials first.");
     }
@@ -112,6 +122,72 @@ export const executors: ProviderExecutors = defineProviderExecutors<AwsActionCon
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    if (credential?.authType !== "custom_credential") {
+      throw new ProviderRequestError(401, "Configure aws_s3 custom credentials first.");
+    }
+
+    const region = resolveRegion(
+      {},
+      {
+        values: credential.values,
+        metadata: credential.metadata,
+        fetcher: fetch,
+        signal: context.signal,
+      },
+    );
+    const bucket =
+      optionalString(credential.metadata.bucket)?.trim() ?? optionalString(credential.values.bucket)?.trim();
+    const method = normalizeAwsS3ProxyMethod(input.method);
+    const url = createProviderProxyUrl(buildAwsS3ProxyBaseUrl(region, bucket), input.endpoint, input.query);
+    url.search = canonicalizeSearchParams(url.searchParams);
+
+    const body = normalizeAwsS3ProxyBody(input.body);
+    const payloadHash =
+      method === "PUT" ? sha256Hex(body ?? "") : body === undefined ? "UNSIGNED-PAYLOAD" : sha256Hex(body);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.delete("user-agent");
+    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+    headers.set("host", url.host);
+    headers.set("x-amz-content-sha256", payloadHash);
+
+    const signedRequest = signAwsRequest(
+      createAwsS3Client({
+        accessKeyId: requireAwsField(credential.values.accessKeyId, "accessKeyId"),
+        secretAccessKey: requireAwsField(credential.values.secretAccessKey, "secretAccessKey"),
+        sessionToken: optionalString(credential.values.sessionToken)?.trim(),
+        region,
+        fetcher: fetch,
+      }),
+      {
+        method,
+        url,
+        headers: Object.fromEntries(headers.entries()),
+        payloadHash,
+      },
+    );
+    signedRequest.headers.set("user-agent", providerUserAgent);
+
+    const response = await fetch(url.toString(), {
+      method,
+      headers: signedRequest.headers,
+      ...(body === undefined ? {} : { body }),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      throw await createAwsS3HttpError(response);
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(normalizeAwsError(error, "execute"), "AWS S3 request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher }): Promise<CredentialValidationResult> {
@@ -336,6 +412,24 @@ async function awsGeneratePresignedUrl(input: Record<string, unknown>, context: 
 
 function createAwsS3Client(input: AwsS3ClientConfig) {
   return input;
+}
+
+function normalizeAwsS3ProxyMethod(method: string): "GET" | "PUT" | "HEAD" | "DELETE" {
+  if (method === "GET" || method === "PUT" || method === "HEAD" || method === "DELETE") {
+    return method;
+  }
+  throw new ProviderRequestError(400, "aws_s3 proxy only supports GET, PUT, HEAD, and DELETE requests.");
+}
+
+function buildAwsS3ProxyBaseUrl(region: string, bucket: string | undefined): string {
+  return bucket ? `https://${bucket}.s3.${region}.amazonaws.com` : `https://s3.${region}.amazonaws.com`;
+}
+
+function normalizeAwsS3ProxyBody(body: unknown): string | undefined {
+  if (body === undefined) {
+    return undefined;
+  }
+  return typeof body === "string" ? body : JSON.stringify(body);
 }
 
 async function validateBucketCredential(client: AwsS3ClientConfig, bucket: string) {

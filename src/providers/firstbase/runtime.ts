@@ -5,7 +5,7 @@ import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from
 import { encodePathSegment } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const firstbaseApiBaseUrl = "https://apipub.firstbasehq.com";
+export const firstbaseApiBaseUrl = "https://apipub.firstbasehq.com";
 const firstbaseValidationPath = "/api/v1/inventory?page=1&size=1";
 
 type FirstbaseRequestMode = "validate" | "execute";

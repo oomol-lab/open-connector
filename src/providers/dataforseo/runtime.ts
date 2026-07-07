@@ -29,7 +29,7 @@ type DataForSeoRequestInput = {
   body?: Record<string, unknown>[];
 };
 
-const dataForSeoApiBaseUrl = "https://api.dataforseo.com/v3";
+export const dataForSeoApiBaseUrl: string = "https://api.dataforseo.com/v3";
 const dataForSeoApiBase = new URL(`${dataForSeoApiBaseUrl}/`);
 
 export const dataForSeoActionHandlers: Record<string, DataForSeoActionHandler> = {

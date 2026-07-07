@@ -1,10 +1,10 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { DiscordbotActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "discordbot";
 const discordApiBaseUrl = "https://discord.com/api";
@@ -106,6 +106,12 @@ export const discordbotActionHandlers: Record<DiscordbotActionName, DiscordbotAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, discordbotActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: discordApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bot " },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

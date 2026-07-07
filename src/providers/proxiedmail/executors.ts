@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProxiedmailActionName } from "./actions.ts";
 
 import {
@@ -13,6 +18,7 @@ import {
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -154,6 +160,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<ProxiedmailA
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: proxiedmailApiBaseUrl,
+  auth: { type: "api_key_header", name: "Token" },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -179,7 +179,7 @@ function buildUnipileUrl(dsn: string, path: string, query?: Record<string, unkno
   return url;
 }
 
-function buildUnipileBaseUrl(dsn: string): string {
+export function buildUnipileBaseUrl(dsn: string): string {
   return `https://${normalizeUnipileDsn(dsn)}`;
 }
 

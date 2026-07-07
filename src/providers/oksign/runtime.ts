@@ -26,7 +26,7 @@ type OksignPhase = "validate" | "execute";
 type OksignActionHandler = (input: Record<string, unknown>, context: OksignActionContext) => Promise<unknown>;
 type OksignRequestHeaders = Record<string, string | undefined>;
 
-const oksignApiBaseUrl = "https://www.oksign.be";
+export const oksignApiBaseUrl = "https://www.oksign.be";
 const oksignDefaultTimeoutMs = 30_000;
 const oksignCreditsPath = "/services/rest/v1/credits/retrieve";
 const oksignActiveDocumentsPath = "/services/rest/v1/documents/active";

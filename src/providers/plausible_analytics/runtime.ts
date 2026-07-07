@@ -211,7 +211,7 @@ function resolveActionSiteId(
   throw new ProviderRequestError(400, `${fieldKey} is required when the connection has no default siteId`);
 }
 
-function normalizePlausibleBaseUrl(value?: string): string {
+export function normalizePlausibleBaseUrl(value?: string): string {
   if (!value) {
     return plausibleDefaultBaseUrl;
   }

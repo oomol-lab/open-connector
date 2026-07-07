@@ -1,9 +1,23 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { SegmentActionName } from "./actions.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredRecord } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineApiKeyProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  requireApiKeyCredential,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "segment";
 const segmentApiBaseUrl = "https://api.segment.io/v1";
@@ -37,6 +51,31 @@ export const segmentActionHandlers: Record<SegmentActionName, SegmentActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, segmentActionHandlers);
+
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const credential = await requireApiKeyCredential(context, service);
+    const url = createProviderProxyUrl(segmentApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("accept", "application/json");
+    headers.set("content-type", "application/json");
+    headers.set("user-agent", providerUserAgent);
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body: JSON.stringify(withWriteKey(optionalRecord(input.body) ?? {}, credential.apiKey)),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {

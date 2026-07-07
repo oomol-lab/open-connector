@@ -3,12 +3,26 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { AwsStsActionName } from "./actions.ts";
 
 import { createHash, createHmac } from "node:crypto";
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRecord,
+  optionalScalarString,
+  optionalString,
+} from "../../core/cast.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 
 const service = "aws_sts";
 const stsApiVersion = "2011-06-15";
@@ -84,6 +98,46 @@ export const executors: ProviderExecutors = defineProviderExecutors<AwsStsContex
   },
 });
 
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    if (input.method !== "POST") {
+      throw new ProviderRequestError(400, "aws_sts proxy only supports POST requests.");
+    }
+
+    const credential = await context.getCredential(service);
+    if (credential?.authType !== "custom_credential") {
+      throw new ProviderRequestError(401, "Configure aws_sts custom credentials first.");
+    }
+
+    const region = defaultRegion;
+    const url = createProviderProxyUrl(`https://sts.${region}.amazonaws.com/`, input.endpoint);
+    const body = buildAwsStsProxyBody(input);
+    const headers = signAwsStsRequest({
+      accessKeyId: requireCredentialField(credential.values.accessKeyId, "accessKeyId"),
+      secretAccessKey: requireCredentialField(credential.values.secretAccessKey, "secretAccessKey"),
+      sessionToken: optionalString(credential.values.sessionToken),
+      region,
+      now: new Date(),
+      url,
+      body,
+    });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body,
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      throw normalizeAwsStsError(response, await response.text(), "proxy");
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "AWS STS request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   async customCredential(input): Promise<CredentialValidationResult> {
     const accessKeyId = requireCredentialField(input.values.accessKeyId, "accessKeyId");
@@ -104,6 +158,40 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+function buildAwsStsProxyBody(input: { body?: unknown; query?: unknown }): string {
+  const params = new URLSearchParams({
+    Action: "AssumeRole",
+    Version: stsApiVersion,
+  });
+  for (const [key, value] of Object.entries({
+    ...readAwsStsProxyParams(input.query),
+    ...readAwsStsProxyParams(input.body),
+  })) {
+    params.set(key, value);
+  }
+  return params.toString();
+}
+
+function readAwsStsProxyParams(input: unknown): Record<string, string> {
+  if (typeof input === "string") {
+    return Object.fromEntries(new URLSearchParams(input).entries());
+  }
+
+  const record = optionalRecord(input);
+  if (!record) {
+    return {};
+  }
+
+  const output: Record<string, string> = {};
+  for (const [key, value] of Object.entries(record)) {
+    const resolved = optionalScalarString(value);
+    if (resolved !== undefined) {
+      output[key] = resolved;
+    }
+  }
+  return output;
+}
 
 async function executeAssumeRole(input: Record<string, unknown>, context: AwsStsContext): Promise<AwsStsCredential> {
   const roleArn = optionalString(input.roleArn) ?? optionalString(context.values.defaultRoleArn);

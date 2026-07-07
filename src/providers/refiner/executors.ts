@@ -1,9 +1,14 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { RefinerActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "refiner";
 const refinerApiBaseUrl = "https://api.refiner.io/v1";
@@ -61,6 +66,12 @@ export const refinerActionHandlers: Record<RefinerActionName, RefinerActionHandl
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, refinerActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: refinerApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});
 
 export const credentialValidators = {
   async apiKey(

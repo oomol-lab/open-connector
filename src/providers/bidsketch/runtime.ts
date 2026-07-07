@@ -10,7 +10,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const bidsketchApiBaseUrl = "https://bidsketch.com/api/v1";
+export const bidsketchApiBaseUrl: string = "https://bidsketch.com/api/v1";
 const bidsketchRequestTimeoutMs = 30_000;
 const bidsketchValidationPath = "/proposals/stats.json";
 

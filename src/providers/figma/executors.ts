@@ -1,4 +1,10 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ProxyExecutionResult,
+} from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { FigmaActionName } from "./actions.ts";
 
@@ -10,7 +16,15 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
 import { figmaProviderScopes } from "./scopes.ts";
 
 const service = "figma";
@@ -157,6 +171,34 @@ export const executors: ProviderExecutors = defineProviderExecutors<FigmaActionC
   },
 });
 
+export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
+  try {
+    const auth = await resolveFigmaAuth(context);
+    const url = createProviderProxyUrl(figmaApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    applyFigmaProxyAuth(headers, auth);
+    headers.set("user-agent", providerUserAgent);
+    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
+      headers.set("content-type", "application/json");
+    }
+
+    const response = await fetch(url, {
+      method: input.method,
+      headers,
+      body:
+        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
+      signal: context.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+    }
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "provider request failed");
+  }
+};
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const user = await figmaGetJson({
@@ -196,6 +238,31 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+async function resolveFigmaAuth(context: ExecutionContext): Promise<FigmaAuth> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key") {
+    return {
+      type: "api_key",
+      token: credential.apiKey,
+    };
+  }
+  if (credential?.authType === "oauth2") {
+    return {
+      type: "oauth2",
+      token: credential.accessToken,
+    };
+  }
+  throw new ProviderRequestError(401, "Configure figma API key or OAuth credentials first.");
+}
+
+function applyFigmaProxyAuth(headers: Headers, auth: FigmaAuth): void {
+  if (auth.type === "api_key") {
+    headers.set("x-figma-token", auth.token);
+    return;
+  }
+  headers.set("authorization", `Bearer ${auth.token}`);
+}
 
 async function getCurrentUser(context: FigmaActionContext): Promise<unknown> {
   return {

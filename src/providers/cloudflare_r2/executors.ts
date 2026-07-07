@@ -3,12 +3,26 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { CloudflareR2Context } from "./runtime.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
-import { cloudflareR2ActionHandlers, requestCloudflareR2Accounts, validateCloudflareR2Credential } from "./runtime.ts";
+import {
+  createProviderProxyUrl,
+  defineProviderExecutors,
+  normalizeProviderProxyHeaders,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-runtime.ts";
+import {
+  cloudflareR2ActionHandlers,
+  cloudflareR2ApiBaseUrl,
+  requestCloudflareR2Accounts,
+  validateCloudflareR2Credential,
+} from "./runtime.ts";
 
 const service = "cloudflare_r2";
 
@@ -48,6 +62,51 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareR2
     throw new ProviderRequestError(401, "Configure cloudflare_r2 credentials first.");
   },
 });
+
+export const proxy: ProviderProxyExecutor = async (input, context) => {
+  try {
+    const credential = await context.getCredential(service);
+    const accessToken =
+      credential?.authType === "custom_credential"
+        ? requiredString(credential.values.apiKey, "apiKey", (message) => new ProviderRequestError(400, message))
+        : credential?.authType === "oauth2"
+          ? credential.accessToken
+          : undefined;
+    if (!accessToken) {
+      throw new ProviderRequestError(401, "Configure cloudflare_r2 credentials first.");
+    }
+
+    const url = createProviderProxyUrl(cloudflareR2ApiBaseUrl, input.endpoint, input.query);
+    const headers = normalizeProviderProxyHeaders(input.headers);
+    headers.set("authorization", `Bearer ${accessToken}`);
+    headers.set("user-agent", providerUserAgent);
+
+    const init: RequestInit = {
+      method: input.method,
+      headers,
+      signal: context.signal,
+    };
+    if (input.body !== undefined) {
+      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
+      if (!headers.has("content-type") && typeof input.body !== "string") {
+        headers.set("content-type", "application/json");
+      }
+    }
+
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(
+        response.status,
+        text || `Cloudflare R2 request failed with HTTP ${response.status}`,
+      );
+    }
+
+    return { ok: true, response: await readProviderProxyResponse(response) };
+  } catch (error) {
+    return toProviderProxyError(error, "Cloudflare R2 request failed");
+  }
+};
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {

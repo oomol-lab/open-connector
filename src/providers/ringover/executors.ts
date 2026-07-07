@@ -1,10 +1,20 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { arrayPayload, objectPayload, requestJson } from "../http-json-runtime.ts";
-import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 
 const service = "ringover";
 const regions = {
@@ -106,6 +116,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<RingoverCont
     };
   },
 });
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: ringoverProxyBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "" },
+});
+
+async function ringoverProxyBaseUrl(context: ExecutionContext): Promise<string> {
+  const credential = await requireApiKeyCredential(context, service);
+  return regions[normalizeRegion(credential.values.region)];
+}
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

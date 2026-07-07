@@ -5,7 +5,7 @@ import type { TomtomActionName } from "./actions.ts";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const tomtomApiBaseUrl = "https://api.tomtom.com";
+export const tomtomApiBaseUrl: string = "https://api.tomtom.com";
 const tomtomValidationPath = "/search/2/geocode/Amsterdam.json";
 
 type TomtomActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

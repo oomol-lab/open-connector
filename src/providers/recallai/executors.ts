@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { RecallAiActionName } from "./actions.ts";
@@ -10,6 +11,7 @@ import type { RecallAiActionName } from "./actions.ts";
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  defineProviderProxy,
   defineProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
@@ -114,6 +116,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<RecallAiCont
     return runtimeContext;
   },
 });
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: recallAiProxyBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Token " },
+});
+
+async function recallAiProxyBaseUrl(context: ExecutionContext): Promise<string> {
+  const credential = await requireApiKeyCredential(context, service);
+  return resolveRecallAiApiBaseUrl({ ...credential.values, ...credential.metadata });
+}
 
 export async function validateRecallAiCredential(
   input: Record<string, string>,
