@@ -304,16 +304,16 @@ export function sortProviders(
   connectionsByService: Map<string, ConnectionRecord>,
 ): ProviderDefinition[] {
   return [...providers].sort((left, right) => {
-    const leftPinned = left.service === firstProviderService;
-    const rightPinned = right.service === firstProviderService;
-    if (leftPinned !== rightPinned) {
-      return leftPinned ? -1 : 1;
-    }
-
     const leftConnected = isUsableCredentialConnection(connectionsByService.get(left.service));
     const rightConnected = isUsableCredentialConnection(connectionsByService.get(right.service));
     if (leftConnected !== rightConnected) {
       return leftConnected ? -1 : 1;
+    }
+
+    const leftPinned = left.service === firstProviderService;
+    const rightPinned = right.service === firstProviderService;
+    if (leftPinned !== rightPinned) {
+      return leftPinned ? -1 : 1;
     }
 
     const recommendedRank =

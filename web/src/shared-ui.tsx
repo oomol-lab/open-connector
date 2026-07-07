@@ -104,6 +104,20 @@ interface ProviderIconSource {
   value: string;
 }
 
+const defaultGoogleProviderIconClass = "i-logos-google-icon";
+
+const googleProviderIconClasses: Record<string, string> = {
+  google_analytics: "i-logos-google-analytics",
+  gmail: "i-logos-google-gmail",
+  googlephotos: "i-logos-google-photos",
+  google_search_console: "i-logos-google-search-console",
+  google_cloud_sts: "i-logos-google-cloud",
+  googledrive: "i-logos-google-drive",
+  googlecalendar: "i-logos-google-calendar",
+  google_address_validation: "i-logos-google-maps",
+  google_routes: "i-logos-google-maps",
+};
+
 export function providerIconSource(provider: ProviderDefinition): ProviderIconSource | undefined {
   const iconUrl = provider.iconUrl?.trim();
   if (iconUrl) {
@@ -128,8 +142,13 @@ export function providerIconSource(provider: ProviderDefinition): ProviderIconSo
 }
 
 export function resolveProviderIconClass(provider: ProviderDefinition): string | undefined {
+  const iconClass = googleProviderIconClasses[provider.service];
+  if (iconClass) {
+    return iconClass;
+  }
+
   if (provider.homepageUrl?.toLowerCase().includes("google")) {
-    return "i-logos:google-icon";
+    return defaultGoogleProviderIconClass;
   }
 
   return undefined;

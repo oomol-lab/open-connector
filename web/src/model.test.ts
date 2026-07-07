@@ -57,7 +57,7 @@ function run(id: string, ok: boolean): RunLog {
 }
 
 describe("sortProviders", () => {
-  it("keeps fusion-api first before connected, recommended, and display-name ordering", () => {
+  it("places connected providers before pinned, recommended, and display-name ordering", () => {
     const providers = [
       provider("airtable", "Airtable"),
       provider("fusion-api", "OOMOL Fusion API"),
@@ -70,8 +70,8 @@ describe("sortProviders", () => {
     ]);
 
     expect(sortProviders(providers, connections).map((item) => item.service)).toEqual([
-      "fusion-api",
       "zendesk",
+      "fusion-api",
       "github",
       "airtable",
     ]);
