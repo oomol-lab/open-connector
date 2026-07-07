@@ -1,6 +1,6 @@
 {
-  "name": "oomol-connect",
-  "version": "0.1.0",
+  "name": "@oomol-lab/open-connector",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "web"
