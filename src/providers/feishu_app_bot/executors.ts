@@ -16,6 +16,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
   toProviderProxyError,
@@ -188,7 +189,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
       const response = await fetch(url, init);
       if (!response.ok) {
-        const rawText = await response.text().catch(() => "");
+        const rawText = await readProviderProxyErrorMessage(response, "");
         let envelope: FeishuApiEnvelope<unknown>;
         try {
           envelope = readFeishuEnvelope<unknown>(rawText);

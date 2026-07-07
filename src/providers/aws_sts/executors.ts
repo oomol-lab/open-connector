@@ -20,6 +20,7 @@ import {
   defineProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -129,7 +130,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       signal: context.signal,
     });
     if (!response.ok) {
-      throw normalizeAwsStsError(response, await response.text(), "proxy");
+      throw normalizeAwsStsError(response, await readProviderProxyErrorMessage(response, ""), "proxy");
     }
 
     return { ok: true, response: await readProviderProxyResponse(response) };

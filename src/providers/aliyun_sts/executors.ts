@@ -19,6 +19,7 @@ import {
   normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -105,7 +106,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       signal: context.signal,
     });
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(
         response.status,
         text || `Alibaba Cloud STS request failed with HTTP ${response.status}`,

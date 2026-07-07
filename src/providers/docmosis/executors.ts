@@ -14,6 +14,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -62,7 +63,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 
     const response = await fetch(url, init);
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
     }
     return { ok: true, response: await readProviderProxyResponse(response) };

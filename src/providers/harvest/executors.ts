@@ -14,6 +14,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -162,7 +163,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
     const response = await fetch(url, init);
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw createHarvestError(response.status, parseHarvestPayload(text), text);
     }
 

@@ -218,6 +218,40 @@ describe("provider proxy helpers", () => {
     });
   });
 
+  it("bounds provider proxy error response bodies", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (): Promise<Response> => new Response("x".repeat(20 * 1024 * 1024 + 1), { status: 500 })),
+    );
+
+    const proxy = defineProviderProxy({
+      service: "example",
+      baseUrl: "https://api.example.com",
+      auth: { type: "none" },
+    });
+
+    await expect(
+      proxy(
+        {
+          endpoint: "/items",
+          method: "GET",
+        },
+        {
+          getCredential: async () => undefined,
+        },
+      ),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "proxy error response exceeds 20971520 bytes",
+        details: {
+          status: 413,
+        },
+      },
+    });
+  });
+
   it("injects API key credentials into proxy request headers", async () => {
     const fetcher = vi.fn(
       async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>

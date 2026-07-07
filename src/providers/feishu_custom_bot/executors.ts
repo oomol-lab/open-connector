@@ -15,6 +15,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -187,7 +188,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
         signal: requestSignal.signal,
       });
       if (!response.ok) {
-        const rawText = await response.text();
+        const rawText = await readProviderProxyErrorMessage(response, "");
         throw normalizeFeishuCustomBotError(
           {
             status: response.status,

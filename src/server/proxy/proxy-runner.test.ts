@@ -9,6 +9,7 @@ import type {
   ResolvedCredential,
 } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
+import type { Logger } from "../logger.ts";
 
 import { describe, expect, it, vi } from "vitest";
 import { ConnectionError } from "../../connection-service.ts";
@@ -145,6 +146,62 @@ describe("ProxyRunner", () => {
     );
   });
 
+  it("rejects GET and HEAD proxy requests with bodies", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const runner = createRunner({
+      providerLoader: new TestProviderLoader(proxy),
+    });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET", body: { ignored: true } },
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      status: 400,
+      errorCode: "invalid_input",
+      message: "GET and HEAD proxy requests must not include a body.",
+    });
+    expect(proxy).not.toHaveBeenCalled();
+  });
+
+  it("logs proxy endpoints without query strings", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const info = vi.fn();
+    const logger = {
+      info,
+      warn: vi.fn(),
+    } as unknown as Logger;
+    const runner = createRunner({
+      logger,
+      providerLoader: new TestProviderLoader(proxy),
+    });
+
+    await runner.run({
+      service: "example",
+      input: { endpoint: "/items?access_token=secret", method: "GET" },
+    });
+
+    expect(info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        endpoint: "/items",
+      }),
+      "proxy request started",
+    );
+    expect(JSON.stringify(info.mock.calls)).not.toContain("secret");
+  });
+
   it("maps connection errors to runtime failures", async () => {
     const connections = createConnections({
       getConnectionSummary: async () => {
@@ -223,10 +280,15 @@ describe("ProxyRunner", () => {
   });
 });
 
-function createRunner(input: { connections?: ConnectionService; providerLoader: IProviderLoader }): ProxyRunner {
+function createRunner(input: {
+  connections?: ConnectionService;
+  logger?: Logger;
+  providerLoader: IProviderLoader;
+}): ProxyRunner {
   return new ProxyRunner({
     catalog: { providers: [provider] } as CatalogStore,
     connections: input.connections ?? createConnections(),
+    logger: input.logger,
     providerLoader: input.providerLoader,
   });
 }

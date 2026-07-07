@@ -12,6 +12,7 @@ import {
   normalizeProviderProxyQuery,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -118,7 +119,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       signal: context.signal,
     });
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(
         response.status,
         text || `uptimerobot request failed with HTTP ${response.status}`,

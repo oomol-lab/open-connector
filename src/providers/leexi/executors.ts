@@ -26,6 +26,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -105,7 +106,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
     const response = await fetch(url, init);
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Leexi request failed with HTTP ${response.status}`);
     }
 

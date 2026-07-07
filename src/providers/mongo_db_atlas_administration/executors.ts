@@ -20,6 +20,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -169,7 +170,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       headers: authorizedHeaders,
     });
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(
         response.status,
         text || `MongoDB Atlas request failed with HTTP ${response.status}`,

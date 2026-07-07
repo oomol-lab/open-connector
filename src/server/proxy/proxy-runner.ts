@@ -83,7 +83,7 @@ export class ProxyRunner {
     const logContext = {
       service: provider.service,
       method: request.input.method,
-      endpoint: request.input.endpoint,
+      endpoint: loggableProxyEndpoint(request.input.endpoint),
       connectionName: input.connectionName,
     };
     this.options.logger?.info(logContext, "proxy request started");
@@ -142,6 +142,9 @@ export class ProxyRunner {
       const method = requiredString(body.method, "method", (message) => new ProxyInputError(message)).toUpperCase();
       if (!supportedProxyMethods.has(method)) {
         throw new ProxyInputError("method must be one of DELETE, GET, HEAD, PATCH, POST, or PUT.");
+      }
+      if ((method === "GET" || method === "HEAD") && "body" in body) {
+        throw new ProxyInputError("GET and HEAD proxy requests must not include a body.");
       }
 
       const request: ProxyRequestInput = {
@@ -223,4 +226,8 @@ export class ProxyRunner {
     }
     return 400;
   }
+}
+
+function loggableProxyEndpoint(endpoint: string): string {
+  return endpoint.split(/[?#]/u, 1)[0] || "/";
 }

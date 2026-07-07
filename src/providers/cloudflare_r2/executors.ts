@@ -14,6 +14,7 @@ import {
   normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -95,10 +96,9 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
     const response = await fetch(url, init);
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
       throw new ProviderRequestError(
         response.status,
-        text || `Cloudflare R2 request failed with HTTP ${response.status}`,
+        await readProviderProxyErrorMessage(response, `Cloudflare R2 request failed with HTTP ${response.status}`),
       );
     }
 

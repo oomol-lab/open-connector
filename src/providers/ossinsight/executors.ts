@@ -13,6 +13,7 @@ import {
   normalizeProviderProxyHeaders,
   providerUserAgent,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -266,7 +267,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       signal: context.signal,
     });
     if (!response.ok) {
-      const message = await readErrorMessage(response);
+      const message = await readErrorMessage(response, true);
       const status =
         response.status === 400 || response.status === 404 || response.status === 422 ? 400 : response.status;
       throw new ProviderRequestError(status, message);
@@ -360,11 +361,11 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
-async function readErrorMessage(response: Response): Promise<string> {
+async function readErrorMessage(response: Response, bounded = false): Promise<string> {
   const fallback = `ossinsight request failed with status ${response.status}`;
   let text: string;
   try {
-    text = await response.text();
+    text = bounded ? await readProviderProxyErrorMessage(response, "") : await response.text();
   } catch {
     return fallback;
   }

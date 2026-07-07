@@ -6,6 +6,7 @@ import {
   normalizeProviderProxyHeaders,
   normalizeProviderProxyQuery,
   ProviderRequestError,
+  readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
   toProviderProxyError,
@@ -54,7 +55,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     });
 
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `tidb request failed with HTTP ${response.status}`);
     }
     return { ok: true, response: await readProviderProxyResponse(response) };

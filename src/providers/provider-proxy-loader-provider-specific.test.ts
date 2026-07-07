@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderLoader } from "./provider-loader.ts";
-import { apiKeyCredential, stubProviderFetch } from "./provider-proxy-loader.test-helpers.ts";
+import { apiKeyCredential, customCredential, stubProviderFetch } from "./provider-proxy-loader.test-helpers.ts";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -25,6 +25,35 @@ describe("ProviderLoader provider-specific proxy executors", () => {
     const [url, init] = fetcher.mock.calls[0] as [URL, RequestInit];
     expect(url.toString()).toBe("https://api.checkhq.com/companies");
     expect((init.headers as Headers).get("authorization")).toBe("Bearer check-key");
+  });
+
+  it("bounds Cloudflare R2 proxy error response bodies", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (): Promise<Response> => new Response("x".repeat(20 * 1024 * 1024 + 1), { status: 500 })),
+    );
+    const proxy = await new ProviderLoader().loadProxyExecutor("cloudflare_r2");
+
+    await expect(
+      proxy?.(
+        {
+          endpoint: "/accounts",
+          method: "GET",
+        },
+        {
+          getCredential: async () => customCredential({ apiKey: "r2-key", accountId: "account-1" }),
+        },
+      ),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "proxy error response exceeds 20971520 bytes",
+        details: {
+          status: 413,
+        },
+      },
+    });
   });
 
   it("loads CentralStationCRM proxy executors with account-derived base URLs", async () => {

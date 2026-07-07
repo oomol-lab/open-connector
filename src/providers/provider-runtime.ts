@@ -275,6 +275,15 @@ export async function readProviderProxyResponse(
   };
 }
 
+export async function readProviderProxyErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: defaultProviderProxyMaxResponseBytes,
+    fieldName: "proxy error response",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  return bytes.byteLength === 0 ? fallbackMessage : new TextDecoder().decode(bytes) || fallbackMessage;
+}
+
 function isTextProxyContentType(contentType: string): boolean {
   const normalized = contentType.toLowerCase();
   return (
@@ -341,8 +350,10 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
 
       const response = await fetch(url, init);
       if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
+        throw new ProviderRequestError(
+          response.status,
+          await readProviderProxyErrorMessage(response, `provider request failed with HTTP ${response.status}`),
+        );
       }
 
       return {
