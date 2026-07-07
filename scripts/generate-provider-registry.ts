@@ -24,9 +24,137 @@ interface GeneratedProxyDefinition {
   service: string;
   baseUrl: GeneratedProxyBaseUrl;
   auth: GeneratedProxyAuth;
+  allowedPathPrefixes?: string[];
 }
 
 type GeneratedProxyBaseUrl = string | { fields: string[] };
+
+const manualProxyDefinitions = new Map<string, Omit<GeneratedProxyDefinition, "service">>([
+  ["adyen", { baseUrl: "https://management-test.adyen.com/v3", auth: { type: "api_key_header", name: "x-api-key" } }],
+  ["agenty", { baseUrl: "https://api.agenty.com/v2", auth: { type: "api_key_header", name: "x-agenty-apikey" } }],
+  [
+    "alchemy",
+    {
+      baseUrl: "https://eth-mainnet.g.alchemy.com",
+      auth: { type: "api_key_authorization", prefix: "Bearer " },
+      allowedPathPrefixes: ["/v2", "/nft/v3"],
+    },
+  ],
+  ["bannerbear", { baseUrl: "https://api.bannerbear.com", auth: { type: "api_key_authorization", prefix: "Bearer " } }],
+  ["bigpicture_io", { baseUrl: "https://company.bigpicture.io", auth: { type: "api_key_authorization", prefix: "" } }],
+  ["builder_io", { baseUrl: "https://builder.io", auth: { type: "api_key_authorization", prefix: "Bearer " } }],
+  ["check", { baseUrl: "https://sandbox.checkhq.com", auth: { type: "api_key_authorization", prefix: "Bearer " } }],
+  [
+    "cloudconvert",
+    { baseUrl: "https://api.cloudconvert.com/v2", auth: { type: "api_key_authorization", prefix: "Bearer " } },
+  ],
+  ["codemagic", { baseUrl: "https://codemagic.io", auth: { type: "api_key_header", name: "x-auth-token" } }],
+  [
+    "collegiate",
+    {
+      baseUrl: "https://www.dictionaryapi.com/api/v3/references/collegiate/json",
+      auth: { type: "api_key_query", name: "key" },
+    },
+  ],
+  [
+    "contentful_graphql",
+    { baseUrl: "https://graphql.contentful.com", auth: { type: "api_key_authorization", prefix: "Bearer " } },
+  ],
+  ["deepl", { baseUrl: "https://api.deepl.com", auth: { type: "api_key_authorization", prefix: "DeepL-Auth-Key " } }],
+  ["deepseek", { baseUrl: "https://api.deepseek.com", auth: { type: "api_key_authorization", prefix: "Bearer " } }],
+  ["docuseal", { baseUrl: "https://api.docuseal.com", auth: { type: "api_key_header", name: "x-auth-token" } }],
+  [
+    "enigma",
+    {
+      baseUrl: "https://api.enigma.com",
+      auth: { type: "api_key_header", name: "x-api-key" },
+      allowedPathPrefixes: ["/graphql", "/v2/kyb"],
+    },
+  ],
+  ["fal_ai", { baseUrl: "https://api.fal.ai", auth: { type: "api_key_authorization", prefix: "Key " } }],
+  ["google_analytics", { baseUrl: "https://analyticsdata.googleapis.com/v1beta", auth: { type: "oauth_bearer" } }],
+  ["google_search_console", { baseUrl: "https://www.googleapis.com/webmasters/v3", auth: { type: "oauth_bearer" } }],
+  ["googledocs", { baseUrl: "https://www.googleapis.com/drive/v3", auth: { type: "oauth_bearer" } }],
+  [
+    "googledrive",
+    {
+      baseUrl: "https://www.googleapis.com",
+      auth: { type: "oauth_bearer" },
+      allowedPathPrefixes: ["/drive/v3", "/upload/drive/v3"],
+    },
+  ],
+  ["googlephotos", { baseUrl: "https://photoslibrary.googleapis.com/v1", auth: { type: "oauth_bearer" } }],
+  ["googlesheets", { baseUrl: "https://sheets.googleapis.com/v4", auth: { type: "oauth_bearer" } }],
+  ["googleslides", { baseUrl: "https://slides.googleapis.com/v1", auth: { type: "oauth_bearer" } }],
+  ["hackernews", { baseUrl: "https://hacker-news.firebaseio.com/v0", auth: { type: "none" } }],
+  ["here", { baseUrl: "https://geocode.search.hereapi.com/v1", auth: { type: "api_key_query", name: "apiKey" } }],
+  ["heygen", { baseUrl: "https://api.heygen.com", auth: { type: "api_key_header", name: "x-api-key" } }],
+  ["huggingface", { baseUrl: "https://datasets-server.huggingface.co", auth: { type: "oauth_bearer" } }],
+  ["ip2location", { baseUrl: "https://api.ip2location.io", auth: { type: "api_key_query", name: "key" } }],
+  ["ip2whois", { baseUrl: "https://api.ip2whois.com", auth: { type: "api_key_query", name: "key" } }],
+  ["ipdata_co", { baseUrl: "https://api.ipdata.co", auth: { type: "api_key_query", name: "api-key" } }],
+  [
+    "jiminny",
+    { baseUrl: "https://app.jiminny.com/customer/api/v1", auth: { type: "api_key_authorization", prefix: "Bearer " } },
+  ],
+  ["kickbox", { baseUrl: "https://api.kickbox.com", auth: { type: "api_key_query", name: "apikey" } }],
+  ["logo_dev", { baseUrl: "https://api.logo.dev", auth: { type: "api_key_authorization", prefix: "Bearer " } }],
+  ["mx_toolbox", { baseUrl: "https://mxtoolbox.com", auth: { type: "api_key_authorization", prefix: "" } }],
+  ["needle", { baseUrl: "https://needle.app", auth: { type: "api_key_header", name: "x-api-key" } }],
+  ["ocrspace", { baseUrl: "https://api.ocr.space", auth: { type: "api_key_query", name: "apikey" } }],
+  [
+    "openfootball_worldcup",
+    { baseUrl: "https://raw.githubusercontent.com/openfootball/worldcup.json/master", auth: { type: "none" } },
+  ],
+  ["openweather_api", { baseUrl: "https://api.openweathermap.org", auth: { type: "api_key_query", name: "appid" } }],
+  ["precoro", { baseUrl: "https://api.precoro.com", auth: { type: "api_key_header", name: "x-auth-token" } }],
+  ["renderform", { baseUrl: "https://get.renderform.io", auth: { type: "api_key_header", name: "x-api-key" } }],
+  ["roboflow", { baseUrl: "https://api.roboflow.com", auth: { type: "api_key_query", name: "api_key" } }],
+  [
+    "semantic_scholar",
+    {
+      baseUrl: "https://api.semanticscholar.org",
+      auth: { type: "api_key_header", name: "x-api-key" },
+      allowedPathPrefixes: ["/graph/v1", "/recommendations/v1"],
+    },
+  ],
+  ["short_io", { baseUrl: "https://api.short.io", auth: { type: "api_key_authorization", prefix: "" } }],
+  ["shortpixel", { baseUrl: "https://api.shortpixel.com/v2", auth: { type: "api_key_query", name: "key" } }],
+  [
+    "teamtailor",
+    { baseUrl: "https://api.teamtailor.com", auth: { type: "api_key_authorization", prefix: "Token token=" } },
+  ],
+  ["ticketmaster", { baseUrl: "https://app.ticketmaster.com", auth: { type: "api_key_header", name: "apikey" } }],
+  [
+    "v2ex",
+    {
+      baseUrl: "https://www.v2ex.com",
+      auth: { type: "api_key_authorization", prefix: "Bearer " },
+      allowedPathPrefixes: ["/api"],
+    },
+  ],
+  [
+    "voiceflow",
+    { baseUrl: "https://general-runtime.voiceflow.com", auth: { type: "api_key_authorization", prefix: "" } },
+  ],
+  [
+    "youtube",
+    {
+      baseUrl: "https://www.googleapis.com",
+      auth: { type: "oauth_bearer" },
+      allowedPathPrefixes: ["/youtube/v3", "/upload/youtube/v3"],
+    },
+  ],
+  [
+    "zenrows",
+    {
+      baseUrl: "https://api.zenrows.com",
+      auth: { type: "api_key_header", name: "x-api-key" },
+      allowedPathPrefixes: ["/v1"],
+    },
+  ],
+  ["zenserp", { baseUrl: "https://app.zenserp.com", auth: { type: "api_key_header", name: "apikey" } }],
+]);
 
 function propertyName(service: string): string {
   return /^[A-Za-z_$][\w$]*$/.test(service) ? service : JSON.stringify(service);
@@ -76,6 +204,7 @@ const proxyLines = [
   'import { credentialProviderProxyBaseUrl, defineProviderProxy } from "./provider-runtime.ts";',
   "",
   "/** Generated provider proxy executors for statically detectable provider HTTP APIs. Do not hand-edit. */",
+  "// oxfmt-ignore",
   "export const generatedProxyExecutors: Record<string, ProviderProxyExecutor> = {",
   ...proxyDefinitions.map((definition) => renderGeneratedProxyDefinition(definition)),
   "};",
@@ -93,6 +222,15 @@ if (existingProxyContent !== proxyContent) {
 async function loadGeneratedProxyDefinitions(): Promise<GeneratedProxyDefinition[]> {
   const definitions: GeneratedProxyDefinition[] = [];
   for (const source of providerSources) {
+    const manual = manualProxyDefinitions.get(source.service);
+    if (manual) {
+      definitions.push({
+        service: source.service,
+        ...manual,
+      });
+      continue;
+    }
+
     const runtimeSource = await readProviderRuntimeSource(source.service);
     if (/\bexport const proxy\b/u.test(runtimeSource)) {
       continue;
@@ -147,9 +285,9 @@ function readStaticProxyBaseUrl(source: string): string | undefined {
     return undefined;
   }
 
-  const origins = new Set(matches.map((match) => new URL(match.url).origin));
-  if (origins.size === 1 && matches.length > 1) {
-    return [...origins][0];
+  const urls = new Set(matches.map((match) => normalizeGeneratedProxyBaseUrl(match.url)));
+  if (urls.size > 1) {
+    return undefined;
   }
 
   return (
@@ -157,6 +295,10 @@ function readStaticProxyBaseUrl(source: string): string | undefined {
     matches.find((match) => match.name.endsWith("BaseUrl")) ??
     matches[0]
   )?.url;
+}
+
+function normalizeGeneratedProxyBaseUrl(url: string): string {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
 function readDynamicProxyBaseUrl(source: string): GeneratedProxyBaseUrl | undefined {
@@ -333,7 +475,7 @@ function isLikelyApiKeyQueryName(name: string): boolean {
 }
 
 function renderGeneratedProxyDefinition(definition: GeneratedProxyDefinition): string {
-  return `  ${propertyName(definition.service)}: defineProviderProxy({ service: ${JSON.stringify(definition.service)}, baseUrl: ${renderProxyBaseUrl(definition.baseUrl)}, auth: ${renderProxyAuth(definition.auth)} }),`;
+  return `  ${propertyName(definition.service)}: defineProviderProxy({ service: ${JSON.stringify(definition.service)}, baseUrl: ${renderProxyBaseUrl(definition.baseUrl)}, auth: ${renderProxyAuth(definition.auth)}${renderAllowedEndpoint(definition)} }),`;
 }
 
 function renderProxyBaseUrl(baseUrl: GeneratedProxyBaseUrl): string {
@@ -358,6 +500,18 @@ function renderProxyAuth(auth: GeneratedProxyAuth): string {
     case "api_key_authorization":
       return `{ type: "api_key_authorization", prefix: ${JSON.stringify(auth.prefix)}${auth.suffix ? `, suffix: ${JSON.stringify(auth.suffix)}` : ""} }`;
   }
+}
+
+function renderAllowedEndpoint(definition: GeneratedProxyDefinition): string {
+  if (!definition.allowedPathPrefixes?.length) {
+    return "";
+  }
+
+  const checks = definition.allowedPathPrefixes.flatMap((prefix) => [
+    `endpoint === ${JSON.stringify(prefix)}`,
+    `endpoint.startsWith(${JSON.stringify(prefix.endsWith("/") ? prefix : `${prefix}/`)})`,
+  ]);
+  return `, allowedEndpoint: (endpoint) => ${checks.join(" || ")}`;
 }
 
 async function readTextFile(path: string): Promise<string | undefined> {

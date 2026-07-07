@@ -83,6 +83,7 @@ describe("provider proxy helpers", () => {
     );
     expect(() => createProviderProxyUrl("https://api.example.com", "//evil.test/a")).toThrow(ProviderRequestError);
     expect(() => createProviderProxyUrl("https://api.example.com/v1", "/../admin")).toThrow(ProviderRequestError);
+    expect(() => createProviderProxyUrl("https://api.example.com/v1", "/%2e%2e/admin")).toThrow(ProviderRequestError);
   });
 
   it("normalizes caller headers without forwarding hop-by-hop or auth headers", () => {

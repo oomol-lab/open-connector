@@ -165,10 +165,24 @@ export function normalizeProviderProxyEndpoint(endpointInput: unknown): string {
       throw error;
     }
   }
-  if (endpoint.includes("\\") || endpoint.split("/").includes("..")) {
+  if (endpoint.includes("\\") || hasPathTraversalSegment(endpoint)) {
     throw new ProviderRequestError(400, "endpoint must not contain path traversal segments");
   }
   return endpoint;
+}
+
+function hasPathTraversalSegment(endpoint: string): boolean {
+  const path = endpoint.split(/[?#]/u)[0]!;
+  for (const segment of path.split("/")) {
+    try {
+      if (decodeURIComponent(segment) === "..") {
+        return true;
+      }
+    } catch {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function normalizeProviderProxyQuery(queryInput: unknown): Record<string, string> {

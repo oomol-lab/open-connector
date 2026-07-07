@@ -118,6 +118,33 @@ describe("ProxyRunner", () => {
     expect(connections.forConnection).toHaveBeenCalledWith("work");
   });
 
+  it("passes HEAD requests through to provider proxy executors", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const runner = createRunner({
+      providerLoader: new TestProviderLoader(proxy),
+    });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "HEAD" },
+      }),
+    ).resolves.toMatchObject({
+      ok: true,
+    });
+    expect(proxy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: "HEAD",
+      }),
+      expect.any(Object),
+    );
+  });
+
   it("maps connection errors to runtime failures", async () => {
     const connections = createConnections({
       getConnectionSummary: async () => {

@@ -43,7 +43,7 @@ type ProxyRequestReadResult = { ok: true; input: ProxyRequestInput } | ProxyRunF
 
 class ProxyInputError extends Error {}
 
-const supportedProxyMethods = new Set(["DELETE", "GET", "PATCH", "POST", "PUT"]);
+const supportedProxyMethods = new Set(["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"]);
 
 export class ProxyRunner {
   private readonly options: ProxyRunnerOptions;
@@ -141,7 +141,7 @@ export class ProxyRunner {
       this.assertRelativeEndpoint(endpoint);
       const method = requiredString(body.method, "method", (message) => new ProxyInputError(message)).toUpperCase();
       if (!supportedProxyMethods.has(method)) {
-        throw new ProxyInputError("method must be one of DELETE, GET, PATCH, POST, or PUT.");
+        throw new ProxyInputError("method must be one of DELETE, GET, HEAD, PATCH, POST, or PUT.");
       }
 
       const request: ProxyRequestInput = {
@@ -186,9 +186,23 @@ export class ProxyRunner {
         throw error;
       }
     }
-    if (endpoint.includes("\\") || endpoint.split("/").includes("..")) {
+    if (endpoint.includes("\\") || this.hasPathTraversalSegment(endpoint)) {
       throw new ProxyInputError("endpoint must not contain path traversal segments");
     }
+  }
+
+  private hasPathTraversalSegment(endpoint: string): boolean {
+    const path = endpoint.split(/[?#]/u)[0]!;
+    for (const segment of path.split("/")) {
+      try {
+        if (decodeURIComponent(segment) === "..") {
+          return true;
+        }
+      } catch {
+        return true;
+      }
+    }
+    return false;
   }
 
   private mapProxyErrorStatus(code: string): ProxyFailureStatus {
