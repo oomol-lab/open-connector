@@ -300,6 +300,20 @@ function stripBase64Padding(value: string): string {
 }
 
 /**
+ * Resolve a dot-separated path through plain objects only. Examples:
+ * `readPath({ test: { id: "x" } }, "test.id") => "x"`,
+ * `readPath({ a: "x" }, "a.b") => undefined` (can't traverse into a string).
+ */
+export function readPath(value: unknown, path: string): unknown {
+  return path.split(".").reduce<unknown>((current, key) => {
+    if (typeof current !== "object" || current === null || Array.isArray(current)) {
+      return undefined;
+    }
+    return (current as Record<string, unknown>)[key];
+  }, value);
+}
+
+/**
  * Pick the first integer-like value from a record. Examples:
  * `pickOptionalInteger({ a: "2" }, "a") => 2`.
  */
