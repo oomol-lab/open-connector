@@ -67,6 +67,8 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
     actionPolicy: new ActionPolicyService({
       allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
       blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
+      allowedProxies: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_PROXIES),
+      blockedProxies: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_PROXIES),
     }),
     logger: workerLogger,
     computeRuntimeAuthConfigured: false,
@@ -114,6 +116,8 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     encryptionKey: env.OOMOL_CONNECT_ENCRYPTION_KEY ?? "",
     allowedActions: env.OOMOL_CONNECT_ALLOWED_ACTIONS ?? "",
     blockedActions: env.OOMOL_CONNECT_BLOCKED_ACTIONS ?? "",
+    allowedProxies: env.OOMOL_CONNECT_ALLOWED_PROXIES ?? "",
+    blockedProxies: env.OOMOL_CONNECT_BLOCKED_PROXIES ?? "",
     transitFileTtlSeconds: env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS ?? "",
     transitFileMaxBytes: env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES ?? "",
   });

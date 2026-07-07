@@ -186,3 +186,6 @@ Constrain executable actions with comma-separated action ids or provider wildcar
 ```bash
 OOMOL_CONNECT_ALLOWED_ACTIONS="hackernews.*,github.get_current_user" npm run dev
 ```
+
+When action policy is configured, provider proxy requests are denied unless the provider is
+explicitly included in `OOMOL_CONNECT_ALLOWED_PROXIES`.

@@ -274,5 +274,25 @@ OOMOL_CONNECT_BLOCKED_ACTIONS="github.delete_repository" \
 npm run dev
 ```
 
-Entries are comma-separated action ids. A provider-wide wildcard such as `gmail.*` matches all
-actions for that provider.
+Provider proxy requests use separate service-level policy variables because `/v1/proxy/:service`
+can reach provider API endpoints beyond the curated action catalog. If any action policy is
+configured, proxy requests are denied by default unless the service is explicitly allowed:
+
+```bash
+OOMOL_CONNECT_ALLOWED_ACTIONS="github.get_current_user" \
+OOMOL_CONNECT_ALLOWED_PROXIES="github" \
+npm run dev
+```
+
+Use `OOMOL_CONNECT_BLOCKED_PROXIES` to deny provider proxies even when `OOMOL_CONNECT_ALLOWED_PROXIES`
+contains `*`:
+
+```bash
+OOMOL_CONNECT_ALLOWED_PROXIES="*" \
+OOMOL_CONNECT_BLOCKED_PROXIES="github" \
+npm run dev
+```
+
+Action policy entries are comma-separated action ids. A provider-wide wildcard such as `gmail.*`
+matches all actions for that provider. Proxy policy entries are comma-separated provider service
+names, or `*` for all provider proxies.

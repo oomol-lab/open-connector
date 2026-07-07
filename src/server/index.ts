@@ -24,6 +24,8 @@ const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
 const actionPolicy = new ActionPolicyService({
   allowedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_ACTIONS),
   blockedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_ACTIONS),
+  allowedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_PROXIES),
+  blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
 });
 const builtRoot = join(process.cwd(), "dist/web");
 const staticRoot = await resolveStaticRoot(builtRoot);

@@ -13,6 +13,7 @@ import type { Logger } from "../logger.ts";
 
 import { describe, expect, it, vi } from "vitest";
 import { ConnectionError } from "../../connection-service.ts";
+import { ActionPolicyService } from "../../core/action-policy.ts";
 import { ProxyRunner } from "./proxy-runner.ts";
 
 const provider: ProviderDefinition = {
@@ -51,6 +52,59 @@ describe("ProxyRunner", () => {
       errorCode: "proxy_not_supported",
     });
     expect(connections.getConnectionSummary).not.toHaveBeenCalled();
+  });
+
+  it("rejects proxies blocked by local policy before loading executors", async () => {
+    const loadProxyExecutor = vi.fn();
+    const connections = createConnections();
+    const runner = createRunner({
+      actionPolicy: new ActionPolicyService({ allowedActions: ["example.echo"] }),
+      connections,
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+        loadProxyExecutor,
+      },
+    });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      status: 403,
+      errorCode: "proxy_not_allowed",
+    });
+    expect(loadProxyExecutor).not.toHaveBeenCalled();
+    expect(connections.getConnectionSummary).not.toHaveBeenCalled();
+  });
+
+  it("runs explicitly allowed proxies when action policy is configured", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const runner = createRunner({
+      actionPolicy: new ActionPolicyService({
+        allowedActions: ["example.echo"],
+        allowedProxies: ["example"],
+      }),
+      providerLoader: new TestProviderLoader(proxy),
+    });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+      }),
+    ).resolves.toMatchObject({
+      ok: true,
+    });
+    expect(proxy).toHaveBeenCalled();
   });
 
   it("rejects invalid endpoints when a provider supports proxy", async () => {
@@ -281,12 +335,14 @@ describe("ProxyRunner", () => {
 });
 
 function createRunner(input: {
+  actionPolicy?: ActionPolicyService;
   connections?: ConnectionService;
   logger?: Logger;
   providerLoader: IProviderLoader;
 }): ProxyRunner {
   return new ProxyRunner({
     catalog: { providers: [provider] } as CatalogStore,
+    actionPolicy: input.actionPolicy,
     connections: input.connections ?? createConnections(),
     logger: input.logger,
     providerLoader: input.providerLoader,

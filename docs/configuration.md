@@ -14,6 +14,8 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_RUNTIME_TOKEN`            | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.             |
 | `OOMOL_CONNECT_ALLOWED_ACTIONS`          | unset                     | Comma-separated executable action allowlist. Supports `service.*`.             |
 | `OOMOL_CONNECT_BLOCKED_ACTIONS`          | unset                     | Comma-separated executable action denylist. Supports `service.*`.              |
+| `OOMOL_CONNECT_ALLOWED_PROXIES`          | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.      |
+| `OOMOL_CONNECT_BLOCKED_PROXIES`          | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.       |
 | `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Local transit file lifetime before cleanup.                                    |
 | `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum local transit file upload size.                                        |
 
@@ -24,6 +26,7 @@ OOMOL_CONNECT_DATA_DIR="$PWD/data" \
 OOMOL_CONNECT_ENCRYPTION_KEY="replace-with-a-long-random-secret" \
 OOMOL_CONNECT_ADMIN_TOKEN="replace-with-an-admin-token" \
 OOMOL_CONNECT_ALLOWED_ACTIONS="hackernews.*,github.get_current_user" \
+OOMOL_CONNECT_ALLOWED_PROXIES="github" \
 npm run dev
 ```
 
@@ -33,8 +36,8 @@ bootstrap scripts and backward compatibility.
 
 ## Cloudflare Workers
 
-Cloudflare uses the same environment variable names for origin, auth tokens, action policy, transit
-file limits, and credential encryption. `PORT`, `HOST`, and `OOMOL_CONNECT_DATA_DIR` are local
+Cloudflare uses the same environment variable names for origin, auth tokens, execution policy,
+transit file limits, and credential encryption. `PORT`, `HOST`, and `OOMOL_CONNECT_DATA_DIR` are local
 Node-only settings on Workers.
 
 The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy

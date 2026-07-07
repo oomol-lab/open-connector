@@ -152,6 +152,10 @@ stored credentials local and lets the provider proxy executor apply provider-spe
 Successful responses use the standard `/v1` success envelope with `data.status`, `data.headers`, and
 `data.data`.
 
+Proxy requests are controlled by `OOMOL_CONNECT_ALLOWED_PROXIES` and
+`OOMOL_CONNECT_BLOCKED_PROXIES`. When action policy is configured, provider proxies are denied by
+default unless explicitly allowlisted.
+
 ## Local Admin Endpoints
 
 These endpoints power the Web Console, examples, and setup scripts:

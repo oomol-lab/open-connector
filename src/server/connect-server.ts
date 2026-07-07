@@ -77,6 +77,7 @@ export class ConnectServer {
       catalog: options.catalog,
       providerLoader: options.providerLoader,
       connections: options.connections,
+      actionPolicy: options.actionPolicy,
       logger: options.logger,
     });
   }

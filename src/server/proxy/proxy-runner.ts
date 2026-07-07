@@ -1,5 +1,6 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService } from "../../connection-service.ts";
+import type { ActionPolicyService } from "../../core/action-policy.ts";
 import type { ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
@@ -14,6 +15,7 @@ export interface ProxyRunnerOptions {
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
+  actionPolicy?: ActionPolicyService;
   logger?: Logger;
 }
 
@@ -61,6 +63,17 @@ export class ProxyRunner {
         errorCode: "invalid_input",
         message: `unknown service: ${input.service}`,
         meta: { service: input.service },
+      };
+    }
+
+    const decision = this.options.actionPolicy?.evaluateProxy(provider.service);
+    if (decision && !decision.allowed) {
+      return {
+        ok: false,
+        status: 403,
+        errorCode: decision.code,
+        message: decision.message,
+        meta: { service: provider.service },
       };
     }
 
