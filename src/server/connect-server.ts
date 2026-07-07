@@ -3,6 +3,7 @@ import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
+import type { AwaitActionRunner } from "./actions/await-action-runner.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
 import type { Logger } from "./logger.ts";
@@ -15,7 +16,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { ConnectionError } from "../connection-service.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
-import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
@@ -52,6 +53,7 @@ export interface IConnectServerOptions {
   oauthFlow: OAuthFlowService;
   runtimeTokens: RuntimeTokenService;
   actions: ActionRunner;
+  awaitActions: AwaitActionRunner;
   transitFiles: ITransitFileService;
   staticRoot?: string;
   auth?: LocalAuthOptions;
@@ -94,6 +96,9 @@ export class ConnectServer {
     app.get("/v1/actions/search", (context) => this.searchRuntimeActions(context));
     app.get("/v1/actions/:actionId", (context) => this.getRuntimeAction(context, context.req.param("actionId")));
     app.post("/v1/actions/:actionId", (context) => this.createRuntimeActionRun(context, context.req.param("actionId")));
+    app.post("/v1/actions/:actionId/await", (context) =>
+      this.createRuntimeActionAwait(context, context.req.param("actionId")),
+    );
     app.get("/v1/apps", (context) => this.listRuntimeApps(context));
     app.get("/v1/apps/authenticated", (context) => this.listAuthenticatedRuntimeApps(context));
     app.get("/v1/apps/services/:service", (context) =>
@@ -391,6 +396,70 @@ export class ConnectServer {
       }
 
       return writeRuntimeActionResult(context, { actionId, executionId: run.executionId, result: run.result });
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        return writeRuntimeFailure(context, {
+          status: mapConnectionErrorStatus(error),
+          errorCode: error.code,
+          message: error.message,
+          meta: { actionId },
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  private async createRuntimeActionAwait(context: Context, actionId: string): Promise<Response> {
+    if (!this.options.catalog.actionsById.has(actionId)) {
+      return writeRuntimeFailure(context, {
+        status: 404,
+        errorCode: "invalid_input",
+        message: `unknown action: ${actionId}`,
+        meta: { actionId },
+      });
+    }
+
+    const body = await readJsonBody(context);
+    // JSON bodies send maxWaitMs as a number, not a numeric string, and an
+    // out-of-range/garbage value is just a hint the engine already clamps —
+    // use the non-throwing optionalInteger so a bad value falls back to the
+    // engine's default instead of a raw 500 from an uncaught CastError.
+    const maxWaitMs = optionalInteger(body.maxWaitMs);
+    try {
+      const outcome = await this.options.awaitActions.run({
+        actionId,
+        input: body.input ?? {},
+        caller: "http",
+        connectionName: readConnectionName(context, body),
+        maxWaitMs,
+        signal: context.req.raw.signal,
+      });
+      if (!outcome) {
+        return writeRuntimeFailure(context, {
+          status: 404,
+          errorCode: "invalid_input",
+          message: `unknown action: ${actionId}`,
+          meta: { actionId },
+        });
+      }
+      if (outcome.kind === "not_pollable") {
+        return writeRuntimeFailure(context, {
+          status: 400,
+          errorCode: "not_pollable_async_lifecycle",
+          message: `Action ${actionId} does not declare a pollable asyncLifecycle mapping.`,
+          meta: { actionId },
+        });
+      }
+      if (outcome.kind === "pending") {
+        return writeRuntimeSuccess(
+          context,
+          { status: "pending", jobId: outcome.jobId, statusActionId: outcome.statusActionId },
+          { executionId: outcome.executionId, actionId },
+        );
+      }
+
+      return writeRuntimeActionResult(context, { actionId, executionId: outcome.executionId, result: outcome.result });
     } catch (error) {
       if (error instanceof ConnectionError) {
         return writeRuntimeFailure(context, {

@@ -3,6 +3,8 @@ import type { ConnectionError, ConnectionSummary } from "../../connection-servic
 import type { ExecutionResult, ProviderDefinition } from "../../core/types.ts";
 import type { Context } from "hono";
 
+import { isPollableAsyncLifecycle } from "../../core/async-lifecycle.ts";
+
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
 export type RuntimeResponseMeta = Record<string, unknown>;
@@ -54,7 +56,7 @@ export interface RuntimeActionMetadata {
   inputSchema: RuntimeActionDefinition["inputSchema"];
   outputSchema: RuntimeActionDefinition["outputSchema"];
   followUpActions: RuntimeActionFollowUp[];
-  asyncLifecycle: RuntimeActionDefinition["asyncLifecycle"] | null;
+  asyncLifecycle: (NonNullable<RuntimeActionDefinition["asyncLifecycle"]> & { pollable: boolean }) | null;
 }
 
 export interface RuntimeConnectedApp {
@@ -112,7 +114,9 @@ export function serializeRuntimeAction(action: RuntimeActionDefinition): Runtime
     inputSchema: action.inputSchema,
     outputSchema: action.outputSchema,
     followUpActions: (action.followUpActions ?? []).map((actionId) => ({ actionId })),
-    asyncLifecycle: action.asyncLifecycle ?? null,
+    asyncLifecycle: action.asyncLifecycle
+      ? { ...action.asyncLifecycle, pollable: isPollableAsyncLifecycle(action.asyncLifecycle) }
+      : null,
   };
 
   return metadata;

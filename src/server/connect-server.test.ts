@@ -26,6 +26,7 @@ import { buildActionSearchIndex } from "../core/action-search.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
+import { AwaitActionRunner } from "./actions/await-action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { TransitFileService } from "./files/transit-files.ts";
@@ -83,6 +84,26 @@ const followUpAction: ActionDefinition = {
   ...echoAction,
   id: "example.follow_up",
   name: "follow_up",
+};
+
+const asyncStartAction: ActionDefinition = {
+  ...echoAction,
+  id: "example.start_job",
+  name: "start_job",
+  asyncLifecycle: {
+    startActionId: "example.start_job",
+    statusActionId: "example.get_job",
+    jobIdOutputPath: "job.id",
+    jobIdInputField: "job_id",
+    completionPath: "status",
+    completionValues: { done: ["completed"] },
+  },
+};
+
+const asyncStatusAction: ActionDefinition = {
+  ...echoAction,
+  id: "example.get_job",
+  name: "get_job",
 };
 
 afterEach(() => {
@@ -147,6 +168,99 @@ describe("ConnectServer", () => {
         code: "invalid_json",
         message: "Request body must be valid JSON.",
       },
+    });
+  });
+
+  it("awaits a pollable async action until it settles", async () => {
+    // A single immediate "completed" poll keeps this HTTP-wiring test fast and
+    // deterministic in real time; the multi-poll/backoff behavior itself is
+    // already covered with a fake clock in await-action-runner.test.ts.
+    const providerLoader = new AsyncJobProviderLoader(() => ({ status: "completed", output: "done" }));
+    const app = createTestServer(
+      [
+        {
+          ...apiKeyProvider,
+          authTypes: ["no_auth"],
+          auth: [{ type: "no_auth" }],
+          actions: [asyncStartAction, asyncStatusAction],
+        },
+      ],
+      { providerLoader },
+    ).createApp();
+
+    const response = await app.request("/v1/actions/example.start_job/await", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, maxWaitMs: 1000 }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      data: { status: "completed", output: "done" },
+    });
+  });
+
+  it("rejects awaiting an action without a pollable asyncLifecycle mapping", async () => {
+    const app = createTestServer([
+      { ...apiKeyProvider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }], actions: [echoAction] },
+    ]).createApp();
+
+    const response = await app.request("/v1/actions/example.echo/await", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ input: { message: "hi" } }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "not_pollable_async_lifecycle",
+    });
+  });
+
+  it("returns a pending handle once the await wait budget is exhausted", async () => {
+    const providerLoader = new AsyncJobProviderLoader(() => ({ status: "in_progress" }));
+    const app = createTestServer(
+      [
+        {
+          ...apiKeyProvider,
+          authTypes: ["no_auth"],
+          auth: [{ type: "no_auth" }],
+          actions: [asyncStartAction, asyncStatusAction],
+        },
+      ],
+      { providerLoader },
+    ).createApp();
+
+    const response = await app.request("/v1/actions/example.start_job/await", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, maxWaitMs: 1000 }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      data: { status: "pending", jobId: "job-1", statusActionId: "example.get_job" },
+    });
+  });
+
+  it("reports pollable async actions through the v1 action metadata endpoint", async () => {
+    const app = createTestServer([
+      {
+        ...apiKeyProvider,
+        authTypes: ["no_auth"],
+        auth: [{ type: "no_auth" }],
+        actions: [asyncStartAction, asyncStatusAction],
+      },
+    ]).createApp();
+
+    const response = await app.request("/v1/actions/example.start_job");
+
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      data: { asyncLifecycle: { pollable: true } },
     });
   });
 
@@ -1689,7 +1803,7 @@ interface CreateTestServerOptions {
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
   const catalog = createCatalogStore(providers, {
-    executableActionIds: ["example.echo"],
+    executableActionIds: ["example.echo", "example.start_job", "example.get_job"],
   });
   const providerLoader = options.providerLoader ?? new EmptyProviderLoader();
   const runtimeTokens = options.runtimeTokens ?? new RuntimeTokenService(new MemoryRuntimeTokenStore());
@@ -1722,6 +1836,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     actionPolicy: options.actionPolicy,
     logger: options.logger,
   });
+  const awaitActionRunner = new AwaitActionRunner({ catalog, actions: actionRunner });
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
@@ -1735,6 +1850,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       states: new MemoryOAuthStateStore(),
     }),
     actions: actionRunner,
+    awaitActions: awaitActionRunner,
     transitFiles,
     runtimeTokens,
     registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, staticRoot) : undefined,
@@ -1797,6 +1913,29 @@ function createTestTransitFiles(rootDir: string, options: { maxBytes?: number } 
 class EmptyProviderLoader implements IProviderLoader {
   async loadActionExecutor(): Promise<never> {
     throw new Error("No actions are available in this test.");
+  }
+
+  async loadProxyExecutor(): Promise<ProviderProxyExecutor | undefined> {
+    return undefined;
+  }
+
+  async loadCredentialValidators(): Promise<undefined> {
+    return undefined;
+  }
+}
+
+class AsyncJobProviderLoader implements IProviderLoader {
+  private readonly nextStatus: () => Record<string, unknown>;
+
+  constructor(nextStatus: () => Record<string, unknown>) {
+    this.nextStatus = nextStatus;
+  }
+
+  async loadActionExecutor(_service: string, actionId: string): Promise<ActionExecutor> {
+    if (actionId === "example.start_job") {
+      return async () => ({ ok: true, output: { job: { id: "job-1" } } });
+    }
+    return async () => ({ ok: true, output: this.nextStatus() });
   }
 
   async loadProxyExecutor(): Promise<ProviderProxyExecutor | undefined> {

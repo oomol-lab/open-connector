@@ -12,6 +12,7 @@ import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.t
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
+import { AwaitActionRunner } from "./actions/await-action-runner.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 
@@ -58,6 +59,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     actionPolicy: options.actionPolicy,
     logger: options.logger,
   });
+  const awaitActions = new AwaitActionRunner({ catalog: options.catalog, actions });
 
   return {
     app: new ConnectServer({
@@ -71,6 +73,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         states: options.runtimeDatabase.oauthStateStore,
       }),
       actions,
+      awaitActions,
       transitFiles: options.transitFiles,
       runtimeTokens,
       registerStaticRoutes: options.registerStaticRoutes,
