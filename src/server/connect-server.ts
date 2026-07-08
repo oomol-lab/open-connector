@@ -40,6 +40,8 @@ import { decodeRunLogCursor } from "./storage/runtime-store.ts";
 
 const oauthCompletionChannelName = "oomol-connect-oauth";
 const oauthCompletedType = "oauth.completed";
+const catalogBrowserCacheControl = "public, max-age=0, must-revalidate";
+const catalogEdgeCacheControl = "public, max-age=31536000, stale-while-revalidate=86400";
 
 /**
  * Dependencies required to construct the local connector server.
@@ -86,6 +88,18 @@ export class ConnectServer {
     const app = new Hono();
     const auth = this.options.auth ?? {};
 
+    app.use("*", async (context, next) => {
+      await next();
+      if (isCatalogResponsePath(context.req.path) && context.res.status >= 200 && context.res.status < 300) {
+        context.header("Cache-Control", catalogBrowserCacheControl);
+        context.header("Cloudflare-CDN-Cache-Control", catalogEdgeCacheControl);
+        context.header("Vary", "Authorization, Cookie");
+        return;
+      }
+      if (isRuntimeResponsePath(context.req.path)) {
+        context.header("Cache-Control", "no-store");
+      }
+    });
     app.get("/health", (context) => context.json({ ok: true }));
     app.use("*", createLocalAuthMiddleware(auth));
     app.get("/v1/health", (context) => writeRuntimeSuccess(context, { ok: true, runtime: "oomol-connect" }));
@@ -779,6 +793,35 @@ export class ConnectServer {
       throw error;
     }
   }
+}
+
+function isCatalogResponsePath(path: string): boolean {
+  return (
+    path === "/api/providers" ||
+    /^\/api\/providers\/[^/]+$/.test(path) ||
+    path === "/api/actions" ||
+    (path !== "/api/actions/search" && /^\/api\/actions\/[^/]+$/.test(path)) ||
+    path === "/v1/providers" ||
+    path === "/v1/actions" ||
+    (path !== "/v1/actions/search" && /^\/v1\/actions\/[^/]+$/.test(path))
+  );
+}
+
+function isRuntimeResponsePath(path: string): boolean {
+  return (
+    path === "/health" ||
+    path === "/openapi.json" ||
+    path === "/docs" ||
+    path.startsWith("/docs/") ||
+    path === "/api" ||
+    path.startsWith("/api/") ||
+    path === "/v1" ||
+    path.startsWith("/v1/") ||
+    path === "/mcp" ||
+    path.startsWith("/mcp/") ||
+    path === "/oauth" ||
+    path.startsWith("/oauth/")
+  );
 }
 
 interface ConnectionLogContext {

@@ -95,6 +95,11 @@ describe("ConnectServer", () => {
     const app = createTestServer([apiKeyProvider]).createApp();
 
     const catalogResponse = await app.request("/api/providers/example");
+    expect(catalogResponse.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(catalogResponse.headers.get("cloudflare-cdn-cache-control")).toBe(
+      "public, max-age=31536000, stale-while-revalidate=86400",
+    );
+    expect(catalogResponse.headers.get("vary")).toBe("Authorization, Cookie");
     await expect(catalogResponse.json()).resolves.toMatchObject({
       service: "example",
       displayName: "Example",
@@ -107,6 +112,7 @@ describe("ConnectServer", () => {
     });
 
     expect(connectionResponse.status).toBe(400);
+    expect(connectionResponse.headers.get("cache-control")).toBe("no-store");
     await expect(connectionResponse.json()).resolves.toEqual({
       error: {
         code: "invalid_input",
@@ -740,9 +746,12 @@ describe("ConnectServer", () => {
       }).createApp();
 
       expect((await app.request("/overview")).status).toBe(200);
-      expect((await app.request("/assets/console.js")).status).toBe(200);
+      const consoleScript = await app.request("/assets/console.js");
+      expect(consoleScript.status).toBe(200);
+      expect(consoleScript.headers.get("cache-control")).not.toBe("no-store");
       expect((await app.request("/api/providers")).status).toBe(401);
       expect((await app.request("/docs")).status).toBe(401);
+      expect((await app.request("/api/providers")).headers.get("cache-control")).toBe("no-store");
 
       const authorized = await app.request("/api/providers", {
         headers: { authorization: "Bearer local-token" },
@@ -1206,8 +1215,17 @@ describe("ConnectServer", () => {
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
 
+    const apiActions = await app.request("/api/actions");
+    expect(apiActions.status).toBe(200);
+    expect(apiActions.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+
+    const apiAction = await app.request("/api/actions/example.echo");
+    expect(apiAction.status).toBe(200);
+    expect(apiAction.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+
     const providers = await app.request("/v1/providers");
     expect(providers.status).toBe(200);
+    expect(providers.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
     await expect(providers.json()).resolves.toMatchObject({
       success: true,
       data: [
@@ -1222,6 +1240,7 @@ describe("ConnectServer", () => {
 
     const actionServices = await app.request("/v1/actions");
     expect(actionServices.status).toBe(200);
+    expect(actionServices.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
     await expect(actionServices.json()).resolves.toMatchObject({
       success: true,
       data: [{ service: "example" }],
@@ -1229,6 +1248,7 @@ describe("ConnectServer", () => {
 
     const actions = await app.request("/v1/actions?service=example");
     expect(actions.status).toBe(200);
+    expect(actions.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
     await expect(actions.json()).resolves.toMatchObject({
       success: true,
       data: [
@@ -1247,6 +1267,7 @@ describe("ConnectServer", () => {
 
     const apiSearch = await app.request("/api/actions/search?q=echo");
     expect(apiSearch.status).toBe(200);
+    expect(apiSearch.headers.get("cache-control")).toBe("no-store");
     const apiSearchResults = (await apiSearch.json()) as Array<{
       id: string;
       service: string;
@@ -1266,6 +1287,7 @@ describe("ConnectServer", () => {
 
     const runtimeSearch = await app.request("/v1/actions/search?q=echo");
     expect(runtimeSearch.status).toBe(200);
+    expect(runtimeSearch.headers.get("cache-control")).toBe("no-store");
     const runtimeSearchBody = (await runtimeSearch.json()) as {
       success: boolean;
       data: Array<{
@@ -1291,6 +1313,7 @@ describe("ConnectServer", () => {
 
     const action = await app.request("/v1/actions/example.echo");
     expect(action.status).toBe(200);
+    expect(action.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
     await expect(action.json()).resolves.toMatchObject({
       success: true,
       meta: {},
