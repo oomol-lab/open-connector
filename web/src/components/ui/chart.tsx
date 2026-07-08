@@ -13,6 +13,11 @@ interface ChartContextValue {
   config: ChartConfig;
 }
 
+export interface ChartContainerProps extends React.ComponentProps<"div"> {
+  config: ChartConfig;
+  children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>["children"];
+}
+
 const ChartContext = React.createContext<ChartContextValue | null>(null);
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
@@ -44,16 +49,7 @@ export function useChart(): ChartContextValue {
   return context;
 }
 
-export function ChartContainer({
-  id,
-  className,
-  children,
-  config,
-  ...props
-}: React.ComponentProps<"div"> & {
-  config: ChartConfig;
-  children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>["children"];
-}): React.ReactElement {
+export function ChartContainer({ id, className, children, config, ...props }: ChartContainerProps): React.ReactElement {
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
 

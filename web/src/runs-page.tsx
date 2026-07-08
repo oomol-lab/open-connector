@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
 import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { apiGet } from "./api";
 import { compactJson, formatDate, formatDuration } from "./model";
@@ -34,6 +34,7 @@ export function RunsPage(props: RunsPageProps): ReactNode {
   const [selectedService, setSelectedService] = useState<string | null>(queryService);
   const [loadingMore, setLoadingMore] = useState(false);
   const [runsError, setRunsError] = useState<string | null>(null);
+  const serviceLoadRequestId = useRef(0);
   const serviceOptions = useMemo(
     () => runServiceOptions(selectedService ? props.initialRuns : runs),
     [props.initialRuns, runs, selectedService],
@@ -45,7 +46,10 @@ export function RunsPage(props: RunsPageProps): ReactNode {
     setSelectedService(queryService);
     setRunsError(null);
     if (queryService) {
-      void loadRunsForService(queryService);
+      void loadRunsForService(queryService, ++serviceLoadRequestId.current);
+    } else {
+      serviceLoadRequestId.current += 1;
+      setLoadingMore(false);
     }
   }, [props.initialRuns, props.nextCursor, queryService]);
 
@@ -67,16 +71,20 @@ export function RunsPage(props: RunsPageProps): ReactNode {
     }
   }
 
-  async function loadRunsForService(service: string): Promise<void> {
+  async function loadRunsForService(service: string, requestId: number): Promise<void> {
     setLoadingMore(true);
     try {
       const page = await apiGet<RunLogPage>(runListPath({ service }));
+      if (requestId !== serviceLoadRequestId.current) return;
       setRuns(page.items);
       setNextCursor(page.nextCursor);
     } catch (caught) {
+      if (requestId !== serviceLoadRequestId.current) return;
       setRunsError(caught instanceof Error ? caught.message : t("runs.loadMoreFailed"));
     } finally {
-      setLoadingMore(false);
+      if (requestId === serviceLoadRequestId.current) {
+        setLoadingMore(false);
+      }
     }
   }
 
@@ -87,10 +95,12 @@ export function RunsPage(props: RunsPageProps): ReactNode {
     const nextSearchParams = new URLSearchParams(searchParams);
 
     if (!service) {
+      serviceLoadRequestId.current += 1;
       nextSearchParams.delete("service");
       setSearchParams(nextSearchParams);
       setRuns(props.initialRuns);
       setNextCursor(props.nextCursor);
+      setLoadingMore(false);
       return;
     }
 
