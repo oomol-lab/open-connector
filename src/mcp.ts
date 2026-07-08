@@ -56,6 +56,15 @@ const mcpToolSummaries: IMcpToolSummary[] = [
   },
 ];
 
+const mcpServerInstructions = [
+  "Use OpenConnector to discover and execute provider actions through a small tool set.",
+  "Start with list_apps or search_actions.",
+  "Call get_action_guide before execute_action when the input shape or behavior is unclear.",
+  "Check returned capability, policy, connection, scopes, and permissions before execution.",
+  "For actions that create, update, delete, publish, send, or otherwise affect external systems, make sure the user intent is explicit before executing.",
+  "Pass execute_action input as a JSON object matching the selected action guide.",
+].join("\n");
+
 /**
  * Return the fixed discovery-oriented MCP tool list.
  *
@@ -71,10 +80,15 @@ export function listMcpToolSummaries(): IMcpToolSummary[] {
  * Create a stateless MCP server instance for one Streamable HTTP request.
  */
 export function createMcpServer(options: IMcpServerOptions): McpServer {
-  const server = new McpServer({
-    name: "oomol-connect",
-    version: "0.1.0",
-  });
+  const server = new McpServer(
+    {
+      name: "oomol-connect",
+      version: "0.1.0",
+    },
+    {
+      instructions: mcpServerInstructions,
+    },
+  );
 
   server.registerTool(
     "list_apps",

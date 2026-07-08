@@ -52,6 +52,16 @@ describe("MCP server", () => {
     });
   });
 
+  it("publishes server instructions through MCP initialization", async () => {
+    await withMcpClient(async (client) => {
+      const instructions = client.getInstructions();
+
+      expect(instructions).toBeTypeOf("string");
+      expect(instructions).toContain("Start with list_apps or search_actions.");
+      expect(instructions).toContain("Call get_action_guide before execute_action");
+    });
+  });
+
   it("returns structured content for action search and execution", async () => {
     await withMcpClient(async (client) => {
       const search = await client.callTool({
