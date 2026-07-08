@@ -1,5 +1,4 @@
 import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
-import type { LongbridgeReadonlyActionName } from "./readonly-action-specs.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -8,25 +7,6 @@ import { defineLongbridgeReadonlyActions } from "./readonly-action-specs.ts";
 const service = "longbridge";
 
 export const longbridgeOAuthScopes: string[] = ["4", "6", "10", "11"];
-
-export type LongbridgeActionName =
-  | "list_securities"
-  | "list_account_cash"
-  | "list_stock_positions"
-  | "get_market_temperature"
-  | "list_market_temperature"
-  | "list_filings"
-  | "list_news"
-  | "list_watchlist_groups"
-  | "list_cash_flow"
-  | "list_fund_positions"
-  | "list_history_executions"
-  | "get_order_detail"
-  | "estimate_max_buy_quantity"
-  | "list_history_orders"
-  | "list_today_executions"
-  | "list_today_orders"
-  | LongbridgeReadonlyActionName;
 
 const nonEmptyString = (description: string): JsonSchema => s.string({ minLength: 1, pattern: "\\S", description });
 const rawObjectSchema = s.looseObject("The raw object returned by Longbridge.");

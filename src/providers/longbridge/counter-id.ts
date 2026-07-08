@@ -43,5 +43,5 @@ function splitSymbol(symbol: string): SymbolParts | undefined {
 }
 
 function normalizeCounterCode(code: string, market: string): string {
-  return market.toUpperCase() === "HK" && /^[0-9]+$/.test(code) ? code.replace(/^0+/, "") : code;
+  return market.toUpperCase() === "HK" && /^[0-9]+$/.test(code) ? code.replace(/^0+(?=[0-9])/, "") : code;
 }

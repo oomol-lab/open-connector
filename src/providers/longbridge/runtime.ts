@@ -1,11 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { LongbridgeActionName } from "./actions.ts";
-import type {
-  LongbridgeReadonlyActionName,
-  LongbridgeReadonlyActionSpec,
-  LongbridgeReadonlyParamSpec,
-} from "./readonly-action-specs.ts";
+import type { LongbridgeReadonlyActionSpec, LongbridgeReadonlyParamSpec } from "./readonly-action-specs.ts";
 
 import {
   compactObject,
@@ -45,11 +40,11 @@ export interface LongbridgeRequestOptions {
 
 type LongbridgeActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
 
-const longbridgeReadonlyActionHandlers = Object.fromEntries(
+const longbridgeReadonlyActionHandlers: Record<string, LongbridgeActionHandler> = Object.fromEntries(
   longbridgeReadonlyActionSpecs.map((spec) => [spec.name, createLongbridgeReadonlyActionHandler(spec)]),
-) as Record<LongbridgeReadonlyActionName, LongbridgeActionHandler>;
+);
 
-export const longbridgeActionHandlers: Record<LongbridgeActionName, LongbridgeActionHandler> = {
+export const longbridgeActionHandlers: Record<string, LongbridgeActionHandler> = {
   async list_securities(input, context) {
     const payload = await requestLongbridgeJson({
       method: "GET",
@@ -827,15 +822,19 @@ function providerInputError(message: string): ProviderRequestError {
 }
 
 function dateToUnixSeconds(value: string, edge: "end" | "start"): number {
-  const match = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/.exec(value);
-  if (!match?.groups) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
     throw new ProviderRequestError(400, "date must use YYYY-MM-DD format");
   }
-  const timestamp =
-    Date.UTC(Number(match.groups.year), Number(match.groups.month) - 1, Number(match.groups.day)) / 1000;
-  if (!Number.isFinite(timestamp)) {
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
     throw new ProviderRequestError(400, "date must be valid");
   }
+  const timestamp = date.getTime() / 1000;
   return edge === "end" ? timestamp + 86_399 : timestamp;
 }
 

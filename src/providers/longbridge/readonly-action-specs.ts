@@ -99,7 +99,7 @@ const sizeSchema = s.positiveInteger("The number of records to request.");
 const countSchema = s.positiveInteger("The number of records to request.");
 const rankKeySchema = s.nonEmptyString("The Longbridge ranking category key.");
 const screenerFilterSchema = s.looseObject("A Longbridge screener filter condition.");
-export const longbridgeScreenerDefaultReturns = [
+export const longbridgeScreenerDefaultReturns: readonly string[] = [
   "filter_prevclose",
   "filter_prevchg",
   "filter_marketcap",
@@ -107,7 +107,7 @@ export const longbridgeScreenerDefaultReturns = [
   "filter_pettm",
   "filter_pbmrq",
   "filter_industry",
-] as const;
+];
 const financeCalendarCategorySchema = s.stringEnum("The Longbridge finance calendar category.", [
   "report",
   "financial",
@@ -874,7 +874,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
       param(
         "conditions",
         "conditions",
-        s.array("SDK/MCP-style Longbridge screener conditions.", screenerFilterSchema),
+        s.array("Alternative Longbridge screener filter conditions.", screenerFilterSchema),
         "objectArray",
       ),
       param(
@@ -886,12 +886,12 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
       param(
         "extraReturns",
         "extra_returns",
-        s.array("Additional SDK/MCP-style screener return fields.", s.nonEmptyString("One return field.")),
+        s.array("Additional Longbridge screener return fields.", s.nonEmptyString("One return field.")),
         "stringArray",
       ),
       param("page", "page", zeroBasedPageSchema, "integer"),
       param("size", "size", sizeSchema, "integer"),
-      param("sortByKey", "sort_by_key", s.nonEmptyString("The SDK/MCP-style screener field key to sort by."), "string"),
+      param("sortByKey", "sort_by_key", s.nonEmptyString("The screener return field key to sort by."), "string"),
       param(
         "sortBy",
         "sort_by",
@@ -1008,6 +1008,4 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
     outputKey: "items",
     outputMode: "object",
   },
-] as const;
-
-export type LongbridgeReadonlyActionName = (typeof longbridgeReadonlyActionSpecs)[number]["name"];
+];
