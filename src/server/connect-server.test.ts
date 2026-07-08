@@ -1333,6 +1333,8 @@ describe("ConnectServer", () => {
       body: JSON.stringify({ input: { message: "hello" } }),
     });
     expect(run.status).toBe(200);
+    expect(run.headers.get("cache-control")).toBe("no-store");
+    expect(run.headers.get("cloudflare-cdn-cache-control")).toBeNull();
     await expect(run.json()).resolves.toMatchObject({
       success: true,
       message: "OK",
