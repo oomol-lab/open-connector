@@ -88,6 +88,7 @@ export interface RuntimeTokenCreation {
 
 export interface RunLog {
   id: string;
+  service: string;
   actionId: string;
   caller: "http" | "mcp" | "web";
   startedAt: string;

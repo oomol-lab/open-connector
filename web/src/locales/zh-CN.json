@@ -107,16 +107,16 @@
     "recentFailures": "最近失败",
     "noFailedRunsTitle": "暂无失败运行",
     "noFailedRunsDescription": "最近的操作运行都正常。",
-    "recentRuns": "最近运行",
-    "noRunsTitle": "暂无运行记录",
-    "noRunsDescription": "运行一个操作后会显示执行历史。",
-    "table": {
-      "action": "操作",
-      "status": "状态",
-      "started": "开始时间",
-      "duration": "耗时",
-      "input": "输入"
-    }
+    "callTrend": "工具调用趋势",
+    "callTrendLegend": "服务",
+    "noCallTrendTitle": "暂无调用趋势",
+    "noCallTrendDescription": "运行一个操作后会显示每日服务调用量。",
+    "recentCalls": "最近调用",
+    "viewRuns": "查看",
+    "callCountOne": "{{count}} 次调用",
+    "callCountMany": "{{count}} 次调用",
+    "noRecentCallsTitle": "暂无最近调用",
+    "noRecentCallsDescription": "运行一个操作后会显示提供商调用次数。"
   },
   "providers": {
     "catalogTitle": "提供商",
@@ -260,6 +260,8 @@
   "runs": {
     "noRunsTitle": "暂无运行记录",
     "noRunsDescription": "运行一个操作后会显示最近执行历史。",
+    "service": "服务",
+    "allServices": "全部服务",
     "loadMore": "加载更多",
     "loadMoreFailed": "加载更多运行记录失败。",
     "table": {

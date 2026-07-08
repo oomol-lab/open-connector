@@ -107,16 +107,16 @@
     "recentFailures": "Échecs récents",
     "noFailedRunsTitle": "Aucun échec",
     "noFailedRunsDescription": "Les exécutions récentes sont propres.",
-    "recentRuns": "Exécutions récentes",
-    "noRunsTitle": "Aucune exécution",
-    "noRunsDescription": "Exécutez une action pour voir l’historique.",
-    "table": {
-      "action": "Action",
-      "status": "Statut",
-      "started": "Début",
-      "duration": "Durée",
-      "input": "Entrée"
-    }
+    "callTrend": "Tendance des appels d’outils",
+    "callTrendLegend": "Services",
+    "noCallTrendTitle": "Aucune tendance d’appel",
+    "noCallTrendDescription": "Exécutez une action pour voir le volume quotidien par service.",
+    "recentCalls": "Appels récents",
+    "viewRuns": "Voir",
+    "callCountOne": "{{count}} appel",
+    "callCountMany": "{{count}} appels",
+    "noRecentCallsTitle": "Aucun appel récent",
+    "noRecentCallsDescription": "Exécutez une action pour voir les appels par fournisseur."
   },
   "providers": {
     "catalogTitle": "Fournisseurs",
@@ -260,6 +260,8 @@
   "runs": {
     "noRunsTitle": "Aucune exécution",
     "noRunsDescription": "Exécutez une action pour voir l’historique récent.",
+    "service": "Service",
+    "allServices": "Tous les services",
     "loadMore": "Charger plus",
     "loadMoreFailed": "Échec du chargement d’exécutions supplémentaires.",
     "table": {

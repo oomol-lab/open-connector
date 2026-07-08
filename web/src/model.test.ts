@@ -47,6 +47,7 @@ function action(id: string, locallyExecutable: boolean): ProviderDefinition["act
 function run(id: string, ok: boolean): RunLog {
   return {
     id,
+    service: "clock",
     actionId: "clock.now",
     caller: "web",
     startedAt: "2026-07-06T09:00:00.000Z",

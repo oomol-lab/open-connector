@@ -228,9 +228,10 @@ export class D1RunLogStore implements IRunLogStore {
     await this.database
       .prepare(
         `
-        insert into runs (id, action_id, started_at, completed_at, ok, value)
-        values (?, ?, ?, ?, ?, ?)
+        insert into runs (id, service, action_id, started_at, completed_at, ok, value)
+        values (?, ?, ?, ?, ?, ?, ?)
         on conflict(id) do update set
+          service = excluded.service,
           action_id = excluded.action_id,
           started_at = excluded.started_at,
           completed_at = excluded.completed_at,
@@ -238,7 +239,7 @@ export class D1RunLogStore implements IRunLogStore {
           value = excluded.value
       `,
       )
-      .bind(run.id, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run))
+      .bind(run.id, run.service, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run))
       .run();
 
     await this.database
@@ -259,23 +260,49 @@ export class D1RunLogStore implements IRunLogStore {
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
     const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
     const cursor = decodeRunLogCursor(input.cursor);
-    const { results } = cursor
-      ? await this.database
-          .prepare(
-            `
-            select value from runs
-            where started_at < ? or (started_at = ? and id < ?)
-            order by started_at desc, id desc
-            limit ?
-          `,
-          )
-          .bind(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
-          .all<RuntimeRow>()
-      : await this.database
-          .prepare("select value from runs order by started_at desc, id desc limit ?")
-          .bind(limit + 1)
-          .all<RuntimeRow>();
-    const runs = results.map((row) => parseJson<RunLog>(readString(row, "value")));
+    const { results } =
+      cursor && input.service
+        ? await this.database
+            .prepare(
+              `
+              select service, value from runs
+              where (started_at < ? or (started_at = ? and id < ?))
+                and service = ?
+              order by started_at desc, id desc
+              limit ?
+            `,
+            )
+            .bind(cursor.startedAt, cursor.startedAt, cursor.id, input.service, limit + 1)
+            .all<RuntimeRow>()
+        : cursor
+          ? await this.database
+              .prepare(
+                `
+                select service, value from runs
+                where started_at < ? or (started_at = ? and id < ?)
+                order by started_at desc, id desc
+                limit ?
+              `,
+              )
+              .bind(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
+              .all<RuntimeRow>()
+          : input.service
+            ? await this.database
+                .prepare(
+                  `
+                  select service, value from runs
+                  where service = ?
+                  order by started_at desc, id desc
+                  limit ?
+                `,
+                )
+                .bind(input.service, limit + 1)
+                .all<RuntimeRow>()
+            : await this.database
+                .prepare("select service, value from runs order by started_at desc, id desc limit ?")
+                .bind(limit + 1)
+                .all<RuntimeRow>();
+    const runs = results.map(readRunLogRow);
     const items = runs.slice(0, limit);
 
     return {
@@ -302,6 +329,11 @@ function readString(row: RuntimeRow, key: string): string {
   }
 
   return value;
+}
+
+function readRunLogRow(row: RuntimeRow): RunLog {
+  const run = parseJson<RunLog>(readString(row, "value"));
+  return { ...run, service: readString(row, "service") };
 }
 
 function readOptionalString(row: RuntimeRow, key: string): string | undefined {

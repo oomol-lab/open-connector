@@ -7,13 +7,14 @@ import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
 type RuntimeRow = Record<string, unknown>;
 type SecretJsonTable = "oauth_client_configs";
+const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 export interface SqliteRuntimeDatabaseOptions {
   runLimit?: number;
@@ -107,8 +108,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
 
   private initialize(): void {
     this.database.exec("pragma journal_mode = wal;");
-    const migrationSql = readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8");
-    this.database.exec(migrationSql);
+    runSqliteMigrations(this.database);
   }
 }
 
@@ -305,19 +305,45 @@ export class SqliteRunLogStore implements IRunLogStore {
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
     const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
     const cursor = decodeRunLogCursor(input.cursor);
-    const rows = cursor
-      ? this.database
-          .prepare(
-            `
-            select value from runs
-            where started_at < ? or (started_at = ? and id < ?)
-            order by started_at desc, id desc
-            limit ?
-          `,
-          )
-          .all(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
-      : this.database.prepare("select value from runs order by started_at desc, id desc limit ?").all(limit + 1);
-    const runs = rows.map((row) => parseJson<RunLog>(readString(row, "value")));
+    const rows =
+      cursor && input.service
+        ? this.database
+            .prepare(
+              `
+              select service, value from runs
+              where (started_at < ? or (started_at = ? and id < ?))
+                and service = ?
+              order by started_at desc, id desc
+              limit ?
+            `,
+            )
+            .all(cursor.startedAt, cursor.startedAt, cursor.id, input.service, limit + 1)
+        : cursor
+          ? this.database
+              .prepare(
+                `
+                select service, value from runs
+                where started_at < ? or (started_at = ? and id < ?)
+                order by started_at desc, id desc
+                limit ?
+              `,
+              )
+              .all(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
+          : input.service
+            ? this.database
+                .prepare(
+                  `
+                  select service, value from runs
+                  where service = ?
+                  order by started_at desc, id desc
+                  limit ?
+                `,
+                )
+                .all(input.service, limit + 1)
+            : this.database
+                .prepare("select service, value from runs order by started_at desc, id desc limit ?")
+                .all(limit + 1);
+    const runs = rows.map(readRunLogRow);
     const items = runs.slice(0, limit);
 
     return {
@@ -331,9 +357,10 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
   database
     .prepare(
       `
-      insert into runs (id, action_id, started_at, completed_at, ok, value)
-      values (?, ?, ?, ?, ?, ?)
+      insert into runs (id, service, action_id, started_at, completed_at, ok, value)
+      values (?, ?, ?, ?, ?, ?, ?)
       on conflict(id) do update set
+        service = excluded.service,
         action_id = excluded.action_id,
         started_at = excluded.started_at,
         completed_at = excluded.completed_at,
@@ -341,7 +368,41 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
         value = excluded.value
     `,
     )
-    .run(run.id, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run));
+    .run(run.id, run.service, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run));
+}
+
+function readRunLogRow(row: unknown): RunLog {
+  const run = parseJson<RunLog>(readString(row, "value"));
+  return { ...run, service: readString(row, "service") };
+}
+
+function runSqliteMigrations(database: DatabaseSync): void {
+  database.exec(`
+    create table if not exists runtime_migrations (
+      name text primary key,
+      applied_at text not null
+    );
+  `);
+  const applied = new Set(
+    database
+      .prepare("select name from runtime_migrations")
+      .all()
+      .map((row) => readString(row, "name")),
+  );
+  const migrationFiles = readdirSync(migrationDirectory)
+    .filter((name) => /^\d+_.*\.sql$/.test(name))
+    .sort();
+
+  for (const file of migrationFiles) {
+    if (applied.has(file)) {
+      continue;
+    }
+
+    database.exec(readFileSync(new URL(file, migrationDirectory), "utf8"));
+    database
+      .prepare("insert into runtime_migrations (name, applied_at) values (?, ?)")
+      .run(file, new Date().toISOString());
+  }
 }
 
 async function readRotatedConnectionSecrets(

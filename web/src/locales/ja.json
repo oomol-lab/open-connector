@@ -107,16 +107,16 @@
     "recentFailures": "最近の失敗",
     "noFailedRunsTitle": "失敗した実行はありません",
     "noFailedRunsDescription": "最近のアクション実行は正常です。",
-    "recentRuns": "最近の実行",
-    "noRunsTitle": "実行履歴はまだありません",
-    "noRunsDescription": "アクションを実行すると履歴が表示されます。",
-    "table": {
-      "action": "アクション",
-      "status": "ステータス",
-      "started": "開始時刻",
-      "duration": "所要時間",
-      "input": "入力"
-    }
+    "callTrend": "ツール呼び出しトレンド",
+    "callTrendLegend": "サービス",
+    "noCallTrendTitle": "呼び出しトレンドはまだありません",
+    "noCallTrendDescription": "アクションを実行すると、サービス別の日次呼び出し量が表示されます。",
+    "recentCalls": "最近の呼び出し",
+    "viewRuns": "表示",
+    "callCountOne": "{{count}} 回の呼び出し",
+    "callCountMany": "{{count}} 回の呼び出し",
+    "noRecentCallsTitle": "最近の呼び出しはありません",
+    "noRecentCallsDescription": "アクションを実行するとプロバイダー別の呼び出し数が表示されます。"
   },
   "providers": {
     "catalogTitle": "プロバイダー",
@@ -260,6 +260,8 @@
   "runs": {
     "noRunsTitle": "実行履歴はまだありません",
     "noRunsDescription": "アクションを実行すると、最近の実行履歴が表示されます。",
+    "service": "サービス",
+    "allServices": "すべてのサービス",
     "loadMore": "さらに読み込む",
     "loadMoreFailed": "実行履歴の追加読み込みに失敗しました。",
     "table": {

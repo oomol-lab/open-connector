@@ -107,16 +107,16 @@
     "recentFailures": "Recent Failures",
     "noFailedRunsTitle": "No failed runs",
     "noFailedRunsDescription": "Recent action runs are clean.",
-    "recentRuns": "Recent Runs",
-    "noRunsTitle": "No runs yet",
-    "noRunsDescription": "Run an action to see execution history.",
-    "table": {
-      "action": "Action",
-      "status": "Status",
-      "started": "Started",
-      "duration": "Duration",
-      "input": "Input"
-    }
+    "callTrend": "Tool Call Trend",
+    "callTrendLegend": "Services",
+    "noCallTrendTitle": "No call trend yet",
+    "noCallTrendDescription": "Run an action to see daily service call volume.",
+    "recentCalls": "Recent Calls",
+    "viewRuns": "View",
+    "callCountOne": "{{count}} call",
+    "callCountMany": "{{count}} calls",
+    "noRecentCallsTitle": "No recent calls",
+    "noRecentCallsDescription": "Run an action to see provider call counts."
   },
   "providers": {
     "catalogTitle": "Providers",
@@ -260,6 +260,8 @@
   "runs": {
     "noRunsTitle": "No runs yet",
     "noRunsDescription": "Run an action to see recent execution history.",
+    "service": "Service",
+    "allServices": "All services",
     "loadMore": "Load more",
     "loadMoreFailed": "Failed to load more runs.",
     "table": {

@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
@@ -43,6 +45,7 @@ describe("SqliteRuntimeDatabase", () => {
     });
     await first.runLogStore.add({
       id: "run-1",
+      service: "hackernews",
       actionId: "hackernews.get_top_stories",
       caller: "http",
       startedAt: "2026-06-30T00:00:00.000Z",
@@ -72,6 +75,7 @@ describe("SqliteRuntimeDatabase", () => {
       items: [
         {
           id: "run-1",
+          service: "hackernews",
           actionId: "hackernews.get_top_stories",
           caller: "http",
           startedAt: "2026-06-30T00:00:00.000Z",
@@ -114,6 +118,60 @@ describe("SqliteRuntimeDatabase", () => {
     expect(second.items.map((run) => run.id)).toEqual(["run-1"]);
     expect(second.nextCursor).toBeUndefined();
     database.close();
+  });
+
+  it("filters recent runs by service before paginating", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath, { runLimit: 5 });
+
+    await database.runLogStore.add(createRun("gmail-1", "2026-06-30T00:00:00.000Z", "mail.search_threads", "gmail"));
+    await database.runLogStore.add(createRun("hackernews-1", "2026-06-30T00:00:01.000Z", "news.get_top_stories"));
+    await database.runLogStore.add(createRun("gmail-2", "2026-06-30T00:00:02.000Z", "mail.list_threads", "gmail"));
+
+    const first = await database.runLogStore.list({ service: "gmail", limit: 1 });
+    expect(first.items.map((run) => run.id)).toEqual(["gmail-2"]);
+    expect(first.nextCursor).toBeTruthy();
+
+    const second = await database.runLogStore.list({ service: "gmail", limit: 1, cursor: first.nextCursor });
+    expect(second.items.map((run) => run.id)).toEqual(["gmail-1"]);
+    expect(second.nextCursor).toBeUndefined();
+    database.close();
+  });
+
+  it("applies pending runtime migrations to existing local databases", async () => {
+    const databasePath = await createDatabasePath();
+    const legacy = new DatabaseSync(databasePath);
+    legacy.exec(readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8"));
+    legacy
+      .prepare(
+        `
+        insert into runs (id, action_id, started_at, completed_at, ok, value)
+        values (?, ?, ?, ?, ?, ?)
+      `,
+      )
+      .run(
+        "legacy-gmail",
+        "gmail.search_threads",
+        "2026-06-30T00:00:00.000Z",
+        "2026-06-30T00:00:01.000Z",
+        1,
+        JSON.stringify({
+          id: "legacy-gmail",
+          actionId: "gmail.search_threads",
+          caller: "http",
+          startedAt: "2026-06-30T00:00:00.000Z",
+          completedAt: "2026-06-30T00:00:01.000Z",
+          durationMs: 1000,
+          ok: true,
+        }),
+      );
+    legacy.close();
+
+    const migrated = new SqliteRuntimeDatabase(databasePath, { runLimit: 5 });
+    await expect(migrated.runLogStore.list({ service: "gmail" })).resolves.toMatchObject({
+      items: [{ id: "legacy-gmail", service: "gmail" }],
+    });
+    migrated.close();
   });
 
   it("encrypts stored credentials when a secret codec is configured", async () => {
@@ -242,10 +300,11 @@ async function createDatabasePath(): Promise<string> {
   return join(dir, "connect.sqlite");
 }
 
-function createRun(id: string, startedAt: string) {
+function createRun(id: string, startedAt: string, actionId = "hackernews.get_top_stories", service = "hackernews") {
   return {
     id,
-    actionId: "hackernews.get_top_stories",
+    service,
+    actionId,
     caller: "http" as const,
     startedAt,
     completedAt: startedAt,

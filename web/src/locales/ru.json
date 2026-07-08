@@ -107,16 +107,16 @@
     "recentFailures": "Недавние ошибки",
     "noFailedRunsTitle": "Ошибок нет",
     "noFailedRunsDescription": "Недавние запуски действий прошли чисто.",
-    "recentRuns": "Недавние запуски",
-    "noRunsTitle": "Запусков пока нет",
-    "noRunsDescription": "Запустите действие, чтобы увидеть историю выполнения.",
-    "table": {
-      "action": "Действие",
-      "status": "Статус",
-      "started": "Начато",
-      "duration": "Длительность",
-      "input": "Ввод"
-    }
+    "callTrend": "Тренд вызовов инструментов",
+    "callTrendLegend": "Сервисы",
+    "noCallTrendTitle": "Тренда вызовов пока нет",
+    "noCallTrendDescription": "Запустите действие, чтобы увидеть ежедневные вызовы по сервисам.",
+    "recentCalls": "Недавние вызовы",
+    "viewRuns": "Смотреть",
+    "callCountOne": "{{count}} вызов",
+    "callCountMany": "{{count}} вызовов",
+    "noRecentCallsTitle": "Недавних вызовов нет",
+    "noRecentCallsDescription": "Запустите действие, чтобы увидеть вызовы по провайдерам."
   },
   "providers": {
     "catalogTitle": "Провайдеры",
@@ -260,6 +260,8 @@
   "runs": {
     "noRunsTitle": "Запусков пока нет",
     "noRunsDescription": "Запустите действие, чтобы увидеть недавнюю историю выполнения.",
+    "service": "Сервис",
+    "allServices": "Все сервисы",
     "loadMore": "Загрузить еще",
     "loadMoreFailed": "Не удалось загрузить больше запусков.",
     "table": {

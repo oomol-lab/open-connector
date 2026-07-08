@@ -7,6 +7,7 @@ export type RunLogCaller = "http" | "mcp" | "web";
  */
 export type RunLog = {
   id: string;
+  service: string;
   actionId: string;
   caller: RunLogCaller;
   startedAt: string;
@@ -22,6 +23,7 @@ export type RunLog = {
 export interface RunLogListInput {
   limit?: number;
   cursor?: string;
+  service?: string;
 }
 
 export interface RunLogPage {

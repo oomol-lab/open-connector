@@ -880,6 +880,10 @@ function readRunLogListInput(context: Context): RunLogListQuery {
   if (cursor !== undefined) {
     input.cursor = cursor;
   }
+  const service = optionalString(context.req.query("service"));
+  if (service !== undefined) {
+    input.service = service;
+  }
 
   return { ok: true, input };
 }

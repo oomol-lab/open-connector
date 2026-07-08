@@ -330,6 +330,7 @@ export function createOpenApiDocument(
         RunLog: jsonSchema.object(
           {
             id: jsonSchema.string({ description: "Run identifier." }),
+            service: jsonSchema.string({ description: "Provider service that owns the executed action." }),
             actionId: jsonSchema.string({ description: "Executed action id." }),
             caller: jsonSchema.string({
               description: "Runtime entry point that executed the run.",
@@ -348,7 +349,7 @@ export function createOpenApiDocument(
             errorMessage: jsonSchema.string({ description: "Error message when the run failed." }),
           },
           {
-            required: ["id", "actionId", "caller", "startedAt", "completedAt", "durationMs", "ok"],
+            required: ["id", "service", "actionId", "caller", "startedAt", "completedAt", "durationMs", "ok"],
             description: "Recent action run entry.",
           },
         ),
@@ -562,6 +563,13 @@ function createRunsPath(): Record<string, unknown> {
           required: false,
           schema: { type: "string" },
           description: "Cursor returned by the previous page.",
+        },
+        {
+          name: "service",
+          in: "query",
+          required: false,
+          schema: { type: "string" },
+          description: "Only return runs whose action id belongs to this service.",
         },
       ],
       responses: {

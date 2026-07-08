@@ -1698,6 +1698,39 @@ describe("ConnectServer", () => {
     const invalid = await app.request("/api/runs?limit=500");
     expect(invalid.status).toBe(400);
   });
+
+  it("filters run logs by service through the web console API", async () => {
+    const runs = new MemoryRunLogStore();
+    await runs.add({
+      ...createRunLog("gmail-1", "2026-06-30T00:00:00.000Z"),
+      actionId: "mail.search_threads",
+      service: "gmail",
+    });
+    await runs.add({
+      ...createRunLog("hackernews-1", "2026-06-30T00:00:01.000Z"),
+      actionId: "news.get_best_stories",
+      service: "hackernews",
+    });
+    await runs.add({
+      ...createRunLog("gmail-2", "2026-06-30T00:00:02.000Z"),
+      actionId: "mail.list_threads",
+      service: "gmail",
+    });
+    const app = createTestServer([apiKeyProvider], { runs }).createApp();
+
+    const response = await app.request("/api/runs?service=gmail&limit=1");
+    expect(response.status).toBe(200);
+    const firstBody = (await response.json()) as RunLogPage;
+    expect(firstBody.items.map((run) => run.id)).toEqual(["gmail-2"]);
+    expect(firstBody.nextCursor).toBeTruthy();
+
+    const query = new URLSearchParams({ service: "gmail", limit: "1", cursor: firstBody.nextCursor! });
+    const second = await app.request(`/api/runs?${query}`);
+    expect(second.status).toBe(200);
+    const secondBody = (await second.json()) as RunLogPage;
+    expect(secondBody.items.map((run) => run.id)).toEqual(["gmail-1"]);
+    expect(secondBody.nextCursor).toBeUndefined();
+  });
 });
 
 interface CreateTestServerOptions {
@@ -2014,10 +2047,11 @@ class MemoryRunLogStore implements IRunLogStore {
     const defaultLimit = this.runs.length || 1;
     const limit = Math.max(1, Math.min(input.limit ?? defaultLimit, defaultLimit));
     const cursor = decodeRunLogCursor(input.cursor);
+    const filteredRuns = input.service ? this.runs.filter((run) => run.service === input.service) : this.runs;
     const start = cursor
-      ? this.runs.findIndex((run) => run.startedAt === cursor.startedAt && run.id === cursor.id) + 1
+      ? filteredRuns.findIndex((run) => run.startedAt === cursor.startedAt && run.id === cursor.id) + 1
       : 0;
-    const runs = this.runs.slice(start < 0 ? 0 : start, start + limit + 1);
+    const runs = filteredRuns.slice(start < 0 ? 0 : start, start + limit + 1);
     const items = runs.slice(0, limit);
 
     return {
@@ -2030,6 +2064,7 @@ class MemoryRunLogStore implements IRunLogStore {
 function createRunLog(id: string, startedAt: string): RunLog {
   return {
     id,
+    service: "example",
     actionId: "example.echo",
     caller: "web",
     startedAt,

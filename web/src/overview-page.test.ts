@@ -9,18 +9,71 @@ import { createAppI18n } from "./i18n";
 import { OverviewPage } from "./overview-page";
 
 describe("OverviewPage", () => {
-  it("marks the recent runs summary as a compact data table", () => {
+  it("keeps run details on the runs page instead of the overview", () => {
     const markup = renderOverview();
 
-    expect(markup.match(/class="[^"]*summary-table[^"]*"/g) ?? []).toHaveLength(1);
+    expect(markup.match(/class="[^"]*summary-table[^"]*"/g) ?? []).toHaveLength(0);
+    expect(markup).not.toContain("overview-recent-runs-panel");
+    expect(markup).not.toContain("Recent Runs");
+    expect(markup).not.toContain("Recent Failures");
   });
 
-  it("lets recent runs fill the overview history row", () => {
-    const markup = renderOverview();
+  it("renders recent calls grouped by provider", () => {
+    const markup = renderOverview({
+      ...overviewData,
+      providers: [...overviewData.providers, provider("gmail", "Gmail", [action("gmail.send_email", true)])],
+      runs: [
+        { ...run("gmail-1", true), service: "gmail", actionId: "mail.send_email" },
+        { ...run("gmail-2", true), service: "gmail", actionId: "mail.list_messages" },
+      ],
+    });
 
-    expect(markup).toContain("overview-recent-runs-panel");
-    expect(markup).toContain("Recent Runs");
-    expect(markup).not.toContain("Recent Failures");
+    expect(markup).toContain("overview-recent-calls-panel");
+    expect(markup).toContain("Recent Calls");
+    expect(markup).toContain("Gmail");
+    expect(markup).toContain("2 calls");
+    expect(markup).toMatch(/href="\/runs\?service=gmail"/);
+  });
+
+  it("renders service call trend without service navigation links", () => {
+    const markup = renderOverview({
+      ...overviewData,
+      providers: [
+        ...overviewData.providers,
+        provider("gmail", "Gmail", [action("gmail.send_email", true)]),
+        provider("slack", "Slack", [action("slack.post_message", true)]),
+      ],
+      runs: [
+        {
+          ...run("gmail-1", true),
+          service: "gmail",
+          actionId: "gmail.send_email",
+          startedAt: "2026-07-04T09:00:00.000Z",
+        },
+        {
+          ...run("gmail-2", true),
+          service: "gmail",
+          actionId: "gmail.send_email",
+          startedAt: "2026-07-04T10:00:00.000Z",
+        },
+        {
+          ...run("slack-1", true),
+          service: "slack",
+          actionId: "slack.post_message",
+          startedAt: "2026-07-05T09:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(markup).toContain("overview-call-trend-panel");
+    expect(markup).toContain("Tool Call Trend");
+    expect(markup).toContain("Gmail");
+    expect(markup).toContain("Slack");
+    expect(markup).toContain("2 calls");
+    expect(markup).toContain("1 call");
+    expect(markup).not.toMatch(/<a class="overview-call-trend-legend-row" href=/);
+    expect(markup).toMatch(/href="\/runs\?service=gmail"/);
+    expect(markup).toMatch(/href="\/runs\?service=slack"/);
   });
 
   it("does not render duplicate overview metrics", () => {
@@ -66,12 +119,14 @@ describe("OverviewPage", () => {
     expect(markup).toContain("Needs attention");
   });
 
-  it("renders the overview recent runs empty state as centered text without an icon", () => {
+  it("renders overview run history empty states as centered text without icons", () => {
     const markup = renderOverview({ ...overviewData, runs: [] });
 
-    expect(markup.match(/class="empty-state compact no-icon"/g) ?? []).toHaveLength(1);
+    expect(markup.match(/class="empty-state compact no-icon"/g) ?? []).toHaveLength(2);
     expect(markup).not.toContain("No failed runs");
-    expect(markup).toContain("No runs yet");
+    expect(markup).toContain("No call trend yet");
+    expect(markup).toContain("No recent calls");
+    expect(markup).not.toContain("No runs yet");
     expect(markup).not.toContain("lucide-circle-check");
     expect(markup).not.toContain("lucide-x");
   });
@@ -138,6 +193,7 @@ function action(id: string, locallyExecutable: boolean): ActionDefinition {
 function run(id: string, ok: boolean): RunLog {
   return {
     id,
+    service: ok ? "hackernews" : "notion",
     actionId: ok ? "hackernews.get_best_stories" : "notion.append_block",
     caller: "web",
     startedAt: "2026-07-06T09:00:00.000Z",

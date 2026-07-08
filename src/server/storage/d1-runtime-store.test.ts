@@ -123,12 +123,29 @@ describe("D1RuntimeDatabase", () => {
     expect(second.items.map((run) => run.id)).toEqual(["run-1"]);
     expect(second.nextCursor).toBeUndefined();
   });
+
+  it("filters recent runs by service before paginating", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { runLimit: 5 });
+
+    await database.runLogStore.add(createRun("gmail-1", "2026-06-30T00:00:00.000Z", "mail.search_threads", "gmail"));
+    await database.runLogStore.add(createRun("hackernews-1", "2026-06-30T00:00:01.000Z", "news.get_top_stories"));
+    await database.runLogStore.add(createRun("gmail-2", "2026-06-30T00:00:02.000Z", "mail.list_threads", "gmail"));
+
+    const first = await database.runLogStore.list({ service: "gmail", limit: 1 });
+    expect(first.items.map((run) => run.id)).toEqual(["gmail-2"]);
+    expect(first.nextCursor).toBeTruthy();
+
+    const second = await database.runLogStore.list({ service: "gmail", limit: 1, cursor: first.nextCursor });
+    expect(second.items.map((run) => run.id)).toEqual(["gmail-1"]);
+    expect(second.nextCursor).toBeUndefined();
+  });
 });
 
-function createRun(id: string, startedAt: string) {
+function createRun(id: string, startedAt: string, actionId = "hackernews.get_top_stories", service = "hackernews") {
   return {
     id,
-    actionId: "hackernews.get_top_stories",
+    service,
+    actionId,
     caller: "http" as const,
     startedAt,
     completedAt: startedAt,
@@ -142,6 +159,7 @@ class SqliteD1Database implements D1DatabaseBinding {
 
   constructor() {
     this.database.exec(readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8"));
+    this.database.exec(readFileSync(new URL("../../../migrations/0002_run_service.sql", import.meta.url), "utf8"));
   }
 
   prepare(query: string): D1PreparedStatementBinding {

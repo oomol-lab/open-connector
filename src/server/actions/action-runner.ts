@@ -85,6 +85,7 @@ export class ActionRunner {
 
     await this.options.runs.add({
       id: executionId,
+      service: action.service,
       actionId: input.actionId,
       caller: input.caller,
       startedAt,
