@@ -1,4 +1,4 @@
-import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { CredentialValidationResult, RuntimeLogger, TransitFileWriter } from "../../core/types.ts";
 import type { QqMailActionName } from "./actions.ts";
 import type { QqMailCredential, QqMailFetchedMessage, QqMailProtocol, QqMailSendInput } from "./protocol.ts";
 
@@ -18,8 +18,9 @@ import {
   qqMailMessageFetchByteLimit,
   qqMailSmtpHost,
   qqMailSmtpPort,
-  QqMailProtocolError,
-} from "./protocol.ts";
+} from "./config.ts";
+import { QqMailProtocolError } from "./errors.ts";
+import { sanitizeTempFileName } from "./temp-files.ts";
 
 const qqMailScopes = ["mail.read", "mail.send", "mail.modify"];
 const defaultFolder = "INBOX";
@@ -35,6 +36,7 @@ export interface QqMailActionContext {
 }
 
 type QqMailActionHandler = (input: Record<string, unknown>, context: QqMailActionContext) => Promise<unknown>;
+type QqMailProtocolLoader = () => Promise<QqMailProtocol> | QqMailProtocol;
 
 export const qqMailActionHandlers: Record<QqMailActionName, QqMailActionHandler> = {
   send_email(input, context) {
@@ -94,7 +96,8 @@ export function readCredential(values: Record<string, string>): QqMailCredential
 
 export async function validateQqMailCredential(
   values: Record<string, string>,
-  protocol: QqMailProtocol,
+  loadProtocol: QqMailProtocolLoader,
+  logger?: RuntimeLogger,
 ): Promise<CredentialValidationResult> {
   const credential = readCredential(values);
   if (isCloudflareWorkerRuntime()) {
@@ -104,11 +107,12 @@ export async function validateQqMailCredential(
     );
   }
 
+  const protocol = await loadProtocol();
   try {
-    await validateQqMailPhase("imap", qqMailImapHost, qqMailImapPort, () =>
+    await validateQqMailPhase("imap", qqMailImapHost, qqMailImapPort, logger, () =>
       protocol.validateImapCredential(credential),
     );
-    await validateQqMailPhase("smtp", qqMailSmtpHost, qqMailSmtpPort, () =>
+    await validateQqMailPhase("smtp", qqMailSmtpHost, qqMailSmtpPort, logger, () =>
       protocol.validateSmtpCredential(credential),
     );
   } catch (error) {
@@ -139,10 +143,11 @@ async function validateQqMailPhase(
   phase: "imap" | "smtp",
   host: string,
   port: number,
+  logger: RuntimeLogger | undefined,
   validate: () => Promise<void>,
 ): Promise<void> {
   const startedAt = Date.now();
-  console.info(
+  logger?.info(
     {
       service: "qq_mail",
       phase,
@@ -154,7 +159,7 @@ async function validateQqMailPhase(
   );
   try {
     await validate();
-    console.info(
+    logger?.info(
       {
         service: "qq_mail",
         phase,
@@ -165,7 +170,7 @@ async function validateQqMailPhase(
       "qq mail credential validation completed",
     );
   } catch (error) {
-    console.warn(
+    logger?.warn(
       {
         service: "qq_mail",
         phase,
@@ -605,47 +610,6 @@ function requireTransitFiles(context: QqMailActionContext) {
     throw new ProviderRequestError(400, "Transit file storage is not enabled.");
   }
   return context.transitFiles;
-}
-
-function sanitizeTempFileName(name: string) {
-  const allowed = new Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-");
-  const sanitized = name
-    .trim()
-    .split("")
-    .map((char) => (allowed.has(char) ? char : "-"))
-    .join("");
-  const collapsed = collapseRepeatedDash(sanitized);
-  const trimmed = trimUnsafeEdges(collapsed);
-  return trimmed || "file";
-}
-
-function collapseRepeatedDash(value: string) {
-  let result = "";
-  let previousWasDash = false;
-  for (const char of value) {
-    if (char === "-") {
-      if (!previousWasDash) {
-        result += char;
-      }
-      previousWasDash = true;
-    } else {
-      result += char;
-      previousWasDash = false;
-    }
-  }
-  return result;
-}
-
-function trimUnsafeEdges(value: string) {
-  let start = 0;
-  let end = value.length;
-  while (start < end && (value[start] === "-" || value[start] === ".")) {
-    start += 1;
-  }
-  while (end > start && (value[end - 1] === "-" || value[end - 1] === ".")) {
-    end -= 1;
-  }
-  return value.slice(start, end);
 }
 
 function inferReplyRecipients(credential: QqMailCredential, original: QqMailFetchedMessage, replyAll: boolean) {

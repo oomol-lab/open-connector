@@ -11,31 +11,16 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import nodemailer from "nodemailer";
-
-export const qqMailImapHost: string = "imap.qq.com";
-export const qqMailSmtpHost: string = "smtp.qq.com";
-export const qqMailImapPort: number = 993;
-export const qqMailSmtpPort: number = 465;
-export const qqMailMessageFetchByteLimit: number = 5 * 1024 * 1024;
-export const qqMailAttachmentDownloadByteLimit: number = 25 * 1024 * 1024;
-export const qqMailConnectionTimeoutMs: number = 30_000;
-
-export type QqMailProtocolErrorKind =
-  | "auth"
-  | "folder_not_found"
-  | "uid_not_found"
-  | "timeout"
-  | "network"
-  | "provider";
-
-export class QqMailProtocolError extends Error {
-  readonly kind: QqMailProtocolErrorKind;
-
-  constructor(kind: QqMailProtocolErrorKind, message: string) {
-    super(message);
-    this.kind = kind;
-  }
-}
+import {
+  qqMailAttachmentDownloadByteLimit,
+  qqMailConnectionTimeoutMs,
+  qqMailImapHost,
+  qqMailImapPort,
+  qqMailSmtpHost,
+  qqMailSmtpPort,
+} from "./config.ts";
+import { QqMailProtocolError } from "./errors.ts";
+import { sanitizeTempFileName } from "./temp-files.ts";
 
 export interface QqMailCredential {
   email: string;
@@ -373,10 +358,7 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
     },
     async downloadAttachment(credential, folder, uid, attachmentId) {
       return await withMailbox(deps, credential, folder, true, async (client) => {
-        const downloaded = await client.download(uid, attachmentId, {
-          uid: true,
-          maxBytes: qqMailAttachmentDownloadByteLimit,
-        });
+        const downloaded = await downloadAttachmentPart(client, uid, attachmentId);
         const expectedSize = readInteger(downloaded.meta.expectedSize);
         const filename = readString(downloaded.meta.filename) ?? `qq-mail-attachment-${attachmentId}`;
         const { filePath, cleanup } = await writeAsyncIterableToTempFile(
@@ -412,7 +394,7 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
     },
     async moveMessage(credential, folder, uid, targetFolder) {
       await withMailbox(deps, credential, folder, false, async (client) => {
-        const moved = await client.messageMove([uid], targetFolder, { uid: true });
+        const moved = await moveMessageToFolder(client, uid, targetFolder);
         if (!moved) {
           throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
         }
@@ -448,6 +430,31 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
       });
     },
   };
+}
+
+async function downloadAttachmentPart(client: RuntimeImapClient, uid: number, attachmentId: string) {
+  try {
+    return await client.download(uid, attachmentId, {
+      uid: true,
+      maxBytes: qqMailAttachmentDownloadByteLimit,
+    });
+  } catch (error) {
+    if (isFolderMissingError(error)) {
+      throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+    }
+    throw error;
+  }
+}
+
+async function moveMessageToFolder(client: RuntimeImapClient, uid: number, targetFolder: string) {
+  try {
+    return await client.messageMove([uid], targetFolder, { uid: true });
+  } catch (error) {
+    if (isFolderMissingError(error)) {
+      throw new QqMailProtocolError("folder_not_found", "QQ Mail folder does not exist.");
+    }
+    throw error;
+  }
 }
 
 function createSmtpTransport(deps: QqMailProtocolDependencies, credential: QqMailCredential): QqMailSmtpTransport {
@@ -736,47 +743,6 @@ async function writeAsyncIterableToTempFile(content: AsyncIterable<unknown>, nam
       await rm(directory, { recursive: true, force: true }).catch(() => {});
     },
   };
-}
-
-function sanitizeTempFileName(name: string) {
-  const allowed = new Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-");
-  const sanitized = name
-    .trim()
-    .split("")
-    .map((char) => (allowed.has(char) ? char : "-"))
-    .join("");
-  const collapsed = collapseRepeatedDash(sanitized);
-  const trimmed = trimUnsafeEdges(collapsed);
-  return trimmed || "file";
-}
-
-function collapseRepeatedDash(value: string) {
-  let result = "";
-  let previousWasDash = false;
-  for (const char of value) {
-    if (char === "-") {
-      if (!previousWasDash) {
-        result += char;
-      }
-      previousWasDash = true;
-    } else {
-      result += char;
-      previousWasDash = false;
-    }
-  }
-  return result;
-}
-
-function trimUnsafeEdges(value: string) {
-  let start = 0;
-  let end = value.length;
-  while (start < end && (value[start] === "-" || value[start] === ".")) {
-    start += 1;
-  }
-  while (end > start && (value[end - 1] === "-" || value[end - 1] === ".")) {
-    end -= 1;
-  }
-  return value.slice(start, end);
 }
 
 function isAttachment(record: Record<string, unknown>) {

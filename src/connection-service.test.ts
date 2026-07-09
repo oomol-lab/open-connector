@@ -272,6 +272,28 @@ describe("ConnectionService", () => {
     });
   });
 
+  it("passes the runtime logger to credential validators", async () => {
+    const logger = createTestLogger();
+    const validators: CredentialValidators = {
+      async apiKey(_input, options) {
+        options.logger?.info({ service: "uptimerobot" }, "validator log");
+      },
+    };
+    const service = createService([apiKeyProvider], {
+      logger,
+      providerLoader: new FakeProviderLoader(validators),
+    });
+
+    await service.connectWithApiKey("uptimerobot", {
+      values: {
+        apiKey: "valid-key",
+        accountId: "account-1",
+      },
+    });
+
+    expect(logger.info).toHaveBeenCalledWith({ service: "uptimerobot" }, "validator log");
+  });
+
   it("exposes connection profiles to local users and agents", async () => {
     const service = createService([apiKeyProvider], {
       providerLoader: new FakeProviderLoader({
@@ -462,6 +484,7 @@ describe("ConnectionService", () => {
 });
 
 interface CreateServiceOptions {
+  logger?: ReturnType<typeof createTestLogger>;
   oauthCredentials?: OAuthCredentialRefreshService;
   providerLoader?: IProviderLoader;
   store?: MemoryConnectionStore;
@@ -472,10 +495,19 @@ function createService(providers: ProviderDefinition[], options: CreateServiceOp
 
   return new ConnectionService({
     catalog,
+    logger: options.logger,
     oauthCredentials: options.oauthCredentials,
     providerLoader: options.providerLoader ?? new FakeProviderLoader(),
     store: options.store ?? new MemoryConnectionStore(),
   });
+}
+
+function createTestLogger() {
+  return {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  };
 }
 
 function createOAuthClientConfigs(providers: ProviderDefinition[]): OAuthClientConfigService {

@@ -48,6 +48,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs),
     providerLoader: options.providerLoader,
     store: options.runtimeDatabase.connectionStore,
+    logger: options.logger,
   });
   const actions = new ActionRunner({
     catalog: options.catalog,
