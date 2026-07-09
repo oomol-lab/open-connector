@@ -141,6 +141,30 @@ describe("ProvidersPage route shell", () => {
     expect(markup.match(/provider-status-badges/g)?.length ?? 0).toBe(1);
   });
 
+  it("renders provider descriptions in the detail header", () => {
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        providers: [
+          {
+            ...oauthProvider,
+            description: "Connect Gmail to send and inspect mailbox actions.",
+          },
+        ],
+      },
+      "/providers/gmail",
+    );
+
+    expect(markup).toContain("Connect Gmail to send and inspect mailbox actions.");
+    expect(markup).toContain('class="provider-detail-description"');
+  });
+
+  it("does not render a default provider description", () => {
+    const markup = renderProvidersPage(providerData, "/providers/gmail");
+
+    expect(markup).not.toContain("provider-detail-description");
+  });
+
   it("labels no-auth providers as no setup instead of configured", () => {
     const markup = renderProvidersPage(
       {

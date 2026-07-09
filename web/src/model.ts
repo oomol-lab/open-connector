@@ -46,6 +46,7 @@ export interface ActionDefinition {
 export interface ProviderDefinition {
   service: string;
   displayName: string;
+  description?: string;
   categories: string[];
   authTypes: string[];
   auth: AuthDefinition[];

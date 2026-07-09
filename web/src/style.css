@@ -1657,6 +1657,15 @@ h3 {
   flex: 0 0 auto;
 }
 
+.provider-detail-description {
+  margin: 0;
+  max-width: 680px;
+  color: color-mix(in oklab, var(--foreground) 68%, transparent);
+  font-size: 14px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
 .provider-detail-meta {
   display: flex;
   align-items: center;

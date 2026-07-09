@@ -465,6 +465,9 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               <h2>{props.provider.displayName}</h2>
               <ProviderStatusBadges status={props.connectionStatus} includeDisconnected />
             </div>
+            {props.provider.description ? (
+              <p className="provider-detail-description">{props.provider.description}</p>
+            ) : null}
             <div className="provider-detail-meta">
               <span className="provider-service-id">{props.provider.service}</span>
               {providerAuthTypeLabels(props.provider, t).map((label) => (

@@ -200,6 +200,8 @@ export type ProviderDefinition = {
   service: string;
   /** Human-readable provider name. */
   displayName: string;
+  /** Human-readable provider summary for catalog browsing. */
+  description?: string;
   /** Broad catalog categories used by UI filtering. */
   categories: string[];
   /** Quick list of supported auth types for catalog filtering. */
