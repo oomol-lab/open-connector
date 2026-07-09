@@ -32,7 +32,7 @@ interface CapabilityStatusCellProps {
 type CapabilityStatusBadgeTone = "success" | "warning";
 
 const capabilityProviderIconLimit = 4;
-const recentCallLimit = 4;
+const recentCallLimit = 7;
 const callTrendDayCount = 30;
 const callTrendServiceLimit = 4;
 const callTrendColors = ["var(--chart-1)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"] as const;
@@ -114,7 +114,7 @@ export function OverviewPage(props: OverviewPageProps): ReactNode {
         </Card>
       </section>
 
-      <section className="content-grid overview-call-trend-section">
+      <section className="content-grid overview-activity-grid">
         <Card className="list-panel overview-call-trend-panel">
           <div className="table-panel-heading">
             <h2>{t("overview.callTrend")}</h2>
@@ -184,9 +184,7 @@ export function OverviewPage(props: OverviewPageProps): ReactNode {
             </div>
           )}
         </Card>
-      </section>
 
-      <section className="content-grid overview-recent-calls-section">
         <Card className="list-panel overview-recent-calls-panel">
           <div className="table-panel-heading">
             <h2>{t("overview.recentCalls")}</h2>

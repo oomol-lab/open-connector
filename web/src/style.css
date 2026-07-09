@@ -755,10 +755,17 @@ h3 {
   grid-column: 1 / -1;
 }
 
-.overview-call-trend-panel,
-.overview-recent-calls-panel {
-  grid-column: 1 / -1;
+.overview-activity-grid {
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.75fr);
+}
+
+.list-panel.overview-call-trend-panel,
+.list-panel.overview-recent-calls-panel {
+  display: flex;
+  flex-direction: column;
   gap: 0;
+  max-height: none;
   overflow: hidden;
   padding: 0;
 }
@@ -1029,6 +1036,10 @@ h3 {
 
 .overview-recent-call-list {
   display: grid;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .overview-recent-call-row {
@@ -1127,6 +1138,27 @@ h3 {
 .overview-recent-call-arrow {
   display: inline-flex;
   color: var(--muted-foreground);
+}
+
+@media (min-width: 1121px) {
+  .overview-activity-grid {
+    height: clamp(320px, calc(100svh - 418px), 740px);
+  }
+
+  .overview-call-trend-panel,
+  .overview-recent-calls-panel,
+  .overview-call-trend-body {
+    min-height: 0;
+  }
+
+  .overview-call-trend-body {
+    flex: 1;
+  }
+
+  .overview-activity-grid .overview-call-trend-chart {
+    height: 100%;
+    min-height: 260px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2446,6 +2478,12 @@ tr:last-child td {
 
   .overview-call-trend-legend {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .overview-activity-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -35,6 +35,23 @@ describe("OverviewPage", () => {
     expect(markup).toMatch(/href="\/runs\?service=gmail"/);
   });
 
+  it("limits recent calls to seven providers", () => {
+    const providers = Array.from({ length: 8 }, (_, index) =>
+      provider(`service${index + 1}`, `Service ${index + 1}`, [action(`service${index + 1}.run`, true)]),
+    );
+    const runs = providers.map((item, index) => ({
+      ...run(`service-${index + 1}`, true),
+      service: item.service,
+      actionId: `${item.service}.run`,
+    }));
+
+    const markup = renderOverview({ ...overviewData, providers, runs });
+
+    expect(markup.match(/class="overview-recent-call-row"/g) ?? []).toHaveLength(7);
+    expect(markup).toContain("Service 7");
+    expect(markup).not.toContain("Service 8");
+  });
+
   it("renders service call trend without service navigation links", () => {
     const markup = renderOverview({
       ...overviewData,
@@ -74,6 +91,15 @@ describe("OverviewPage", () => {
     expect(markup).not.toMatch(/<a class="overview-call-trend-legend-row" href=/);
     expect(markup).toMatch(/href="\/runs\?service=gmail"/);
     expect(markup).toMatch(/href="\/runs\?service=slack"/);
+  });
+
+  it("renders call trend and recent calls in one overview activity row", () => {
+    const markup = renderOverview();
+
+    const activityRow = markup.match(/<section class="content-grid overview-activity-grid">([\s\S]*?)<\/section>/)?.[1];
+
+    expect(activityRow ?? "").toContain("overview-call-trend-panel");
+    expect(activityRow ?? "").toContain("overview-recent-calls-panel");
   });
 
   it("does not render duplicate overview metrics", () => {
