@@ -396,13 +396,15 @@ function AppShell(props: {
   );
 }
 
-export function UnlockView(props: {
+export interface UnlockViewProps {
   loading: boolean;
   message: string | null;
   theme: ThemeMode;
   onThemeChange(theme: ThemeMode): void;
   onUnlock(token: string): void;
-}): ReactNode {
+}
+
+export function UnlockView(props: UnlockViewProps): ReactNode {
   const t = useTranslate();
   const [token, setToken] = useState("");
 
