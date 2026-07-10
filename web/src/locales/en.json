@@ -309,9 +309,16 @@
       "title": "API Reference",
       "description": "Browse the local runtime routes in Scalar."
     },
-    "mcpTools": {
-      "title": "MCP Tools",
-      "description": "{{count}} actions exposed as local tools."
+    "mcp": {
+      "title": "MCP connection",
+      "description": "Connect Claude Desktop or Cursor to this local runtime.",
+      "endpoint": "MCP URL",
+      "copyEndpoint": "Copy MCP URL",
+      "copiedEndpoint": "Copied MCP URL",
+      "configTitle": "JSON configuration",
+      "copyConfig": "Copy JSON configuration",
+      "copiedConfig": "Copied JSON configuration",
+      "createToken": "Generate Runtime Token"
     },
     "openapi": {
       "title": "OpenAPI JSON",

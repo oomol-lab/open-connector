@@ -24,7 +24,7 @@ import {
   Sun,
   TerminalSquare,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
 import { AccessPage } from "./access-page";
 import { ActionsPage } from "./actions-page";
@@ -294,7 +294,6 @@ function AppShell(props: {
 }): ReactNode {
   const t = useTranslate();
   const location = useLocation();
-  const actions = useMemo(() => props.data.providers.flatMap((provider) => provider.actions), [props.data.providers]);
   const heading = headingForPath(location.pathname);
   const section = location.pathname.split("/").filter(Boolean)[0];
   const isOverviewPage = heading === "overview";
@@ -387,7 +386,7 @@ function AppShell(props: {
               path="/access"
               element={<AccessPage tokens={props.data.runtimeTokens} onRefresh={props.onRefresh} />}
             />
-            <Route path="/resources" element={<ResourcesPage actions={actions} />} />
+            <Route path="/resources" element={<ResourcesPage />} />
             <Route path="*" element={<Navigate to="/overview" replace />} />
           </Routes>
         </main>

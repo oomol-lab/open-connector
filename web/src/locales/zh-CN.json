@@ -309,9 +309,16 @@
       "title": "API 参考",
       "description": "在 Scalar 中浏览本地运行时路由。"
     },
-    "mcpTools": {
-      "title": "MCP 工具",
-      "description": "{{count}} 个操作已暴露为本地工具。"
+    "mcp": {
+      "title": "MCP 连接",
+      "description": "将 Claude Desktop 或 Cursor 连接到本地运行时。",
+      "endpoint": "MCP 地址",
+      "copyEndpoint": "复制 MCP 地址",
+      "copiedEndpoint": "已复制 MCP 地址",
+      "configTitle": "JSON 配置",
+      "copyConfig": "复制 JSON 配置",
+      "copiedConfig": "已复制 JSON 配置",
+      "createToken": "生成 Runtime Token"
     },
     "openapi": {
       "title": "OpenAPI JSON",

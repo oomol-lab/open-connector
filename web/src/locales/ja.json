@@ -309,9 +309,16 @@
       "title": "API Reference",
       "description": "Scalar でローカルランタイム route を確認します。"
     },
-    "mcpTools": {
-      "title": "MCP Tools",
-      "description": "{{count}} 件のアクションがローカル tool として公開されています。"
+    "mcp": {
+      "title": "MCP 接続",
+      "description": "Claude Desktop または Cursor をローカルランタイムに接続します。",
+      "endpoint": "MCP URL",
+      "copyEndpoint": "MCP URL をコピー",
+      "copiedEndpoint": "MCP URL をコピーしました",
+      "configTitle": "JSON 設定",
+      "copyConfig": "JSON 設定をコピー",
+      "copiedConfig": "JSON 設定をコピーしました",
+      "createToken": "Runtime Token を生成"
     },
     "openapi": {
       "title": "OpenAPI JSON",

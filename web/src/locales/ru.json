@@ -309,9 +309,16 @@
       "title": "API Reference",
       "description": "Просматривайте маршруты локального runtime в Scalar."
     },
-    "mcpTools": {
-      "title": "MCP Tools",
-      "description": "{{count}} действий доступны как локальные инструменты."
+    "mcp": {
+      "title": "Подключение MCP",
+      "description": "Подключите Claude Desktop или Cursor к локальному runtime.",
+      "endpoint": "URL MCP",
+      "copyEndpoint": "Копировать URL MCP",
+      "copiedEndpoint": "URL MCP скопирован",
+      "configTitle": "Конфигурация JSON",
+      "copyConfig": "Копировать конфигурацию JSON",
+      "copiedConfig": "Конфигурация JSON скопирована",
+      "createToken": "Создать Runtime Token"
     },
     "openapi": {
       "title": "OpenAPI JSON",
