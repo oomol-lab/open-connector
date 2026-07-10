@@ -17,7 +17,7 @@
 
 OpenConnector est un connector gateway open source pour AI agents, et une alternative à Composio.
 Connectez les comptes d'apps utilisateur une fois, puis exposez un catalog partagé de 1,000+
-providers et 9 400+ Actions prêtes à l'emploi aux agents et applications.
+providers et 10 000+ Actions prêtes à l'emploi aux agents et applications.
 
 Utilisez le [Connector SDK](https://github.com/oomol-lab/connector-sdk) dans le code applicatif,
 [oo CLI](https://github.com/oomol-lab/oo-cli) comme relais pour les agents locaux, MCP pour les

@@ -16,7 +16,7 @@
 </div>
 
 OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Composio 的开源替代方案。
-连接一次用户应用账号，就可以把包含 1,000+ 个 provider 和 9,400+ 个预置 Action 的共享 catalog 暴露给
+连接一次用户应用账号，就可以把包含 1,000+ 个 provider 和 10,000+ 个预置 Action 的共享 catalog 暴露给
 Agent 和应用。
 
 应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
