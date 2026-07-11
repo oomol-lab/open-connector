@@ -43,8 +43,11 @@ describe("Gitee runtime", () => {
     });
 
     const [url, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
-    expect(url.toString()).toBe("https://gitee.com/api/v5/user?access_token=gitee-token");
-    expect((init.headers as Record<string, string>)["user-agent"]).toBe("oomol-connect/0.1");
+    expect(url.toString()).toBe("https://gitee.com/api/v5/user");
+    expect(init.headers).toMatchObject({
+      authorization: "Bearer gitee-token",
+      "user-agent": "oomol-connect/0.1",
+    });
   });
 
   it("uses the same validation for API keys and OAuth credentials", async () => {
@@ -70,8 +73,10 @@ describe("Gitee runtime", () => {
 
     expect(apiKeyResult?.grantedScopes).toEqual([]);
     expect(oauthResult?.grantedScopes).toEqual(["user_info", "projects"]);
-    expect(new URL(String(fetcher.mock.calls[0]?.[0])).searchParams.get("access_token")).toBe("personal-token");
-    expect(new URL(String(fetcher.mock.calls[1]?.[0])).searchParams.get("access_token")).toBe("oauth-token");
+    expect(fetcher.mock.calls[0]?.[1]?.headers).toMatchObject({ authorization: "Bearer personal-token" });
+    expect(fetcher.mock.calls[1]?.[1]?.headers).toMatchObject({ authorization: "Bearer oauth-token" });
+    expect(new URL(String(fetcher.mock.calls[0]?.[0])).searchParams.has("access_token")).toBe(false);
+    expect(new URL(String(fetcher.mock.calls[1]?.[0])).searchParams.has("access_token")).toBe(false);
   });
 
   it("lists repositories with Gitee pagination parameters", async () => {
@@ -97,7 +102,6 @@ describe("Gitee runtime", () => {
     const url = new URL(String(fetcher.mock.calls[0]?.[0]));
     expect(url.pathname).toBe("/api/v5/user/repos");
     expect(Object.fromEntries(url.searchParams)).toEqual({
-      access_token: "gitee-token",
       visibility: "private",
       q: "demo",
       sort: "updated",
@@ -117,7 +121,8 @@ describe("Gitee runtime", () => {
 
     const url = new URL(String(fetcher.mock.calls[0]?.[0]));
     expect(url.pathname).toBe("/api/v5/repos/team%20name/repo%2Fname");
-    expect(url.searchParams.get("access_token")).toBe("gitee-token");
+    expect(url.searchParams.has("access_token")).toBe(false);
+    expect(fetcher.mock.calls[0]?.[1]?.headers).toMatchObject({ authorization: "Bearer gitee-token" });
   });
 
   it("maps authentication, rate limit, and malformed response failures", async () => {

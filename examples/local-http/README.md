@@ -22,22 +22,6 @@ Run GitHub with a personal access token:
 GITHUB_TOKEN=github_pat_... node examples/local-http/github.ts
 ```
 
-Run Gitee with a personal access token. Set `GITEE_REPOSITORY=owner/repo` to also fetch one
-repository by path.
-
-```bash
-GITEE_TOKEN=... node examples/local-http/gitee.ts
-```
-
-Prepare Gitee OAuth with your own Gitee third-party application:
-
-```bash
-GITEE_CLIENT_ID=... GITEE_CLIENT_SECRET=... node examples/local-http/gitee.ts
-```
-
-Configure the Gitee application redirect URI to `http://localhost:3000/oauth/callback`, then open
-the printed authorization URL.
-
 Run Notion with an internal integration token. Share target pages or databases with the integration
 first.
 

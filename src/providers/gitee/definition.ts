@@ -24,7 +24,7 @@ export const provider: ProviderDefinition = {
       type: "api_key",
       label: "Personal access token",
       placeholder: "Gitee personal access token",
-      description: "Gitee personal access token used with the public API V5 access_token parameter.",
+      description: "Gitee personal access token used with the public API V5.",
     },
   ],
   homepageUrl: "https://gitee.com",

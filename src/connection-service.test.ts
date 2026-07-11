@@ -416,9 +416,6 @@ describe("ConnectionService", () => {
       "https://example.com/oauth/token",
       expect.objectContaining({
         method: "POST",
-        headers: expect.objectContaining({
-          "user-agent": "oomol-connect/0.1",
-        }),
       }),
     );
   });

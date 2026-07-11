@@ -3,9 +3,6 @@
  */
 export type QueryValue = string | number | boolean | null | undefined;
 
-/** Default User-Agent sent by outbound provider and OAuth requests. */
-export const providerUserAgent = "oomol-connect/0.1";
-
 /**
  * Convert defined scalar values into URL query strings.
  *

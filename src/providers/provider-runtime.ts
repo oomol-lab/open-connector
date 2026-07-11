@@ -13,14 +13,17 @@ import type {
 
 import { Buffer } from "node:buffer";
 import { CastError, optionalRecord, optionalScalarString, optionalString, requiredString } from "../core/cast.ts";
-import { providerUserAgent, readBoundedResponseBytes } from "../core/request.ts";
-
-export { providerUserAgent } from "../core/request.ts";
+import { readBoundedResponseBytes } from "../core/request.ts";
 
 /**
  * Fetch-compatible function accepted by provider runtime helpers and tests.
  */
 export type ProviderFetch = typeof fetch;
+
+/**
+ * Default User-Agent sent by local provider executors.
+ */
+export const providerUserAgent = "oomol-connect/0.1";
 
 /**
  * Provider-native handler shape. The provider owns `TContext`; the shared

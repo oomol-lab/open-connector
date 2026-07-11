@@ -91,7 +91,6 @@ async function giteeRequestJson<T = unknown>(
   options: GiteeRequestOptions = {},
 ): Promise<T> {
   const url = new URL(`${giteeApiBaseUrl}${path}`);
-  url.searchParams.set("access_token", context.accessToken);
   for (const [key, value] of Object.entries(queryParams(options.query ?? {}))) {
     url.searchParams.set(key, value);
   }
@@ -101,6 +100,7 @@ async function giteeRequestJson<T = unknown>(
     response = await context.fetcher(url, {
       headers: {
         accept: "application/json",
+        authorization: `Bearer ${context.accessToken}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,
