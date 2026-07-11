@@ -33,6 +33,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@scalar/hono-api-reference": "^0.11.7",
     "ali-oss": "^6.23.0",
+    "fast-xml-parser": "^5.9.3",
     "hono": "^4.12.27",
     "imapflow": "^1.4.6",
     "mailparser": "^3.9.14",

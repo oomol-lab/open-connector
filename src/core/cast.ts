@@ -147,6 +147,22 @@ export function stringArray(
 }
 
 /**
+ * Return an array only when every item is already a string, or throw.
+ * Unlike `stringArray`, this helper does not coerce scalar values.
+ */
+export function requiredStringArray(
+  value: unknown,
+  fieldName: string,
+  createError: CastErrorFactory = (message) => new CastError(message),
+): string[] {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+    throw createError(`${fieldName} must be an array of strings`);
+  }
+
+  return value;
+}
+
+/**
  * Return every array item as a plain object record, or throw. Examples:
  * `objectArray([{ a: 1 }], "items") => [{ a: 1 }]`, `objectArray([1], "items")` throws.
  */
