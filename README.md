@@ -128,10 +128,16 @@ run `npm run deploy:cloudflare`.
 
 ## Quick Start
 
-Start the runtime with Docker Compose:
+Start the runtime from the published image with Docker Compose:
 
 ```bash
-docker compose up --build
+docker compose up
+```
+
+This pulls `ghcr.io/oomol-lab/connect:latest`. To build from source instead:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
 ```
 
 Open the local console and generated API reference:
@@ -195,6 +201,14 @@ Fly volume.
 See [docs/fly-io.md](docs/fly-io.md) for app creation, volume setup, secrets, deployment, custom
 domains, and scaling.
 
+## Docker Image (GHCR)
+
+Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomol-lab/connect`. Use
+`latest` for the newest release, a pinned version like `v1.0.0` for production, or `tip` for the
+latest `main` build.
+
+See [docs/docker-ghcr.md](docs/docker-ghcr.md) for tags, pulling, and running.
+
 ## Want to Use It Directly?
 
 The paths above are for teams integrating connectors into their own products, runtimes, or
@@ -220,6 +234,7 @@ create, and sync across connected tools.
 - [Runtime API and MCP](docs/runtime-api.md)
 - [Fly.io deployment](docs/fly-io.md)
 - [Cloudflare deployment](docs/cloudflare.md)
+- [Docker image (GHCR)](docs/docker-ghcr.md)
 - [Configuration](docs/configuration.md)
 - [Credentials and OAuth](docs/credentials.md)
 - [Catalog format](docs/catalog-format.md)

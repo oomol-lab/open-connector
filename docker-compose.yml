@@ -1,8 +1,8 @@
+# Runs the prebuilt image published to GHCR. To build from source instead, add
+# the build overlay: docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
 services:
   connector:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
+    image: ghcr.io/oomol-lab/connect:latest
     ports:
       - "3000:3000"
     volumes:

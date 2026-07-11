@@ -1,0 +1,147 @@
+name: Publish Docker Image
+
+# Build the OpenConnector image from docker/Dockerfile and publish it to the
+# GitHub Packages container registry (GHCR) at ghcr.io/<owner>/<repo>.
+#
+# Triggers and tags:
+#   - push to main (this includes merged PRs): `tip` + the short commit hash
+#   - published release:                       `latest` + the release version (e.g. v1.0.0)
+#
+# The image is multi-arch (linux/amd64 + linux/arm64). Each architecture is
+# built NATIVELY on its own Blacksmith runner (no QEMU emulation), pushed by
+# digest, and the two are then merged into a single multi-arch manifest per tag.
+#
+# main-branch pushes and releases never overlap: `push` ignores tag refs and
+# publishing a release does not fire a branch `push`. See docs/docker-ghcr.md.
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+# One in-flight publish per ref. main pushes share a group so a newer commit
+# cancels an older, still-running build — this keeps `tip` pointing at the most
+# recent commit. Releases use their own per-tag group and are never cancelled.
+concurrency:
+  group: publish-docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+# Least privilege: read the repo, and write packages to push the image to GHCR.
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  # ghcr.io/oomol-lab/connect — GHCR auto-links the package to this repository.
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build each architecture natively and push it to GHCR by digest (no tags yet).
+  build:
+    name: Build ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: blacksmith-4vcpu-ubuntu-2404
+            pair: linux-amd64
+          # Native arm64 hardware; the `-arm` suffix picks a Blacksmith ARM runner.
+          - platform: linux/arm64
+            runner: blacksmith-4vcpu-ubuntu-2404-arm
+            pair: linux-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # OCI image labels; tags are applied later, on the merged manifest.
+      - name: Compute labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Blacksmith's Docker builder keeps a per-Dockerfile layer cache on a
+      # sticky disk (one per architecture), so no cache-from/cache-to is needed.
+      - name: Set up Blacksmith Docker builder
+        uses: useblacksmith/setup-docker-builder@v1
+
+      - name: Build and push by digest
+        id: build
+        uses: useblacksmith/build-push-action@v2
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Single-manifest per arch; skip the provenance attestation.
+          provenance: false
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.pair }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Merge the per-arch digests into one multi-arch manifest per computed tag.
+  merge:
+    name: Merge & Push manifest
+    needs: build
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Same tag scheme as before: tip + short-sha on push, latest + version on release.
+      - name: Compute tags
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=tip,enable=${{ github.event_name == 'push' }}
+            type=sha,prefix=,format=short,enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
+
+      - name: Create and push multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Inspect manifest
+        run: docker buildx imagetools inspect "$(jq -cr '.tags[0]' <<< "$DOCKER_METADATA_OUTPUT_JSON")"

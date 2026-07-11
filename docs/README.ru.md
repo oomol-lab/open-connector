@@ -128,10 +128,16 @@ flowchart LR
 
 ## Быстрый Старт
 
-Запустите runtime через Docker Compose:
+Запустите runtime из опубликованного образа через Docker Compose:
 
 ```bash
-docker compose up --build
+docker compose up
+```
+
+Это скачает `ghcr.io/oomol-lab/connect:latest`. Чтобы собрать из исходников:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
 ```
 
 Откройте локальную console и сгенерированную API reference:
@@ -192,6 +198,14 @@ Fly volume.
 Создание Fly app, настройка volume, secrets, deployment, custom domain и scaling описаны в
 [fly-io.md](fly-io.md).
 
+## Docker-образ (GHCR)
+
+Запускайте OpenConnector из готового образа в GitHub Packages (GHCR): `ghcr.io/oomol-lab/connect`.
+Используйте `latest` для новейшего release, закреплённую версию вроде `v1.0.0` для production или `tip`
+для последнего build из `main`.
+
+Про теги образа, pull и запуск см. [docker-ghcr.md (на английском)](docker-ghcr.md).
+
 ## Хотите Использовать Напрямую?
 
 Пути выше предназначены для команд, которые интегрируют connector в свои продукты, runtimes или
@@ -217,6 +231,7 @@ CLI, MCP либо HTTP API.
 - [Runtime API и MCP](runtime-api.md)
 - [Развертывание Fly.io](fly-io.md)
 - [Развертывание Cloudflare](cloudflare.md)
+- [Docker-образ (GHCR) (на английском)](docker-ghcr.md)
 - [Configuration](configuration.md)
 - [Credentials и OAuth](credentials.md)
 - [Формат catalog](catalog-format.md)
