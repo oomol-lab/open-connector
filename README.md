@@ -134,7 +134,7 @@ Start the runtime from the published image with Docker Compose:
 docker compose up
 ```
 
-This pulls `ghcr.io/oomol-lab/connect:latest`. To build from source instead:
+This pulls `ghcr.io/oomol-lab/open-connector:latest`. To build from source instead:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
@@ -203,7 +203,7 @@ domains, and scaling.
 
 ## Docker Image (GHCR)
 
-Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomol-lab/connect`. Use
+Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomol-lab/open-connector`. Use
 `latest` for the newest release, a pinned version like `v1.0.0` for production, or `tip` for the
 latest `main` build.
 

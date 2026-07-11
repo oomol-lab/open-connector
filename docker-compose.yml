@@ -2,7 +2,7 @@
 # the build overlay: docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
 services:
   connector:
-    image: ghcr.io/oomol-lab/connect:latest
+    image: ghcr.io/oomol-lab/open-connector:latest
     ports:
       - "3000:3000"
     volumes:

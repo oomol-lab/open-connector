@@ -6,7 +6,7 @@ OpenConnector 在 GitHub Packages 容器镜像仓库（GHCR）提供了预构建
 运行 OpenConnector。镜像地址为：
 
 ```text
-ghcr.io/oomol-lab/connect
+ghcr.io/oomol-lab/open-connector
 ```
 
 ## 选择标签（Tag）
@@ -25,7 +25,7 @@ ghcr.io/oomol-lab/connect
 镜像是 public 的，无需登录即可拉取：
 
 ```bash
-docker pull ghcr.io/oomol-lab/connect:latest
+docker pull ghcr.io/oomol-lab/open-connector:latest
 ```
 
 如果遇到 `unauthorized` 或 `denied` 错误，用带 `read:packages` scope 的 GitHub token 登录：
@@ -60,7 +60,7 @@ docker run -d \
   -e OOMOL_CONNECT_ORIGIN="https://api.example.com" \
   -e OOMOL_CONNECT_ENCRYPTION_KEY="$OOMOL_CONNECT_ENCRYPTION_KEY" \
   -e OOMOL_CONNECT_ADMIN_TOKEN="$OOMOL_CONNECT_ADMIN_TOKEN" \
-  ghcr.io/oomol-lab/connect:latest
+  ghcr.io/oomol-lab/open-connector:latest
 ```
 
 完整环境变量参考见 [configuration.md](configuration.md)，连接 provider 见 [credentials.md](credentials.md)。

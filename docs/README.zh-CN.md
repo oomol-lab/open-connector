@@ -120,7 +120,7 @@ secret，然后运行 `npm run deploy:cloudflare`。
 docker compose up
 ```
 
-这会拉取 `ghcr.io/oomol-lab/connect:latest`。想改为从源码构建：
+这会拉取 `ghcr.io/oomol-lab/open-connector:latest`。想改为从源码构建：
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
@@ -182,7 +182,7 @@ Fly app 创建、volume、secret、部署、自定义域名和扩缩容步骤见
 
 ## Docker 镜像（GHCR）
 
-可以直接用 GitHub Packages（GHCR）上的预构建镜像运行 OpenConnector：`ghcr.io/oomol-lab/connect`。最新
+可以直接用 GitHub Packages（GHCR）上的预构建镜像运行 OpenConnector：`ghcr.io/oomol-lab/open-connector`。最新
 release 用 `latest`，生产环境固定版本号（如 `v1.0.0`），想用最新 `main` 构建则用 `tip`。
 
 镜像标签、拉取和运行的说明见 [docker-ghcr.zh-CN.md](docker-ghcr.zh-CN.md)。

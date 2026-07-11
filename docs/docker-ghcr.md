@@ -6,7 +6,7 @@ OpenConnector ships a prebuilt Docker image on the GitHub Packages container reg
 can run it without cloning the repository or building anything. The image is:
 
 ```text
-ghcr.io/oomol-lab/connect
+ghcr.io/oomol-lab/open-connector
 ```
 
 ## Choose A Tag
@@ -25,7 +25,7 @@ For production, pin a released version such as `v1.0.0`.
 The image is public, so no sign-in is required:
 
 ```bash
-docker pull ghcr.io/oomol-lab/connect:latest
+docker pull ghcr.io/oomol-lab/open-connector:latest
 ```
 
 If you get an `unauthorized` or `denied` error, sign in with a GitHub token that has the
@@ -63,7 +63,7 @@ docker run -d \
   -e OOMOL_CONNECT_ORIGIN="https://api.example.com" \
   -e OOMOL_CONNECT_ENCRYPTION_KEY="$OOMOL_CONNECT_ENCRYPTION_KEY" \
   -e OOMOL_CONNECT_ADMIN_TOKEN="$OOMOL_CONNECT_ADMIN_TOKEN" \
-  ghcr.io/oomol-lab/connect:latest
+  ghcr.io/oomol-lab/open-connector:latest
 ```
 
 See [configuration.md](configuration.md) for the full environment variable reference and

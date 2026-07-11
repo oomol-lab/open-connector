@@ -33,7 +33,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  # ghcr.io/oomol-lab/connect — GHCR auto-links the package to this repository.
+  # ghcr.io/oomol-lab/open-connector — GHCR auto-links the package to this repository.
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
