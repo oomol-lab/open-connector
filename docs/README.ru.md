@@ -204,7 +204,7 @@ Fly volume.
 Используйте `latest` для новейшего release, закреплённую версию вроде `v1.0.0` для production или `tip`
 для последнего build из `main`.
 
-Про теги образа, pull и запуск см. [docker-ghcr.md (на английском)](docker-ghcr.md).
+О тегах образа, pull и запуске см. [docker-ghcr.md (на английском)](docker-ghcr.md).
 
 ## Хотите Использовать Напрямую?
 

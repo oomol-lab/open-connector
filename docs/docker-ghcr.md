@@ -12,10 +12,10 @@ ghcr.io/oomol-lab/open-connector
 ## Choose A Tag
 
 | Tag           | Points at                            | Use it when                                                    |
-| ------------- | ------------------------------------ | ------------------------------------------------------------- |
-| `latest`      | the newest published release         | you want the current stable runtime                           |
+| ------------- | ------------------------------------ | -------------------------------------------------------------- |
+| `latest`      | the newest published release         | you want the current stable runtime                            |
 | `v1.0.0`      | a specific release (immutable)       | you deploy to production and want a pinned, reproducible build |
-| `tip`         | the latest commit on `main`          | you want to try changes that are not released yet             |
+| `tip`         | the latest commit on `main`          | you want to try changes that are not released yet              |
 | `<short-sha>` | a specific `main` commit (immutable) | you want to pin an exact pre-release build                     |
 
 For production, pin a released version such as `v1.0.0`.

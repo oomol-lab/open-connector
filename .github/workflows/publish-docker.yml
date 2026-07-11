@@ -133,7 +133,7 @@ jobs:
           tags: |
             type=raw,value=tip,enable=${{ github.event_name == 'push' }}
             type=sha,prefix=,format=short,enable=${{ github.event_name == 'push' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
             type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
 
       - name: Create and push multi-arch manifest
