@@ -382,6 +382,7 @@ describe("OAuthFlowService", () => {
     const tokenBody = tokenRequest?.body;
     expect(tokenRequest?.headers).toMatchObject({
       authorization: `Basic ${Buffer.from("client%3Aid:client%3Asecret").toString("base64")}`,
+      "user-agent": "oomol-connect/0.1",
     });
     expect(tokenBody).toBeInstanceOf(URLSearchParams);
     expect((tokenBody as URLSearchParams).get("code_verifier")).toMatch(/^[A-Za-z0-9_-]+$/);
