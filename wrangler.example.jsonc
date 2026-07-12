@@ -29,10 +29,15 @@
       "migrations_dir": "migrations",
     },
   ],
+{
+  // ...
+  // Option A: R2 backend (default)
   "r2_buckets": [
-    {
-      "binding": "TRANSIT_FILES",
-      "bucket_name": "open-connector-transit-files",
-    },
+    { "binding": "TRANSIT_FILES", "bucket_name": "<your-bucket-name>" }
   ],
+  // Option B: KV backend (no credit card required; max file size 25 MB)
+  // "kv_namespaces": [
+  //   { "binding": "TRANSIT_FILES", "id": "<your-kv-namespace-id>" }
+  // ],
+  // "vars": { "TRANSIT_FILES_BACKEND": "kv" }
 }
