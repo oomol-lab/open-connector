@@ -15,7 +15,7 @@ export const provider: ProviderDefinition = {
       label: "API Key",
       placeholder: "APOLLO_API_KEY",
       description:
-        "Apollo API key sent with the Authorization Bearer header. Create it in Settings > Integrations > API Keys: https://docs.apollo.io/docs/create-api-key. The first-pass actions require a master API key.",
+        "Apollo API key sent with the x-api-key header. Create it in Settings > Integrations > API Keys: https://docs.apollo.io/docs/create-api-key. The first-pass actions require a master API key.",
       extraFields: [],
     },
   ],
