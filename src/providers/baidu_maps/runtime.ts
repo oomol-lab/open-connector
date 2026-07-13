@@ -3,7 +3,7 @@ import type { BaiduMapsActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalString } from "../../core/cast.ts";
-import { setSearchParams, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const baiduMapsApiBaseUrl = "https://api.map.baidu.com";
 export const baiduMapsValidationPath = "/reverse_geocoding/v3/";
@@ -23,6 +23,8 @@ interface BaiduMapsResponsePayload {
   message?: unknown;
   result?: unknown;
   results?: unknown;
+  content?: unknown;
+  address?: unknown;
   data_version?: unknown;
   [key: string]: unknown;
 }
@@ -145,11 +147,12 @@ function applyBaiduMapsSn(
   }
   const sn = computeBaiduMapsSn(path, query, sk);
   const timestamp = formatBaiduTimestamp(new Date());
-  return {
-    ...query,
-    sn,
-    timestamp,
-  };
+  // Append `sn` and `timestamp` AFTER the signed query keys, sorted in the
+  // same order Baidu uses when validating the signature on its end. The
+  // signing input above already sorted every non-ak/sn/timestamp field by key
+  // (ascending ASCII), so appending the two signing fields in their natural
+  // order matches the URL we'll actually send.
+  return orderSignedQueryKeys(query, sn, timestamp);
 }
 
 /**
@@ -163,20 +166,46 @@ export function computeBaiduMapsSnForTest(path: string, query: Record<string, Qu
 }
 
 function computeBaiduMapsSn(path: string, query: Record<string, QueryValue>, sk: string): string {
-  const signingBase: Record<string, QueryValue> = {};
+  const sortedKeys = sortedSigningKeys(query);
+  const search = new URLSearchParams();
+  for (const key of sortedKeys) {
+    search.append(key, String(query[key]));
+  }
+  const signingString = `${path}?${search.toString()}${sk}`;
+  return createHash("md5").update(signingString, "utf8").digest("hex");
+}
+
+function sortedSigningKeys(query: Record<string, QueryValue>): string[] {
+  const keys: string[] = [];
   for (const [key, value] of Object.entries(query)) {
     if (key === "ak" || key === "sn" || key === "timestamp" || value === undefined) {
       continue;
     }
-    signingBase[key] = value;
+    keys.push(key);
   }
-  const sortedKeys = Object.keys(signingBase).sort();
-  const search = new URLSearchParams();
-  for (const key of sortedKeys) {
-    search.append(key, String(signingBase[key]));
+  keys.sort();
+  return keys;
+}
+
+function orderSignedQueryKeys(
+  query: Record<string, QueryValue>,
+  sn: string,
+  timestamp: string,
+): Record<string, QueryValue> {
+  const ordered: Record<string, QueryValue> = {};
+  // Baidu's SN spec places the user-supplied fields (excluding ak) first,
+  // sorted by key, followed by ak, sn, timestamp. Keep the URL SearchParams
+  // encoding identical between signature and request.
+  for (const key of sortedSigningKeys(query)) {
+    ordered[key] = query[key];
   }
-  const signingString = `${path}?${search.toString()}${sk}`;
-  return createHash("md5").update(signingString, "utf8").digest("hex");
+  // Preserve any ak already in the query so we round-trip the original value.
+  if (query.ak !== undefined) {
+    ordered.ak = query.ak;
+  }
+  ordered.sn = sn;
+  ordered.timestamp = timestamp;
+  return ordered;
 }
 
 function formatBaiduTimestamp(date: Date): string {
@@ -215,7 +244,7 @@ async function executeGeocode(input: RuntimeInput, context: BaiduMapsActionConte
   );
   return compactObject({
     status: readOptionalInteger(payload.status),
-    location: readOptionalStringLike(extractField(payload.result, "location")),
+    location: serializeLatLng(extractField(payload.result, "location")),
     precise: readOptionalInteger(extractField(payload.result, "precise")),
     confidence: readOptionalInteger(extractField(payload.result, "confidence")),
     comprehension: readOptionalInteger(extractField(payload.result, "comprehension")),
@@ -383,15 +412,15 @@ async function executeIpLocate(input: RuntimeInput, context: BaiduMapsActionCont
     "execute",
     context.signal,
   );
-  const result = readOptionalRecord(payload.result);
-  const addressDetail = readOptionalRecord(extractField(result, "address_detail"));
-  const point = readOptionalRecord(extractField(result, "point"));
+  const content = readOptionalRecord(payload.content);
+  const addressDetail = readOptionalRecord(extractField(content, "address_detail"));
+  const point = readOptionalRecord(extractField(content, "point"));
   return compactObject({
     status: readOptionalInteger(payload.status),
     message: readOptionalString(payload.message),
-    address: readOptionalString(extractField(result, "address")),
+    address: readOptionalString(payload.address),
     content: compactObject({
-      address: readOptionalString(extractField(result, "address")),
+      address: readOptionalString(extractField(content, "address")),
       point: compactObject({
         x: readOptionalNumber(point?.x),
         y: readOptionalNumber(point?.y),
@@ -595,20 +624,14 @@ async function baiduMapsGet<T extends BaiduMapsResponsePayload>(
 
 function buildBaiduMapsUrl(path: string, query: Record<string, QueryValue>): string {
   const url = new URL(path, baiduMapsApiBaseUrl);
-  setSearchParams(url, stringifyQuery(query));
-  return url.toString();
-}
-
-function stringifyQuery(query: Record<string, QueryValue>): Record<string, string | undefined> {
-  const output: Record<string, string | undefined> = {};
+  // Iterate in insertion order so the request URL preserves the key ordering
+  // we used when computing the SN signature (Baidu requires the same order).
   for (const [key, value] of Object.entries(query)) {
-    if (value === undefined) {
-      output[key] = undefined;
-    } else {
-      output[key] = String(value);
+    if (value !== undefined) {
+      url.searchParams.append(key, String(value));
     }
   }
-  return output;
+  return url.toString();
 }
 
 async function readBaiduMapsJson<T extends BaiduMapsResponsePayload>(response: Response): Promise<T> {
@@ -726,6 +749,24 @@ function readArrayLike(value: unknown): unknown[] {
 function extractField(parent: unknown, field: string): unknown {
   const record = readOptionalRecord(parent);
   return record ? record[field] : undefined;
+}
+
+function serializeLatLng(value: unknown): string | undefined {
+  // Baidu Maps returns coordinates as either a "lat,lng" string or a
+  // { lat, lng } object. Normalize to "lat,lng" for downstream consumers.
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+  const record = readOptionalRecord(value);
+  if (!record) {
+    return undefined;
+  }
+  const lat = readOptionalNumber(record.lat ?? record.y);
+  const lng = readOptionalNumber(record.lng ?? record.x);
+  if (lat === undefined || lng === undefined) {
+    return undefined;
+  }
+  return `${lat},${lng}`;
 }
 
 function readUnexpectedMessage(error: unknown): string {

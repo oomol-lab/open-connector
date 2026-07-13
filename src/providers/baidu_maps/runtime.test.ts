@@ -123,10 +123,66 @@ describe("Baidu Maps runtime", () => {
     expect(timestamp).not.toBeNull();
     expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
 
+    // The signing input uses the same key order as the request URL so that
+    // Baidu's server, which re-parses the URL, hashes the same string.
+    expect(url.search.slice(1)).toMatch(/^output=json&query=.*&region=.*&ak=ak-signed&sn=[a-f0-9]{32}&timestamp=/);
+
     const expectedSigningString =
       "/place/v2/search?output=json&query=%E5%92%96%E5%95%A1%E5%8E%85&region=%E5%8C%97%E4%BA%ACsk-signed";
     const expected = createHash("md5").update(expectedSigningString, "utf8").digest("hex");
     expect(sn).toBe(expected);
+  });
+
+  it("serializes geocode result.location when the API returns a {lat, lng} object", async () => {
+    const requests: RecordedRequest[] = [];
+    const fetcher = createFetcher(requests, {
+      status: 0,
+      message: "ok",
+      result: {
+        location: { lat: 39.915, lng: 116.404 },
+        precise: 1,
+        confidence: 90,
+        comprehension: 1,
+      },
+    });
+
+    const output = (await baiduMapsActionHandlers.geocode(
+      { address: "北京市海淀区中关村南大街27号" },
+      { apiKey: "ak-geo", fetcher },
+    )) as { location?: string };
+
+    expect(output.location).toBe("39.915,116.404");
+    expect(requests).toHaveLength(1);
+  });
+
+  it("reads ip_locate response from the top-level address and content fields", async () => {
+    const requests: RecordedRequest[] = [];
+    const fetcher = createFetcher(requests, {
+      status: 0,
+      message: "ok",
+      address: "北京市",
+      content: {
+        address: "北京市",
+        point: { x: 116.404, y: 39.915 },
+        address_detail: { city: "北京市", city_code: 131, province: "北京市" },
+      },
+    });
+
+    const output = (await baiduMapsActionHandlers.ip_locate(
+      {},
+      { apiKey: "ak-ip", fetcher },
+    )) as {
+      address?: string;
+      content?: {
+        point?: { x?: number; y?: number };
+        address_detail?: { city?: string; city_code?: number };
+      };
+    };
+
+    expect(output.address).toBe("北京市");
+    expect(output.content?.point).toEqual({ x: 116.404, y: 39.915 });
+    expect(output.content?.address_detail).toEqual({ city: "北京市", city_code: 131, province: "北京市" });
+    expect(requests).toHaveLength(1);
   });
 });
 
