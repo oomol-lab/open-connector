@@ -29,3 +29,14 @@ export interface R2ObjectBinding {
 export interface AssetsBinding {
   fetch(request: Request): Promise<Response>;
 }
+
+export interface KVNamespaceBinding {
+  put(
+    key: string,
+    value: string | ArrayBuffer | ArrayBufferView | ReadableStream,
+    options?: { expirationTtl?: number; expiration?: number },
+  ): Promise<void>;
+  get(key: string, type: "text"): Promise<string | null>;
+  get(key: string, type: "arrayBuffer"): Promise<ArrayBuffer | null>;
+  delete(key: string): Promise<void>;
+}

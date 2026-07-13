@@ -1,8 +1,9 @@
-import type { AssetsBinding, D1DatabaseBinding, R2BucketBinding } from "./cloudflare-bindings.ts";
+import type { AssetsBinding, D1DatabaseBinding, KVNamespaceBinding, R2BucketBinding } from "./cloudflare-bindings.ts";
 
 export interface CloudflareEnv {
   DB: D1DatabaseBinding;
-  TRANSIT_FILES: R2BucketBinding;
+  TRANSIT_FILES: R2BucketBinding | KVNamespaceBinding;
+  TRANSIT_FILES_BACKEND?: "r2" | "kv"; // New: used to distinguish backend type at runtime
   ASSETS?: AssetsBinding;
   OOMOL_CONNECT_ORIGIN?: string;
   OOMOL_CONNECT_ADMIN_TOKEN?: string;
