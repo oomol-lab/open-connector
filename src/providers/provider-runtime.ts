@@ -21,6 +21,16 @@ import { readBoundedResponseBytes } from "../core/request.ts";
 export type ProviderFetch = typeof fetch;
 
 /**
+ * Receiver-safe wrapper for the platform fetch implementation.
+ *
+ * Provider runtimes commonly store this function on a context object before
+ * invoking it. Calling the Workers-native fetch function that way forwards the
+ * context object as `this` and causes an Illegal invocation error. This wrapper
+ * keeps the native call lexical while remaining easy to replace in tests.
+ */
+export const providerFetch: ProviderFetch = (input, init) => fetch(input, init);
+
+/**
  * Default User-Agent sent by local provider executors.
  */
 export const providerUserAgent = "oomol-connect/0.1";
@@ -711,7 +721,7 @@ export function defineProviderExecutors<TContext>(input: ProviderExecutorDefinit
           ok: true,
           output: await handler(
             actionInput as Record<string, unknown>,
-            await input.createContext(executionContext, fetch),
+            await input.createContext(executionContext, providerFetch),
           ),
         };
       } catch (error) {

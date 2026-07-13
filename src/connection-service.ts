@@ -14,6 +14,7 @@ import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 
 import { normalizeCredentialValues } from "./core/credential-fields.ts";
+import { providerFetch } from "./providers/provider-runtime.ts";
 
 export const defaultConnectionName = "default";
 
@@ -430,7 +431,7 @@ export class ConnectionService {
 
   private createValidatorOptions() {
     return {
-      fetcher: fetch,
+      fetcher: providerFetch,
       logger: this.logger,
     };
   }

@@ -330,6 +330,38 @@ describe("ConnectionService", () => {
     expect(logger.info).toHaveBeenCalledWith({ service: "uptimerobot" }, "validator log");
   });
 
+  it("passes a receiver-safe fetcher to credential validators", async () => {
+    let nativeFetchThis: unknown = null;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(function (this: unknown) {
+        nativeFetchThis = this;
+        if (this !== undefined) {
+          throw new TypeError("Illegal invocation: function called with incorrect `this` reference");
+        }
+        return Promise.resolve(Response.json({ ok: true }));
+      }),
+    );
+    const service = createService([apiKeyProvider], {
+      providerLoader: new FakeProviderLoader({
+        async apiKey(_input, { fetcher }) {
+          const context = { fetcher };
+          await context.fetcher("https://example.com/validate");
+        },
+      }),
+    });
+
+    await expect(
+      service.connectWithApiKey("uptimerobot", {
+        values: {
+          apiKey: "valid-key",
+          accountId: "account-1",
+        },
+      }),
+    ).resolves.toMatchObject({ service: "uptimerobot", configured: true });
+    expect(nativeFetchThis).toBeUndefined();
+  });
+
   it("exposes connection profiles to local users and agents", async () => {
     const service = createService([apiKeyProvider], {
       providerLoader: new FakeProviderLoader({
