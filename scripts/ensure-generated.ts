@@ -3,19 +3,24 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const rootDir = process.cwd();
-const registryPath = join(process.cwd(), "src/providers/registry.generated.ts");
+const registryPaths = [
+  join(process.cwd(), "src/providers/registry.generated.ts"),
+  join(process.cwd(), "src/providers/registry.cloudflare.generated.ts"),
+];
 const catalogDir = join(process.cwd(), "catalog/apps");
 const sourcePaths = [
   join(rootDir, "src/core"),
   join(rootDir, "src/providers"),
   join(rootDir, "scripts/generate-catalog.ts"),
   join(rootDir, "scripts/generate-provider-registry.ts"),
+  join(rootDir, "scripts/provider-source.ts"),
 ];
-const generatedPaths = new Set([registryPath]);
+const generatedPaths = new Set(registryPaths);
 
 const sourceMtimeMs = await newestMtimeMs(sourcePaths);
 
-if (!(await isFreshFile(registryPath, sourceMtimeMs))) {
+const registriesFresh = await Promise.all(registryPaths.map((path) => isFreshFile(path, sourceMtimeMs)));
+if (registriesFresh.some((fresh) => !fresh)) {
   runNodeScript("scripts/generate-provider-registry.ts");
 }
 

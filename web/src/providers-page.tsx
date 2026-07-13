@@ -15,6 +15,7 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  CircleSlash2,
   ExternalLink,
   KeyRound,
   Search,
@@ -27,7 +28,7 @@ import { Link, useParams } from "react-router";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { credentialFieldsFor, filterProviders, resolveProviderConnectionStatus, sortProviders } from "./model";
 import { Badge, EmptyState, FormStatus, ProviderIcon, TagList } from "./shared-ui";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -343,13 +344,16 @@ function ProviderCollectionBar(props: {
 function ProviderCard(props: ProviderCardProps): ReactNode {
   const t = useTranslate();
   const to = `/providers/${encodeURIComponent(props.provider.service)}`;
-  const actionLabel = props.status.noSetupRequired
+  const locallyAvailable = isProviderLocallyAvailable(props.provider);
+  const actionLabel = !locallyAvailable
     ? t("providers.buttons.details")
-    : props.status.connected
-      ? t("providers.buttons.manageConnection")
-      : props.status.oauthClientRequired
-        ? t("providers.buttons.configureOAuthClient")
-        : t("providers.buttons.connect");
+    : props.status.noSetupRequired
+      ? t("providers.buttons.details")
+      : props.status.connected
+        ? t("providers.buttons.manageConnection")
+        : props.status.oauthClientRequired
+          ? t("providers.buttons.configureOAuthClient")
+          : t("providers.buttons.connect");
 
   return (
     <div className="provider-card" style={providerCardStyle}>
@@ -357,11 +361,15 @@ function ProviderCard(props: ProviderCardProps): ReactNode {
         <ProviderIcon provider={props.provider} />
         <span className="provider-card-title-row">
           <span className="provider-card-title">{props.provider.displayName || props.provider.service}</span>
-          <ProviderStatusBadges status={props.status} compact />
+          <ProviderStatusBadges status={props.status} locallyAvailable={locallyAvailable} compact />
         </span>
       </Link>
       <Link
-        className={props.status.connected ? "provider-card-action" : "provider-card-action provider-card-action-muted"}
+        className={
+          locallyAvailable && props.status.connected
+            ? "provider-card-action"
+            : "provider-card-action provider-card-action-muted"
+        }
         to={to}
       >
         <span>{actionLabel}</span>
@@ -373,11 +381,23 @@ function ProviderCard(props: ProviderCardProps): ReactNode {
 
 function ProviderStatusBadges(props: {
   status: ProviderConnectionStatus;
+  locallyAvailable: boolean;
   compact?: boolean;
   includeDisconnected?: boolean;
 }): ReactNode {
   const t = useTranslate();
   const badges: ReactNode[] = [];
+
+  if (!props.locallyAvailable) {
+    return (
+      <span className="provider-status-badges">
+        <Badge tone="warning">
+          {props.compact ? <CircleSlash2 size={12} /> : null}
+          {t("providers.runtimeUnavailableBadge")}
+        </Badge>
+      </span>
+    );
+  }
 
   if (props.status.connected) {
     badges.push(
@@ -434,13 +454,16 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
   const selectedAuth = props.provider.auth.find((auth) => auth.type === selectedAuthType) ?? props.provider.auth[0];
   const oauthAuth = props.provider.auth.find((auth) => auth.type === "oauth2");
   const hasMultipleAuthMethods = props.provider.auth.length > 1;
-  const connectionDescription = props.connectionStatus.noSetupRequired
-    ? t("providers.connectionDescriptions.noSetup")
-    : props.connectionStatus.connected
-      ? t("providers.connectionDescriptions.connected", { authType: props.connection?.authType ?? "" })
-      : props.connectionStatus.oauthClientRequired
-        ? t("providers.connectionDescriptions.oauthClientRequired", { name: props.provider.displayName })
-        : t("providers.connectionDescriptions.notConnected", { name: props.provider.displayName });
+  const locallyAvailable = isProviderLocallyAvailable(props.provider);
+  const connectionDescription = !locallyAvailable
+    ? t("providers.connectionDescriptions.unavailable")
+    : props.connectionStatus.noSetupRequired
+      ? t("providers.connectionDescriptions.noSetup")
+      : props.connectionStatus.connected
+        ? t("providers.connectionDescriptions.connected", { authType: props.connection?.authType ?? "" })
+        : props.connectionStatus.oauthClientRequired
+          ? t("providers.connectionDescriptions.oauthClientRequired", { name: props.provider.displayName })
+          : t("providers.connectionDescriptions.notConnected", { name: props.provider.displayName });
 
   useEffect(() => {
     setSelectedAuthType(initialAuthType(props.provider, props.connection));
@@ -463,7 +486,11 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
           <div className="provider-detail-heading-copy">
             <div className="provider-detail-heading-title">
               <h2>{props.provider.displayName}</h2>
-              <ProviderStatusBadges status={props.connectionStatus} includeDisconnected />
+              <ProviderStatusBadges
+                status={props.connectionStatus}
+                locallyAvailable={locallyAvailable}
+                includeDisconnected
+              />
             </div>
             {props.provider.description ? (
               <p className="provider-detail-description">{props.provider.description}</p>
@@ -496,7 +523,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               <p>{connectionDescription}</p>
             </div>
           </div>
-          {hasMultipleAuthMethods ? (
+          {locallyAvailable && hasMultipleAuthMethods ? (
             <ToggleGroup
               className="auth-method-control bg-muted p-[3px]"
               type="single"
@@ -516,7 +543,13 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               ))}
             </ToggleGroup>
           ) : null}
-          {selectedAuth ? (
+          {!locallyAvailable ? (
+            <UnavailableProviderConnection
+              provider={props.provider}
+              connection={props.connection}
+              onRefresh={props.onRefresh}
+            />
+          ) : selectedAuth ? (
             <ConnectionForm
               key={selectedAuth.type}
               provider={props.provider}
@@ -532,7 +565,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               description={t("providers.noConnectionMethodDescription")}
             />
           )}
-          {oauthAuth && selectedAuth?.type === "oauth2" ? (
+          {locallyAvailable && oauthAuth && selectedAuth?.type === "oauth2" ? (
             <div className="provider-inline-oauth-settings">
               <h3>{t("providers.oauthClient")}</h3>
               <OAuthClientSettings
@@ -594,6 +627,10 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
 
 export function shouldShowOAuthClientForm(auth: AuthDefinition | undefined, expanded: boolean): boolean {
   return auth?.type === "oauth2" && expanded;
+}
+
+export function isProviderLocallyAvailable(provider: ProviderDefinition): boolean {
+  return provider.actions.length === 0 || provider.actions.some((action) => action.execution.locallyExecutable);
 }
 
 export function shouldShowConnectionActions(auth: AuthDefinition): boolean {
@@ -686,6 +723,47 @@ function authTypeLabel(authType: string, t: (key: string) => string): string {
   if (authType === "custom_credential") return t("providers.authLabels.custom");
   if (authType === "no_auth") return t("providers.authLabels.noAuth");
   return authType;
+}
+
+function UnavailableProviderConnection(props: {
+  provider: ProviderDefinition;
+  connection?: AppData["connections"][number];
+  onRefresh(): void;
+}): ReactNode {
+  const t = useTranslate();
+  const [status, setStatus] = useState<string | null>(null);
+
+  async function disconnect(): Promise<void> {
+    setStatus(t("providers.connectionMessages.disconnecting"));
+    try {
+      await apiDelete(`/api/connections/${props.provider.service}`);
+      setStatus(t("providers.connectionMessages.disconnected"));
+      props.onRefresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : t("providers.connectionMessages.disconnectFailed"));
+    }
+  }
+
+  return (
+    <div className="form-grid">
+      <Alert variant="warning">
+        <CircleSlash2 size={16} />
+        <AlertTitle>{t("providers.runtimeUnavailableTitle")}</AlertTitle>
+        <AlertDescription>
+          {t("providers.runtimeUnavailableDescription", { name: props.provider.displayName })}
+        </AlertDescription>
+      </Alert>
+      {props.connection ? (
+        <div className="button-row">
+          <Button variant="outline" type="button" onClick={() => void disconnect()}>
+            <Trash2 size={16} />
+            {t("providers.buttons.disconnect")}
+          </Button>
+        </div>
+      ) : null}
+      {status ? <FormStatus message={status} /> : null}
+    </div>
+  );
 }
 
 function ConnectionForm(props: ConnectionFormProps): ReactNode {

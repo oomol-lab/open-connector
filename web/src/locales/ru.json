@@ -147,6 +147,9 @@
     "noSetupBadge": "Без настройки",
     "unconfiguredBadge": "Не подключено",
     "oauthClientRequiredBadge": "Требуется OAuth client",
+    "runtimeUnavailableBadge": "Недоступно",
+    "runtimeUnavailableTitle": "Недоступно в текущей среде выполнения",
+    "runtimeUnavailableDescription": "{{name}} остаётся в каталоге для справки, но подключения и действия недоступны в текущей среде выполнения.",
     "summary": {
       "actions": "Действия",
       "auth": "Auth",
@@ -161,7 +164,8 @@
       "noSetup": "Этот провайдер может работать без локальных учетных данных.",
       "connected": "Локальные учетные данные настроены через {{authType}}.",
       "oauthClientRequired": "{{name}} требует локальный OAuth client перед запуском OAuth.",
-      "notConnected": "Настройте локальные учетные данные перед запуском действий {{name}}, которым они нужны."
+      "notConnected": "Настройте локальные учетные данные перед запуском действий {{name}}, которым они нужны.",
+      "unavailable": "Подключения нельзя настроить в текущей среде выполнения."
     },
     "noConnectionMethodTitle": "Нет способа подключения",
     "noConnectionMethodDescription": "Этому провайдеру не нужны локальные учетные данные.",

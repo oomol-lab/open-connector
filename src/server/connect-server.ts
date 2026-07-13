@@ -629,7 +629,7 @@ export class ConnectServer {
       );
       return context.json(authorization);
     } catch (error) {
-      if (error instanceof OAuthFlowError) {
+      if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
         this.options.logger?.warn(
           {
             errorCode: error.code,
@@ -729,7 +729,7 @@ export class ConnectServer {
         "oauth callback completed",
       );
     } catch (error) {
-      if (error instanceof OAuthFlowError) {
+      if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
         this.options.logger?.warn(
           {
             ...logContext,
@@ -737,7 +737,7 @@ export class ConnectServer {
           },
           "oauth callback failed",
         );
-        return jsonError(context, 400, error.code, error.message);
+        return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
       }
       throw error;
     }

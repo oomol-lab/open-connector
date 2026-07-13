@@ -147,6 +147,9 @@
     "noSetupBadge": "无需设置",
     "unconfiguredBadge": "未连接",
     "oauthClientRequiredBadge": "需要 OAuth client",
+    "runtimeUnavailableBadge": "不可用",
+    "runtimeUnavailableTitle": "当前运行时不可用",
+    "runtimeUnavailableDescription": "{{name}} 仍保留在目录中供查阅，但当前运行时无法配置连接或执行操作。",
     "summary": {
       "actions": "操作",
       "auth": "鉴权",
@@ -161,7 +164,8 @@
       "noSetup": "这个提供商无需本地凭证即可运行。",
       "connected": "本地凭证已通过 {{authType}} 配置。",
       "oauthClientRequired": "{{name}} 需要先配置本地 OAuth client 才能开始 OAuth。",
-      "notConnected": "运行需要凭证的 {{name}} 操作前，请先配置本地凭证。"
+      "notConnected": "运行需要凭证的 {{name}} 操作前，请先配置本地凭证。",
+      "unavailable": "当前运行时无法配置连接。"
     },
     "noConnectionMethodTitle": "没有连接方式",
     "noConnectionMethodDescription": "这个提供商不需要本地凭证。",

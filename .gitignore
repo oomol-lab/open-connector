@@ -6,7 +6,7 @@ node_modules/
 dist/
 coverage/
 catalog/
-src/providers/registry.generated.ts
+src/providers/registry*.generated.ts
 .env
 .env.*
 !.env.example

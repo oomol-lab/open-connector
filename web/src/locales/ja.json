@@ -147,6 +147,9 @@
     "noSetupBadge": "設定不要",
     "unconfiguredBadge": "未接続",
     "oauthClientRequiredBadge": "OAuth client が必要",
+    "runtimeUnavailableBadge": "利用不可",
+    "runtimeUnavailableTitle": "現在のランタイムでは利用できません",
+    "runtimeUnavailableDescription": "{{name}} はカタログの参照用に表示されますが、現在のランタイムでは接続の設定やアクションの実行はできません。",
     "summary": {
       "actions": "アクション",
       "auth": "認証",
@@ -161,7 +164,8 @@
       "noSetup": "このプロバイダーはローカル認証情報なしで実行できます。",
       "connected": "ローカル認証情報は {{authType}} で設定済みです。",
       "oauthClientRequired": "{{name}} で OAuth を開始するには、ローカル OAuth client が必要です。",
-      "notConnected": "認証情報が必要な {{name}} アクションを実行する前に、ローカル認証情報を設定してください。"
+      "notConnected": "認証情報が必要な {{name}} アクションを実行する前に、ローカル認証情報を設定してください。",
+      "unavailable": "現在のランタイムでは接続を設定できません。"
     },
     "noConnectionMethodTitle": "接続方式はありません",
     "noConnectionMethodDescription": "このプロバイダーはローカル認証情報を必要としません。",

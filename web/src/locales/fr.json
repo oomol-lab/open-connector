@@ -147,6 +147,9 @@
     "noSetupBadge": "Sans configuration",
     "unconfiguredBadge": "Non connecté",
     "oauthClientRequiredBadge": "Client OAuth requis",
+    "runtimeUnavailableBadge": "Indisponible",
+    "runtimeUnavailableTitle": "Indisponible dans cet environnement d’exécution",
+    "runtimeUnavailableDescription": "{{name}} reste visible dans le catalogue, mais ses connexions et actions ne sont pas disponibles dans l’environnement d’exécution actuel.",
     "summary": {
       "actions": "Actions",
       "auth": "Auth",
@@ -161,7 +164,8 @@
       "noSetup": "Ce fournisseur peut s’exécuter sans identifiants locaux.",
       "connected": "Les identifiants locaux sont configurés avec {{authType}}.",
       "oauthClientRequired": "{{name}} nécessite un client OAuth local avant de lancer OAuth.",
-      "notConnected": "Configurez des identifiants locaux avant d’exécuter les actions {{name}} qui en ont besoin."
+      "notConnected": "Configurez des identifiants locaux avant d’exécuter les actions {{name}} qui en ont besoin.",
+      "unavailable": "Les connexions ne peuvent pas être configurées dans l’environnement d’exécution actuel."
     },
     "noConnectionMethodTitle": "Aucune méthode de connexion",
     "noConnectionMethodDescription": "Ce fournisseur n’a pas besoin d’identifiants locaux.",

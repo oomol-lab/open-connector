@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { qqMailActions } from "./actions.ts";
 
+export const nodeOnly = true;
+
 export const provider: ProviderDefinition = {
   service: "qq_mail",
   displayName: "QQ Mail",

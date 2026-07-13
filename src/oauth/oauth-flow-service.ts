@@ -64,6 +64,7 @@ export class OAuthFlowService {
 
   async startAuthorization(input: OAuthAuthorizationStartInput): Promise<OAuthAuthorizationStart> {
     const { service, connectionName } = input;
+    this.connections.assertProviderAvailable(service);
     const auth = this.clientConfigs.getOAuthDefinition(service);
     const config = await this.clientConfigs.getConfig(service);
     if (!config) {

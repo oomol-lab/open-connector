@@ -147,6 +147,9 @@
     "noSetupBadge": "No setup",
     "unconfiguredBadge": "Not connected",
     "oauthClientRequiredBadge": "OAuth client required",
+    "runtimeUnavailableBadge": "Unavailable",
+    "runtimeUnavailableTitle": "Unavailable in this runtime",
+    "runtimeUnavailableDescription": "{{name}} remains visible for catalog reference, but connections and actions are unavailable in the current runtime.",
     "summary": {
       "actions": "Actions",
       "auth": "Auth",
@@ -161,7 +164,8 @@
       "noSetup": "This provider can run without local credentials.",
       "connected": "Local credentials are configured with {{authType}}.",
       "oauthClientRequired": "{{name}} needs a local OAuth client before OAuth can start.",
-      "notConnected": "Configure local credentials before running credentialed {{name}} actions."
+      "notConnected": "Configure local credentials before running credentialed {{name}} actions.",
+      "unavailable": "Connections cannot be configured in the current runtime."
     },
     "noConnectionMethodTitle": "No connection method",
     "noConnectionMethodDescription": "This provider does not need local credentials.",

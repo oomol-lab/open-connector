@@ -2,7 +2,16 @@ import type { ActionExecutor, CredentialValidators, ProviderExecutors, ProviderP
 
 import { withProviderFallbackMessage } from "./provider-runtime.ts";
 import { registeredProxyExecutors } from "./proxy.registry.ts";
-import { executorModules } from "./registry.generated.ts";
+
+export interface ExecutorModule {
+  credentialValidators?: CredentialValidators;
+  executors: ProviderExecutors;
+  proxy?: ProviderProxyExecutor;
+}
+
+export interface ExecutorModules {
+  [service: string]: () => Promise<ExecutorModule>;
+}
 
 /**
  * Loads provider executor modules only when an action is executed.
@@ -33,15 +42,21 @@ export interface IProviderLoader {
 }
 
 /**
- * Default provider loader backed by `registry.generated.ts`.
+ * Provider loader backed by the executor registry selected by the runtime entry point.
  */
 export class ProviderLoader implements IProviderLoader {
+  private readonly executorModules: ExecutorModules;
+
+  constructor(executorModules: ExecutorModules) {
+    this.executorModules = executorModules;
+  }
+
   async loadActionExecutor(
     service: string,
     actionId: string,
     providerDisplayName?: string,
   ): Promise<ActionExecutor | undefined> {
-    const loadExecutors = executorModules[service];
+    const loadExecutors = this.executorModules[service];
     if (!loadExecutors) {
       return undefined;
     }
@@ -52,14 +67,14 @@ export class ProviderLoader implements IProviderLoader {
   }
 
   async loadProxyExecutor(service: string, _providerDisplayName?: string): Promise<ProviderProxyExecutor | undefined> {
+    const loadExecutors = this.executorModules[service];
+    if (!loadExecutors) {
+      return undefined;
+    }
+
     const registeredProxy = registeredProxyExecutors[service];
     if (registeredProxy) {
       return registeredProxy;
-    }
-
-    const loadExecutors = executorModules[service];
-    if (!loadExecutors) {
-      return undefined;
     }
 
     const module = await loadExecutors();
@@ -67,7 +82,7 @@ export class ProviderLoader implements IProviderLoader {
   }
 
   async loadCredentialValidators(service: string): Promise<CredentialValidators | undefined> {
-    const loadExecutors = executorModules[service];
+    const loadExecutors = this.executorModules[service];
     if (!loadExecutors) {
       return undefined;
     }

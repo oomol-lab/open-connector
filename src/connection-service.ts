@@ -1,4 +1,4 @@
-import type { CatalogStore } from "./catalog-store.ts";
+import type { CatalogStore, RuntimeProviderDefinition } from "./catalog-store.ts";
 import type {
   ApiKeyAuthDefinition,
   AuthType,
@@ -207,7 +207,7 @@ export class ConnectionService {
   }
 
   async connectWithoutAuth(service: string, input: ConnectWithoutAuthInput = {}): Promise<ConnectionSummary> {
-    const provider = this.getProvider(service);
+    const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support no_auth.`);
     }
@@ -216,7 +216,7 @@ export class ConnectionService {
   }
 
   async connectWithApiKey(service: string, input: ConnectWithCredentialInput): Promise<ConnectionSummary> {
-    const provider = this.getProvider(service);
+    const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "api_key")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support api_key.`);
     }
@@ -248,7 +248,7 @@ export class ConnectionService {
   }
 
   async connectWithCustomCredential(service: string, input: ConnectWithCredentialInput): Promise<ConnectionSummary> {
-    const provider = this.getProvider(service);
+    const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "custom_credential")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support custom_credential.`);
     }
@@ -281,7 +281,7 @@ export class ConnectionService {
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
     connectionNameInput?: string,
   ): Promise<ConnectionSummary> {
-    const provider = this.getProvider(service);
+    const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "oauth2")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support oauth2.`);
     }
@@ -357,10 +357,24 @@ export class ConnectionService {
     };
   }
 
-  private getProvider(service: string): ProviderDefinition {
+  /** Rejects provider setup when none of its catalog actions can execute in this runtime. */
+  assertProviderAvailable(service: string): void {
+    this.getAvailableProvider(service);
+  }
+
+  private getProvider(service: string): RuntimeProviderDefinition {
     const provider = this.catalog.providers.find((provider) => provider.service === service);
     if (!provider) {
       throw new ConnectionError("unknown_service", `Unknown service: ${service}.`);
+    }
+
+    return provider;
+  }
+
+  private getAvailableProvider(service: string): RuntimeProviderDefinition {
+    const provider = this.getProvider(service);
+    if (provider.actions.length > 0 && provider.execution.locallyExecutableActionCount === 0) {
+      throw new ConnectionError("provider_unavailable", `${provider.displayName} is not available in this runtime.`);
     }
 
     return provider;

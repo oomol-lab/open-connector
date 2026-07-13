@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { loadCatalog } from "../catalog-store.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executableActionIds } from "../providers/registry.generated.ts";
+import { executableActionIds, executorModules } from "../providers/registry.generated.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { TransitFileService } from "./files/transit-files.ts";
@@ -33,7 +33,7 @@ await mkdir(dataDir, { recursive: true });
 const catalog = await loadCatalog(undefined, {
   executableActionIds: Object.values(executableActionIds).flat(),
 });
-const providerLoader = new ProviderLoader();
+const providerLoader = new ProviderLoader(executorModules);
 const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"), {
   secretCodec,
 });

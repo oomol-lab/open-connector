@@ -9,6 +9,7 @@ import { createAppI18n } from "./i18n";
 import {
   connectionSubmitLabel,
   createOAuthPopupFeatures,
+  isProviderLocallyAvailable,
   oauthClientActionLabel,
   oauthConfigForProvider,
   providerBrowserResetKey,
@@ -187,6 +188,37 @@ describe("ProvidersPage route shell", () => {
     expect(markup).toContain("Configure OAuth Client");
   });
 
+  it("shows catalog-only providers as unavailable without connection controls", () => {
+    const data = { ...providerData, providers: [catalogOnlyProvider], oauthConfigs: [] };
+    const browserMarkup = renderProvidersPage(data, "/providers");
+    const detailMarkup = renderProvidersPage(data, "/providers/catalog-only");
+
+    expect(browserMarkup).toContain("Unavailable");
+    expect(browserMarkup).toContain("Details");
+    expect(browserMarkup).not.toContain(">Connect<");
+    expect(detailMarkup).toContain("Unavailable in this runtime");
+    expect(detailMarkup).toContain(
+      "Catalog Only remains visible for catalog reference, but connections and actions are unavailable in the current runtime.",
+    );
+    expect(detailMarkup).not.toContain("Save Connection");
+    expect(detailMarkup).not.toContain("Host");
+  });
+
+  it("allows stale catalog-only connections to be removed", () => {
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        providers: [catalogOnlyProvider],
+        connections: [{ service: "catalog-only", authType: "custom_credential", metadata: {} }],
+        oauthConfigs: [],
+      },
+      "/providers/catalog-only",
+    );
+
+    expect(markup).toContain("Disconnect");
+    expect(markup).not.toContain("Save Connection");
+  });
+
   it("omits OAuth client warning badges in the provider browser cards", () => {
     const markup = renderProvidersPage({ ...providerData, oauthConfigs: [] }, "/providers");
 
@@ -209,6 +241,18 @@ describe("ProvidersPage route shell", () => {
     expect(markup).toContain("Show more");
     expect(markup).toContain("Clock 47");
     expect(markup).not.toContain("Clock 48");
+  });
+});
+
+describe("isProviderLocallyAvailable", () => {
+  it("distinguishes catalog-only providers from providers with local actions", () => {
+    expect(isProviderLocallyAvailable(catalogOnlyProvider)).toBe(false);
+    expect(
+      isProviderLocallyAvailable({
+        ...catalogOnlyProvider,
+        actions: [{ ...catalogOnlyProvider.actions[0]!, execution: executableActionExecution }],
+      }),
+    ).toBe(true);
   });
 });
 
@@ -290,6 +334,53 @@ const noAuthProvider: ProviderDefinition = {
   authTypes: ["no_auth"],
   auth: [{ type: "no_auth" }],
   actions: [],
+};
+
+const catalogOnlyActionExecution = {
+  locallyExecutable: false,
+  catalogOnly: true,
+  requiredAuthTypes: ["custom_credential"],
+  noAuthRunnable: false,
+  needsCredential: true,
+};
+
+const executableActionExecution = {
+  ...catalogOnlyActionExecution,
+  locallyExecutable: true,
+  catalogOnly: false,
+};
+
+const catalogOnlyProvider: ProviderDefinition = {
+  service: "catalog-only",
+  displayName: "Catalog Only",
+  categories: ["Developer Tools"],
+  authTypes: ["custom_credential"],
+  auth: [
+    {
+      type: "custom_credential",
+      fields: [
+        {
+          key: "host",
+          label: "Host",
+          inputType: "text",
+          required: true,
+          secret: false,
+        },
+      ],
+    },
+  ],
+  actions: [
+    {
+      id: "catalog-only.query",
+      service: "catalog-only",
+      name: "query",
+      description: "Query the provider.",
+      requiredScopes: [],
+      inputSchema: {},
+      outputSchema: {},
+      execution: catalogOnlyActionExecution,
+    },
+  ],
 };
 
 const providerData: AppData = {

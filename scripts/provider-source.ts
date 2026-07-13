@@ -6,6 +6,7 @@ import { assertProviderId } from "../src/core/provider-id.ts";
 
 export interface ProviderSource {
   definition: ProviderDefinition;
+  nodeOnly: boolean;
   service: string;
 }
 
@@ -23,6 +24,7 @@ export async function loadProviderSources(): Promise<ProviderSource[]> {
       assertProviderDefinitionService(service, module.provider.service);
       return {
         definition: module.provider,
+        nodeOnly: module.nodeOnly === true,
         service,
       };
     }),
@@ -30,6 +32,7 @@ export async function loadProviderSources(): Promise<ProviderSource[]> {
 }
 
 interface ProviderDefinitionModule {
+  nodeOnly?: boolean;
   provider: ProviderDefinition;
 }
 

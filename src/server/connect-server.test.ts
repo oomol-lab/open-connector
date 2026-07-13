@@ -85,12 +85,76 @@ const followUpAction: ActionDefinition = {
   name: "follow_up",
 };
 
+const catalogOnlyProvider: ProviderDefinition = {
+  ...apiKeyProvider,
+  service: "catalog_only",
+  displayName: "Catalog Only",
+  actions: [
+    {
+      ...echoAction,
+      id: "catalog_only.query",
+      service: "catalog_only",
+      name: "query",
+    },
+  ],
+};
+
+const catalogOnlyOAuthProvider: ProviderDefinition = {
+  ...oauthProvider,
+  service: "oauth_catalog_only",
+  displayName: "OAuth Catalog Only",
+  actions: [
+    {
+      ...echoAction,
+      id: "oauth_catalog_only.query",
+      service: "oauth_catalog_only",
+      name: "query",
+    },
+  ],
+};
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
 describe("ConnectServer", () => {
+  it("rejects connections for providers unavailable in the current runtime", async () => {
+    const app = createTestServer([catalogOnlyProvider]).createApp();
+
+    const response = await app.request("/api/connections/catalog_only", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "secret" } }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "provider_unavailable",
+        message: "Catalog Only is not available in this runtime.",
+      },
+    });
+  });
+
+  it("rejects OAuth authorization for providers unavailable in the current runtime", async () => {
+    const app = createTestServer([catalogOnlyOAuthProvider]).createApp();
+
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_catalog_only" }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "provider_unavailable",
+        message: "OAuth Catalog Only is not available in this runtime.",
+      },
+    });
+  });
+
   it("serves catalog and standard connection errors without opening a port", async () => {
     const app = createTestServer([apiKeyProvider]).createApp();
 

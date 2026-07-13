@@ -70,6 +70,24 @@ const customCredentialProvider: ProviderDefinition = {
   actions: [],
 };
 
+const catalogOnlyProvider: ProviderDefinition = {
+  ...customCredentialProvider,
+  service: "catalog_only",
+  displayName: "Catalog Only",
+  actions: [
+    {
+      id: "catalog_only.query",
+      service: "catalog_only",
+      name: "query",
+      description: "Query the catalog-only provider.",
+      requiredScopes: [],
+      providerPermissions: [],
+      inputSchema: {},
+      outputSchema: {},
+    },
+  ],
+};
+
 const oauthProvider: ProviderDefinition = {
   service: "example",
   displayName: "Example",
@@ -113,6 +131,24 @@ afterEach(() => {
 });
 
 describe("ConnectionService", () => {
+  it("rejects connections for providers unavailable in the current runtime", async () => {
+    const service = createService([catalogOnlyProvider]);
+
+    await expect(
+      service.connectWithCustomCredential("catalog_only", {
+        values: {
+          host: "localhost",
+          password: "secret",
+        },
+      }),
+    ).rejects.toMatchObject({
+      code: "provider_unavailable",
+      message: "Catalog Only is not available in this runtime.",
+    });
+
+    await expect(service.listConnections()).resolves.toEqual([]);
+  });
+
   it("exposes no_auth providers as virtual connections", async () => {
     const service = createService([hackernewsProvider]);
 

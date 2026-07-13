@@ -7,7 +7,7 @@ import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executableActionIds } from "../providers/registry.generated.ts";
+import { executableActionIds, executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
 import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
@@ -52,7 +52,7 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
   const secretCodec = await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY);
   return await createConnectApp({
     catalog: await loadCatalogOnce(assets),
-    providerLoader: new ProviderLoader(),
+    providerLoader: new ProviderLoader(executorModules),
     runtimeDatabase: new D1RuntimeDatabase(env.DB, { secretCodec }),
     transitFiles: (() => {
       const transitFileOptions = {

@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { neteaseMailActions } from "./actions.ts";
 
+export const nodeOnly = true;
+
 export const provider: ProviderDefinition = {
   service: "netease_mail",
   displayName: "NetEase Mail",

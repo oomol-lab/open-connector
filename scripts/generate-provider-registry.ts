@@ -1,56 +1,61 @@
+import type { ProviderSource } from "./provider-source.ts";
+
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadProviderSources } from "./provider-source.ts";
 
 const providersDir = join(process.cwd(), "src/providers");
 const providerSources = await loadProviderSources();
-const services = providerSources.map((source) => source.service);
-const executableActionIds = new Map<string, string[]>(
-  providerSources.map((source) => [
-    source.service,
-    source.definition.actions.map((action) => action.id).sort((a, b) => a.localeCompare(b)),
-  ]),
-);
+
+await Promise.all([
+  writeRegistry("registry.generated.ts", providerSources),
+  writeRegistry(
+    "registry.cloudflare.generated.ts",
+    providerSources.filter((source) => !source.nodeOnly),
+  ),
+]);
 
 function propertyName(service: string): string {
   return /^[A-Za-z_$][\w$]*$/.test(service) ? service : JSON.stringify(service);
 }
 
-const registryLines = [
-  'import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../core/types.ts";',
-  "",
-  "/** Lazy-loaded provider executor module shape. */",
-  "export type ExecutorModule = {",
-  "  credentialValidators?: CredentialValidators;",
-  "  executors: ProviderExecutors;",
-  "  proxy?: ProviderProxyExecutor;",
-  "};",
-  "",
-  "/** Generated lazy imports for provider executors. Do not hand-edit. */",
-  "export const executorModules: Record<string, () => Promise<ExecutorModule>> = {",
-  ...services.map(
-    (service) => `  ${propertyName(service)}: (): Promise<ExecutorModule> => import("./${service}/executors.ts"),`,
-  ),
-  "};",
-  "",
-  "/** Generated local executable action ids by provider. Do not hand-edit. */",
-  "export const executableActionIds: Record<string, string[]> = {",
-  ...services.flatMap((service) => [
-    `  ${propertyName(service)}: [`,
-    ...(executableActionIds.get(service) ?? []).map((actionId) => `    ${JSON.stringify(actionId)},`),
-    "  ],",
-  ]),
-  "};",
-];
+async function writeRegistry(filename: string, sources: ProviderSource[]): Promise<void> {
+  const services = sources.map((source) => source.service);
+  const executableActionIds = new Map<string, string[]>(
+    sources.map((source) => [
+      source.service,
+      source.definition.actions.map((action) => action.id).sort((a, b) => a.localeCompare(b)),
+    ]),
+  );
+  const lines = [
+    'import type { ExecutorModule } from "./provider-loader.ts";',
+    "",
+    "/** Generated lazy imports for provider executors. Do not hand-edit. */",
+    "export const executorModules: Record<string, () => Promise<ExecutorModule>> = {",
+    ...services.map(
+      (service) => `  ${propertyName(service)}: (): Promise<ExecutorModule> => import("./${service}/executors.ts"),`,
+    ),
+    "};",
+    "",
+    "/** Generated local executable action ids by provider. Do not hand-edit. */",
+    "export const executableActionIds: Record<string, string[]> = {",
+    ...services.flatMap((service) => [
+      `  ${propertyName(service)}: [`,
+      ...(executableActionIds.get(service) ?? []).map((actionId) => `    ${JSON.stringify(actionId)},`),
+      "  ],",
+    ]),
+    "};",
+  ];
 
-const registryPath = join(providersDir, "registry.generated.ts");
-const registryContent = `${registryLines.join("\n")}\n`;
-const existingContent = await readTextFile(registryPath);
-if (existingContent !== registryContent) {
-  await writeFile(registryPath, registryContent);
-  console.log(`Generated provider registry for ${services.length} providers.`);
-} else {
-  console.log(`Provider registry is up to date for ${services.length} providers.`);
+  const path = join(providersDir, filename);
+  const content = `${lines.join("\n")}\n`;
+  const existingContent = await readTextFile(path);
+  if (existingContent !== content) {
+    await writeFile(path, content);
+    console.log(`Generated ${filename} for ${services.length} providers.`);
+  } else {
+    console.log(`${filename} is up to date for ${services.length} providers.`);
+  }
 }
 
 async function readTextFile(path: string): Promise<string | undefined> {
