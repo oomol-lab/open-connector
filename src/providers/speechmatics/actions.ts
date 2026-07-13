@@ -2,10 +2,10 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { speechmaticsBatchRegions } from "./constants.ts";
 
 const service = "speechmatics";
 
-const batchRegionValues = ["eu1", "eu2", "us1", "us2", "au1"];
 const processingModeValues = ["batch", "realtime"];
 
 const projectSchema = s.looseRequiredObject(
@@ -94,7 +94,7 @@ export const speechmaticsActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Input parameters for querying Speechmatics service capabilities.",
       {
-        region: s.stringEnum(batchRegionValues, {
+        region: s.stringEnum([...speechmaticsBatchRegions], {
           description: "The Batch SaaS region whose Discovery API should be queried.",
           default: "eu1",
         }),
@@ -102,7 +102,7 @@ export const speechmaticsActions: ActionDefinition[] = [
       { optional: ["region"] },
     ),
     outputSchema: s.object("Speechmatics service capabilities for a cloud region.", {
-      region: s.stringEnum("The queried Speechmatics Batch SaaS region.", batchRegionValues),
+      region: s.stringEnum("The queried Speechmatics Batch SaaS region.", [...speechmaticsBatchRegions]),
       endpoint: s.url("The Discovery API endpoint that was queried."),
       capabilities: discoveryCapabilitiesSchema,
     }),

@@ -38,6 +38,19 @@ describe("Speechmatics runtime", () => {
     expect(new Headers(requests[0]?.init?.headers).has("authorization")).toBe(false);
   });
 
+  it("rejects unsupported Discovery API regions", async () => {
+    const requests: RecordedRequest[] = [];
+    const context = createContext(requests, {});
+
+    await expect(
+      speechmaticsActionHandlers.get_service_capabilities!({ region: "invalid" }, context),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Unsupported Speechmatics region: invalid",
+    });
+    expect(requests).toEqual([]);
+  });
+
   it("filters documented deployments by processing mode", async () => {
     const context = createContext([], {});
     const output = (await speechmaticsActionHandlers.list_deployments!({ mode: "realtime" }, context)) as {
@@ -50,6 +63,7 @@ describe("Speechmatics runtime", () => {
       "eu.rt.speechmatics.com",
       "us.rt.speechmatics.com",
     ]);
+    expect(output.deployments.map((deployment) => deployment.region)).toEqual(["eu1", "us1"]);
   });
 
   it("validates Management Tokens through the projects endpoint", async () => {

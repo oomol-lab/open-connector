@@ -1,15 +1,16 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { SpeechmaticsBatchRegion } from "./constants.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, readProviderTextBody } from "../provider-runtime.ts";
+import { speechmaticsBatchHosts } from "./constants.ts";
 
 const speechmaticsManagementApiBaseUrl = "https://mp.api.speechmatics.com/v1";
 const speechmaticsProjectsPath = "/projects";
 const speechmaticsDiscoveryPath = "/v1/discovery/features";
 
 type SpeechmaticsRequestPhase = "validate" | "execute";
-type SpeechmaticsBatchRegion = keyof typeof speechmaticsBatchHosts;
 type SpeechmaticsProcessingMode = "batch" | "realtime";
 type SpeechmaticsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -22,7 +23,7 @@ interface SpeechmaticsRequestOptions {
 
 interface SpeechmaticsDeployment {
   mode: SpeechmaticsProcessingMode;
-  region: string;
+  region: SpeechmaticsBatchRegion;
   location: string;
   customerType: "all" | "enterprise";
   endpoint: string;
@@ -30,18 +31,10 @@ interface SpeechmaticsDeployment {
   apiVersion: string;
 }
 
-const speechmaticsBatchHosts = {
-  eu1: "eu1.asr.api.speechmatics.com",
-  eu2: "eu2.asr.api.speechmatics.com",
-  us1: "us1.asr.api.speechmatics.com",
-  us2: "us2.asr.api.speechmatics.com",
-  au1: "au1.asr.api.speechmatics.com",
-} as const;
-
 const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   {
     mode: "batch",
-    region: "EU1",
+    region: "eu1",
     location: "Europe",
     customerType: "all",
     endpoint: speechmaticsBatchHosts.eu1,
@@ -50,7 +43,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
   {
     mode: "batch",
-    region: "EU2",
+    region: "eu2",
     location: "Europe",
     customerType: "enterprise",
     endpoint: speechmaticsBatchHosts.eu2,
@@ -59,7 +52,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
   {
     mode: "batch",
-    region: "US1",
+    region: "us1",
     location: "USA",
     customerType: "all",
     endpoint: speechmaticsBatchHosts.us1,
@@ -68,7 +61,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
   {
     mode: "batch",
-    region: "US2",
+    region: "us2",
     location: "USA",
     customerType: "enterprise",
     endpoint: speechmaticsBatchHosts.us2,
@@ -77,7 +70,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
   {
     mode: "batch",
-    region: "AU1",
+    region: "au1",
     location: "Australia",
     customerType: "all",
     endpoint: speechmaticsBatchHosts.au1,
@@ -86,7 +79,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
   {
     mode: "realtime",
-    region: "EU1",
+    region: "eu1",
     location: "Europe",
     customerType: "all",
     endpoint: "eu.rt.speechmatics.com",
@@ -95,7 +88,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
   {
     mode: "realtime",
-    region: "US1",
+    region: "us1",
     location: "USA",
     customerType: "all",
     endpoint: "us.rt.speechmatics.com",
