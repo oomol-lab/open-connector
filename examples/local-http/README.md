@@ -29,6 +29,12 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+Run Fivetran with a Scoped API key or System key and its paired API secret:
+
+```bash
+FIVETRAN_API_KEY=... FIVETRAN_API_SECRET=... node examples/local-http/fivetran.ts
+```
+
 Prepare Gmail OAuth with your own Google OAuth app:
 
 ```bash
