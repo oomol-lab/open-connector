@@ -6,6 +6,7 @@ import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
+import { parsePrivateNetworkAccessFlag, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executableActionIds, executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
@@ -28,6 +29,7 @@ let cachedApp: { key: string; app: Promise<ConnectApp> } | undefined;
 
 export default {
   async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
+    setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
     const publicOrigin = resolvePublicOrigin(request, env);
     const cacheKey = createCacheKey(env, publicOrigin);
     if (!cachedApp || cachedApp.key !== cacheKey) {

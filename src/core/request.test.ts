@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { assertPublicHttpUrl } from "./request.ts";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  assertPublicHttpUrl,
+  isPrivateNetworkAccessAllowed,
+  parsePrivateNetworkAccessFlag,
+  setPrivateNetworkAccessAllowed,
+} from "./request.ts";
 
 describe("assertPublicHttpUrl", () => {
   it("canonicalizes public hostnames with trailing dots", () => {
@@ -17,7 +22,12 @@ describe("assertPublicHttpUrl", () => {
   });
 
   it("rejects internal hostname suffixes", () => {
-    for (const value of ["https://router.local/", "https://service.internal/", "https://nas.lan/"]) {
+    for (const value of [
+      "https://router.local/",
+      "https://service.internal/",
+      "https://nas.lan/",
+      "https://box.home/",
+    ]) {
       expect(() => readPublicUrl(value)).toThrow("target local hosts");
     }
   });
@@ -43,7 +53,11 @@ describe("assertPublicHttpUrl", () => {
       "http://100.64.0.1:3000/",
       "http://172.16.0.1:3000/",
       "http://192.168.0.1:3000/",
+      "https://192.168.0.1:3000/",
       "http://dokploy.internal:3000/",
+      "http://router.local:3000/",
+      "http://box.home:3000/",
+      "http://nas.lan:3000/",
     ]) {
       expect(readPublicUrl(value, true).toString()).toBe(value);
     }
@@ -60,6 +74,30 @@ describe("assertPublicHttpUrl", () => {
       "http://[fd7a:115c:a1e0::1]/",
     ]) {
       expect(() => readPublicUrl(value, true)).toThrow();
+    }
+  });
+});
+
+describe("private network access deployment flag", () => {
+  afterEach(() => setPrivateNetworkAccessAllowed(false));
+
+  it("is disabled by default", () => {
+    expect(isPrivateNetworkAccessAllowed()).toBe(false);
+  });
+
+  it("reflects the configured value", () => {
+    setPrivateNetworkAccessAllowed(true);
+    expect(isPrivateNetworkAccessAllowed()).toBe(true);
+    setPrivateNetworkAccessAllowed(false);
+    expect(isPrivateNetworkAccessAllowed()).toBe(false);
+  });
+
+  it("parses only explicit truthy env values", () => {
+    for (const value of ["1", "true", "TRUE", "yes", "on", " True "]) {
+      expect(parsePrivateNetworkAccessFlag(value)).toBe(true);
+    }
+    for (const value of [undefined, "", "0", "false", "no", "off", "disabled"]) {
+      expect(parsePrivateNetworkAccessFlag(value)).toBe(false);
     }
   });
 });

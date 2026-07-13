@@ -152,6 +152,39 @@ export interface PublicHttpUrlOptions {
 }
 
 /**
+ * Deployment-level opt-in that lets self-hosted provider connections (currently
+ * Dokploy) target RFC 1918, carrier-grade-NAT, and private-hostname addresses.
+ *
+ * Off by default so a shared/multi-tenant runtime keeps a public-only SSRF guard
+ * and a tenant cannot turn a self-hosted connection into an SSRF pivot into the
+ * operator's internal network. Single-tenant, self-hosted operators enable it
+ * through the `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK` environment variable.
+ *
+ * Even when enabled, reserved, loopback, link-local, cloud-metadata, multicast,
+ * and IPv6 targets remain blocked by {@link assertPublicHttpUrl}.
+ */
+let privateNetworkAccessAllowed = false;
+
+/** Configure whether opted-in providers may target private networks (called once at deployment bootstrap). */
+export function setPrivateNetworkAccessAllowed(allowed: boolean): void {
+  privateNetworkAccessAllowed = allowed;
+}
+
+/** Whether the current deployment allows opted-in providers to target private networks. */
+export function isPrivateNetworkAccessAllowed(): boolean {
+  return privateNetworkAccessAllowed;
+}
+
+/** Parse the `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK` flag; only explicit truthy values enable it. */
+export function parsePrivateNetworkAccessFlag(value: string | undefined): boolean {
+  if (value === undefined) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
+
+/**
  * Parse a user-supplied URL and reject unsafe network targets.
  *
  * This is a local runtime SSRF guard for provider actions that fetch remote

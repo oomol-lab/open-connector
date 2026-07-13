@@ -3,7 +3,7 @@ import type { DokployActionName } from "./actions.ts";
 import type { DokployOperation } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -64,16 +64,23 @@ export async function validateDokployCredential(
 }
 
 /**
- * Validates a public or private Dokploy HTTP URL, rejects embedded credentials
- * and unsafe targets, removes query/hash components, and ensures its path ends
- * in `/api`.
+ * Validates a Dokploy HTTP URL, rejects embedded credentials and unsafe targets,
+ * removes query/hash components, and ensures its path ends in `/api`.
+ *
+ * Private/overlay-network targets (RFC 1918, Tailscale, NetBird, private
+ * hostnames) are only accepted when the deployment opts in through
+ * `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`; otherwise the shared public-only SSRF
+ * guard applies. `allowPrivateNetwork` may be passed explicitly (used by tests).
  */
-export function normalizeDokployApiBaseUrl(value: unknown): string {
+export function normalizeDokployApiBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const instanceUrl = requiredString(value, "baseUrl", credentialError);
   const url = assertPublicHttpUrl(instanceUrl, {
     fieldName: "baseUrl",
     createError: credentialError,
-    allowPrivateNetwork: true,
+    allowPrivateNetwork,
   });
   if (url.username || url.password) throw credentialError("baseUrl must not include credentials");
   url.hash = "";

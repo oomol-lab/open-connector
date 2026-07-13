@@ -26,7 +26,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://dokploy.example.com",
           description:
-            "The HTTP or HTTPS URL of your Dokploy instance, without an API endpoint path. Public, RFC 1918, Tailscale, and NetBird addresses are supported; unsafe local and metadata targets remain blocked. See https://docs.dokploy.com/docs/core/api.",
+            "The HTTP or HTTPS URL of your Dokploy instance, without an API endpoint path. Public addresses work by default; private/overlay targets (RFC 1918, Tailscale, NetBird, private hostnames) require the self-hosted runtime to enable OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK. Unsafe local, reserved, and cloud-metadata targets always remain blocked. See https://docs.dokploy.com/docs/core/api.",
         },
       ],
     },
