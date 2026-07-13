@@ -144,7 +144,7 @@ export const fivetranActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_transformation_project",
     description: "Retrieve detailed information for one Fivetran transformation project.",
-    inputSchema: s.object("Identifier of the Fivetran transformation project to retrieve.", {
+    inputSchema: s.requiredObject("Identifier of the Fivetran transformation project to retrieve.", {
       projectId: s.nonEmptyString("Unique Fivetran transformation project identifier."),
     }),
     outputSchema: s.object("A Fivetran transformation project result.", {
@@ -164,7 +164,7 @@ export const fivetranActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_log_service",
     description: "Retrieve detailed information for one group-level Fivetran external log service.",
-    inputSchema: s.object("Identifier of the Fivetran log service to retrieve.", {
+    inputSchema: s.requiredObject("Identifier of the Fivetran log service to retrieve.", {
       logId: s.nonEmptyString("Unique Fivetran log service identifier."),
     }),
     outputSchema: s.object("A Fivetran external log service result.", {
@@ -186,7 +186,7 @@ export const fivetranActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_hybrid_deployment_agent",
     description: "Retrieve details and current connection usage for one Fivetran hybrid deployment agent.",
-    inputSchema: s.object("Identifier of the Fivetran hybrid deployment agent to retrieve.", {
+    inputSchema: s.requiredObject("Identifier of the Fivetran hybrid deployment agent to retrieve.", {
       agentId: s.nonEmptyString("Unique Fivetran hybrid deployment agent identifier."),
     }),
     outputSchema: s.object("A Fivetran hybrid deployment agent result.", {
