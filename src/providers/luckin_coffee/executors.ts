@@ -24,11 +24,6 @@ type LuckinActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "s
 type LuckinActionHandler = (input: Record<string, unknown>, context: LuckinActionContext) => Promise<unknown>;
 type LuckinMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
-interface LuckinMcpToolSummary {
-  name: string;
-  description?: string;
-}
-
 export const luckinActionHandlers: Record<LuckinCoffeeActionName, LuckinActionHandler> = Object.fromEntries(
   luckinMcpToolNames.map((toolName) => [
     toolName,
@@ -60,7 +55,7 @@ export const credentialValidators: CredentialValidators = {
       grantedScopes: [],
       metadata: {
         mcpEndpoint: luckinMcpEndpoint,
-        mcpTools: tools.map((tool) => tool.name).sort(),
+        mcpTools: tools.sort(),
       },
     };
   },
@@ -70,13 +65,10 @@ async function listLuckinMcpTools(input: {
   apiKey: string;
   fetcher: typeof fetch;
   signal?: AbortSignal;
-}): Promise<LuckinMcpToolSummary[]> {
+}): Promise<string[]> {
   return withLuckinMcpClient(input, async (client) => {
     const result = await client.listTools({}, { timeout: luckinRequestTimeoutMs });
-    return result.tools.map((tool) => ({
-      name: tool.name,
-      ...(tool.description ? { description: tool.description } : {}),
-    }));
+    return result.tools.map((tool) => tool.name);
   });
 }
 
@@ -159,7 +151,13 @@ function mapLuckinMcpError(error: unknown): ProviderRequestError {
   if (error instanceof StreamableHTTPError) {
     const status = error.code;
     return new ProviderRequestError(
-      status === 401 || status === 403 ? 401 : status && status >= 400 && status < 500 ? 400 : 502,
+      status === 401 || status === 403
+        ? 401
+        : status === 429
+          ? 429
+          : status && status >= 400 && status < 500
+            ? 400
+            : 502,
       `Luckin Coffee MCP request failed: ${error.message}`,
       error,
     );
