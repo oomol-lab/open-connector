@@ -101,18 +101,25 @@ const previewOrderSchema = s.looseObject("A Luckin Coffee order preview.", {
   totalInitialPrice: s.number("The total list price."),
 });
 
-const createOrderResultSchema = s.looseObject("The created Luckin Coffee order and payment details.", {
-  orderId: s.number("The numeric order ID. Prefer `orderIdStr` when passing it to another action."),
-  payOrderUrl: s.string("The WeChat payment URL."),
-  payOrderQrCodeUrl: s.string("The payment QR-code URL."),
-  discountPrice: s.number("The amount to pay."),
-  needPay: s.boolean("Whether payment is required."),
-  tradeNo: s.nullableString("The payment transaction number."),
-  description: s.nullableString("Additional order information."),
-  businessNotifyUrl: s.nullableString("The business notification URL."),
-  subMchid: s.nullableString("The WeChat Pay sub-merchant ID."),
-  orderIdStr: s.string("The order ID as a lossless string."),
-});
+// Use s.object(..., { additionalProperties: true }) rather than s.looseObject here: this
+// schema has a field literally named `description`, which s.looseObject's string-first form
+// would misread as its options argument and silently drop every declared field.
+const createOrderResultSchema = s.object(
+  "The created Luckin Coffee order and payment details.",
+  {
+    orderId: s.number("The numeric order ID. Prefer `orderIdStr` when passing it to another action."),
+    payOrderUrl: s.string("The WeChat payment URL."),
+    payOrderQrCodeUrl: s.string("The payment QR-code URL."),
+    discountPrice: s.number("The amount to pay."),
+    needPay: s.boolean("Whether payment is required."),
+    tradeNo: s.nullableString("The payment transaction number."),
+    description: s.nullableString("Additional order information."),
+    businessNotifyUrl: s.nullableString("The business notification URL."),
+    subMchid: s.nullableString("The WeChat Pay sub-merchant ID."),
+    orderIdStr: s.string("The order ID as a lossless string."),
+  },
+  { additionalProperties: true },
+);
 
 const takeMealCodeSchema = s.looseObject("Pickup-code information.", {
   code: s.string("The pickup code or its generation status."),
