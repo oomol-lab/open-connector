@@ -100,6 +100,25 @@ describe("Railway runtime", () => {
     });
   });
 
+  it("rejects a missing variable update result", async () => {
+    const context = createContext(async () => jsonResponse({ data: {} }));
+
+    await expect(
+      railwayActionHandlers.upsert_variable(
+        {
+          projectId: "project_1",
+          environmentId: "environment_1",
+          name: "OPTIONAL_VALUE",
+          value: "value",
+        },
+        context,
+      ),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "Railway variable update result was not returned",
+    });
+  });
+
   it("maps GraphQL errors returned with HTTP 200 to provider errors", async () => {
     const context = createContext(async () =>
       jsonResponse({ data: null, errors: [{ message: "Not Authorized", path: ["projects"] }] }),
