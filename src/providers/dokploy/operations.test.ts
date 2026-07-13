@@ -594,6 +594,9 @@ describe("Dokploy generated operation contract", () => {
         offset: { type: "number", default: 0, minimum: 0 },
       },
     });
+    expect(requireOperation("mongo-create").inputSchema).toMatchObject({
+      properties: { dockerImage: { type: "string", default: "mongo:8" } },
+    });
   });
 
   it("marks exactly the two transit-file operations as multipart", () => {

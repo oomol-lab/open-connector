@@ -105,6 +105,7 @@ for (const [path, pathItem] of Object.entries(paths)) {
       description: `Input for ${operationId}.`,
       ...(required.size > 0 ? { required: [...required].sort() } : {}),
     };
+    applyKnownSchemaCorrections(operationId, inputSchema);
     const outputSchema = responseSchema(operation.responses ?? {});
     const supportStatus = "supported";
 
@@ -268,6 +269,20 @@ function responseSchema(responses: Record<string, JsonObject>): JsonObject {
 function selectContentType(content: Record<string, JsonObject>): string | undefined {
   if (content["application/json"]) return "application/json";
   return Object.keys(content)[0];
+}
+
+function applyKnownSchemaCorrections(operationId: string, inputSchema: JsonObject): void {
+  if (operationId !== "mongo-create") return;
+
+  const properties = inputSchema.properties;
+  const dockerImage = isObject(properties) ? properties.dockerImage : undefined;
+  if (!isObject(dockerImage) || dockerImage.default !== "mongo:15") {
+    throw new Error("Expected the pinned mongo-create dockerImage default to be mongo:15");
+  }
+
+  // Dokploy's persisted Mongo default is mongo:8; its API schema currently has
+  // a mongo:15 typo that would direct clients to a nonexistent official tag.
+  dockerImage.default = "mongo:8";
 }
 
 function withDescription(schema: JsonObject, description: unknown): JsonObject {

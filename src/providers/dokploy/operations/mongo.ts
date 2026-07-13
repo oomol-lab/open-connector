@@ -41,7 +41,7 @@ export const mongoOperations: readonly DokployOperationDefinition[] = [
           pattern: "^[a-zA-Z0-9._-]+$",
         },
         dockerImage: {
-          default: "mongo:15",
+          default: "mongo:8",
           type: "string",
         },
         environmentId: {
