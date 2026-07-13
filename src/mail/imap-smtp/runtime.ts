@@ -1,6 +1,13 @@
-import type { CredentialValidationResult, RuntimeLogger, TransitFileWriter } from "../../core/types.ts";
-import type { QqMailActionName } from "./actions.ts";
-import type { QqMailCredential, QqMailFetchedMessage, QqMailProtocol, QqMailSendInput } from "./protocol.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  RuntimeLogger,
+  TransitFileWriter,
+} from "../../core/types.ts";
+import type { MailActionName } from "./actions.ts";
+import type { MailCredential, MailFetchedMessage, MailProtocol, MailSendInput } from "./protocol.ts";
 
 import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
@@ -10,113 +17,150 @@ import { join } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
 import {
-  qqMailConnectionTimeoutMs,
-  qqMailImapHost,
-  qqMailImapPort,
-  qqMailMessageFetchByteLimit,
-  qqMailSmtpHost,
-  qqMailSmtpPort,
-} from "./config.ts";
-import { QqMailProtocolError } from "./errors.ts";
+  defineProviderExecutors,
+  ProviderRequestError,
+  requireCustomCredential,
+} from "../../providers/provider-runtime.ts";
+import { mailConnectionTimeoutMs, mailImapPort, mailMessageFetchByteLimit, mailSmtpPort } from "./config.ts";
+import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";
 
-const qqMailScopes = ["mail.read", "mail.send", "mail.modify"];
+const mailScopes = ["mail.read", "mail.send", "mail.modify"];
 const defaultFolder = "INBOX";
 const defaultLimit = 20;
-const qqMailSendAttachmentByteLimit = 25 * 1024 * 1024;
+const mailSendAttachmentByteLimit = 25 * 1024 * 1024;
 
-export interface QqMailActionContext {
+export interface MailRuntimeConfig {
+  service: string;
+  displayName: string;
+  attachmentFallbackPrefix: string;
+  connectAuthMessage: string;
+  readCredential(values: Record<string, string>): MailCredential;
+}
+
+export interface MailActionContext {
   values: Record<string, string>;
   fetcher: typeof fetch;
-  protocol: QqMailProtocol;
+  protocol: MailProtocol;
+  config: MailRuntimeConfig;
   transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 }
 
-type QqMailActionHandler = (input: Record<string, unknown>, context: QqMailActionContext) => Promise<unknown>;
-type QqMailProtocolLoader = () => Promise<QqMailProtocol> | QqMailProtocol;
+type MailActionHandler = (input: Record<string, unknown>, context: MailActionContext) => Promise<unknown>;
+type MailProtocolLoader = () => Promise<MailProtocol> | MailProtocol;
 
-export const qqMailActionHandlers: Record<QqMailActionName, QqMailActionHandler> = {
-  send_email(input, context) {
-    return executeQqMailAction("send_email", input, context);
-  },
-  list_folders(input, context) {
-    return executeQqMailAction("list_folders", input, context);
-  },
-  search_emails(input, context) {
-    return executeQqMailAction("search_emails", input, context);
-  },
-  get_email(input, context) {
-    return executeQqMailAction("get_email", input, context);
-  },
-  download_attachment(input, context) {
-    return executeQqMailAction("download_attachment", input, context);
-  },
-  mark_email_read(input, context) {
-    return executeQqMailAction("mark_email_read", input, context);
-  },
-  mark_email_unread(input, context) {
-    return executeQqMailAction("mark_email_unread", input, context);
-  },
-  move_email(input, context) {
-    return executeQqMailAction("move_email", input, context);
-  },
-  delete_email(input, context) {
-    return executeQqMailAction("delete_email", input, context);
-  },
-  get_folder_status(input, context) {
-    return executeQqMailAction("get_folder_status", input, context);
-  },
-  reply_email(input, context) {
-    return executeQqMailAction("reply_email", input, context);
-  },
-  forward_email(input, context) {
-    return executeQqMailAction("forward_email", input, context);
-  },
-};
-
-export function readCredential(values: Record<string, string>): QqMailCredential {
-  const email = values.email?.trim() ?? "";
-  const authorizationCode = values.authorizationCode?.trim() ?? "";
-
-  if (!email || !email.includes("@")) {
-    throw new ProviderRequestError(400, "QQ Mail email must be a valid email address.");
-  }
-  if (authorizationCode.length !== 16) {
-    throw new ProviderRequestError(400, "QQ Mail authorization code must be 16 characters.");
-  }
-
+function createMailActionHandlers(): Record<MailActionName, MailActionHandler> {
   return {
-    email,
-    authorizationCode,
+    send_email(input, context) {
+      return executeMailAction("send_email", input, context);
+    },
+    list_folders(input, context) {
+      return executeMailAction("list_folders", input, context);
+    },
+    search_emails(input, context) {
+      return executeMailAction("search_emails", input, context);
+    },
+    get_email(input, context) {
+      return executeMailAction("get_email", input, context);
+    },
+    download_attachment(input, context) {
+      return executeMailAction("download_attachment", input, context);
+    },
+    mark_email_read(input, context) {
+      return executeMailAction("mark_email_read", input, context);
+    },
+    mark_email_unread(input, context) {
+      return executeMailAction("mark_email_unread", input, context);
+    },
+    move_email(input, context) {
+      return executeMailAction("move_email", input, context);
+    },
+    delete_email(input, context) {
+      return executeMailAction("delete_email", input, context);
+    },
+    get_folder_status(input, context) {
+      return executeMailAction("get_folder_status", input, context);
+    },
+    reply_email(input, context) {
+      return executeMailAction("reply_email", input, context);
+    },
+    forward_email(input, context) {
+      return executeMailAction("forward_email", input, context);
+    },
   };
 }
 
-export async function validateQqMailCredential(
+export interface MailProviderRuntime {
+  executors: ProviderExecutors;
+  credentialValidators: CredentialValidators;
+}
+
+export function createMailProviderRuntime(config: MailRuntimeConfig): MailProviderRuntime {
+  let protocolPromise: Promise<MailProtocol> | undefined;
+  const loadProtocol = (): Promise<MailProtocol> => {
+    protocolPromise ??= import("./protocol.ts").then(({ createMailProtocol }) =>
+      createMailProtocol({
+        displayName: config.displayName,
+        attachmentFallbackPrefix: config.attachmentFallbackPrefix,
+      }),
+    );
+    return protocolPromise;
+  };
+
+  const executors = defineProviderExecutors<MailActionContext>({
+    service: config.service,
+    handlers: createMailActionHandlers(),
+    async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<MailActionContext> {
+      const credential = await requireCustomCredential(context, config.service);
+      const providerContext: MailActionContext = {
+        values: credential.values,
+        fetcher,
+        protocol: await loadProtocol(),
+        config,
+        signal: context.signal,
+      };
+      if (context.transitFiles) {
+        providerContext.transitFiles = context.transitFiles;
+      }
+      return providerContext;
+    },
+  });
+
+  const credentialValidators: CredentialValidators = {
+    async customCredential(input, options): Promise<CredentialValidationResult> {
+      return validateMailCredential(input.values, loadProtocol, config, options.logger);
+    },
+  };
+
+  return { executors, credentialValidators };
+}
+
+async function validateMailCredential(
   values: Record<string, string>,
-  loadProtocol: QqMailProtocolLoader,
+  loadProtocol: MailProtocolLoader,
+  config: MailRuntimeConfig,
   logger?: RuntimeLogger,
 ): Promise<CredentialValidationResult> {
-  const credential = readCredential(values);
+  const credential = config.readCredential(values);
   if (isCloudflareWorkerRuntime()) {
     throw new ProviderRequestError(
       400,
-      "QQ Mail requires a Node.js runtime because IMAP/SMTP connections are not reliable from Cloudflare Workers.",
+      `${config.displayName} requires a Node.js runtime because IMAP/SMTP connections are not reliable from Cloudflare Workers.`,
     );
   }
 
   const protocol = await loadProtocol();
   try {
-    await validateQqMailPhase("imap", qqMailImapHost, qqMailImapPort, logger, () =>
+    await validateMailPhase(config, "imap", credential.imapHost, mailImapPort, logger, () =>
       protocol.validateImapCredential(credential),
     );
-    await validateQqMailPhase("smtp", qqMailSmtpHost, qqMailSmtpPort, logger, () =>
+    await validateMailPhase(config, "smtp", credential.smtpHost, mailSmtpPort, logger, () =>
       protocol.validateSmtpCredential(credential),
     );
   } catch (error) {
-    throw mapProtocolError(error, "connect");
+    throw mapProtocolError(error, "connect", config);
   }
 
   const normalizedEmail = credential.email.toLowerCase();
@@ -124,13 +168,13 @@ export async function validateQqMailCredential(
     profile: {
       accountId: normalizedEmail,
       displayName: credential.email,
-      grantedScopes: qqMailScopes,
+      grantedScopes: mailScopes,
     },
-    grantedScopes: qqMailScopes,
+    grantedScopes: mailScopes,
     metadata: {
       email: normalizedEmail,
-      imapHost: qqMailImapHost,
-      smtpHost: qqMailSmtpHost,
+      imapHost: credential.imapHost,
+      smtpHost: credential.smtpHost,
     },
   };
 }
@@ -139,7 +183,8 @@ function isCloudflareWorkerRuntime(): boolean {
   return typeof navigator === "object" && navigator.userAgent === "Cloudflare-Workers";
 }
 
-async function validateQqMailPhase(
+async function validateMailPhase(
+  config: MailRuntimeConfig,
   phase: "imap" | "smtp",
   host: string,
   port: number,
@@ -149,43 +194,43 @@ async function validateQqMailPhase(
   const startedAt = Date.now();
   logger?.info(
     {
-      service: "qq_mail",
+      service: config.service,
       phase,
       host,
       port,
-      timeoutMs: qqMailConnectionTimeoutMs,
+      timeoutMs: mailConnectionTimeoutMs,
     },
-    "qq mail credential validation started",
+    `${config.service} mail credential validation started`,
   );
   try {
     await validate();
     logger?.info(
       {
-        service: "qq_mail",
+        service: config.service,
         phase,
         host,
         port,
         elapsedMs: Date.now() - startedAt,
       },
-      "qq mail credential validation completed",
+      `${config.service} mail credential validation completed`,
     );
   } catch (error) {
     logger?.warn(
       {
-        service: "qq_mail",
+        service: config.service,
         phase,
         host,
         port,
         elapsedMs: Date.now() - startedAt,
-        error: describeQqMailValidationError(error),
+        error: describeMailValidationError(error),
       },
-      "qq mail credential validation failed",
+      `${config.service} mail credential validation failed`,
     );
     throw error;
   }
 }
 
-function describeQqMailValidationError(error: unknown): Record<string, unknown> {
+function describeMailValidationError(error: unknown): Record<string, unknown> {
   if (!(error instanceof Error)) {
     return { message: String(error) };
   }
@@ -195,17 +240,16 @@ function describeQqMailValidationError(error: unknown): Record<string, unknown> 
     name: error.name,
     message: error.message,
     code: typeof details.code === "string" ? details.code : undefined,
-    kind:
-      error instanceof QqMailProtocolError ? error.kind : typeof details.kind === "string" ? details.kind : undefined,
+    kind: error instanceof MailProtocolError ? error.kind : typeof details.kind === "string" ? details.kind : undefined,
   };
 }
 
-export async function executeQqMailAction(
-  actionName: QqMailActionName,
+export async function executeMailAction(
+  actionName: MailActionName,
   input: Record<string, unknown>,
-  context: QqMailActionContext,
+  context: MailActionContext,
 ): Promise<unknown> {
-  const credential = readCredential(context.values);
+  const credential = context.config.readCredential(context.values);
   const protocol = context.protocol;
   try {
     switch (actionName) {
@@ -245,7 +289,7 @@ export async function executeQqMailAction(
         const folder = getInput.folder ?? defaultFolder;
         const message = await protocol.fetchMessage(credential, folder, getInput.uid, {
           peek: true,
-          maxBytes: qqMailMessageFetchByteLimit,
+          maxBytes: mailMessageFetchByteLimit,
           skipAttachmentBodies: true,
         });
         return {
@@ -280,7 +324,8 @@ export async function executeQqMailAction(
         );
         try {
           const transitFiles = requireTransitFiles(context);
-          const name = attachment.filename ?? `qq-mail-attachment-${attachment.attachmentId}`;
+          const name =
+            attachment.filename ?? `${context.config.attachmentFallbackPrefix}-attachment-${attachment.attachmentId}`;
           const mimeType = attachment.contentType ?? "application/octet-stream";
           const upload = await transitFiles.create(
             new File([await readFile(attachment.filePath)], name, { type: mimeType }),
@@ -357,7 +402,7 @@ export async function executeQqMailAction(
         replyInput.replyAll = replyInput.replyAll ?? false;
         const original = await protocol.fetchMessage(credential, replyInput.folder, replyInput.uid, {
           peek: true,
-          maxBytes: qqMailMessageFetchByteLimit,
+          maxBytes: mailMessageFetchByteLimit,
           skipAttachmentBodies: true,
         });
         const prepared = await buildReplySendInput(credential, original, replyInput, context);
@@ -372,7 +417,7 @@ export async function executeQqMailAction(
         forwardInput.folder = forwardInput.folder ?? defaultFolder;
         const original = await protocol.fetchMessage(credential, forwardInput.folder, forwardInput.uid, {
           peek: true,
-          maxBytes: qqMailMessageFetchByteLimit,
+          maxBytes: mailMessageFetchByteLimit,
           skipAttachmentBodies: true,
         });
         const prepared = await buildForwardSendInput(original, forwardInput, context);
@@ -384,7 +429,7 @@ export async function executeQqMailAction(
       }
     }
   } catch (error) {
-    throw mapProtocolError(error, "execute");
+    throw mapProtocolError(error, "execute", context.config);
   }
 }
 
@@ -431,11 +476,11 @@ interface ParsedForwardInput {
 }
 
 interface PreparedSendInput {
-  sendInput: QqMailSendInput;
+  sendInput: MailSendInput;
   cleanup(): Promise<void>;
 }
 
-async function readSendInput(input: ParsedSendInput, context: QqMailActionContext): Promise<PreparedSendInput> {
+async function readSendInput(input: ParsedSendInput, context: MailActionContext): Promise<PreparedSendInput> {
   const resolvedAttachments = input.attachments ? await resolveOutgoingAttachments(input.attachments, context) : null;
 
   return {
@@ -453,7 +498,7 @@ async function readSendInput(input: ParsedSendInput, context: QqMailActionContex
   };
 }
 
-async function resolveOutgoingAttachments(attachments: ParsedOutgoingAttachment[], context: QqMailActionContext) {
+async function resolveOutgoingAttachments(attachments: ParsedOutgoingAttachment[], context: MailActionContext) {
   const resolved = [];
   const cleanups: Array<() => Promise<void>> = [];
 
@@ -465,23 +510,30 @@ async function resolveOutgoingAttachments(attachments: ParsedOutgoingAttachment[
       });
       const response = await context.fetcher(url, { signal: context.signal });
       if (!response.ok) {
-        throw new ProviderRequestError(400, `QQ Mail attachment URL returned HTTP ${response.status}.`);
+        throw new ProviderRequestError(
+          400,
+          `${context.config.displayName} attachment URL returned HTTP ${response.status}.`,
+        );
       }
 
       const contentLength = response.headers.get("content-length");
-      if (contentLength !== null && Number(contentLength) > qqMailSendAttachmentByteLimit) {
-        throw new ProviderRequestError(400, "QQ Mail attachment is too large.");
+      if (contentLength !== null && Number(contentLength) > mailSendAttachmentByteLimit) {
+        throw new ProviderRequestError(400, `${context.config.displayName} attachment is too large.`);
       }
 
       if (!response.body) {
-        throw new ProviderRequestError(400, "QQ Mail attachment URL did not return a readable body.");
+        throw new ProviderRequestError(
+          400,
+          `${context.config.displayName} attachment URL did not return a readable body.`,
+        );
       }
 
       const { filePath, cleanup } = await writeWebStreamToTempFile(
         response.body,
         attachment.filename,
-        "oomol-connect-qq-mail-send-",
-        qqMailSendAttachmentByteLimit,
+        `oomol-connect-${context.config.attachmentFallbackPrefix}-send-`,
+        mailSendAttachmentByteLimit,
+        context.config.displayName,
       );
       cleanups.push(cleanup);
 
@@ -506,14 +558,14 @@ async function resolveOutgoingAttachments(attachments: ParsedOutgoingAttachment[
 }
 
 async function buildReplySendInput(
-  credential: QqMailCredential,
-  original: QqMailFetchedMessage,
+  credential: MailCredential,
+  original: MailFetchedMessage,
   input: ParsedReplyInput,
-  context: QqMailActionContext,
+  context: MailActionContext,
 ): Promise<PreparedSendInput> {
   const to = input.to ?? inferReplyRecipients(credential, original, input.replyAll);
   if (to.length === 0) {
-    throw new ProviderRequestError(400, "QQ Mail reply recipient is unavailable.");
+    throw new ProviderRequestError(400, `${context.config.displayName} reply recipient is unavailable.`);
   }
 
   const cc = input.cc ?? (input.replyAll ? filterRecipientEmails(original.cc, credential.email) : undefined);
@@ -539,9 +591,9 @@ async function buildReplySendInput(
 }
 
 async function buildForwardSendInput(
-  original: QqMailFetchedMessage,
+  original: MailFetchedMessage,
   input: ParsedForwardInput,
-  context: QqMailActionContext,
+  context: MailActionContext,
 ): Promise<PreparedSendInput> {
   const resolvedAttachments = input.attachments ? await resolveOutgoingAttachments(input.attachments, context) : null;
 
@@ -564,12 +616,17 @@ async function writeWebStreamToTempFile(
   name: string,
   prefix: string,
   maxBytes: number,
+  displayName: string,
 ) {
   const directory = await mkdtemp(join(tmpdir(), prefix));
   const filePath = join(directory, `${randomUUID()}-${sanitizeTempFileName(name)}`);
 
   try {
-    await pipeline(Readable.fromWeb(stream as never), createByteLimitTransform(maxBytes), createWriteStream(filePath));
+    await pipeline(
+      Readable.fromWeb(stream as never),
+      createByteLimitTransform(maxBytes, displayName),
+      createWriteStream(filePath),
+    );
   } catch (error) {
     await rm(directory, { recursive: true, force: true }).catch(() => {});
     throw error;
@@ -583,13 +640,13 @@ async function writeWebStreamToTempFile(
   };
 }
 
-function createByteLimitTransform(maxBytes: number) {
+function createByteLimitTransform(maxBytes: number, displayName: string) {
   let totalBytes = 0;
   return new Transform({
     transform(chunk, _encoding, callback) {
       totalBytes += chunk.length;
       if (totalBytes > maxBytes) {
-        callback(new ProviderRequestError(400, "QQ Mail attachment is too large."));
+        callback(new ProviderRequestError(400, `${displayName} attachment is too large.`));
         return;
       }
       callback(null, chunk);
@@ -605,14 +662,14 @@ function noop() {
   return Promise.resolve();
 }
 
-function requireTransitFiles(context: QqMailActionContext) {
+function requireTransitFiles(context: MailActionContext) {
   if (!context.transitFiles) {
     throw new ProviderRequestError(400, "Transit file storage is not enabled.");
   }
   return context.transitFiles;
 }
 
-function inferReplyRecipients(credential: QqMailCredential, original: QqMailFetchedMessage, replyAll: boolean) {
+function inferReplyRecipients(credential: MailCredential, original: MailFetchedMessage, replyAll: boolean) {
   const recipients = [
     ...(original.summary.from ? [original.summary.from] : []),
     ...(replyAll ? original.summary.to : []),
@@ -644,7 +701,7 @@ function prefixSubject(prefix: string, subject: string | null) {
   return value.toLowerCase().startsWith(prefix.toLowerCase()) ? value : `${prefix} ${value}`.trim();
 }
 
-function buildReplyText(replyText: string, original: QqMailFetchedMessage) {
+function buildReplyText(replyText: string, original: MailFetchedMessage) {
   const quote = quotePlain(original.text);
   if (!quote) {
     return replyText;
@@ -655,7 +712,7 @@ function buildReplyText(replyText: string, original: QqMailFetchedMessage) {
   )} wrote:\n${quote}`;
 }
 
-function buildReplyHtml(replyHtml: string, original: QqMailFetchedMessage) {
+function buildReplyHtml(replyHtml: string, original: MailFetchedMessage) {
   const quoted = original.html ?? (original.text ? `<pre>${escapeHtml(original.text)}</pre>` : "");
   if (!quoted) {
     return replyHtml;
@@ -664,7 +721,7 @@ function buildReplyHtml(replyHtml: string, original: QqMailFetchedMessage) {
   return `${replyHtml}<br><br><blockquote>${quoted}</blockquote>`;
 }
 
-function buildForwardText(prefixText: string | undefined, original: QqMailFetchedMessage) {
+function buildForwardText(prefixText: string | undefined, original: MailFetchedMessage) {
   const header = [
     "---------- Forwarded message ---------",
     `From: ${formatAddress(original.summary.from)}`,
@@ -677,7 +734,7 @@ function buildForwardText(prefixText: string | undefined, original: QqMailFetche
     .join("\n\n");
 }
 
-function buildForwardHtml(prefixHtml: string | undefined, original: QqMailFetchedMessage) {
+function buildForwardHtml(prefixHtml: string | undefined, original: MailFetchedMessage) {
   const originalHtml = original.html ?? (original.text ? `<pre>${escapeHtml(original.text)}</pre>` : "");
   const header = `<p>---------- Forwarded message ---------<br>From: ${escapeHtml(
     formatAddress(original.summary.from),
@@ -722,27 +779,31 @@ function readSearchCriteria(input: Record<string, unknown>) {
   };
 }
 
-export function mapProtocolError(error: unknown, phase: "connect" | "execute"): ProviderRequestError {
+export function mapProtocolError(
+  error: unknown,
+  phase: "connect" | "execute",
+  config: MailRuntimeConfig,
+): ProviderRequestError {
   if (error instanceof ProviderRequestError) {
     return error;
   }
 
-  if (error instanceof QqMailProtocolError) {
+  if (error instanceof MailProtocolError) {
     switch (error.kind) {
       case "auth":
         return phase === "connect"
-          ? new ProviderRequestError(
-              400,
-              "Verify that QQ Mail POP3/IMAP/SMTP service is enabled and use the 16-character authorization code instead of the web login password.",
-            )
+          ? new ProviderRequestError(400, config.connectAuthMessage)
           : new ProviderRequestError(
               401,
-              "QQ Mail rejected the stored authorization code. Reconnect the account with a fresh QQ Mail authorization code.",
+              `${config.displayName} rejected the stored authorization code. Reconnect the account with a fresh ${config.displayName} authorization code.`,
             );
       case "folder_not_found":
-        return new ProviderRequestError(400, "QQ Mail folder does not exist.");
+        return new ProviderRequestError(400, `${config.displayName} folder does not exist.`);
       case "uid_not_found":
-        return new ProviderRequestError(400, "QQ Mail message UID does not exist in the selected folder.");
+        return new ProviderRequestError(
+          400,
+          `${config.displayName} message UID does not exist in the selected folder.`,
+        );
       case "timeout":
         return new ProviderRequestError(504, error.message);
       case "network":
@@ -752,5 +813,8 @@ export function mapProtocolError(error: unknown, phase: "connect" | "execute"): 
     }
   }
 
-  return new ProviderRequestError(502, error instanceof Error ? error.message : "QQ Mail provider error.");
+  return new ProviderRequestError(
+    502,
+    error instanceof Error ? error.message : `${config.displayName} provider error.`,
+  );
 }

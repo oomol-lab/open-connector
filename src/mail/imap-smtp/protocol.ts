@@ -11,23 +11,23 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import nodemailer from "nodemailer";
-import {
-  qqMailAttachmentDownloadByteLimit,
-  qqMailConnectionTimeoutMs,
-  qqMailImapHost,
-  qqMailImapPort,
-  qqMailSmtpHost,
-  qqMailSmtpPort,
-} from "./config.ts";
-import { QqMailProtocolError } from "./errors.ts";
+import { mailAttachmentDownloadByteLimit, mailConnectionTimeoutMs, mailImapPort, mailSmtpPort } from "./config.ts";
+import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";
 
-export interface QqMailCredential {
+export interface MailCredential {
   email: string;
   authorizationCode: string;
+  imapHost: string;
+  smtpHost: string;
 }
 
-export interface QqMailSendInput {
+export interface MailProtocolConfig {
+  displayName: string;
+  attachmentFallbackPrefix: string;
+}
+
+export interface MailSendInput {
   to: string[];
   cc?: string[];
   bcc?: string[];
@@ -37,23 +37,23 @@ export interface QqMailSendInput {
   subject: string;
   text?: string;
   html?: string;
-  attachments?: QqMailOutgoingAttachment[];
+  attachments?: MailOutgoingAttachment[];
 }
 
-export interface QqMailOutgoingAttachment {
+export interface MailOutgoingAttachment {
   filename: string;
   contentType?: string;
   filePath: string;
 }
 
-export interface QqMailSendResult {
+export interface MailSendResult {
   messageId: string | null;
   accepted: string[];
   rejected: string[];
   response: string;
 }
 
-export interface QqMailFolder {
+export interface MailFolder {
   path: string;
   name: string;
   delimiter: string | null;
@@ -61,7 +61,7 @@ export interface QqMailFolder {
   specialUse: string | null;
 }
 
-export interface QqMailSearchCriteria {
+export interface MailSearchCriteria {
   unseen?: boolean;
   from?: string;
   to?: string;
@@ -71,28 +71,28 @@ export interface QqMailSearchCriteria {
   before?: string;
 }
 
-export interface QqMailSearchPage {
+export interface MailSearchPage {
   limit: number;
   beforeUid?: number;
   peek: true;
 }
 
-export interface QqMailSearchSummariesResult {
-  summaries: QqMailSummary[];
+export interface MailSearchSummariesResult {
+  summaries: MailSummary[];
   nextBeforeUid: number | null;
 }
 
-export interface QqMailAddress {
+export interface MailAddress {
   name: string | null;
   email: string | null;
 }
 
-export interface QqMailSummary {
+export interface MailSummary {
   uid: number;
   messageId: string | null;
   subject: string | null;
-  from: QqMailAddress | null;
-  to: QqMailAddress[];
+  from: MailAddress | null;
+  to: MailAddress[];
   date: string | null;
   flags: string[];
   seen: boolean;
@@ -100,7 +100,7 @@ export interface QqMailSummary {
   size: number | null;
 }
 
-export interface QqMailAttachment {
+export interface MailAttachment {
   attachmentId: string;
   filename: string | null;
   contentType: string | null;
@@ -108,7 +108,7 @@ export interface QqMailAttachment {
   contentId: string | null;
 }
 
-export interface QqMailDownloadedAttachment {
+export interface MailDownloadedAttachment {
   attachmentId: string;
   filename: string | null;
   contentType: string | null;
@@ -117,7 +117,7 @@ export interface QqMailDownloadedAttachment {
   cleanup(): Promise<void>;
 }
 
-export interface QqMailFolderStatus {
+export interface MailFolderStatus {
   folder: string;
   messages: number | null;
   recent: number | null;
@@ -126,58 +126,58 @@ export interface QqMailFolderStatus {
   uidValidity: string | null;
 }
 
-export interface QqMailFetchedMessage {
-  summary: QqMailSummary;
-  cc: QqMailAddress[];
+export interface MailFetchedMessage {
+  summary: MailSummary;
+  cc: MailAddress[];
   text: string | null;
   html: string | null;
-  attachments: QqMailAttachment[];
+  attachments: MailAttachment[];
   truncated: boolean;
 }
 
-export interface QqMailProtocol {
-  validateImapCredential(credential: QqMailCredential): Promise<void>;
-  validateSmtpCredential(credential: QqMailCredential): Promise<void>;
-  sendMail(credential: QqMailCredential, input: QqMailSendInput): Promise<QqMailSendResult>;
-  listFolders(credential: QqMailCredential): Promise<QqMailFolder[]>;
-  searchUids(credential: QqMailCredential, folder: string, criteria: QqMailSearchCriteria): Promise<number[]>;
+export interface MailProtocol {
+  validateImapCredential(credential: MailCredential): Promise<void>;
+  validateSmtpCredential(credential: MailCredential): Promise<void>;
+  sendMail(credential: MailCredential, input: MailSendInput): Promise<MailSendResult>;
+  listFolders(credential: MailCredential): Promise<MailFolder[]>;
+  searchUids(credential: MailCredential, folder: string, criteria: MailSearchCriteria): Promise<number[]>;
   fetchSummaries(
-    credential: QqMailCredential,
+    credential: MailCredential,
     folder: string,
     uids: number[],
     options: { peek: true },
-  ): Promise<QqMailSummary[]>;
+  ): Promise<MailSummary[]>;
   searchSummaries(
-    credential: QqMailCredential,
+    credential: MailCredential,
     folder: string,
-    criteria: QqMailSearchCriteria,
-    page: QqMailSearchPage,
-  ): Promise<QqMailSearchSummariesResult>;
+    criteria: MailSearchCriteria,
+    page: MailSearchPage,
+  ): Promise<MailSearchSummariesResult>;
   fetchMessage(
-    credential: QqMailCredential,
+    credential: MailCredential,
     folder: string,
     uid: number,
     options: { peek: true; maxBytes: number; skipAttachmentBodies: true },
-  ): Promise<QqMailFetchedMessage>;
+  ): Promise<MailFetchedMessage>;
   downloadAttachment(
-    credential: QqMailCredential,
+    credential: MailCredential,
     folder: string,
     uid: number,
     attachmentId: string,
-  ): Promise<QqMailDownloadedAttachment>;
-  markSeen(credential: QqMailCredential, folder: string, uid: number): Promise<void>;
-  markUnseen(credential: QqMailCredential, folder: string, uid: number): Promise<void>;
-  moveMessage(credential: QqMailCredential, folder: string, uid: number, targetFolder: string): Promise<void>;
-  deleteMessage(credential: QqMailCredential, folder: string, uid: number): Promise<void>;
-  getFolderStatus(credential: QqMailCredential, folder: string): Promise<QqMailFolderStatus>;
+  ): Promise<MailDownloadedAttachment>;
+  markSeen(credential: MailCredential, folder: string, uid: number): Promise<void>;
+  markUnseen(credential: MailCredential, folder: string, uid: number): Promise<void>;
+  moveMessage(credential: MailCredential, folder: string, uid: number, targetFolder: string): Promise<void>;
+  deleteMessage(credential: MailCredential, folder: string, uid: number): Promise<void>;
+  getFolderStatus(credential: MailCredential, folder: string): Promise<MailFolderStatus>;
 }
 
-export interface QqMailProtocolDependencies {
-  createSmtpTransport?: (config: Record<string, unknown>) => QqMailSmtpTransport;
-  createImapClient?: (config: Record<string, unknown>) => QqMailImapClient;
+export interface MailProtocolDependencies {
+  createSmtpTransport?: (config: Record<string, unknown>) => MailSmtpTransport;
+  createImapClient?: (config: Record<string, unknown>) => MailImapClient;
 }
 
-interface QqMailSmtpTransport {
+interface MailSmtpTransport {
   verify(): Promise<unknown>;
   sendMail(input: Record<string, unknown>): Promise<{
     messageId?: string;
@@ -188,14 +188,14 @@ interface QqMailSmtpTransport {
   close(): void;
 }
 
-interface QqMailImapClient {
+interface MailImapClient {
   connect(): Promise<void>;
   logout(): Promise<void>;
   close?(): void;
   list(): Promise<unknown[]>;
 }
 
-type RuntimeImapClient = QqMailImapClient & {
+type RuntimeImapClient = MailImapClient & {
   mailboxOpen(path: string, options: { readOnly: boolean }): Promise<unknown>;
   search(query: SearchObject, options: { uid: true }): Promise<number[] | false>;
   fetchAll(range: number[], query: Record<string, unknown>, options: { uid: true }): Promise<unknown[]>;
@@ -236,10 +236,10 @@ interface BodyPart {
   size: number | null;
 }
 
-export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqMailProtocol {
+export function createMailProtocol(config: MailProtocolConfig, deps: MailProtocolDependencies = {}): MailProtocol {
   return {
     async validateImapCredential(credential) {
-      await withImapClient(deps, credential, async (client) => {
+      await withImapClient(config, deps, credential, async (client) => {
         await client.list();
       });
     },
@@ -248,7 +248,7 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
       try {
         await transport.verify();
       } catch (error) {
-        throw mapLibraryError(error);
+        throw mapLibraryError(error, config);
       } finally {
         transport.close();
       }
@@ -284,26 +284,28 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
           response: typeof result.response === "string" ? result.response : "",
         };
       } catch (error) {
-        throw mapLibraryError(error);
+        throw mapLibraryError(error, config);
       } finally {
         transport.close();
       }
     },
     async listFolders(credential) {
-      return await withImapClient(deps, credential, async (client) => (await client.list()).map(normalizeMailbox));
+      return await withImapClient(config, deps, credential, async (client) =>
+        (await client.list()).map(normalizeMailbox),
+      );
     },
     async searchUids(credential, folder, criteria) {
-      return await withMailbox(deps, credential, folder, true, async (client) => {
+      return await withMailbox(config, deps, credential, folder, true, async (client) => {
         return await searchUidsInMailbox(client, criteria);
       });
     },
     async fetchSummaries(credential, folder, uids) {
-      return await withMailbox(deps, credential, folder, true, async (client) => {
+      return await withMailbox(config, deps, credential, folder, true, async (client) => {
         return await fetchSummariesInMailbox(client, uids);
       });
     },
     async searchSummaries(credential, folder, criteria, page) {
-      return await withMailbox(deps, credential, folder, true, async (client) => {
+      return await withMailbox(config, deps, credential, folder, true, async (client) => {
         const uids = await searchUidsInMailbox(client, criteria);
         const { returnedUids, nextBeforeUid } = pageUids(uids, page.limit, page.beforeUid);
         return {
@@ -313,7 +315,7 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
       });
     },
     async fetchMessage(credential, folder, uid, options) {
-      return await withMailbox(deps, credential, folder, true, async (client) => {
+      return await withMailbox(config, deps, credential, folder, true, async (client) => {
         const metadata = await client.fetchOne(
           uid,
           {
@@ -326,7 +328,7 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
           { uid: true },
         );
         if (!metadata) {
-          throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+          throw new MailProtocolError("uid_not_found", "Mail message UID does not exist in the selected folder.");
         }
 
         const message = metadata as FetchMessageObject;
@@ -357,14 +359,15 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
       });
     },
     async downloadAttachment(credential, folder, uid, attachmentId) {
-      return await withMailbox(deps, credential, folder, true, async (client) => {
+      return await withMailbox(config, deps, credential, folder, true, async (client) => {
         const downloaded = await downloadAttachmentPart(client, uid, attachmentId);
         const expectedSize = readInteger(downloaded.meta.expectedSize);
-        const filename = readString(downloaded.meta.filename) ?? `qq-mail-attachment-${attachmentId}`;
+        const filename =
+          readString(downloaded.meta.filename) ?? `${config.attachmentFallbackPrefix}-attachment-${attachmentId}`;
         const { filePath, cleanup } = await writeAsyncIterableToTempFile(
           downloaded.content,
           filename,
-          "oomol-connect-qq-mail-download-",
+          `oomol-connect-${config.attachmentFallbackPrefix}-download-`,
         );
         return {
           attachmentId,
@@ -377,39 +380,39 @@ export function createQqMailProtocol(deps: QqMailProtocolDependencies = {}): QqM
       });
     },
     async markSeen(credential, folder, uid) {
-      await withMailbox(deps, credential, folder, false, async (client) => {
+      await withMailbox(config, deps, credential, folder, false, async (client) => {
         const updated = await client.messageFlagsAdd([uid], ["\\Seen"], { uid: true });
         if (!updated) {
-          throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+          throw new MailProtocolError("uid_not_found", "Mail message UID does not exist in the selected folder.");
         }
       });
     },
     async markUnseen(credential, folder, uid) {
-      await withMailbox(deps, credential, folder, false, async (client) => {
+      await withMailbox(config, deps, credential, folder, false, async (client) => {
         const updated = await client.messageFlagsRemove([uid], ["\\Seen"], { uid: true });
         if (!updated) {
-          throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+          throw new MailProtocolError("uid_not_found", "Mail message UID does not exist in the selected folder.");
         }
       });
     },
     async moveMessage(credential, folder, uid, targetFolder) {
-      await withMailbox(deps, credential, folder, false, async (client) => {
+      await withMailbox(config, deps, credential, folder, false, async (client) => {
         const moved = await moveMessageToFolder(client, uid, targetFolder);
         if (!moved) {
-          throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+          throw new MailProtocolError("uid_not_found", "Mail message UID does not exist in the selected folder.");
         }
       });
     },
     async deleteMessage(credential, folder, uid) {
-      await withMailbox(deps, credential, folder, false, async (client) => {
+      await withMailbox(config, deps, credential, folder, false, async (client) => {
         const deleted = await client.messageDelete([uid], { uid: true });
         if (!deleted) {
-          throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+          throw new MailProtocolError("uid_not_found", "Mail message UID does not exist in the selected folder.");
         }
       });
     },
     async getFolderStatus(credential, folder) {
-      return await withImapClient(deps, credential, async (client) => {
+      return await withImapClient(config, deps, credential, async (client) => {
         const status = toRecord(
           await client.status(folder, {
             messages: true,
@@ -436,11 +439,11 @@ async function downloadAttachmentPart(client: RuntimeImapClient, uid: number, at
   try {
     return await client.download(uid, attachmentId, {
       uid: true,
-      maxBytes: qqMailAttachmentDownloadByteLimit,
+      maxBytes: mailAttachmentDownloadByteLimit,
     });
   } catch (error) {
     if (isFolderMissingError(error)) {
-      throw new QqMailProtocolError("uid_not_found", "QQ Mail message UID does not exist in the selected folder.");
+      throw new MailProtocolError("uid_not_found", "Mail message UID does not exist in the selected folder.");
     }
     throw error;
   }
@@ -451,43 +454,43 @@ async function moveMessageToFolder(client: RuntimeImapClient, uid: number, targe
     return await client.messageMove([uid], targetFolder, { uid: true });
   } catch (error) {
     if (isFolderMissingError(error)) {
-      throw new QqMailProtocolError("folder_not_found", "QQ Mail folder does not exist.");
+      throw new MailProtocolError("folder_not_found", "Mail folder does not exist.");
     }
     throw error;
   }
 }
 
-function createSmtpTransport(deps: QqMailProtocolDependencies, credential: QqMailCredential): QqMailSmtpTransport {
+function createSmtpTransport(deps: MailProtocolDependencies, credential: MailCredential): MailSmtpTransport {
   const config = {
-    host: qqMailSmtpHost,
-    port: qqMailSmtpPort,
+    host: credential.smtpHost,
+    port: mailSmtpPort,
     secure: true,
     auth: {
       user: credential.email,
       pass: credential.authorizationCode,
     },
-    connectionTimeout: qqMailConnectionTimeoutMs,
-    greetingTimeout: qqMailConnectionTimeoutMs,
-    socketTimeout: qqMailConnectionTimeoutMs,
+    connectionTimeout: mailConnectionTimeoutMs,
+    greetingTimeout: mailConnectionTimeoutMs,
+    socketTimeout: mailConnectionTimeoutMs,
   };
 
   return deps.createSmtpTransport
     ? deps.createSmtpTransport(config)
-    : (nodemailer.createTransport(config as never) as QqMailSmtpTransport);
+    : (nodemailer.createTransport(config as never) as MailSmtpTransport);
 }
 
-function createImapClient(deps: QqMailProtocolDependencies, credential: QqMailCredential): QqMailImapClient {
+function createImapClient(deps: MailProtocolDependencies, credential: MailCredential): MailImapClient {
   const config = {
-    host: qqMailImapHost,
-    port: qqMailImapPort,
+    host: credential.imapHost,
+    port: mailImapPort,
     secure: true,
     auth: {
       user: credential.email,
       pass: credential.authorizationCode,
     },
-    connectionTimeout: qqMailConnectionTimeoutMs,
-    greetingTimeout: qqMailConnectionTimeoutMs,
-    socketTimeout: qqMailConnectionTimeoutMs,
+    connectionTimeout: mailConnectionTimeoutMs,
+    greetingTimeout: mailConnectionTimeoutMs,
+    socketTimeout: mailConnectionTimeoutMs,
     logger: false,
   };
 
@@ -495,8 +498,9 @@ function createImapClient(deps: QqMailProtocolDependencies, credential: QqMailCr
 }
 
 async function withImapClient<T>(
-  deps: QqMailProtocolDependencies,
-  credential: QqMailCredential,
+  config: MailProtocolConfig,
+  deps: MailProtocolDependencies,
+  credential: MailCredential,
   callback: (client: RuntimeImapClient) => Promise<T>,
 ) {
   const client = createImapClient(deps, credential);
@@ -506,7 +510,7 @@ async function withImapClient<T>(
     connected = true;
     return await callback(client as RuntimeImapClient);
   } catch (error) {
-    throw mapLibraryError(error);
+    throw mapLibraryError(error, config);
   } finally {
     if (connected) {
       try {
@@ -521,18 +525,19 @@ async function withImapClient<T>(
 }
 
 async function withMailbox<T>(
-  deps: QqMailProtocolDependencies,
-  credential: QqMailCredential,
+  config: MailProtocolConfig,
+  deps: MailProtocolDependencies,
+  credential: MailCredential,
   folder: string,
   readOnly: boolean,
   callback: (client: RuntimeImapClient) => Promise<T>,
 ) {
-  return await withImapClient(deps, credential, async (client) => {
+  return await withImapClient(config, deps, credential, async (client) => {
     try {
       await client.mailboxOpen(folder, { readOnly });
     } catch (error) {
       if (isFolderMissingError(error)) {
-        throw new QqMailProtocolError("folder_not_found", "QQ Mail folder does not exist.");
+        throw new MailProtocolError("folder_not_found", "Mail folder does not exist.");
       }
       throw error;
     }
@@ -541,7 +546,7 @@ async function withMailbox<T>(
   });
 }
 
-function createSearchQuery(criteria: QqMailSearchCriteria): SearchObject {
+function createSearchQuery(criteria: MailSearchCriteria): SearchObject {
   const query: SearchObject = {};
   if (criteria.unseen === true) {
     query.seen = false;
@@ -568,7 +573,7 @@ function createSearchQuery(criteria: QqMailSearchCriteria): SearchObject {
   return Object.keys(query).length === 0 ? { all: true } : query;
 }
 
-async function searchUidsInMailbox(client: RuntimeImapClient, criteria: QqMailSearchCriteria) {
+async function searchUidsInMailbox(client: RuntimeImapClient, criteria: MailSearchCriteria) {
   const result = await client.search(createSearchQuery(criteria), { uid: true });
   return result === false ? [] : result.filter((uid) => Number.isInteger(uid) && uid > 0);
 }
@@ -613,7 +618,7 @@ function pageUids(uids: number[], limit: number, beforeUid: number | undefined) 
   };
 }
 
-function normalizeMailbox(value: unknown): QqMailFolder {
+function normalizeMailbox(value: unknown): MailFolder {
   const record = toRecord(value);
   const delimiter = readString(record?.delimiter);
   const path = readString(record?.path) ?? readString(record?.name) ?? "";
@@ -626,7 +631,7 @@ function normalizeMailbox(value: unknown): QqMailFolder {
   };
 }
 
-function normalizeSummary(value: unknown): QqMailSummary {
+function normalizeSummary(value: unknown): MailSummary {
   const record = toRecord(value);
   const envelope = toRecord(record?.envelope);
   const uid = readPositiveInteger(record?.uid);
@@ -645,12 +650,12 @@ function normalizeSummary(value: unknown): QqMailSummary {
   };
 }
 
-function normalizeEnvelopeAddresses(value: unknown, key: "from" | "to" | "cc"): QqMailAddress[] {
+function normalizeEnvelopeAddresses(value: unknown, key: "from" | "to" | "cc"): MailAddress[] {
   const envelope = toRecord(toRecord(value)?.envelope);
   return normalizeAddressList(envelope?.[key]);
 }
 
-function normalizeAddressList(value: unknown): QqMailAddress[] {
+function normalizeAddressList(value: unknown): MailAddress[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -661,7 +666,7 @@ function normalizeAddressList(value: unknown): QqMailAddress[] {
   });
 }
 
-function normalizeAddress(value: unknown): QqMailAddress {
+function normalizeAddress(value: unknown): MailAddress {
   const record = toRecord(value);
   return {
     name: readString(record?.name),
@@ -695,7 +700,7 @@ function collectBodyParts(bodyStructure: unknown): BodyPart[] {
   ];
 }
 
-function collectAttachmentMetadata(bodyStructure: unknown): QqMailAttachment[] {
+function collectAttachmentMetadata(bodyStructure: unknown): MailAttachment[] {
   const record = toRecord(bodyStructure);
   if (!record) {
     return [];
@@ -835,26 +840,26 @@ function appendBody(current: string | null, next: string) {
   return current ? `${current}\n\n${next}` : next;
 }
 
-function mapLibraryError(error: unknown): QqMailProtocolError {
-  if (error instanceof QqMailProtocolError) {
+function mapLibraryError(error: unknown, config: MailProtocolConfig): MailProtocolError {
+  if (error instanceof MailProtocolError) {
     return error;
   }
 
-  const message = error instanceof Error ? error.message : "QQ Mail protocol error.";
+  const message = error instanceof Error ? error.message : `${config.displayName} protocol error.`;
   const code = readString(toRecord(error)?.code);
   const lowerMessage = message.toLowerCase();
 
   if (isAuthError(error, code, lowerMessage)) {
-    return new QqMailProtocolError("auth", message);
+    return new MailProtocolError("auth", message);
   }
   if (isTimeoutError(code, lowerMessage)) {
-    return new QqMailProtocolError("timeout", message);
+    return new MailProtocolError("timeout", message);
   }
   if (isNetworkError(code)) {
-    return new QqMailProtocolError("network", message);
+    return new MailProtocolError("network", message);
   }
 
-  return new QqMailProtocolError("provider", message);
+  return new MailProtocolError("provider", message);
 }
 
 function isAuthError(error: unknown, code: string | null, lowerMessage: string) {
