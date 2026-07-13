@@ -1,10 +1,32 @@
+import type { DokployOperation } from "./operations.ts";
+
 import { describe, expect, it, vi } from "vitest";
+import { s } from "../../core/json-schema.ts";
 import {
   createDokployContext,
-  dokployActionHandlers,
+  executeDokployOperation,
   normalizeDokployApiBaseUrl,
+  redactSensitive,
   validateDokployCredential,
 } from "./runtime.ts";
+
+const schema = s.looseObject({}, { description: "Test schema." });
+
+function operation(overrides: Partial<DokployOperation> = {}): DokployOperation {
+  return {
+    name: "test_operation",
+    operationId: "test.operation",
+    description: "Test operation.",
+    method: "GET",
+    path: "/resource/{resourceId}",
+    pathFields: ["resourceId"],
+    queryFields: ["filter", "tags"],
+    bodyFields: [],
+    inputSchema: schema,
+    outputSchema: schema,
+    ...overrides,
+  };
+}
 
 function context(fetcher: typeof fetch) {
   return createDokployContext({ baseUrl: "https://dokploy.example.com" }, "dokploy-key", fetcher);
@@ -20,75 +42,158 @@ describe("Dokploy runtime", () => {
   });
 
   it("validates credentials with an authenticated project search", async () => {
-    const fetcher = vi.fn(
-      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
-        Response.json({ items: [], total: 0 }),
-    );
-
+    const fetcher = vi.fn(async (): Promise<Response> => Response.json({ items: [], total: 0 }));
     await expect(
       validateDokployCredential({ baseUrl: "https://dokploy.example.com" }, "dokploy-key", fetcher),
     ).resolves.toMatchObject({
-      profile: {
-        accountId: "dokploy:dokploy.example.com",
-        displayName: "Dokploy dokploy.example.com",
-      },
-      metadata: {
-        apiBaseUrl: "https://dokploy.example.com/api",
-        validationEndpoint: "/project.search",
-      },
+      profile: { accountId: "dokploy:dokploy.example.com", displayName: "Dokploy dokploy.example.com" },
+      metadata: { apiBaseUrl: "https://dokploy.example.com/api", validationEndpoint: "/project.search" },
     });
-
     const [url, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
     expect(url.toString()).toBe("https://dokploy.example.com/api/project.search?limit=1&offset=0");
     expect(init.headers).toMatchObject({ "x-api-key": "dokploy-key", "user-agent": "oomol-connect/0.1" });
   });
 
-  it("maps application search filters to Dokploy query parameters", async () => {
-    const fetcher = vi.fn(
-      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
-        Response.json({ items: [{ applicationId: "app-1" }], total: 1 }),
+  it("maps path and repeated query fields from operation metadata", async () => {
+    const fetcher = vi.fn(async (): Promise<Response> => Response.json({ ok: true }));
+    await executeDokployOperation(
+      operation(),
+      { resourceId: "a/b", filter: "active", tags: ["one", "two"], ignored: true },
+      context(fetcher),
     );
-
-    await expect(
-      dokployActionHandlers.search_applications(
-        { query: "api", projectId: "project-1", limit: 10, offset: 20 },
-        context(fetcher),
-      ),
-    ).resolves.toEqual({ applications: [{ applicationId: "app-1" }], total: 1 });
-
-    const url = new URL(String(fetcher.mock.calls[0]?.[0]));
-    expect(url.pathname).toBe("/api/application.search");
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      q: "api",
-      projectId: "project-1",
-      limit: "10",
-      offset: "20",
-    });
+    const [url, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.toString()).toBe("https://dokploy.example.com/api/resource/a%2Fb?filter=active&tags=one&tags=two");
+    expect(init.method).toBe("GET");
+    expect(init.body).toBeUndefined();
   });
 
-  it("sends deployment requests without undefined optional fields", async () => {
-    const fetcher = vi.fn(
-      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> => Response.json(null),
+  it("maps JSON bodies from operation metadata and omits undefined fields", async () => {
+    const fetcher = vi.fn(async (): Promise<Response> => Response.json({ accepted: true }));
+    await executeDokployOperation(
+      operation({
+        method: "POST",
+        path: "/resource.create",
+        pathFields: [],
+        queryFields: [],
+        bodyFields: ["name", "note"],
+      }),
+      { name: "web", note: undefined, ignored: true },
+      context(fetcher),
     );
+    const [, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(init.headers).toMatchObject({ "content-type": "application/json" });
+    expect(JSON.parse(String(init.body))).toEqual({ name: "web" });
+  });
 
-    await expect(
-      dokployActionHandlers.deploy_application({ applicationId: "app-1", title: "Release" }, context(fetcher)),
-    ).resolves.toEqual({ accepted: true });
+  it.each([
+    ["zip", "deployment.zip", "application/zip"],
+    ["file", "config.json", "application/json"],
+  ])("maps the %s transit-file field to multipart form data", async (field, name, mimeType) => {
+    const fetcher = vi.fn(async (): Promise<Response> => Response.json({ accepted: true }));
+    const transitFiles = {
+      maxBytes: 1_000_000,
+      create: vi.fn(),
+      delete: vi.fn(),
+      read: vi.fn(async () => ({
+        file: new File(["payload"], name, { type: mimeType }),
+        sizeBytes: 7,
+        name,
+        mimeType,
+      })),
+    };
+    const runtimeContext = createDokployContext(
+      { baseUrl: "https://dokploy.example.com" },
+      "dokploy-key",
+      fetcher,
+      undefined,
+      transitFiles,
+    );
+    await executeDokployOperation(
+      operation({
+        method: "POST",
+        path: "/upload",
+        pathFields: [],
+        queryFields: [],
+        bodyFields: ["resourceId", field],
+        fileFields: [field],
+        contentType: "multipart/form-data",
+      }),
+      { resourceId: "resource-1", [field]: { fileId: "transit-1" } },
+      runtimeContext,
+    );
+    const [, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(init.headers).not.toHaveProperty("content-type");
+    const body = init.body as FormData;
+    expect(body.get("resourceId")).toBe("resource-1");
+    expect(body.get(field)).toMatchObject({ name, type: mimeType });
+    expect(transitFiles.read).toHaveBeenCalledWith("transit-1");
+  });
 
-    const [url, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
-    expect(url.toString()).toBe("https://dokploy.example.com/api/application.deploy");
-    expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({ applicationId: "app-1", title: "Release" });
+  it("can recursively redact sensitive error details without changing safe fields", () => {
+    expect(
+      redactSensitive({ apiKey: "key", nested: [{ password: "pw", visible: "yes" }], access_token: "token" }),
+    ).toEqual({
+      apiKey: "[redacted]",
+      nested: [{ password: "[redacted]", visible: "yes" }],
+      access_token: "[redacted]",
+    });
   });
 
   it("maps invalid credentials to a connection validation error", async () => {
     const fetcher = vi.fn(
-      async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
-        Response.json({ message: "Invalid API key" }, { status: 401 }),
+      async (): Promise<Response> => Response.json({ message: "Invalid API key" }, { status: 401 }),
     );
-
     await expect(
       validateDokployCredential({ baseUrl: "https://dokploy.example.com" }, "bad-key", fetcher),
     ).rejects.toMatchObject({ status: 400, message: "Invalid API key" });
+  });
+
+  it("rejects a successful non-JSON response", async () => {
+    const fetcher = vi.fn(async (): Promise<Response> => new Response("accepted", { status: 200 }));
+    await expect(
+      executeDokployOperation(
+        operation({ path: "/plain", pathFields: [], queryFields: [], bodyFields: [] }),
+        {},
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: "Dokploy returned invalid JSON" });
+  });
+
+  it("uses bounded non-JSON error text while preserving the upstream status", async () => {
+    const fetcher = vi.fn(
+      async (): Promise<Response> => new Response("Deployment archive is invalid", { status: 422 }),
+    );
+    await expect(
+      executeDokployOperation(
+        operation({ path: "/invalid", pathFields: [], queryFields: [], bodyFields: [] }),
+        {},
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({ status: 422, message: "Deployment archive is invalid" });
+  });
+
+  it("truncates oversized non-JSON error messages", async () => {
+    const fetcher = vi.fn(async (): Promise<Response> => new Response("x".repeat(20_000), { status: 502 }));
+    await expect(
+      executeDokployOperation(
+        operation({ path: "/long-error", pathFields: [], queryFields: [], bodyFields: [] }),
+        {},
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: `${"x".repeat(16_383)}…` });
+  });
+
+  it("rejects responses whose declared content length exceeds the response limit", async () => {
+    const fetcher = vi.fn(
+      async (): Promise<Response> =>
+        new Response("{}", { headers: { "content-length": String(10 * 1024 * 1024 + 1) } }),
+    );
+    await expect(
+      executeDokployOperation(
+        operation({ path: "/large", pathFields: [], queryFields: [], bodyFields: [] }),
+        {},
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({ status: 413, message: "Dokploy response exceeds 10485760 bytes" });
   });
 });

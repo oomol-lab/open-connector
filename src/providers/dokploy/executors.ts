@@ -16,7 +16,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<DokployActio
   handlers: dokployActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<DokployActionContext> {
     const credential = await requireApiKeyCredential(context, service);
-    return createDokployContext(credential.values, credential.apiKey, fetcher, context.signal);
+    return createDokployContext(credential.values, credential.apiKey, fetcher, context.signal, context.transitFiles);
   },
   fallbackMessage: "Dokploy request failed",
 });

@@ -7,7 +7,7 @@ const service = "dokploy";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Dokploy",
-  description: "Manage projects, applications, and deployments on a self-hosted Dokploy instance.",
+  description: "Manage infrastructure, services, deployments, access, and settings on a self-hosted Dokploy instance.",
   categories: ["Developer Tools", "Infrastructure"],
   authTypes: ["api_key"],
   auth: [
