@@ -22,6 +22,17 @@ describe("assertPublicHttpUrl", () => {
     }
   });
 
+  it("rejects known cloud metadata hostnames even when private networks are allowed", () => {
+    for (const value of [
+      "http://instance-data.ec2.internal/",
+      "http://metadata.google.internal/",
+      "http://metadata.google.internal./",
+      "http://metadata.goog/",
+    ]) {
+      expect(() => readPublicUrl(value, true)).toThrow("cloud metadata hosts");
+    }
+  });
+
   it("rejects IPv6 targets", () => {
     expect(() => readPublicUrl("https://[::1]/")).toThrow("target IPv6 addresses");
   });

@@ -121,6 +121,7 @@ export async function readBoundedResponseBytes(
 }
 
 const localHostnames = new Set(["localhost", "localhost.localdomain", "ip6-localhost", "ip6-loopback"]);
+const cloudMetadataHostnames = new Set(["instance-data.ec2.internal", "metadata.google.internal", "metadata.goog"]);
 const localHostnameSuffixes = [".localhost", ".localdomain"];
 const privateHostnameSuffixes = [".local", ".internal", ".home", ".lan"];
 const privateIpv4Cidrs: Array<[number, number]> = [
@@ -171,6 +172,9 @@ export function assertPublicHttpUrl(value: string, options: PublicHttpUrlOptions
   }
 
   const hostname = normalizeHostname(url.hostname);
+  if (cloudMetadataHostnames.has(hostname)) {
+    throw options.createError(`${options.fieldName} must not target cloud metadata hosts`);
+  }
   if (localHostnames.has(hostname) || localHostnameSuffixes.some((suffix) => hostname.endsWith(suffix))) {
     throw options.createError(`${options.fieldName} must not target local hosts`);
   }
