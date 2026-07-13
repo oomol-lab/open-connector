@@ -34,8 +34,11 @@ export class KVTransitFileService implements ITransitFileService {
   constructor(options: KVTransitFileOptions) {
     this.namespace = options.namespace;
     this.publicOrigin = options.publicOrigin.replace(/\/+$/, "");
-    this.ttlSeconds = Math.max(options.ttlSeconds, KV_MIN_TTL_SECONDS);
-    this.maxBytes = Math.min(options.maxBytes, KV_MAX_VALUE_BYTES);
+    // This constructor is exported; a non-finite/fractional/non-positive value would slip
+    // through the clamps below (NaN maxBytes silently disables the size check, NaN ttl yields
+    // an invalid expirationTtl), so reject anything that is not a positive integer up front.
+    this.ttlSeconds = Math.max(positiveInteger(options.ttlSeconds, "ttlSeconds"), KV_MIN_TTL_SECONDS);
+    this.maxBytes = Math.min(positiveInteger(options.maxBytes, "maxBytes"), KV_MAX_VALUE_BYTES);
   }
 
   async create(file: File): Promise<TransitFileUpload> {
@@ -141,6 +144,12 @@ function assertSafeFileId(fileId: string): void {
   if (!/^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?$/.test(fileId)) {
     throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
   }
+}
+function positiveInteger(value: number, field: string): number {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new TypeError(`KVTransitFileService: "${field}" must be a positive integer (received ${value}).`);
+  }
+  return value;
 }
 function escapeHeaderValue(value: string): string {
   return value.replace(/["\\\r\n]/g, "_");

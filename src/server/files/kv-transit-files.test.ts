@@ -137,6 +137,16 @@ describe("KVTransitFileService", () => {
     // A regex bug here previously replaced the letter "n" and let control bytes through.
     expect(response.headers.get("content-disposition")).toBe('attachment; filename="a_b_c_d_e.txt"');
   });
+
+  it("rejects non-integer, non-positive, or non-finite ttl/maxBytes at construction", () => {
+    // NaN maxBytes would otherwise slip past Math.min and disable the size check entirely.
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, 0, -1, 1.5]) {
+      expect(() => createService(new MemoryKVNamespace(), { maxBytes: bad })).toThrow(TypeError);
+      expect(() => createService(new MemoryKVNamespace(), { ttlSeconds: bad })).toThrow(TypeError);
+    }
+    // A valid-but-out-of-range value is still accepted and clamped, not rejected.
+    expect(() => createService(new MemoryKVNamespace(), { ttlSeconds: 10, maxBytes: 500 * 1024 * 1024 })).not.toThrow();
+  });
 });
 
 function createService(
