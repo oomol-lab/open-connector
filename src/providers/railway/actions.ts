@@ -70,7 +70,21 @@ const deploymentTargetFields = {
   environmentId: id("Railway environment ID."),
 };
 
-export const railwayActions: readonly ProviderActionDefinition[] = [
+type RailwayActionDefinitions = readonly [
+  ProviderActionDefinition<"list_projects">,
+  ProviderActionDefinition<"get_project">,
+  ProviderActionDefinition<"get_service_instance">,
+  ProviderActionDefinition<"list_deployments">,
+  ProviderActionDefinition<"get_deployment">,
+  ProviderActionDefinition<"get_deployment_logs">,
+  ProviderActionDefinition<"deploy_service">,
+  ProviderActionDefinition<"upsert_variable">,
+  ProviderActionDefinition<"rollback_deployment">,
+];
+
+export type RailwayActionName = RailwayActionDefinitions[number]["name"];
+
+export const railwayActions: RailwayActionDefinitions = [
   defineProviderAction(service, {
     name: "list_projects",
     description: "List Railway projects available to the configured account or workspace token.",
@@ -240,5 +254,3 @@ export const railwayActions: readonly ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type RailwayActionName = (typeof railwayActions)[number]["name"];
