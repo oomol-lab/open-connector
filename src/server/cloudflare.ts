@@ -45,44 +45,44 @@ export default {
 };
 
 async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Promise<ConnectApp> {
-    const assets = env.ASSETS;
-    if (!assets) {
-        throw new Error("Cloudflare ASSETS binding is required to load the catalog");
-    }
-    const secretCodec = await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY);
-    return await createConnectApp({
-        catalog: await loadCatalogOnce(assets),
-        providerLoader: new ProviderLoader(),
-        runtimeDatabase: new D1RuntimeDatabase(env.DB, { secretCodec }),
-        transitFiles: (() => {
-            const transitFileOptions = {
-                publicOrigin,
-                ttlSeconds: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS, 86_400),
-                maxBytes: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES, 25 * 1024 * 1024),
-            };
-            return env.TRANSIT_FILES_BACKEND === "kv"
-                ? new KVTransitFileService({
-                      namespace: env.TRANSIT_FILES as KVNamespaceBinding,
-                      ...transitFileOptions,
-                  })
-                : new R2TransitFileService({
-                      bucket: env.TRANSIT_FILES as R2BucketBinding,
-                      ...transitFileOptions,
-                  });
-        })(),
+  const assets = env.ASSETS;
+  if (!assets) {
+    throw new Error("Cloudflare ASSETS binding is required to load the catalog");
+  }
+  const secretCodec = await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY);
+  return await createConnectApp({
+    catalog: await loadCatalogOnce(assets),
+    providerLoader: new ProviderLoader(),
+    runtimeDatabase: new D1RuntimeDatabase(env.DB, { secretCodec }),
+    transitFiles: (() => {
+      const transitFileOptions = {
         publicOrigin,
-        secretCodec,
-        adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
-        runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
-        actionPolicy: new ActionPolicyService({
-            allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
-            blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
-            allowedProxies: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_PROXIES),
-            blockedProxies: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_PROXIES),
-        }),
-        logger: workerLogger,
-        computeRuntimeAuthConfigured: false,
-    });
+        ttlSeconds: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS, 86_400),
+        maxBytes: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES, 100 * 1024 * 1024),
+      };
+      return env.TRANSIT_FILES_BACKEND === "kv"
+        ? new KVTransitFileService({
+            namespace: env.TRANSIT_FILES as KVNamespaceBinding,
+            ...transitFileOptions,
+          })
+        : new R2TransitFileService({
+            bucket: env.TRANSIT_FILES as R2BucketBinding,
+            ...transitFileOptions,
+          });
+    })(),
+    publicOrigin,
+    secretCodec,
+    adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
+    runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
+    actionPolicy: new ActionPolicyService({
+      allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
+      blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
+      allowedProxies: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_PROXIES),
+      blockedProxies: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_PROXIES),
+    }),
+    logger: workerLogger,
+    computeRuntimeAuthConfigured: false,
+  });
 }
 
 const workerLogger = {

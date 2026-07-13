@@ -29,15 +29,21 @@
       "migrations_dir": "migrations",
     },
   ],
-{
-  // ...
-  // Option A: R2 backend (default)
+  // Transit-file storage — enable EXACTLY ONE of Option A or Option B.
+  // Both use the binding name TRANSIT_FILES; Wrangler rejects two bindings with the
+  // same name, so switching to Option B means commenting out Option A's block below.
+  //
+  // Option A: R2 backend (default). Comment out this whole block to use Option B.
   "r2_buckets": [
-    { "binding": "TRANSIT_FILES", "bucket_name": "<your-bucket-name>" }
+    {
+      "binding": "TRANSIT_FILES",
+      "bucket_name": "<your-bucket-name>",
+    },
   ],
-  // Option B: KV backend (no credit card required; max file size 25 MB)
+  // Option B: KV backend (no credit card required; max file size 25 MB).
+  // To use it: comment out the r2_buckets block above, then uncomment all three lines below.
   // "kv_namespaces": [
-  //   { "binding": "TRANSIT_FILES", "id": "<your-kv-namespace-id>" }
+  //   { "binding": "TRANSIT_FILES", "id": "<your-kv-namespace-id>" },
   // ],
-  // "vars": { "TRANSIT_FILES_BACKEND": "kv" }
+  // "vars": { "TRANSIT_FILES_BACKEND": "kv" },
 }

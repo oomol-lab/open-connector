@@ -30,7 +30,6 @@ export interface AssetsBinding {
   fetch(request: Request): Promise<Response>;
 }
 
-// src/server/cloudflare/cloudflare-bindings.ts （追加）
 export interface KVNamespaceBinding {
   put(
     key: string,

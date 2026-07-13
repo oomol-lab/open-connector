@@ -1,13 +1,20 @@
-// src/server/files/kv-transit-files.ts
 import type { KVNamespaceBinding } from "../cloudflare/cloudflare-bindings.ts";
 import type { ITransitFileService, TransitFileRead, TransitFileUpload } from "./transit-file-store.ts";
+
 import { extname } from "node:path";
 import { contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+
+// Workers KV rejects an `expirationTtl` below 60 seconds.
+const KV_MIN_TTL_SECONDS = 60;
+// Workers KV rejects any single value larger than 25 MiB.
+const KV_MAX_VALUE_BYTES = 25 * 1024 * 1024;
 
 export interface KVTransitFileOptions {
   namespace: KVNamespaceBinding;
   publicOrigin: string;
+  // Requested TTL in seconds. Values below KV's 60s minimum are clamped up to 60.
   ttlSeconds: number;
+  // Requested max upload size in bytes. Clamped down to KV's 25 MiB per-value limit.
   maxBytes: number;
 }
 
@@ -27,8 +34,8 @@ export class KVTransitFileService implements ITransitFileService {
   constructor(options: KVTransitFileOptions) {
     this.namespace = options.namespace;
     this.publicOrigin = options.publicOrigin.replace(/\/+$/, "");
-    this.ttlSeconds = options.ttlSeconds;
-    this.maxBytes = options.maxBytes;
+    this.ttlSeconds = Math.max(options.ttlSeconds, KV_MIN_TTL_SECONDS);
+    this.maxBytes = Math.min(options.maxBytes, KV_MAX_VALUE_BYTES);
   }
 
   async create(file: File): Promise<TransitFileUpload> {
@@ -81,10 +88,7 @@ export class KVTransitFileService implements ITransitFileService {
   async delete(fileId: string): Promise<boolean> {
     assertSafeFileId(fileId);
     const existing = await this.namespace.get(objectKey(fileId), "arrayBuffer");
-    await Promise.all([
-      this.namespace.delete(objectKey(fileId)),
-      this.namespace.delete(metadataKey(fileId)),
-    ]);
+    await Promise.all([this.namespace.delete(objectKey(fileId)), this.namespace.delete(metadataKey(fileId))]);
     return existing != null;
   }
 
@@ -100,8 +104,10 @@ export class KVTransitFileService implements ITransitFileService {
       this.namespace.get(objectKey(fileId), "arrayBuffer"),
       this.readMetadata(fileId),
     ]);
+    // Workers KV is eventually consistent: a partial miss may be a not-yet-propagated
+    // write rather than a genuinely absent file. Never delete on miss (native TTL handles
+    // cleanup), otherwise a transient read turns into permanent data loss.
     if (!buffer || !metadata) {
-      await this.delete(fileId);
       throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
     }
     return { buffer, metadata };
@@ -137,7 +143,7 @@ function assertSafeFileId(fileId: string): void {
   }
 }
 function escapeHeaderValue(value: string): string {
-  return value.replace(/["\\\\n]/g, "_");
+  return value.replace(/["\\\r\n]/g, "_");
 }
 function safeExtension(name: string): string {
   const extension = extname(name).toLowerCase();
@@ -150,7 +156,8 @@ function randomHex(byteLength: number): string {
 function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitFileMetadata {
   return {
     name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "file",
-    mimeType: typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
+    mimeType:
+      typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
     createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
     sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
   };
