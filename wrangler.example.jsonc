@@ -40,7 +40,7 @@
       "bucket_name": "<your-bucket-name>",
     },
   ],
-  // Option B: KV backend (no credit card required; max file size 25 MB).
+  // Option B: KV backend (no credit card required; max file size 25 MiB).
   // To use it: comment out the r2_buckets block above, then uncomment all three lines below.
   // "kv_namespaces": [
   //   { "binding": "TRANSIT_FILES", "id": "<your-kv-namespace-id>" },

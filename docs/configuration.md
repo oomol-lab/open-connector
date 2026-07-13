@@ -16,8 +16,8 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_BLOCKED_ACTIONS`          | unset                     | Comma-separated executable action denylist. Supports `service.*`.              |
 | `OOMOL_CONNECT_ALLOWED_PROXIES`          | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.      |
 | `OOMOL_CONNECT_BLOCKED_PROXIES`          | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.       |
-| `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Local transit file lifetime before cleanup.                                    |
-| `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum local transit file upload size.                                        |
+| `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                          |
+| `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                              |
 
 Example:
 
@@ -45,8 +45,13 @@ The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
 before running Wrangler commands.
 
 - `DB`: D1 database for connections, OAuth config/state, runtime tokens, and run logs.
-- `TRANSIT_FILES`: R2 bucket for temporary transit files.
+- `TRANSIT_FILES`: R2 bucket or Workers KV namespace for temporary transit files.
 - `ASSETS`: Workers Static Assets binding for the web console.
+
+R2 is the default transit-file backend. To use Workers KV, bind the KV namespace as
+`TRANSIT_FILES` and set the Wrangler variable `TRANSIT_FILES_BACKEND` to `"kv"`. Configure exactly
+one R2 bucket or KV namespace with that binding name. KV limits each file to 25 MiB, clamps the
+transit-file TTL to a minimum of 60 seconds, and deletes expired files automatically.
 
 Set secrets with Wrangler instead of committing them to config:
 
