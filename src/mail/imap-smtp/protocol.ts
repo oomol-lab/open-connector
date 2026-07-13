@@ -129,6 +129,7 @@ export interface MailFolderStatus {
 export interface MailFetchedMessage {
   summary: MailSummary;
   cc: MailAddress[];
+  replyTo: MailAddress[];
   text: string | null;
   html: string | null;
   attachments: MailAttachment[];
@@ -351,6 +352,7 @@ export function createMailProtocol(config: MailProtocolConfig, deps: MailProtoco
         return {
           summary: normalizeSummary(message),
           cc: normalizeEnvelopeAddresses(message, "cc"),
+          replyTo: normalizeEnvelopeAddresses(message, "replyTo"),
           text: parsedBody.text,
           html: parsedBody.html,
           attachments: collectAttachmentMetadata(message.bodyStructure),
@@ -650,7 +652,7 @@ function normalizeSummary(value: unknown): MailSummary {
   };
 }
 
-function normalizeEnvelopeAddresses(value: unknown, key: "from" | "to" | "cc"): MailAddress[] {
+function normalizeEnvelopeAddresses(value: unknown, key: "from" | "to" | "cc" | "replyTo"): MailAddress[] {
   const envelope = toRecord(toRecord(value)?.envelope);
   return normalizeAddressList(envelope?.[key]);
 }

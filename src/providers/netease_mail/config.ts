@@ -3,11 +3,11 @@ import type { MailRuntimeConfig } from "../../mail/imap-smtp/runtime.ts";
 
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const serversByDomain = {
-  "163.com": { imapHost: "imap.163.com", smtpHost: "smtp.163.com" },
-  "126.com": { imapHost: "imap.126.com", smtpHost: "smtp.126.com" },
-  "yeah.net": { imapHost: "imap.yeah.net", smtpHost: "smtp.yeah.net" },
-} as const;
+const serversByDomain = new Map([
+  ["163.com", { imapHost: "imap.163.com", smtpHost: "smtp.163.com" }],
+  ["126.com", { imapHost: "imap.126.com", smtpHost: "smtp.126.com" }],
+  ["yeah.net", { imapHost: "imap.yeah.net", smtpHost: "smtp.yeah.net" }],
+]);
 
 export const neteaseMailRuntimeConfig: MailRuntimeConfig = {
   service: "netease_mail",
@@ -25,7 +25,7 @@ export const neteaseMailRuntimeConfig: MailRuntimeConfig = {
     }
 
     const domain = parts[1].toLowerCase();
-    const servers = serversByDomain[domain as keyof typeof serversByDomain];
+    const servers = serversByDomain.get(domain);
     if (!servers) {
       throw new ProviderRequestError(
         400,

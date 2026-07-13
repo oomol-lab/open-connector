@@ -13,7 +13,9 @@ export const qqMailRuntimeConfig: MailRuntimeConfig = {
     const email = values.email?.trim() ?? "";
     const authorizationCode = values.authorizationCode?.trim() ?? "";
 
-    if (!email || !email.includes("@")) {
+    const parts = email.split("@");
+    const hasWhitespace = [...email].some((character) => character.trim().length === 0);
+    if (parts.length !== 2 || !parts[0] || !parts[1] || hasWhitespace) {
       throw new ProviderRequestError(400, "QQ Mail email must be a valid email address.");
     }
     if (authorizationCode.length !== 16) {

@@ -26,7 +26,6 @@ import { mailConnectionTimeoutMs, mailImapPort, mailMessageFetchByteLimit, mailS
 import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";
 
-const mailScopes = ["mail.read", "mail.send", "mail.modify"];
 const defaultFolder = "INBOX";
 const defaultLimit = 20;
 const mailSendAttachmentByteLimit = 25 * 1024 * 1024;
@@ -168,9 +167,9 @@ async function validateMailCredential(
     profile: {
       accountId: normalizedEmail,
       displayName: credential.email,
-      grantedScopes: mailScopes,
+      grantedScopes: [],
     },
-    grantedScopes: mailScopes,
+    grantedScopes: [],
     metadata: {
       email: normalizedEmail,
       imapHost: credential.imapHost,
@@ -670,10 +669,9 @@ function requireTransitFiles(context: MailActionContext) {
 }
 
 function inferReplyRecipients(credential: MailCredential, original: MailFetchedMessage, replyAll: boolean) {
-  const recipients = [
-    ...(original.summary.from ? [original.summary.from] : []),
-    ...(replyAll ? original.summary.to : []),
-  ];
+  const directRecipients =
+    original.replyTo.length > 0 ? original.replyTo : original.summary.from ? [original.summary.from] : [];
+  const recipients = [...directRecipients, ...(replyAll ? original.summary.to : [])];
   return filterRecipientEmails(recipients, credential.email);
 }
 

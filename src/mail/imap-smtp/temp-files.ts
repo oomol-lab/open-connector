@@ -1,3 +1,6 @@
+const maxFileNameLength = 200;
+const maxPreservedExtensionLength = 20;
+
 export function sanitizeTempFileName(name: string): string {
   const allowed = new Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-");
   const sanitized = name
@@ -7,7 +10,18 @@ export function sanitizeTempFileName(name: string): string {
     .join("");
   const collapsed = collapseRepeatedDash(sanitized);
   const trimmed = trimUnsafeEdges(collapsed);
-  return trimmed || "file";
+  return truncateFileName(trimmed || "file");
+}
+
+function truncateFileName(name: string): string {
+  if (name.length <= maxFileNameLength) {
+    return name;
+  }
+
+  const extensionStart = name.lastIndexOf(".");
+  const extension =
+    extensionStart > 0 && name.length - extensionStart <= maxPreservedExtensionLength ? name.slice(extensionStart) : "";
+  return `${name.slice(0, maxFileNameLength - extension.length)}${extension}`;
 }
 
 function collapseRepeatedDash(value: string): string {

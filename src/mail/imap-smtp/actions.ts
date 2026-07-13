@@ -137,7 +137,7 @@ export function createMailActions<const TService extends string>(
   const listFoldersAction: ProviderActionDefinition<"list_folders"> = defineProviderAction(service, {
     name: "list_folders",
     description: mailText("List folders visible to the connected Mail Service account."),
-    requiredScopes: ["mail.read"],
+    requiredScopes: [],
     inputSchema: s.object(mailText("The input payload for listing Mail Service folders."), {}),
     outputSchema: s.requiredObject(mailText("The response returned when listing Mail Service folders."), {
       folders: s.array(mailText("The folders returned by Mail Service IMAP."), folderSummarySchema),
@@ -147,7 +147,7 @@ export function createMailActions<const TService extends string>(
   const sendEmailAction: ProviderActionDefinition<"send_email"> = defineProviderAction(service, {
     name: "send_email",
     description: mailText("Send an email through Mail Service SMTP."),
-    requiredScopes: ["mail.send"],
+    requiredScopes: [],
     inputSchema: sendEmailInputSchema,
     outputSchema: sendEmailOutputSchema,
   });
@@ -155,7 +155,7 @@ export function createMailActions<const TService extends string>(
   const searchEmailsAction: ProviderActionDefinition<"search_emails"> = defineProviderAction(service, {
     name: "search_emails",
     description: mailText("Search one Mail Service folder and return lightweight email summaries."),
-    requiredScopes: ["mail.read"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for searching Mail Service emails."),
       {
@@ -184,7 +184,7 @@ export function createMailActions<const TService extends string>(
   const getEmailAction: ProviderActionDefinition<"get_email"> = defineProviderAction(service, {
     name: "get_email",
     description: mailText("Fetch and parse one Mail Service message without marking it as read."),
-    requiredScopes: ["mail.read"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for fetching one Mail Service email."),
       {
@@ -214,7 +214,7 @@ export function createMailActions<const TService extends string>(
   const downloadAttachmentAction: ProviderActionDefinition<"download_attachment"> = defineProviderAction(service, {
     name: "download_attachment",
     description: mailText("Download one Mail Service attachment by IMAP body part identifier."),
-    requiredScopes: ["mail.read"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for downloading one Mail Service attachment."),
       {
@@ -236,7 +236,7 @@ export function createMailActions<const TService extends string>(
   const markEmailReadAction: ProviderActionDefinition<"mark_email_read"> = defineProviderAction(service, {
     name: "mark_email_read",
     description: mailText("Mark one Mail Service message as read."),
-    requiredScopes: ["mail.modify"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for marking one Mail Service email as read."),
       {
@@ -255,7 +255,7 @@ export function createMailActions<const TService extends string>(
   const markEmailUnreadAction: ProviderActionDefinition<"mark_email_unread"> = defineProviderAction(service, {
     name: "mark_email_unread",
     description: mailText("Mark one Mail Service message as unread."),
-    requiredScopes: ["mail.modify"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for marking one Mail Service email as unread."),
       {
@@ -274,7 +274,7 @@ export function createMailActions<const TService extends string>(
   const moveEmailAction: ProviderActionDefinition<"move_email"> = defineProviderAction(service, {
     name: "move_email",
     description: mailText("Move one Mail Service message to another folder."),
-    requiredScopes: ["mail.modify"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for moving one Mail Service email."),
       {
@@ -295,7 +295,7 @@ export function createMailActions<const TService extends string>(
   const deleteEmailAction: ProviderActionDefinition<"delete_email"> = defineProviderAction(service, {
     name: "delete_email",
     description: mailText("Delete one Mail Service message from a folder."),
-    requiredScopes: ["mail.modify"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for deleting one Mail Service email."),
       {
@@ -314,7 +314,7 @@ export function createMailActions<const TService extends string>(
   const folderStatusAction: ProviderActionDefinition<"get_folder_status"> = defineProviderAction(service, {
     name: "get_folder_status",
     description: mailText("Get lightweight message counters for one Mail Service folder."),
-    requiredScopes: ["mail.read"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for reading one Mail Service folder status."),
       {
@@ -362,7 +362,7 @@ export function createMailActions<const TService extends string>(
   const replyEmailAction: ProviderActionDefinition<"reply_email"> = defineProviderAction(service, {
     name: "reply_email",
     description: mailText("Reply to one Mail Service email using SMTP reply headers and quoted content."),
-    requiredScopes: ["mail.read", "mail.send"],
+    requiredScopes: [],
     inputSchema: replyEmailInputSchema,
     outputSchema: sendEmailOutputSchema,
   });
@@ -370,7 +370,7 @@ export function createMailActions<const TService extends string>(
   const forwardEmailAction: ProviderActionDefinition<"forward_email"> = defineProviderAction(service, {
     name: "forward_email",
     description: mailText("Forward one Mail Service email using SMTP with quoted original content."),
-    requiredScopes: ["mail.read", "mail.send"],
+    requiredScopes: [],
     inputSchema: s.object(
       mailText("The input payload for forwarding one Mail Service email."),
       {
