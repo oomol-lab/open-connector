@@ -29,6 +29,12 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+Run Speechmatics with a workspace Management Token that has the **View projects** permission:
+
+```bash
+SPEECHMATICS_MANAGEMENT_TOKEN=... node examples/local-http/speechmatics.ts
+```
+
 Prepare Gmail OAuth with your own Google OAuth app:
 
 ```bash
