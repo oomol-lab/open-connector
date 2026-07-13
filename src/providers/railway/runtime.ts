@@ -246,7 +246,9 @@ export const railwayActionHandlers: Record<RailwayActionName, RailwayActionHandl
         }),
       },
     );
-    return { updated: data.variableUpsert === true };
+    return {
+      updated: requireGraphqlValue(data.variableUpsert, "Railway variable update result was not returned"),
+    };
   },
 
   async rollback_deployment(input, context) {
