@@ -25,11 +25,37 @@ describe("assertPublicHttpUrl", () => {
   it("rejects IPv6 targets", () => {
     expect(() => readPublicUrl("https://[::1]/")).toThrow("target IPv6 addresses");
   });
+
+  it("allows explicitly trusted private and overlay network targets", () => {
+    for (const value of [
+      "http://10.0.0.1:3000/",
+      "http://100.64.0.1:3000/",
+      "http://172.16.0.1:3000/",
+      "http://192.168.0.1:3000/",
+      "http://dokploy.internal:3000/",
+    ]) {
+      expect(readPublicUrl(value, true).toString()).toBe(value);
+    }
+  });
+
+  it("keeps unsafe targets blocked when private networks are allowed", () => {
+    for (const value of [
+      "http://localhost:3000/",
+      "http://service.localhost:3000/",
+      "http://127.0.0.1:3000/",
+      "http://169.254.169.254/",
+      "http://224.0.0.1/",
+      "http://[fd7a:115c:a1e0::1]/",
+    ]) {
+      expect(() => readPublicUrl(value, true)).toThrow();
+    }
+  });
 });
 
-function readPublicUrl(value: string): URL {
+function readPublicUrl(value: string, allowPrivateNetwork = false): URL {
   return assertPublicHttpUrl(value, {
     fieldName: "url",
     createError: (message) => new Error(message),
+    allowPrivateNetwork,
   });
 }

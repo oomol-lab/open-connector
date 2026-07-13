@@ -120,18 +120,21 @@ export async function readBoundedResponseBytes(
   return bytes;
 }
 
-const privateHostnames = new Set(["localhost", "localhost.localdomain", "ip6-localhost", "ip6-loopback"]);
-const privateHostnameSuffixes = [".localhost", ".local", ".localdomain", ".internal", ".home", ".lan"];
+const localHostnames = new Set(["localhost", "localhost.localdomain", "ip6-localhost", "ip6-loopback"]);
+const localHostnameSuffixes = [".localhost", ".localdomain"];
+const privateHostnameSuffixes = [".local", ".internal", ".home", ".lan"];
 const privateIpv4Cidrs: Array<[number, number]> = [
-  [ipv4ToNumber("0.0.0.0"), 8],
   [ipv4ToNumber("10.0.0.0"), 8],
   [ipv4ToNumber("100.64.0.0"), 10],
+  [ipv4ToNumber("172.16.0.0"), 12],
+  [ipv4ToNumber("192.168.0.0"), 16],
+];
+const reservedIpv4Cidrs: Array<[number, number]> = [
+  [ipv4ToNumber("0.0.0.0"), 8],
   [ipv4ToNumber("127.0.0.0"), 8],
   [ipv4ToNumber("169.254.0.0"), 16],
-  [ipv4ToNumber("172.16.0.0"), 12],
   [ipv4ToNumber("192.0.0.0"), 24],
   [ipv4ToNumber("192.0.2.0"), 24],
-  [ipv4ToNumber("192.168.0.0"), 16],
   [ipv4ToNumber("198.18.0.0"), 15],
   [ipv4ToNumber("198.51.100.0"), 24],
   [ipv4ToNumber("203.0.113.0"), 24],
@@ -142,13 +145,17 @@ const privateIpv4Cidrs: Array<[number, number]> = [
 export interface PublicHttpUrlOptions {
   fieldName: string;
   createError: (message: string) => Error;
+  /** Allow RFC 1918, shared-address-space, and private hostname targets while retaining reserved-target guards. */
+  allowPrivateNetwork?: boolean;
 }
 
 /**
- * Parse a user-supplied URL and reject local/private network targets.
+ * Parse a user-supplied URL and reject unsafe network targets.
  *
  * This is a local runtime SSRF guard for provider actions that fetch remote
- * user-supplied content before uploading it to an upstream provider.
+ * user-supplied content before uploading it to an upstream provider. Callers
+ * may explicitly allow private networks for trusted self-hosted services, but
+ * loopback, link-local, reserved, multicast, and IPv6 targets remain blocked.
  */
 export function assertPublicHttpUrl(value: string, options: PublicHttpUrlOptions): URL {
   let url: URL;
@@ -163,12 +170,22 @@ export function assertPublicHttpUrl(value: string, options: PublicHttpUrlOptions
   }
 
   const hostname = normalizeHostname(url.hostname);
-  if (privateHostnames.has(hostname) || privateHostnameSuffixes.some((suffix) => hostname.endsWith(suffix))) {
+  if (localHostnames.has(hostname) || localHostnameSuffixes.some((suffix) => hostname.endsWith(suffix))) {
+    throw options.createError(`${options.fieldName} must not target local hosts`);
+  }
+  if (!options.allowPrivateNetwork && privateHostnameSuffixes.some((suffix) => hostname.endsWith(suffix))) {
     throw options.createError(`${options.fieldName} must not target local hosts`);
   }
 
   const ipv4 = parseIpv4(hostname);
-  if (ipv4 !== undefined && privateIpv4Cidrs.some(([network, bits]) => ipv4InCidr(ipv4, network, bits))) {
+  if (ipv4 !== undefined && reservedIpv4Cidrs.some(([network, bits]) => ipv4InCidr(ipv4, network, bits))) {
+    throw options.createError(`${options.fieldName} must not target private or reserved IP addresses`);
+  }
+  if (
+    ipv4 !== undefined &&
+    !options.allowPrivateNetwork &&
+    privateIpv4Cidrs.some(([network, bits]) => ipv4InCidr(ipv4, network, bits))
+  ) {
     throw options.createError(`${options.fieldName} must not target private or reserved IP addresses`);
   }
 

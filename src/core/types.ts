@@ -22,7 +22,7 @@ export type CredentialDefinition = {
   /** Human-readable label for local UI forms. */
   label: string;
   /** Suggested local UI control for collecting the value. */
-  inputType: "text" | "password" | "textarea" | "json";
+  inputType: "text" | "password" | "textarea" | "json" | "checkbox";
   /** Whether the local runtime rejects empty or missing values. */
   required: boolean;
   /** Whether local UI/storage should treat the value as sensitive. */

@@ -44,7 +44,14 @@ export function createDokployContext(
   signal?: AbortSignal,
   transitFiles?: TransitFileWriter,
 ): DokployActionContext {
-  return { apiKey, apiBaseUrl: normalizeDokployApiBaseUrl(values.baseUrl), fetcher, signal, transitFiles };
+  const allowPrivateNetwork = parseDokployAllowPrivateNetwork(values.allowPrivateNetwork);
+  return {
+    apiKey,
+    apiBaseUrl: normalizeDokployApiBaseUrl(values.baseUrl, allowPrivateNetwork),
+    fetcher,
+    signal,
+    transitFiles,
+  };
 }
 
 export async function validateDokployCredential(
@@ -64,18 +71,31 @@ export async function validateDokployCredential(
 }
 
 /**
- * Validates a public Dokploy HTTP URL, rejects embedded credentials, removes
- * query/hash components, and ensures its path ends in `/api`.
+ * Validates a Dokploy HTTP URL, optionally permits trusted private networks,
+ * rejects embedded credentials, removes query/hash components, and ensures its
+ * path ends in `/api`.
  */
-export function normalizeDokployApiBaseUrl(value: unknown): string {
+export function normalizeDokployApiBaseUrl(value: unknown, allowPrivateNetwork = false): string {
   const instanceUrl = requiredString(value, "baseUrl", credentialError);
-  const url = assertPublicHttpUrl(instanceUrl, { fieldName: "baseUrl", createError: credentialError });
+  const url = assertPublicHttpUrl(instanceUrl, {
+    fieldName: "baseUrl",
+    createError: credentialError,
+    allowPrivateNetwork,
+  });
   if (url.username || url.password) throw credentialError("baseUrl must not include credentials");
   url.hash = "";
   url.search = "";
   const path = url.pathname.replace(/\/+$/u, "");
   url.pathname = path.endsWith("/api") ? path : `${path}/api`;
   return url.toString().replace(/\/$/u, "");
+}
+
+/** Parse the explicit credential opt-in for trusted private-network targets. */
+export function parseDokployAllowPrivateNetwork(value: unknown): boolean {
+  const setting = optionalString(value)?.trim().toLowerCase();
+  if (!setting || setting === "false") return false;
+  if (setting === "true") return true;
+  throw credentialError("allowPrivateNetwork must be true or false");
 }
 
 export async function executeDokployOperation(

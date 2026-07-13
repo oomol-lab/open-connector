@@ -26,7 +26,16 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://dokploy.example.com",
           description:
-            "The public HTTP or HTTPS URL of your Dokploy instance, without an API endpoint path. See https://docs.dokploy.com/docs/core/api.",
+            "The HTTP or HTTPS URL of your Dokploy instance, without an API endpoint path. Private-network targets require Allow Private Network to be enabled. See https://docs.dokploy.com/docs/core/api.",
+        },
+        {
+          key: "allowPrivateNetwork",
+          label: "Allow Private Network",
+          inputType: "checkbox",
+          required: false,
+          secret: false,
+          description:
+            "Set to true only for a trusted self-hosted Dokploy instance on an RFC 1918, Tailscale, or NetBird network. Loopback, link-local, reserved, multicast, and IPv6 targets remain blocked.",
         },
       ],
     },

@@ -1046,7 +1046,14 @@ function CredentialInput(props: { field: CredentialField; value: string; onChang
   return (
     <Label className="field">
       <span>{props.field.label}</span>
-      {props.field.inputType === "textarea" || props.field.inputType === "json" ? (
+      {props.field.inputType === "checkbox" ? (
+        <Input
+          className="h-4 w-4"
+          type="checkbox"
+          checked={props.value === "true"}
+          onChange={(event) => props.onChange(event.target.checked ? "true" : "false")}
+        />
+      ) : props.field.inputType === "textarea" || props.field.inputType === "json" ? (
         <Textarea
           className="min-h-24 resize-y font-mono text-xs leading-relaxed"
           value={props.value}
