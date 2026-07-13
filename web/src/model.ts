@@ -17,7 +17,7 @@ export type AuthDefinition =
 export interface CredentialField {
   key: string;
   label: string;
-  inputType: "text" | "password" | "textarea" | "json" | "checkbox";
+  inputType: "text" | "password" | "textarea" | "json";
   required: boolean;
   secret: boolean;
   placeholder?: string;

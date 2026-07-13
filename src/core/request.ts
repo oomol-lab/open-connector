@@ -131,6 +131,7 @@ const privateIpv4Cidrs: Array<[number, number]> = [
 ];
 const reservedIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("0.0.0.0"), 8],
+  [ipv4ToNumber("100.100.100.200"), 32],
   [ipv4ToNumber("127.0.0.0"), 8],
   [ipv4ToNumber("169.254.0.0"), 16],
   [ipv4ToNumber("192.0.0.0"), 24],

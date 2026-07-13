@@ -43,6 +43,7 @@ describe("assertPublicHttpUrl", () => {
       "http://localhost:3000/",
       "http://service.localhost:3000/",
       "http://127.0.0.1:3000/",
+      "http://100.100.100.200/",
       "http://169.254.169.254/",
       "http://224.0.0.1/",
       "http://[fd7a:115c:a1e0::1]/",

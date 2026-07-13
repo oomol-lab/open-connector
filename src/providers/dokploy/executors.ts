@@ -18,7 +18,6 @@ import {
   createDokployContext,
   dokployActionHandlers,
   normalizeDokployApiBaseUrl,
-  parseDokployAllowPrivateNetwork,
   validateDokployCredential,
 } from "./runtime.ts";
 
@@ -45,7 +44,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     if (!value) {
       throw new ProviderRequestError(500, "dokploy connection is missing baseUrl metadata");
     }
-    return normalizeDokployApiBaseUrl(value, parseDokployAllowPrivateNetwork(credential.values.allowPrivateNetwork));
+    return normalizeDokployApiBaseUrl(value);
   },
   auth: { type: "api_key_header", name: "x-api-key" },
   customizeRequest({ headers }) {
