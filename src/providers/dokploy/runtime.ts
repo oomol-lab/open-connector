@@ -140,7 +140,9 @@ async function requestDokployJson(
       throw new ProviderRequestError(504, "Dokploy request timed out");
     throw new ProviderRequestError(
       502,
-      error instanceof Error ? `Dokploy request failed: ${error.message}` : "Dokploy request failed",
+      error instanceof Error
+        ? `Dokploy request failed: ${boundedErrorMessage(error.message) ?? "Unknown network error"}`
+        : "Dokploy request failed",
     );
   } finally {
     timeout.cleanup();
@@ -213,10 +215,14 @@ function readErrorMessage(payload: unknown): string | undefined {
 }
 
 function boundedErrorMessage(value: string): string | undefined {
-  const message = value.trim();
+  const message = redactSensitiveQueryParameters(value.trim());
   if (message === "") return undefined;
   if (message.length <= maxErrorMessageCharacters) return message;
   return `${message.slice(0, maxErrorMessageCharacters - 1)}…`;
+}
+
+function redactSensitiveQueryParameters(value: string): string {
+  return value.replace(/([?&](?:api[-_]?key|authorization|cookie|password|secret|token)=)[^&#\s]*/giu, "$1[redacted]");
 }
 
 export function redactSensitive(value: unknown): unknown {

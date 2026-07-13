@@ -14,7 +14,7 @@ const schema = s.looseObject({}, { description: "Test schema." });
 
 function operation(overrides: Partial<DokployOperation> = {}): DokployOperation {
   return {
-    name: "test_operation",
+    name: "application-create",
     operationId: "test.operation",
     description: "Test operation.",
     method: "GET",
@@ -181,6 +181,25 @@ describe("Dokploy runtime", () => {
         context(fetcher),
       ),
     ).rejects.toMatchObject({ status: 502, message: `${"x".repeat(16_383)}…` });
+  });
+
+  it("redacts sensitive query parameters from network errors", async () => {
+    const fetcher = vi.fn(async (): Promise<Response> => {
+      throw new Error(
+        "request to https://dokploy.example.com/api/ai.getModels?apiUrl=https%3A%2F%2Fai.example.com&apiKey=ai-secret&token=metrics-secret failed",
+      );
+    });
+    await expect(
+      executeDokployOperation(
+        operation({ path: "/network-error", pathFields: [], queryFields: [], bodyFields: [] }),
+        {},
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({
+      status: 502,
+      message:
+        "Dokploy request failed: request to https://dokploy.example.com/api/ai.getModels?apiUrl=https%3A%2F%2Fai.example.com&apiKey=[redacted]&token=[redacted] failed",
+    });
   });
 
   it("rejects responses whose declared content length exceeds the response limit", async () => {

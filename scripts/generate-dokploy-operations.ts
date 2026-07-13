@@ -149,13 +149,18 @@ const imports = moduleEntries
   .map(({ exportName, file }) => `import { ${exportName} } from "./operations/${file}";`)
   .join("\n");
 const arrays = moduleEntries.map(({ exportName }) => `  ${exportName},`).join("\n");
+const actionNameUnion = [...names]
+  .sort((left, right) => left.localeCompare(right))
+  .map((name) => `  | ${JSON.stringify(name)}`)
+  .join("\n");
 const indexSource =
   `// Generated in part by scripts/generate-dokploy-operations.ts.\n` +
   `import type { JsonSchema } from "../../core/types.ts";\n\n${imports}\n\n` +
   `export type DokployActionMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";\n` +
   `export type DokployOperationSupportStatus = "supported" | "unsupported";\n\n` +
+  `export type DokployActionName =\n${actionNameUnion};\n\n` +
   `export interface DokployOperationDefinition {\n` +
-  `  name: string;\n  operationId?: string;\n  tag?: string;\n  description: string;\n` +
+  `  name: DokployActionName;\n  operationId?: string;\n  tag?: string;\n  description: string;\n` +
   `  method: DokployActionMethod;\n  path: string;\n  pathFields: readonly string[];\n` +
   `  queryFields: readonly string[];\n  bodyFields: readonly string[];\n  fileFields?: readonly string[];\n` +
   `  contentType?: string | null;\n  supportStatus?: DokployOperationSupportStatus;\n` +

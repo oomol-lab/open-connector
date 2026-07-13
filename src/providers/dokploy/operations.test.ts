@@ -1,6 +1,7 @@
+import type { DokployActionName } from "./actions.ts";
 import type { DokployOperation } from "./operations.ts";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { dokployActions } from "./actions.ts";
 import { dokployOperationByActionName, dokployOperations } from "./operations.ts";
 import { dokployActionHandlers } from "./runtime.ts";
@@ -545,6 +546,9 @@ function requireOperation(name: string): DokployOperation {
 
 describe("Dokploy generated operation contract", () => {
   it("has exact parity with the fixed 524-action MCP snapshot", () => {
+    expectTypeOf<"application-create">().toMatchTypeOf<DokployActionName>();
+    expectTypeOf<"not-a-dokploy-action">().not.toMatchTypeOf<DokployActionName>();
+    expectTypeOf<DokployActionName>().not.toEqualTypeOf<string>();
     const names = dokployOperations.map((operation) => operation.name);
     expect(names).toHaveLength(524);
     expect(new Set(names).size).toBe(524);
