@@ -1,4 +1,4 @@
-// Generated in part by scripts/generate-dokploy-operations.ts.
+// Generated in part by src/providers/dokploy/generate.ts.
 import type { JsonSchema } from "../../core/types.ts";
 
 import { adminOperations } from "./operations/admin.ts";

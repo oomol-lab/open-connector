@@ -19,7 +19,7 @@
     "typecheck": "npm run generate:registry && node scripts/typecheck.ts src scripts-all examples",
     "generate:registry": "node scripts/generate-provider-registry.ts",
     "generate:catalog": "npm run generate:registry && node scripts/generate-catalog.ts",
-    "generate:dokploy": "node scripts/generate-dokploy-operations.ts && oxfmt src/providers/dokploy/operations.ts src/providers/dokploy/operations",
+    "generate:provider": "node scripts/generate-provider.ts",
     "runtime:data": "node scripts/runtime-data.ts",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
