@@ -6,8 +6,10 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport, SseError } from "@modelcontextprotocol/sdk/client/sse.js";
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { createHash } from "node:crypto";
-import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { requiredString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { jumpServerMcpToolNames } from "./actions.ts";
 
 type JumpServerActionHandler = (input: Record<string, unknown>, context: JumpServerMcpContext) => Promise<unknown>;
 type JumpServerMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
@@ -19,42 +21,14 @@ export interface JumpServerMcpContext {
   signal?: AbortSignal;
 }
 
-interface JumpServerMcpToolSummary {
-  name: string;
-  description?: string;
-  inputSchema: Record<string, unknown>;
-  outputSchema?: Record<string, unknown>;
-}
-
-interface JumpServerMcpToolPage {
-  tools: JumpServerMcpToolSummary[];
-  nextCursor?: string;
-}
-
 const requestTimeoutMs = 60_000;
-const blockedMetadataHosts = new Set([
-  "100.100.100.200",
-  "169.254.169.254",
-  "fd00:ec2::254",
-  "instance-data.ec2.internal",
-  "metadata",
-  "metadata.azure.internal",
-  "metadata.google.internal",
-  "metadata.goog",
-]);
 
-export const jumpServerActionHandlers: Record<JumpServerActionName, JumpServerActionHandler> = {
-  list_tools(input, context) {
-    return listJumpServerMcpTools(context, optionalString(input.cursor));
-  },
-  call_tool(input, context) {
-    return callJumpServerMcpTool(
-      context,
-      requiredString(input.toolName, "toolName", inputError),
-      optionalRecord(input.arguments) ?? {},
-    );
-  },
-};
+export const jumpServerActionHandlers: Record<JumpServerActionName, JumpServerActionHandler> = Object.fromEntries(
+  jumpServerMcpToolNames.map((toolName) => [
+    toolName,
+    (input: Record<string, unknown>, context: JumpServerMcpContext) => callJumpServerMcpTool(context, toolName, input),
+  ]),
+) as Record<JumpServerActionName, JumpServerActionHandler>;
 
 export function createJumpServerMcpContext(
   values: Record<string, string>,
@@ -75,7 +49,8 @@ export async function validateJumpServerCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = createJumpServerMcpContext(values, fetcher, signal);
-  const page = await listJumpServerMcpTools(context);
+  const discoveredTools = await listJumpServerMcpTools(context);
+  const availableActions = jumpServerMcpToolNames.filter((toolName) => discoveredTools.includes(toolName));
   const endpointHash = createHash("sha256").update(context.endpoint.origin).digest("hex").slice(0, 16);
   return {
     profile: {
@@ -85,8 +60,8 @@ export async function validateJumpServerCredential(
     grantedScopes: [],
     metadata: {
       mcpEndpoint: context.endpoint.toString(),
-      discoveredToolCount: page.tools.length,
-      hasMoreTools: Boolean(page.nextCursor),
+      discoveredToolCount: discoveredTools.length,
+      availableActions,
     },
   };
 }
@@ -94,34 +69,25 @@ export async function validateJumpServerCredential(
 /**
  * Normalize a trusted self-hosted JumpServer MCP endpoint.
  *
- * Loopback and private-network HTTP endpoints are intentional for the official
- * Docker deployment. Public endpoints must use HTTPS, and cloud metadata
- * targets are always rejected.
+ * Private-network HTTP endpoints require the deployment-level private-network
+ * opt-in. Loopback, link-local, cloud metadata, reserved, multicast, and IPv6
+ * targets remain blocked by the shared provider egress policy.
  */
-export function normalizeJumpServerMcpEndpoint(value: unknown): URL {
+export function normalizeJumpServerMcpEndpoint(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): URL {
   const raw = requiredString(value, "mcpEndpoint", credentialError);
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw credentialError("mcpEndpoint must be a valid URL");
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw credentialError("mcpEndpoint must use http or https");
-  }
+  const url = assertPublicHttpUrl(raw, {
+    fieldName: "mcpEndpoint",
+    createError: credentialError,
+    allowPrivateNetwork,
+  });
   if (url.username || url.password) {
     throw credentialError("mcpEndpoint must not include credentials");
   }
-
-  const hostname = normalizeHostname(url.hostname);
-  if (isBlockedMetadataHost(hostname)) {
-    throw credentialError("mcpEndpoint must not target a cloud metadata service");
-  }
-  if (isUnsafeIpAddress(hostname)) {
-    throw credentialError("mcpEndpoint must not target a reserved, link-local, multicast, or IPv6 address");
-  }
-  if (url.protocol === "http:" && !isTrustedPrivateHostname(hostname)) {
-    throw credentialError("public mcpEndpoint URLs must use https");
+  if (url.protocol === "http:" && !allowPrivateNetwork) {
+    throw credentialError("http mcpEndpoint URLs require private-network access to be enabled");
   }
 
   url.hash = "";
@@ -130,24 +96,16 @@ export function normalizeJumpServerMcpEndpoint(value: unknown): URL {
   return url;
 }
 
-async function listJumpServerMcpTools(context: JumpServerMcpContext, cursor?: string): Promise<JumpServerMcpToolPage> {
+async function listJumpServerMcpTools(context: JumpServerMcpContext): Promise<string[]> {
   return withJumpServerMcpClient(context, async (client) => {
-    const result = await client.listTools(cursor ? { cursor } : {}, { timeout: requestTimeoutMs });
-    return {
-      tools: result.tools.map((tool) => ({
-        name: tool.name,
-        ...(tool.description ? { description: tool.description } : {}),
-        inputSchema: tool.inputSchema,
-        ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
-      })),
-      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
-    };
+    const result = await client.listTools({}, { timeout: requestTimeoutMs });
+    return result.tools.map((tool) => tool.name);
   });
 }
 
 async function callJumpServerMcpTool(
   context: JumpServerMcpContext,
-  toolName: string,
+  toolName: JumpServerActionName,
   args: Record<string, unknown>,
 ): Promise<unknown> {
   return withJumpServerMcpClient(context, async (client) => {
@@ -188,6 +146,16 @@ function normalizeJumpServerMcpToolResult(toolName: string, result: JumpServerMc
       `JumpServer MCP tool ${toolName} returned an error: ${formatMcpToolContent(result)}`,
       result,
     );
+  }
+  if (result.structuredContent) return result.structuredContent;
+
+  const textItems = result.content.filter((content) => content.type === "text");
+  if (textItems.length === 1) {
+    try {
+      return JSON.parse(textItems[0]!.text) as unknown;
+    } catch {
+      // Preserve the MCP content envelope when JumpServer returns plain text.
+    }
   }
   return result;
 }
@@ -233,73 +201,7 @@ function mapJumpServerMcpError(error: unknown): ProviderRequestError {
   );
 }
 
-function normalizeHostname(value: string): string {
-  const unwrapped = value.startsWith("[") && value.endsWith("]") ? value.slice(1, -1) : value;
-  return unwrapped.toLowerCase().replace(/\.+$/u, "");
-}
-
-function isBlockedMetadataHost(hostname: string): boolean {
-  return blockedMetadataHosts.has(hostname) || hostname.endsWith(".metadata.google.internal");
-}
-
-function isUnsafeIpAddress(hostname: string): boolean {
-  if (hostname.includes(":")) return true;
-  const octets = parseIpv4(hostname);
-  if (!octets) return false;
-  const [first, second, third, fourth] = octets;
-  if (first === 127) return false;
-  return (
-    first === 0 ||
-    (first === 169 && second === 254) ||
-    (first === 192 && second === 0 && third === 0) ||
-    (first === 192 && second === 0 && third === 2) ||
-    (first === 198 && (second === 18 || second === 19)) ||
-    (first === 198 && second === 51 && third === 100) ||
-    (first === 203 && second === 0 && third === 113) ||
-    first >= 224 ||
-    (first === 100 && second === 100 && third === 100 && fourth === 200)
-  );
-}
-
-function isTrustedPrivateHostname(hostname: string): boolean {
-  if (
-    hostname === "localhost" ||
-    hostname.endsWith(".localhost") ||
-    hostname.endsWith(".local") ||
-    hostname.endsWith(".localdomain") ||
-    hostname.endsWith(".internal") ||
-    hostname.endsWith(".home") ||
-    hostname.endsWith(".lan")
-  ) {
-    return true;
-  }
-  if (hostname.includes(":")) return false;
-
-  const octets = parseIpv4(hostname);
-  if (!octets) return false;
-  const [first, second] = octets;
-  return (
-    first === 10 ||
-    first === 127 ||
-    (first === 100 && second >= 64 && second <= 127) ||
-    (first === 172 && second >= 16 && second <= 31) ||
-    (first === 192 && second === 168)
-  );
-}
-
-function parseIpv4(hostname: string): [number, number, number, number] | undefined {
-  const parts = hostname.split(".");
-  if (parts.length !== 4 || parts.some((part) => !/^\d+$/u.test(part))) return undefined;
-  const octets = parts.map(Number);
-  if (octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return undefined;
-  return octets as [number, number, number, number];
-}
-
 function credentialError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function inputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
 

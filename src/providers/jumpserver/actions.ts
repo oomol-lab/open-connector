@@ -1,63 +1,85 @@
-import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "jumpserver" as const;
+const service = "jumpserver";
 
-const toolSchema = s.object(
-  "A tool discovered from the configured JumpServer MCP server.",
+export const jumpServerMcpToolNames = [
+  "assets_assets_list",
+  "assets_nodes_list",
+  "accounts_accounts_list",
+  "users_users_list",
+  "perms_asset_permissions_list",
+  "terminal_sessions_list",
+] as const;
+
+export type JumpServerActionName = (typeof jumpServerMcpToolNames)[number];
+
+const listInputSchema = s.object(
+  "Common JumpServer list filters. Availability of matching records depends on the Bearer token permissions.",
   {
-    name: s.nonEmptyString("JumpServer MCP tool name."),
-    description: s.string("Tool description supplied by JumpServer MCP."),
-    inputSchema: s.unknownObject("JSON Schema accepted by the JumpServer MCP tool."),
-    outputSchema: s.unknownObject("JSON Schema returned by the JumpServer MCP tool when declared."),
+    limit: s.positiveInteger("Maximum number of records to return."),
+    offset: s.nonNegativeInteger("Number of records to skip before returning results."),
+    search: s.string("Search text applied to fields supported by this JumpServer resource."),
   },
-  { required: ["name", "inputSchema"], optional: ["description", "outputSchema"] },
+  { optional: ["limit", "offset", "search"] },
 );
 
-type JumpServerActionDefinitions = readonly [
-  ProviderActionDefinition<"list_tools">,
-  ProviderActionDefinition<"call_tool">,
-];
+function listOutputSchema(resource: string): JsonSchema {
+  return s.object(
+    `A paginated list of JumpServer ${resource}.`,
+    {
+      count: s.nonNegativeInteger("Total number of matching records."),
+      next: s.nullableString("URL for the next page when one exists."),
+      previous: s.nullableString("URL for the previous page when one exists."),
+      results: s.array(`Matching JumpServer ${resource}.`, s.unknownObject(`One JumpServer ${resource} record.`)),
+    },
+    { required: ["count", "results"], optional: ["next", "previous"], additionalProperties: true },
+  );
+}
 
-export type JumpServerActionName = JumpServerActionDefinitions[number]["name"];
-
-export const jumpServerActions: JumpServerActionDefinitions = [
+export const jumpServerActions: ActionDefinition[] = [
   defineProviderAction(service, {
-    name: "list_tools",
-    description:
-      "List tools exposed by the configured JumpServer MCP server. The available tools depend on the JumpServer version, installed components, and Bearer token permissions.",
-    inputSchema: s.object(
-      "Input for listing JumpServer MCP tools.",
-      {
-        cursor: s.string("Opaque pagination cursor returned by a previous list_tools call."),
-      },
-      { optional: ["cursor"] },
-    ),
-    outputSchema: s.object(
-      "Tools exposed by JumpServer MCP.",
-      {
-        tools: s.array("JumpServer MCP tools.", toolSchema),
-        nextCursor: s.string("Opaque cursor for the next page when more tools are available."),
-      },
-      { required: ["tools"], optional: ["nextCursor"] },
-    ),
+    name: "assets_assets_list",
+    description: "List assets visible to the configured JumpServer token, with optional pagination and search.",
+    inputSchema: listInputSchema,
+    outputSchema: listOutputSchema("assets"),
+    followUpActions: ["jumpserver.assets_nodes_list", "jumpserver.accounts_accounts_list"],
   }),
   defineProviderAction(service, {
-    name: "call_tool",
-    description:
-      "Call any tool exposed by the configured JumpServer MCP server. Use list_tools first to inspect the exact tool name, description, and input schema. Warning: the selected JumpServer tool may create, modify, delete, or otherwise disrupt managed assets and access configuration.",
-    inputSchema: s.object(
-      "Input for calling one JumpServer MCP tool.",
-      {
-        toolName: s.nonEmptyString("Exact JumpServer MCP tool name returned by list_tools."),
-        arguments: s.unknownObject("Arguments validated by the selected JumpServer MCP tool."),
-      },
-      { required: ["toolName"], optional: ["arguments"] },
-    ),
-    outputSchema: s.unknownObject(
-      "The MCP call result, including content and optional structuredContent returned by JumpServer.",
-    ),
+    name: "assets_nodes_list",
+    description: "List asset nodes visible to the configured JumpServer token.",
+    inputSchema: listInputSchema,
+    outputSchema: listOutputSchema("asset nodes"),
+    followUpActions: ["jumpserver.assets_assets_list"],
+  }),
+  defineProviderAction(service, {
+    name: "accounts_accounts_list",
+    description: "List managed accounts visible to the configured JumpServer token.",
+    inputSchema: listInputSchema,
+    outputSchema: listOutputSchema("managed accounts"),
+    followUpActions: ["jumpserver.assets_assets_list"],
+  }),
+  defineProviderAction(service, {
+    name: "users_users_list",
+    description: "List JumpServer users visible to the configured token.",
+    inputSchema: listInputSchema,
+    outputSchema: listOutputSchema("users"),
+    followUpActions: ["jumpserver.perms_asset_permissions_list"],
+  }),
+  defineProviderAction(service, {
+    name: "perms_asset_permissions_list",
+    description: "List asset permission rules visible to the configured JumpServer token.",
+    inputSchema: listInputSchema,
+    outputSchema: listOutputSchema("asset permission rules"),
+    followUpActions: ["jumpserver.assets_assets_list", "jumpserver.users_users_list"],
+  }),
+  defineProviderAction(service, {
+    name: "terminal_sessions_list",
+    description: "List historical and active terminal sessions visible to the configured JumpServer token.",
+    inputSchema: listInputSchema,
+    outputSchema: listOutputSchema("terminal sessions"),
+    followUpActions: ["jumpserver.assets_assets_list", "jumpserver.users_users_list"],
   }),
 ];

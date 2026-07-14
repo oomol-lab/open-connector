@@ -9,7 +9,7 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "JumpServer",
   description:
-    "Discover and call asset, account, permission, session, audit, and other tools exposed by an official JumpServer MCP server.",
+    "Inspect assets, nodes, accounts, users, permissions, and sessions through an official JumpServer MCP server.",
   categories: ["Developer Tools", "Infrastructure", "Security"],
   authTypes: ["custom_credential"],
   auth: [
@@ -22,9 +22,9 @@ export const provider: ProviderDefinition = {
           inputType: "text",
           required: true,
           secret: false,
-          placeholder: "http://127.0.0.1:8099/sse",
+          placeholder: "https://jumpserver-mcp.example.com/sse",
           description:
-            "The SSE endpoint of the official jumpserver/mcp server. Localhost, private-network, Tailscale, NetBird, and public HTTPS endpoints are supported. See https://github.com/jumpserver/mcp.",
+            "The SSE endpoint of the official jumpserver/mcp server. Public HTTPS endpoints are supported by default. Private-network, Tailscale, and NetBird endpoints require OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK. Loopback endpoints remain blocked. See https://github.com/jumpserver/mcp.",
         },
         {
           key: "token",
