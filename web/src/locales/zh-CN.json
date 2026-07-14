@@ -187,6 +187,7 @@
       "needsOAuthClient": "{{name}} 需要先配置本地 OAuth client 才能连接。",
       "connectedOAuth": "{{name}} 已通过 OAuth 连接。",
       "connectOAuth": "通过 OAuth 授权流程连接 {{name}}。",
+      "connectClientCredentials": "使用 OAuth Client Credentials 连接 {{name}}。",
       "saving": "正在保存连接...",
       "openingOAuth": "正在打开 OAuth...",
       "configureOAuthFirst": "请先配置 OAuth client 再连接。",

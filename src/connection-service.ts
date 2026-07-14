@@ -112,6 +112,17 @@ export class ConnectionService {
   private readonly providerLoader: IProviderLoader;
   private readonly store: IConnectionStore;
   private readonly logger?: RuntimeLogger;
+  private readonly pendingOAuthRefreshes = new Map<
+    string,
+    Promise<Extract<ResolvedCredential, { authType: "oauth2" }>>
+  >();
+  private readonly renewedClientCredentials = new Map<
+    string,
+    {
+      source: Extract<ResolvedCredential, { authType: "oauth2" }>;
+      credential: Extract<ResolvedCredential, { authType: "oauth2" }>;
+    }
+  >();
 
   constructor(input: ConnectionServiceOptions) {
     this.catalog = input.catalog;
@@ -300,6 +311,7 @@ export class ConnectionService {
       ...credential,
       ...this.mergeCredentialRuntimeData(provider, "oauth2", credential, validation),
     };
+    this.renewedClientCredentials.delete(createConnectionId(service, connectionName));
     await this.store.set(service, connectionName, storedCredential);
     return this.createStoredConnectionSummary(provider, connectionName, storedCredential);
   }
@@ -309,6 +321,7 @@ export class ConnectionService {
     connectionNameInput?: string,
   ): Promise<ConnectionSummary | DisconnectedConnectionSummary> {
     const connectionName = normalizeConnectionName(connectionNameInput);
+    this.renewedClientCredentials.delete(createConnectionId(service, connectionName));
     await this.store.delete(service, connectionName);
     const provider = this.catalog.providers.find((provider) => provider.service === service);
     if (provider && this.supportsAuth(provider, "no_auth")) {
@@ -441,11 +454,23 @@ export class ConnectionService {
     connectionName: string,
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
   ): Promise<Extract<ResolvedCredential, { authType: "oauth2" }>> {
+    const refreshKey = createConnectionId(service, connectionName);
+    const cached = this.renewedClientCredentials.get(refreshKey);
+    if (
+      cached &&
+      isSameOAuthCredentialSource(cached.source, credential) &&
+      !isOAuthCredentialExpired(cached.credential)
+    ) {
+      return cached.credential;
+    }
     if (!isOAuthCredentialExpired(credential)) {
       return credential;
     }
 
-    if (!credential.refreshToken) {
+    const provider = this.getProvider(service);
+    const oauthAuth = provider.auth.find((auth) => auth.type === "oauth2");
+    const canRenewWithoutRefreshToken = oauthAuth?.type === "oauth2" && oauthAuth.flow === "client_credentials";
+    if (!credential.refreshToken && !canRenewWithoutRefreshToken) {
       throw new ConnectionError(
         "oauth_token_expired",
         `${service} OAuth access token expired and no refresh token is available. Reconnect ${service}.`,
@@ -459,8 +484,38 @@ export class ConnectionService {
       );
     }
 
-    const nextCredential = await this.oauthCredentials.refresh(service, credential);
-    await this.store.set(service, connectionName, nextCredential);
+    const pending = this.pendingOAuthRefreshes.get(refreshKey);
+    if (pending) {
+      return await pending;
+    }
+
+    const refresh = this.refreshAndStoreOAuthCredential(
+      service,
+      connectionName,
+      credential,
+      canRenewWithoutRefreshToken,
+    ).finally(() => {
+      this.pendingOAuthRefreshes.delete(refreshKey);
+    });
+    this.pendingOAuthRefreshes.set(refreshKey, refresh);
+    return await refresh;
+  }
+
+  private async refreshAndStoreOAuthCredential(
+    service: string,
+    connectionName: string,
+    credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+    cacheOnly: boolean,
+  ): Promise<Extract<ResolvedCredential, { authType: "oauth2" }>> {
+    const nextCredential = await this.oauthCredentials!.refresh(service, credential);
+    if (cacheOnly) {
+      this.renewedClientCredentials.set(createConnectionId(service, connectionName), {
+        source: credential,
+        credential: nextCredential,
+      });
+    } else {
+      await this.store.set(service, connectionName, nextCredential);
+    }
     return nextCredential;
   }
 
@@ -579,6 +634,20 @@ function isOAuthCredentialExpired(credential: Extract<ResolvedCredential, { auth
 
   const expiresAt = Date.parse(credential.expiresAt);
   return Number.isFinite(expiresAt) && expiresAt <= Date.now() + 60_000;
+}
+
+function isSameOAuthCredentialSource(
+  left: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  right: Extract<ResolvedCredential, { authType: "oauth2" }>,
+): boolean {
+  return (
+    left.accessToken === right.accessToken &&
+    left.refreshToken === right.refreshToken &&
+    left.clientCredentials?.clientId === right.clientCredentials?.clientId &&
+    left.clientCredentials?.clientSecret === right.clientCredentials?.clientSecret &&
+    JSON.stringify(left.clientCredentials?.extra) === JSON.stringify(right.clientCredentials?.extra) &&
+    JSON.stringify(left.clientCredentials?.secretExtra) === JSON.stringify(right.clientCredentials?.secretExtra)
+  );
 }
 
 function createApiKeyFields(auth: ApiKeyAuthDefinition): CredentialDefinition[] {

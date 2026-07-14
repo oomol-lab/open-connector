@@ -2,6 +2,7 @@ import type { CatalogStore, RuntimeActionDefinition } from "../catalog-store.ts"
 import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
+import type { OAuthClientCredentialsService } from "../oauth/oauth-client-credentials-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
@@ -48,6 +49,7 @@ export interface IConnectServerOptions {
   providerLoader: IProviderLoader;
   connections: ConnectionService;
   oauthClientConfigs: OAuthClientConfigService;
+  oauthClientCredentials: OAuthClientCredentialsService;
   oauthFlow: OAuthFlowService;
   runtimeTokens: RuntimeTokenService;
   actions: ActionRunner;
@@ -569,6 +571,14 @@ export class ConnectServer {
       return this.writeConnectionResult(
         context,
         this.options.connections.connectWithCustomCredential(service, { values, connectionName }),
+        logContext,
+      );
+    }
+    if (authType === "oauth2") {
+      this.options.logger?.info(logContext, "connection started");
+      return this.writeConnectionResult(
+        context,
+        this.options.oauthClientCredentials.connect({ service, values: optionalRecord(values), connectionName }),
         logContext,
       );
     }

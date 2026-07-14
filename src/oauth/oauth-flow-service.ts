@@ -66,6 +66,15 @@ export class OAuthFlowService {
     const { service, connectionName } = input;
     this.connections.assertProviderAvailable(service);
     const auth = this.clientConfigs.getOAuthDefinition(service);
+    if ((auth.flow ?? "authorization_code") !== "authorization_code") {
+      throw new OAuthFlowError(
+        "unsupported_oauth_flow",
+        `${service} uses client_credentials and does not require browser authorization.`,
+      );
+    }
+    if (!auth.authorizationUrl) {
+      throw new OAuthFlowError("invalid_oauth_configuration", `${service} OAuth authorizationUrl is required.`);
+    }
     const config = await this.clientConfigs.getConfig(service);
     if (!config) {
       throw new OAuthFlowError("oauth_client_config_required", `Configure an OAuth client for ${service} first.`);

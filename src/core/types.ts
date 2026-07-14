@@ -84,15 +84,12 @@ export type CustomCredentialAuthDefinition = {
 /**
  * OAuth client configuration required by the local runtime.
  *
- * Open source users provide their own provider OAuth app and configure its
- * callback URL to this local runtime.
+ * Open source users provide their own provider OAuth app or machine client.
  */
-export type OAuth2AuthDefinition = {
+type OAuth2AuthDefinitionCommon = {
   /** Auth discriminator used by catalog clients and connection routes. */
   type: "oauth2";
-  /** Provider authorization endpoint used to build the browser consent URL. */
-  authorizationUrl: string;
-  /** Provider token endpoint used to exchange an authorization code. */
+  /** Provider token endpoint used to issue an access token. */
   tokenUrl: string;
   /** Provider token endpoint used to refresh an access token. Defaults to tokenUrl. */
   refreshTokenUrl?: string;
@@ -121,6 +118,12 @@ export type OAuth2AuthDefinition = {
       grantType?: string | false;
       refreshToken?: string;
     };
+    clientCredentials?: {
+      grantType?: string | false;
+      scope?: string | false;
+      /** Token request field names mapped to provider clientConfigFields keys. */
+      configFields?: Record<string, string>;
+    };
   };
   /** Provider-specific token response envelope. */
   tokenResponseEnvelope?: {
@@ -129,6 +132,15 @@ export type OAuth2AuthDefinition = {
     successCode?: number;
     messageField?: string;
   };
+  /** Extra local OAuth client fields required by provider endpoints or token requests. */
+  clientConfigFields?: OAuthClientConfigFieldDefinition[];
+};
+
+type AuthorizationCodeOAuth2AuthDefinition = OAuth2AuthDefinitionCommon & {
+  /** Browser authorization is the default OAuth flow for backwards compatibility. */
+  flow?: "authorization_code";
+  /** Provider authorization endpoint used to build the browser consent URL. */
+  authorizationUrl: string;
   /** Proof Key for Code Exchange mode for providers that require per-flow verifiers. */
   pkce?: {
     method: "S256";
@@ -143,9 +155,18 @@ export type OAuth2AuthDefinition = {
     state?: string | false;
     scope?: string | false;
   };
-  /** Extra local OAuth app fields required before starting authorization. */
-  clientConfigFields?: OAuthClientConfigFieldDefinition[];
 };
+
+type ClientCredentialsOAuth2AuthDefinition = OAuth2AuthDefinitionCommon & {
+  /** Machine-to-machine OAuth flow with no browser redirect or refresh token. */
+  flow: "client_credentials";
+  authorizationUrl?: never;
+  authorizationParams?: never;
+  authorizationRequestFields?: never;
+  pkce?: never;
+};
+
+export type OAuth2AuthDefinition = AuthorizationCodeOAuth2AuthDefinition | ClientCredentialsOAuth2AuthDefinition;
 
 /**
  * Provider authentication capabilities advertised in the public catalog.
@@ -254,6 +275,13 @@ export type ResolvedCredential =
       expiresAt?: string;
       /** OAuth refresh token, if the provider issued one. */
       refreshToken?: string;
+      /** Host-managed OAuth client credentials used to renew client_credentials tokens. */
+      clientCredentials?: {
+        clientId: string;
+        clientSecret: string;
+        extra: Record<string, string>;
+        secretExtra: Record<string, string>;
+      };
       /** Stable provider account identity safe to show in local APIs and MCP. */
       profile: CredentialProfile;
       /** Raw token metadata such as provider scope or token type. */

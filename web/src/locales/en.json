@@ -187,6 +187,7 @@
       "needsOAuthClient": "{{name}} needs a local OAuth client before it can connect.",
       "connectedOAuth": "{{name}} is connected through OAuth.",
       "connectOAuth": "Connect {{name}} through its OAuth authorization flow.",
+      "connectClientCredentials": "Connect {{name}} with its OAuth client credentials.",
       "saving": "Saving connection...",
       "openingOAuth": "Opening OAuth...",
       "configureOAuthFirst": "Configure the OAuth client before connecting.",

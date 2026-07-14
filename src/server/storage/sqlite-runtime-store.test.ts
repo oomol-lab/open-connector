@@ -187,9 +187,23 @@ describe("SqliteRuntimeDatabase", () => {
       profile: githubProfile,
       metadata: {},
     });
+    await first.connectionStore.set("machine", "production", {
+      authType: "oauth2",
+      accessToken: "machine-access-token",
+      tokenType: "Bearer",
+      clientCredentials: {
+        clientId: "machine-client-id",
+        clientSecret: "machine-client-secret",
+        extra: {},
+        secretExtra: {},
+      },
+      profile: githubProfile,
+      metadata: {},
+    });
     first.close();
 
     await expectDatabaseDirectoryNotToContain(databasePath, "github-token");
+    await expectDatabaseDirectoryNotToContain(databasePath, "machine-client-secret");
 
     const second = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
@@ -197,6 +211,11 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(second.connectionStore.get("github", "default")).resolves.toMatchObject({
       authType: "api_key",
       apiKey: "github-token",
+    });
+    await expect(second.connectionStore.get("machine", "production")).resolves.toMatchObject({
+      authType: "oauth2",
+      accessToken: "machine-access-token",
+      clientCredentials: { clientSecret: "machine-client-secret" },
     });
     second.close();
   });

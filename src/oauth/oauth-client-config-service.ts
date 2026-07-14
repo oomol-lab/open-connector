@@ -22,7 +22,7 @@ export type OAuthClientConfigSummary = {
   service: string;
   configured: boolean;
   clientId: string | null;
-  expectedRedirectUri: string;
+  expectedRedirectUri?: string;
   auth: OAuth2AuthDefinition;
 };
 
@@ -75,6 +75,12 @@ export class OAuthClientConfigService {
     secretExtra?: Record<string, unknown>;
   }): Promise<OAuthClientConfigSummary> {
     const auth = this.getOAuthDefinition(input.service);
+    if (auth.flow === "client_credentials") {
+      throw new OAuthClientConfigError(
+        "unsupported_oauth_flow",
+        `${input.service} stores client credentials on each connection instead of global OAuth configuration.`,
+      );
+    }
     const clientId = input.clientId.trim();
     const clientSecret = input.clientSecret.trim();
     if (!clientId) {
@@ -119,7 +125,7 @@ export class OAuthClientConfigService {
     return `${this.origin}${OAuthClientConfigService.callbackPath}`;
   }
 
-  resolveEndpointUrl(service: string, endpointUrl: string, config: OAuthClientConfig): string {
+  resolveEndpointUrl(service: string, endpointUrl: string, config: Pick<OAuthClientConfig, "extra">): string {
     this.getOAuthDefinition(service);
     const resolved = endpointUrl.replaceAll(/\{(\+?)([A-Za-z0-9_]+)\}/g, (_match, rawModifier: string, key: string) => {
       const value = config.extra[key];
@@ -149,7 +155,9 @@ export class OAuthClientConfigService {
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
     return this.catalog.providers.flatMap((provider) => {
       const auth = provider.auth.find((auth) => auth.type === "oauth2");
-      return auth && auth.type === "oauth2" ? [{ service: provider.service, auth }] : [];
+      return auth && auth.type === "oauth2" && (auth.flow ?? "authorization_code") === "authorization_code"
+        ? [{ service: provider.service, auth }]
+        : [];
     });
   }
 
@@ -162,7 +170,8 @@ export class OAuthClientConfigService {
       service,
       configured: config != null,
       clientId: config?.clientId ?? null,
-      expectedRedirectUri: this.expectedRedirectUri(service),
+      expectedRedirectUri:
+        (auth.flow ?? "authorization_code") === "authorization_code" ? this.expectedRedirectUri(service) : undefined,
       auth,
     };
   }

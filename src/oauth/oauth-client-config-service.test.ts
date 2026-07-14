@@ -16,7 +16,12 @@ describe("OAuthClientConfigService", () => {
       secretExtra: {},
     });
     const service = new OAuthClientConfigService({
-      catalog: createCatalogStore([oauthProvider("alpha"), oauthProvider("beta"), noAuthProvider]),
+      catalog: createCatalogStore([
+        oauthProvider("alpha"),
+        oauthProvider("beta"),
+        clientCredentialsProvider,
+        noAuthProvider,
+      ]),
       origin: "http://localhost:3000",
       store,
     });
@@ -54,6 +59,19 @@ const noAuthProvider: ProviderDefinition = {
   authTypes: ["no_auth"],
   auth: [{ type: "no_auth" }],
   actions: [],
+};
+
+const clientCredentialsProvider: ProviderDefinition = {
+  ...oauthProvider("machine"),
+  auth: [
+    {
+      type: "oauth2",
+      flow: "client_credentials",
+      tokenUrl: "https://example.com/oauth/token",
+      scopes: ["read"],
+      tokenEndpointAuthMethod: "client_secret_post",
+    },
+  ],
 };
 
 class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {

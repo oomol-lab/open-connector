@@ -9,6 +9,7 @@ import type { Hono } from "hono";
 
 import { ConnectionService } from "../connection-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
+import { OAuthClientCredentialsService } from "../oauth/oauth-client-credentials-service.ts";
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
@@ -66,6 +67,10 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       providerLoader: options.providerLoader,
       connections,
       oauthClientConfigs,
+      oauthClientCredentials: new OAuthClientCredentialsService({
+        clientConfigs: oauthClientConfigs,
+        connections,
+      }),
       oauthFlow: new OAuthFlowService({
         clientConfigs: oauthClientConfigs,
         connections,
