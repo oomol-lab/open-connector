@@ -23,7 +23,7 @@ export const provider: ProviderDefinition = {
           secret: true,
           placeholder: "Only required for SN-signed endpoints",
           description:
-            "Computed automatically by the runtime for endpoints that require SN validation (such as /place/v2/*, /directionlite/v1/*, /weather/v1, /location/ip, /api_region/v1, /api_distance/v2). Leave blank when SN validation is disabled for your application.",
+            "The SK is used only to compute the SN signature locally; it is never sent to Baidu. Baidu's SN check is an AK-level setting (chosen in the console as the AK's request-verification method), so when an SK is provided every request is signed automatically. Leave blank when your AK uses IP-whitelist verification instead of SN.",
         },
       ],
     },

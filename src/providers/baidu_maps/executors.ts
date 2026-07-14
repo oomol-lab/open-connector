@@ -1,8 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { BaiduMapsActionContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
-import { baiduMapsActionHandlers, baiduMapsApiBaseUrl, validateBaiduMapsCredential } from "./runtime.ts";
+import {
+  baiduMapsActionHandlers,
+  baiduMapsApiBaseUrl,
+  signBaiduMapsProxyUrl,
+  validateBaiduMapsCredential,
+} from "./runtime.ts";
 
 const service = "baidu_maps";
 
@@ -25,6 +31,12 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: baiduMapsApiBaseUrl,
   auth: { type: "api_key_query", name: "ak" },
+  // Sign SN-validated endpoints on the raw proxy path too, so an SK-configured
+  // account behaves the same through the proxy as through the action handlers.
+  customizeRequest({ url, credential }) {
+    const sk = credential && "values" in credential ? optionalString(credential.values.sk) : undefined;
+    signBaiduMapsProxyUrl(url, sk);
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -37,10 +49,3 @@ export const credentialValidators: CredentialValidators = {
     });
   },
 };
-
-interface BaiduMapsActionContext {
-  apiKey: string;
-  sk?: string;
-  fetcher: typeof fetch;
-  signal?: AbortSignal;
-}

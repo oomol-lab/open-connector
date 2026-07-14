@@ -7,18 +7,28 @@ const service = "baidu_maps";
 
 const rawObject = s.unknownObject("A raw object returned by Baidu Maps.");
 
-const poi = s.looseRequiredObject("A normalized point of interest record.", {
-  uid: s.string("The Baidu Maps point of interest identifier."),
-  name: s.string("The point of interest name."),
-  address: s.string("The formatted address."),
-  location: s.string("The coordinate string formatted as latitude,longitude."),
-  province: s.string("The province."),
-  city: s.string("The city."),
-  district: s.string("The district."),
-  category: s.string("The point of interest category."),
-  detail: s.integer("The detail level flag returned by Baidu Maps."),
-  distance: s.number("The distance from the search center in meters."),
-});
+// Baidu POI records are passed through from the API unchanged, so every field
+// is best-effort and may be absent depending on the endpoint (region vs.
+// circular search, scope, etc.). `location` in particular is returned as a
+// { lng, lat } object, not a string.
+const poi = s.looseRequiredObject(
+  "A Baidu Maps point of interest record. Fields are passed through from Baidu and vary by endpoint.",
+  {
+    uid: s.string("The Baidu Maps point of interest identifier."),
+    name: s.string("The point of interest name."),
+    address: s.string("The formatted address."),
+    location: s.unknown("The coordinate; Baidu returns a { lng, lat } object for place search."),
+    province: s.string("The province."),
+    city: s.string("The city."),
+    district: s.string("The district (Baidu field 'area')."),
+    category: s.string("The point of interest category (when scope=2)."),
+    detail: s.integer("The detail level flag returned by Baidu Maps."),
+    distance: s.number("The distance from the search center in meters (circular search only)."),
+  },
+  {
+    optional: ["uid", "name", "address", "location", "province", "city", "district", "category", "detail", "distance"],
+  },
+);
 
 function action(
   name: string,
@@ -47,14 +57,7 @@ export const baiduMapsActions: ActionDefinition[] = [
       precise: s.integer("Whether the result is precise (1) or fuzzy (0)."),
       confidence: s.integer("The confidence score from 0 to 100."),
       comprehension: s.integer("Whether the address was understood as a comprehension query."),
-      result: s.requiredObject("The structured geocoding result.", {
-        level: s.string("The match level (e.g. '道路')."),
-        precise: s.integer("Whether the result is precise (1) or fuzzy (0)."),
-        confidence: s.integer("The confidence score from 0 to 100."),
-        location: s.string("The coordinate string formatted as latitude,longitude."),
-        formatted_address: s.string("The formatted address."),
-        business: s.string("A landmark near the coordinate."),
-      }),
+      result: rawObject,
     }),
   ),
   action(
@@ -64,7 +67,7 @@ export const baiduMapsActions: ActionDefinition[] = [
       "Input parameters for reverse geocoding.",
       {
         location: s.nonEmptyString("The coordinate string formatted as latitude,longitude (bd09ll by default)."),
-        coordtype: s.stringEnum("The coordinate system of the input location.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
+        coordtype: s.string("The coordinate system of the input location."),
         radius: s.nonNegativeInteger("The radius in meters to include nearby points of interest."),
         extensions_poi: s.integer("0 to only return the address (default), 1 to also return nearby POIs."),
         poi_types: s.string("Comma separated extensions_poi types filter (when extensions_poi=1)."),
@@ -126,42 +129,19 @@ export const baiduMapsActions: ActionDefinition[] = [
       "Input parameters for searching places.",
       {
         query: s.nonEmptyString("The keyword used to search places."),
-        region: s.nonEmptyString("The region name, for example '北京'. Required when tag is not used."),
+        region: s.nonEmptyString("The region name to scope the search, for example '北京'."),
         city_limit: s.integer(
           "Whether to restrict results to the supplied region (1) or extend to nearby regions (0).",
         ),
-        output: s.stringEnum("The output format.", ["json", "xml"]),
         scope: s.stringEnum("The result scope.", ["1", "2"]),
         filter: s.string("Pipe separated industry filtering tags."),
-        coord_type: s.stringEnum("The coordinate system of returned locations.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
-        ret_coordtype: s.stringEnum("Alias for coord_type used by some Baidu endpoints.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
+        coord_type: s.string("The coordinate system of returned locations."),
+        ret_coordtype: s.string("Alias for coord_type used by some Baidu endpoints."),
         page_size: s.nonNegativeInteger("The page size, 0 to 20."),
         page_num: s.nonNegativeInteger("The zero-based page index."),
-        ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
       },
       {
-        optional: [
-          "region",
-          "city_limit",
-          "output",
-          "scope",
-          "filter",
-          "coord_type",
-          "ret_coordtype",
-          "page_size",
-          "page_num",
-          "ak",
-        ],
+        optional: ["region", "city_limit", "scope", "filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
       },
     ),
     s.requiredObject("The place search response.", {
@@ -181,37 +161,14 @@ export const baiduMapsActions: ActionDefinition[] = [
         location: s.nonEmptyString("The search center formatted as latitude,longitude."),
         radius: s.nonNegativeInteger("The search radius in meters (default 1000, max 50000)."),
         radius_limit: s.integer("Whether to strictly observe the radius (1) or relax it (0)."),
-        output: s.stringEnum("The output format.", ["json", "xml"]),
         filter: s.string("Pipe separated industry filtering tags."),
-        coord_type: s.stringEnum("The coordinate system of returned locations.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
-        ret_coordtype: s.stringEnum("Alias for coord_type used by some Baidu endpoints.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
+        coord_type: s.string("The coordinate system of returned locations."),
+        ret_coordtype: s.string("Alias for coord_type used by some Baidu endpoints."),
         page_size: s.nonNegativeInteger("The page size, 0 to 20."),
         page_num: s.nonNegativeInteger("The zero-based page index."),
-        ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
       },
       {
-        optional: [
-          "location",
-          "radius",
-          "radius_limit",
-          "output",
-          "filter",
-          "coord_type",
-          "ret_coordtype",
-          "page_size",
-          "page_num",
-          "ak",
-        ],
+        optional: ["radius", "radius_limit", "filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
       },
     ),
     s.requiredObject("The circular place search response.", {
@@ -229,28 +186,17 @@ export const baiduMapsActions: ActionDefinition[] = [
       {
         query: s.nonEmptyString("The keyword used to search places."),
         bounds: s.nonEmptyString(
-          "Comma delimited bounds string 'minLng,minLat;maxLng,maxLat'. When supplied, region is ignored.",
+          "Rectangle bounds 'bottomLeftLat,bottomLeftLng,topRightLat,topRightLng' — latitude first, all comma " +
+            "separated (e.g. '39.915,116.404,39.975,116.414'). When supplied, region is ignored.",
         ),
-        output: s.stringEnum("The output format.", ["json", "xml"]),
         filter: s.string("Pipe separated industry filtering tags."),
-        coord_type: s.stringEnum("The coordinate system of returned locations.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
-        ret_coordtype: s.stringEnum("Alias for coord_type used by some Baidu endpoints.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
+        coord_type: s.string("The coordinate system of returned locations."),
+        ret_coordtype: s.string("Alias for coord_type used by some Baidu endpoints."),
         page_size: s.nonNegativeInteger("The page size, 0 to 20."),
         page_num: s.nonNegativeInteger("The zero-based page index."),
-        ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
       },
       {
-        optional: ["bounds", "output", "filter", "coord_type", "ret_coordtype", "page_size", "page_num", "ak"],
+        optional: ["filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
       },
     ),
     s.requiredObject("The rectangular place search response.", {
@@ -263,13 +209,15 @@ export const baiduMapsActions: ActionDefinition[] = [
   action(
     "get_place_detail",
     "Look up a Baidu Maps place by its uid.",
-    s.requiredObject("Input parameters for place detail lookup.", {
-      uid: s.nonEmptyString("The Baidu Maps place identifier (uid)."),
-      scope: s.stringEnum("The detail scope.", ["1", "2"]),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      coord_type: s.stringEnum("The coordinate system of returned locations.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for place detail lookup.",
+      {
+        uid: s.nonEmptyString("The Baidu Maps place identifier (uid)."),
+        scope: s.stringEnum("The detail scope.", ["1", "2"]),
+        coord_type: s.string("The coordinate system of returned locations."),
+      },
+      { optional: ["scope", "coord_type"] },
+    ),
     s.requiredObject("The place detail response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
@@ -286,30 +234,27 @@ export const baiduMapsActions: ActionDefinition[] = [
         region: s.nonEmptyString("Restrict suggestions to a region (e.g. '北京')."),
         city_limit: s.integer("Whether to restrict suggestions to the supplied region."),
         location: s.nonEmptyString("The center coordinate used for location bias."),
-        coord_type: s.stringEnum("The coordinate system of the input location.", [
-          "bd09ll",
-          "bd09mc",
-          "gcj02",
-          "wgs84",
-        ]),
-        ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
+        coord_type: s.string("The coordinate system of the input location."),
       },
-      { optional: ["region", "city_limit", "location", "coord_type", "ak"] },
+      { optional: ["region", "city_limit", "location", "coord_type"] },
     ),
     s.requiredObject("The input tips response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
-      result: rawObject,
+      result: s.array(s.unknownObject("One suggestion (name, location, uid, ...).")),
     }),
   ),
   action(
     "ip_locate",
     "Locate an IP address with Baidu Maps.",
-    s.requiredObject("Input parameters for IP geolocation.", {
-      ip: s.string("The IP address to locate. Omit to locate the caller."),
-      coor: s.stringEnum("The coordinate system of the returned location.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for IP geolocation.",
+      {
+        ip: s.string("The IP address to locate. Omit to locate the caller."),
+        coor: s.string("The coordinate system of the returned location."),
+      },
+      { optional: ["ip", "coor"] },
+    ),
     s.requiredObject("The IP location response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
@@ -330,112 +275,142 @@ export const baiduMapsActions: ActionDefinition[] = [
   ),
   action(
     "district_search",
-    "Query the Baidu Maps administrative district API.",
-    s.requiredObject("Input parameters for the district query.", {
-      mode: s.stringEnum("The district endpoint variant.", ["list", "children", "search"]),
-      keyword: s.string("The keyword used by 'search' mode (adcode or name fragment)."),
-      id: s.string("The adcode used by 'children' mode."),
-      struct_type: s.integer("The structure type: 0 default, 1 with polygon."),
-      get_polygon: s.integer("1 to include polygons (requires service claim)."),
-      max_offset: s.integer("Maximum number of polygons to return per district."),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    "Query the Baidu Maps administrative division API (api_region_search).",
+    s.object(
+      "Input parameters for the administrative district query.",
+      {
+        keyword: s.nonEmptyString("The district name or administrative code (adcode) to look up."),
+        sub_admin: s.integer("Number of subordinate levels to return (0-3, default 0)."),
+        extensions_code: s.integer("1 to also return standard administrative codes (default 0)."),
+        boundary: s.integer("1 to return boundary coordinates (default 0)."),
+      },
+      { optional: ["sub_admin", "extensions_code", "boundary"] },
+    ),
     s.requiredObject("The district query response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
-      data_version: s.string("The district data version string."),
-      result: s.unknown("The district payload returned by Baidu Maps."),
+      result_size: s.integer("The number of matched administrative divisions."),
+      districts: s.array(s.unknownObject("One administrative division (code, name, level, nested districts, ...).")),
     }),
   ),
   action(
     "weather",
     "Fetch weather observations and forecasts for a coordinate.",
-    s.requiredObject("Input parameters for the weather API.", {
-      data_type: s.stringEnum("The data sections to include.", ["all", "fc", "index", "alerts", "nearest"]),
-      coord_type: s.stringEnum("The coordinate system of the input location.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      location: s.nonEmptyString("The coordinate string formatted as latitude,longitude."),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for the weather API.",
+      {
+        data_type: s.stringEnum("The data sections to include (default 'all').", [
+          "now",
+          "fc",
+          "index",
+          "alert",
+          "fc_hour",
+          "all",
+        ]),
+        coordtype: s.string("The coordinate system of the input location (weather uses 'coordtype', default wgs84)."),
+        location: s.nonEmptyString(
+          "The coordinate as longitude,latitude — NOTE weather is lng,lat (opposite of other endpoints). " +
+            "Provide this or district_id.",
+        ),
+        district_id: s.string("The administrative division code (adcode). Provide this or location; takes priority."),
+      },
+      { optional: ["data_type", "coordtype", "location", "district_id"] },
+    ),
     s.requiredObject("The weather response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
-      result: s.requiredObject("The structured weather result.", {
-        location: s.requiredObject("The resolved location.", {
-          country: s.string("The country."),
-          province: s.string("The province."),
-          city: s.string("The city."),
-          name: s.string("The region name."),
-          id: s.string("The region code."),
-        }),
-        now: s.unknown("The current weather observation (when data_type includes 'now')."),
-        forecast: s.unknown("The forecast data (when data_type includes 'fc')."),
-        forecast_hours: s.unknown("The hourly forecast (when data_type includes 'hour')."),
-        alerts: s.unknown("The weather alerts (when data_type includes 'alerts')."),
-        indices: s.unknown("The lifestyle indices (when data_type includes 'index')."),
-      }),
+      result: s.object(
+        "The structured weather result.",
+        {
+          location: s.requiredObject("The resolved location.", {
+            country: s.string("The country."),
+            province: s.string("The province."),
+            city: s.string("The city."),
+            name: s.string("The region name."),
+            id: s.string("The region code."),
+          }),
+          now: s.unknown("The current weather observation (data_type includes 'now' or 'all')."),
+          forecasts: s.array(s.unknownObject("One day of the daily forecast (data_type includes 'fc' or 'all').")),
+          forecast_hours: s.array(
+            s.unknownObject("One hour of the hourly forecast (data_type includes 'fc_hour' or 'all')."),
+          ),
+          alerts: s.array(
+            s.unknownObject(
+              "One weather alert/warning (request data_type 'alert' or 'all'; response key is 'alerts').",
+            ),
+          ),
+          indexes: s.array(s.unknownObject("One life index (data_type includes 'index' or 'all').")),
+        },
+        { optional: ["now", "forecasts", "forecast_hours", "alerts", "indexes"] },
+      ),
     }),
   ),
   action(
     "route_driving",
     "Plan a Baidu Maps driving route.",
-    s.requiredObject("Input parameters for driving routing.", {
-      origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
-      destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
-      origin_uid: s.string("Optional origin POI uid."),
-      destination_uid: s.string("Optional destination POI uid."),
-      waypoints: s.string("Comma separated intermediate waypoints."),
-      tactics: s.integer(
-        "The routing preference (0 default, 1 toll free, 2 distance first, 3 expressway first, 4 highway avoid, ...).",
-      ),
-      tactics_in_city: s.integer(
-        "Urban routing preference (0 default, 1 main road first, 2 time first, 3 distance first, 4 avoid congestion).",
-      ),
-      alternatives: s.integer("0 to return only the best route; 3 to return up to 3 alternatives."),
-      departure_time: s.string("Departure time in ISO 8601 (used only with future-traffic tactics)."),
-      plate_number: s.string("License plate for restriction-aware routing."),
-      traffic_policy: s.integer("Real-time traffic policy."),
-      coord_type: s.stringEnum("The coordinate system of origin/destination.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for driving routing.",
+      {
+        origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
+        destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
+        origin_uid: s.string("Optional origin POI uid."),
+        destination_uid: s.string("Optional destination POI uid."),
+        waypoints: s.string("Comma separated intermediate waypoints."),
+        tactics: s.integer(
+          "The routing preference (0 default, 1 toll free, 2 distance first, 3 expressway first, 4 highway avoid, ...).",
+        ),
+        tactics_in_city: s.integer(
+          "Urban routing preference (0 default, 1 main road first, 2 time first, 3 distance first, 4 avoid congestion).",
+        ),
+        alternatives: s.integer("0 to return only the best route; 3 to return up to 3 alternatives."),
+        departure_time: s.string("Departure time in ISO 8601 (used only with future-traffic tactics)."),
+        plate_number: s.string("License plate for restriction-aware routing."),
+        traffic_policy: s.integer("Real-time traffic policy."),
+        coord_type: s.string("The coordinate system of origin/destination."),
+      },
+      {
+        optional: [
+          "origin_uid",
+          "destination_uid",
+          "waypoints",
+          "tactics",
+          "tactics_in_city",
+          "alternatives",
+          "departure_time",
+          "plate_number",
+          "traffic_policy",
+          "coord_type",
+        ],
+      },
+    ),
     s.requiredObject("The driving route response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
       result: s.requiredObject("The driving route result.", {
-        origin: s.requiredObject("The origin summary.", {
-          location: s.string("The origin coordinate."),
-          uid: s.string("The origin POI uid when supplied."),
-        }),
-        destination: s.requiredObject("The destination summary.", {
-          location: s.string("The destination coordinate."),
-          uid: s.string("The destination POI uid when supplied."),
-        }),
+        origin: s.unknownObject("The origin as a { lng, lat } object."),
+        destination: s.unknownObject("The destination as a { lng, lat } object."),
         routes: s.array(s.unknownObject("One driving route alternative.")),
-        origin_poi: s.unknown("The detailed origin POI."),
-        destination_poi: s.unknown("The detailed destination POI."),
       }),
     }),
   ),
   action(
     "route_walking",
     "Plan a Baidu Maps walking route.",
-    s.requiredObject("Input parameters for walking routing.", {
-      origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
-      destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
-      coord_type: s.stringEnum("The coordinate system of origin/destination.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for walking routing.",
+      {
+        origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
+        destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
+        coord_type: s.string("The coordinate system of origin/destination."),
+      },
+      { optional: ["coord_type"] },
+    ),
     s.requiredObject("The walking route response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
       result: s.requiredObject("The walking route result.", {
-        origin: s.requiredObject("The origin summary.", { location: s.string("The origin coordinate.") }),
-        destination: s.requiredObject("The destination summary.", {
-          location: s.string("The destination coordinate."),
-        }),
+        origin: s.unknownObject("The origin as a { lng, lat } object."),
+        destination: s.unknownObject("The destination as a { lng, lat } object."),
         routes: s.array(s.unknownObject("One walking route alternative.")),
       }),
     }),
@@ -443,21 +418,21 @@ export const baiduMapsActions: ActionDefinition[] = [
   action(
     "route_bicycling",
     "Plan a Baidu Maps bicycling route.",
-    s.requiredObject("Input parameters for bicycling routing.", {
-      origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
-      destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
-      coord_type: s.stringEnum("The coordinate system of origin/destination.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for bicycling routing.",
+      {
+        origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
+        destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
+        coord_type: s.string("The coordinate system of origin/destination."),
+      },
+      { optional: ["coord_type"] },
+    ),
     s.requiredObject("The bicycling route response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
       result: s.requiredObject("The bicycling route result.", {
-        origin: s.requiredObject("The origin summary.", { location: s.string("The origin coordinate.") }),
-        destination: s.requiredObject("The destination summary.", {
-          location: s.string("The destination coordinate."),
-        }),
+        origin: s.unknownObject("The origin as a { lng, lat } object."),
+        destination: s.unknownObject("The destination as a { lng, lat } object."),
         routes: s.array(s.unknownObject("One bicycling route alternative.")),
       }),
     }),
@@ -465,49 +440,25 @@ export const baiduMapsActions: ActionDefinition[] = [
   action(
     "route_transit",
     "Plan a Baidu Maps transit route.",
-    s.requiredObject("Input parameters for transit routing.", {
-      origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
-      destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
-      departure_time: s.string("Optional ISO 8601 departure time, default now."),
-      tactics_in_city: s.integer("Transit tactic when origin/destination are inside the same city."),
-      tactics_inter_city: s.integer("Transit tactic when traveling between cities."),
-      coord_type: s.stringEnum("The coordinate system of origin/destination.", ["bd09ll", "bd09mc", "gcj02", "wgs84"]),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
+    s.object(
+      "Input parameters for transit routing.",
+      {
+        origin: s.nonEmptyString("The origin coordinate formatted as latitude,longitude."),
+        destination: s.nonEmptyString("The destination coordinate formatted as latitude,longitude."),
+        departure_time: s.string("Optional ISO 8601 departure time, default now."),
+        tactics_in_city: s.integer("Transit tactic when origin/destination are inside the same city."),
+        tactics_inter_city: s.integer("Transit tactic when traveling between cities."),
+        coord_type: s.string("The coordinate system of origin/destination."),
+      },
+      { optional: ["departure_time", "tactics_in_city", "tactics_inter_city", "coord_type"] },
+    ),
     s.requiredObject("The transit route response.", {
       status: s.integer("The Baidu Maps status code (0 means success)."),
       message: s.string("The status message."),
       result: s.requiredObject("The transit route result.", {
-        origin: s.requiredObject("The origin summary.", { location: s.string("The origin coordinate.") }),
-        destination: s.requiredObject("The destination summary.", {
-          location: s.string("The destination coordinate."),
-        }),
+        origin: s.unknownObject("The origin as a { lng, lat } object."),
+        destination: s.unknownObject("The destination as a { lng, lat } object."),
         routes: s.array(s.unknownObject("One transit route alternative.")),
-      }),
-    }),
-  ),
-  action(
-    "distance_matrix",
-    "Calculate a Baidu Maps distance matrix.",
-    s.requiredObject("Input parameters for the distance matrix API.", {
-      origins: s.nonEmptyString("Semicolon separated origin coordinates."),
-      destinations: s.nonEmptyString("Semicolon separated destination coordinates."),
-      tactics: s.integer("0 distance, 1 duration, 3 duration with traffic."),
-      coord_type: s.stringEnum("The coordinate system of origins/destinations.", [
-        "bd09ll",
-        "bd09mc",
-        "gcj02",
-        "wgs84",
-      ]),
-      output: s.stringEnum("The output format.", ["json", "xml"]),
-      ak: s.string("The Baidu Maps AK; provided automatically from the credential."),
-    }),
-    s.requiredObject("The distance matrix response.", {
-      status: s.integer("The Baidu Maps status code (0 means success)."),
-      message: s.string("The status message."),
-      result: s.requiredObject("The distance matrix result.", {
-        elements: s.array(s.unknownObject("One distance matrix cell.")),
       }),
     }),
   ),
@@ -527,5 +478,4 @@ export type BaiduMapsActionName =
   | "route_driving"
   | "route_walking"
   | "route_bicycling"
-  | "route_transit"
-  | "distance_matrix";
+  | "route_transit";
