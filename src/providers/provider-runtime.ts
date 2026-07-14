@@ -53,6 +53,12 @@ export function createProviderFetch(options: ProviderFetchOptions = {}): Provide
  * Shared public-only SSRF-guarded fetch for provider egress. Providers that
  * issue their own requests (custom proxy executors, context builders) must use
  * this instead of the global fetch.
+ *
+ * It is also receiver-safe: provider runtimes commonly store the fetcher on a
+ * context object and call `context.fetcher(...)`, which would forward the
+ * context as `this` to the Workers-native fetch and trigger an Illegal
+ * invocation error. This wrapper closes over the platform call lexically, so
+ * the native fetch is always invoked without a stray receiver.
  */
 export const providerFetch: ProviderFetch = createProviderFetch();
 
