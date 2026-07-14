@@ -29,6 +29,12 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+Run Tailscale with an OAuth client that has the `devices:core:read` scope:
+
+```bash
+TAILSCALE_CLIENT_ID=... TAILSCALE_CLIENT_SECRET=... node examples/local-http/tailscale.ts
+```
+
 Prepare Gmail OAuth with your own Google OAuth app:
 
 ```bash
