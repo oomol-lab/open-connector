@@ -204,14 +204,23 @@ describe("createGuardedFetch redirects", () => {
     const guarded = createGuardedFetch({ fetch: transport });
 
     await guarded("https://api.example.com/", {
-      headers: { authorization: "Bearer secret", cookie: "sid=1", "x-trace": "keep" },
+      headers: {
+        authorization: "Bearer secret",
+        cookie: "sid=1",
+        "x-api-key": "provider-secret",
+        "x-auth-token": "tok",
+        "x-trace": "keep",
+      },
     });
 
     const sameOriginHeaders = new Headers(calls[1]?.init?.headers);
     expect(sameOriginHeaders.get("authorization")).toBe("Bearer secret");
+    expect(sameOriginHeaders.get("x-api-key")).toBe("provider-secret");
     const crossOriginHeaders = new Headers(calls[2]?.init?.headers);
     expect(crossOriginHeaders.has("authorization")).toBe(false);
     expect(crossOriginHeaders.has("cookie")).toBe(false);
+    expect(crossOriginHeaders.has("x-api-key")).toBe(false);
+    expect(crossOriginHeaders.has("x-auth-token")).toBe(false);
     expect(crossOriginHeaders.get("x-trace")).toBe("keep");
   });
 
@@ -374,8 +383,8 @@ describe("createGuardedFetch resolved-address validation", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("falls through to the transport when the lookup fails", async () => {
-    const { transport, calls } = createTransport([new Response("ok", { status: 200 })]);
+  it("fails closed and does not call the transport when an enabled lookup fails", async () => {
+    const { transport, calls } = createTransport([]);
     const guarded = createGuardedFetch({
       fetch: transport,
       lookup: async () => {
@@ -383,8 +392,8 @@ describe("createGuardedFetch resolved-address validation", () => {
       },
     });
 
-    await guarded("https://unresolvable.example.com/");
-    expect(calls).toHaveLength(1);
+    await expect(guarded("https://unresolvable.example.com/")).rejects.toThrow(/could not be resolved/u);
+    expect(calls).toHaveLength(0);
   });
 
   it("re-validates resolved addresses for every redirect hop", async () => {

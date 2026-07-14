@@ -122,6 +122,18 @@ describe("isBlockedIpAddress", () => {
     }
   });
 
+  it("blocks IANA special-purpose non-global IPv6 ranges regardless of the private-network flag", () => {
+    for (const address of [
+      "64:ff9b:1::1", // local-use IPv4/IPv6 translation (RFC 8215)
+      "2001:2::1", // benchmarking (RFC 5180)
+      "3fff::1", // documentation (RFC 9637)
+      "5f00::1", // SRv6 SIDs (RFC 9602)
+    ]) {
+      expect(isBlockedIpAddress(address)).toBe(true);
+      expect(isBlockedIpAddress(address, true)).toBe(true);
+    }
+  });
+
   it("applies the IPv4 policy to v4-mapped, NAT64, and 6to4 IPv6 addresses", () => {
     expect(isBlockedIpAddress("::ffff:169.254.169.254")).toBe(true);
     expect(isBlockedIpAddress("::ffff:169.254.169.254", true)).toBe(true);

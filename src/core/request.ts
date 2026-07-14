@@ -147,7 +147,11 @@ const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("::"), 128],
   [ipv6ToBytes("::1"), 128],
   [ipv6ToBytes("100::"), 64],
+  [ipv6ToBytes("64:ff9b:1::"), 48],
+  [ipv6ToBytes("2001:2::"), 48],
   [ipv6ToBytes("2001:db8::"), 32],
+  [ipv6ToBytes("3fff::"), 20],
+  [ipv6ToBytes("5f00::"), 16],
   [ipv6ToBytes("fe80::"), 10],
   [ipv6ToBytes("ff00::"), 8],
 ];

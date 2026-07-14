@@ -51,8 +51,15 @@ export interface GuardedFetchOptions {
 // chains that previously succeeded.
 const defaultMaxRedirects = 20;
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
-/** Credential-bearing headers dropped when a redirect crosses origins, mirroring the fetch spec. */
-const crossOriginSensitiveHeaders = ["authorization", "cookie", "proxy-authorization"];
+/**
+ * Credential-bearing headers dropped when a redirect crosses origins. Covers the
+ * fetch-spec set (`authorization`/`cookie`/`proxy-authorization`) plus the
+ * custom auth headers provider egress commonly sends (`x-api-key`, `api-key`,
+ * `x-auth-token`, and similar key/token/secret headers), so a cross-origin
+ * redirect cannot exfiltrate a provider credential.
+ */
+const crossOriginSensitiveHeaderPattern =
+  /^(authorization|cookie|proxy-authorization|(x-)?(api[-_]?key|auth[-_]?token|access[-_]?token|api[-_]?token|app[-_]?key|.*[-_](key|token|secret|password)))$/u;
 /** Body-describing headers dropped when a redirect rewrites the method to GET, mirroring the fetch spec. */
 const bodyHeaders = ["content-encoding", "content-language", "content-length", "content-location", "content-type"];
 
@@ -196,8 +203,10 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
         throw createError("redirect cannot be followed because the request body is not replayable");
       }
       if (guardedNext.origin !== url.origin) {
-        for (const name of crossOriginSensitiveHeaders) {
-          headers.delete(name);
+        for (const name of [...headers.keys()]) {
+          if (crossOriginSensitiveHeaderPattern.test(name)) {
+            headers.delete(name);
+          }
         }
       }
       url = guardedNext;
@@ -231,12 +240,14 @@ async function assertResolvedAddressesAllowed(
   try {
     results = await policy.lookup(hostname);
   } catch {
-    // Resolution failures surface through the transport as its natural network
-    // error; only successful resolutions are validated here.
-    return;
+    // Fail closed: once a lookup is enabled, a resolution failure must not
+    // silently skip address validation, or a forced-failure / split-resolver
+    // could bypass the guard. A genuinely unresolvable host fails here instead
+    // of at the transport, with the same net outcome (the request is rejected).
+    throw policy.createError(`${fieldName} could not be resolved for validation`);
   }
   if (!Array.isArray(results)) {
-    return;
+    throw policy.createError(`${fieldName} could not be resolved for validation`);
   }
   for (const entry of results) {
     if (entry && typeof entry.address === "string" && isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
