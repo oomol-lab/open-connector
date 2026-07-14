@@ -124,6 +124,8 @@ describe("isBlockedIpAddress", () => {
 
   it("blocks IANA special-purpose non-global IPv6 ranges regardless of the private-network flag", () => {
     for (const address of [
+      "100::1", // discard-only (RFC 6666)
+      "100:0:0:1::1", // discard-only extension
       "64:ff9b:1::1", // local-use IPv4/IPv6 translation (RFC 8215)
       "2001:2::1", // benchmarking (RFC 5180)
       "3fff::1", // documentation (RFC 9637)
