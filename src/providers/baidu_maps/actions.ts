@@ -133,7 +133,19 @@ export const baiduMapsActions: ActionDefinition[] = [
         city_limit: s.integer(
           "Whether to restrict results to the supplied region (1) or extend to nearby regions (0).",
         ),
-        scope: s.stringEnum("The result scope.", ["1", "2"]),
+        // Baidu's place-search `scope` parameter is documented as a numeric enum
+        // (1 = basic, 2 = detail) but the upstream API also accepts the string
+        // forms "1" / "2". Some SDKs and docs serialize it as a string, so we
+        // accept both — but still constrain the integer form to {1, 2} so
+        // out-of-range values get a clear validation error instead of being
+        // silently forwarded and rejected by Baidu.
+        scope: s.anyOf(
+          [
+            s.stringEnum(["1", "2"]),
+            { type: "integer", enum: [1, 2], description: "The integer-form scope (1 or 2)." },
+          ],
+          { description: "The result scope. Baidu accepts either the string or the integer form." },
+        ),
         filter: s.string("Pipe separated industry filtering tags."),
         coord_type: s.string("The coordinate system of returned locations."),
         ret_coordtype: s.string("Alias for coord_type used by some Baidu endpoints."),
@@ -141,7 +153,7 @@ export const baiduMapsActions: ActionDefinition[] = [
         page_num: s.nonNegativeInteger("The zero-based page index."),
       },
       {
-        optional: ["region", "city_limit", "scope", "filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
+        optional: ["region", "city_limit", "filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
       },
     ),
     s.requiredObject("The place search response.", {
@@ -213,7 +225,16 @@ export const baiduMapsActions: ActionDefinition[] = [
       "Input parameters for place detail lookup.",
       {
         uid: s.nonEmptyString("The Baidu Maps place identifier (uid)."),
-        scope: s.stringEnum("The detail scope.", ["1", "2"]),
+        // Same string-or-integer contract as search_places.scope — Baidu's
+        // place-detail endpoint accepts both, and SDKs differ on which they
+        // emit. Integer is constrained to {1, 2} for the same reason.
+        scope: s.anyOf(
+          [
+            s.stringEnum(["1", "2"]),
+            { type: "integer", enum: [1, 2], description: "The integer-form scope (1 or 2)." },
+          ],
+          { description: "The detail scope. Baidu accepts either the string or the integer form." },
+        ),
         coord_type: s.string("The coordinate system of returned locations."),
       },
       { optional: ["scope", "coord_type"] },

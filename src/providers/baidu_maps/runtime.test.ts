@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { provider as baiduMapsProvider } from "./definition.ts";
 import {
   baiduMapsActionHandlers,
   baiduMapsApiBaseUrl,
@@ -522,6 +524,62 @@ describe("Baidu Maps runtime", () => {
       "sk-x",
     );
     expect(url.searchParams.get("sn")).toBe(expected);
+  });
+
+  // Regression: Baidu's `scope` parameter is documented as a numeric enum but
+  // many callers (and Baidu's own JS SDK) serialize it as a string. The
+  // previous stringEnum-only schema rejected numeric input with a confusing
+  // "Instance type 'number' is invalid. Expected 'string'." error.
+  describe("scope accepts both string and integer forms", () => {
+    const searchPlaces = baiduMapsProvider.actions.find((a) => a.id === "baidu_maps.search_places")!;
+    const getDetail = baiduMapsProvider.actions.find((a) => a.id === "baidu_maps.get_place_detail")!;
+
+    it("search_places schema accepts scope='2'", () => {
+      const r = validateActionInput(searchPlaces, { query: "咖啡", region: "北京", scope: "2" });
+      expect(r.valid).toBe(true);
+    });
+
+    it("search_places schema accepts scope=2", () => {
+      const r = validateActionInput(searchPlaces, { query: "咖啡", region: "北京", scope: 2 });
+      expect(r.valid).toBe(true);
+    });
+
+    it("search_places schema rejects scope=3 (not in enum)", () => {
+      const r = validateActionInput(searchPlaces, { query: "咖啡", region: "北京", scope: 3 });
+      expect(r.valid).toBe(false);
+    });
+
+    it("get_place_detail schema accepts scope=2", () => {
+      const r = validateActionInput(getDetail, { uid: "abc", scope: 2 });
+      expect(r.valid).toBe(true);
+    });
+
+    it("search_places handler forwards scope=2 to the wire", async () => {
+      const requests: RecordedRequest[] = [];
+      const fetcher = createFetcher(requests, { status: 0, results: [] });
+      await baiduMapsActionHandlers.search_places(
+        { query: "咖啡", region: "北京", scope: 2 },
+        { apiKey: "ak-s", fetcher },
+      );
+      expect(new URL(requests[0]!.url).searchParams.get("scope")).toBe("2");
+    });
+
+    it("search_places handler forwards scope='1' to the wire", async () => {
+      const requests: RecordedRequest[] = [];
+      const fetcher = createFetcher(requests, { status: 0, results: [] });
+      await baiduMapsActionHandlers.search_places(
+        { query: "咖啡", region: "北京", scope: "1" },
+        { apiKey: "ak-s", fetcher },
+      );
+      expect(new URL(requests[0]!.url).searchParams.get("scope")).toBe("1");
+    });
+
+    it("get_place_detail handler forwards scope=2 to the wire", async () => {
+      const requests: RecordedRequest[] = [];
+      const fetcher = createFetcher(requests, { status: 0, result: {} });
+      await baiduMapsActionHandlers.get_place_detail({ uid: "u-1", scope: 2 }, { apiKey: "ak-d", fetcher });
+      expect(new URL(requests[0]!.url).searchParams.get("scope")).toBe("2");
+    });
   });
 });
 

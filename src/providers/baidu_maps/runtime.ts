@@ -302,7 +302,10 @@ function payloadFromSearch(
     city_limit: readOptionalIntegerLike(input.cityLimit ?? input.city_limit),
     output: "json",
     filter: readOptionalString(input.filter),
-    scope: readOptionalString(input.scope),
+    // `scope` is declared as a string|int union in actions.ts because Baidu
+    // accepts both forms. readOptionalString drops numbers, so use the
+    // string-coercing variant to preserve either shape.
+    scope: readOptionalStringLike(input.scope),
     coord_type: readOptionalString(input.coordType ?? input.coord_type),
     ret_coordtype: readOptionalString(input.retCoordtype ?? input.ret_coordtype),
     page_size: readOptionalIntegerLike(input.pageSize ?? input.page_size),
@@ -338,7 +341,8 @@ async function executeGetPlaceDetail(input: RuntimeInput, context: BaiduMapsActi
       "/place/v2/detail",
       compactObject({
         uid: readRequiredString(input.uid, "uid"),
-        scope: readOptionalString(input.scope),
+        // Same string|int union as search_places.scope — see comment there.
+        scope: readOptionalStringLike(input.scope),
         output: "json",
         coord_type: readOptionalString(input.coordType ?? input.coord_type),
         ak: context.apiKey,
