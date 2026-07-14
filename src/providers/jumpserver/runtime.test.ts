@@ -47,6 +47,15 @@ describe("JumpServer MCP provider contract", () => {
       results: [{ source: "assets_assets_list", limit: 1 }],
     });
   });
+
+  it("rejects an MCP endpoint that exposes no supported static actions", async () => {
+    const fixture = await startJumpServerMcpFixture(["unrelated_tool"]);
+    const values = { mcpEndpoint: fixture.endpoint, token: "jumpserver-token" };
+
+    await expect(validateJumpServerCredential(values, fixture.fetcher)).rejects.toThrow(
+      "JumpServer MCP endpoint did not expose any supported tools",
+    );
+  });
 });
 
 describe("normalizeJumpServerMcpEndpoint", () => {
@@ -93,7 +102,9 @@ interface JumpServerMcpFixture {
   fetcher: typeof fetch;
 }
 
-async function startJumpServerMcpFixture(): Promise<JumpServerMcpFixture> {
+async function startJumpServerMcpFixture(
+  toolNames: readonly string[] = jumpServerMcpToolNames,
+): Promise<JumpServerMcpFixture> {
   const transports = new Map<string, SSEServerTransport>();
   const httpServer = createServer(async (request, response) => {
     if (request.headers.authorization !== "Bearer jumpserver-token") {
@@ -104,7 +115,7 @@ async function startJumpServerMcpFixture(): Promise<JumpServerMcpFixture> {
       const transport = new SSEServerTransport("/messages", response);
       transports.set(transport.sessionId, transport);
       transport.onclose = () => transports.delete(transport.sessionId);
-      await createFixtureMcpServer().connect(transport);
+      await createFixtureMcpServer(toolNames).connect(transport);
       return;
     }
     if (request.method === "POST" && request.url?.startsWith("/messages")) {
@@ -138,10 +149,10 @@ async function startJumpServerMcpFixture(): Promise<JumpServerMcpFixture> {
   return { endpoint: "https://mcp.example.com/sse", fetcher };
 }
 
-function createFixtureMcpServer(): Server {
+function createFixtureMcpServer(toolNames: readonly string[]): Server {
   const server = new Server({ name: "jumpserver-test", version: "1.0.0" }, { capabilities: { tools: {} } });
   server.setRequestHandler(ListToolsRequestSchema, () => ({
-    tools: jumpServerMcpToolNames.map((name) => ({
+    tools: toolNames.map((name) => ({
       name,
       description: `List JumpServer resources with ${name}.`,
       inputSchema: {
@@ -156,7 +167,7 @@ function createFixtureMcpServer(): Server {
     })),
   }));
   server.setRequestHandler(CallToolRequestSchema, (request) => {
-    expect(jumpServerMcpToolNames).toContain(request.params.name);
+    expect(toolNames).toContain(request.params.name);
     const limit = request.params.arguments?.limit;
     return {
       content: [

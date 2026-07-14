@@ -51,6 +51,9 @@ export async function validateJumpServerCredential(
   const context = createJumpServerMcpContext(values, fetcher, signal);
   const discoveredTools = await listJumpServerMcpTools(context);
   const availableActions = jumpServerMcpToolNames.filter((toolName) => discoveredTools.includes(toolName));
+  if (availableActions.length === 0) {
+    throw credentialError("JumpServer MCP endpoint did not expose any supported tools");
+  }
   const endpointHash = createHash("sha256").update(context.endpoint.origin).digest("hex").slice(0, 16);
   return {
     profile: {
