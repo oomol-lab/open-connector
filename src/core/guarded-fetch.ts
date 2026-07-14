@@ -52,14 +52,47 @@ export interface GuardedFetchOptions {
 const defaultMaxRedirects = 20;
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
 /**
- * Credential-bearing headers dropped when a redirect crosses origins. Covers the
+ * Credential-bearing request headers dropped when a redirect crosses origins, so
+ * a cross-origin redirect cannot exfiltrate a provider credential. Covers the
  * fetch-spec set (`authorization`/`cookie`/`proxy-authorization`) plus the
- * custom auth headers provider egress commonly sends (`x-api-key`, `api-key`,
- * `x-auth-token`, and similar key/token/secret headers), so a cross-origin
- * redirect cannot exfiltrate a provider credential.
+ * common custom auth headers provider egress sends. This is an explicit
+ * allowlist rather than a name pattern so it never strips look-alike but
+ * non-credential headers (e.g. `idempotency-key`, `x-correlation-id`); add a
+ * provider's header here if it authenticates with a name not already listed.
  */
-const crossOriginSensitiveHeaderPattern =
-  /^(authorization|cookie|proxy-authorization|(x-)?(api[-_]?key|auth[-_]?token|access[-_]?token|api[-_]?token|app[-_]?key|.*[-_](key|token|secret|password)))$/u;
+const crossOriginCredentialHeaders = new Set([
+  "authorization",
+  "proxy-authorization",
+  "cookie",
+  "api-key",
+  "apikey",
+  "x-api-key",
+  "x-apikey",
+  "api-token",
+  "x-api-token",
+  "auth-token",
+  "x-auth-token",
+  "x-auth-key",
+  "access-token",
+  "x-access-token",
+  "app-key",
+  "x-app-key",
+  "api-secret",
+  "x-api-secret",
+  "client-secret",
+  "x-client-secret",
+  "x-secret",
+  "token",
+  "x-token",
+  "session-token",
+  "x-session-token",
+  "private-token",
+  "x-private-token",
+  "x-csrf-token",
+  "x-xsrf-token",
+  "x-goog-api-key",
+  "x-amz-security-token",
+]);
 /** Body-describing headers dropped when a redirect rewrites the method to GET, mirroring the fetch spec. */
 const bodyHeaders = ["content-encoding", "content-language", "content-length", "content-location", "content-type"];
 
@@ -204,7 +237,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
       }
       if (guardedNext.origin !== url.origin) {
         for (const name of [...headers.keys()]) {
-          if (crossOriginSensitiveHeaderPattern.test(name)) {
+          if (crossOriginCredentialHeaders.has(name)) {
             headers.delete(name);
           }
         }

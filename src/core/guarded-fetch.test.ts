@@ -210,6 +210,9 @@ describe("createGuardedFetch redirects", () => {
         "x-api-key": "provider-secret",
         "x-auth-token": "tok",
         "x-trace": "keep",
+        // Look-alike but non-credential headers must survive cross-origin.
+        "idempotency-key": "abc",
+        "x-correlation-id": "cid",
       },
     });
 
@@ -222,6 +225,8 @@ describe("createGuardedFetch redirects", () => {
     expect(crossOriginHeaders.has("x-api-key")).toBe(false);
     expect(crossOriginHeaders.has("x-auth-token")).toBe(false);
     expect(crossOriginHeaders.get("x-trace")).toBe("keep");
+    expect(crossOriginHeaders.get("idempotency-key")).toBe("abc");
+    expect(crossOriginHeaders.get("x-correlation-id")).toBe("cid");
   });
 
   it("passes through when the caller handles redirects manually", async () => {
