@@ -120,16 +120,42 @@ export async function readBoundedResponseBytes(
   return bytes;
 }
 
+// Egress targets are classified into two tiers for the SSRF guard:
+//
+//   - "reserved" (localHostnames, cloudMetadataHostnames, localHostnameSuffixes,
+//     reservedIpv4Cidrs, reservedIpv6Cidrs): loopback, link-local, cloud-metadata,
+//     multicast, and other unsafe special-use ranges. ALWAYS blocked — the
+//     private-network opt-in never unblocks these, because they are the classic
+//     SSRF escalation targets ("don't let the deployment attack itself").
+//   - "private" (privateHostnameSuffixes, privateIpv4Cidrs, privateIpv6Cidrs):
+//     RFC 1918 / CGNAT / IPv6 ULA LAN ranges and private hostname suffixes.
+//     Blocked by default, but reachable once a self-hosted deployment opts in via
+//     OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK (see isPrivateNetworkAccessAllowed).
+//
+// So the flag toggles LAN/private-network reachability only; loopback and
+// link-local/metadata stay blocked in both states.
+
+// Always blocked: names that resolve to loopback, regardless of the flag.
 const localHostnames = new Set(["localhost", "localhost.localdomain", "ip6-localhost", "ip6-loopback"]);
+// Always blocked: cloud instance-metadata endpoints (prime SSRF escalation targets).
 const cloudMetadataHostnames = new Set(["instance-data.ec2.internal", "metadata.google.internal", "metadata.goog"]);
+// Always blocked: .localhost (RFC 6761 loopback) and the localhost.localdomain alias.
 const localHostnameSuffixes = [".localhost", ".localdomain"];
+// Flag-gated: private-use TLDs — .local (mDNS, RFC 6762), .internal (ICANN 2024 reservation),
+// .home/.lan (convention). Reachable only with the private-network opt-in.
 const privateHostnameSuffixes = [".local", ".internal", ".home", ".lan"];
+// Flag-gated: RFC 1918 private-use (10/8, 172.16/12, 192.168/16) + RFC 6598 CGNAT (100.64/10).
 const privateIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("10.0.0.0"), 8],
   [ipv4ToNumber("100.64.0.0"), 10],
   [ipv4ToNumber("172.16.0.0"), 12],
   [ipv4ToNumber("192.168.0.0"), 16],
 ];
+// Always blocked (opt-in never unblocks these): this-network (0/8), loopback (127/8),
+// link-local incl. the 169.254.169.254 metadata host (169.254/16), IANA protocol/documentation/
+// benchmark blocks, multicast (224/4), and future-use (240/4). 100.100.100.200/32 is the Alibaba
+// Cloud metadata endpoint — it sits inside CGNAT (100.64/10) but is pinned here so it stays
+// blocked even after opting into private networks.
 const reservedIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("0.0.0.0"), 8],
   [ipv4ToNumber("100.100.100.200"), 32],
@@ -143,6 +169,8 @@ const reservedIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("224.0.0.0"), 4],
   [ipv4ToNumber("240.0.0.0"), 4],
 ];
+// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), multicast (ff00::/8),
+// plus discard, documentation, benchmark, and other special-purpose IPv6 ranges (RFC 6890 registry).
 const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("::"), 128],
   [ipv6ToBytes("::1"), 128],
@@ -156,6 +184,8 @@ const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("fe80::"), 10],
   [ipv6ToBytes("ff00::"), 8],
 ];
+// Flag-gated: IPv6 ULA (fc00::/7, RFC 4193) and deprecated site-local (fec0::/10, RFC 3879).
+// Only reached via the resolved-address path — assertPublicHttpUrl rejects every literal IPv6 URL.
 const privateIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("fc00::"), 7],
   [ipv6ToBytes("fec0::"), 10],
