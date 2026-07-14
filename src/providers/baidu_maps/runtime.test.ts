@@ -549,6 +549,11 @@ describe("Baidu Maps runtime", () => {
       expect(r.valid).toBe(false);
     });
 
+    it("search_places schema keeps scope optional (accepts input without scope)", () => {
+      const r = validateActionInput(searchPlaces, { query: "咖啡", region: "北京" });
+      expect(r.valid).toBe(true);
+    });
+
     it("get_place_detail schema accepts scope=2", () => {
       const r = validateActionInput(getDetail, { uid: "abc", scope: 2 });
       expect(r.valid).toBe(true);

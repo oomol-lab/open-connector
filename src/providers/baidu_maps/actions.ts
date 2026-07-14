@@ -153,7 +153,7 @@ export const baiduMapsActions: ActionDefinition[] = [
         page_num: s.nonNegativeInteger("The zero-based page index."),
       },
       {
-        optional: ["region", "city_limit", "filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
+        optional: ["region", "city_limit", "scope", "filter", "coord_type", "ret_coordtype", "page_size", "page_num"],
       },
     ),
     s.requiredObject("The place search response.", {
