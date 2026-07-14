@@ -2,6 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
+import { assertPublicHttpUrl } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const breezeApiPathPrefix = "/api";
@@ -293,15 +294,20 @@ export function normalizeBreezeBaseUrl(value: unknown): string | undefined {
     return undefined;
   }
 
+  let url: URL;
   try {
-    const url = new URL(input);
-    if (url.protocol !== "https:" || !url.hostname.endsWith(".breezechms.com")) {
-      return undefined;
-    }
-    return `${url.protocol}//${url.hostname}`;
+    url = assertPublicHttpUrl(input, {
+      fieldName: "baseUrl",
+      createError: (message) => new ProviderRequestError(400, message),
+    });
   } catch {
     return undefined;
   }
+
+  if (url.protocol !== "https:" || !url.hostname.endsWith(".breezechms.com")) {
+    return undefined;
+  }
+  return `${url.protocol}//${url.hostname}`;
 }
 
 export function normalizeBreezeSubdomain(value: unknown): string {
