@@ -141,8 +141,9 @@ const localHostnames = new Set(["localhost", "localhost.localdomain", "ip6-local
 const cloudMetadataHostnames = new Set(["instance-data.ec2.internal", "metadata.google.internal", "metadata.goog"]);
 // Always blocked: .localhost (RFC 6761 loopback) and the localhost.localdomain alias.
 const localHostnameSuffixes = [".localhost", ".localdomain"];
-// Flag-gated: private-use TLDs — .local (mDNS, RFC 6762), .internal (ICANN 2024 reservation),
-// .home/.lan (convention). Reachable only with the private-network opt-in.
+// Flag-gated: private hostname suffixes with mixed standards status — .local (mDNS special-use,
+// RFC 6762), .internal (ICANN 2024 private-use reservation), .home/.lan (convention only).
+// Reachable only with the private-network opt-in.
 const privateHostnameSuffixes = [".local", ".internal", ".home", ".lan"];
 // Flag-gated: RFC 1918 private-use (10/8, 172.16/12, 192.168/16) + RFC 6598 CGNAT (100.64/10).
 const privateIpv4Cidrs: Array<[number, number]> = [
