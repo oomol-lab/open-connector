@@ -15,7 +15,7 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { createProviderTimeout, providerFetch, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { parsePubmedArticleSet } from "./runtime-xml.ts";
 
 type PubmedSort = "first_author" | "journal" | "publication_date" | "relevance";
@@ -414,8 +414,10 @@ interface CreatePubmedActionContextOptions {
 export function createPubmedActionContext(options: CreatePubmedActionContextOptions): PubmedActionContext {
   return {
     ...options,
-    requestGate: options.fetcher === fetch ? requestGateFor(options.apiKey) : { wait: immediateDelay },
-    sleep: options.fetcher === fetch ? delay : immediateDelay,
+    // The real NCBI request gate and Retry-After backoff apply to the shared
+    // production fetcher; test stubs pass a different fetcher and skip throttling.
+    requestGate: options.fetcher === providerFetch ? requestGateFor(options.apiKey) : { wait: immediateDelay },
+    sleep: options.fetcher === providerFetch ? delay : immediateDelay,
   };
 }
 

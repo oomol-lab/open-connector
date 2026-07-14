@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -20,9 +21,12 @@ import {
 
 const service = "twilio";
 
+const twilioFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: twilioActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher) {
     const credential = await requireCustomCredential(context, service);
     return {
@@ -57,7 +61,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await twilioFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Twilio request failed with HTTP ${response.status}`);

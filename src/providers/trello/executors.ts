@@ -7,11 +7,12 @@ import type {
 import type { TrelloActionContext } from "./runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -21,9 +22,12 @@ import { trelloActionHandlers, trelloApiBaseUrl, validateTrelloCredential } from
 
 const service = "trello";
 
+const trelloFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors<TrelloActionContext>({
   service,
   handlers: trelloActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<TrelloActionContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "custom_credential") {
@@ -59,7 +63,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await trelloFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Trello request failed with HTTP ${response.status}`);

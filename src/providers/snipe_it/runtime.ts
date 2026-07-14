@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 import type { SnipeItActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl, queryParams } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, queryParams } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const snipeItValidationPath = "/users/me";
@@ -342,10 +342,14 @@ function stringifyFilter(value: unknown): string | undefined {
   return value === undefined ? undefined : JSON.stringify(value);
 }
 
-function resolveSnipeItUrls(rawInstanceUrl: unknown): { instanceUrl: string; apiBaseUrl: string } {
+function resolveSnipeItUrls(
+  rawInstanceUrl: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): { instanceUrl: string; apiBaseUrl: string } {
   const instanceUrl = normalizeSnipeItInstanceUrl(rawInstanceUrl);
   assertPublicHttpUrl(instanceUrl, {
     fieldName: "instanceUrl",
+    allowPrivateNetwork,
     createError: (message) => new ProviderRequestError(400, message),
   });
   return {

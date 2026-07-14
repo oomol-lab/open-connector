@@ -14,8 +14,9 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -164,7 +165,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const credential = await requireCustomCredential(context, service);
     const accessToken = await fetchTenantAccessToken(
       readFeishuAppBotCredential(credential.values),
-      fetch,
+      providerFetch,
       "execute",
       context.signal,
     );
@@ -187,7 +188,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
         }
       }
 
-      const response = await fetch(url, init);
+      const response = await providerFetch(url, init);
       if (!response.ok) {
         const rawText = await readProviderProxyErrorMessage(response, "");
         let envelope: FeishuApiEnvelope<unknown>;

@@ -6,6 +6,7 @@ import type {
 } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -24,9 +25,11 @@ import {
 } from "./runtime.ts";
 
 const service = "sage_sales_management";
+const sageSalesManagementFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
+  skipDnsValidation: true,
   handlers: sageSalesManagementActionHandlers,
   async createContext(context, fetcher) {
     const credential = await requireCustomCredential(context, service);
@@ -37,7 +40,11 @@ export const executors: ProviderExecutors = defineProviderExecutors({
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
     const credential = await requireCustomCredential(context, service);
-    const sageContext = await createSageSalesManagementActionContext(credential.values, fetch, context.signal);
+    const sageContext = await createSageSalesManagementActionContext(
+      credential.values,
+      sageSalesManagementFetch,
+      context.signal,
+    );
     const url = createProviderProxyUrl(sageSalesManagementApiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("user-agent", providerUserAgent);
@@ -55,7 +62,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await sageSalesManagementFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

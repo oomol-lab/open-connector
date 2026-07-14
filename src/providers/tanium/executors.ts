@@ -7,12 +7,14 @@ import type {
 import type { TaniumContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   defineProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -22,9 +24,12 @@ import { normalizeTaniumGatewayUrl, taniumActionHandlers, validateTaniumCredenti
 
 const service = "tanium";
 
+const egressFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+
 export const executors: ProviderExecutors = defineProviderExecutors<TaniumContext>({
   service,
   handlers: taniumActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<TaniumContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -66,7 +71,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(gatewayUrl, init);
+    const response = await egressFetch(gatewayUrl, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(
@@ -82,12 +87,13 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     return validateTaniumCredential(
       {
         apiKey: input.apiKey,
         gatewayUrl: input.values.gatewayUrl,
       },
-      fetcher,
+      guardedFetcher,
       signal,
     );
   },

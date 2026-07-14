@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
@@ -15,6 +16,7 @@ import { buildBasicAuthHeader, executors, partnerstackApiBaseUrl, validatePartne
 export { executors };
 
 const service = "partnerstack";
+const partnerstackFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -36,7 +38,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await partnerstackFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(

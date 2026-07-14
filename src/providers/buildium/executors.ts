@@ -9,11 +9,12 @@ import type { BuildiumActionContext } from "./runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -22,10 +23,12 @@ import {
 import { buildiumActionHandlers, buildiumApiBaseUrl, validateBuildiumCredential } from "./runtime.ts";
 
 const service = "buildium";
+const buildiumFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<BuildiumActionContext>({
   service,
   handlers: buildiumActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<BuildiumActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -46,7 +49,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     headers.set("x-buildium-client-secret", credential.apiKey);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await buildiumFetch(url, {
       method: input.method,
       headers,
       body:

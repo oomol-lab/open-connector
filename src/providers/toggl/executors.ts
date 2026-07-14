@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -20,7 +21,11 @@ import {
 
 const service = "toggl";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, togglActionHandlers);
+const togglFetch = createProviderFetch({ skipDnsValidation: true });
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, togglActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -42,7 +47,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await togglFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `toggl request failed with HTTP ${response.status}`);

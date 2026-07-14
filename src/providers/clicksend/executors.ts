@@ -10,11 +10,12 @@ import type { ClicksendActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -23,10 +24,12 @@ import {
 import { clicksendActionHandlers, clicksendApiBaseUrl, validateClicksendCredential } from "./runtime.ts";
 
 const service = "clicksend";
+const clicksendFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<ClicksendActionContext>({
   service,
   handlers: clicksendActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<ClicksendActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -53,7 +56,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await clicksendFetch(url, {
       method: input.method,
       headers,
       body:

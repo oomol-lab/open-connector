@@ -9,11 +9,12 @@ import type { HarvestActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
@@ -23,6 +24,7 @@ import { harvestOAuthScopes } from "./scopes.ts";
 const service = "harvest";
 const harvestApiBaseUrl = "https://api.harvestapp.com";
 const harvestAccountsUrl = "https://id.getharvest.com/api/v2/accounts";
+const harvestFetch = createProviderFetch({ skipDnsValidation: true });
 const harvestValidationPath = "/v2/users/me";
 const harvestRequestTimeoutMs = 30_000;
 
@@ -116,6 +118,7 @@ export const harvestActionHandlers: Record<HarvestActionName, HarvestActionHandl
 export const executors: ProviderExecutors = defineProviderExecutors<HarvestActionContext>({
   service,
   handlers: harvestActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<HarvestActionContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType === "api_key") {
@@ -161,7 +164,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await harvestFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw createHarvestError(response.status, parseHarvestPayload(text), text);

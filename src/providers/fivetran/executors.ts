@@ -10,11 +10,12 @@ import type { FivetranContext } from "./runtime.ts";
 import { Buffer } from "node:buffer";
 import { requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -23,6 +24,7 @@ import {
 import { fivetranActionHandlers, fivetranApiBaseUrl, validateFivetranCredential } from "./runtime.ts";
 
 const service = "fivetran";
+const fivetranFetch = createProviderFetch({ skipDnsValidation: true });
 
 function readCredentialField(values: Record<string, string>, field: string): string {
   return requiredString(values[field], field, (message) => new ProviderRequestError(400, message));
@@ -31,6 +33,7 @@ function readCredentialField(values: Record<string, string>, field: string): str
 export const executors: ProviderExecutors = defineProviderExecutors<FivetranContext>({
   service,
   handlers: fivetranActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<FivetranContext> {
     const credential = await requireCustomCredential(context, service);
     return {
@@ -67,7 +70,7 @@ export const proxy: ProviderProxyExecutor = async (input, context: ExecutionCont
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await fivetranFetch(url, init);
     if (!response.ok) {
       throw new ProviderRequestError(
         response.status,

@@ -8,10 +8,11 @@ import type { LinearActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
-  ProviderRequestError,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
@@ -20,6 +21,7 @@ import {
 
 const linearApiBaseUrl = "https://api.linear.app";
 const linearGraphqlUrl = "https://api.linear.app/graphql";
+const linearFetch = createProviderFetch({ skipDnsValidation: true });
 
 const pageInfoFields = `
   startCursor
@@ -1310,6 +1312,7 @@ export const linearActionHandlers: Record<LinearActionName, LinearActionHandler>
 export const executors: ProviderExecutors = defineProviderExecutors<LinearActionContext>({
   service: "linear",
   handlers: linearActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<LinearActionContext> {
     const credential = await context.getCredential("linear");
     if (credential?.authType === "oauth2") {
@@ -1358,7 +1361,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await linearFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `linear request failed with HTTP ${response.status}`);

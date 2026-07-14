@@ -6,12 +6,13 @@ import type {
 } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -26,7 +27,11 @@ import {
 
 const service = "docsbot_ai";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, docsbotAiActionHandlers);
+const docsbotAiFetch = createProviderFetch({ skipDnsValidation: true });
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, docsbotAiActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
@@ -40,7 +45,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await docsbotAiFetch(url, {
       method: input.method,
       headers,
       body:

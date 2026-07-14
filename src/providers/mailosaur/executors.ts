@@ -2,11 +2,12 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 
 import { Buffer } from "node:buffer";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -15,8 +16,11 @@ import {
 import { mailosaurActionHandlers, mailosaurApiBaseUrl, validateMailosaurCredential } from "./runtime.ts";
 
 const service = "mailosaur";
+const mailosaurFetch = createProviderFetch({ skipDnsValidation: true });
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, mailosaurActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, mailosaurActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -38,7 +42,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await mailosaurFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Mailosaur request failed with HTTP ${response.status}`);

@@ -9,7 +9,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface ClickupActionContext {
   authType: "api_key" | "oauth2";
@@ -69,7 +69,7 @@ export async function validateClickupCredential(
 export async function fetchClickupCurrentAccount(
   accessToken: string,
   authType: "api_key" | "oauth2",
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
   mode: ClickupRequestMode = "execute",
   signal?: AbortSignal,
 ): Promise<{ accountId: string; displayName: string; metadata: Record<string, unknown> }> {

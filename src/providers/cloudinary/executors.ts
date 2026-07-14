@@ -11,11 +11,12 @@ import type { CloudinaryContext } from "./runtime.ts";
 import { Buffer } from "node:buffer";
 import { requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
@@ -24,10 +25,12 @@ import { cloudinaryActionHandlers, validateCloudinaryCredential } from "./runtim
 
 const service = "cloudinary";
 const cloudinaryApiBaseUrl = "https://api.cloudinary.com/v1_1";
+const cloudinaryFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<CloudinaryContext>({
   service,
   handlers: cloudinaryActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<CloudinaryContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "api_key") {
@@ -76,7 +79,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     headers.set("authorization", `Basic ${Buffer.from(`${credential.apiKey}:${apiSecret}`).toString("base64")}`);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await cloudinaryFetch(url, {
       method: input.method,
       headers,
       body:

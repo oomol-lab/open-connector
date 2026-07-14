@@ -7,7 +7,7 @@ import {
   optionalString as asOptionalString,
   stringArray as asStringArray,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const tidbApiBaseUrlByFamily = {
   starter_essential: "https://serverless.tidbapi.com/v1beta1",
@@ -138,7 +138,7 @@ export const tidbActionHandlers: Record<TiDBActionName, TiDBActionHandler> = {
 
 export async function validateTiDBCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
 ): Promise<CredentialValidationResult> {
   const context = {
     publicKey: requireTiDBCredentialField(input.publicKey, "publicKey"),

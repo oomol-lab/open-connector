@@ -12,12 +12,13 @@ import { Buffer } from "node:buffer";
 import { createHmac } from "node:crypto";
 import { optionalRecord, optionalScalarString, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -26,6 +27,7 @@ import {
 
 const service = "mopinion";
 const mopinionApiBaseUrl = "https://api.mopinion.com";
+const mopinionFetch = createProviderFetch({ skipDnsValidation: true });
 const mopinionApiVersion = "3.0.0";
 const accountPath = "/account";
 
@@ -189,6 +191,7 @@ export const mopinionActionHandlers: Record<MopinionActionName, MopinionActionHa
 export const executors: ProviderExecutors = defineProviderExecutors<MopinionActionContext>({
   service,
   handlers: mopinionActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<MopinionActionContext> {
     const credential = await requireCustomCredential(context, service);
     return {
@@ -229,7 +232,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, init);
+    const response = await mopinionFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Mopinion request failed with HTTP ${response.status}`);

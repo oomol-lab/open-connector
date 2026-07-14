@@ -2,6 +2,7 @@ import type { CredentialValidators, ProviderProxyExecutor } from "../../core/typ
 
 import { optionalRecord } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
@@ -16,6 +17,7 @@ import { executors, pushoverVersionedApiBaseUrl, validatePushoverCredential } fr
 export { executors };
 
 const service = "pushover";
+const pushoverFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher }) {
@@ -43,7 +45,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       init.body = createPushoverProxyBody(input.body, credential.apiKey, headers);
     }
 
-    const response = await fetch(url, init);
+    const response = await pushoverFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

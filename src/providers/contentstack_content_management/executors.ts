@@ -8,11 +8,12 @@ import type {
 
 import { optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -25,10 +26,12 @@ import {
 
 const service = "contentstack_content_management";
 const contentstackContentManagementApiBaseUrl = "https://api.contentstack.io/v3";
+const contentstackContentManagementFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: contentstackContentManagementActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -61,7 +64,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await contentstackContentManagementFetch(url, {
       method: input.method,
       headers,
       body:

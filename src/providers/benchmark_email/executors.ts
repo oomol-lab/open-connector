@@ -7,12 +7,14 @@ import type {
 } from "../../core/types.ts";
 import type { BenchmarkEmailContext } from "./runtime.ts";
 
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -26,9 +28,12 @@ import {
 
 const service = "benchmark_email";
 
+const benchmarkEmailFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+
 export const executors: ProviderExecutors = defineProviderExecutors<BenchmarkEmailContext>({
   service,
   handlers: benchmarkEmailActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<BenchmarkEmailContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -54,7 +59,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await benchmarkEmailFetch(url, {
       method: input.method,
       headers,
       body:
@@ -73,6 +78,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
-    return validateBenchmarkEmailCredential(input, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateBenchmarkEmailCredential(input, guardedFetcher, signal);
   },
 };

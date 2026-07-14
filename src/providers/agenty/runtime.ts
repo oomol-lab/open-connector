@@ -3,7 +3,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import type { AgentyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const agentyApiBaseUrl = "https://api.agenty.com/v2";
 export const agentyBrowserBaseUrl = "https://browser.agenty.com/api";
@@ -117,7 +117,7 @@ export const agentyActionHandlers: Record<AgentyActionName, AgentyActionHandler>
 
 export async function validateAgentyApiKey(
   apiKey: string,
-  fetcher: ProviderFetch = fetch,
+  fetcher: ProviderFetch = providerFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const trimmedApiKey = apiKey.trim();

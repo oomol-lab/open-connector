@@ -8,6 +8,7 @@ import type { StackAiActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
@@ -24,6 +25,8 @@ import {
 const service = "stack_ai";
 const stackAiInferenceBaseUrl = "https://stack-inference.com";
 const stackAiRequestTimeoutMs = 30_000;
+
+const stackAiFetch = createProviderFetch({ skipDnsValidation: true });
 
 type StackAiPhase = "validate" | "execute";
 
@@ -50,12 +53,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<StackAiConte
   service,
   handlers: stackAiActionHandlers,
   createContext: createStackAiContext,
+  skipDnsValidation: true,
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
     const credential = await requireCustomCredential(context, service);
-    const stackAiContext = readStackAiCredential(credential.values, fetch, context.signal);
+    const stackAiContext = readStackAiCredential(credential.values, stackAiFetch, context.signal);
     const baseUrl = new URL(
       buildRunPath(stackAiContext.organizationId, stackAiContext.flowId),
       stackAiInferenceBaseUrl,
@@ -77,7 +81,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await stackAiFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `StackAI request failed with HTTP ${response.status}`);

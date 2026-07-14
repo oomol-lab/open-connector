@@ -8,6 +8,7 @@ const service = "getnote";
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: getnoteActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
     const clientId = readGetnoteClientId({

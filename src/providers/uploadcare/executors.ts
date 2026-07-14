@@ -7,11 +7,12 @@ import type {
 import type { UploadcareContext } from "./runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -29,9 +30,13 @@ import {
 
 const service = "uploadcare";
 
+// Fixed-host proxy egress (uploadcareApiBaseUrl); DNS-rebinding check is redundant here.
+const uploadcareFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors<UploadcareContext>({
   service,
   handlers: uploadcareActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher): Promise<UploadcareContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -74,7 +79,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       init.body = body;
     }
 
-    const response = await fetch(url, init);
+    const response = await uploadcareFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Uploadcare request failed with HTTP ${response.status}`);

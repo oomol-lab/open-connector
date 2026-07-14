@@ -7,6 +7,7 @@ import type {
 
 import { compactObject } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -20,6 +21,7 @@ import {
 
 const service = "notion";
 const notionApiBaseUrl = "https://api.notion.com/v1";
+const notionFetch = createProviderFetch({ skipDnsValidation: true });
 const notionCoreVersion = "2026-03-11";
 
 type NotionObject = Record<string, unknown>;
@@ -119,6 +121,7 @@ export const notionActionHandlers: Record<string, NotionActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<NotionActionContext>({
   service,
   handlers: notionActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<NotionActionContext> {
     const credential = await requireBearerCredential(context, service);
     return { accessToken: credential.accessToken, fetcher };
@@ -146,7 +149,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await notionFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Notion request failed with HTTP ${response.status}`);

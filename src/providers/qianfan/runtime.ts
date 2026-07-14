@@ -131,6 +131,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
         handler({ apiKey: context.apiKey, input, transitFiles: context.transitFiles }, context.fetcher),
     ]),
   ),
+  { skipDnsValidation: true },
 );
 
 export async function validateQianfanCredential(

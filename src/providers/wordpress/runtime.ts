@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import type { WordpressActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const wordpressValidationPath = "/users/me";
@@ -146,7 +146,16 @@ export function createWordpressContext(
   };
 }
 
-export function normalizeWordpressSiteUrl(value: string | undefined): string {
+/**
+ * Normalizes and SSRF-guards the WordPress site URL. By default only public
+ * hosts are allowed; set OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK to opt a
+ * deployment into private/LAN instances (reserved/loopback/metadata/IPv6
+ * ranges stay blocked regardless).
+ */
+export function normalizeWordpressSiteUrl(
+  value: string | undefined,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const raw = value?.trim();
   if (!raw) {
     throw new ProviderRequestError(400, "siteUrl is required");
@@ -179,6 +188,7 @@ export function normalizeWordpressSiteUrl(value: string | undefined): string {
   const normalized = `${parsed.origin}${parsed.pathname === "/" ? "" : parsed.pathname}`;
   assertPublicHttpUrl(normalized, {
     fieldName: "siteUrl",
+    allowPrivateNetwork,
     createError: (message) => new ProviderRequestError(400, message),
   });
   return normalized;

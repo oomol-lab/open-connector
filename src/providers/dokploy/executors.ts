@@ -8,7 +8,9 @@ import type {
 import type { DokployActionContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   defineProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
@@ -31,6 +33,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<DokployActio
     return createDokployContext(credential.values, credential.apiKey, fetcher, context.signal, context.transitFiles);
   },
   fallbackMessage: "Dokploy request failed",
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
@@ -52,10 +55,15 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       headers.set("accept", "application/json");
     }
   },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    return validateDokployCredential(input.values, input.apiKey, fetcher, signal);
+    // Re-guard the shared validator fetcher with Dokploy's private-network
+    // opt-in so validating a private baseUrl works when the deployment allows
+    // it (createProviderFetch unwraps an already-guarded fetcher).
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateDokployCredential(input.values, input.apiKey, guardedFetcher, signal);
   },
 };

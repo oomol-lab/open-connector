@@ -7,11 +7,12 @@ import type {
 } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -22,8 +23,11 @@ import { createDockerHubActionContext, dockerHubActionHandlers, validateDockerHu
 const service = "docker_hub";
 const dockerHubApiBaseUrl = "https://hub.docker.com";
 
+const dockerHubFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
+  skipDnsValidation: true,
   handlers: dockerHubActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
@@ -34,7 +38,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
     const credential = await requireApiKeyCredential(context, service);
-    const dockerHubContext = await createDockerHubActionContext(credential.apiKey, fetch, context.signal);
+    const dockerHubContext = await createDockerHubActionContext(credential.apiKey, dockerHubFetch, context.signal);
     const url = createProviderProxyUrl(dockerHubApiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("authorization", `Bearer ${dockerHubContext.bearerToken}`);
@@ -43,7 +47,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await dockerHubFetch(url, {
       method: input.method,
       headers,
       body:

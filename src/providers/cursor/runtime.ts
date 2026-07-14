@@ -4,7 +4,7 @@ import type { CursorActionName } from "./actions.ts";
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type CursorActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -93,7 +93,7 @@ export const cursorActionHandlers: Record<CursorActionName, CursorActionHandler>
 
 export async function validateCursorCredential(
   apiKey: string,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };

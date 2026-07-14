@@ -6,11 +6,12 @@ import type {
 } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -19,8 +20,11 @@ import {
 import { bestbuyActionHandlers, bestbuyApiOrigin, validateBestbuyCredential } from "./runtime.ts";
 
 const service = "bestbuy";
+const bestbuyFetch = createProviderFetch({ skipDnsValidation: true });
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, bestbuyActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, bestbuyActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
@@ -31,7 +35,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await bestbuyFetch(url, {
       method: input.method,
       headers,
       body:

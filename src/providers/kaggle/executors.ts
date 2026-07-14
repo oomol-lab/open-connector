@@ -11,11 +11,12 @@ import type { KaggleActionName } from "./actions.ts";
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -25,6 +26,7 @@ import {
 const service = "kaggle";
 const kaggleApiBaseUrl = "https://www.kaggle.com/api/v1";
 const kaggleValidationPath = "/competitions/list";
+const kaggleFetch = createProviderFetch({ skipDnsValidation: true });
 
 type KaggleRequestPhase = "validate" | "execute";
 type QueryValue = string | number | boolean | undefined;
@@ -67,6 +69,7 @@ const kaggleActionHandlers: Record<KaggleActionName, KaggleActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<KaggleContext>({
   service,
   handlers: kaggleActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<KaggleContext> {
     const credential = await requireApiKeyCredential(context, service);
     const kaggleContext: KaggleContext = {
@@ -94,7 +97,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await kaggleFetch(url, {
       method: input.method,
       headers,
       body:

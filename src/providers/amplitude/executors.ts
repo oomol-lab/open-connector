@@ -21,6 +21,7 @@ const service = "amplitude";
 export const executors: ProviderExecutors = defineProviderExecutors<AmplitudeActionContext>({
   service,
   handlers: amplitudeActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher): Promise<AmplitudeActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     const dataResidency =
@@ -43,6 +44,7 @@ export const credentialValidators: CredentialValidators = {
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
+  skipDnsValidation: true,
   baseUrl: async (context) => {
     const credential = await requireApiKeyCredential(context, service);
     const dataResidency =

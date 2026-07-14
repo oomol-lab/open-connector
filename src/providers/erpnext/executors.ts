@@ -7,13 +7,14 @@ import type {
 } from "../../core/types.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -21,6 +22,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "erpnext";
+const proxyFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 const erpnextLoggedUserMethod = "frappe.auth.get_logged_user";
 const erpnextGetCountMethod = "frappe.client.get_count";
 const erpnextGetValueMethod = "frappe.client.get_value";
@@ -203,6 +205,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<ErpnextActio
       signal: context.signal,
     };
   },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
@@ -220,7 +223,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await proxyFetch(url, {
       method: input.method,
       headers,
       body:
@@ -239,6 +242,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     const baseUrl = normalizeBaseUrl(input.values.baseUrl);
     const apiSecret = readRequiredString(input.values.apiSecret, "apiSecret");
     const payload = await requestErpnext({
@@ -247,7 +251,7 @@ export const credentialValidators: CredentialValidators = {
       apiSecret,
       path: buildMethodPath(erpnextLoggedUserMethod),
       method: "GET",
-      fetcher,
+      fetcher: guardedFetcher,
       signal,
       phase: "validate",
     });
@@ -294,7 +298,7 @@ async function requestErpnext(input: ErpnextRequestOptions): Promise<unknown> {
   return payload;
 }
 
-function normalizeBaseUrl(value: unknown): string {
+function normalizeBaseUrl(value: unknown, allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed()): string {
   const raw = optionalString(value);
   if (!raw) {
     throw new ProviderRequestError(400, "baseUrl is required");
@@ -302,6 +306,7 @@ function normalizeBaseUrl(value: unknown): string {
 
   const url = assertPublicHttpUrl(raw, {
     fieldName: "baseUrl",
+    allowPrivateNetwork,
     createError: (message) => new ProviderRequestError(400, message),
   });
 

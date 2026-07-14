@@ -3,7 +3,7 @@ import type { RazorpayActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const razorpayApiBaseUrl = "https://api.razorpay.com/v1";
 const razorpayValidationPath = "/payments";
@@ -72,7 +72,7 @@ export const razorpayActionHandlers: Record<RazorpayActionName, RazorpayActionHa
 
 export async function validateRazorpayCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
 ): Promise<CredentialValidationResult> {
   const keySecret = input.apiKey;
   const keyId = requireRazorpayKeyId(input);

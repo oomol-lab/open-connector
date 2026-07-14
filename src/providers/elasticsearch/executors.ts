@@ -9,8 +9,9 @@ import type { ElasticsearchActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -23,6 +24,7 @@ import {
 } from "../provider-runtime.ts";
 import { elasticsearchExpandWildcardValues } from "./actions.ts";
 
+const elasticsearchFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 const elasticsearchUserAgent = providerUserAgent;
 const elasticsearchIndexInfoColumns = [
   "health",
@@ -86,6 +88,7 @@ export const elasticsearchActionHandlers: Record<ElasticsearchActionName, Elasti
 export const executors: ProviderExecutors = defineProviderExecutors<ElasticsearchActionContext>({
   service: "elasticsearch",
   handlers: elasticsearchActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<ElasticsearchActionContext> {
     const credential = await context.getCredential("elasticsearch");
     if (credential?.authType === "api_key") {
@@ -146,7 +149,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await elasticsearchFetch(url, init);
     if (!response.ok) {
       throw new ProviderRequestError(response.status, await readElasticsearchError(response));
     }
@@ -162,13 +165,14 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     const baseUrl = normalizeElasticsearchBaseUrl(input.values.baseUrl);
     const { payload } = await elasticsearchRequest<Record<string, unknown>>({
       baseUrl,
       authorization: buildApiKeyAuthHeader(requireElasticsearchField(input.apiKey, "apiKey")),
       method: "GET",
       path: "/_security/_authenticate",
-      fetcher,
+      fetcher: guardedFetcher,
       signal,
       phase: "validate",
     });
@@ -195,6 +199,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
   async customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     const baseUrl = normalizeElasticsearchBaseUrl(input.values.baseUrl);
     const username = requireElasticsearchField(input.values.username, "username");
     const password = requireElasticsearchField(input.values.password, "password");
@@ -203,7 +208,7 @@ export const credentialValidators: CredentialValidators = {
       authorization: buildBasicAuthHeader(username, password),
       method: "GET",
       path: "/_security/_authenticate",
-      fetcher,
+      fetcher: guardedFetcher,
       signal,
       phase: "validate",
     });
@@ -514,7 +519,7 @@ function buildElasticsearchUrl(
   return url;
 }
 
-function normalizeElasticsearchBaseUrl(value: unknown) {
+function normalizeElasticsearchBaseUrl(value: unknown, allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed()) {
   const trimmed = optionalString(value);
   if (!trimmed) {
     throw new ProviderRequestError(400, "baseUrl is required");
@@ -524,6 +529,7 @@ function normalizeElasticsearchBaseUrl(value: unknown) {
   try {
     parsed = assertPublicHttpUrl(trimmed, {
       fieldName: "baseUrl",
+      allowPrivateNetwork,
       createError: (message) => new ProviderRequestError(400, message),
     });
   } catch (error) {

@@ -9,6 +9,7 @@ import {
   requiredRecord,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineOAuthProviderExecutors,
   normalizeProviderProxyEndpoint,
@@ -22,6 +23,7 @@ import {
 
 const dropboxApiBaseUrl = "https://api.dropboxapi.com/2";
 const dropboxContentBaseUrl = "https://content.dropboxapi.com/2";
+const dropboxFetch = createProviderFetch({ skipDnsValidation: true });
 const dropboxMaxSimpleUploadBytes = 150 * 1024 * 1024;
 const dropboxContentEndpointPrefixes = [
   "/files/download",
@@ -123,7 +125,9 @@ export const dropboxActionHandlers: Record<string, ActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("dropbox", dropboxActionHandlers);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors("dropbox", dropboxActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -146,7 +150,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await dropboxFetch(url, init);
     if (!response.ok) {
       throw await normalizeDropboxHttpError(response, "Dropbox request failed");
     }

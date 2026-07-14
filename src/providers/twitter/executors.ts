@@ -10,11 +10,12 @@ import type { TwitterActionContext } from "./runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
@@ -22,6 +23,9 @@ import {
 import { fetchTwitterCurrentAccount, twitterActionHandlers, twitterApiBaseUrl } from "./runtime.ts";
 
 const service = "twitter";
+
+// Fixed-host proxy egress (twitterApiBaseUrl); DNS-rebinding check is redundant here.
+const twitterFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<TwitterActionContext>({
   service,
@@ -70,7 +74,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await twitterFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Twitter request failed with HTTP ${response.status}`);

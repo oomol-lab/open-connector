@@ -7,12 +7,14 @@ import type {
 } from "../../core/types.ts";
 
 import AliOss from "ali-oss";
-import { isIP } from "node:net";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerFetch,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -23,6 +25,8 @@ import {
 const service = "aliyun_oss";
 const sourceFetchTimeoutMs = 15_000;
 const maxSourceBytes = 20 * 1024 * 1024;
+
+const proxyFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 
 type AliyunBucket = {
   name?: string;
@@ -258,7 +262,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       ),
     );
 
-    const response = await fetch(url, init);
+    const response = await proxyFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(
@@ -424,7 +428,10 @@ async function aliyunPutObject(input: Record<string, unknown>, context: AliyunOs
   const objectKey = requireAliyunField(input.objectKey, "objectKey");
   const client = createClientForAction(input, context, bucket);
   const sourceUrl = optionalString(input.sourceUrl);
-  const sourceFile = sourceUrl ? await downloadSourceFile(sourceUrl, context.fetcher, context.signal) : null;
+  // A user-supplied sourceUrl is downloaded with the public-only fetch even when
+  // the deployment allows private networks: the private-network opt-in covers the
+  // trusted OSS endpoint, never an arbitrary user-provided download URL.
+  const sourceFile = sourceUrl ? await downloadSourceFile(sourceUrl, providerFetch, context.signal) : null;
   const resolvedContentType = optionalString(input.contentType) ?? sourceFile?.contentType;
   const body =
     sourceFile?.bytes ??
@@ -699,7 +706,7 @@ function buildFallbackObjectUrl(endpoint: string, bucket: string, objectKey: str
   return url.toString();
 }
 
-function parseAndValidateEndpoint(value: string): URL {
+function parseAndValidateEndpoint(value: string, allowPrivateNetwork = isPrivateNetworkAccessAllowed()): URL {
   const url = parseUrl(value.includes("://") ? value : `https://${value}`, "endpoint");
   if (url.protocol !== "https:") {
     throw new ProviderRequestError(400, "endpoint must use https");
@@ -707,7 +714,15 @@ function parseAndValidateEndpoint(value: string): URL {
   if (url.pathname !== "/" || url.search || url.hash) {
     throw new ProviderRequestError(400, "endpoint must not include path, query, or hash");
   }
-  validatePublicHostname(url.hostname, "endpoint");
+  // SDK-based actions build an ali-oss client from this endpoint and bypass the
+  // guarded fetch, so this is the sole SSRF guard for those paths. Delegate to
+  // the shared policy (blocks metadata hostnames and IPv6 unconditionally,
+  // private targets unless the deployment opts in) instead of a bespoke check.
+  assertPublicHttpUrl(url.toString(), {
+    fieldName: "endpoint",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
   return url;
 }
 
@@ -716,7 +731,13 @@ function validateSourceUrl(value: string): string {
   if (url.protocol !== "https:") {
     throw new ProviderRequestError(400, "sourceUrl must use https");
   }
-  validatePublicHostname(url.hostname, "sourceUrl");
+  // A user-supplied sourceUrl is always validated public-only, independent of the
+  // deployment's private-network opt-in (which only covers the trusted endpoint).
+  assertPublicHttpUrl(url.toString(), {
+    fieldName: "sourceUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork: false,
+  });
   return url.toString();
 }
 
@@ -732,20 +753,6 @@ function parseUrl(value: string, fieldName: "endpoint" | "sourceUrl"): URL {
       throw error;
     }
     throw new ProviderRequestError(400, `${fieldName} must be a valid URL`);
-  }
-}
-
-function validatePublicHostname(hostname: string, fieldName: "endpoint" | "sourceUrl"): void {
-  const normalizedHostname = hostname.toLowerCase();
-  if (
-    normalizedHostname === "localhost" ||
-    normalizedHostname.endsWith(".localhost") ||
-    normalizedHostname.endsWith(".local") ||
-    normalizedHostname.endsWith(".internal") ||
-    !normalizedHostname.includes(".") ||
-    isIP(normalizedHostname) !== 0
-  ) {
-    throw new ProviderRequestError(400, `${fieldName} must use a public hostname`);
   }
 }
 

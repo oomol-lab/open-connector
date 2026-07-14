@@ -4,11 +4,12 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireBearerCredential,
@@ -25,6 +26,7 @@ import { mondayStructureActionHandlers } from "./runtime-structure.ts";
 import { getMondayAuthorizationScopes, parseMondayScopeString } from "./scopes.ts";
 
 const service = "monday";
+const mondayFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface MondayActionContext {
   apiKey: string;
@@ -59,6 +61,7 @@ const actionHandlers = Object.fromEntries(
 export const executors: ProviderExecutors = defineProviderExecutors<MondayActionContext>({
   service,
   handlers: actionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<MondayActionContext> {
     const credential = await requireBearerCredential(context, service);
     return {
@@ -89,7 +92,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await mondayFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `monday request failed with HTTP ${response.status}`);

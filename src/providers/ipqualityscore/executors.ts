@@ -5,12 +5,13 @@ import type { IpqualityscoreActionName } from "./actions.ts";
 import { isIP } from "node:net";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -18,6 +19,7 @@ import {
 
 const service = "ipqualityscore";
 const ipqualityscoreApiBaseUrl = "https://www.ipqualityscore.com";
+const ipqualityscoreFetch = createProviderFetch({ skipDnsValidation: true });
 
 type IpqualityscoreRequestPhase = "validate" | "execute";
 type IpqualityscoreFamily = "email" | "ip" | "phone" | "url";
@@ -87,7 +89,9 @@ export const ipqualityscoreActionHandlers: Record<IpqualityscoreActionName, Ipqu
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipqualityscoreActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipqualityscoreActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -111,7 +115,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await ipqualityscoreFetch(url, {
       method: "GET",
       headers,
       signal: context.signal,

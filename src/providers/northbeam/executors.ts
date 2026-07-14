@@ -7,11 +7,12 @@ import type {
 import type { NorthbeamContext } from "./runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -25,10 +26,12 @@ import {
 } from "./runtime.ts";
 
 const service = "northbeam";
+const northbeamFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<NorthbeamContext>({
   service,
   handlers: northbeamActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<NorthbeamContext> {
     const credential = await requireApiKeyCredential(context, service);
     return resolveNorthbeamCredentialContext(
@@ -49,7 +52,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       credential.apiKey,
       credential.values,
       credential.metadata,
-      fetch,
+      northbeamFetch,
       context.signal,
     );
     const url = createProviderProxyUrl(northbeamApiBaseUrl, input.endpoint, input.query);
@@ -70,7 +73,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await northbeamFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Northbeam request failed with HTTP ${response.status}`);

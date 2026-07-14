@@ -13,12 +13,48 @@ import type {
 
 import { Buffer } from "node:buffer";
 import { CastError, optionalRecord, optionalScalarString, optionalString, requiredString } from "../core/cast.ts";
+import { createGuardedFetch } from "../core/guarded-fetch.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
 
 /**
  * Fetch-compatible function accepted by provider runtime helpers and tests.
  */
 export type ProviderFetch = typeof fetch;
+
+export interface ProviderFetchOptions {
+  /** Base transport; defaults to the global fetch. A guarded fetch is unwrapped so guards never stack. */
+  fetch?: ProviderFetch;
+  /** Allow private-network targets for this provider's egress (see `assertPublicHttpUrl`); default public-only. */
+  allowPrivateNetwork?: () => boolean;
+  /**
+   * Skip the DNS resolved-address check (URL and redirect guards still apply).
+   * Only pass for providers whose egress host is a hardcoded literal, never
+   * derived from user/credential input. See {@link GuardedFetchOptions.skipDnsValidation}.
+   */
+  skipDnsValidation?: boolean;
+}
+
+/**
+ * Create the SSRF-guarded fetch used for all provider egress: the request URL,
+ * every redirect hop, and (when DNS is available) every resolved address are
+ * validated against the shared public-URL policy, so a provider-reachable URL
+ * cannot redirect or resolve into loopback/link-local/metadata/private targets.
+ */
+export function createProviderFetch(options: ProviderFetchOptions = {}): ProviderFetch {
+  return createGuardedFetch({
+    fetch: options.fetch,
+    allowPrivateNetwork: options.allowPrivateNetwork,
+    skipDnsValidation: options.skipDnsValidation,
+    createError: (message) => new ProviderRequestError(502, message),
+  });
+}
+
+/**
+ * Shared public-only SSRF-guarded fetch for provider egress. Providers that
+ * issue their own requests (custom proxy executors, context builders) must use
+ * this instead of the global fetch.
+ */
+export const providerFetch: ProviderFetch = createProviderFetch();
 
 /**
  * Default User-Agent sent by local provider executors.
@@ -44,6 +80,10 @@ export interface ProviderExecutorDefinition<TContext> {
   handlers: Record<string, ProviderRuntimeHandler<TContext>>;
   createContext: ProviderRuntimeContextFactory<TContext>;
   fallbackMessage?: string;
+  /** Deployment-gated private-network opt-in applied to this provider's egress fetch (currently Dokploy). */
+  allowPrivateNetwork?: () => boolean;
+  /** Skip the redundant DNS resolved-address check; only for hardcoded-host providers. */
+  skipDnsValidation?: boolean;
 }
 
 export interface BearerCredential {
@@ -143,6 +183,10 @@ export interface ProviderProxyDefinition {
   auth: ProviderProxyAuth;
   allowedEndpoint?: (endpoint: string) => boolean;
   customizeRequest?: (input: ProviderProxyRequestCustomizationInput) => Promise<void> | void;
+  /** Deployment-gated private-network opt-in applied to this proxy's egress fetch (currently Dokploy). */
+  allowPrivateNetwork?: () => boolean;
+  /** Skip the redundant DNS resolved-address check; only for hardcoded-base-URL proxies. */
+  skipDnsValidation?: boolean;
 }
 
 const blockedProxyRequestHeaders = new Set([
@@ -313,6 +357,13 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
 }
 
 export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
+  const egressFetch =
+    input.allowPrivateNetwork || input.skipDnsValidation
+      ? createProviderFetch({
+          allowPrivateNetwork: input.allowPrivateNetwork,
+          skipDnsValidation: input.skipDnsValidation,
+        })
+      : providerFetch;
   return async (proxyInput: ProxyRequestInput, context: ExecutionContext): Promise<ProxyExecutionResult> => {
     try {
       const endpoint = normalizeProviderProxyEndpoint(proxyInput.endpoint);
@@ -349,7 +400,7 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         }
       }
 
-      const response = await fetch(url, init);
+      const response = await egressFetch(url, init);
       if (!response.ok) {
         throw new ProviderRequestError(
           response.status,
@@ -704,6 +755,13 @@ export function toProviderExecutionError(error: unknown, fallbackMessage: string
 export function defineProviderExecutors<TContext>(input: ProviderExecutorDefinition<TContext>): ProviderExecutors {
   const executors: ProviderExecutors = {};
   const fallbackMessage = input.fallbackMessage ?? "provider request failed";
+  const egressFetch =
+    input.allowPrivateNetwork || input.skipDnsValidation
+      ? createProviderFetch({
+          allowPrivateNetwork: input.allowPrivateNetwork,
+          skipDnsValidation: input.skipDnsValidation,
+        })
+      : providerFetch;
   for (const [name, handler] of Object.entries(input.handlers)) {
     executors[`${input.service}.${name}`] = async (actionInput, executionContext): Promise<ExecutionResult> => {
       try {
@@ -711,7 +769,7 @@ export function defineProviderExecutors<TContext>(input: ProviderExecutorDefinit
           ok: true,
           output: await handler(
             actionInput as Record<string, unknown>,
-            await input.createContext(executionContext, fetch),
+            await input.createContext(executionContext, egressFetch),
           ),
         };
       } catch (error) {
@@ -723,16 +781,27 @@ export function defineProviderExecutors<TContext>(input: ProviderExecutorDefinit
   return executors;
 }
 
+/** Egress-guard options shared by the credential-typed executor helpers. */
+export interface ProviderExecutorEgressOptions {
+  /** Deployment-gated private-network opt-in (see {@link ProviderExecutorDefinition.allowPrivateNetwork}). */
+  allowPrivateNetwork?: () => boolean;
+  /** Skip the redundant DNS resolved-address check; only for hardcoded-host providers. */
+  skipDnsValidation?: boolean;
+}
+
 /**
  * Define executors for providers that use the built-in API key credential.
  */
 export function defineApiKeyProviderExecutors(
   service: string,
   handlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>>,
+  options: ProviderExecutorEgressOptions = {},
 ): ProviderExecutors {
   return defineProviderExecutors<ApiKeyProviderContext>({
     service,
     handlers,
+    allowPrivateNetwork: options.allowPrivateNetwork,
+    skipDnsValidation: options.skipDnsValidation,
     async createContext(context, fetcher): Promise<ApiKeyProviderContext> {
       const credential = await requireApiKeyCredential(context, service);
       const providerContext: ApiKeyProviderContext = {
@@ -754,10 +823,13 @@ export function defineApiKeyProviderExecutors(
 export function defineOAuthProviderExecutors(
   service: string,
   handlers: Record<string, ProviderRuntimeHandler<OAuthProviderContext>>,
+  options: ProviderExecutorEgressOptions = {},
 ): ProviderExecutors {
   return defineProviderExecutors<OAuthProviderContext>({
     service,
     handlers,
+    allowPrivateNetwork: options.allowPrivateNetwork,
+    skipDnsValidation: options.skipDnsValidation,
     async createContext(context, fetcher): Promise<OAuthProviderContext> {
       const credential = await requireOAuthCredential(context, service);
       const providerContext: OAuthProviderContext = {
@@ -780,10 +852,13 @@ export function defineOAuthProviderExecutors(
 export function defineBearerProviderExecutors(
   service: string,
   handlers: Record<string, ProviderRuntimeHandler<BearerProviderContext>>,
+  options: ProviderExecutorEgressOptions = {},
 ): ProviderExecutors {
   return defineProviderExecutors<BearerProviderContext>({
     service,
     handlers,
+    allowPrivateNetwork: options.allowPrivateNetwork,
+    skipDnsValidation: options.skipDnsValidation,
     async createContext(context, fetcher): Promise<BearerProviderContext> {
       const credential = await requireBearerCredential(context, service);
       const providerContext: BearerProviderContext = {

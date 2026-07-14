@@ -12,8 +12,9 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -41,7 +42,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     const credential = await requireCustomCredential(context, service);
     const customerioContext = resolveCustomerioCredentialContext(
       credential.values,
-      fetch,
+      providerFetch,
       context.signal,
       credential.metadata,
     );
@@ -56,7 +57,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await providerFetch(url, {
       method: input.method,
       headers,
       body:

@@ -17,8 +17,9 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -303,7 +304,7 @@ async function requestFlomoProxy(
   init.signal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 
   try {
-    const response = await fetch(url, init);
+    const response = await providerFetch(url, init);
     if (!response.ok) {
       const text = await response.text().catch(() => "");
       throw new ProviderRequestError(

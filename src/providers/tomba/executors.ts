@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -15,9 +16,12 @@ import { tombaActionHandlers, tombaApiBaseUrl, validateTombaCredential } from ".
 
 const service = "tomba";
 
+const tombaFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: tombaActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher) {
     const credential = await requireApiKeyCredential(context, service);
     const apiSecret = credential.values.apiSecret || credential.values.secret;
@@ -61,7 +65,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await tombaFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Tomba request failed with HTTP ${response.status}`);

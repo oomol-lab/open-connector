@@ -2,11 +2,12 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { HiggsfieldAiContext } from "./runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -20,10 +21,12 @@ import {
 } from "./runtime.ts";
 
 const service = "higgsfield_ai";
+const higgsfieldAiFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<HiggsfieldAiContext>({
   service,
   handlers: higgsfieldAiActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher): Promise<HiggsfieldAiContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -55,7 +58,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await higgsfieldAiFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(

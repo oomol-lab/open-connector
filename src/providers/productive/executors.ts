@@ -8,6 +8,7 @@ export { executors };
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "productive",
+  skipDnsValidation: true,
   baseUrl: productiveApiBaseUrl,
   auth: { type: "api_key_header", name: "x-auth-token" },
   customizeRequest({ headers, credential }) {

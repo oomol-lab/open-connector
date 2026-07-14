@@ -8,6 +8,7 @@ import type {
 import type { AircallActionContext } from "./runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -26,10 +27,12 @@ import {
 } from "./runtime.ts";
 
 const service = "aircall";
+const aircallFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<AircallActionContext>({
   service,
   handlers: aircallActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<AircallActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -55,7 +58,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await aircallFetch(url, {
       method: input.method,
       headers,
       body:

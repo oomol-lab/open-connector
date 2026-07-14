@@ -10,7 +10,9 @@ import { moesifActionHandlers, moesifApiBaseUrl, validateMoesifCredential } from
 
 const service = "moesif";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, moesifActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, moesifActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
@@ -21,6 +23,7 @@ export const credentialValidators: CredentialValidators = {
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: moesifApiBaseUrl,
+  skipDnsValidation: true,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   customizeRequest({ headers }) {
     headers.set("accept", "application/json");

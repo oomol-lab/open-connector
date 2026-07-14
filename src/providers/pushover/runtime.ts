@@ -234,6 +234,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
         handler({ apiKey: context.apiKey, values: {}, input, transitFiles: context.transitFiles }, context.fetcher),
     ]),
   ) as Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>>,
+  { skipDnsValidation: true },
 );
 
 async function sendPushoverMessage(input: PushoverActionInput, fetcher: typeof fetch) {

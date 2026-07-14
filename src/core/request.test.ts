@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   assertPublicHttpUrl,
+  isBlockedIpAddress,
+  isIpv4Address,
   isPrivateNetworkAccessAllowed,
   parsePrivateNetworkAccessFlag,
   setPrivateNetworkAccessAllowed,
@@ -74,6 +76,95 @@ describe("assertPublicHttpUrl", () => {
       "http://[fd7a:115c:a1e0::1]/",
     ]) {
       expect(() => readPublicUrl(value, true)).toThrow();
+    }
+  });
+});
+
+describe("isBlockedIpAddress", () => {
+  it("blocks loopback, link-local, metadata, and other reserved IPv4 addresses", () => {
+    for (const address of [
+      "127.0.0.1",
+      "169.254.169.254",
+      "0.0.0.0",
+      "100.100.100.200",
+      "224.0.0.1",
+      "255.255.255.255",
+    ]) {
+      expect(isBlockedIpAddress(address)).toBe(true);
+      expect(isBlockedIpAddress(address, true)).toBe(true);
+    }
+  });
+
+  it("blocks private IPv4 addresses unless private networks are allowed", () => {
+    for (const address of ["10.0.0.5", "172.16.0.2", "192.168.1.1", "100.64.0.1"]) {
+      expect(isBlockedIpAddress(address)).toBe(true);
+      expect(isBlockedIpAddress(address, true)).toBe(false);
+    }
+  });
+
+  it("allows public IPv4 addresses", () => {
+    for (const address of ["1.1.1.1", "8.8.8.8", "93.184.216.34"]) {
+      expect(isBlockedIpAddress(address)).toBe(false);
+    }
+  });
+
+  it("blocks reserved IPv6 addresses regardless of the private-network flag", () => {
+    for (const address of ["::", "::1", "fe80::1", "ff02::1", "2001:db8::1", "100::1"]) {
+      expect(isBlockedIpAddress(address)).toBe(true);
+      expect(isBlockedIpAddress(address, true)).toBe(true);
+    }
+  });
+
+  it("blocks unique-local and site-local IPv6 unless private networks are allowed", () => {
+    for (const address of ["fd00::1", "fc00::1", "fec0::1", "fd7a:115c:a1e0::1"]) {
+      expect(isBlockedIpAddress(address)).toBe(true);
+      expect(isBlockedIpAddress(address, true)).toBe(false);
+    }
+  });
+
+  it("applies the IPv4 policy to v4-mapped, NAT64, and 6to4 IPv6 addresses", () => {
+    expect(isBlockedIpAddress("::ffff:169.254.169.254")).toBe(true);
+    expect(isBlockedIpAddress("::ffff:169.254.169.254", true)).toBe(true);
+    expect(isBlockedIpAddress("::ffff:10.0.0.5")).toBe(true);
+    expect(isBlockedIpAddress("::ffff:10.0.0.5", true)).toBe(false);
+    expect(isBlockedIpAddress("::ffff:8.8.8.8")).toBe(false);
+    // NAT64 well-known prefix embedding 127.0.0.1 (7f00:1).
+    expect(isBlockedIpAddress("64:ff9b::7f00:1")).toBe(true);
+    // 6to4 embedding 192.168.1.1 (c0a8:0101).
+    expect(isBlockedIpAddress("2002:c0a8:101::1")).toBe(true);
+    expect(isBlockedIpAddress("2002:c0a8:101::1", true)).toBe(false);
+  });
+
+  it("allows public IPv6 addresses and ignores zone suffixes", () => {
+    expect(isBlockedIpAddress("2606:4700:4700::1111")).toBe(false);
+    expect(isBlockedIpAddress("fe80::1%en0")).toBe(true);
+  });
+
+  it("treats unparseable addresses as blocked", () => {
+    for (const address of ["", "not-an-ip", "10.0.0", "1.2.3.4.5", ":::1", "fe80::1::2"]) {
+      expect(isBlockedIpAddress(address)).toBe(true);
+    }
+  });
+});
+
+describe("isIpv4Address", () => {
+  it("accepts canonical dotted-decimal IPv4 literals", () => {
+    for (const value of ["127.0.0.1", "10.0.0.5", "169.254.169.254", "0.0.0.0", "255.255.255.255"]) {
+      expect(isIpv4Address(value)).toBe(true);
+    }
+  });
+
+  it("rejects looser numeric forms that a resolver could still treat as an address", () => {
+    // Out-of-range or non-4-group numeric hosts must not be mistaken for a
+    // validated literal — they have to go through DNS resolved-address checks.
+    for (const value of ["0251.0376.0251.0376", "1.2.3.999", "300.1.1.1", "2130706433", "10.0.0", "1.2.3.4.5", ""]) {
+      expect(isIpv4Address(value)).toBe(false);
+    }
+  });
+
+  it("rejects hostnames and IPv6 literals", () => {
+    for (const value of ["example.com", "metadata.attacker.com", "::1", "fe80::1"]) {
+      expect(isIpv4Address(value)).toBe(false);
     }
   });
 });

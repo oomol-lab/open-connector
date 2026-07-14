@@ -16,11 +16,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -29,6 +30,7 @@ import {
 
 const service = "nethunt";
 const nethuntApiBaseUrl = "https://nethunt.com/api/v1/zapier";
+const nethuntFetch = createProviderFetch({ skipDnsValidation: true });
 const nethuntAuthTestPath = "/triggers/auth-test";
 
 type NethuntRequestPhase = "validate" | "execute";
@@ -156,6 +158,7 @@ export const nethuntActionHandlers: Record<string, NethuntActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<NethuntContext>({
   service,
   handlers: nethuntActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<NethuntContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -187,7 +190,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await nethuntFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `NetHunt request failed with HTTP ${response.status}`);

@@ -26,8 +26,9 @@ import {
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
   normalizeProviderProxyQuery,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyResponse,
   requireCustomCredential,
   toProviderProxyError,
@@ -207,7 +208,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await providerFetch(url, init);
     if (!response.ok) {
       const payload = await readFuxinPayload(response);
       throw normalizeFuxinError(response, payload, "execute");

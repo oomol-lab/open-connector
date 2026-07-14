@@ -4,6 +4,7 @@ import { compactObject, optionalRecord as asOptionalObject, optionalString } fro
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerFetch,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -82,7 +83,7 @@ export function mondayProviderError(_code: string, message: string, status = 502
 
 export async function validateMondayCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
   options: MondayCredentialValidationOptions = {},
 ): Promise<CredentialValidationResult> {
   const apiKey = optionalString(input.apiKey);

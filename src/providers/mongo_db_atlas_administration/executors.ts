@@ -13,13 +13,14 @@ import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
@@ -27,6 +28,7 @@ import {
 
 const service = "mongo_db_atlas_administration";
 const mongoDbAtlasAdministrationApiBaseUrl = "https://cloud.mongodb.com/api/atlas/v2";
+const atlasFetch = createProviderFetch({ skipDnsValidation: true });
 const atlasAcceptHeader = "application/vnd.atlas.2024-08-05+json";
 const defaultRequestTimeoutMs = 30_000;
 
@@ -104,6 +106,7 @@ export const mongoDbAtlasAdministrationActionHandlers: Record<
 export const executors: ProviderExecutors = defineProviderExecutors<AtlasActionContext>({
   service,
   handlers: mongoDbAtlasAdministrationActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<AtlasActionContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "api_key") {
@@ -140,7 +143,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       signal: context.signal,
     };
 
-    const unauthenticatedResponse = await fetch(url, init);
+    const unauthenticatedResponse = await atlasFetch(url, init);
     if (unauthenticatedResponse.status !== 401) {
       if (!unauthenticatedResponse.ok) {
         const text = await unauthenticatedResponse.text().catch(() => "");
@@ -165,7 +168,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }),
     );
 
-    const response = await fetch(url, {
+    const response = await atlasFetch(url, {
       ...init,
       headers: authorizedHeaders,
     });

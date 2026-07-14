@@ -9,11 +9,12 @@ import type { KlaviyoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -24,6 +25,7 @@ const service = "klaviyo";
 const klaviyoApiBaseUrl = "https://a.klaviyo.com";
 const klaviyoApiRevision = "2026-04-15";
 const accountValidationPath = "/api/accounts/";
+const klaviyoFetch = createProviderFetch({ skipDnsValidation: true });
 
 type KlaviyoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -51,7 +53,9 @@ export const klaviyoActionHandlers: Record<KlaviyoActionName, KlaviyoActionHandl
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, klaviyoActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, klaviyoActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -75,7 +79,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await klaviyoFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Klaviyo request failed with HTTP ${response.status}`);

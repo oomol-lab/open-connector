@@ -8,6 +8,7 @@ import type {
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -22,6 +23,8 @@ import { simpleAnalyticsActionHandlers, simpleAnalyticsBaseUrl, validateSimpleAn
 
 const service = "simple_analytics";
 
+const simpleAnalyticsFetch = createProviderFetch({ skipDnsValidation: true });
+
 interface SimpleAnalyticsContext extends ApiKeyProviderContext {
   userId?: string;
 }
@@ -29,6 +32,7 @@ interface SimpleAnalyticsContext extends ApiKeyProviderContext {
 export const executors: ProviderExecutors = defineProviderExecutors<SimpleAnalyticsContext>({
   service,
   handlers: simpleAnalyticsActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<SimpleAnalyticsContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -66,7 +70,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await simpleAnalyticsFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

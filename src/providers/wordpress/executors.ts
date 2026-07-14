@@ -5,12 +5,14 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -25,9 +27,12 @@ import {
 
 const service = "wordpress";
 
+const guardedProviderFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: wordpressActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
     return createWordpressContext(credential.apiKey, credential.values, fetcher, context.signal);
@@ -37,7 +42,12 @@ export const executors: ProviderExecutors = defineProviderExecutors({
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
     const credential = await requireApiKeyCredential(context, service);
-    const wordpressContext = createWordpressContext(credential.apiKey, credential.values, fetch, context.signal);
+    const wordpressContext = createWordpressContext(
+      credential.apiKey,
+      credential.values,
+      guardedProviderFetch,
+      context.signal,
+    );
     const url = createProviderProxyUrl(buildWordpressApiBaseUrl(wordpressContext.siteUrl), input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("authorization", `Basic ${btoa(`${wordpressContext.username}:${wordpressContext.apiKey}`)}`);
@@ -55,7 +65,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await guardedProviderFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `WordPress request failed with HTTP ${response.status}`);
@@ -68,6 +78,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
-    return validateWordpressCredential(input, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateWordpressCredential(input, guardedFetcher, signal);
   },
 };

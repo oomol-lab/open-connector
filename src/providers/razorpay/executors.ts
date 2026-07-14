@@ -7,6 +7,7 @@ import type {
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -20,6 +21,7 @@ import {
 import { razorpayActionHandlers, razorpayApiBaseUrl, validateRazorpayCredential } from "./runtime.ts";
 
 const service = "razorpay";
+const razorpayFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface RazorpayExecutorContext {
   keyId: string;
@@ -29,6 +31,7 @@ interface RazorpayExecutorContext {
 
 export const executors: ProviderExecutors = defineProviderExecutors<RazorpayExecutorContext>({
   service,
+  skipDnsValidation: true,
   handlers: razorpayActionHandlers,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<RazorpayExecutorContext> {
     const credential = await context.getCredential(service);
@@ -75,7 +78,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await razorpayFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

@@ -10,12 +10,14 @@ import type { ClickhouseActionName } from "./actions.ts";
 import type { ClickhouseActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -25,9 +27,12 @@ import { clickhouseActionHandlers, createClickhouseContext, validateClickhouseCr
 
 const service = "clickhouse";
 
+const clickhouseFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+
 export const executors: ProviderExecutors = defineProviderExecutors<ClickhouseActionContext>({
   service,
   handlers: clickhouseActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<ClickhouseActionContext> {
     const credential = await requireCustomCredential(context, service);
     return createClickhouseContext(credential.values, fetcher, context.signal);
@@ -38,7 +43,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<ClickhouseAc
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
     const credential = await requireCustomCredential(context, service);
-    const clickhouseContext = createClickhouseContext(credential.values, fetch, context.signal);
+    const clickhouseContext = createClickhouseContext(credential.values, clickhouseFetch, context.signal);
     const url = createProviderProxyUrl(clickhouseContext.baseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set(
@@ -50,7 +55,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", typeof input.body === "string" ? "text/plain; charset=utf-8" : "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await clickhouseFetch(url, {
       method: input.method,
       headers,
       body:
@@ -69,7 +74,8 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    return validateClickhouseCredential(input.values, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateClickhouseCredential(input.values, guardedFetcher, signal);
   },
 };
 

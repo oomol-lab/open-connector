@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineOAuthProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireOAuthCredential,
@@ -19,8 +20,11 @@ import {
 } from "./runtime.ts";
 
 const service = "linkedin";
+const linkedinFetch = createProviderFetch({ skipDnsValidation: true });
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, linkedinActionHandlers);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, linkedinActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -44,7 +48,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await linkedinFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `LinkedIn request failed with HTTP ${response.status}`);

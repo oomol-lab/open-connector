@@ -9,11 +9,12 @@ import type {
 import { Buffer } from "node:buffer";
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -23,6 +24,8 @@ import { dataForSeoActionHandlers, dataForSeoApiBaseUrl, requestDataForSeoUserDa
 
 const service = "dataforseo";
 
+const dataForSeoFetch = createProviderFetch({ skipDnsValidation: true });
+
 interface DataForSeoContext {
   login: string;
   password: string;
@@ -31,6 +34,7 @@ interface DataForSeoContext {
 
 export const executors: ProviderExecutors = defineProviderExecutors<DataForSeoContext>({
   service,
+  skipDnsValidation: true,
   handlers: dataForSeoActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<DataForSeoContext> {
     const credential = await requireCustomCredential(context, service);
@@ -63,7 +67,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await dataForSeoFetch(url, {
       method: input.method,
       headers,
       body:

@@ -14,6 +14,7 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import { arrayPayload, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -27,6 +28,7 @@ import {
 
 const service = "quickbase";
 const apiBaseUrl = "https://api.quickbase.com/v1";
+const quickbaseFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface QuickbaseContext {
   apiKey: string;
@@ -134,6 +136,7 @@ export const quickbaseActionHandlers: Record<string, Handler> = {
 
 export const executors: ProviderExecutors = defineProviderExecutors<QuickbaseContext>({
   service,
+  skipDnsValidation: true,
   handlers: quickbaseActionHandlers,
   async createContext(context, fetcher) {
     const credential = await requireApiKeyCredential(context, service);
@@ -170,7 +173,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await quickbaseFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

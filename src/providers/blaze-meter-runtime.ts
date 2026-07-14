@@ -4,8 +4,9 @@ import type { ProviderFetch, ProviderRuntimeHandler } from "./provider-runtime.t
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../core/cast.ts";
 import {
-  createProviderTimeout,
+  createProviderFetch,
   createProviderProxyUrl,
+  createProviderTimeout,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
@@ -20,6 +21,7 @@ export const blazeMeterValidationPath = "/user";
 
 const blazeMeterRequestBaseUrl = "https://a.blazemeter.com/api/v4/";
 const blazeMeterDefaultTimeoutMs = 30_000;
+const blazeMeterFetch = createProviderFetch({ skipDnsValidation: true });
 
 export type BlazeMeterPhase = "validate" | "execute";
 export type BlazeMeterMethod = "GET" | "PUT";
@@ -158,7 +160,7 @@ export function createBlazeMeterProxyExecutor(service: string): ProviderProxyExe
         headers.set("content-type", "application/json");
       }
 
-      const response = await fetch(url, {
+      const response = await blazeMeterFetch(url, {
         method: input.method,
         headers,
         body:

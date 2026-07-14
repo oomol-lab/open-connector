@@ -4,7 +4,7 @@ import type { TaniumActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -89,7 +89,11 @@ export async function validateTaniumCredential(
   };
 }
 
-export function normalizeTaniumGatewayUrl(value: unknown): string {
+// Private-network egress is gated by deployment config; see isPrivateNetworkAccessAllowed.
+export function normalizeTaniumGatewayUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   if (typeof value !== "string" || !value.trim()) {
     throw new ProviderRequestError(400, "gatewayUrl is required");
   }
@@ -121,6 +125,7 @@ export function normalizeTaniumGatewayUrl(value: unknown): string {
   return assertPublicHttpUrl(url.toString(), {
     fieldName: "gatewayUrl",
     createError: requestInputError,
+    allowPrivateNetwork,
   }).toString();
 }
 

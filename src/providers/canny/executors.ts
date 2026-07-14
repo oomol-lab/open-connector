@@ -8,11 +8,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -21,6 +22,7 @@ import {
 
 const service = "canny";
 const cannyApiBaseUrl = "https://canny.io/api";
+const cannyFetch = createProviderFetch({ skipDnsValidation: true });
 
 type CannyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -60,7 +62,9 @@ export const cannyActionHandlers: Record<string, CannyActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, cannyActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, cannyActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
@@ -69,7 +73,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set("content-type", "application/json");
     headers.set("user-agent", providerUserAgent);
-    const response = await fetch(url.toString(), {
+    const response = await cannyFetch(url.toString(), {
       method: input.method,
       headers,
       body: JSON.stringify({ ...optionalRecord(input.body), apiKey: credential.apiKey }),

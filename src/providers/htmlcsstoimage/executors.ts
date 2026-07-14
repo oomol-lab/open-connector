@@ -8,11 +8,12 @@ import type { HtmlCssToImageActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -26,10 +27,12 @@ import {
 } from "./runtime.ts";
 
 const service = "htmlcsstoimage";
+const htmlCssToImageFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<HtmlCssToImageActionContext>({
   service,
   handlers: htmlCssToImageActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<HtmlCssToImageActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -70,7 +73,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await htmlCssToImageFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(

@@ -19,11 +19,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -32,6 +33,7 @@ import {
 
 const service = "crisp";
 const crispApiBaseUrl = "https://api.crisp.chat/v1";
+const crispFetch = createProviderFetch({ skipDnsValidation: true });
 
 type CrispRequestPhase = "validate" | "execute";
 type CrispTokenTier = "website" | "plugin";
@@ -107,6 +109,7 @@ export const crispActionHandlers: Record<CrispActionName, CrispActionHandler> = 
 export const executors: ProviderExecutors = defineProviderExecutors<CrispContext>({
   service,
   handlers: crispActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<CrispContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -137,7 +140,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await crispFetch(url, {
       method: input.method,
       headers,
       body:

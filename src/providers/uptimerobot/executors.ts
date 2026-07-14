@@ -3,6 +3,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -20,6 +21,9 @@ import {
 const service = "uptimerobot";
 const uptimerobotApiBaseUrl = "https://api.uptimerobot.com/v2";
 const uptimerobotDefaultRequestTimeoutMs = 30_000;
+
+// Fixed-host proxy egress (uptimerobotApiBaseUrl); DNS-rebinding check is redundant here.
+const uptimerobotProxyFetch = createProviderFetch({ skipDnsValidation: true });
 
 type UptimerobotRequestPhase = "validate" | "execute";
 type UptimerobotActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -93,7 +97,9 @@ export const uptimerobotActionHandlers: Record<string, UptimerobotActionHandler>
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, uptimerobotActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, uptimerobotActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -111,7 +117,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     body.set("api_key", credential.apiKey);
     body.set("format", "json");
 
-    const response = await fetch(url, {
+    const response = await uptimerobotProxyFetch(url, {
       method: input.method,
       headers,
       body,

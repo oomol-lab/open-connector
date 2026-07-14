@@ -10,8 +10,9 @@ import type { RocketChatActionName } from "./actions.ts";
 
 import { isIP } from "node:net";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -25,6 +26,8 @@ import {
 const service = "rocket_chat";
 const requestTimeoutMs = 30_000;
 const validationPath = "/me";
+
+const privateAwareFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 
 interface RocketChatCredential {
   baseUrl: string;
@@ -162,6 +165,7 @@ export const rocketChatActionHandlers: Record<RocketChatActionName, RocketChatAc
 export const executors: ProviderExecutors = defineProviderExecutors<RocketChatContext>({
   service,
   handlers: rocketChatActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<RocketChatContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "custom_credential") {
@@ -178,9 +182,10 @@ export const executors: ProviderExecutors = defineProviderExecutors<RocketChatCo
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const credential = readRocketChatCredential(input.values);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     const payload = await requestRocketChatObject({
       credential,
-      fetcher,
+      fetcher: guardedFetcher,
       signal,
       path: validationPath,
       phase: "validate",
@@ -233,7 +238,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await privateAwareFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
@@ -352,8 +357,11 @@ function createRocketChatError(
   return new ProviderRequestError(status || 502, message, payload);
 }
 
-function readRocketChatCredential(input: Record<string, string>): RocketChatCredential {
-  const baseUrl = normalizeRocketChatBaseUrl(readCredentialString(input, "baseUrl"));
+function readRocketChatCredential(
+  input: Record<string, string>,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): RocketChatCredential {
+  const baseUrl = normalizeRocketChatBaseUrl(readCredentialString(input, "baseUrl"), allowPrivateNetwork);
   const userId = readCredentialString(input, "userId");
   const authToken = readCredentialString(input, "authToken");
   return {
@@ -372,9 +380,13 @@ function readCredentialString(input: Record<string, string>, key: string): strin
   return value.trim();
 }
 
-function normalizeRocketChatBaseUrl(input: string): string {
+function normalizeRocketChatBaseUrl(
+  input: string,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const url = assertPublicHttpUrl(input, {
     fieldName: "baseUrl",
+    allowPrivateNetwork,
     createError: (message) => new ProviderRequestError(400, message),
   });
   if (url.protocol !== "https:") {
@@ -383,7 +395,9 @@ function normalizeRocketChatBaseUrl(input: string): string {
   if (url.username || url.password) {
     throw new ProviderRequestError(400, "baseUrl must not include credentials");
   }
-  validateRocketChatHostname(url.hostname);
+  if (!allowPrivateNetwork) {
+    validateRocketChatHostname(url.hostname);
+  }
   url.hash = "";
   url.search = "";
   url.pathname = trimTrailingSlashes(url.pathname);

@@ -58,6 +58,7 @@ export const sendsparkActionHandlers: Record<SendsparkActionName, SendsparkActio
 
 export const sendsparkExecutorDefinition: ProviderExecutorDefinition<SendsparkContext> = {
   service: "sendspark",
+  skipDnsValidation: true,
   handlers: sendsparkActionHandlers,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<SendsparkContext> {
     return createSendsparkContext(await requireApiKeyCredential(context, service), fetcher, context.signal);

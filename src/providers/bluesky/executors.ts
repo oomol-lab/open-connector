@@ -8,11 +8,12 @@ import type { BlueskyContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -27,10 +28,12 @@ import {
 } from "./runtime.ts";
 
 const service = "bluesky";
+const blueskyFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<BlueskyContext>({
   service,
   handlers: blueskyActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher): Promise<BlueskyContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -48,7 +51,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     const session = await createBlueskySession({
       identifier: requireBlueskyHandle(optionalString(credential.values.handle)),
       appPassword: credential.apiKey,
-      fetcher: fetch,
+      fetcher: blueskyFetch,
       signal: context.signal,
       phase: "execute",
     });
@@ -60,7 +63,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await blueskyFetch(url, {
       method: input.method,
       headers,
       body:

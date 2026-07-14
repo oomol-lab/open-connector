@@ -15,6 +15,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   ProviderRequestError,
@@ -29,6 +30,7 @@ const stsApiVersion = "2011-06-15";
 const awsServiceName = "sts";
 const defaultRegion = "ap-southeast-1";
 const defaultRoleSessionName = "oomol-connect";
+const awsStsFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface AwsStsContext {
   values: Record<string, string>;
@@ -85,6 +87,7 @@ export const awsStsActionHandlers: Record<string, AwsStsActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<AwsStsContext>({
   service,
   handlers: awsStsActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<AwsStsContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "custom_credential") {
@@ -122,7 +125,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       body,
     });
 
-    const response = await fetch(url, {
+    const response = await awsStsFetch(url, {
       method: "POST",
       headers,
       body,

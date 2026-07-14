@@ -8,8 +8,9 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -24,6 +25,7 @@ import {
 const service = "bark";
 const barkDefaultBaseUrl = "https://api.day.app";
 const barkSuccessCode = 200;
+const barkProxyFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 
 interface BarkContext extends ApiKeyProviderContext {
   baseUrl: string;
@@ -62,6 +64,7 @@ export const barkActionHandlers: Record<string, BarkActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<BarkContext>({
   service,
   handlers: barkActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context, fetcher): Promise<BarkContext> {
     const credential = await requireApiKeyCredential(context, service);
     const resolved = resolveBarkCredential(
@@ -94,7 +97,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await barkProxyFetch(url, {
       method: input.method,
       headers,
       body,
@@ -113,9 +116,10 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const credential = resolveBarkCredential(input.apiKey, optionalString(input.values.baseUrl));
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     await requestBarkServerPing({
       baseUrl: credential.baseUrl,
-      fetcher,
+      fetcher: guardedFetcher,
       signal,
     });
 
@@ -270,24 +274,28 @@ async function requestBarkRaw(input: {
   return response;
 }
 
-function resolveBarkCredential(apiKey: string, baseUrlInput?: string): BarkCredential {
+function resolveBarkCredential(
+  apiKey: string,
+  baseUrlInput?: string,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): BarkCredential {
   const trimmedApiKey = apiKey.trim();
   if (!trimmedApiKey) {
     throw new ProviderRequestError(400, "Bark device key is required");
   }
 
-  const parsedFromUrl = parseBarkPushUrl(trimmedApiKey);
+  const parsedFromUrl = parseBarkPushUrl(trimmedApiKey, allowPrivateNetwork);
   if (parsedFromUrl) {
     return parsedFromUrl;
   }
 
   return {
     deviceKey: trimmedApiKey,
-    baseUrl: normalizeBarkBaseUrl(baseUrlInput),
+    baseUrl: normalizeBarkBaseUrl(baseUrlInput, allowPrivateNetwork),
   };
 }
 
-function parseBarkPushUrl(value: string): BarkCredential | undefined {
+function parseBarkPushUrl(value: string, allowPrivateNetwork: boolean): BarkCredential | undefined {
   if (!value.includes("://")) {
     return undefined;
   }
@@ -296,6 +304,7 @@ function parseBarkPushUrl(value: string): BarkCredential | undefined {
   try {
     url = assertPublicHttpUrl(value, {
       fieldName: "Bark push URL",
+      allowPrivateNetwork,
       createError: (message) => new ProviderRequestError(400, message),
     });
   } catch (error) {
@@ -321,14 +330,15 @@ function parseBarkPushUrl(value: string): BarkCredential | undefined {
 
   return {
     deviceKey,
-    baseUrl: normalizeBarkBaseUrl(`${url.origin}${basePath}`),
+    baseUrl: normalizeBarkBaseUrl(`${url.origin}${basePath}`, allowPrivateNetwork),
   };
 }
 
-function normalizeBarkBaseUrl(value?: string): string {
+function normalizeBarkBaseUrl(value?: string, allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed()): string {
   const candidate = value?.trim() || barkDefaultBaseUrl;
   const url = assertPublicHttpUrl(candidate, {
     fieldName: "Bark baseUrl",
+    allowPrivateNetwork,
     createError: (message) => new ProviderRequestError(400, message),
   });
 

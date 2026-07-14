@@ -11,18 +11,20 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "ipinfo_io";
+const ipinfoIoFetch = createProviderFetch({ skipDnsValidation: true });
 const ipinfoLegacyBaseUrl = "https://ipinfo.io";
 const ipinfoLiteBaseUrl = "https://api.ipinfo.io/lite";
 const ipinfoLookupBaseUrl = "https://api.ipinfo.io/lookup";
@@ -133,7 +135,9 @@ export const ipinfoIoActionHandlers: Record<IpinfoIoActionName, IpinfoIoActionHa
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipinfoIoActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipinfoIoActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -161,7 +165,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await ipinfoIoFetch(url, init);
     if (!response.ok) {
       throw createIpinfoError(response, await readIpinfoPayload(response, true), "execute");
     }

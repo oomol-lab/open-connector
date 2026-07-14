@@ -10,10 +10,11 @@ import type { DiscourseActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
-  createProviderTimeout,
+  createProviderFetch,
   createProviderProxyUrl,
+  createProviderTimeout,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
@@ -25,6 +26,8 @@ import {
 } from "../provider-runtime.ts";
 
 export const discourseDefaultRequestTimeoutMs = 30_000;
+
+const discourseProxyFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 
 type DiscourseHttpMethod = "GET" | "POST";
 type DiscoursePhase = "validate" | "execute";
@@ -203,6 +206,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<DiscourseAct
       signal: context.signal,
     };
   },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
@@ -225,7 +229,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await discourseProxyFetch(url, {
       method: input.method,
       headers,
       body:
@@ -244,12 +248,16 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
+    // Re-guard the shared validator fetcher with Discourse's private-network
+    // opt-in so validating a private baseUrl works when the deployment allows
+    // it (createProviderFetch unwraps an already-guarded fetcher).
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     return validateDiscourseCredential(
       {
         ...input.values,
         apiKey: input.apiKey,
       },
-      fetcher,
+      guardedFetcher,
       signal,
     );
   },
@@ -292,7 +300,20 @@ async function validateDiscourseCredential(
   };
 }
 
-export function normalizeDiscourseBaseUrl(value: unknown): string {
+/**
+ * Validates a Discourse instance URL, rejects embedded credentials and unsafe
+ * targets, and returns its origin.
+ *
+ * Private/overlay-network targets (RFC 1918, Tailscale, NetBird, private
+ * hostnames) are only accepted when the deployment opts in through
+ * `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`; otherwise the shared public-only SSRF
+ * guard applies. https is always required regardless of the opt-in.
+ * `allowPrivateNetwork` may be passed explicitly (used by tests).
+ */
+export function normalizeDiscourseBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   if (typeof value !== "string" || !value.trim()) {
     throw new ProviderRequestError(400, "baseUrl is required");
   }
@@ -302,6 +323,7 @@ export function normalizeDiscourseBaseUrl(value: unknown): string {
     url = assertPublicHttpUrl(value.trim(), {
       fieldName: "baseUrl",
       createError: (message) => new ProviderRequestError(400, message),
+      allowPrivateNetwork,
     });
   } catch (error) {
     if (error instanceof ProviderRequestError) {

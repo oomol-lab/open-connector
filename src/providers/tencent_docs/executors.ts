@@ -9,10 +9,11 @@ import type {
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireOAuthCredential,
@@ -22,6 +23,8 @@ import {
 import { tencentDocsActionHandlers, tencentDocsApiBaseUrl } from "./runtime.ts";
 
 const service = "tencent_docs";
+
+const tencentDocsFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = Object.fromEntries(
   Object.entries(tencentDocsActionHandlers).map(([name, handler]) => [
@@ -53,7 +56,7 @@ export const executors: ProviderExecutors = Object.fromEntries(
             accessToken: credential.accessToken,
             clientId: clientId ?? "",
             openID: openID ?? "",
-            fetcher: fetch,
+            fetcher: tencentDocsFetch,
             signal: context.signal,
           }),
         };
@@ -101,7 +104,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await tencentDocsFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(

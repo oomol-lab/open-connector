@@ -21,8 +21,9 @@ import {
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -217,7 +218,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
     }
 
-    const response = await fetch(url, init);
+    const response = await providerFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Mailchimp request failed with HTTP ${response.status}`);

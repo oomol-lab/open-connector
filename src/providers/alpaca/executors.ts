@@ -7,11 +7,12 @@ import type {
 } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -23,10 +24,12 @@ const service = "alpaca";
 const paperTradingBaseUrl = "https://paper-api.alpaca.markets";
 const liveTradingBaseUrl = "https://api.alpaca.markets";
 const dataBaseUrl = "https://data.alpaca.markets";
+const alpacaFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: alpacaActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -60,7 +63,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     headers.set("apca-api-secret-key", alpacaCredential.apiSecretKey);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await alpacaFetch(url, {
       method: input.method,
       headers,
       body:

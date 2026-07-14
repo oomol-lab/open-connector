@@ -10,11 +10,12 @@ import { Buffer } from "node:buffer";
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -27,6 +28,8 @@ const feishuCustomBotWebhookPathPrefix = "/open-apis/bot/v2/hook/";
 const feishuCustomBotAllowedWebhookHosts = new Set([new URL(feishuCustomBotApiBaseUrl).host]);
 const feishuCustomBotMaxPayloadBytes = 20 * 1024;
 const feishuCustomBotRequestTimeoutMs = 30_000;
+
+const feishuCustomBotFetch = createProviderFetch({ skipDnsValidation: true });
 const feishuCustomBotProbeBadRequestCode = 9499;
 const feishuCustomBotKeywordNotFoundCode = 19024;
 const feishuCustomBotProbePayload = {
@@ -134,6 +137,7 @@ export const feishuCustomBotActionHandlers: Record<FeishuCustomBotActionName, Fe
 
 export const executors: ProviderExecutors = defineProviderExecutors<FeishuCustomBotActionContext>({
   service,
+  skipDnsValidation: true,
   handlers: feishuCustomBotActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<FeishuCustomBotActionContext> {
     const credential = await requireApiKeyCredential(context, service);
@@ -181,7 +185,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
     const requestSignal = createFeishuCustomBotRequestSignal(context.signal);
     try {
-      const response = await fetch(webhook, {
+      const response = await feishuCustomBotFetch(webhook, {
         method: "POST",
         headers,
         body: requestBody,

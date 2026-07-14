@@ -12,11 +12,12 @@ import { Buffer } from "node:buffer";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -26,6 +27,7 @@ import {
 const service = "chaserhq";
 const apiBaseUrl = "https://openapi.chaserhq.com";
 const apiVersionBaseUrl = "https://openapi.chaserhq.com/v1";
+const chaserhqFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface ChaserContext {
   apiKey: string;
@@ -96,6 +98,7 @@ export const chaserhqActionHandlers: Record<string, Handler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<ChaserContext>({
   service,
   handlers: chaserhqActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<ChaserContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -124,7 +127,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     headers.set("authorization", `Basic ${Buffer.from(`${credential.apiKey}:${apiSecret}`).toString("base64")}`);
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await chaserhqFetch(url, {
       method: input.method,
       headers,
       body:

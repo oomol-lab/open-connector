@@ -8,11 +8,12 @@ import type {
 
 import { Buffer } from "node:buffer";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -21,10 +22,12 @@ import {
 import { agoraActionHandlers, agoraApiBaseUrl, readAgoraCustomerId, validateAgoraCredential } from "./runtime.ts";
 
 const service = "agora";
+const agoraFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: agoraActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -48,7 +51,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await agoraFetch(url, {
       method: input.method,
       headers,
       body:

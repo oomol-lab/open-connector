@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -15,7 +16,11 @@ import { tushareActionHandlers, tushareApiBaseUrl, validateTushareCredential } f
 
 const service = "tushare";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, tushareActionHandlers);
+const tushareFetch = createProviderFetch({ skipDnsValidation: true });
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, tushareActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -30,7 +35,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     headers.set("content-type", "application/json");
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(new URL(tushareApiBaseUrl), {
+    const response = await tushareFetch(new URL(tushareApiBaseUrl), {
       method: input.method,
       headers,
       body: JSON.stringify({ ...body, token: credential.apiKey }),

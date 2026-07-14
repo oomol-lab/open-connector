@@ -17,11 +17,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
@@ -30,6 +31,8 @@ import { figmaProviderScopes } from "./scopes.ts";
 
 const service = "figma";
 const figmaApiBaseUrl = "https://api.figma.com";
+
+const figmaFetch = createProviderFetch({ skipDnsValidation: true });
 
 type FigmaRequestPhase = "validate" | "execute";
 
@@ -144,6 +147,7 @@ export const figmaActionHandlers: Record<FigmaActionName, FigmaActionHandler> = 
 
 export const executors: ProviderExecutors = defineProviderExecutors<FigmaActionContext>({
   service,
+  skipDnsValidation: true,
   handlers: figmaActionHandlers,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<FigmaActionContext> {
     const credential = await context.getCredential(service);
@@ -183,7 +187,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await figmaFetch(url, {
       method: input.method,
       headers,
       body:

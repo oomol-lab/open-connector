@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -20,7 +21,11 @@ import {
 
 const service = "tinypng";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, tinypngActionHandlers);
+const tinypngFetch = createProviderFetch({ skipDnsValidation: true });
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, tinypngActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -42,7 +47,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await tinypngFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `tinypng request failed with HTTP ${response.status}`);

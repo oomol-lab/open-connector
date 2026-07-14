@@ -10,11 +10,12 @@ import type { MailjetContext } from "./runtime.ts";
 import { Buffer } from "node:buffer";
 import { optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -24,10 +25,12 @@ import { mailjetActionHandlers, validateMailjetCredential } from "./runtime.ts";
 
 const service = "mailjet";
 const mailjetApiBaseUrl = "https://api.mailjet.com/v3/REST";
+const mailjetFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<MailjetContext>({
   service,
   handlers: mailjetActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<MailjetContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -60,7 +63,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await mailjetFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Mailjet request failed with HTTP ${response.status}`);

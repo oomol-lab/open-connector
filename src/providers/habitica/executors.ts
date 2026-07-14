@@ -14,17 +14,19 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "habitica";
 const habiticaApiBaseUrl = "https://habitica.com/api/v3";
+const habiticaFetch = createProviderFetch({ skipDnsValidation: true });
 const habiticaDefaultRequestTimeoutMs = 30_000;
 
 type HabiticaRequestPhase = "validate" | "execute";
@@ -100,6 +102,7 @@ export const habiticaActionHandlers: Record<HabiticaActionName, HabiticaActionHa
 export const executors: ProviderExecutors = defineProviderExecutors<HabiticaActionContext>({
   service,
   handlers: habiticaActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<HabiticaActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -135,7 +138,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
     }
 
-    const response = await fetch(url, init);
+    const response = await habiticaFetch(url, init);
     const payload = await readHabiticaPayload(response);
     if (!response.ok) {
       throw createHabiticaError(response.status, payload, "execute");

@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
@@ -16,6 +17,7 @@ import { executors, qianfanApiBaseUrl, qianfanApiOrigin, validateQianfanCredenti
 export { executors };
 
 const service = "qianfan";
+const qianfanFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher }) {
@@ -47,7 +49,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await qianfanFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import {
+  createProviderFetch,
   defineProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
@@ -15,9 +16,12 @@ import { requestTiDBProxy, resolveTiDBProxyTarget, tidbActionHandlers, validateT
 
 const service = "tidb";
 
+const tidbFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: tidbActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher) {
     const credential = await requireCustomCredential(context, service);
     return {
@@ -50,7 +54,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       body,
       publicKey: credential.values.publicKey,
       privateKey: credential.values.privateKey,
-      fetcher: fetch,
+      fetcher: tidbFetch,
       signal: context.signal,
     });
 

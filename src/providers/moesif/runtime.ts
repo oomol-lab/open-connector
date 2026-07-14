@@ -14,8 +14,9 @@ import { queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
 } from "../provider-runtime.ts";
 
 export const moesifApiBaseUrl = "https://api.moesif.com/v1";
@@ -141,7 +142,7 @@ export const moesifActionHandlers: Record<MoesifActionName, MoesifActionHandler>
 
 export async function validateMoesifCredential(
   apiKey: string,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const payload = await requestMoesifJson({

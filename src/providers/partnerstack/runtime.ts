@@ -67,6 +67,7 @@ export const partnerstackActionHandlers: Record<PartnerstackActionName, Partners
 export const executors: ProviderExecutors = defineProviderExecutors<PartnerstackContext>({
   service: "partnerstack",
   handlers: partnerstackActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher): Promise<PartnerstackContext> {
     const credential = await requireApiKeyCredential(context, "partnerstack");
     return {

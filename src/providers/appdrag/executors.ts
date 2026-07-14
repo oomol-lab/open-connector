@@ -8,11 +8,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -23,6 +24,7 @@ const service = "appdrag";
 const appdragHomepageUrl = "https://appdrag.com";
 const appdragDefaultRequestTimeoutMs = 30_000;
 const appdragResponseWrapperDescription = "/api/<folder>/<function>";
+const appdragFetch = createProviderFetch({ skipDnsValidation: true });
 
 type AppdragHttpMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
 type AppdragEnvironment = "default" | "dev" | "preprod" | "prod";
@@ -41,7 +43,9 @@ export const appdragActionHandlers: Record<string, AppdragActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, appdragActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, appdragActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
@@ -64,7 +68,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await appdragFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);

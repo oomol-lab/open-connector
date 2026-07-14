@@ -7,12 +7,14 @@ import type {
 import type { GongContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -22,9 +24,12 @@ import { gongActionHandlers, resolveGongCredentialContext, validateGongCredentia
 
 const service = "gong";
 
+const gongFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+
 export const executors: ProviderExecutors = defineProviderExecutors<GongContext>({
   service,
   handlers: gongActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<GongContext> {
     const credential = await requireCustomCredential(context, service);
     return resolveGongCredentialContext(credential.values, fetcher, context.signal);
@@ -35,7 +40,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<GongContext>
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
     const credential = await requireCustomCredential(context, service);
-    const gongContext = resolveGongCredentialContext(credential.values, fetch, context.signal);
+    const gongContext = resolveGongCredentialContext(credential.values, gongFetch, context.signal);
     const url = createProviderProxyUrl(gongContext.apiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set(
@@ -56,7 +61,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await gongFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `Gong request failed with HTTP ${response.status}`);
@@ -70,6 +75,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher, signal }) {
-    return validateGongCredential(input.values, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateGongCredential(input.values, guardedFetcher, signal);
   },
 };

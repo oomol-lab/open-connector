@@ -5,12 +5,14 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
@@ -24,6 +26,8 @@ import {
 
 const service = "woocommerce";
 
+const proxyFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: woocommerceActionHandlers,
@@ -32,6 +36,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     return resolveWooCommerceCredentialContext(credential.values, fetcher, context.signal, context.transitFiles);
   },
   fallbackMessage: "woocommerce request failed",
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
@@ -39,7 +44,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const credential = await requireCustomCredential(context, service);
     const credentialContext = resolveWooCommerceCredentialContext(
       credential.values,
-      fetch,
+      proxyFetch,
       context.signal,
       context.transitFiles,
     );
@@ -63,7 +68,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await proxyFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(
@@ -79,6 +84,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher, signal }) {
-    return validateWooCommerceCredential(input.values, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateWooCommerceCredential(input.values, guardedFetcher, signal);
   },
 };

@@ -8,11 +8,12 @@ import type {
 import type { WacheteContext } from "./runtime.ts";
 
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -28,9 +29,13 @@ import {
 
 const service = "wachete";
 
+// Fixed-host proxy egress (wacheteApiBaseUrl); DNS-rebinding check is redundant here.
+const wacheteFetch = createProviderFetch({ skipDnsValidation: true });
+
 export const executors: ProviderExecutors = defineProviderExecutors<WacheteContext>({
   service,
   handlers: wacheteActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<WacheteContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -48,7 +53,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     const token = await requestWacheteToken({
       apiKey: credential.apiKey,
       userId: resolveWacheteUserId(credential),
-      fetcher: fetch,
+      fetcher: wacheteFetch,
       signal: context.signal,
       phase: "execute",
     });
@@ -61,7 +66,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await wacheteFetch(url, {
       method: input.method,
       headers,
       body:

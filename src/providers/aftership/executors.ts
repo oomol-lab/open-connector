@@ -12,14 +12,16 @@ import type { AftershipActionName } from "./actions.ts";
 import { CastError, compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
+  createProviderFetch,
   defineProviderProxy,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const service = "aftership";
 const aftershipApiBaseUrl = "https://api.aftership.com/tracking/2026-01";
+const aftershipFetch = createProviderFetch({ skipDnsValidation: true });
 
 type AftershipHttpMethod = "DELETE" | "GET" | "POST" | "PUT";
 type AftershipActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -140,6 +142,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: aftershipApiBaseUrl,
   auth: { type: "api_key_header", name: "as-api-key" },
+  skipDnsValidation: true,
   customizeRequest({ headers }) {
     if (!headers.has("accept")) {
       headers.set("accept", "application/json");
@@ -384,7 +387,7 @@ function createAftershipExecutor(handler: AftershipActionHandler): ActionExecuto
 function createAftershipContext(apiKey: string, executionContext: ExecutionContext): ApiKeyProviderContext {
   const context: ApiKeyProviderContext = {
     apiKey,
-    fetcher: fetch,
+    fetcher: aftershipFetch,
     signal: executionContext.signal,
   };
   if (executionContext.transitFiles) {

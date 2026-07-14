@@ -10,13 +10,14 @@ import type { LemlistActionName } from "./actions.ts";
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
@@ -27,6 +28,7 @@ const service = "lemlist";
 const lemlistApiBaseUrl = "https://api.lemlist.com/api";
 const lemlistValidationPath = "/team";
 const lemlistDefaultRequestTimeoutMs = 30_000;
+const lemlistFetch = createProviderFetch({ skipDnsValidation: true });
 
 type LemlistRequestPhase = "validate" | "execute";
 type LemlistActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -102,7 +104,9 @@ export const lemlistActionHandlers: Record<LemlistActionName, LemlistActionHandl
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, lemlistActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, lemlistActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
@@ -124,7 +128,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await lemlistFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
       throw new ProviderRequestError(response.status, text || `lemlist request failed with HTTP ${response.status}`);

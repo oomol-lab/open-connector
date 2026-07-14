@@ -6,8 +6,9 @@ import { compactObject, optionalInteger, optionalRecord, requiredString } from "
 import {
   createProviderTimeout,
   isAbortLikeError,
-  providerUserAgent,
+  providerFetch,
   ProviderRequestError,
+  providerUserAgent,
 } from "../provider-runtime.ts";
 
 export const amplitudeApiBaseUrl = "https://amplitude.com";
@@ -94,7 +95,7 @@ export const amplitudeActionHandlers: Record<AmplitudeActionName, AmplitudeActio
 
 export async function validateAmplitudeCredential(
   input: { apiKey: string; values: Record<string, string> },
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const secretKey = requireAmplitudeSecretKey(input.apiKey);

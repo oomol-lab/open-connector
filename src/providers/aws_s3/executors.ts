@@ -13,6 +13,7 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerFetch,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyResponse,
@@ -134,7 +135,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       {
         values: credential.values,
         metadata: credential.metadata,
-        fetcher: fetch,
+        fetcher: providerFetch,
         signal: context.signal,
       },
     );
@@ -161,7 +162,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
         secretAccessKey: requireAwsField(credential.values.secretAccessKey, "secretAccessKey"),
         sessionToken: optionalString(credential.values.sessionToken)?.trim(),
         region,
-        fetcher: fetch,
+        fetcher: providerFetch,
       }),
       {
         method,
@@ -172,7 +173,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     );
     signedRequest.headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url.toString(), {
+    const response = await providerFetch(url.toString(), {
       method,
       headers: signedRequest.headers,
       ...(body === undefined ? {} : { body }),

@@ -11,11 +11,12 @@ import { Buffer } from "node:buffer";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -23,6 +24,7 @@ import {
 
 const service = "guru";
 const guruApiBaseUrl = "https://api.getguru.com";
+const guruFetch = createProviderFetch({ skipDnsValidation: true });
 const guruValidationPath = "/api/v1/whoami";
 
 type GuruRequestPhase = "validate" | "execute";
@@ -80,6 +82,7 @@ export const guruActionHandlers: Record<GuruActionName, GuruActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<GuruActionContext>({
   service,
   handlers: guruActionHandlers,
+  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<GuruActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -114,7 +117,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
       }
     }
 
-    const response = await fetch(url, init);
+    const response = await guruFetch(url, init);
     if (!response.ok) {
       const payload = await readGuruPayload(response);
       throw createGuruError(response, payload, "execute");

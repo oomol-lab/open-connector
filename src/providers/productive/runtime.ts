@@ -4,6 +4,7 @@ import type { ProductiveActionName } from "./actions.ts";
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerFetch,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -47,7 +48,7 @@ export const productiveActionHandlers: Record<ProductiveActionName, ProductiveAc
 
 export async function validateProductiveCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = providerFetch,
 ): Promise<CredentialValidationResult> {
   const apiKey = readRequiredApiKey(input.apiKey);
   const organizationId = readRequiredOrganizationId(input);
@@ -107,6 +108,7 @@ export async function executeProductiveAction(
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "productive",
+  skipDnsValidation: true,
   handlers: productiveActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, "productive");

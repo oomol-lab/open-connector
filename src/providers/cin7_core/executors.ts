@@ -9,6 +9,7 @@ import type { Cin7CoreActionName } from "./actions.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
@@ -24,6 +25,7 @@ import {
 
 const service = "cin7_core";
 const cin7CoreApiBaseUrl = "https://inventory.dearsystems.com/ExternalApi/v2/";
+const cin7CoreFetch = createProviderFetch({ skipDnsValidation: true });
 const cin7CoreValidationPath = "/me";
 const cin7CoreDefaultRequestTimeoutMs = 30_000;
 
@@ -155,6 +157,7 @@ const cin7CoreActionHandlers: Record<Cin7CoreActionName, Cin7CoreActionHandler> 
 export const executors: ProviderExecutors = defineProviderExecutors<Cin7CoreContext>({
   service,
   handlers: cin7CoreActionHandlers,
+  skipDnsValidation: true,
   async createContext(context, fetcher): Promise<Cin7CoreContext> {
     const credential = await requireApiKeyCredential(context, service);
     return readCin7CoreCredentials({
@@ -183,7 +186,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       headers.set("content-type", "application/json");
     }
 
-    const response = await fetch(url, {
+    const response = await cin7CoreFetch(url, {
       method: input.method,
       headers,
       body:

@@ -14,6 +14,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -33,6 +34,7 @@ import {
 } from "./runtime.ts";
 
 const service = "aliyun_sts";
+const aliyunStsFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface AliyunStsContext {
   values: Record<string, string>;
@@ -42,6 +44,7 @@ interface AliyunStsContext {
 
 export const executors: ProviderExecutors = defineProviderExecutors<AliyunStsContext>({
   service,
+  skipDnsValidation: true,
   handlers: {
     assume_role(input, context) {
       const accessKeyId = requireCredentialField(context.values.accessKeyId, "accessKeyId");
@@ -99,7 +102,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     headers.set("content-type", "application/x-www-form-urlencoded");
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await aliyunStsFetch(url, {
       method: "POST",
       headers,
       body: buildAliyunStsSignedRpcBody(buildAliyunStsProxyParams(input, accessKeyId), accessKeySecret),

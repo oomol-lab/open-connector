@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { createProviderFetch, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import {
   roamScimActionHandlers,
   roamScimApiBaseUrl,
@@ -15,9 +15,11 @@ import {
 } from "./runtime.ts";
 
 const service = "roam_scim";
+const roamScimFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
+  skipDnsValidation: true,
   baseUrl: roamScimApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
 });
@@ -30,7 +32,7 @@ export const executors: ProviderExecutors = Object.fromEntries(
         const credential = await requireApiKeyCredential(context, service);
         const providerContext: ApiKeyProviderContext = {
           apiKey: credential.apiKey,
-          fetcher: fetch,
+          fetcher: roamScimFetch,
           signal: context.signal,
         };
         if (context.transitFiles) {

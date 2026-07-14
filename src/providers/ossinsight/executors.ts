@@ -8,11 +8,12 @@ import type { OssinsightActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
+  createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
@@ -20,6 +21,7 @@ import {
 
 const service = "ossinsight";
 const ossinsightBaseUrl = "https://api.ossinsight.io/v1";
+const ossinsightFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface OssinsightSqlColumn {
   col: string;
@@ -239,6 +241,7 @@ export const ossinsightActionHandlers: Record<OssinsightActionName, OssinsightAc
 export const executors: ProviderExecutors = defineProviderExecutors<OssinsightActionContext>({
   service,
   handlers: ossinsightActionHandlers,
+  skipDnsValidation: true,
   createContext(context: ExecutionContext, fetcher: typeof fetch): OssinsightActionContext {
     return {
       fetcher,
@@ -261,7 +264,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     }
     headers.set("user-agent", providerUserAgent);
 
-    const response = await fetch(url, {
+    const response = await ossinsightFetch(url, {
       method: "GET",
       headers,
       signal: context.signal,
