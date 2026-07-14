@@ -29,6 +29,14 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+List the first five queries owned by a Dune account:
+
+```bash
+DUNE_API_KEY=... node examples/local-http/dune.ts
+```
+
+Set `DUNE_EXECUTION_ID` as well to check an execution instead.
+
 Prepare Gmail OAuth with your own Google OAuth app:
 
 ```bash
