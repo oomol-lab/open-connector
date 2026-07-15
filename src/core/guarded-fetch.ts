@@ -86,6 +86,7 @@ const crossOriginCredentialHeaders = new Set([
   "x-token",
   "session-token",
   "x-session-token",
+  "x-seq-apikey",
   "private-token",
   "x-private-token",
   "x-csrf-token",
@@ -156,7 +157,6 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
   const baseFetch = unwrapGuardedFetch(options.fetch);
   const createError = options.createError ?? ((message: string) => new TypeError(message));
   const maxRedirects = options.maxRedirects ?? defaultMaxRedirects;
-
   const guardedFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const transport = baseFetch ?? globalThis.fetch;
     const allowPrivateNetwork =
