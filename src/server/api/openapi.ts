@@ -1,7 +1,11 @@
 import type { ActionDefinition, JsonSchema, ProviderDefinition } from "../../core/types.ts";
 
 import { jsonSchema } from "../../core/json-schema.ts";
-import { idempotencyKeyMaxBytes, idempotencyRetentionHours } from "../actions/action-idempotency.ts";
+import {
+  actionInputMaxDepth,
+  idempotencyKeyMaxBytes,
+  idempotencyRetentionHours,
+} from "../actions/action-idempotency.ts";
 
 /**
  * Minimal OpenAPI document shape returned by the local runtime.
@@ -91,7 +95,7 @@ const idempotencyKeyParameter = {
   in: "header",
   required: false,
   schema: { type: "string", minLength: 1 },
-  description: `Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed ${idempotencyKeyMaxBytes} UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection.`,
+  description: `Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed ${idempotencyKeyMaxBytes} UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection. When this header is present, the action input may contain at most ${actionInputMaxDepth} nested arrays or objects.`,
 };
 
 const idempotencyConflictDescription =

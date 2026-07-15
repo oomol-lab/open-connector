@@ -111,9 +111,9 @@ openssl rand -base64 32
 ```
 
 Store the encryption key in a password manager or another external secrets vault. If it is lost or
-changed, credentials, OAuth client configuration, and completed idempotent Action responses already
-encrypted in D1 cannot be recovered. Keep the admin token available to operators who need the Web
-Console or admin API.
+replaced without first re-encrypting existing D1 records, encrypted credentials, OAuth client
+configuration, and completed idempotent Action responses cannot be recovered. Keep the admin token
+available to operators who need the Web Console or admin API.
 
 Paste the generated values when Wrangler prompts for each secret:
 

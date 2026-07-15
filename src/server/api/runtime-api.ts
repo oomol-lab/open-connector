@@ -3,6 +3,8 @@ import type { ConnectionError, ConnectionSummary } from "../../connection-servic
 import type { ExecutionResult, ProviderDefinition } from "../../core/types.ts";
 import type { Context } from "hono";
 
+import { requiredRecord } from "../../core/cast.ts";
+
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
 export type RuntimeResponseMeta = Record<string, unknown>;
@@ -84,10 +86,9 @@ export interface RuntimeActionResultInput {
 }
 
 /** HTTP status and JSON envelope persisted for idempotent action replay. */
-export interface RuntimeActionHttpResult {
-  status: 200 | RuntimeStatus;
-  body: RuntimeSuccessEnvelope<unknown> | RuntimeFailureEnvelope;
-}
+export type RuntimeActionHttpResult =
+  | { status: 200; body: RuntimeSuccessEnvelope<unknown> }
+  | { status: RuntimeStatus; body: RuntimeFailureEnvelope };
 
 export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeProviderMetadata {
   return {
@@ -191,6 +192,28 @@ export function serializeRuntimeActionResult(input: RuntimeActionResultInput): R
   });
 }
 
+/** Validate an action response decoded from persistent storage. */
+export function parseRuntimeActionHttpResult(value: unknown): RuntimeActionHttpResult {
+  const invalid = (message: string): Error => new Error(`Invalid persisted action response: ${message}`);
+  const result = requiredRecord(value, "response", invalid);
+  const body = requiredRecord(result.body, "response.body", invalid);
+  requiredRecord(body.meta, "response.body.meta", invalid);
+
+  if (!("data" in body) || typeof body.message !== "string") {
+    throw invalid("response.body must contain message and data");
+  }
+
+  if (result.status === 200 && body.success === true && body.message === "OK") {
+    return { status: 200, body: body as unknown as RuntimeSuccessEnvelope<unknown> };
+  }
+
+  if (isRuntimeStatus(result.status) && body.success === false && typeof body.errorCode === "string") {
+    return { status: result.status, body: body as unknown as RuntimeFailureEnvelope };
+  }
+
+  throw invalid("status and body envelope do not match");
+}
+
 /** Write a newly serialized or replayed action response. */
 export function writeRuntimeActionHttpResult(context: Context, result: RuntimeActionHttpResult): Response {
   return context.json(result.body, result.status);
@@ -220,4 +243,18 @@ function mapExecutionErrorStatus(code: string | undefined): 400 | 403 | 404 | 42
     return 500;
   }
   return 400;
+}
+
+function isRuntimeStatus(value: unknown): value is RuntimeStatus {
+  return (
+    value === 400 ||
+    value === 401 ||
+    value === 403 ||
+    value === 404 ||
+    value === 409 ||
+    value === 413 ||
+    value === 429 ||
+    value === 500 ||
+    value === 501
+  );
 }

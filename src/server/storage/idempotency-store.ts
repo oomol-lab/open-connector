@@ -1,8 +1,4 @@
-/** HTTP action result retained for a later idempotent replay. */
-export interface StoredIdempotencyResponse {
-  status: number;
-  body: unknown;
-}
+import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 
 /** Values required to atomically claim one runtime-wide idempotency key. */
 export interface IdempotencyClaimInput {
@@ -17,7 +13,7 @@ export interface IdempotencyClaimInput {
 export type IdempotencyClaimResult =
   | { kind: "acquired" }
   | { kind: "in_progress" }
-  | { kind: "completed"; response: StoredIdempotencyResponse }
+  | { kind: "completed"; response: RuntimeActionHttpResult }
   | { kind: "conflict" };
 
 /** Values required to persist the response owned by a successful claim. */
@@ -25,7 +21,7 @@ export interface CompleteIdempotencyInput {
   keyHash: string;
   requestHash: string;
   claimId: string;
-  response: StoredIdempotencyResponse;
+  response: RuntimeActionHttpResult;
   expiresAt: string;
 }
 

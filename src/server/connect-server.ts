@@ -22,6 +22,7 @@ import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import {
+  ActionInputDepthError,
   createIdempotencyExpiry,
   hashActionRequest,
   hashIdempotencyKey,
@@ -415,11 +416,24 @@ export class ConnectServer {
 
     const now = new Date();
     const keyHash = hashIdempotencyKey(idempotencyKey.key);
-    const requestHash = hashActionRequest({
-      actionId,
-      connectionName: connectionName ?? defaultConnectionName,
-      input,
-    });
+    let requestHash: string;
+    try {
+      requestHash = hashActionRequest({
+        actionId,
+        connectionName: connectionName ?? defaultConnectionName,
+        input,
+      });
+    } catch (error) {
+      if (!(error instanceof ActionInputDepthError)) {
+        throw error;
+      }
+      return writeRuntimeFailure(context, {
+        status: 400,
+        errorCode: "invalid_input",
+        message: error.message,
+        meta: { actionId },
+      });
+    }
     const claimId = crypto.randomUUID();
     const claim = await this.options.idempotency.claim({
       keyHash,
@@ -446,7 +460,7 @@ export class ConnectServer {
       });
     }
     if (claim.kind === "completed") {
-      return writeRuntimeActionHttpResult(context, claim.response as RuntimeActionHttpResult);
+      return writeRuntimeActionHttpResult(context, claim.response);
     }
 
     const result = await this.executeRuntimeAction(actionId, input, connectionName);

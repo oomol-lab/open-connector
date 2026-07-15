@@ -8,6 +8,18 @@ export const idempotencyKeyMaxBytes = 255;
 export const idempotencyRetentionHours = 24;
 const retentionMs = idempotencyRetentionHours * 60 * 60 * 1000;
 
+/** Maximum number of nested arrays or objects accepted when fingerprinting an action input. */
+export const actionInputMaxDepth = 100;
+
+/** Raised when an action input exceeds the safe fingerprinting depth. */
+export class ActionInputDepthError extends Error {
+  constructor() {
+    super(
+      `Action input must not exceed ${actionInputMaxDepth} nested arrays or objects when Idempotency-Key is provided.`,
+    );
+  }
+}
+
 export type IdempotencyKeyResult = { ok: true; key: string | undefined } | { ok: false; message: string };
 
 /** Action request semantics covered by one idempotency-key fingerprint. */
@@ -48,13 +60,11 @@ export function hashIdempotencyKey(key: string): string {
  */
 export function hashActionRequest(input: ActionRequestFingerprintInput): string {
   return sha256(
-    JSON.stringify(
-      canonicalize({
-        actionId: input.actionId,
-        connectionName: input.connectionName,
-        input: input.input,
-      }),
-    ),
+    JSON.stringify({
+      actionId: input.actionId,
+      connectionName: input.connectionName,
+      input: canonicalize(input.input, 1),
+    }),
   );
 }
 
@@ -69,16 +79,24 @@ function sha256(value: string): string {
   return createHash("sha256").update(value).digest("base64url");
 }
 
-function canonicalize(value: unknown): unknown {
+function canonicalize(value: unknown, depth: number): unknown {
   if (Array.isArray(value)) {
-    return value.map(canonicalize);
+    assertDepth(depth);
+    return value.map((entry) => canonicalize(entry, depth + 1));
   }
   if (value && typeof value === "object") {
+    assertDepth(depth);
     return Object.fromEntries(
       Object.entries(value)
         .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-        .map(([key, entry]) => [key, canonicalize(entry)]),
+        .map(([key, entry]) => [key, canonicalize(entry, depth + 1)]),
     );
   }
   return value;
+}
+
+function assertDepth(depth: number): void {
+  if (depth > actionInputMaxDepth) {
+    throw new ActionInputDepthError();
+  }
 }

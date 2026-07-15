@@ -9,12 +9,12 @@ import type {
   IdempotencyClaimInput,
   IdempotencyClaimResult,
   IIdempotencyStore,
-  StoredIdempotencyResponse,
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
+import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
@@ -266,8 +266,8 @@ export class D1IdempotencyStore implements IIdempotencyStore {
       return { kind: "in_progress" };
     }
 
-    const response = parseJson<StoredIdempotencyResponse>(
-      await this.secretCodec.decode(readString(row, "response_value")),
+    const response = parseRuntimeActionHttpResult(
+      parseJson(await this.secretCodec.decode(readString(row, "response_value"))),
     );
     return { kind: "completed", response };
   }

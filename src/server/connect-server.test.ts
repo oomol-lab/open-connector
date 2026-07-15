@@ -11,13 +11,13 @@ import type {
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-flow-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
+import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { Logger } from "./logger.ts";
 import type {
   CompleteIdempotencyInput,
   IdempotencyClaimInput,
   IdempotencyClaimResult,
   IIdempotencyStore,
-  StoredIdempotencyResponse,
 } from "./storage/idempotency-store.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./storage/runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-token-service.ts";
@@ -32,6 +32,7 @@ import { ActionPolicyService as LocalActionPolicyService } from "../core/action-
 import { buildActionSearchIndex } from "../core/action-search.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
+import { actionInputMaxDepth } from "./actions/action-idempotency.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
@@ -1847,6 +1848,52 @@ describe("ConnectServer", () => {
     expect(executions).toBe(0);
   });
 
+  it("rejects deeply nested idempotent inputs before claiming the key", async () => {
+    let executions = 0;
+    const providerLoader = new ActionProviderLoader(async (input) => {
+      executions += 1;
+      return { ok: true, output: input };
+    });
+    const app = createTestServer(
+      [
+        {
+          ...apiKeyProvider,
+          actions: [echoAction],
+        },
+      ],
+      { providerLoader },
+    ).createApp();
+    let input: unknown = "leaf";
+    for (let depth = 0; depth <= actionInputMaxDepth; depth += 1) {
+      input = { child: input };
+    }
+    const headers = {
+      "content-type": "application/json",
+      "idempotency-key": "request-too-deep",
+    };
+
+    const rejected = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ input }),
+    });
+    expect(rejected.status).toBe(400);
+    await expect(rejected.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "invalid_input",
+      message: `Action input must not exceed ${actionInputMaxDepth} nested arrays or objects when Idempotency-Key is provided.`,
+    });
+    expect(executions).toBe(0);
+
+    const accepted = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ input: { child: "leaf" } }),
+    });
+    expect(accepted.status).toBe(200);
+    expect(executions).toBe(1);
+  });
+
   it("maps v1 runtime failures to stable envelopes", async () => {
     const app = createTestServer(
       [
@@ -2479,7 +2526,7 @@ type MemoryIdempotencyRecord =
       claimId: string;
       requestHash: string;
       state: "completed";
-      response: StoredIdempotencyResponse;
+      response: RuntimeActionHttpResult;
       expiresAt: string;
     };
 

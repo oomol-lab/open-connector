@@ -1,3 +1,4 @@
+import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../cloudflare/cloudflare-bindings.ts";
 
 import { readFileSync } from "node:fs";
@@ -134,7 +135,7 @@ describe("D1RuntimeDatabase", () => {
       database.idempotencyStore.claim({ ...claim, requestHash: "request-2", claimId: "claim-2" }),
     ).resolves.toEqual({ kind: "conflict" });
 
-    const response = { status: 201, body: { data: { id: "message-1" }, meta: { executionId: "run-1" } } };
+    const response = successResponse({ id: "message-1" });
     await expect(
       database.idempotencyStore.complete({
         keyHash: claim.keyHash,
@@ -148,6 +149,34 @@ describe("D1RuntimeDatabase", () => {
       kind: "completed",
       response,
     });
+  });
+
+  it("rejects malformed persisted idempotency responses", async () => {
+    const d1 = new SqliteD1Database();
+    const database = new D1RuntimeDatabase(d1);
+    const claim = {
+      keyHash: "key-1",
+      requestHash: "request-1",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    };
+    await database.idempotencyStore.claim(claim);
+    await database.idempotencyStore.complete({
+      ...claim,
+      response: successResponse({ id: "message-1" }),
+    });
+    await d1
+      .prepare("update idempotency_records set response_value = ? where key_hash = ?")
+      .bind(
+        JSON.stringify({ status: 500, body: { success: true, message: "OK", data: null, meta: {} } }),
+        claim.keyHash,
+      )
+      .run();
+
+    await expect(database.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).rejects.toThrow(
+      "Invalid persisted action response",
+    );
   });
 
   it("expires claims without allowing stale executions to complete their replacements", async () => {
@@ -174,12 +203,12 @@ describe("D1RuntimeDatabase", () => {
         keyHash: oldClaim.keyHash,
         requestHash: oldClaim.requestHash,
         claimId: oldClaim.claimId,
-        response: { status: 200, body: { source: "old" } },
+        response: successResponse({ source: "old" }),
         expiresAt: "2026-07-01T00:00:00.000Z",
       }),
     ).resolves.toBe(false);
 
-    const response = { status: 200, body: { source: "new" } };
+    const response = successResponse({ source: "new" });
     await expect(
       database.idempotencyStore.complete({
         keyHash: newClaim.keyHash,
@@ -204,7 +233,7 @@ describe("D1RuntimeDatabase", () => {
       now: "2026-06-30T00:00:00.000Z",
       expiresAt: "2026-07-01T00:00:00.000Z",
     };
-    const response = { status: 200, body: { token: "provider-secret" } };
+    const response = successResponse({ token: "provider-secret" });
 
     await database.idempotencyStore.claim(claim);
     await database.idempotencyStore.complete({
@@ -276,6 +305,18 @@ function createRun(id: string, startedAt: string, actionId = "hackernews.get_top
     completedAt: startedAt,
     durationMs: 0,
     ok: true,
+  };
+}
+
+function successResponse(data: unknown): RuntimeActionHttpResult {
+  return {
+    status: 200,
+    body: {
+      success: true,
+      message: "OK",
+      data,
+      meta: {},
+    },
   };
 }
 

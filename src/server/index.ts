@@ -88,7 +88,7 @@ serve(
     }
     if (!secretCodec.encrypted) {
       logger.warn(
-        "local data encryption is disabled; set OOMOL_CONNECT_ENCRYPTION_KEY to encrypt stored credentials and idempotent action responses",
+        "local data encryption is disabled; set OOMOL_CONNECT_ENCRYPTION_KEY to encrypt stored credentials, OAuth client configuration, and idempotent action responses",
       );
     }
     if (!staticRoot) {

@@ -8,7 +8,6 @@ import type {
   IdempotencyClaimInput,
   IdempotencyClaimResult,
   IIdempotencyStore,
-  StoredIdempotencyResponse,
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
@@ -16,6 +15,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-ser
 
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
@@ -345,8 +345,8 @@ export class SqliteIdempotencyStore implements IIdempotencyStore {
 
     return {
       kind: "completed",
-      response: parseJson<StoredIdempotencyResponse>(
-        await this.secretCodec.decode(readString(claim.row, "response_value")),
+      response: parseRuntimeActionHttpResult(
+        parseJson(await this.secretCodec.decode(readString(claim.row, "response_value"))),
       ),
     };
   }

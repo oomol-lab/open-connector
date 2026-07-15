@@ -2,7 +2,12 @@ import type { RuntimeActionHttpResult } from "./runtime-api.ts";
 
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { serializeRuntimeActionResult, serializeRuntimeFailure, writeRuntimeActionHttpResult } from "./runtime-api.ts";
+import {
+  parseRuntimeActionHttpResult,
+  serializeRuntimeActionResult,
+  serializeRuntimeFailure,
+  writeRuntimeActionHttpResult,
+} from "./runtime-api.ts";
 
 describe("runtime action HTTP results", () => {
   it("serializes a successful execution without changing its wire shape", () => {
@@ -74,6 +79,17 @@ describe("runtime action HTTP results", () => {
         meta: {},
       },
     });
+  });
+
+  it.each([
+    { status: 201, body: { success: true, message: "OK", data: null, meta: {} } },
+    { status: 200, body: { success: false, message: "Failed", data: null, errorCode: "failed", meta: {} } },
+    { status: 500, body: { success: true, message: "OK", data: null, meta: {} } },
+    { status: 500, body: { success: false, message: "Failed", data: null, meta: {} } },
+    { status: 500, body: { success: false, message: "Failed", errorCode: "failed", meta: {} } },
+    { status: 500, body: { success: false, message: "Failed", data: null, errorCode: "failed", meta: [] } },
+  ])("rejects malformed persisted results %#", (result) => {
+    expect(() => parseRuntimeActionHttpResult(result)).toThrow("Invalid persisted action response");
   });
 
   it("writes a previously serialized result", async () => {

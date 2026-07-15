@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  actionInputMaxDepth,
+  ActionInputDepthError,
   createIdempotencyExpiry,
   hashActionRequest,
   hashIdempotencyKey,
@@ -34,6 +36,7 @@ describe("action idempotency", () => {
     });
 
     expect(left).toBe(right);
+    expect(left).toBe("dbs9TrhPtVXlhZLp9sqNAryjv1DwdBfOX_QaOzR01KA");
     expect(left).not.toBe(
       hashActionRequest({
         actionId: "example.echo",
@@ -44,7 +47,36 @@ describe("action idempotency", () => {
     expect(hashIdempotencyKey("request-1")).not.toBe("request-1");
   });
 
+  it("rejects action inputs beyond the fingerprint depth limit", () => {
+    expect(() =>
+      hashActionRequest({
+        actionId: "example.echo",
+        connectionName: "default",
+        input: nestedInput(actionInputMaxDepth),
+      }),
+    ).not.toThrow();
+
+    const hashTooDeepInput = () =>
+      hashActionRequest({
+        actionId: "example.echo",
+        connectionName: "default",
+        input: nestedInput(actionInputMaxDepth + 1),
+      });
+    expect(hashTooDeepInput).toThrow(ActionInputDepthError);
+    expect(hashTooDeepInput).toThrow(
+      `Action input must not exceed ${actionInputMaxDepth} nested arrays or objects when Idempotency-Key is provided.`,
+    );
+  });
+
   it("expires records 24 hours after the supplied time", () => {
     expect(createIdempotencyExpiry(new Date("2026-07-15T00:00:00.000Z"))).toBe("2026-07-16T00:00:00.000Z");
   });
 });
+
+function nestedInput(depth: number): unknown {
+  let value: unknown = "leaf";
+  for (let index = 0; index < depth; index += 1) {
+    value = index % 2 === 0 ? { value } : [value];
+  }
+  return value;
+}
