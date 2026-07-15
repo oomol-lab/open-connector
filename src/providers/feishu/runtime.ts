@@ -7,9 +7,12 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 const feishuOpenBaseUrl = "https://open.feishu.cn/open-apis";
 
 // Feishu returns HTTP 200 with a non-zero `code` for most failures, so map the
-// well-known auth codes to their real meaning instead of a generic 502.
-const feishuCredentialErrorCodes = new Set([99991661, 99991663, 99991664, 99991665, 99991671, 99991673]);
-const feishuScopeErrorCodes = new Set([99991672, 99991676, 99991679]);
+// well-known auth codes to their real meaning instead of a generic 502. This
+// provider only uses user_access_token, so the credential set is the
+// user-token invalid/expired/malformed codes (not the tenant/app-token ones);
+// codes verified against Feishu's generic error-code reference.
+const feishuCredentialErrorCodes = new Set([20005, 20006, 99991661, 99991668, 99991671, 99991677]);
+const feishuScopeErrorCodes = new Set([99991679]);
 
 type FeishuActionContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 type FeishuActionHandler = (input: Record<string, unknown>, context: FeishuActionContext) => Promise<unknown>;

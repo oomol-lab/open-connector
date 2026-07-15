@@ -110,11 +110,12 @@ describe("Feishu runtime", () => {
     ).rejects.toMatchObject({ status: 403 });
   });
 
-  it("maps an expired-credential code to 401", async () => {
-    const calls: RecordedRequest[] = [];
-    const fetcher = stubFetcher({ code: 99991663, msg: "token expired" }, calls);
-
-    await expect(fetchFeishuUserInfo({ accessToken: "u-token", fetcher })).rejects.toMatchObject({ status: 401 });
+  it("maps invalid/expired user-token codes (HTTP 200 body) to 401", async () => {
+    // 20005 = invalid access token, 99991677 = user token expired.
+    for (const code of [20005, 99991677]) {
+      const fetcher = stubFetcher({ code, msg: "user token invalid" }, []);
+      await expect(fetchFeishuUserInfo({ accessToken: "u-token", fetcher })).rejects.toMatchObject({ status: 401 });
+    }
   });
 
   it("rejects a missing required id before making a request", async () => {
