@@ -1,6 +1,7 @@
 import type { IConnectionStore } from "../../connection-service.ts";
 import type { IOAuthClientConfigStore } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore } from "../../oauth/oauth-flow-service.ts";
+import type { IIdempotencyStore } from "./idempotency-store.ts";
 import type { IRunLogStore } from "./runtime-store.ts";
 import type { IRuntimeTokenStore } from "./runtime-token-service.ts";
 
@@ -10,4 +11,5 @@ export interface RuntimeDatabase {
   oauthStateStore: IOAuthStateStore;
   runtimeTokenStore: IRuntimeTokenStore;
   runLogStore: IRunLogStore;
+  idempotencyStore: IIdempotencyStore;
 }

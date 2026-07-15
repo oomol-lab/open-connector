@@ -63,8 +63,8 @@ fly secrets set \
 ```
 
 Keep `OOMOL_CONNECT_ENCRYPTION_KEY` in a password manager or another external secrets vault. If the
-key is lost, encrypted credentials and OAuth client secrets in the SQLite database cannot be
-recovered.
+key is lost, encrypted credentials, OAuth client configuration, and completed idempotent Action
+responses in the SQLite database cannot be recovered.
 
 Optional runtime policy can also be set as secrets:
 

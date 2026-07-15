@@ -72,6 +72,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         states: options.runtimeDatabase.oauthStateStore,
       }),
       actions,
+      idempotency: options.runtimeDatabase.idempotencyStore,
       transitFiles: options.transitFiles,
       runtimeTokens,
       registerStaticRoutes: options.registerStaticRoutes,

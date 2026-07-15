@@ -83,6 +83,12 @@ export interface RuntimeActionResultInput {
   result: ExecutionResult;
 }
 
+/** HTTP status and JSON envelope persisted for idempotent action replay. */
+export interface RuntimeActionHttpResult {
+  status: 200 | RuntimeStatus;
+  body: RuntimeSuccessEnvelope<unknown> | RuntimeFailureEnvelope;
+}
+
 export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeProviderMetadata {
   return {
     service: provider.service,
@@ -144,6 +150,11 @@ export function writeRuntimeSuccess<TData>(context: Context, data: TData, meta?:
 }
 
 export function writeRuntimeFailure(context: Context, input: RuntimeFailureInput): Response {
+  return writeRuntimeActionHttpResult(context, serializeRuntimeFailure(input));
+}
+
+/** Build a runtime failure response without writing it to the HTTP context. */
+export function serializeRuntimeFailure(input: RuntimeFailureInput): RuntimeActionHttpResult {
   const body: RuntimeFailureEnvelope = {
     success: false,
     message: input.message,
@@ -152,23 +163,37 @@ export function writeRuntimeFailure(context: Context, input: RuntimeFailureInput
     meta: input.meta ?? {},
   };
 
-  return context.json(body, input.status);
+  return { status: input.status, body };
 }
 
-export function writeRuntimeActionResult(context: Context, input: RuntimeActionResultInput): Response {
+/** Build the persistable HTTP response for a completed action execution. */
+export function serializeRuntimeActionResult(input: RuntimeActionResultInput): RuntimeActionHttpResult {
   const { actionId, executionId, result } = input;
   const meta = { executionId, actionId };
   if (result.ok) {
-    return writeRuntimeSuccess(context, result.output ?? null, meta);
+    return {
+      status: 200,
+      body: {
+        success: true,
+        message: "OK",
+        data: result.output ?? null,
+        meta,
+      },
+    };
   }
 
-  return writeRuntimeFailure(context, {
+  return serializeRuntimeFailure({
     status: mapExecutionErrorStatus(result.error?.code),
     errorCode: result.error?.code ?? "provider_error",
     message: result.error?.message ?? "Action execution failed.",
     data: result.error?.details ?? null,
     meta,
   });
+}
+
+/** Write a newly serialized or replayed action response. */
+export function writeRuntimeActionHttpResult(context: Context, result: RuntimeActionHttpResult): Response {
+  return context.json(result.body, result.status);
 }
 
 export function mapConnectionErrorStatus(error: ConnectionError): 400 | 404 | 409 {

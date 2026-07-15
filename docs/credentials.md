@@ -1,8 +1,8 @@
 # Credentials And Local Storage
 
-The local Node runtime stores connections, OAuth client configuration, pending OAuth states, and
-recent run logs in SQLite. The Cloudflare Workers runtime stores the same runtime records in D1 and
-temporary transit files in R2.
+The local Node runtime stores connections, OAuth client configuration, pending OAuth states, runtime
+tokens, recent run logs, and HTTP Action idempotency claims and responses in SQLite. The Cloudflare
+Workers runtime stores the same runtime records in D1 and temporary transit files in R2.
 
 By default the database lives at:
 
@@ -19,18 +19,28 @@ Set `OOMOL_CONNECT_DATA_DIR` to use another directory. The Docker image defaults
 
 ## Encryption
 
-Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials and OAuth client secrets:
+Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials, OAuth client configuration, and
+completed idempotent Action response payloads:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="replace-with-a-long-random-secret" npm run dev
 ```
 
-The runtime uses AES-256-GCM for records that contain provider credentials or OAuth client
-configuration. The key is not stored by OpenConnector; if it is lost, encrypted records cannot be
-recovered.
+The runtime uses AES-256-GCM for provider credential records, OAuth client configuration, and the
+completed response payload retained for an idempotent HTTP Action retry. The raw `Idempotency-Key`
+is never stored; the database contains its hash and a request fingerprint. Claim identifiers,
+state, timestamps, and expiry are also stored as unencrypted metadata. The encryption key is not
+stored by OpenConnector; if it is lost, encrypted records cannot be recovered.
 
 Without `OOMOL_CONNECT_ENCRYPTION_KEY`, the runtime stays usable for local development and prints a
-startup warning. In that mode, treat `connect.sqlite` as a sensitive local file.
+startup warning. In that mode, credentials, OAuth client configuration, and completed idempotent
+Action responses are stored as plaintext. Action responses may contain sensitive provider data, so
+treat `connect.sqlite` or D1 as a sensitive data store even after a response is no longer eligible
+for replay.
+
+Completed idempotent Action responses remain eligible for replay for 24 hours. Expired idempotency
+records are deleted opportunistically when a later idempotent Action request claims a key; the
+24-hour replay window is not a guarantee of physical deletion by that deadline.
 
 ## Credential Fields
 
@@ -203,7 +213,7 @@ Reset local runtime data:
 npm run runtime:data -- reset --yes
 ```
 
-Rotate the local SQLite credential encryption key:
+Rotate the local SQLite data-encryption key:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="old-secret" \
@@ -211,12 +221,16 @@ OOMOL_CONNECT_NEW_ENCRYPTION_KEY="new-secret" \
 npm run runtime:data -- rotate-key
 ```
 
-Remove local SQLite credential encryption only when you intentionally want plaintext local storage:
+Remove local SQLite data encryption only when you intentionally want plaintext local storage:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="old-secret" \
 npm run runtime:data -- rotate-key --plain
 ```
+
+Both commands re-encode stored credentials, OAuth client configuration, and completed idempotent
+Action response payloads. Idempotency key hashes, request fingerprints, claim state, and timestamps
+remain unencrypted metadata.
 
 `runtime:data` is for the local SQLite runtime only. For Cloudflare, back up and restore D1/R2
 directly with Cloudflare tooling.

@@ -41,8 +41,9 @@ echo "$GITHUB_TOKEN" | docker login ghcr.io -u <github-username> --password-stdi
 
 镜像监听 `3000` 端口，绑定到 `0.0.0.0`，并把运行时数据存放在 `/app/data`。
 
-先生成运行时 secret 并妥善保存。`OOMOL_CONNECT_ENCRYPTION_KEY` 用于加密存储的凭据和 OAuth client secret；一旦
-丢失，`/app/data` 里加密的数据将无法恢复。`OOMOL_CONNECT_ADMIN_TOKEN` 用于 admin API 和控制台的鉴权。
+先生成运行时 secret 并妥善保存。`OOMOL_CONNECT_ENCRYPTION_KEY` 用于加密存储的凭据、OAuth client 配置和已完成的
+幂等 Action 响应；一旦丢失，`/app/data` 里加密的数据将无法恢复。`OOMOL_CONNECT_ADMIN_TOKEN` 用于 admin API 和
+控制台的鉴权。
 
 ```bash
 # 运行前请把两个值保存到密码管理器或 secrets vault。

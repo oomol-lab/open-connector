@@ -1,9 +1,10 @@
 # Security Policy
 
-OpenConnector (`oomol-lab/open-connector`) is a connector gateway that stores and brokers sensitive user
-credentials — API keys, OAuth client secrets, and OAuth access/refresh tokens — on behalf of many
-third-party providers. We take security reports seriously and are grateful to the researchers and
-users who help keep the project and its users safe.
+OpenConnector (`oomol-lab/open-connector`) is a connector gateway that stores and brokers sensitive
+user credentials — API keys, OAuth client secrets, and OAuth access/refresh tokens — on behalf of
+many third-party providers. It may also retain completed Action response payloads for idempotent
+HTTP retries. We take security reports seriously and are grateful to the researchers and users who
+help keep the project and its users safe.
 
 This policy explains which versions receive security fixes, how to report a vulnerability privately,
 what to expect after you report, and how operators and contributors share responsibility for keeping
@@ -119,10 +120,12 @@ currently run a paid bug-bounty program, but we credit every reporter whose find
 OpenConnector can be self-hosted and holds live provider credentials, so operators share
 responsibility for securing their deployment. At minimum:
 
-- **Enable at-rest encryption.** Set `OOMOL_CONNECT_ENCRYPTION_KEY` so stored credentials and OAuth
-  client configs are encrypted (AES-256-GCM). Without it, secrets are stored in plaintext and the
-  runtime logs a startup warning. Store the key outside the database; losing it makes encrypted
-  records unrecoverable.
+- **Enable at-rest encryption.** Set `OOMOL_CONNECT_ENCRYPTION_KEY` so stored credentials, OAuth
+  client configuration, and completed idempotent Action response payloads are encrypted
+  (AES-256-GCM). Without it, those payloads are stored in plaintext; completed responses may contain
+  sensitive provider data. The raw `Idempotency-Key` is not stored, but its hash, request
+  fingerprint, claim state, and timestamps remain unencrypted metadata. Store the encryption key
+  outside the database; losing it makes encrypted records unrecoverable.
 - **Require authentication.** Set `OOMOL_CONNECT_ADMIN_TOKEN` to protect `/api`, `/docs`, and the Web
   Console, and issue scoped runtime tokens for `/v1` and `/mcp`. Both are disabled by default for
   local development.
@@ -131,7 +134,9 @@ responsibility for securing their deployment. At minimum:
   expose it publicly without admin and runtime tokens set.
 - **Protect the data store.** The SQLite database (local), D1 (Cloudflare), and R2 transit files
   contain sensitive material even when encrypted. Restrict file permissions and access, and store
-  Cloudflare secrets with `wrangler secret put`.
+  Cloudflare secrets with `wrangler secret put`. Idempotent Action responses are eligible for replay
+  for 24 hours, but expired records are removed opportunistically rather than by a physical-deletion
+  deadline.
 - **Reduce attack surface.** Use `OOMOL_CONNECT_ALLOWED_ACTIONS` / `OOMOL_CONNECT_BLOCKED_ACTIONS` to
   limit which Actions can run.
 - **Stay current.** Run a supported Node.js (22.18+ / 24) and update to the latest OpenConnector

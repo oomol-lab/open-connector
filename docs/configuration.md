@@ -8,7 +8,7 @@ OpenConnector is configured with environment variables.
 | `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                     |
 | `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                    |
 | `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Directory containing `connect.sqlite`. Docker image sets `/app/data`.          |
-| `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Enables AES-256-GCM encryption for stored credentials and OAuth client config. |
+| `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, and completed idempotent Action responses. |
 | `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                     |
 | `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.         |
 | `OOMOL_CONNECT_RUNTIME_TOKEN`            | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.             |
@@ -66,14 +66,15 @@ The following targets stay blocked even when the flag is enabled:
 ## Cloudflare Workers
 
 Cloudflare uses the same environment variable names for origin, auth tokens, execution policy,
-transit file limits, and credential encryption. `PORT`, `HOST`, and `OOMOL_CONNECT_DATA_DIR` are local
+transit file limits, and data encryption. `PORT`, `HOST`, and `OOMOL_CONNECT_DATA_DIR` are local
 Node-only settings on Workers.
 
 The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
 `wrangler.example.jsonc` to `wrangler.local.jsonc` and fill in your own Cloudflare resource IDs
 before running Wrangler commands.
 
-- `DB`: D1 database for connections, OAuth config/state, runtime tokens, and run logs.
+- `DB`: D1 database for connections, OAuth config/state, runtime tokens, run logs, and idempotency
+  claims and responses.
 - `TRANSIT_FILES`: R2 bucket or Workers KV namespace for temporary transit files.
 - `ASSETS`: Workers Static Assets binding for the web console.
 
