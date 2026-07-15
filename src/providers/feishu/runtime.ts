@@ -6,6 +6,11 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 
 const feishuOpenBaseUrl = "https://open.feishu.cn/open-apis";
 
+// Feishu returns HTTP 200 with a non-zero `code` for most failures, so map the
+// well-known auth codes to their real meaning instead of a generic 502.
+const feishuCredentialErrorCodes = new Set([99991661, 99991663, 99991664, 99991665, 99991671, 99991673]);
+const feishuScopeErrorCodes = new Set([99991672, 99991676, 99991679]);
+
 type FeishuActionContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 type FeishuActionHandler = (input: Record<string, unknown>, context: FeishuActionContext) => Promise<unknown>;
 
@@ -218,8 +223,7 @@ async function feishuApiRequest(input: {
   const code = typeof envelope.code === "number" ? envelope.code : 0;
   if (!response.ok || code !== 0) {
     const message = optionalString(envelope.msg) ?? `Feishu request failed (HTTP ${response.status}).`;
-    const status =
-      response.status === 401 ? 401 : response.status >= 400 && response.status < 500 ? response.status : 502;
+    const status = mapFeishuErrorStatus(response.status, code);
     throw new ProviderRequestError(status, code ? `Feishu ${code}: ${message}` : message);
   }
 
@@ -251,6 +255,19 @@ function normalizeFeishuPage(data: Record<string, unknown>): Record<string, unkn
     hasMore: typeof data.has_more === "boolean" ? data.has_more : null,
     total: typeof data.total === "number" ? data.total : null,
   };
+}
+
+function mapFeishuErrorStatus(httpStatus: number, code: number): number {
+  if (httpStatus === 401 || feishuCredentialErrorCodes.has(code)) {
+    return 401;
+  }
+  if (httpStatus === 403 || feishuScopeErrorCodes.has(code)) {
+    return 403;
+  }
+  if (httpStatus >= 400 && httpStatus < 500) {
+    return httpStatus;
+  }
+  return 502;
 }
 
 function requiredFeishuId(value: unknown, fieldName: string): string {
