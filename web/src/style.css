@@ -1725,6 +1725,7 @@ h3 {
 }
 
 .provider-connection-card > .auth-method-control,
+.provider-connection-card > .connection-manager,
 .provider-connection-card > .connection-form,
 .provider-inline-oauth-settings,
 .provider-detail-card > .tag-list,
@@ -1735,6 +1736,26 @@ h3 {
 
 .provider-connection-card > .auth-method-control {
   margin-bottom: 0;
+}
+
+.connection-manager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  max-width: 760px;
+}
+
+.connection-manager-select [data-slot="select-trigger"] {
+  width: 100%;
+}
+
+.connection-manager .field-error {
+  color: var(--destructive);
+}
+
+.connection-manager-new > [data-slot="button"] {
+  margin-bottom: 20px;
 }
 
 .provider-inline-oauth-settings {
@@ -2828,6 +2849,16 @@ tr:last-child td {
   .button-row {
     align-items: stretch;
     flex-wrap: wrap;
+  }
+
+  .connection-manager {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .connection-manager-new > [data-slot="button"] {
+    justify-self: start;
+    margin-bottom: 0;
   }
 
   .provider-browser-header,

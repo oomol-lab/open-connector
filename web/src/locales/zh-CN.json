@@ -159,6 +159,11 @@
       "notUsed": "未使用"
     },
     "connection": "连接",
+    "savedConnection": "已保存的连接",
+    "connectionName": "连接名称",
+    "connectionNamePlaceholder": "例如 work",
+    "connectionNameDescription": "运行操作时使用这个名称选择账号。",
+    "connectionNameExists": "这个名称已被使用；请选择已有连接进行重新连接。",
     "connectionMethod": "连接方式",
     "connectionDescriptions": {
       "noSetup": "这个提供商无需本地凭证即可运行。",
@@ -201,6 +206,8 @@
       "configureOAuthClient": "配置 OAuth Client",
       "editOAuthClient": "编辑 OAuth Client",
       "saveConnection": "保存连接",
+      "addConnection": "添加连接",
+      "cancel": "取消",
       "connect": "连接",
       "details": "详情",
       "manageConnection": "管理",

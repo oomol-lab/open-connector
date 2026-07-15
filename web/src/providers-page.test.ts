@@ -7,6 +7,8 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
 import {
+  configurableConnectionsForProvider,
+  connectionDisplayLabel,
   connectionSubmitLabel,
   createOAuthPopupFeatures,
   isProviderLocallyAvailable,
@@ -54,6 +56,34 @@ describe("shouldShowConnectionActions", () => {
   it("shows connection actions when credentials or OAuth are required", () => {
     expect(shouldShowConnectionActions({ type: "api_key" })).toBe(true);
     expect(shouldShowConnectionActions({ type: "oauth2", scopes: [] })).toBe(true);
+  });
+});
+
+describe("provider connection management", () => {
+  it("keeps all saved connections for the selected provider", () => {
+    expect(
+      configurableConnectionsForProvider(
+        [
+          { service: "gmail", connectionName: "personal", authType: "oauth2", metadata: {} },
+          { service: "gmail", connectionName: "work", authType: "oauth2", metadata: {} },
+          { service: "github", connectionName: "work", authType: "oauth2", metadata: {} },
+          { service: "gmail", authType: "no_auth", virtual: true, metadata: {} },
+        ],
+        "gmail",
+      ).map((connection) => connection.connectionName),
+    ).toEqual(["personal", "work"]);
+  });
+
+  it("shows both the connection name and provider account identity", () => {
+    expect(
+      connectionDisplayLabel({
+        service: "gmail",
+        connectionName: "work",
+        authType: "oauth2",
+        profile: { displayName: "user@example.com" },
+        metadata: {},
+      }),
+    ).toBe("work · user@example.com");
   });
 });
 
@@ -131,6 +161,43 @@ describe("ProvidersPage route shell", () => {
     expect(markup).toContain("Back to providers");
     expect(markup).toContain("Connection");
     expect(markup).toContain("Scopes requested by this provider");
+  });
+
+  it("asks for a connection name before creating the first connection", () => {
+    const markup = renderProvidersPage(providerData, "/providers/gmail");
+
+    expect(markup).toContain("Connection name");
+    expect(markup).toContain('value="default"');
+  });
+
+  it("renders a saved connection selector and add action for multiple connections", () => {
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        connections: [
+          {
+            service: "gmail",
+            connectionName: "default",
+            authType: "oauth2",
+            default: true,
+            profile: { displayName: "personal@example.com" },
+            metadata: {},
+          },
+          {
+            service: "gmail",
+            connectionName: "work",
+            authType: "oauth2",
+            profile: { displayName: "work@example.com" },
+            metadata: {},
+          },
+        ],
+      },
+      "/providers/gmail",
+    );
+
+    expect(markup).toContain("Saved connection");
+    expect(markup).toContain("default · personal@example.com");
+    expect(markup).toContain("Add Connection");
   });
 
   it("places provider connection status beside the detail title", () => {

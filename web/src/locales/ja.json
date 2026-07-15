@@ -159,6 +159,11 @@
       "notUsed": "未使用"
     },
     "connection": "接続",
+    "savedConnection": "保存済みの接続",
+    "connectionName": "接続名",
+    "connectionNamePlaceholder": "例: work",
+    "connectionNameDescription": "アクションの実行時に、この名前でアカウントを選択します。",
+    "connectionNameExists": "この名前はすでに使用されています。再接続するには既存の接続を選択してください。",
     "connectionMethod": "接続方式",
     "connectionDescriptions": {
       "noSetup": "このプロバイダーはローカル認証情報なしで実行できます。",
@@ -201,6 +206,8 @@
       "configureOAuthClient": "OAuth Client を設定",
       "editOAuthClient": "OAuth Client を編集",
       "saveConnection": "接続を保存",
+      "addConnection": "接続を追加",
+      "cancel": "キャンセル",
       "connect": "接続",
       "details": "詳細",
       "manageConnection": "管理",

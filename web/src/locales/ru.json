@@ -159,6 +159,11 @@
       "notUsed": "Не используется"
     },
     "connection": "Подключение",
+    "savedConnection": "Сохраненное подключение",
+    "connectionName": "Имя подключения",
+    "connectionNamePlaceholder": "например, work",
+    "connectionNameDescription": "Используйте это имя для выбора аккаунта при запуске действий.",
+    "connectionNameExists": "Это имя уже используется. Выберите существующее подключение, чтобы переподключить его.",
     "connectionMethod": "Способ подключения",
     "connectionDescriptions": {
       "noSetup": "Этот провайдер может работать без локальных учетных данных.",
@@ -201,6 +206,8 @@
       "configureOAuthClient": "Настроить OAuth Client",
       "editOAuthClient": "Изменить OAuth Client",
       "saveConnection": "Сохранить подключение",
+      "addConnection": "Добавить подключение",
+      "cancel": "Отмена",
       "connect": "Подключить",
       "details": "Детали",
       "manageConnection": "Управлять",

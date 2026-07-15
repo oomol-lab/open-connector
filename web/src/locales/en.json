@@ -159,6 +159,11 @@
       "notUsed": "Not used"
     },
     "connection": "Connection",
+    "savedConnection": "Saved connection",
+    "connectionName": "Connection name",
+    "connectionNamePlaceholder": "for example, work",
+    "connectionNameDescription": "Use this name to select the account when running actions.",
+    "connectionNameExists": "This name is already in use. Select that connection to reconnect it.",
     "connectionMethod": "Connection method",
     "connectionDescriptions": {
       "noSetup": "This provider can run without local credentials.",
@@ -201,6 +206,8 @@
       "configureOAuthClient": "Configure OAuth Client",
       "editOAuthClient": "Edit OAuth Client",
       "saveConnection": "Save Connection",
+      "addConnection": "Add Connection",
+      "cancel": "Cancel",
       "connect": "Connect",
       "details": "Details",
       "manageConnection": "Manage",
