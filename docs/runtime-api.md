@@ -115,8 +115,8 @@ non-empty and no longer than 255 UTF-8 bytes; invalid values return `400 invalid
 namespace is runtime-wide rather than scoped to a bearer token, caller, or connection, so callers
 should use sufficiently unique values.
 
-When this header is present, the Action input may contain at most 100 nested arrays or objects.
-Deeper inputs return `400 invalid_input` before the Action is dispatched.
+When this header is present, the Action input must not exceed an object/array nesting depth of 100
+levels. Deeper inputs return `400 invalid_input` before the Action is dispatched.
 
 The request identity includes the Action id, JSON input, and effective connection. JSON object key
 order does not affect the identity, and explicitly selecting the `default` connection is equivalent

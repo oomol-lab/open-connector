@@ -92,6 +92,17 @@ describe("runtime action HTTP results", () => {
     expect(() => parseRuntimeActionHttpResult(result)).toThrow("Invalid persisted action response");
   });
 
+  it("accepts a valid persisted failure", () => {
+    const result = serializeRuntimeFailure({
+      status: 409,
+      errorCode: "idempotency_request_in_progress",
+      message: "The request is still in progress.",
+      meta: { actionId: "example.echo" },
+    });
+
+    expect(parseRuntimeActionHttpResult(result)).toEqual(result);
+  });
+
   it("writes a previously serialized result", async () => {
     const result: RuntimeActionHttpResult = {
       status: 409,

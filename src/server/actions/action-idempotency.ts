@@ -15,7 +15,7 @@ export const actionInputMaxDepth = 100;
 export class ActionInputDepthError extends Error {
   constructor() {
     super(
-      `Action input must not exceed ${actionInputMaxDepth} nested arrays or objects when Idempotency-Key is provided.`,
+      `Action input must not exceed an object/array nesting depth of ${actionInputMaxDepth} levels when Idempotency-Key is provided.`,
     );
   }
 }

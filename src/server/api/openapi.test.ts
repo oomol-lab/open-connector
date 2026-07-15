@@ -58,7 +58,7 @@ describe("action execution OpenAPI", () => {
         required: false,
         schema: { type: "string", minLength: 1 },
         description:
-          "Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed 255 UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection. When this header is present, the action input may contain at most 100 nested arrays or objects.",
+          "Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed 255 UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection. When this header is present, the action input must not exceed an object/array nesting depth of 100 levels.",
       });
       expect(path.post.responses["409"]?.description).toBe(
         "For idempotency, idempotency_request_in_progress means the original request is still running or its outcome is uncertain, while idempotency_key_conflict means the key was reused for a different action, input, or effective connection. Other runtime conflicts may return their own error code with the same status.",

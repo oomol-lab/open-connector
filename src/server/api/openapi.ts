@@ -95,7 +95,7 @@ const idempotencyKeyParameter = {
   in: "header",
   required: false,
   schema: { type: "string", minLength: 1 },
-  description: `Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed ${idempotencyKeyMaxBytes} UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection. When this header is present, the action input may contain at most ${actionInputMaxDepth} nested arrays or objects.`,
+  description: `Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed ${idempotencyKeyMaxBytes} UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection. When this header is present, the action input must not exceed an object/array nesting depth of ${actionInputMaxDepth} levels.`,
 };
 
 const idempotencyConflictDescription =

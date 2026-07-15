@@ -1881,7 +1881,7 @@ describe("ConnectServer", () => {
     await expect(rejected.json()).resolves.toMatchObject({
       success: false,
       errorCode: "invalid_input",
-      message: `Action input must not exceed ${actionInputMaxDepth} nested arrays or objects when Idempotency-Key is provided.`,
+      message: `Action input must not exceed an object/array nesting depth of ${actionInputMaxDepth} levels when Idempotency-Key is provided.`,
     });
     expect(executions).toBe(0);
 
