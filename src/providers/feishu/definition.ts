@@ -22,6 +22,9 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://open.feishu.cn/open-apis/authen/v2/oauth/token",
       scopes: feishuOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
+      // Feishu's v2 token endpoint requires an application/json body; the
+      // framework otherwise defaults to form encoding and the exchange fails.
+      tokenRequestFormat: "json",
     },
   ],
   homepageUrl: "https://www.feishu.cn",

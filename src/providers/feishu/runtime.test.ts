@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { provider } from "./definition.ts";
 import { feishuActionHandlers, fetchFeishuUserInfo } from "./runtime.ts";
 
 interface RecordedRequest {
@@ -122,5 +123,20 @@ describe("Feishu runtime", () => {
 
     await expect(feishuActionHandlers.get_document({}, context(fetcher))).rejects.toBeInstanceOf(ProviderRequestError);
     expect(calls).toHaveLength(0);
+  });
+
+  // Guards the OAuth token exchange, which lives in framework code and is not
+  // exercised by the action tests above (that gap hid a JSON-vs-form bug).
+  it("configures the token exchange as JSON against Feishu's v2 endpoint", () => {
+    const oauth = provider.auth[0];
+    expect(oauth?.type).toBe("oauth2");
+    if (oauth?.type !== "oauth2") {
+      throw new Error("Feishu provider must expose an oauth2 auth definition");
+    }
+    // Feishu v2 requires application/json; the framework defaults to form.
+    expect(oauth.tokenRequestFormat).toBe("json");
+    expect(oauth.tokenEndpointAuthMethod).toBe("client_secret_post");
+    expect(oauth.tokenUrl).toBe("https://open.feishu.cn/open-apis/authen/v2/oauth/token");
+    expect(oauth.authorizationUrl).toBe("https://accounts.feishu.cn/open-apis/authen/v1/authorize");
   });
 });
