@@ -26,7 +26,7 @@ describe("OAuth token requests", () => {
 
     expect(fetcher).toHaveBeenCalledOnce();
     const init = fetcher.mock.calls[0]?.[1];
-    expect(init).toMatchObject({ method: "POST", redirect: "error" });
+    expect(init).toMatchObject({ method: "POST", redirect: "manual" });
     expect(String(init?.body)).toContain("client_secret=client-secret");
     expect(String(init?.body)).toContain("code=authorization-code");
   });
