@@ -1,10 +1,19 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { feishuProviderScopes } from "./scopes.ts";
 
 const service = "feishu";
+
+function feishuPageSchema(description: string, itemDescription: string): JsonSchema {
+  return s.object(description, {
+    items: s.array("The items on this page.", s.looseObject(itemDescription)),
+    pageToken: s.nullableString("The token to fetch the next page, when hasMore is true."),
+    hasMore: s.nullableBoolean("Whether more pages are available."),
+    total: s.nullableInteger("The total number of items, when the API reports it."),
+  });
+}
 
 const feishuUserSchema = s.object("The authenticated Feishu user profile.", {
   openId: s.nullableString("The open_id of the authorized user, scoped to this OAuth app."),
@@ -30,15 +39,13 @@ const feishuDocumentContentSchema = s.object("The plain-text content of a Feishu
   content: s.string("The full plain-text content of the document."),
 });
 
-const feishuDocumentBlocksSchema = s.object("A page of a Feishu docx document's structured blocks.", {
-  items: s.array("The document blocks on this page.", s.looseObject("A raw docx block object.")),
-  pageToken: s.nullableString("The token to fetch the next page, when has_more is true."),
-  hasMore: s.nullableBoolean("Whether more block pages are available."),
-});
+const docxIdField = s.nonEmptyString("The docx document id, from the document URL (.../docx/<document_id>).");
+const baseAppTokenField = s.nonEmptyString("The Bitable app token, from the Base URL (.../base/<app_token>).");
+const baseTableIdField = s.nonEmptyString("The Bitable table id (starts with tbl), from the URL (?table=<table_id>).");
 
 /**
- * Feishu actions backed by the user_access_token (the authorized user's own
- * identity and resources). Bitable read actions are added in follow-up work.
+ * Feishu actions backed by the user_access_token: the authorized user's own
+ * identity, docx documents, and Bitable data. All reads are read-only.
  */
 export const feishuActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -51,9 +58,7 @@ export const feishuActions: ActionDefinition[] = [
     name: "get_document",
     description: "Get a Feishu docx document's basic metadata (title and revision) that the authorized user can read.",
     requiredScopes: [feishuProviderScopes.docxReadonly],
-    inputSchema: s.object("Identify the document to read.", {
-      documentId: s.nonEmptyString("The docx document id, from the document URL (.../docx/<document_id>)."),
-    }),
+    inputSchema: s.object("Identify the document to read.", { documentId: docxIdField }),
     outputSchema: feishuDocumentSchema,
   }),
   defineProviderAction(service, {
@@ -63,7 +68,7 @@ export const feishuActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Identify the document to read.",
       {
-        documentId: s.nonEmptyString("The docx document id, from the document URL (.../docx/<document_id>)."),
+        documentId: docxIdField,
         lang: s.integer("Language for @user mentions in the text: 0 = default name, 1 = English name."),
       },
       { optional: ["lang"] },
@@ -78,7 +83,7 @@ export const feishuActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Identify the document and page through its blocks.",
       {
-        documentId: s.nonEmptyString("The docx document id, from the document URL (.../docx/<document_id>)."),
+        documentId: docxIdField,
         pageSize: s.integer("Number of blocks per page (max 500, default 500)."),
         pageToken: s.string("The page token returned by a previous call; omit for the first page."),
         documentRevisionId: s.integer("Document revision to read; -1 (default) reads the latest version."),
@@ -86,8 +91,71 @@ export const feishuActions: ActionDefinition[] = [
       },
       { optional: ["pageSize", "pageToken", "documentRevisionId", "userIdType"] },
     ),
-    outputSchema: feishuDocumentBlocksSchema,
+    outputSchema: feishuPageSchema("A page of a Feishu docx document's structured blocks.", "A raw docx block object."),
+  }),
+  defineProviderAction(service, {
+    name: "list_bitable_tables",
+    description: "List the data tables in a Feishu Bitable (多维表格) the authorized user can access.",
+    requiredScopes: [feishuProviderScopes.bitableAppReadonly],
+    inputSchema: s.object(
+      "Identify the Bitable app and page through its tables.",
+      {
+        appToken: baseAppTokenField,
+        pageSize: s.integer("Number of tables per page (max 100, default 20)."),
+        pageToken: s.string("The page token returned by a previous call; omit for the first page."),
+      },
+      { optional: ["pageSize", "pageToken"] },
+    ),
+    outputSchema: feishuPageSchema("A page of Bitable tables.", "A Bitable table {table_id, name, revision}."),
+  }),
+  defineProviderAction(service, {
+    name: "list_bitable_fields",
+    description: "List the fields (columns) of a Feishu Bitable table, to understand its schema before reading rows.",
+    requiredScopes: [feishuProviderScopes.bitableAppReadonly],
+    inputSchema: s.object(
+      "Identify the Bitable table and page through its fields.",
+      {
+        appToken: baseAppTokenField,
+        tableId: baseTableIdField,
+        viewId: s.string("Restrict fields to a specific view id (optional)."),
+        pageSize: s.integer("Number of fields per page (max 100, default 20)."),
+        pageToken: s.string("The page token returned by a previous call; omit for the first page."),
+      },
+      { optional: ["viewId", "pageSize", "pageToken"] },
+    ),
+    outputSchema: feishuPageSchema(
+      "A page of Bitable fields.",
+      "A Bitable field {field_id, field_name, type, property, ui_type}.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "search_bitable_records",
+    description: "Read rows (records) from a Feishu Bitable table, with optional field selection, filter, and sort.",
+    requiredScopes: [feishuProviderScopes.bitableAppReadonly],
+    inputSchema: s.object(
+      "Identify the Bitable table and query its records.",
+      {
+        appToken: baseAppTokenField,
+        tableId: baseTableIdField,
+        viewId: s.string("Query records visible in a specific view id (optional)."),
+        fieldNames: s.stringArray("Restrict returned fields to these field names (optional)."),
+        filter: s.looseObject("A Feishu Bitable filter condition group (optional)."),
+        sort: s.array("Sort conditions, each { field_name, desc } (optional).", s.looseObject("A sort condition.")),
+        pageSize: s.integer("Number of records per page (max 500, default 20)."),
+        pageToken: s.string("The page token returned by a previous call; omit for the first page."),
+        userIdType: s.stringEnum("The user id format for user fields in records.", ["open_id", "union_id", "user_id"]),
+      },
+      { optional: ["viewId", "fieldNames", "filter", "sort", "pageSize", "pageToken", "userIdType"] },
+    ),
+    outputSchema: feishuPageSchema("A page of Bitable records.", "A Bitable record {record_id, fields}."),
   }),
 ];
 
-export type FeishuActionName = "get_current_user" | "get_document" | "get_document_content" | "list_document_blocks";
+export type FeishuActionName =
+  | "get_current_user"
+  | "get_document"
+  | "get_document_content"
+  | "list_document_blocks"
+  | "list_bitable_tables"
+  | "list_bitable_fields"
+  | "search_bitable_records";
