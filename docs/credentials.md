@@ -308,5 +308,5 @@ npm run dev
 ```
 
 Action policy entries are comma-separated action ids. A provider-wide wildcard such as `gmail.*`
-matches all actions for that provider. Proxy policy entries are comma-separated provider service
-names, or `*` for all provider proxies.
+matches all actions for that provider, and a bare `*` matches every action. Proxy policy entries are
+comma-separated provider service names, or `*` for all provider proxies.
