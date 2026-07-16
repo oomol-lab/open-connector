@@ -46,10 +46,6 @@ export const provider: ProviderDefinition = {
             "Optional tailnet ID used in Tailscale API paths. Leave blank to use Tailscale's '-' shorthand for the OAuth client's tailnet.",
         },
       ],
-      testAction: {
-        actionName: "list_devices",
-        input: {},
-      },
     },
   ],
   homepageUrl: "https://tailscale.com",
