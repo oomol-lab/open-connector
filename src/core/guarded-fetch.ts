@@ -305,7 +305,15 @@ async function resolveDefaultLookup(): Promise<GuardedFetchDnsLookup | null | un
         // reject every CNAME'd host (api.tailscale.com, graph.microsoft.com, ...).
         // The real A/AAAA records are present alongside, so dropping non-addresses
         // keeps the resolved-address check intact rather than disabling it.
-        return results.filter((entry) => isIpAddress(entry.address));
+        const addresses = results.filter((entry) => isIpAddress(entry.address));
+        if (addresses.length === 0) {
+          // Nothing left to validate. Fail closed like a lookup rejection does:
+          // returning an empty list would let the check pass vacuously, so a
+          // resolver coaxed into answering with only CNAMEs could skip validation
+          // while the transport resolves the name to a blocked address itself.
+          throw new Error(`${hostname} did not resolve to any IP address`);
+        }
+        return addresses;
       },
     () => undefined,
   );
