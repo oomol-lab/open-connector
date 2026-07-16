@@ -8,6 +8,11 @@ import "./style.css";
 
 const i18n = createAppI18n(readInitialLang());
 
+// Keep <html lang> in sync with the selected language (fires immediately for the initial lang).
+i18n.lang$.subscribe((lang) => {
+  document.documentElement.lang = lang;
+});
+
 createRoot(document.getElementById("root")!).render(
   <I18nProvider i18n={i18n}>
     <BrowserRouter>
