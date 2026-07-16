@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   assertPublicHttpUrl,
   isBlockedIpAddress,
+  isIpAddress,
   isIpv4Address,
   isPrivateNetworkAccessAllowed,
   parsePrivateNetworkAccessFlag,
@@ -179,6 +180,28 @@ describe("isIpv4Address", () => {
   it("rejects hostnames and IPv6 literals", () => {
     for (const value of ["example.com", "metadata.attacker.com", "::1", "fe80::1"]) {
       expect(isIpv4Address(value)).toBe(false);
+    }
+  });
+});
+
+describe("isIpAddress", () => {
+  it("accepts IPv4 and IPv6 literals", () => {
+    for (const value of ["127.0.0.1", "8.219.95.213", "::1", "fe80::1", "2606:b740:49::115", "::ffff:10.0.0.1"]) {
+      expect(isIpAddress(value)).toBe(true);
+    }
+  });
+
+  it("rejects the CNAME hostnames workerd reports in a lookup entry's address field", () => {
+    // workerd's node:dns maps every DoH answer record into an entry without
+    // filtering by type, so CNAME targets arrive where an address is expected.
+    for (const value of [
+      "controlplane.tailscale.com.",
+      "alb-2ez87aepnoql6znr3g.ap-southeast-1.alb.aliyuncsslbintl.com.",
+      "ags.privatelink.msidentity.com.",
+      "example.com",
+      "",
+    ]) {
+      expect(isIpAddress(value)).toBe(false);
     }
   });
 });

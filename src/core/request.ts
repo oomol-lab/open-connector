@@ -333,6 +333,16 @@ export function isIpv4Address(hostname: string): boolean {
   return parseIpv4(hostname) !== undefined;
 }
 
+/**
+ * Whether a string parses as an IPv4 or IPv6 address literal. Callers use this
+ * to tell real addresses apart from other strings a resolver may hand back, so
+ * {@link isBlockedIpAddress}'s "unparseable is blocked" rule only ever judges
+ * values that were meant to be addresses.
+ */
+export function isIpAddress(value: string): boolean {
+  return parseIpv4(value) !== undefined || parseIpv6(value) !== undefined;
+}
+
 function isBlockedIpv4(value: number, allowPrivateNetwork: boolean): boolean {
   if (reservedIpv4Cidrs.some(([network, bits]) => ipv4InCidr(value, network, bits))) {
     return true;

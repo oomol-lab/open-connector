@@ -1,4 +1,4 @@
-import { assertPublicHttpUrl, isBlockedIpAddress, isIpv4Address } from "./request.ts";
+import { assertPublicHttpUrl, isBlockedIpAddress, isIpAddress, isIpv4Address } from "./request.ts";
 
 /**
  * Single resolved address returned by a DNS lookup, mirroring the shape of
@@ -145,9 +145,10 @@ export function unwrapGuardedFetch(fetcher: typeof fetch | undefined): typeof fe
  *   transport so unreachable hosts still surface their natural network error.
  *   (True time-of-check/time-of-use DNS rebinding with low-TTL records remains
  *   possible because the transport re-resolves; full connection pinning is not
- *   expressible over the fetch API.) The default lookup uses `node:dns`; on
- *   runtimes without it (e.g. Cloudflare Workers) this layer degrades to a no-op
- *   and only the URL-literal and redirect-`Location` checks apply.
+ *   expressible over the fetch API.) The default lookup uses `node:dns`, which
+ *   Cloudflare Workers also provides under `nodejs_compat` (resolving over DoH),
+ *   so this layer applies there too. Only on a runtime without `node:dns` does it
+ *   degrade to a no-op, leaving the URL-literal and redirect-`Location` checks.
  *
  * Callers that pass `redirect: "manual"` or `redirect: "error"` keep native
  * semantics: the first response (or native redirect error) is returned after
@@ -295,8 +296,17 @@ async function resolveDefaultLookup(): Promise<GuardedFetchDnsLookup | null | un
   }
   nodeDnsLookupPromise ??= import("node:dns/promises").then(
     ({ lookup }) =>
-      (hostname: string) =>
-        lookup(hostname, { all: true }),
+      async (hostname: string) => {
+        const results = await lookup(hostname, { all: true });
+        // Keep only real addresses. workerd's node:dns resolves over DoH and maps
+        // every answer record into an entry without filtering by record type, so a
+        // CNAME answer arrives as { address: "target.example.com.", family: 4 }.
+        // isBlockedIpAddress treats unparseable input as blocked, which would
+        // reject every CNAME'd host (api.tailscale.com, graph.microsoft.com, ...).
+        // The real A/AAAA records are present alongside, so dropping non-addresses
+        // keeps the resolved-address check intact rather than disabling it.
+        return results.filter((entry) => isIpAddress(entry.address));
+      },
     () => undefined,
   );
   return nodeDnsLookupPromise;
