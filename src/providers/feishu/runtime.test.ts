@@ -10,10 +10,11 @@ interface RecordedRequest {
 
 /** A fetcher that returns one canned Feishu envelope and records the request. */
 function stubFetcher(payload: unknown, calls: RecordedRequest[], status = 200): typeof fetch {
-  return (async (url: URL | RequestInfo, init?: RequestInit) => {
+  const fetcher: typeof fetch = async (url, init) => {
     calls.push({ url: String(url), init });
     return new Response(JSON.stringify(payload), { status, headers: { "content-type": "application/json" } });
-  }) as unknown as typeof fetch;
+  };
+  return fetcher;
 }
 
 function context(fetcher: typeof fetch) {
@@ -29,25 +30,24 @@ describe("Feishu runtime", () => {
       calls,
     );
 
-    const user = (await fetchFeishuUserInfo({ accessToken: "u-token", fetcher })) as Record<string, unknown>;
+    const user = await fetchFeishuUserInfo({ accessToken: "u-token", fetcher });
     expect(user.open_id).toBe("ou_1");
     expect(calls[0]?.url).toBe("https://open.feishu.cn/open-apis/authen/v1/user_info");
 
-    const normalized = (await feishuActionHandlers.get_current_user({}, context(fetcher))) as Record<string, unknown>;
-    expect(normalized.openId).toBe("ou_1");
-    expect(normalized.name).toBe("愉超");
-    expect(normalized.userId).toBeNull();
-    expect(normalized.email).toBeNull();
+    const normalized = await feishuActionHandlers.get_current_user({}, context(fetcher));
+    expect(normalized).toMatchObject({
+      openId: "ou_1",
+      name: "愉超",
+      userId: null,
+      email: null,
+    });
   });
 
   it("reads docx plain-text content and forwards the lang query", async () => {
     const calls: RecordedRequest[] = [];
     const fetcher = stubFetcher({ code: 0, data: { content: "hello doc" } }, calls);
 
-    const result = (await feishuActionHandlers.get_document_content(
-      { documentId: "doc123", lang: 1 },
-      context(fetcher),
-    )) as Record<string, unknown>;
+    const result = await feishuActionHandlers.get_document_content({ documentId: "doc123", lang: 1 }, context(fetcher));
 
     expect(result).toEqual({ documentId: "doc123", content: "hello doc" });
     expect(calls[0]?.url).toBe("https://open.feishu.cn/open-apis/docx/v1/documents/doc123/raw_content?lang=1");
@@ -68,15 +68,14 @@ describe("Feishu runtime", () => {
       calls,
     );
 
-    const page = (await feishuActionHandlers.list_bitable_tables(
-      { appToken: "app1", pageSize: 1 },
-      context(fetcher),
-    )) as Record<string, unknown>;
+    const page = await feishuActionHandlers.list_bitable_tables({ appToken: "app1", pageSize: 1 }, context(fetcher));
 
-    expect(page.items).toHaveLength(1);
-    expect(page.pageToken).toBe("next");
-    expect(page.hasMore).toBe(true);
-    expect(page.total).toBe(5);
+    expect(page).toMatchObject({
+      items: [{ table_id: "tbl1", name: "T1", revision: 1 }],
+      pageToken: "next",
+      hasMore: true,
+      total: 5,
+    });
     expect(calls[0]?.url).toBe("https://open.feishu.cn/open-apis/bitable/v1/apps/app1/tables?page_size=1");
   });
 
@@ -116,6 +115,20 @@ describe("Feishu runtime", () => {
       const fetcher = stubFetcher({ code, msg: "user token invalid" }, []);
       await expect(fetchFeishuUserInfo({ accessToken: "u-token", fetcher })).rejects.toMatchObject({ status: 401 });
     }
+  });
+
+  it("rejects malformed successful envelopes instead of treating them as empty data", async () => {
+    const missingCodeFetcher = stubFetcher({ data: { open_id: "ou_1" } }, []);
+    await expect(fetchFeishuUserInfo({ accessToken: "u-token", fetcher: missingCodeFetcher })).rejects.toMatchObject({
+      status: 502,
+      message: "invalid Feishu response: missing numeric code.",
+    });
+
+    const invalidDataFetcher = stubFetcher({ code: 0, data: [] }, []);
+    await expect(fetchFeishuUserInfo({ accessToken: "u-token", fetcher: invalidDataFetcher })).rejects.toMatchObject({
+      status: 502,
+      message: "invalid Feishu response: missing data object.",
+    });
   });
 
   it("rejects a missing required id before making a request", async () => {

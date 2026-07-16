@@ -1,5 +1,4 @@
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { FeishuActionName } from "./actions.ts";
 
 import { compactObject, optionalObjectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -17,13 +16,21 @@ const feishuScopeErrorCodes = new Set([99991679]);
 type FeishuActionContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 type FeishuActionHandler = (input: Record<string, unknown>, context: FeishuActionContext) => Promise<unknown>;
 
-interface FeishuEnvelope {
-  code?: unknown;
-  msg?: unknown;
-  data?: unknown;
+export interface FetchFeishuUserInfoInput {
+  accessToken: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
 }
 
-export const feishuActionHandlers: Record<FeishuActionName, FeishuActionHandler> = {
+interface FeishuApiRequestInput {
+  method?: "GET" | "POST";
+  path: string;
+  query?: Array<[string, string]>;
+  body?: Record<string, unknown>;
+  context: FeishuActionContext;
+}
+
+export const feishuActionHandlers: Record<string, FeishuActionHandler> = {
   get_current_user(_input, context) {
     return feishuGetCurrentUser(context);
   },
@@ -174,11 +181,7 @@ async function feishuSearchBitableRecords(
  * Shared by the get_current_user action and the OAuth credential validator so
  * the identity call has a single owner.
  */
-export async function fetchFeishuUserInfo(input: {
-  accessToken: string;
-  fetcher: typeof fetch;
-  signal?: AbortSignal;
-}): Promise<Record<string, unknown>> {
+export async function fetchFeishuUserInfo(input: FetchFeishuUserInfoInput): Promise<Record<string, unknown>> {
   return feishuApiRequest({
     path: "/authen/v1/user_info",
     context: { accessToken: input.accessToken, fetcher: input.fetcher, signal: input.signal },
@@ -190,13 +193,7 @@ export async function fetchFeishuUserInfo(input: {
  * response `data` object. Owns Bearer auth, envelope parsing, and error
  * mapping for every Feishu read in this provider.
  */
-async function feishuApiRequest(input: {
-  method?: "GET" | "POST";
-  path: string;
-  query?: Array<[string, string]>;
-  body?: Record<string, unknown>;
-  context: FeishuActionContext;
-}): Promise<Record<string, unknown>> {
+async function feishuApiRequest(input: FeishuApiRequestInput): Promise<Record<string, unknown>> {
   const url = new URL(`${feishuOpenBaseUrl}${input.path}`);
   for (const [key, value] of input.query ?? []) {
     url.searchParams.set(key, value);
@@ -216,21 +213,37 @@ async function feishuApiRequest(input: {
   const response = await input.context.fetcher(url, init);
 
   const rawText = await response.text();
-  let envelope: FeishuEnvelope;
+  let envelope: Record<string, unknown>;
   try {
-    envelope = JSON.parse(rawText) as FeishuEnvelope;
-  } catch {
+    const parsed: unknown = JSON.parse(rawText);
+    const parsedEnvelope = optionalRecord(parsed);
+    if (!parsedEnvelope) {
+      throw new ProviderRequestError(502, "invalid Feishu JSON response");
+    }
+    envelope = parsedEnvelope;
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
     throw new ProviderRequestError(502, "invalid Feishu JSON response");
   }
 
-  const code = typeof envelope.code === "number" ? envelope.code : 0;
+  if (typeof envelope.code !== "number") {
+    throw new ProviderRequestError(502, "invalid Feishu response: missing numeric code.");
+  }
+
+  const code = envelope.code;
   if (!response.ok || code !== 0) {
     const message = optionalString(envelope.msg) ?? `Feishu request failed (HTTP ${response.status}).`;
     const status = mapFeishuErrorStatus(response.status, code);
     throw new ProviderRequestError(status, code ? `Feishu ${code}: ${message}` : message);
   }
 
-  return optionalRecord(envelope.data) ?? {};
+  const data = optionalRecord(envelope.data);
+  if (!data) {
+    throw new ProviderRequestError(502, "invalid Feishu response: missing data object.");
+  }
+  return data;
 }
 
 function normalizeFeishuUser(data: Record<string, unknown>): Record<string, unknown> {

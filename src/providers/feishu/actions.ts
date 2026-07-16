@@ -69,7 +69,10 @@ export const feishuActions: ActionDefinition[] = [
       "Identify the document to read.",
       {
         documentId: docxIdField,
-        lang: s.integer("Language for @user mentions in the text: 0 = default name, 1 = English name."),
+        lang: s.integer("Language for @user mentions in the text: 0 = default name, 1 = English name.", {
+          minimum: 0,
+          maximum: 1,
+        }),
       },
       { optional: ["lang"] },
     ),
@@ -86,7 +89,9 @@ export const feishuActions: ActionDefinition[] = [
         documentId: docxIdField,
         pageSize: s.positiveInteger("Number of blocks per page (max 500, default 500).", { maximum: 500 }),
         pageToken: s.string("The page token returned by a previous call; omit for the first page."),
-        documentRevisionId: s.integer("Document revision to read; -1 (default) reads the latest version."),
+        documentRevisionId: s.integer("Document revision to read; -1 (default) reads the latest version.", {
+          minimum: -1,
+        }),
         userIdType: s.stringEnum("The user id format for user fields in blocks.", ["open_id", "union_id", "user_id"]),
       },
       { optional: ["pageSize", "pageToken", "documentRevisionId", "userIdType"] },
@@ -160,12 +165,3 @@ export const feishuActions: ActionDefinition[] = [
     outputSchema: feishuPageSchema("A page of Bitable records.", "A Bitable record {record_id, fields}."),
   }),
 ];
-
-export type FeishuActionName =
-  | "get_current_user"
-  | "get_document"
-  | "get_document_content"
-  | "list_document_blocks"
-  | "list_bitable_tables"
-  | "list_bitable_fields"
-  | "search_bitable_records";
