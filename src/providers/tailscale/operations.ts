@@ -1,8 +1,90 @@
 import type { JsonSchema } from "../../core/types.ts";
 
+import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { s } from "../../core/json-schema.ts";
 
 export const tailscaleDeviceReadScope = "devices:core:read";
+
+/**
+ * Narrows an operation's scopes to the minimum one call needs.
+ *
+ * Tailscale mints every access token by downscoping the credential, and its token endpoint fails
+ * with `invalid_scope` when asked for a scope the OAuth client was never granted — "the OAuth
+ * client must have permission to grant the requested scopes". So a token request must name only
+ * what this call actually needs: asking for the union of an endpoint's documented scopes locks out
+ * every correctly least-privileged credential.
+ *
+ * `granted` is the scope set recorded when the connection was created. Prefer deciding from `input`
+ * alone; read `granted` only where the input cannot identify the scope (`delete_key` knows a key id
+ * but not its type) or where a scope is optional for the endpoint rather than required.
+ */
+export type TailscaleScopeResolver = (
+  input: Record<string, unknown>,
+  granted: ReadonlySet<string>,
+) => readonly string[];
+
+/** Tailscale's catch-all scopes: complete tailnet access, and read-only tailnet access. */
+const tailscaleAllScope = "all";
+const tailscaleAllReadScope = "all:read";
+
+const readScopeSuffix = ":read";
+
+/**
+ * The scope string to request so `scope` is authorized, or undefined when the credential lacks it.
+ *
+ * Three Tailscale grants cover a scope without naming it. `all` stands in for every scope,
+ * `all:read` for every `:read` scope, and a write scope carries its own read form — the docs list a
+ * write scope's endpoints as "Endpoints from `<scope>:read`" plus the mutations, and a grant records
+ * only the write form. Where just the write form is held it is the write form that gets requested:
+ * Tailscale documents narrowing from `all` but not from a write scope to its read form, and guessing
+ * wrong fails the token request and the whole action with it.
+ */
+const grantableScope = (granted: ReadonlySet<string>, scope: string): string | undefined => {
+  if (granted.has(scope) || granted.has(tailscaleAllScope)) {
+    return scope;
+  }
+  if (!scope.endsWith(readScopeSuffix)) {
+    return undefined;
+  }
+  if (granted.has(tailscaleAllReadScope)) {
+    return scope;
+  }
+  const writeForm = scope.slice(0, -readScopeSuffix.length);
+  return granted.has(writeForm) ? writeForm : undefined;
+};
+
+/**
+ * Requests only the alternatives the credential holds, for endpoints whose scopes each unlock a
+ * different slice of one resource rather than combining into a single requirement.
+ *
+ * Returning nothing is deliberate: the executor then omits `scope` entirely, which mints a token
+ * carrying every scope the client holds. That is the same fallback credential validation uses, and
+ * it keeps the action working when the recorded grant is unknown instead of failing closed.
+ */
+const heldAlternatives =
+  (...alternatives: readonly string[]): TailscaleScopeResolver =>
+  (_input, granted) =>
+    alternatives.map((scope) => grantableScope(granted, scope)).filter((scope) => scope !== undefined);
+
+/**
+ * The scope authorizing each `keyType` accepted by `POST /tailnet/{tailnet}/keys`.
+ *
+ * A Map rather than an object literal so a `keyType` naming an inherited property — `constructor`,
+ * `toString` — misses instead of resolving to something that is not a scope at all.
+ */
+const keyTypeScopes = new Map<string, string>([
+  ["auth", "auth_keys"],
+  ["client", "oauth_keys"],
+  ["federated", "federated_keys"],
+]);
+
+/** Tailnet settings that a scope other than `feature_settings` governs. */
+const governedTailnetSettings: readonly { scope: string; fields: readonly string[] }[] = [
+  { scope: "logs:network", fields: ["networkFlowLoggingOn"] },
+  // Tailscale documents this as `httpsCertificates` but the request body field is `httpsEnabled`.
+  { scope: "networking_settings", fields: ["httpsEnabled", "httpsCertificates"] },
+  { scope: "policy_file", fields: ["aclsExternallyManagedOn", "aclsExternalLink"] },
+];
 
 /** Official endpoints that cannot be called with Tailscale OAuth client access tokens. */
 export const tailscaleUnsupportedOAuthClientOperations = [
@@ -60,7 +142,28 @@ export interface TailscaleOperationDefinition {
   bodyFormat?: "json" | "text";
   contentType?: string;
   responseFormat?: "json" | "text";
+  /** Request headers sent from the named inputs, keyed by input name. */
+  headerFields?: Readonly<Record<string, string>>;
+  /**
+   * Returns the response body under `bodyField` with response headers beside it.
+   *
+   * Only for headers carrying data the body omits. Keeping the body under its own field lets it go
+   * straight back to Tailscale unaltered.
+   */
+  responseEnvelope?: {
+    bodyField: string;
+    /** Response headers to read, keyed by the output field that holds each one. */
+    headers: Readonly<Record<string, string>>;
+  };
+  /**
+   * Every scope this operation can require, for operator-facing permissions.
+   *
+   * This is the union an operation may need across all inputs, not what one call requests. Set
+   * `resolveScopes` whenever that union is wider than a single call needs.
+   */
   requiredScopes: readonly string[];
+  /** Narrows `requiredScopes` to the scopes this call needs. Defaults to requesting all of them. */
+  resolveScopes?: TailscaleScopeResolver;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
 }
@@ -285,6 +388,13 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     method: "GET",
     path: "/tailnet/-/settings",
     requiredScopes: ["feature_settings:read", "logs:network:read", "networking_settings:read", "policy_file:read"],
+    // Each scope reveals a different subset of settings, so read whichever ones the credential holds.
+    resolveScopes: heldAlternatives(
+      "feature_settings:read",
+      "logs:network:read",
+      "networking_settings:read",
+      "policy_file:read",
+    ),
     inputSchema: emptyInput("Tailscale get tailnet settings input."),
     outputSchema: objectOutput("The visible tailnet settings."),
   },
@@ -409,14 +519,16 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
       {
         deviceId: s.nonEmptyString("The preferred nodeId or legacy id of the device."),
         attributeKey: s.nonEmptyString("A custom posture attribute key in the custom: namespace."),
-        value: s.unknown("The string, integer, or boolean attribute value."),
+        value: s.oneOf([s.string({}), s.number({}), s.boolean({})], {
+          description: "The attribute value. Tailscale accepts only a string, number, or boolean.",
+        }),
         expiry: s.string("Optional RFC 3339 expiry time."),
         comment: s.string("Optional audit-log comment."),
       },
       ["deviceId", "attributeKey", "value"],
       "Tailscale set device posture attribute input.",
     ),
-    outputSchema: s.nullable(s.unknown("Tailscale posture attribute response.")),
+    outputSchema: objectOutput("The device's custom posture attributes after the update."),
   },
   {
     name: "set_dns_nameservers",
@@ -490,17 +602,22 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
   },
   {
     name: "set_dns_configuration",
-    description: "Update the combined nameserver, split DNS, search path, and DNS preference configuration.",
+    description:
+      "Replace the entire tailnet DNS configuration, including nameservers, split DNS, search paths, and preferences.",
     method: "POST",
     path: "/tailnet/-/dns/configuration",
     bodyInputName: "configuration",
     requiredScopes: ["dns"],
     inputSchema: s.actionInput(
-      { configuration: objectOutput("The DNS configuration fields to update.") },
+      {
+        configuration: objectOutput(
+          "The complete replacement DNS configuration. This replaces rather than merges: any section left out is cleared, so send the full configuration.",
+        ),
+      },
       ["configuration"],
       "Tailscale set DNS configuration input.",
     ),
-    outputSchema: objectOutput("The updated complete DNS configuration."),
+    outputSchema: objectOutput("The replacement complete DNS configuration."),
   },
   {
     name: "update_tailnet_settings",
@@ -509,6 +626,19 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/settings",
     bodyInputName: "settings",
     requiredScopes: ["feature_settings", "logs:network", "networking_settings", "policy_file"],
+    // Each scope governs a different subset of settings, so request only the ones this call writes.
+    resolveScopes: (input) => {
+      const fields = Object.keys(optionalRecord(input.settings) ?? {});
+      const scopes = governedTailnetSettings
+        .filter((setting) => setting.fields.some((field) => fields.includes(field)))
+        .map((setting) => setting.scope);
+      const governed = new Set(governedTailnetSettings.flatMap((setting) => setting.fields));
+      // `feature_settings` covers every setting the scopes above do not govern.
+      if (scopes.length === 0 || fields.some((field) => !governed.has(field))) {
+        scopes.unshift("feature_settings");
+      }
+      return scopes;
+    },
     inputSchema: s.actionInput(
       { settings: objectOutput("The tailnet settings fields to update.") },
       ["settings"],
@@ -585,11 +715,18 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     description: "Set or remove custom posture attributes across multiple Tailscale devices.",
     method: "PATCH",
     path: "/tailnet/-/device-attributes",
-    bodyInputName: "update",
+    // Tailscale ignores a body without `nodes` and still answers 200, so the wrapper is sent as a
+    // named field rather than left to the caller to reproduce.
+    bodyFields: ["nodes", "comment"],
     requiredScopes: ["devices:posture_attributes"],
     inputSchema: s.actionInput(
-      { update: objectOutput("Device IDs mapped to custom posture attribute updates and an optional audit comment.") },
-      ["update"],
+      {
+        nodes: objectOutput(
+          "Device IDs mapped to custom: attribute keys and their {value, expiry} updates. JSON Merge Patch semantics: a null attribute deletes it.",
+        ),
+        comment: s.string("Optional audit-log comment."),
+      },
+      ["nodes"],
       "Tailscale batch posture attribute update input.",
     ),
     outputSchema: s.nullable(s.unknown("Tailscale batch posture attribute update response.")),
@@ -667,6 +804,12 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["logType"],
     bodyInputName: "configuration",
     requiredScopes: ["log_streaming", "device_invites", "policy_file"],
+    // `device_invites` and `policy_file` are required only for private endpoints, which the request
+    // body does not distinguish, so add them when held and let Tailscale reject a genuine shortfall.
+    resolveScopes: (input, granted) => [
+      "log_streaming",
+      ...heldAlternatives("device_invites", "policy_file")(input, granted),
+    ],
     inputSchema: s.actionInput(
       {
         logType: s.stringEnum(["configuration", "network"], { description: "The Tailscale log type." }),
@@ -675,7 +818,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
       ["logType", "configuration"],
       "Tailscale set log streaming configuration input.",
     ),
-    outputSchema: objectOutput("The stored log streaming configuration."),
+    outputSchema: s.nullable(s.unknown("Tailscale set log streaming configuration response.")),
   },
   {
     name: "disable_log_streaming",
@@ -692,8 +835,17 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     description: "Create or retrieve the AWS external ID used by Tailscale log streaming.",
     method: "POST",
     path: "/tailnet/-/aws-external-id",
+    bodyFields: ["reusable"],
     requiredScopes: ["log_streaming"],
-    inputSchema: emptyInput("Tailscale get AWS external ID input."),
+    inputSchema: s.actionInput(
+      {
+        reusable: s.boolean(
+          "Whether later reusable calls may receive this same external ID, until it is linked with an AWS account.",
+        ),
+      },
+      [],
+      "Tailscale get AWS external ID input.",
+    ),
     outputSchema: objectOutput("The AWS external ID assigned to the tailnet."),
   },
   {
@@ -712,7 +864,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
       ["externalId", "roleArn"],
       "Tailscale validate AWS external ID input.",
     ),
-    outputSchema: objectOutput("The AWS trust policy validation result."),
+    outputSchema: s.nullable(s.unknown("Tailscale AWS trust policy validation response.")),
   },
   {
     name: "list_keys",
@@ -721,6 +873,13 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys",
     queryParameters: [{ inputName: "all", parameterName: "all" }],
     requiredScopes: ["api_access_tokens:read", "auth_keys:read", "oauth_keys:read", "federated_keys:read"],
+    // Each scope reveals one key family, so list whichever families the credential can see.
+    resolveScopes: heldAlternatives(
+      "api_access_tokens:read",
+      "auth_keys:read",
+      "oauth_keys:read",
+      "federated_keys:read",
+    ),
     inputSchema: s.actionInput(
       { all: s.boolean("Whether to include expired and revoked keys.") },
       [],
@@ -735,6 +894,13 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys",
     bodyInputName: "key",
     requiredScopes: ["auth_keys", "oauth_keys", "federated_keys"],
+    // Each scope creates one `keyType`; requesting all three locks out the common auth-keys-only client.
+    resolveScopes: (input, granted) => {
+      // Tailscale defaults an omitted keyType to "auth".
+      const keyType = optionalString(optionalRecord(input.key)?.keyType) ?? "auth";
+      const scope = keyTypeScopes.get(keyType);
+      return scope ? [scope] : heldAlternatives(...keyTypeScopes.values())(input, granted);
+    },
     inputSchema: s.actionInput(
       { key: objectOutput("The key type, capabilities, expiry, scopes, tags, and identity configuration.") },
       ["key"],
@@ -749,6 +915,13 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys/{keyId}",
     pathParameters: ["keyId"],
     requiredScopes: ["api_access_tokens:read", "auth_keys:read", "oauth_keys:read", "federated_keys:read"],
+    // A key id does not reveal its family, so read with whichever families the credential can see.
+    resolveScopes: heldAlternatives(
+      "api_access_tokens:read",
+      "auth_keys:read",
+      "oauth_keys:read",
+      "federated_keys:read",
+    ),
     inputSchema: idInput("keyId", "The Tailscale key ID."),
     outputSchema: objectOutput("The requested key metadata."),
   },
@@ -759,6 +932,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys/{keyId}",
     pathParameters: ["keyId"],
     requiredScopes: ["api_access_tokens", "auth_keys", "oauth_keys", "federated_keys"],
+    // A key id does not reveal its type, so request whichever key families the credential holds.
+    resolveScopes: heldAlternatives("api_access_tokens", "auth_keys", "oauth_keys", "federated_keys"),
     inputSchema: idInput("keyId", "The Tailscale key ID to revoke and delete."),
     outputSchema: s.nullable(s.unknown("Tailscale delete key response.")),
   },
@@ -770,6 +945,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["keyId"],
     bodyInputName: "key",
     requiredScopes: ["oauth_keys", "federated_keys"],
+    // Each scope updates a different credential kind, and a key id does not say which.
+    resolveScopes: heldAlternatives("oauth_keys", "federated_keys"),
     inputSchema: s.actionInput(
       {
         keyId: s.nonEmptyString("The Tailscale key ID."),
@@ -786,13 +963,22 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     method: "GET",
     path: "/tailnet/-/acl",
     queryParameters: [{ inputName: "details", parameterName: "details" }],
+    // Tailscale returns the policy version only as an ETag header, and set_policy_file needs it to
+    // avoid overwriting a concurrent edit, so it is surfaced next to the policy itself.
+    responseEnvelope: { bodyField: "policy", headers: { etag: "etag" } },
     requiredScopes: ["policy_file:read"],
     inputSchema: s.actionInput(
       { details: s.boolean("Whether to include the encoded policy, warnings, and errors.") },
       [],
       "Tailscale get policy file input.",
     ),
-    outputSchema: objectOutput("The current Tailscale policy file or detailed validation result."),
+    outputSchema: s.object(
+      {
+        policy: objectOutput("The current Tailscale policy file or detailed validation result."),
+        etag: s.nullableString("The policy version to pass as set_policy_file's ifMatch input."),
+      },
+      { required: ["policy"], description: "The current Tailscale policy file and its version." },
+    ),
   },
   {
     name: "set_policy_file",
@@ -800,9 +986,15 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     method: "POST",
     path: "/tailnet/-/acl",
     bodyInputName: "policy",
+    headerFields: { ifMatch: "If-Match" },
     requiredScopes: ["policy_file"],
     inputSchema: s.actionInput(
-      { policy: objectOutput("The complete replacement Tailscale policy document.") },
+      {
+        policy: objectOutput("The complete replacement Tailscale policy document."),
+        ifMatch: s.nonEmptyString(
+          "The etag returned by get_policy_file. Rejects the write with HTTP 412 if the policy changed since that read, instead of overwriting the change. Omit to overwrite unconditionally.",
+        ),
+      },
       ["policy"],
       "Tailscale set policy file input.",
     ),
@@ -824,7 +1016,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
       ["userId", "role"],
       "Tailscale update user role input.",
     ),
-    outputSchema: objectOutput("The updated Tailscale user."),
+    outputSchema: s.nullable(s.unknown("Tailscale update user role response.")),
   },
   {
     name: "approve_user",
@@ -834,7 +1026,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["userId"],
     requiredScopes: ["users"],
     inputSchema: idInput("userId", "The pending Tailscale user ID."),
-    outputSchema: objectOutput("The approved Tailscale user."),
+    outputSchema: s.nullable(s.unknown("Tailscale approve user response.")),
   },
   {
     name: "suspend_user",
@@ -844,7 +1036,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["userId"],
     requiredScopes: ["users"],
     inputSchema: idInput("userId", "The Tailscale user ID to suspend."),
-    outputSchema: objectOutput("The suspended Tailscale user."),
+    outputSchema: s.nullable(s.unknown("Tailscale suspend user response.")),
   },
   {
     name: "restore_user",
@@ -854,7 +1046,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["userId"],
     requiredScopes: ["users"],
     inputSchema: idInput("userId", "The suspended Tailscale user ID to restore."),
-    outputSchema: objectOutput("The restored Tailscale user."),
+    outputSchema: s.nullable(s.unknown("Tailscale restore user response.")),
   },
   {
     name: "delete_user",
@@ -884,7 +1076,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
       ["contactType", "email"],
       "Tailscale update contact input.",
     ),
-    outputSchema: objectOutput("The updated tailnet contact."),
+    outputSchema: s.nullable(s.unknown("Tailscale update contact response.")),
   },
   {
     name: "resend_contact_verification_email",
@@ -1011,6 +1203,11 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/oauth-apps",
     bodyInputName: "app",
     requiredScopes: ["oauth_apps", "devices:posture_attributes"],
+    // `devices:posture_attributes` is required only when the app declares allowed node attributes.
+    resolveScopes: (input) =>
+      "allowedNodeAttributes" in (optionalRecord(input.app) ?? {})
+        ? ["oauth_apps", "devices:posture_attributes"]
+        : ["oauth_apps"],
     inputSchema: s.actionInput(
       { app: objectOutput("The OAuth app name, redirect URIs, scopes, and allowed node attributes.") },
       ["app"],
@@ -1036,6 +1233,13 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["appId"],
     bodyInputName: "app",
     requiredScopes: ["oauth_apps", "devices:posture_attributes"],
+    // Tailscale documents only `oauth_apps` here, unlike the create endpoint. Send the posture scope
+    // when the app declares node attributes and the credential holds it, so a documented-only
+    // `oauth_apps` client still works either way.
+    resolveScopes: (input, granted) =>
+      "allowedNodeAttributes" in (optionalRecord(input.app) ?? {})
+        ? ["oauth_apps", ...heldAlternatives("devices:posture_attributes")(input, granted)]
+        : ["oauth_apps"],
     inputSchema: s.actionInput(
       {
         appId: s.nonEmptyString("The Tailscale OAuth app ID."),

@@ -237,7 +237,9 @@ describe("Tailscale provider integration", () => {
       .map(([, init]) => Object.fromEntries(new URLSearchParams(String(init?.body))));
     const credential = { grant_type: "client_credentials", client_id: "client-id", client_secret: "client-secret" };
     // Credential validation omits `scope` entirely so that any OAuth client can connect; each action
-    // then requests exactly the scopes its own operation declares.
+    // then requests only the scopes that one call needs. Tailscale refuses to mint a token naming a
+    // scope the client was never granted, so `create_key` asks for the one scope its `keyType`
+    // requires rather than every scope the endpoint documents.
     expect(tokenBodies).toEqual([
       credential,
       { ...credential, scope: "devices:core:read" },
@@ -247,7 +249,7 @@ describe("Tailscale provider integration", () => {
       { ...credential, scope: "users:read" },
       { ...credential, scope: "users:read" },
       { ...credential, scope: "devices:routes" },
-      { ...credential, scope: "auth_keys oauth_keys federated_keys" },
+      { ...credential, scope: "auth_keys" },
       { ...credential, scope: "devices:core" },
     ]);
     expect(apiUrls).toEqual([
@@ -350,6 +352,186 @@ describe("Tailscale provider integration", () => {
     expect(stored.metadata).toEqual({ tailnet: "-" });
     // The device probe is skipped rather than attempted-and-forgiven, so only the token exchange ran.
     expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual(["https://api.tailscale.com/api/v2/oauth/token"]);
+  });
+
+  it("creates an auth key with a credential scoped only for auth keys", async () => {
+    setDefaultGuardedFetchDnsLookup(null);
+    // The most common Tailscale OAuth client: provisioned to mint CI auth keys and nothing else.
+    const held = new Set(["auth_keys"]);
+    const requestedScopes: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://api.tailscale.com/api/v2/oauth/token") {
+        const requested = new URLSearchParams(String(init?.body)).get("scope");
+        if (requested !== null) {
+          requestedScopes.push(requested);
+          // Tailscale mints a token only for scopes the client was granted.
+          const unheld = requested.split(/\s+/).filter((scope) => scope && !held.has(scope));
+          if (unheld.length > 0) {
+            return Response.json(
+              { error: "invalid_scope", error_description: `client is not permitted scope ${unheld.join(" ")}` },
+              { status: 400 },
+            );
+          }
+        }
+        return Response.json({
+          access_token: "key-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+          scope: [...held].join(" "),
+        });
+      }
+      if (url === "https://api.tailscale.com/api/v2/tailnet/-/keys" && init?.method === "POST") {
+        return Response.json({ id: "k123", key: "tskey-auth-secret" });
+      }
+      return Response.json({ message: "not found" }, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    const catalog = createCatalogStore([provider], {
+      executableActionIds: provider.actions.map((action) => action.id),
+    });
+    const providerLoader = new ProviderLoader({ tailscale: () => import("./executors.ts") });
+    const connections = new ConnectionService({
+      catalog,
+      providerLoader,
+      store: new MemoryConnectionStore(),
+    });
+    await connections.connectWithCustomCredential("tailscale", {
+      connectionName: "keys-only",
+      values: { clientId: "client-id", clientSecret: "client-secret" },
+    });
+
+    const action = catalog.actionsById.get("tailscale.create_key")!;
+    const executor = await providerLoader.loadActionExecutor("tailscale", action.id, provider.displayName);
+    // Requesting `oauth_keys` and `federated_keys` here as well would fail the token exchange outright,
+    // even though this credential is perfectly able to create the auth key being asked for.
+    await expect(
+      executeAction(
+        action,
+        executor,
+        { key: { keyType: "auth", description: "CI key", expirySeconds: 3600 } },
+        connections.forConnection("keys-only"),
+      ),
+    ).resolves.toMatchObject({ ok: true, output: { id: "k123", key: "tskey-auth-secret" } });
+    expect(requestedScopes).toEqual(["auth_keys"]);
+  });
+
+  it("returns the policy file with the etag that guards a later write", async () => {
+    setDefaultGuardedFetchDnsLookup(null);
+    const policy = { acls: [{ action: "accept", src: ["*"], dst: ["*:*"] }] };
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://api.tailscale.com/api/v2/oauth/token") {
+        return Response.json({
+          access_token: "policy-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+          scope: "policy_file policy_file:read",
+        });
+      }
+      if (url === "https://api.tailscale.com/api/v2/tailnet/-/acl" && (init?.method ?? "GET") === "GET") {
+        return Response.json(policy, { headers: { etag: '"abc123"' } });
+      }
+      if (url === "https://api.tailscale.com/api/v2/tailnet/-/acl" && init?.method === "POST") {
+        // Tailscale answers 412 when the policy moved on since the etag was read.
+        if (new Headers(init?.headers).get("if-match") !== '"abc123"') {
+          return Response.json({ message: "policy file has changed" }, { status: 412 });
+        }
+        return Response.json(policy);
+      }
+      return Response.json({ message: "not found" }, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    const catalog = createCatalogStore([provider], {
+      executableActionIds: provider.actions.map((action) => action.id),
+    });
+    const providerLoader = new ProviderLoader({ tailscale: () => import("./executors.ts") });
+    const connections = new ConnectionService({
+      catalog,
+      providerLoader,
+      store: new MemoryConnectionStore(),
+    });
+    await connections.connectWithCustomCredential("tailscale", {
+      connectionName: "policy",
+      values: { clientId: "client-id", clientSecret: "client-secret" },
+    });
+
+    // The etag lives only in a response header, so the read has to hand it back for a safe write.
+    const getAction = catalog.actionsById.get("tailscale.get_policy_file")!;
+    const getExecutor = await providerLoader.loadActionExecutor("tailscale", getAction.id, provider.displayName);
+    await expect(executeAction(getAction, getExecutor, {}, connections.forConnection("policy"))).resolves.toMatchObject(
+      { ok: true, output: { policy, etag: '"abc123"' } },
+    );
+
+    const setAction = catalog.actionsById.get("tailscale.set_policy_file")!;
+    const setExecutor = await providerLoader.loadActionExecutor("tailscale", setAction.id, provider.displayName);
+    await expect(
+      executeAction(setAction, setExecutor, { policy, ifMatch: '"abc123"' }, connections.forConnection("policy")),
+    ).resolves.toMatchObject({ ok: true });
+    // Only the policy reaches the body; the etag rides as If-Match.
+    const write = fetcher.mock.calls.find(
+      ([input, init]) => String(input) === "https://api.tailscale.com/api/v2/tailnet/-/acl" && init?.method === "POST",
+    );
+    expect(write?.[1]?.body).toBe(JSON.stringify(policy));
+    expect(new Headers(write?.[1]?.headers).get("if-match")).toBe('"abc123"');
+
+    // A stale etag is refused instead of silently overwriting a concurrent admin edit.
+    await expect(
+      executeAction(setAction, setExecutor, { policy, ifMatch: '"stale"' }, connections.forConnection("policy")),
+    ).resolves.toMatchObject({ ok: false });
+  });
+
+  it("sends batched posture attributes under the nodes wrapper Tailscale requires", async () => {
+    setDefaultGuardedFetchDnsLookup(null);
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://api.tailscale.com/api/v2/oauth/token") {
+        return Response.json({
+          access_token: "posture-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+          scope: "devices:posture_attributes",
+        });
+      }
+      if (url === "https://api.tailscale.com/api/v2/tailnet/-/device-attributes" && init?.method === "PATCH") {
+        return new Response(null, { status: 200 });
+      }
+      return Response.json({ message: "not found" }, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    const catalog = createCatalogStore([provider], {
+      executableActionIds: provider.actions.map((action) => action.id),
+    });
+    const providerLoader = new ProviderLoader({ tailscale: () => import("./executors.ts") });
+    const connections = new ConnectionService({
+      catalog,
+      providerLoader,
+      store: new MemoryConnectionStore(),
+    });
+    await connections.connectWithCustomCredential("tailscale", {
+      connectionName: "posture",
+      values: { clientId: "client-id", clientSecret: "client-secret" },
+    });
+
+    const action = catalog.actionsById.get("tailscale.batch_update_device_posture_attributes")!;
+    const executor = await providerLoader.loadActionExecutor("tailscale", action.id, provider.displayName);
+    await expect(
+      executeAction(
+        action,
+        executor,
+        { nodes: { n123: { "custom:score": { value: 7 } } }, comment: "bulk update" },
+        connections.forConnection("posture"),
+      ),
+    ).resolves.toEqual({ ok: true, output: null });
+    // Without the `nodes` wrapper Tailscale accepts the request and writes nothing, so the shape of
+    // this body is the only thing standing between the caller and a silent no-op.
+    const write = fetcher.mock.calls.find(([, init]) => init?.method === "PATCH");
+    expect(write?.[1]?.body).toBe(
+      JSON.stringify({ nodes: { n123: { "custom:score": { value: 7 } } }, comment: "bulk update" }),
+    );
   });
 
   it("rejects a credential whose tailnet does not exist", async () => {

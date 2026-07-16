@@ -21,6 +21,8 @@ interface TailscaleContext {
   clientId: string;
   clientSecret: string;
   tailnet: string;
+  /** Scopes recorded when the connection was created, used to narrow per-operation token requests. */
+  grantedScopes: ReadonlySet<string>;
   fetcher: ProviderFetch;
   signal?: AbortSignal;
 }
@@ -41,7 +43,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<TailscaleCon
   skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<TailscaleContext> {
     const credential = await requireCustomCredential(context, service);
-    return readTailscaleContext(credential.values, fetcher, context.signal);
+    return readTailscaleContext(credential.values, fetcher, context.signal, credential.profile.grantedScopes);
   },
 });
 
@@ -102,10 +104,29 @@ function createOperationHandler(operation: TailscaleOperationDefinition): Provid
       url,
       context,
       createOperationRequestInit(operation, input),
-      operation.requiredScopes,
+      resolveOperationScopes(operation, input, context),
       operation.responseFormat ?? "json",
+      operation.responseEnvelope,
     );
   };
+}
+
+/**
+ * The scopes one call's access token asks for.
+ *
+ * Tailscale rejects a token request naming any scope the OAuth client was not granted, so an
+ * operation narrows its documented union to what this input needs. An empty result omits `scope`
+ * entirely, which mints a token carrying whatever the client holds.
+ */
+function resolveOperationScopes(
+  operation: TailscaleOperationDefinition,
+  input: Record<string, unknown>,
+  context: TailscaleContext,
+): readonly string[] {
+  if (!operation.resolveScopes) {
+    return operation.requiredScopes;
+  }
+  return operation.resolveScopes(input, context.grantedScopes);
 }
 
 function createOperationRequestInit(
@@ -123,8 +144,18 @@ function createOperationRequestInit(
       ),
     );
   }
+  const headers: Record<string, string> = {};
   if (init.body !== undefined) {
-    init.headers = { "content-type": operation.contentType ?? "application/json" };
+    headers["content-type"] = operation.contentType ?? "application/json";
+  }
+  for (const [inputName, headerName] of Object.entries(operation.headerFields ?? {})) {
+    const value = optionalString(input[inputName]);
+    if (value !== undefined) {
+      headers[headerName] = value;
+    }
+  }
+  if (Object.keys(headers).length > 0) {
+    init.headers = headers;
   }
   return init;
 }
@@ -165,6 +196,7 @@ function readTailscaleContext(
   values: Record<string, string>,
   fetcher: ProviderFetch,
   signal: AbortSignal | undefined,
+  grantedScopes: readonly string[] = [],
 ): TailscaleContext {
   const tailnet = optionalString(values.tailnet)?.trim() || defaultTailnet;
   return {
@@ -175,6 +207,7 @@ function readTailscaleContext(
       (message) => new ProviderRequestError(400, message),
     ),
     tailnet,
+    grantedScopes: new Set(grantedScopes),
     fetcher,
     signal,
   };
@@ -227,9 +260,10 @@ async function tailscaleRequestUrl(
   init: RequestInit,
   requiredScopes: readonly string[],
   responseFormat: "json" | "text",
+  responseEnvelope?: TailscaleOperationDefinition["responseEnvelope"],
 ): Promise<unknown> {
   const token = await requestTailscaleAccessToken(context, requiredScopes);
-  return tailscaleRequestWithToken(url, context, init, token, responseFormat);
+  return tailscaleRequestWithToken(url, context, init, token, responseFormat, responseEnvelope);
 }
 
 async function tailscaleRequestWithToken(
@@ -238,6 +272,7 @@ async function tailscaleRequestWithToken(
   init: RequestInit,
   token: TailscaleAccessToken,
   responseFormat: "json" | "text",
+  responseEnvelope?: TailscaleOperationDefinition["responseEnvelope"],
 ): Promise<unknown> {
   const headers = new Headers(init.headers);
   headers.set("accept", "application/json");
@@ -254,7 +289,20 @@ async function tailscaleRequestWithToken(
   if (!response.ok) {
     throwTailscaleRequestError(response.status, payload, "Tailscale request failed");
   }
-  return payload;
+  return responseEnvelope ? wrapResponseEnvelope(payload, response, responseEnvelope) : payload;
+}
+
+/** Returns the body under its own field with the response headers the operation asked to keep. */
+function wrapResponseEnvelope(
+  payload: unknown,
+  response: Response,
+  envelope: NonNullable<TailscaleOperationDefinition["responseEnvelope"]>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { [envelope.bodyField]: payload };
+  for (const [field, headerName] of Object.entries(envelope.headers)) {
+    result[field] = response.headers.get(headerName);
+  }
+  return result;
 }
 
 async function readTailscaleJsonResponse(response: Response): Promise<unknown> {
