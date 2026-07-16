@@ -8,11 +8,13 @@ export const tailscaleDeviceReadScope = "devices:core:read";
 /**
  * Narrows an operation's scopes to the minimum one call needs.
  *
- * Tailscale mints every access token by downscoping the credential, and its token endpoint fails
- * with `invalid_scope` when asked for a scope the OAuth client was never granted — "the OAuth
- * client must have permission to grant the requested scopes". So a token request must name only
- * what this call actually needs: asking for the union of an endpoint's documented scopes locks out
- * every correctly least-privileged credential.
+ * Tailscale mints every access token by downscoping the credential, and asking for a scope the
+ * OAuth client was never granted fails the whole request — the token endpoint answers
+ * `{"message":"OAuth client cannot grant scopes \"auth_keys\""}`, verified against the live API.
+ * Narrowing to a subset of the grant is what succeeds. So a token request must name only what this
+ * call actually needs: asking for the union of an endpoint's documented scopes locks out every
+ * correctly least-privileged credential, and the key scopes are separately grantable, so an
+ * auth-keys-only client is routine rather than hypothetical.
  *
  * `granted` is the scope set recorded when the connection was created. Prefer deciding from `input`
  * alone; read `granted` only where the input cannot identify the scope (`delete_key` knows a key id
