@@ -601,7 +601,7 @@ export function normalizeConnectionName(value: string | undefined): string {
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(name)) {
     throw new ConnectionError(
       "invalid_connection_name",
-      "connectionName must start with a letter or digit and contain only letters, digits, underscores, or hyphens.",
+      "connectionName must start with a letter or digit, contain only letters, digits, underscores, or hyphens, and be at most 64 characters.",
     );
   }
 

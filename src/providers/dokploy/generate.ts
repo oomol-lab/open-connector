@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -19,6 +20,7 @@ const repositoryRoot = resolve(import.meta.dirname, "../../..");
 const dokployMcpCommit = "db18449eafdfc8dbd438d392b95c46292069c658";
 const expectedSourceSha256 = "225972ade1e545cc9a44638e4ff32d73a23ea48298617ca3a37fb5cfff6a058e";
 const defaultSourceUrl = `https://raw.githubusercontent.com/Dokploy/mcp/${dokployMcpCommit}/src/generated/openapi.json`;
+const maxSourceBytes = 10 * 1024 * 1024;
 const localSourceArgument = process.argv[2];
 const sourcePath = localSourceArgument ? resolve(localSourceArgument) : undefined;
 const sourceLabel = sourcePath
@@ -34,8 +36,8 @@ if (sourceSha256 !== expectedSourceSha256) {
     `Dokploy OpenAPI SHA-256 mismatch for ${sourceLabel}: expected ${expectedSourceSha256}, received ${sourceSha256}`,
   );
 }
-const document = JSON.parse(source) as JsonObject;
-const paths = (document.paths ?? {}) as Record<string, Record<string, OpenApiOperation>>;
+const document = parseOpenApiDocument(source);
+const paths = openApiPaths(document.paths);
 const operationsByTag = new Map<string, JsonObject[]>();
 const names = new Set<string>();
 let relaxedPlaceholderResponses = 0;
@@ -52,7 +54,7 @@ for (const [path, pathItem] of Object.entries(paths)) {
     if (names.has(name)) throw new Error(`Duplicate Dokploy action name: ${name}`);
     names.add(name);
 
-    const pathParameters = pathItem.parameters as unknown as JsonObject[] | undefined;
+    const pathParameters = objectArray(pathItem.parameters);
     const parameters = [...(pathParameters ?? []), ...(operation.parameters ?? [])];
     const pathFields: string[] = [];
     const queryFields: string[] = [];
@@ -64,7 +66,7 @@ for (const [path, pathItem] of Object.entries(paths)) {
       const parameterName = String(parameter.name);
       const location = String(parameter.in);
       parameterProperties[parameterName] = withDescription(
-        dereference((parameter.schema ?? {}) as JsonObject),
+        dereference(objectOrEmpty(parameter.schema)),
         parameter.description,
       );
       if (parameter.required === true) required.add(parameterName);
@@ -72,17 +74,16 @@ for (const [path, pathItem] of Object.entries(paths)) {
       if (location === "query") queryFields.push(parameterName);
     }
 
-    const content = (operation.requestBody?.content ?? {}) as Record<string, JsonObject>;
+    const content = objectRecord(operation.requestBody?.content);
     const contentType = selectContentType(content);
-    const bodySchema = contentType ? dereference((content[contentType]?.schema ?? {}) as JsonObject) : undefined;
+    const bodySchema = contentType ? dereference(objectOrEmpty(content[contentType]?.schema)) : undefined;
     const bodyFields =
-      bodySchema && bodySchema.type === "object" ? Object.keys((bodySchema.properties ?? {}) as JsonObject) : [];
+      bodySchema && bodySchema.type === "object" ? Object.keys(objectRecord(bodySchema.properties)) : [];
     const fileFields: string[] = [];
-    const bodyRequired = bodySchema && Array.isArray(bodySchema.required) ? (bodySchema.required as string[]) : [];
-    const bodyProperties = bodySchema?.type === "object" ? ((bodySchema.properties ?? {}) as JsonObject) : {};
+    const bodyRequired = stringArray(bodySchema?.required);
+    const bodyProperties = bodySchema?.type === "object" ? objectRecord(bodySchema.properties) : {};
     for (const [field, schema] of Object.entries(bodyProperties)) {
-      const fieldSchema = schema as JsonObject;
-      if (fieldSchema.type === "string" && fieldSchema.format === "binary") {
+      if (schema.type === "string" && schema.format === "binary") {
         fileFields.push(field);
         parameterProperties[field] = transitFileSchema(field);
       } else {
@@ -197,7 +198,12 @@ async function downloadDefaultSource(): Promise<string> {
   if (!response.ok) {
     throw new Error(`Failed to download pinned Dokploy OpenAPI: HTTP ${response.status} ${response.statusText}`);
   }
-  return response.text();
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: maxSourceBytes,
+    fieldName: "Dokploy OpenAPI source",
+    createError: (message) => new Error(message),
+  });
+  return new TextDecoder().decode(bytes);
 }
 
 function fallbackDescription(method: string, path: string, operationId: string): string {
@@ -214,23 +220,23 @@ function dereference(value: JsonObject, seen = new Set<string>()): JsonObject {
     if (seen.has(value.$ref)) return {};
     return dereference(resolvePointer(value.$ref), new Set([...seen, value.$ref]));
   }
-  return Object.fromEntries(
-    Object.entries(value).map(([key, child]) => [
-      key,
-      Array.isArray(child)
-        ? child.map((item) => (isObject(item) ? dereference(item, seen) : item))
-        : isObject(child)
-          ? dereference(child, seen)
-          : child,
-    ]),
-  );
+  const output: JsonObject = {};
+  for (const [key, child] of Object.entries(value)) {
+    output[key] = Array.isArray(child)
+      ? child.map((item) => (isObject(item) ? dereference(item, seen) : item))
+      : isObject(child)
+        ? dereference(child, seen)
+        : child;
+  }
+  return output;
 }
 
 function resolvePointer(pointer: string): JsonObject {
   if (!pointer.startsWith("#/")) throw new Error(`External OpenAPI reference is not supported: ${pointer}`);
   let current: unknown = document;
   for (const token of pointer.slice(2).split("/")) {
-    current = (current as JsonObject)[token.replaceAll("~1", "/").replaceAll("~0", "~")];
+    if (!isObject(current)) throw new Error(`OpenAPI reference does not point to an object: ${pointer}`);
+    current = current[token.replaceAll("~1", "/").replaceAll("~0", "~")];
   }
   if (!isObject(current)) throw new Error(`OpenAPI reference does not point to an object: ${pointer}`);
   return current;
@@ -240,13 +246,13 @@ function responseSchema(responses: Record<string, JsonObject>): JsonObject {
   const response = responses["200"] ?? responses["201"] ?? responses["202"] ?? responses.default;
   if (!response) return { description: "Dokploy response.", type: "object", additionalProperties: true };
   const resolvedResponse = dereference(response);
-  const content = (resolvedResponse.content ?? {}) as Record<string, JsonObject>;
+  const content = objectRecord(resolvedResponse.content);
   const mediaType = content["application/json"] ?? Object.values(content)[0];
   if (mediaType?.schema) {
-    const schema = withDescription(dereference(mediaType.schema as JsonObject), resolvedResponse.description);
+    const schema = withDescription(dereference(objectOrEmpty(mediaType.schema)), resolvedResponse.description);
     if (
       schema.type === "object" &&
-      Object.keys((schema.properties ?? {}) as JsonObject).length === 0 &&
+      Object.keys(objectRecord(schema.properties)).length === 0 &&
       schema.additionalProperties === false
     ) {
       relaxedPlaceholderResponses += 1;
@@ -324,6 +330,54 @@ function toCamelCase(value: string): string {
       .map((part) => part[0]?.toUpperCase() + part.slice(1))
       .join("")
   );
+}
+
+function parseOpenApiDocument(source: string): JsonObject {
+  const document: unknown = JSON.parse(source);
+  if (!isObject(document)) throw new Error("Dokploy OpenAPI document must be an object");
+  return document;
+}
+
+function objectOrEmpty(value: unknown): JsonObject {
+  return isObject(value) ? value : {};
+}
+
+function objectRecord(value: unknown): Record<string, JsonObject> {
+  const source = objectOrEmpty(value);
+  const output: Record<string, JsonObject> = {};
+  for (const [key, child] of Object.entries(source)) {
+    if (isObject(child)) {
+      output[key] = child;
+    }
+  }
+  return output;
+}
+
+function openApiPaths(value: unknown): Record<string, Record<string, OpenApiOperation>> {
+  const source = objectRecord(value);
+  const paths: Record<string, Record<string, OpenApiOperation>> = {};
+  for (const [path, pathItem] of Object.entries(source)) {
+    const operations: Record<string, OpenApiOperation> = {};
+    for (const [method, operation] of Object.entries(pathItem)) {
+      if (isObject(operation)) {
+        operations[method] = operation;
+      }
+    }
+    paths[path] = operations;
+  }
+  return paths;
+}
+
+function objectArray(value: unknown): JsonObject[] {
+  return Array.isArray(value) ? value.filter(isObject) : [];
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter(isString) : [];
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === "string";
 }
 
 function isObject(value: unknown): value is JsonObject {

@@ -3,12 +3,19 @@ import type { ResolvedCredential } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
+import type {
+  CompleteIdempotencyInput,
+  IdempotencyClaimInput,
+  IdempotencyClaimResult,
+  IIdempotencyStore,
+} from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
@@ -54,6 +61,11 @@ interface RotatedServiceSecret {
   value: string;
 }
 
+interface RotatedIdempotencySecret {
+  keyHash: string;
+  value: string;
+}
+
 /**
  * Shared SQLite connection for local runtime state.
  */
@@ -63,6 +75,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   readonly oauthStateStore: SqliteOAuthStateStore;
   readonly runtimeTokenStore: SqliteRuntimeTokenStore;
   readonly runLogStore: SqliteRunLogStore;
+  readonly idempotencyStore: SqliteIdempotencyStore;
 
   private readonly database: DatabaseSync;
   private readonly secretCodec: ISecretCodec;
@@ -76,6 +89,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.oauthStateStore = new SqliteOAuthStateStore(this.database);
     this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database);
     this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? 100);
+    this.idempotencyStore = new SqliteIdempotencyStore(this.database, this.secretCodec);
   }
 
   close(): void {
@@ -90,9 +104,11 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       nextSecretCodec,
       "oauth_client_configs",
     );
+    const idempotencyResponses = await readRotatedIdempotencySecrets(this.database, this.secretCodec, nextSecretCodec);
     runInTransaction(this.database, () => {
       writeRotatedConnectionSecrets(this.database, connections);
       writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
+      writeRotatedIdempotencySecrets(this.database, idempotencyResponses);
     });
   }
 
@@ -103,6 +119,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from oauth_states;
       delete from runtime_tokens;
       delete from runs;
+      delete from idempotency_records;
     `);
   }
 
@@ -273,6 +290,82 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     this.database
       .prepare("update runtime_tokens set last_used_at = ? where id = ? and revoked_at is null")
       .run(usedAt, id);
+  }
+}
+
+export class SqliteIdempotencyStore implements IIdempotencyStore {
+  private readonly database: DatabaseSync;
+  private readonly secretCodec: ISecretCodec;
+
+  constructor(database: DatabaseSync, secretCodec: ISecretCodec) {
+    this.database = database;
+    this.secretCodec = secretCodec;
+  }
+
+  async claim(input: IdempotencyClaimInput): Promise<IdempotencyClaimResult> {
+    const claim = runInTransaction(this.database, () => {
+      this.database.prepare("delete from idempotency_records where expires_at <= ?").run(input.now);
+      const inserted = this.database
+        .prepare(
+          `
+          insert into idempotency_records (
+            key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
+          )
+          values (?, ?, ?, 'in_progress', null, ?, ?)
+          on conflict(key_hash) do nothing
+        `,
+        )
+        .run(input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt);
+
+      if (inserted.changes > 0) {
+        return { kind: "acquired" } as const;
+      }
+
+      const row = this.database
+        .prepare(
+          `
+          select request_hash, state, response_value
+          from idempotency_records
+          where key_hash = ?
+        `,
+        )
+        .get(input.keyHash) as RuntimeRow;
+      return { kind: "existing", row } as const;
+    });
+
+    if (claim.kind === "acquired") {
+      return claim;
+    }
+    if (readString(claim.row, "request_hash") !== input.requestHash) {
+      return { kind: "conflict" };
+    }
+    if (readString(claim.row, "state") === "in_progress") {
+      return { kind: "in_progress" };
+    }
+
+    return {
+      kind: "completed",
+      response: parseRuntimeActionHttpResult(
+        parseJson(await this.secretCodec.decode(readString(claim.row, "response_value"))),
+      ),
+    };
+  }
+
+  async complete(input: CompleteIdempotencyInput): Promise<boolean> {
+    const responseValue = await this.secretCodec.encode(JSON.stringify(input.response));
+    const result = this.database
+      .prepare(
+        `
+        update idempotency_records
+        set state = 'completed', response_value = ?, expires_at = ?
+        where key_hash = ?
+          and claim_id = ?
+          and request_hash = ?
+          and state = 'in_progress'
+      `,
+      )
+      .run(responseValue, input.expiresAt, input.keyHash, input.claimId, input.requestHash);
+    return result.changes > 0;
   }
 }
 
@@ -453,11 +546,35 @@ function writeRotatedServiceSecrets(
   }
 }
 
-function runInTransaction(database: DatabaseSync, work: () => void): void {
+async function readRotatedIdempotencySecrets(
+  database: DatabaseSync,
+  currentCodec: ISecretCodec,
+  nextCodec: ISecretCodec,
+): Promise<RotatedIdempotencySecret[]> {
+  const rows = database
+    .prepare("select key_hash, response_value from idempotency_records where response_value is not null")
+    .all();
+  return await Promise.all(
+    rows.map(async (row) => ({
+      keyHash: readString(row, "key_hash"),
+      value: await nextCodec.encode(await currentCodec.decode(readString(row, "response_value"))),
+    })),
+  );
+}
+
+function writeRotatedIdempotencySecrets(database: DatabaseSync, responses: RotatedIdempotencySecret[]): void {
+  const statement = database.prepare("update idempotency_records set response_value = ? where key_hash = ?");
+  for (const response of responses) {
+    statement.run(response.value, response.keyHash);
+  }
+}
+
+function runInTransaction<T>(database: DatabaseSync, work: () => T): T {
   database.exec("begin immediate");
   try {
-    work();
+    const result = work();
     database.exec("commit");
+    return result;
   } catch (error) {
     database.exec("rollback");
     throw error;

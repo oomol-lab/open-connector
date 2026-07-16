@@ -1,3 +1,5 @@
+import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
+
 import { readFileSync } from "node:fs";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -88,6 +90,159 @@ describe("SqliteRuntimeDatabase", () => {
     second.close();
   });
 
+  it("claims, completes, and replays idempotent responses across database instances", async () => {
+    const databasePath = await createDatabasePath();
+    const first = new SqliteRuntimeDatabase(databasePath);
+    const claim = {
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    };
+
+    await expect(first.idempotencyStore.claim(claim)).resolves.toEqual({ kind: "acquired" });
+    await expect(first.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).resolves.toEqual({
+      kind: "in_progress",
+    });
+    await expect(
+      first.idempotencyStore.claim({ ...claim, requestHash: "different-request", claimId: "claim-3" }),
+    ).resolves.toEqual({ kind: "conflict" });
+    const response = successResponse({ executionId: "execution-1" });
+    await expect(
+      first.idempotencyStore.complete({
+        keyHash: claim.keyHash,
+        requestHash: claim.requestHash,
+        claimId: claim.claimId,
+        response,
+        expiresAt: "2026-07-01T00:00:01.000Z",
+      }),
+    ).resolves.toBe(true);
+    await expect(
+      first.idempotencyStore.complete({
+        keyHash: claim.keyHash,
+        requestHash: claim.requestHash,
+        claimId: claim.claimId,
+        response,
+        expiresAt: "2026-07-01T00:00:02.000Z",
+      }),
+    ).resolves.toBe(false);
+    first.close();
+
+    const second = new SqliteRuntimeDatabase(databasePath);
+    await expect(second.idempotencyStore.claim({ ...claim, claimId: "claim-4" })).resolves.toEqual({
+      kind: "completed",
+      response,
+    });
+    second.close();
+  });
+
+  it("rejects malformed persisted idempotency responses", async () => {
+    const databasePath = await createDatabasePath();
+    const claim = {
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    };
+    const database = new SqliteRuntimeDatabase(databasePath);
+    await database.idempotencyStore.claim(claim);
+    await database.idempotencyStore.complete({
+      ...claim,
+      response: successResponse({ executionId: "execution-1" }),
+    });
+    database.close();
+
+    const raw = new DatabaseSync(databasePath);
+    raw
+      .prepare("update idempotency_records set response_value = ? where key_hash = ?")
+      .run(
+        JSON.stringify({ status: 201, body: { success: true, message: "OK", data: null, meta: {} } }),
+        claim.keyHash,
+      );
+    raw.close();
+
+    const reopened = new SqliteRuntimeDatabase(databasePath);
+    await expect(reopened.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).rejects.toThrow(
+      "Invalid persisted action response",
+    );
+    reopened.close();
+  });
+
+  it("shares in-progress idempotency claims across database instances", async () => {
+    const databasePath = await createDatabasePath();
+    const first = new SqliteRuntimeDatabase(databasePath);
+    const second = new SqliteRuntimeDatabase(databasePath);
+    const claim = {
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    };
+
+    await expect(first.idempotencyStore.claim({ ...claim, claimId: "claim-1" })).resolves.toEqual({
+      kind: "acquired",
+    });
+    await expect(second.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).resolves.toEqual({
+      kind: "in_progress",
+    });
+    first.close();
+    second.close();
+  });
+
+  it("reclaims expired keys without allowing stale claims to complete", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath);
+    const first = {
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-06-30T01:00:00.000Z",
+    };
+    const second = {
+      ...first,
+      claimId: "claim-2",
+      now: first.expiresAt,
+      expiresAt: "2026-06-30T02:00:00.000Z",
+    };
+    const staleResponse = successResponse({ claim: "stale" });
+    const response = successResponse({ claim: "current" });
+
+    await expect(database.idempotencyStore.claim(first)).resolves.toEqual({ kind: "acquired" });
+    await expect(database.idempotencyStore.claim(second)).resolves.toEqual({ kind: "acquired" });
+    await expect(
+      database.idempotencyStore.complete({
+        keyHash: first.keyHash,
+        requestHash: first.requestHash,
+        claimId: first.claimId,
+        response: staleResponse,
+        expiresAt: "2026-06-30T03:00:00.000Z",
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      database.idempotencyStore.complete({
+        keyHash: second.keyHash,
+        requestHash: second.requestHash,
+        claimId: second.claimId,
+        response,
+        expiresAt: "2026-06-30T03:00:00.000Z",
+      }),
+    ).resolves.toBe(true);
+    await expect(
+      database.idempotencyStore.claim({
+        ...second,
+        claimId: "claim-3",
+        now: "2026-06-30T02:30:00.000Z",
+      }),
+    ).resolves.toEqual({
+      kind: "completed",
+      response,
+    });
+    database.close();
+  });
+
   it("keeps only the configured number of recent runs", async () => {
     const databasePath = await createDatabasePath();
     const database = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
@@ -171,6 +326,15 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(migrated.runLogStore.list({ service: "gmail" })).resolves.toMatchObject({
       items: [{ id: "legacy-gmail", service: "gmail" }],
     });
+    await expect(
+      migrated.idempotencyStore.claim({
+        keyHash: "key-hash",
+        requestHash: "request-hash",
+        claimId: "claim-1",
+        now: "2026-06-30T00:00:00.000Z",
+        expiresAt: "2026-07-01T00:00:00.000Z",
+      }),
+    ).resolves.toEqual({ kind: "acquired" });
     migrated.close();
   });
 
@@ -187,9 +351,25 @@ describe("SqliteRuntimeDatabase", () => {
       profile: githubProfile,
       metadata: {},
     });
+    const claim = {
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    };
+    await first.idempotencyStore.claim(claim);
+    await first.idempotencyStore.complete({
+      keyHash: claim.keyHash,
+      requestHash: claim.requestHash,
+      claimId: claim.claimId,
+      response: successResponse({ token: "idempotency-secret" }),
+      expiresAt: claim.expiresAt,
+    });
     first.close();
 
     await expectDatabaseDirectoryNotToContain(databasePath, "github-token");
+    await expectDatabaseDirectoryNotToContain(databasePath, "idempotency-secret");
 
     const second = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
@@ -197,6 +377,10 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(second.connectionStore.get("github", "default")).resolves.toMatchObject({
       authType: "api_key",
       apiKey: "github-token",
+    });
+    await expect(second.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).resolves.toEqual({
+      kind: "completed",
+      response: successResponse({ token: "idempotency-secret" }),
     });
     second.close();
   });
@@ -239,11 +423,27 @@ describe("SqliteRuntimeDatabase", () => {
       metadata: {},
     });
     await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    await database.idempotencyStore.claim({
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    });
 
     database.resetRuntimeData();
 
     await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
     await expect(database.runLogStore.list()).resolves.toEqual({ items: [] });
+    await expect(
+      database.idempotencyStore.claim({
+        keyHash: "key-hash",
+        requestHash: "request-hash",
+        claimId: "claim-2",
+        now: "2026-06-30T00:01:00.000Z",
+        expiresAt: "2026-07-01T00:01:00.000Z",
+      }),
+    ).resolves.toEqual({ kind: "acquired" });
     database.close();
   });
 
@@ -268,6 +468,21 @@ describe("SqliteRuntimeDatabase", () => {
       extra: {},
       secretExtra: {},
     });
+    const claim = {
+      keyHash: "key-hash",
+      requestHash: "request-hash",
+      claimId: "claim-1",
+      now: "2026-06-30T00:00:00.000Z",
+      expiresAt: "2026-07-01T00:00:00.000Z",
+    };
+    await database.idempotencyStore.claim(claim);
+    await database.idempotencyStore.complete({
+      keyHash: claim.keyHash,
+      requestHash: claim.requestHash,
+      claimId: claim.claimId,
+      response: successResponse({ token: "rotated-idempotency-secret" }),
+      expiresAt: claim.expiresAt,
+    });
     await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
     await database.rotateSecretCodec(new AesGcmSecretCodec("new-key"));
     database.close();
@@ -276,6 +491,7 @@ describe("SqliteRuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("old-key"),
     });
     await expect(withOldKey.connectionStore.get("github", "default")).rejects.toThrow();
+    await expect(withOldKey.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).rejects.toThrow();
     withOldKey.close();
 
     const withNewKey = new SqliteRuntimeDatabase(databasePath, {
@@ -290,6 +506,10 @@ describe("SqliteRuntimeDatabase", () => {
     });
     await expect(withNewKey.runtimeTokenStore.list()).resolves.toMatchObject([{ id: token.record.id }]);
     await expect(withNewKey.runLogStore.list()).resolves.toMatchObject({ items: [{ id: "run-1" }] });
+    await expect(withNewKey.idempotencyStore.claim({ ...claim, claimId: "claim-3" })).resolves.toEqual({
+      kind: "completed",
+      response: successResponse({ token: "rotated-idempotency-secret" }),
+    });
     withNewKey.close();
   });
 });
@@ -310,6 +530,18 @@ function createRun(id: string, startedAt: string, actionId = "hackernews.get_top
     completedAt: startedAt,
     durationMs: 0,
     ok: true,
+  };
+}
+
+function successResponse(data: unknown): RuntimeActionHttpResult {
+  return {
+    status: 200,
+    body: {
+      success: true,
+      message: "OK",
+      data,
+      meta: {},
+    },
   };
 }
 

@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { BaiduMapsActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
-import { compactObject, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
 
 export const baiduMapsApiBaseUrl = "https://api.map.baidu.com";
@@ -236,7 +236,7 @@ async function executeGeocode(input: RuntimeInput, context: BaiduMapsActionConte
     precise: readOptionalInteger(extractField(payload.result, "precise")),
     confidence: readOptionalInteger(extractField(payload.result, "confidence")),
     comprehension: readOptionalInteger(extractField(payload.result, "comprehension")),
-    result: readOptionalRecord(payload.result),
+    result: optionalRecord(payload.result),
   });
 }
 
@@ -262,11 +262,11 @@ async function executeReverseGeocode(input: RuntimeInput, context: BaiduMapsActi
     "execute",
     context.signal,
   );
-  const result = readOptionalRecord(payload.result);
+  const result = optionalRecord(payload.result);
   return compactObject({
     status: readOptionalInteger(payload.status),
     formatted_address: readOptionalString(extractField(result, "formatted_address")),
-    addressComponent: readOptionalRecord(extractField(result, "addressComponent")),
+    addressComponent: optionalRecord(extractField(result, "addressComponent")),
     pois: readArrayLike(extractField(result, "pois")),
     roads: readArrayLike(extractField(result, "roads")),
     poiRegions: readArrayLike(extractField(result, "poiRegions")),
@@ -356,7 +356,7 @@ async function executeGetPlaceDetail(input: RuntimeInput, context: BaiduMapsActi
   return compactObject({
     status: readOptionalInteger(payload.status),
     message: readOptionalString(payload.message),
-    result: readOptionalRecord(payload.result),
+    result: optionalRecord(payload.result),
   });
 }
 
@@ -405,9 +405,9 @@ async function executeIpLocate(input: RuntimeInput, context: BaiduMapsActionCont
     "execute",
     context.signal,
   );
-  const content = readOptionalRecord(payload.content);
-  const addressDetail = readOptionalRecord(extractField(content, "address_detail"));
-  const point = readOptionalRecord(extractField(content, "point"));
+  const content = optionalRecord(payload.content);
+  const addressDetail = optionalRecord(extractField(content, "address_detail"));
+  const point = optionalRecord(extractField(content, "point"));
   return compactObject({
     status: readOptionalInteger(payload.status),
     message: readOptionalString(payload.message),
@@ -483,10 +483,10 @@ async function executeWeather(input: RuntimeInput, context: BaiduMapsActionConte
     "execute",
     context.signal,
   );
-  const result = readOptionalRecord(payload.result);
+  const result = optionalRecord(payload.result);
   // Baidu returns the resolved place under `location`; accept `address` too
   // since some doc revisions name it that way.
-  const location = readOptionalRecord(extractField(result, "location") ?? extractField(result, "address"));
+  const location = optionalRecord(extractField(result, "location") ?? extractField(result, "address"));
   return compactObject({
     status: readOptionalInteger(payload.status),
     message: readOptionalString(payload.message),
@@ -504,7 +504,7 @@ async function executeWeather(input: RuntimeInput, context: BaiduMapsActionConte
       // confirmed against Baidu's own MCP server source. Read `alert` as a
       // defensive fallback. A missing section stays undefined so compactObject
       // drops it.
-      now: readOptionalRecord(extractField(result, "now")),
+      now: optionalRecord(extractField(result, "now")),
       forecasts: readOptionalArray(extractField(result, "forecasts")),
       forecast_hours: readOptionalArray(extractField(result, "forecast_hours")),
       alerts: readOptionalArray(extractField(result, "alerts") ?? extractField(result, "alert")),
@@ -546,27 +546,27 @@ async function executeRoute(
     "execute",
     context.signal,
   );
-  const result = readOptionalRecord(payload.result);
+  const result = optionalRecord(payload.result);
   return compactObject({
     status: readOptionalInteger(payload.status),
     message: readOptionalString(payload.message),
     result: compactObject({
       // directionlite returns origin/destination as { lng, lat } objects and a
       // routes array; there are no origin_poi/destination_poi fields here.
-      origin: readOptionalRecord(extractField(result, "origin")),
-      destination: readOptionalRecord(extractField(result, "destination")),
+      origin: optionalRecord(extractField(result, "origin")),
+      destination: optionalRecord(extractField(result, "destination")),
       routes: readArrayLike(extractField(result, "routes")),
     }),
   });
 }
 
-async function baiduMapsGet<T extends BaiduMapsResponsePayload>(
+async function baiduMapsGet(
   path: string,
   query: Record<string, QueryValue>,
   fetcher: typeof fetch,
   phase: BaiduMapsRequestPhase,
   signal?: AbortSignal,
-): Promise<T> {
+): Promise<BaiduMapsResponsePayload> {
   try {
     const url = buildBaiduMapsUrl(path, query);
     const response = await fetcher(url, {
@@ -577,7 +577,7 @@ async function baiduMapsGet<T extends BaiduMapsResponsePayload>(
       },
       signal,
     });
-    const payload = await readBaiduMapsJson<T>(response);
+    const payload = await readBaiduMapsJson(response);
     if (!response.ok || readStatusCode(payload.status) !== 0) {
       throw normalizeBaiduMapsError(response, payload, phase);
     }
@@ -589,7 +589,8 @@ async function baiduMapsGet<T extends BaiduMapsResponsePayload>(
     // Surface caller-initiated cancellation as-is rather than a generic 502.
     // AbortController rejects with a DOMException whose name is "AbortError";
     // don't rely on `instanceof Error` since DOMException isn't one everywhere.
-    if (typeof error === "object" && error !== null && (error as { name?: unknown }).name === "AbortError") {
+    const errorObject = optionalRecord(error);
+    if (errorObject?.name === "AbortError") {
       throw error;
     }
     throw new ProviderRequestError(502, readUnexpectedMessage(error));
@@ -607,16 +608,22 @@ function buildBaiduMapsUrl(path: string, query: Record<string, QueryValue>): str
   return queryString ? `${url.origin}${url.pathname}?${queryString}` : url.toString();
 }
 
-async function readBaiduMapsJson<T extends BaiduMapsResponsePayload>(response: Response): Promise<T> {
+async function readBaiduMapsJson(response: Response): Promise<BaiduMapsResponsePayload> {
   // Bounded read (413 on overflow), matching the rest of the framework, and
   // parse regardless of content-type: Baidu sometimes returns JSON bodies with
   // a non-JSON content-type, and its own reference client parses them anyway.
   const text = await readProviderTextBody(response, "Baidu Maps response");
+  let parsed: unknown;
   try {
-    return JSON.parse(text) as T;
+    parsed = JSON.parse(text);
   } catch {
     throw new ProviderRequestError(502, `Baidu Maps returned a non-JSON response: ${text.slice(0, 200)}`);
   }
+  const payload = optionalRecord(parsed);
+  if (!payload) {
+    throw new ProviderRequestError(502, "Baidu Maps returned a non-object JSON response");
+  }
+  return payload;
 }
 
 function normalizeBaiduMapsError(
@@ -708,13 +715,6 @@ function readOptionalNumber(value: unknown): number | undefined {
   return undefined;
 }
 
-function readOptionalRecord(value: unknown): Record<string, unknown> | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return undefined;
-  }
-  return value as Record<string, unknown>;
-}
-
 function readArrayLike(value: unknown): unknown[] {
   if (Array.isArray(value)) {
     return value;
@@ -733,7 +733,7 @@ function readOptionalArray(value: unknown): unknown[] | undefined {
 }
 
 function extractField(parent: unknown, field: string): unknown {
-  const record = readOptionalRecord(parent);
+  const record = optionalRecord(parent);
   return record ? record[field] : undefined;
 }
 
@@ -743,7 +743,7 @@ function serializeLatLng(value: unknown): string | undefined {
   if (typeof value === "string" && value.length > 0) {
     return value;
   }
-  const record = readOptionalRecord(value);
+  const record = optionalRecord(value);
   if (!record) {
     return undefined;
   }

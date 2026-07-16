@@ -32,6 +32,16 @@ describe("ActionPolicyService", () => {
     });
   });
 
+  it("supports bare wildcard to match all actions", () => {
+    expect(new ActionPolicyService({ allowedActions: ["*"] }).evaluate(action)).toEqual({
+      allowed: true,
+    });
+    expect(new ActionPolicyService({ blockedActions: ["*"] }).evaluate(action)).toMatchObject({
+      allowed: false,
+      code: "action_blocked",
+    });
+  });
+
   it("blocks actions even when they are also allowed", () => {
     expect(
       new ActionPolicyService({

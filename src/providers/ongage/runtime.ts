@@ -17,6 +17,7 @@ import {
   isAbortSignalError,
   providerUserAgent,
   ProviderRequestError,
+  readProviderJsonBody,
 } from "../provider-runtime.ts";
 
 export const ongageApiBaseUrl = "https://api.ongage.com";
@@ -268,15 +269,14 @@ function buildOngageHeaders(apiKey: string, hasJsonBody: boolean): Headers {
 }
 
 async function readOngageJson(response: Response): Promise<unknown> {
-  const text = await response.text();
-  if (!text.trim()) {
+  const payload = await readProviderJsonBody(response, {
+    emptyBody: null,
+    invalidJsonMessage: "Ongage returned invalid JSON",
+  });
+  if (payload === null) {
     throw new ProviderRequestError(502, "Ongage returned an empty response");
   }
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    throw new ProviderRequestError(502, "Ongage returned invalid JSON");
-  }
+  return payload;
 }
 
 function readOngageEnvelope(payload: unknown): OngageResponseEnvelope {

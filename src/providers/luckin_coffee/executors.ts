@@ -24,12 +24,11 @@ type LuckinActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "s
 type LuckinActionHandler = (input: Record<string, unknown>, context: LuckinActionContext) => Promise<unknown>;
 type LuckinMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
-export const luckinActionHandlers: Record<LuckinCoffeeActionName, LuckinActionHandler> = Object.fromEntries(
-  luckinMcpToolNames.map((toolName) => [
-    toolName,
-    (input: Record<string, unknown>, context: LuckinActionContext) => callLuckinMcpTool(context, toolName, input),
-  ]),
-) as Record<LuckinCoffeeActionName, LuckinActionHandler>;
+export const luckinActionHandlers: Record<string, LuckinActionHandler> = {};
+for (const toolName of luckinMcpToolNames) {
+  luckinActionHandlers[toolName] = (input: Record<string, unknown>, context: LuckinActionContext) =>
+    callLuckinMcpTool(context, toolName, input);
+}
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, luckinActionHandlers);
 
@@ -122,7 +121,8 @@ function normalizeLuckinMcpToolResult(toolName: string, result: LuckinMcpToolRes
   const textItems = result.content.filter((content) => content.type === "text");
   if (textItems.length === 1) {
     try {
-      return JSON.parse(textItems[0]!.text) as unknown;
+      const payload: unknown = JSON.parse(textItems[0]!.text);
+      return payload;
     } catch {
       // Preserve the MCP content envelope when the tool intentionally returns plain text.
     }

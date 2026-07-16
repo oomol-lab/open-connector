@@ -125,7 +125,7 @@ export const speechmaticsActionHandlers: Record<string, SpeechmaticsActionHandle
     };
   },
   async list_deployments(input): Promise<unknown> {
-    const mode = optionalString(input.mode) as SpeechmaticsProcessingMode | undefined;
+    const mode = readProcessingMode(input.mode);
     return {
       deployments: mode
         ? speechmaticsDeployments.filter((deployment) => deployment.mode === mode)
@@ -199,7 +199,8 @@ async function readSpeechmaticsPayload(response: Response): Promise<unknown> {
   }
 
   try {
-    return JSON.parse(text) as unknown;
+    const payload: unknown = JSON.parse(text);
+    return payload;
   } catch {
     return text;
   }
@@ -262,10 +263,25 @@ function requireSpeechmaticsObject(value: unknown, label: string): Record<string
   return object;
 }
 
+function readProcessingMode(value: unknown): SpeechmaticsProcessingMode | undefined {
+  const mode = optionalString(value);
+  if (!mode) {
+    return undefined;
+  } else if (mode === "batch" || mode === "realtime") {
+    return mode;
+  } else {
+    throw new ProviderRequestError(400, `Unsupported Speechmatics mode: ${mode}`);
+  }
+}
+
 function readBatchRegion(value: unknown): SpeechmaticsBatchRegion {
   const region = optionalString(value) ?? "eu1";
-  if (region in speechmaticsBatchHosts) {
-    return region as SpeechmaticsBatchRegion;
+  if (isSpeechmaticsBatchRegion(region)) {
+    return region;
   }
   throw new ProviderRequestError(400, `Unsupported Speechmatics region: ${region}`);
+}
+
+function isSpeechmaticsBatchRegion(value: string): value is SpeechmaticsBatchRegion {
+  return Object.hasOwn(speechmaticsBatchHosts, value);
 }

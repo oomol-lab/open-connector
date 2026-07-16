@@ -22,13 +22,11 @@ function loadJumpServerRuntime(): Promise<JumpServerRuntime> {
   return runtimeModule;
 }
 
-const handlers = Object.fromEntries(
-  jumpServerMcpToolNames.map((toolName) => [
-    toolName,
-    async (input: Record<string, unknown>, context: JumpServerMcpContext): Promise<unknown> =>
-      (await loadJumpServerRuntime()).jumpServerActionHandlers[toolName](input, context),
-  ]),
-) as Record<(typeof jumpServerMcpToolNames)[number], JumpServerActionHandler>;
+const handlers: Record<string, JumpServerActionHandler> = {};
+for (const toolName of jumpServerMcpToolNames) {
+  handlers[toolName] = async (input: Record<string, unknown>, context: JumpServerMcpContext): Promise<unknown> =>
+    (await loadJumpServerRuntime()).jumpServerActionHandlers[toolName](input, context);
+}
 
 export const executors: ProviderExecutors = defineProviderExecutors<JumpServerMcpContext>({
   service,

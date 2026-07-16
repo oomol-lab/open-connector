@@ -160,7 +160,8 @@ OOMOL_CONNECT_DATA_DIR=/path/to/data npm run dev
 
 With Docker Compose, the bundled `connector-data` volume is mounted at `/app/data`.
 
-Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials:
+Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials, OAuth client configuration, and
+completed idempotent Action responses:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="replace-with-a-long-random-secret" npm run dev

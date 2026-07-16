@@ -3,6 +3,49 @@ import { escapeHtml } from "./http-utils.ts";
 const oauthCompletionChannelName = "oomol-connect-oauth";
 const oauthCompletedType = "oauth.completed";
 
+// Client-side translations. English is also the server-rendered default in the
+// markup below, so the page stays meaningful without JavaScript. `bodyBefore`
+// and `bodyAfter` wrap the (already-escaped) service <code> element, which the
+// script never rewrites, so no service value is ever injected as HTML.
+const oauthCompletionStrings = {
+  en: {
+    badge: "Connected",
+    title: "Connection ready",
+    bodyBefore: "OAuth finished for ",
+    bodyAfter: ". Return to OOMOL Connect to continue.",
+    closeButton: "Close window",
+    autoClose: "Automatically closing in %N% seconds.",
+    manualClose: "You can now close this window.",
+  },
+  "zh-CN": {
+    badge: "已连接",
+    title: "连接已就绪",
+    bodyBefore: "已完成 ",
+    bodyAfter: " 的授权，返回 OOMOL Connect 继续。",
+    closeButton: "关闭窗口",
+    autoClose: "%N% 秒后自动关闭。",
+    manualClose: "现在可以手动关闭此窗口。",
+  },
+  "zh-TW": {
+    badge: "已連接",
+    title: "連線已就緒",
+    bodyBefore: "已完成 ",
+    bodyAfter: " 的授權，返回 OOMOL Connect 繼續。",
+    closeButton: "關閉視窗",
+    autoClose: "%N% 秒後自動關閉。",
+    manualClose: "現在可以手動關閉此視窗。",
+  },
+  ja: {
+    badge: "接続済み",
+    title: "接続の準備が完了しました",
+    bodyBefore: "",
+    bodyAfter: " の認証が完了しました。OOMOL Connect に戻って続行してください。",
+    closeButton: "ウィンドウを閉じる",
+    autoClose: "%N% 秒後に自動的に閉じます。",
+    manualClose: "このウィンドウを閉じても問題ありません。",
+  },
+};
+
 export function renderOAuthCompletionPage(service: string): string {
   const payload = scriptJson({
     type: oauthCompletedType,
@@ -125,16 +168,34 @@ code {
 <body>
 <main class="card" role="status" aria-live="polite">
   <div class="header">
-    <span class="badge">Connected</span>
-    <h1>Connection ready</h1>
-    <p>OAuth finished for <code>${escapedService}</code>. Return to OOMOL Connect to continue.</p>
+    <span class="badge" data-t="badge">Connected</span>
+    <h1 data-t="title">Connection ready</h1>
+    <p><span data-t="bodyBefore">OAuth finished for </span><code>${escapedService}</code><span data-t="bodyAfter">. Return to OOMOL Connect to continue.</span></p>
   </div>
   <div class="actions">
-    <button class="button" type="button" onclick="window.close()">Close window</button>
-    <p class="close-note">Automatically closing in 5 seconds.</p>
+    <button class="button" type="button" data-t="closeButton">Close window</button>
+    <p class="close-note" data-close-note>Automatically closing in 5 seconds.</p>
   </div>
 </main>
-<script>(()=>{if("BroadcastChannel" in window){const channel=new BroadcastChannel(${scriptJson(oauthCompletionChannelName)});channel.postMessage(${payload});channel.close();}setTimeout(()=>window.close(),5000);})();</script>
+<script>(()=>{
+const STR=${scriptJson(oauthCompletionStrings)};
+if("BroadcastChannel" in window){const channel=new BroadcastChannel(${scriptJson(oauthCompletionChannelName)});channel.postMessage(${payload});channel.close();}
+const pick=()=>{const langs=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"];for(const raw of langs){const l=String(raw).toLowerCase();if(l.startsWith("zh"))return (l.includes("tw")||l.includes("hk")||l.includes("hant"))?"zh-TW":"zh-CN";const primary=l.split("-")[0];if(STR[raw])return raw;if(STR[primary])return primary;}return "en";};
+const t=STR[pick()]||STR.en;
+document.documentElement.lang=pick();
+for(const el of document.querySelectorAll("[data-t]")){const key=el.getAttribute("data-t");if(t[key]!=null)el.textContent=t[key];}
+if(t.title)document.title=t.title;
+const note=document.querySelector("[data-close-note]");
+const button=document.querySelector("[data-t=closeButton]");
+const showManual=()=>{if(note)note.textContent=t.manualClose;};
+// window.close() only works for script-opened windows; on a tab the user
+// navigated to it is a no-op. Attempt it, then fall back to a manual hint.
+const tryClose=()=>{window.close();setTimeout(showManual,300);};
+if(button)button.addEventListener("click",tryClose);
+let remaining=5;
+const tick=()=>{if(remaining<=0){tryClose();return;}if(note)note.textContent=t.autoClose.replace("%N%",String(remaining));remaining-=1;setTimeout(tick,1000);};
+tick();
+})();</script>
 </body>
 </html>`;
 }

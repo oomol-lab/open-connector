@@ -3,6 +3,8 @@ import type { ConnectionError, ConnectionSummary } from "../../connection-servic
 import type { ExecutionResult, ProviderDefinition } from "../../core/types.ts";
 import type { Context } from "hono";
 
+import { requiredRecord } from "../../core/cast.ts";
+
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
 export type RuntimeResponseMeta = Record<string, unknown>;
@@ -83,6 +85,11 @@ export interface RuntimeActionResultInput {
   result: ExecutionResult;
 }
 
+/** HTTP status and JSON envelope persisted for idempotent action replay. */
+export type RuntimeActionHttpResult =
+  | { status: 200; body: RuntimeSuccessEnvelope<unknown> }
+  | { status: RuntimeStatus; body: RuntimeFailureEnvelope };
+
 export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeProviderMetadata {
   return {
     service: provider.service,
@@ -144,6 +151,11 @@ export function writeRuntimeSuccess<TData>(context: Context, data: TData, meta?:
 }
 
 export function writeRuntimeFailure(context: Context, input: RuntimeFailureInput): Response {
+  return writeRuntimeActionHttpResult(context, serializeRuntimeFailure(input));
+}
+
+/** Build a runtime failure response without writing it to the HTTP context. */
+export function serializeRuntimeFailure(input: RuntimeFailureInput): RuntimeActionHttpResult {
   const body: RuntimeFailureEnvelope = {
     success: false,
     message: input.message,
@@ -152,23 +164,59 @@ export function writeRuntimeFailure(context: Context, input: RuntimeFailureInput
     meta: input.meta ?? {},
   };
 
-  return context.json(body, input.status);
+  return { status: input.status, body };
 }
 
-export function writeRuntimeActionResult(context: Context, input: RuntimeActionResultInput): Response {
+/** Build the persistable HTTP response for a completed action execution. */
+export function serializeRuntimeActionResult(input: RuntimeActionResultInput): RuntimeActionHttpResult {
   const { actionId, executionId, result } = input;
   const meta = { executionId, actionId };
   if (result.ok) {
-    return writeRuntimeSuccess(context, result.output ?? null, meta);
+    return {
+      status: 200,
+      body: {
+        success: true,
+        message: "OK",
+        data: result.output ?? null,
+        meta,
+      },
+    };
   }
 
-  return writeRuntimeFailure(context, {
+  return serializeRuntimeFailure({
     status: mapExecutionErrorStatus(result.error?.code),
     errorCode: result.error?.code ?? "provider_error",
     message: result.error?.message ?? "Action execution failed.",
     data: result.error?.details ?? null,
     meta,
   });
+}
+
+/** Validate an action response decoded from persistent storage. */
+export function parseRuntimeActionHttpResult(value: unknown): RuntimeActionHttpResult {
+  const invalid = (message: string): Error => new Error(`Invalid persisted action response: ${message}`);
+  const result = requiredRecord(value, "response", invalid);
+  const body = requiredRecord(result.body, "response.body", invalid);
+  requiredRecord(body.meta, "response.body.meta", invalid);
+
+  if (!("data" in body) || typeof body.message !== "string") {
+    throw invalid("response.body must contain message and data");
+  }
+
+  if (result.status === 200 && body.success === true && body.message === "OK") {
+    return { status: 200, body: body as unknown as RuntimeSuccessEnvelope<unknown> };
+  }
+
+  if (isRuntimeStatus(result.status) && body.success === false && typeof body.errorCode === "string") {
+    return { status: result.status, body: body as unknown as RuntimeFailureEnvelope };
+  }
+
+  throw invalid("status and body envelope do not match");
+}
+
+/** Write a newly serialized or replayed action response. */
+export function writeRuntimeActionHttpResult(context: Context, result: RuntimeActionHttpResult): Response {
+  return context.json(result.body, result.status);
 }
 
 export function mapConnectionErrorStatus(error: ConnectionError): 400 | 404 | 409 {
@@ -195,4 +243,18 @@ function mapExecutionErrorStatus(code: string | undefined): 400 | 403 | 404 | 42
     return 500;
   }
   return 400;
+}
+
+function isRuntimeStatus(value: unknown): value is RuntimeStatus {
+  return (
+    value === 400 ||
+    value === 401 ||
+    value === 403 ||
+    value === 404 ||
+    value === 409 ||
+    value === 413 ||
+    value === 429 ||
+    value === 500 ||
+    value === 501
+  );
 }

@@ -4,7 +4,7 @@ OpenConnector supports Cloudflare Workers as a metadata and runtime-state deploy
 Worker runtime uses:
 
 - Workers for the HTTP runtime.
-- D1 for connections, OAuth config/state, runtime tokens, and run logs.
+- D1 for connections, OAuth config/state, runtime tokens, run logs, and Action idempotency records.
 - R2 or Workers KV for temporary transit files.
 - Static Assets for the Web Console.
 
@@ -67,8 +67,9 @@ The local Worker preview stores its D1, R2, and KV data under the ignored `.wran
 This data is separate from the remote Cloudflare resources.
 
 Remote secrets set with `wrangler secret put` are not available to the local preview. To test local
-admin authentication and credential encryption, add separate local values to the ignored `.env`
-file before starting the Worker:
+admin authentication and encryption of credentials, OAuth client configuration, and completed
+idempotent Action responses, add separate local values to the ignored `.env` file before starting
+the Worker:
 
 ```dotenv
 OOMOL_CONNECT_ADMIN_TOKEN=replace-with-a-local-admin-token
@@ -96,7 +97,8 @@ The health endpoint should return `{"ok":true}`.
 
 ## Remote Deployment
 
-Apply migrations to the remote D1 database:
+Apply all pending migrations to the remote D1 database before the initial deployment and every
+upgrade. `npm run deploy:cloudflare` does not apply D1 migrations:
 
 ```bash
 npx wrangler d1 migrations apply open-connector --remote --config wrangler.local.jsonc
@@ -109,8 +111,9 @@ openssl rand -base64 32
 ```
 
 Store the encryption key in a password manager or another external secrets vault. If it is lost or
-changed, credentials and OAuth client configuration already encrypted in D1 cannot be recovered.
-Keep the admin token available to operators who need the Web Console or admin API.
+replaced without first re-encrypting existing D1 records, encrypted credentials, OAuth client
+configuration, and completed idempotent Action responses cannot be recovered. Keep the admin token
+available to operators who need the Web Console or admin API.
 
 Paste the generated values when Wrangler prompts for each secret:
 

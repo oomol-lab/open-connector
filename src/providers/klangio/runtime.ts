@@ -263,7 +263,9 @@ async function resolveKlangioUploadSource(
     });
     const response = await context.fetcher(url, {
       method: "GET",
-      redirect: "error",
+      // Workers has no "error" redirect mode; "manual" never follows either, and
+      // the !response.ok check below rejects any 3xx.
+      redirect: "manual",
       signal: context.signal,
     });
 

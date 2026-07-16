@@ -91,7 +91,10 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
       headers,
       body,
       signal: AbortSignal.timeout(oauthTokenRequestTimeoutMs),
-      redirect: "error",
+      // Workers has no "error" redirect mode; "manual" surfaces any 3xx as a
+      // non-ok response, which the check below rejects. Same intent as "error"
+      // (never follow a redirect from the token endpoint), edge-compatible.
+      redirect: "manual",
     });
   } catch (error) {
     throw input.createError(

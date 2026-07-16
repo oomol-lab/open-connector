@@ -12,7 +12,12 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderTextBody,
+} from "../provider-runtime.ts";
 
 const service = "revenuecat";
 const revenueCatApiBaseUrl = "https://api.revenuecat.com";
@@ -221,11 +226,12 @@ async function requestRevenueCat(
 }
 
 async function readRevenueCatPayload(response: Response): Promise<unknown> {
-  const text = await response.text();
+  const text = await readProviderTextBody(response, "RevenueCat response");
   if (!text) return null;
 
   try {
-    return JSON.parse(text) as unknown;
+    const payload: unknown = JSON.parse(text);
+    return payload;
   } catch {
     if (response.ok) throw new ProviderRequestError(502, "RevenueCat returned invalid JSON");
     return text;

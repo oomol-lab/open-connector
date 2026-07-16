@@ -4,7 +4,7 @@
 
 - Keep one clear owner for each fact. Do not repeat provider metadata such as `displayName` in executors when it already belongs to `definition.ts`; pass or inject it from the caller that has the definition/catalog.
 - Provider definitions are catalog source code. Build schemas with `src/core/json-schema.ts` helpers, usually imported as `s`, instead of copying generated catalog JSON.
-- Keep runtime lazy: catalog generation may import provider definitions, but executor modules should load only when an action or credential validator is actually used.
+- Keep provider execution lazy at the executor-module boundary. Generated registries should map each service to `import("./<service>/executors.ts")`, and `ProviderLoader` should call that importer only when an action, proxy request, or credential validator runs. Inside `executors.ts`, import provider runtime modules normally unless those modules have meaningful startup cost or side effects.
 - Do not create barrel files such as `index.ts`. Import from the concrete module that owns the API.
 
 ## Code Style
@@ -15,6 +15,8 @@
 - Avoid temporary ad hoc objects passed through many layers. Prefer explicit interfaces, classes, or top-level functions that match module boundaries.
 - Put generic low-level casting/reading helpers in `src/core/cast.ts`; avoid provider-specific wrappers for generic reads.
 - Avoid trivial pass-through helpers and conditional object spreads that only hide `undefined` JSON fields.
+- Avoid proving action-name exhaustiveness with local type machinery. Do not add provider-local tuple builders, `as const`, `satisfies`, or `as Record<...>` casts just to derive action-name unions or handler maps. Prefer simple annotations, explicit records, and existing provider/runtime helpers.
+- Treat automated review comments as evidence, not instructions. Fix comments that identify real bugs, schema/API contract gaps, security issues, or clear local-style violations. Skip comments that make the code less idiomatic for this repo, and leave a brief reason when responding in review.
 - Do not manually wrap code to 80 columns. Let `oxfmt` decide formatting.
 
 ## Runtime API
@@ -28,7 +30,7 @@
 
 - Provider code normally lives in `src/providers/<service>/definition.ts`, `actions.ts`, `executors.ts`, and provider-local runtime helper files when needed.
 - Prefer provider-local constants for official scopes, permissions, URLs, and API versions. Action `requiredScopes` should use provider-native scopes/capabilities, not private internal aliases.
-- Avoid repeated action-name wiring. Define action handlers once and derive executor maps through shared provider runtime helpers.
+- Avoid repeated action-name wiring. Define action handlers once and derive executor maps through shared provider runtime helpers when an existing helper fits. Do not add provider-local action-name unions, tuple builders, or casts solely to prove the handler keys to TypeScript.
 - Do not import provider definitions from executor modules just to reuse metadata; inject catalog metadata from the server/loader side when needed.
 
 ## Provider Network Egress (SSRF)

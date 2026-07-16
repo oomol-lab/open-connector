@@ -96,6 +96,10 @@ export function parseActionPolicyList(value: string | undefined): string[] {
 }
 
 function createMatcher(pattern: string): ActionMatcher {
+  if (pattern === "*") {
+    return () => true;
+  }
+
   if (pattern.endsWith(".*")) {
     const prefix = pattern.slice(0, -1);
     return (actionId) => actionId.startsWith(prefix);

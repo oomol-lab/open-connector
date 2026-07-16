@@ -44,8 +44,9 @@ Silicon and AWS Graviton. No `--platform` flag is needed.
 The image listens on port `3000`, binds to `0.0.0.0`, and stores runtime data in `/app/data`.
 
 First generate the runtime secrets and save them somewhere safe. `OOMOL_CONNECT_ENCRYPTION_KEY`
-encrypts stored credentials and OAuth client secrets; if it is lost, the encrypted data in
-`/app/data` cannot be recovered. `OOMOL_CONNECT_ADMIN_TOKEN` authenticates the admin API and console.
+encrypts stored credentials, OAuth client configuration, and completed idempotent Action responses;
+if it is lost, the encrypted data in `/app/data` cannot be recovered.
+`OOMOL_CONNECT_ADMIN_TOKEN` authenticates the admin API and console.
 
 ```bash
 # Save both values in a password manager or secrets vault before running.

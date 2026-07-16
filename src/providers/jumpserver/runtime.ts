@@ -23,12 +23,11 @@ export interface JumpServerMcpContext {
 
 const requestTimeoutMs = 60_000;
 
-export const jumpServerActionHandlers: Record<JumpServerActionName, JumpServerActionHandler> = Object.fromEntries(
-  jumpServerMcpToolNames.map((toolName) => [
-    toolName,
-    (input: Record<string, unknown>, context: JumpServerMcpContext) => callJumpServerMcpTool(context, toolName, input),
-  ]),
-) as Record<JumpServerActionName, JumpServerActionHandler>;
+export const jumpServerActionHandlers: Record<string, JumpServerActionHandler> = {};
+for (const toolName of jumpServerMcpToolNames) {
+  jumpServerActionHandlers[toolName] = (input: Record<string, unknown>, context: JumpServerMcpContext) =>
+    callJumpServerMcpTool(context, toolName, input);
+}
 
 export function createJumpServerMcpContext(
   values: Record<string, string>,
@@ -155,7 +154,8 @@ function normalizeJumpServerMcpToolResult(toolName: string, result: JumpServerMc
   const textItems = result.content.filter((content) => content.type === "text");
   if (textItems.length === 1) {
     try {
-      return JSON.parse(textItems[0]!.text) as unknown;
+      const payload: unknown = JSON.parse(textItems[0]!.text);
+      return payload;
     } catch {
       // Preserve the MCP content envelope when JumpServer returns plain text.
     }

@@ -1,5 +1,4 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
-import type { DokployActionName } from "./actions.ts";
 import type { DokployOperation } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -29,13 +28,11 @@ const maxResponseBytes = 10 * 1024 * 1024;
 const maxErrorMessageCharacters = 16 * 1024;
 const validationEndpoint = "/project.search";
 
-export const dokployActionHandlers: Record<DokployActionName, DokployActionHandler> = Object.fromEntries(
-  dokployOperations.map((operation) => [
-    operation.name,
-    (input: Record<string, unknown>, context: DokployActionContext) =>
-      executeDokployOperation(operation, input, context),
-  ]),
-) as Record<DokployActionName, DokployActionHandler>;
+export const dokployActionHandlers: Record<string, DokployActionHandler> = {};
+for (const operation of dokployOperations) {
+  dokployActionHandlers[operation.name] = (input: Record<string, unknown>, context: DokployActionContext) =>
+    executeDokployOperation(operation, input, context);
+}
 
 export function createDokployContext(
   values: Record<string, string>,
@@ -190,7 +187,13 @@ function buildPath(template: string, fields: readonly string[], input: Record<st
 }
 
 function pickFields(input: Record<string, unknown>, fields: readonly string[]): Record<string, unknown> {
-  return Object.fromEntries(fields.filter((field) => input[field] !== undefined).map((field) => [field, input[field]]));
+  const output: Record<string, unknown> = {};
+  for (const field of fields) {
+    if (input[field] !== undefined) {
+      output[field] = input[field];
+    }
+  }
+  return output;
 }
 
 function hasFields(value: Record<string, unknown>): boolean {
@@ -215,7 +218,8 @@ async function readResponseBody(response: Response): Promise<{ payload: unknown;
   const text = new TextDecoder().decode(bytes);
   if (text.trim() === "") return { payload: null, text, isJson: true };
   try {
-    return { payload: JSON.parse(text) as unknown, text, isJson: true };
+    const payload: unknown = JSON.parse(text);
+    return { payload, text, isJson: true };
   } catch {
     return { payload: null, text, isJson: false };
   }
@@ -240,9 +244,11 @@ function redactSensitiveQueryParameters(value: string): string {
 export function redactSensitive(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(redactSensitive);
   if (!value || typeof value !== "object") return value;
-  return Object.fromEntries(
-    Object.entries(value).map(([key, child]) => [key, isSensitiveKey(key) ? "[redacted]" : redactSensitive(child)]),
-  );
+  const output: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value)) {
+    output[key] = isSensitiveKey(key) ? "[redacted]" : redactSensitive(child);
+  }
+  return output;
 }
 
 function isSensitiveKey(name: string): boolean {

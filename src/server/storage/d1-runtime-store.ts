@@ -4,10 +4,17 @@ import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oau
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
 import type { D1DatabaseBinding } from "../cloudflare/cloudflare-bindings.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
+import type {
+  CompleteIdempotencyInput,
+  IdempotencyClaimInput,
+  IdempotencyClaimResult,
+  IIdempotencyStore,
+} from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
+import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
@@ -25,6 +32,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
   readonly oauthStateStore: D1OAuthStateStore;
   readonly runtimeTokenStore: D1RuntimeTokenStore;
   readonly runLogStore: D1RunLogStore;
+  readonly idempotencyStore: D1IdempotencyStore;
 
   constructor(database: D1DatabaseBinding, options: D1RuntimeDatabaseOptions = {}) {
     const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
@@ -33,6 +41,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     this.oauthStateStore = new D1OAuthStateStore(database);
     this.runtimeTokenStore = new D1RuntimeTokenStore(database);
     this.runLogStore = new D1RunLogStore(database, options.runLimit ?? 100);
+    this.idempotencyStore = new D1IdempotencyStore(database, secretCodec);
   }
 }
 
@@ -212,6 +221,78 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
       .prepare("update runtime_tokens set last_used_at = ? where id = ? and revoked_at is null")
       .bind(usedAt, id)
       .run();
+  }
+}
+
+export class D1IdempotencyStore implements IIdempotencyStore {
+  private readonly database: D1DatabaseBinding;
+  private readonly secretCodec: ISecretCodec;
+
+  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
+    this.database = database;
+    this.secretCodec = secretCodec;
+  }
+
+  async claim(input: IdempotencyClaimInput): Promise<IdempotencyClaimResult> {
+    await this.database.prepare("delete from idempotency_records where expires_at <= ?").bind(input.now).run();
+
+    const inserted = await this.database
+      .prepare(
+        `
+        insert into idempotency_records (
+          key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
+        )
+        values (?, ?, ?, 'in_progress', null, ?, ?)
+        on conflict(key_hash) do nothing
+      `,
+      )
+      .bind(input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt)
+      .run();
+    if ((inserted.meta.changes ?? 0) > 0) {
+      return { kind: "acquired" };
+    }
+
+    const row = await this.database
+      .prepare("select request_hash, state, response_value from idempotency_records where key_hash = ?")
+      .bind(input.keyHash)
+      .first<RuntimeRow>();
+    if (!row) {
+      throw new Error("Idempotency record disappeared while claiming it.");
+    }
+    if (readString(row, "request_hash") !== input.requestHash) {
+      return { kind: "conflict" };
+    }
+    if (readString(row, "state") === "in_progress") {
+      return { kind: "in_progress" };
+    }
+
+    const response = parseRuntimeActionHttpResult(
+      parseJson(await this.secretCodec.decode(readString(row, "response_value"))),
+    );
+    return { kind: "completed", response };
+  }
+
+  async complete(input: CompleteIdempotencyInput): Promise<boolean> {
+    const result = await this.database
+      .prepare(
+        `
+        update idempotency_records
+        set state = 'completed', response_value = ?, expires_at = ?
+        where key_hash = ?
+          and claim_id = ?
+          and request_hash = ?
+          and state = 'in_progress'
+      `,
+      )
+      .bind(
+        await this.secretCodec.encode(JSON.stringify(input.response)),
+        input.expiresAt,
+        input.keyHash,
+        input.claimId,
+        input.requestHash,
+      )
+      .run();
+    return (result.meta.changes ?? 0) > 0;
   }
 }
 

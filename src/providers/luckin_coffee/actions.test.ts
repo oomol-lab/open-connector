@@ -1,10 +1,22 @@
 import type { JsonSchema } from "../../core/types.ts";
 
 import { describe, expect, it } from "vitest";
+import { optionalRecord } from "../../core/cast.ts";
 import { luckinCoffeeActions, luckinMcpToolNames } from "./actions.ts";
 
 function schemaProperties(schema: JsonSchema | undefined): Record<string, JsonSchema> {
-  return (schema?.properties as Record<string, JsonSchema> | undefined) ?? {};
+  const properties = optionalRecord(schema?.properties);
+  const schemas: Record<string, JsonSchema> = {};
+  if (!properties) {
+    return schemas;
+  }
+  for (const [key, value] of Object.entries(properties)) {
+    const child = optionalRecord(value);
+    if (child) {
+      schemas[key] = child;
+    }
+  }
+  return schemas;
 }
 
 describe("Luckin Coffee actions", () => {
