@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe("Tailscale provider integration", () => {
-  it("verifies custom credentials and executes representative safe operations", async () => {
+  it("verifies custom credentials and executes representative read and write operations", async () => {
     setDefaultGuardedFetchDnsLookup(null);
     let tokenRequests = 0;
     const apiAuthorizations: string[] = [];
@@ -57,6 +57,15 @@ describe("Tailscale provider integration", () => {
       }
       if (url.startsWith("https://api.tailscale.com/api/v2/tailnet/-/users?")) {
         return Response.json({ users: [{ id: "u1", loginName: "alice@example.com", type: "member" }] });
+      }
+      if (url === "https://api.tailscale.com/api/v2/device/n123/routes" && init?.method === "POST") {
+        return Response.json({ advertisedRoutes: ["10.0.0.0/24"], enabledRoutes: ["10.0.0.0/24"] });
+      }
+      if (url === "https://api.tailscale.com/api/v2/tailnet/-/keys" && init?.method === "POST") {
+        return Response.json({ id: "k123", key: "tskey-auth-secret" });
+      }
+      if (url === "https://api.tailscale.com/api/v2/device/n-delete" && init?.method === "DELETE") {
+        return new Response(null, { status: 200 });
       }
       return Response.json({ message: "not found" }, { status: 404 });
     });
@@ -165,7 +174,52 @@ describe("Tailscale provider integration", () => {
     ).resolves.toMatchObject({ ok: true });
     expect(apiUrls.at(-1)).toBe("https://api.tailscale.com/api/v2/tailnet/-/users?type=member");
 
-    expect(tokenRequests).toBe(7);
+    const setRoutesAction = catalog.actionsById.get("tailscale.set_device_routes")!;
+    const setRoutesExecutor = await providerLoader.loadActionExecutor(
+      "tailscale",
+      setRoutesAction.id,
+      provider.displayName,
+    );
+    await expect(
+      executeAction(
+        setRoutesAction,
+        setRoutesExecutor,
+        { deviceId: "n123", routes: ["10.0.0.0/24"] },
+        connections.forConnection("production"),
+      ),
+    ).resolves.toMatchObject({ ok: true, output: { enabledRoutes: ["10.0.0.0/24"] } });
+
+    const createKeyAction = catalog.actionsById.get("tailscale.create_key")!;
+    const createKeyExecutor = await providerLoader.loadActionExecutor(
+      "tailscale",
+      createKeyAction.id,
+      provider.displayName,
+    );
+    await expect(
+      executeAction(
+        createKeyAction,
+        createKeyExecutor,
+        { key: { keyType: "auth", description: "CI key", expirySeconds: 3600 } },
+        connections.forConnection("production"),
+      ),
+    ).resolves.toMatchObject({ ok: true, output: { id: "k123", key: "tskey-auth-secret" } });
+
+    const deleteDeviceAction = catalog.actionsById.get("tailscale.delete_device")!;
+    const deleteDeviceExecutor = await providerLoader.loadActionExecutor(
+      "tailscale",
+      deleteDeviceAction.id,
+      provider.displayName,
+    );
+    await expect(
+      executeAction(
+        deleteDeviceAction,
+        deleteDeviceExecutor,
+        { deviceId: "n-delete" },
+        connections.forConnection("production"),
+      ),
+    ).resolves.toEqual({ ok: true, output: null });
+
+    expect(tokenRequests).toBe(10);
     expect(apiAuthorizations).toEqual([
       "Bearer tailscale-token-1",
       "Bearer tailscale-token-2",
@@ -174,6 +228,9 @@ describe("Tailscale provider integration", () => {
       "Bearer tailscale-token-5",
       "Bearer tailscale-token-6",
       "Bearer tailscale-token-7",
+      "Bearer tailscale-token-8",
+      "Bearer tailscale-token-9",
+      "Bearer tailscale-token-10",
     ]);
     const tokenBodies = fetcher.mock.calls
       .filter(([input]) => String(input) === "https://api.tailscale.com/api/v2/oauth/token")
@@ -189,6 +246,9 @@ describe("Tailscale provider integration", () => {
       { ...credential, scope: "policy_file:read" },
       { ...credential, scope: "users:read" },
       { ...credential, scope: "users:read" },
+      { ...credential, scope: "devices:routes" },
+      { ...credential, scope: "auth_keys oauth_keys federated_keys" },
+      { ...credential, scope: "devices:core" },
     ]);
     expect(apiUrls).toEqual([
       "https://api.tailscale.com/api/v2/tailnet/-/devices",
@@ -201,8 +261,11 @@ describe("Tailscale provider integration", () => {
       "https://api.tailscale.com/api/v2/tailnet/-/users?type=all",
       // An explicit filter still wins over that default.
       "https://api.tailscale.com/api/v2/tailnet/-/users?type=member",
+      "https://api.tailscale.com/api/v2/device/n123/routes",
+      "https://api.tailscale.com/api/v2/tailnet/-/keys",
+      "https://api.tailscale.com/api/v2/device/n-delete",
     ]);
-    expect(apiMethods).toEqual(["GET", "GET", "GET", "GET", "POST", "GET", "GET"]);
+    expect(apiMethods).toEqual(["GET", "GET", "GET", "GET", "POST", "GET", "GET", "POST", "POST", "DELETE"]);
     const previewCall = fetcher.mock.calls.find(([input]) =>
       String(input).startsWith("https://api.tailscale.com/api/v2/tailnet/-/acl/preview?"),
     );
@@ -213,7 +276,30 @@ describe("Tailscale provider integration", () => {
         }),
       }),
     );
-    expect(provider.actions).toHaveLength(32);
+    const routesCall = fetcher.mock.calls.find(
+      ([input]) => String(input) === "https://api.tailscale.com/api/v2/device/n123/routes",
+    );
+    expect(routesCall?.[1]).toEqual(
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ routes: ["10.0.0.0/24"] }),
+      }),
+    );
+    const createKeyCall = fetcher.mock.calls.find(
+      ([input]) => String(input) === "https://api.tailscale.com/api/v2/tailnet/-/keys",
+    );
+    expect(createKeyCall?.[1]).toEqual(
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ keyType: "auth", description: "CI key", expirySeconds: 3600 }),
+      }),
+    );
+    const deleteDeviceCall = fetcher.mock.calls.find(
+      ([input]) => String(input) === "https://api.tailscale.com/api/v2/device/n-delete",
+    );
+    expect(deleteDeviceCall?.[1]).toEqual(expect.objectContaining({ method: "DELETE" }));
+    expect(deleteDeviceCall?.[1]?.body).toBeUndefined();
+    expect(provider.actions).toHaveLength(82);
   });
 
   it("connects an OAuth client that was never granted device read access", async () => {
