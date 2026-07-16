@@ -6,6 +6,7 @@ import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
+import { setDefaultGuardedFetchDnsLookup } from "../core/guarded-fetch.ts";
 import { parsePrivateNetworkAccessFlag, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executableActionIds, executorModules } from "../providers/registry.cloudflare.generated.ts";
@@ -26,6 +27,11 @@ interface CloudflareExecutionContext {
 let catalogPromise: Promise<CatalogStore> | undefined;
 let cachedSecretCodec: { key: string; codec: Promise<ISecretCodec> } | undefined;
 let cachedApp: { key: string; app: Promise<ConnectApp> } | undefined;
+
+// `nodejs_compat` makes node:dns importable in Workers, but lookup() returns
+// platform proxy addresses rather than the destinations used by native fetch.
+// Keep URL/redirect guards while leaving DNS enforcement to Workers networking.
+setDefaultGuardedFetchDnsLookup(null);
 
 export default {
   async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
