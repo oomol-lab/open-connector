@@ -296,6 +296,12 @@ describe("Tailscale provider integration", () => {
         values: { clientId: "client-id", clientSecret: "client-secret", tailnet: "typo.example.net" },
       }),
     ).rejects.toThrow(/tailnet not found/);
+    // The catch-all 404 would answer the default tailnet too, so pin the probed URL to prove the
+    // configured tailnet is what actually reached the API.
+    expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://api.tailscale.com/api/v2/oauth/token",
+      "https://api.tailscale.com/api/v2/tailnet/typo.example.net/devices",
+    ]);
   });
 });
 
