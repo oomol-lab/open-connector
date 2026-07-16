@@ -24,11 +24,4 @@ Action definitions also declare provider-native `requiredScopes` and `providerPe
 runtime exposes those fields through HTTP and MCP discovery together with the current connection
 profile, so agents can see both the capability they are about to use and the account it will run as.
 
-OAuth provider definitions default to the browser-based `authorization_code` flow. Machine-to-machine
-providers declare `flow: "client_credentials"`; those definitions require a token URL but do not
-declare an authorization URL. Their client ID, client secret, and `clientConfigFields` are collected
-when each named connection is created. Provider extensions such as a token `audience` or `tags`
-parameter can map token request field names to `clientConfigFields` with
-`tokenRequestFields.clientCredentials.configFields`.
-
 For the full contribution workflow, see `.codex/skills/add-provider/SKILL.md`.

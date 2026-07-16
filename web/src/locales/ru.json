@@ -187,7 +187,6 @@
       "needsOAuthClient": "{{name}} требует локальный OAuth client перед подключением.",
       "connectedOAuth": "{{name}} подключен через OAuth.",
       "connectOAuth": "Подключите {{name}} через OAuth authorization flow.",
-      "connectClientCredentials": "Подключите {{name}} с учетными данными клиента OAuth.",
       "saving": "Сохранение подключения...",
       "openingOAuth": "Открытие OAuth...",
       "configureOAuthFirst": "Настройте OAuth client перед подключением.",

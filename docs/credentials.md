@@ -15,8 +15,7 @@ Set `OOMOL_CONNECT_DATA_DIR` to use another directory. The Docker image defaults
 
 - `no_auth` providers are available as virtual connections and do not store secrets.
 - `api_key` and `custom_credential` providers store their local secrets in SQLite.
-- Authorization-code `oauth2` providers use user-provided OAuth app configuration and a callback URL.
-- Client-credentials `oauth2` providers store one machine OAuth client per named connection.
+- `oauth2` providers use user-provided OAuth client configuration and a localhost callback URL.
 
 ## Encryption
 
@@ -41,7 +40,7 @@ metadata as the contract for local API requests:
 - `api_key` connections always require `values.apiKey`.
 - `api_key` connections may declare additional `extraFields`.
 - `custom_credential` connections require exactly the provider-declared `fields`.
-- `oauth2` definitions may declare additional `clientConfigFields`.
+- `oauth2` client config may declare additional `clientConfigFields`.
 
 All submitted string values are trimmed. Empty strings are treated as missing. Unknown submitted
 fields are rejected instead of being silently stored, because credential forms, scripts, and provider
@@ -112,7 +111,7 @@ curl -s -X PUT http://localhost:3000/api/connections/example \
 
 The accepted keys come from the provider's `auth[].fields`.
 
-## OAuth2 Authorization Code Connections
+## OAuth2 Connections
 
 OAuth2 providers require your own provider OAuth app. List OAuth-capable providers and copy the
 `expectedRedirectUri` for the service:
@@ -168,23 +167,6 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
 ```
 
 Protect the local SQLite database like any other file containing API keys or OAuth tokens.
-
-## OAuth2 Client Credentials Connections
-
-Providers with `auth[].flow` set to `client_credentials` do not open a browser or use the OAuth
-callback. Create the connection directly with its client ID and secret:
-
-```bash
-curl -s -X PUT http://localhost:3000/api/connections/machine-api \
-  -H 'content-type: application/json' \
-  -d '{"authType":"oauth2","connectionName":"production","values":{"clientId":"...","clientSecret":"..."}}'
-```
-
-Additional values come from the provider's `auth[].clientConfigFields`. The client ID, client
-secret, additional secret fields, and current access token are stored in the connection record. The
-record is encrypted at rest when `OOMOL_CONNECT_ENCRYPTION_KEY` is configured. Client-credentials
-access tokens normally do not include a refresh token; before an access token expires, the runtime
-automatically requests a replacement using the client credentials saved with that named connection.
 
 ## Selecting A Connection For Execution
 

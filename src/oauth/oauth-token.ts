@@ -15,7 +15,6 @@ export interface OAuthTokenRequestOptions {
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
   tokenRequestFormat?: "form" | "json";
   tokenUrl: string;
-  sensitiveValues?: string[];
 }
 
 interface AuthorizationCodeTokenRequest extends OAuthTokenRequestOptions {
@@ -30,32 +29,12 @@ interface RefreshTokenRequest extends OAuthTokenRequestOptions {
   createError: OAuthTokenErrorFactory;
 }
 
-interface ClientCredentialsTokenRequest extends OAuthTokenRequestOptions {
-  scopes: string[];
-  scopeSeparator?: " " | ",";
-  extraFields?: Record<string, string>;
-  createError: OAuthTokenErrorFactory;
-}
-
 interface TokenRequest extends OAuthTokenRequestOptions {
   fields: Record<string, string>;
   createError: OAuthTokenErrorFactory;
 }
 
 export type OAuthTokenErrorFactory = (message: string) => Error;
-
-export function createClientCredentialsExtraFields(
-  auth: OAuth2AuthDefinition,
-  config: { extra: Record<string, string>; secretExtra: Record<string, string> },
-): Record<string, string> | undefined {
-  const fields = Object.entries(auth.tokenRequestFields?.clientCredentials?.configFields ?? {}).flatMap(
-    ([requestField, configField]) => {
-      const value = config.extra[configField] ?? config.secretExtra[configField];
-      return value === undefined ? [] : [[requestField, value] as const];
-    },
-  );
-  return fields.length > 0 ? Object.fromEntries(fields) : undefined;
-}
 
 export async function requestAuthorizationCodeToken(
   input: AuthorizationCodeTokenRequest,
@@ -72,15 +51,6 @@ export async function requestRefreshToken(
   return requestToken({
     ...input,
     fields: createRefreshTokenFields(input),
-  });
-}
-
-export async function requestClientCredentialsToken(
-  input: ClientCredentialsTokenRequest,
-): Promise<Extract<ResolvedCredential, { authType: "oauth2" }>> {
-  return requestToken({
-    ...input,
-    fields: createClientCredentialsFields(input),
   });
 }
 
@@ -133,53 +103,27 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
   const rawPayload = await readTokenPayload(response, input.createError);
   const payload = unwrapTokenPayload(rawPayload, input.responseEnvelope);
   if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
-    const message = readTokenErrorMessage(rawPayload, payload, input.responseEnvelope) ?? "OAuth token request failed.";
-    throw input.createError(sanitizeTokenErrorMessage(message, [input.clientSecret, ...(input.sensitiveValues ?? [])]));
+    throw input.createError(
+      readTokenErrorMessage(rawPayload, payload, input.responseEnvelope) ?? "OAuth token request failed.",
+    );
   }
 
   const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
   const tokenType = optionalString(payload.token_type) ?? "Bearer";
-  const expiresIn = parseExpiresIn(payload.expires_in);
-  const grantedScopes = parseGrantedScopes(payload.scope);
+  const expiresIn = typeof payload.expires_in === "number" ? payload.expires_in : undefined;
   return {
     authType: "oauth2",
     accessToken,
     tokenType,
     refreshToken: optionalString(payload.refresh_token),
-    expiresAt: expiresIn !== undefined ? new Date(Date.now() + expiresIn * 1000).toISOString() : undefined,
+    expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : undefined,
     profile: {
       accountId: "oauth2",
       displayName: "OAuth Credential",
-      grantedScopes,
+      grantedScopes: [],
     },
     metadata: createTokenMetadata(payload),
   };
-}
-
-function parseExpiresIn(value: unknown): number | undefined {
-  const expiresIn = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
-  return Number.isFinite(expiresIn) ? expiresIn : undefined;
-}
-
-function parseGrantedScopes(value: unknown): string[] {
-  const scopes = Array.isArray(value) ? value : typeof value === "string" ? value.split(/[\s,]+/) : [];
-  return [
-    ...new Set(
-      scopes
-        .filter((scope): scope is string => typeof scope === "string" && scope.trim() !== "")
-        .map((scope) => scope.trim()),
-    ),
-  ];
-}
-
-function sanitizeTokenErrorMessage(message: string, sensitiveValues: string[]): string {
-  let sanitized = message.replaceAll(/[\r\n]+/g, " ");
-  for (const value of sensitiveValues) {
-    if (value) {
-      sanitized = sanitized.replaceAll(value, "[redacted]");
-    }
-  }
-  return sanitized.slice(0, 1000);
 }
 
 async function readTokenPayload(
@@ -258,21 +202,6 @@ function createRefreshTokenFields(input: RefreshTokenRequest): Record<string, st
     "refresh_token",
     input.refreshToken,
   );
-  return fields;
-}
-
-function createClientCredentialsFields(input: ClientCredentialsTokenRequest): Record<string, string> {
-  const fields: Record<string, string> = { ...(input.extraFields ?? {}) };
-  const fieldMap = input.tokenRequestFields?.clientCredentials;
-  setMappedField(
-    fields,
-    fieldMap?.grantType ?? input.tokenRequestFields?.grantType,
-    "grant_type",
-    "client_credentials",
-  );
-  if (input.scopes.length > 0) {
-    setMappedField(fields, fieldMap?.scope, "scope", input.scopes.join(input.scopeSeparator ?? " "));
-  }
   return fields;
 }
 

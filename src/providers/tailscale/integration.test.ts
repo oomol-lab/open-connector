@@ -1,15 +1,11 @@
 import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
-import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
 import { ConnectionService } from "../../connection-service.ts";
 import { executeAction } from "../../core/execution.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
-import { OAuthClientCredentialsService } from "../../oauth/oauth-client-credentials-service.ts";
-import { OAuthCredentialRefreshService } from "../../oauth/oauth-credential-refresh-service.ts";
 import { ProviderLoader } from "../provider-loader.ts";
 import { provider } from "./definition.ts";
 
@@ -20,7 +16,7 @@ afterEach(() => {
 });
 
 describe("Tailscale provider integration", () => {
-  it("connects, verifies, renews, stores, and executes both device actions", async () => {
+  it("verifies custom credentials and executes device actions with short-lived OAuth tokens", async () => {
     setDefaultGuardedFetchDnsLookup(null);
     let tokenRequests = 0;
     const apiAuthorizations: string[] = [];
@@ -31,7 +27,7 @@ describe("Tailscale provider integration", () => {
         return Response.json({
           access_token: `tailscale-token-${tokenRequests}`,
           token_type: "Bearer",
-          expires_in: tokenRequests === 1 ? 1 : 3600,
+          expires_in: 3600,
           scope: "devices:core:read",
         });
       }
@@ -56,22 +52,14 @@ describe("Tailscale provider integration", () => {
       tailscale: () => import("./executors.ts"),
     });
     const connectionStore = new MemoryConnectionStore();
-    const clientConfigs = new OAuthClientConfigService({
-      catalog,
-      origin: "http://localhost:3000",
-      store: new MemoryOAuthClientConfigStore(),
-    });
     const connections = new ConnectionService({
       catalog,
-      oauthCredentials: new OAuthCredentialRefreshService(clientConfigs),
       providerLoader,
       store: connectionStore,
     });
-    const clientCredentials = new OAuthClientCredentialsService({ clientConfigs, connections });
 
     await expect(
-      clientCredentials.connect({
-        service: "tailscale",
+      connections.connectWithCustomCredential("tailscale", {
         connectionName: "production",
         values: { clientId: "client-id", clientSecret: "client-secret" },
       }),
@@ -82,10 +70,9 @@ describe("Tailscale provider integration", () => {
       profile: { grantedScopes: ["devices:core:read"] },
     });
     await expect(connectionStore.get("tailscale", "production")).resolves.toMatchObject({
-      authType: "oauth2",
-      accessToken: "tailscale-token-1",
-      clientCredentials: { clientId: "client-id", clientSecret: "client-secret" },
-      metadata: { verifiedDeviceCount: 1 },
+      authType: "custom_credential",
+      values: { clientId: "client-id", clientSecret: "client-secret" },
+      metadata: { tailnet: "-", verifiedDeviceCount: 1 },
     });
 
     const listAction = catalog.actionsById.get("tailscale.list_devices")!;
@@ -106,26 +93,22 @@ describe("Tailscale provider integration", () => {
       output: { nodeId: "n123", hostname: "example-device" },
     });
 
-    expect(tokenRequests).toBe(2);
+    expect(tokenRequests).toBe(3);
     expect(apiAuthorizations).toEqual([
       "Bearer tailscale-token-1",
       "Bearer tailscale-token-2",
-      "Bearer tailscale-token-2",
+      "Bearer tailscale-token-3",
     ]);
-    await expect(connectionStore.get("tailscale", "production")).resolves.toMatchObject({
-      authType: "oauth2",
-      accessToken: "tailscale-token-1",
-      clientCredentials: { clientId: "client-id", clientSecret: "client-secret" },
-    });
-    await expect(connections.getCredential("tailscale", "production")).resolves.toMatchObject({
-      authType: "oauth2",
-      accessToken: "tailscale-token-2",
-    });
-
     const tokenBodies = fetcher.mock.calls
       .filter(([input]) => String(input) === "https://api.tailscale.com/api/v2/oauth/token")
       .map(([, init]) => Object.fromEntries(new URLSearchParams(String(init?.body))));
     expect(tokenBodies).toEqual([
+      {
+        grant_type: "client_credentials",
+        scope: "devices:core:read",
+        client_id: "client-id",
+        client_secret: "client-secret",
+      },
       {
         grant_type: "client_credentials",
         scope: "devices:core:read",
@@ -166,25 +149,5 @@ class MemoryConnectionStore implements IConnectionStore {
         credential,
       };
     });
-  }
-}
-
-class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {
-  private readonly configs = new Map<string, OAuthClientConfig>();
-
-  async get(service: string): Promise<OAuthClientConfig | undefined> {
-    return this.configs.get(service);
-  }
-
-  async set(config: OAuthClientConfig): Promise<void> {
-    this.configs.set(config.service, config);
-  }
-
-  async delete(service: string): Promise<void> {
-    this.configs.delete(service);
-  }
-
-  async list(): Promise<OAuthClientConfig[]> {
-    return [...this.configs.values()];
   }
 }

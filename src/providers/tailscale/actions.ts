@@ -55,7 +55,7 @@ function action(input: {
 export const tailscaleActions: ActionDefinition[] = [
   action({
     name: "list_devices",
-    description: "List all devices in the OAuth client's Tailscale tailnet.",
+    description: "List all devices in the configured Tailscale tailnet.",
     inputSchema: s.actionInput({}, [], "Tailscale list devices input."),
     outputSchema: s.object(
       {

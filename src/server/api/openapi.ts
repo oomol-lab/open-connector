@@ -282,12 +282,12 @@ export function createOpenApiDocument(
             }),
             clientId: jsonSchema.nullable(jsonSchema.string({ description: "Configured OAuth client id." })),
             expectedRedirectUri: jsonSchema.string({
-              description: "Callback URL to configure for authorization_code providers.",
+              description: "Callback URL to configure in the provider OAuth app.",
             }),
             auth: jsonSchema.unknownObject("Provider OAuth capability metadata."),
           },
           {
-            required: ["service", "configured", "clientId", "auth"],
+            required: ["service", "configured", "clientId", "expectedRedirectUri", "auth"],
             description: "OAuth client config summary safe for the local console.",
           },
         ),
@@ -855,7 +855,7 @@ function createConnectionUpsertRequestSchema(): JsonSchema {
   return jsonSchema.object(
     {
       authType: jsonSchema.string({
-        description: "Connection auth type: no_auth, api_key, custom_credential, or client_credentials oauth2.",
+        description: "Connection auth type: no_auth, api_key, or custom_credential.",
       }),
       connectionName: jsonSchema.string({
         description: "Optional local connection name. Defaults to default.",

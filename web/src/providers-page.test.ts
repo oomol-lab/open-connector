@@ -86,12 +86,6 @@ describe("shouldEnableConnectionSubmit", () => {
     expect(shouldEnableConnectionSubmit({ type: "oauth2", scopes: [] }, undefined)).toBe(false);
   });
 
-  it("enables client_credentials OAuth without a global OAuth app config", () => {
-    expect(shouldEnableConnectionSubmit({ type: "oauth2", flow: "client_credentials", scopes: [] }, undefined)).toBe(
-      true,
-    );
-  });
-
   it("enables OAuth start after an OAuth client is configured", () => {
     expect(
       shouldEnableConnectionSubmit(

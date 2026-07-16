@@ -1,7 +1,7 @@
 import type { AppData, ProviderDefinition, RunLog } from "./model";
 
 import { describe, expect, it } from "vitest";
-import { credentialFieldsFor, createOverviewSummary, resolveProviderConnectionStatus, sortProviders } from "./model";
+import { createOverviewSummary, resolveProviderConnectionStatus, sortProviders } from "./model";
 
 function provider(service: string, displayName: string): ProviderDefinition {
   return {
@@ -149,22 +149,6 @@ describe("createOverviewSummary", () => {
 });
 
 describe("resolveProviderConnectionStatus", () => {
-  it("does not require a global OAuth app config for client_credentials providers", () => {
-    const machineProvider = {
-      ...oauthProvider("machine", "Machine"),
-      auth: [{ type: "oauth2" as const, flow: "client_credentials" as const, scopes: ["read"] }],
-    };
-
-    expect(resolveProviderConnectionStatus(machineProvider, [], [])).toMatchObject({
-      connected: false,
-      oauthClientRequired: false,
-    });
-    expect(credentialFieldsFor(machineProvider.auth[0])).toMatchObject([
-      { key: "clientId", secret: false },
-      { key: "clientSecret", secret: true },
-    ]);
-  });
-
   it("treats no-auth-only providers as no-setup instead of connected", () => {
     const status = resolveProviderConnectionStatus(
       provider("clock", "Clock"),

@@ -10,9 +10,7 @@ export type AuthDefinition =
   | { type: "custom_credential"; fields: CredentialField[] }
   | {
       type: "oauth2";
-      flow?: "authorization_code" | "client_credentials";
       scopes: string[];
-      tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
       clientConfigFields?: CredentialField[];
     };
 
@@ -241,7 +239,7 @@ export function resolveProviderConnectionStatus(
   return {
     noSetupRequired,
     connected: connection != null,
-    oauthClientRequired: providerHasBrowserOAuth(provider) && !oauthClientConfigured(provider.service, oauthConfigs),
+    oauthClientRequired: providerHasOAuth(provider) && !oauthClientConfigured(provider.service, oauthConfigs),
     connection,
   };
 }
@@ -265,10 +263,8 @@ function isUsableCredentialConnection(connection: ConnectionRecord | undefined):
   );
 }
 
-function providerHasBrowserOAuth(provider: ProviderDefinition): boolean {
-  return provider.auth.some(
-    (auth) => auth.type === "oauth2" && (auth.flow ?? "authorization_code") === "authorization_code",
-  );
+function providerHasOAuth(provider: ProviderDefinition): boolean {
+  return provider.auth.some((auth) => auth.type === "oauth2") || provider.authTypes.includes("oauth2");
 }
 
 function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): boolean {
@@ -291,25 +287,6 @@ export function credentialFieldsFor(auth: AuthDefinition): CredentialField[] {
     ];
   }
   if (auth.type === "custom_credential") return auth.fields;
-  if (auth.type === "oauth2" && auth.flow === "client_credentials") {
-    return [
-      {
-        key: "clientId",
-        label: "Client ID",
-        inputType: "text",
-        required: true,
-        secret: false,
-      },
-      {
-        key: "clientSecret",
-        label: "Client secret",
-        inputType: "password",
-        required: auth.tokenEndpointAuthMethod !== "none",
-        secret: true,
-      },
-      ...(auth.clientConfigFields ?? []),
-    ];
-  }
   return [];
 }
 

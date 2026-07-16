@@ -1,7 +1,6 @@
 import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
 import type { ActionExecutor, CredentialValidators, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { OAuthClientConfig } from "./oauth/oauth-client-config-service.ts";
-import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh-service.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -115,20 +114,6 @@ const oauthRefreshProvider: ProviderDefinition = {
       authorizationUrl: "https://example.com/oauth/authorize",
       tokenUrl: "https://example.com/oauth/token",
       refreshTokenUrl: "https://example.com/oauth/refresh",
-      scopes: ["read"],
-      tokenEndpointAuthMethod: "client_secret_post",
-    },
-  ],
-};
-
-const oauthClientCredentialsProvider: ProviderDefinition = {
-  ...oauthProvider,
-  service: "machine_example",
-  auth: [
-    {
-      type: "oauth2",
-      flow: "client_credentials",
-      tokenUrl: "https://example.com/oauth/token",
       scopes: ["read"],
       tokenEndpointAuthMethod: "client_secret_post",
     },
@@ -564,47 +549,11 @@ describe("ConnectionService", () => {
       code: "oauth_token_expired",
     });
   });
-
-  it("coalesces concurrent client_credentials token renewals for one named connection", async () => {
-    const store = new MemoryConnectionStore();
-    const refresh = vi.fn(async (_service, credential) => ({
-      ...credential,
-      accessToken: "fresh-token",
-      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
-    }));
-    const service = createService([oauthClientCredentialsProvider], {
-      oauthCredentials: { refresh },
-      store,
-    });
-    await store.set("machine_example", "production", {
-      authType: "oauth2",
-      accessToken: "expired-token",
-      tokenType: "Bearer",
-      expiresAt: "2026-01-01T00:00:00.000Z",
-      clientCredentials: {
-        clientId: "client-id",
-        clientSecret: "client-secret",
-        extra: {},
-        secretExtra: {},
-      },
-      profile: testProfile,
-      metadata: {},
-    });
-
-    const [first, second] = await Promise.all([
-      service.getCredential("machine_example", "production"),
-      service.getCredential("machine_example", "production"),
-    ]);
-
-    expect(first).toMatchObject({ accessToken: "fresh-token" });
-    expect(second).toMatchObject({ accessToken: "fresh-token" });
-    expect(refresh).toHaveBeenCalledOnce();
-  });
 });
 
 interface CreateServiceOptions {
   logger?: ReturnType<typeof createTestLogger>;
-  oauthCredentials?: IOAuthCredentialRefresher;
+  oauthCredentials?: OAuthCredentialRefreshService;
   providerLoader?: IProviderLoader;
   store?: MemoryConnectionStore;
 }

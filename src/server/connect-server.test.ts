@@ -24,7 +24,6 @@ import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
 import { buildActionSearchIndex } from "../core/action-search.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
-import { OAuthClientCredentialsService } from "../oauth/oauth-client-credentials-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
@@ -64,23 +63,6 @@ const oauthProvider: ProviderDefinition = {
           location: "secretExtra",
         },
       ],
-    },
-  ],
-  actions: [],
-};
-
-const clientCredentialsProvider: ProviderDefinition = {
-  service: "machine_oauth",
-  displayName: "Machine OAuth",
-  categories: ["Developer Tools"],
-  authTypes: ["oauth2"],
-  auth: [
-    {
-      type: "oauth2",
-      flow: "client_credentials",
-      tokenUrl: "https://example.com/oauth/token",
-      scopes: ["read"],
-      tokenEndpointAuthMethod: "client_secret_post",
     },
   ],
   actions: [],
@@ -137,44 +119,6 @@ afterEach(() => {
 });
 
 describe("ConnectServer", () => {
-  it("creates client_credentials OAuth connections without browser authorization", async () => {
-    const fetcher = vi.fn().mockResolvedValue(
-      Response.json({
-        access_token: "access-token",
-        token_type: "Bearer",
-        expires_in: 3600,
-        scope: "read",
-      }),
-    );
-    vi.stubGlobal("fetch", fetcher);
-    const app = createTestServer([clientCredentialsProvider]).createApp();
-
-    const response = await app.request("/api/connections/machine_oauth", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        authType: "oauth2",
-        connectionName: "production",
-        values: { clientId: "client-id", clientSecret: "client-secret" },
-      }),
-    });
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
-      service: "machine_oauth",
-      connectionName: "production",
-      authType: "oauth2",
-      configured: true,
-    });
-    const requestBody = new URLSearchParams(String(fetcher.mock.calls[0]?.[1]?.body));
-    expect(Object.fromEntries(requestBody)).toEqual({
-      grant_type: "client_credentials",
-      scope: "read",
-      client_id: "client-id",
-      client_secret: "client-secret",
-    });
-  });
-
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const app = createTestServer([catalogOnlyProvider]).createApp();
 
@@ -1907,7 +1851,6 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     providerLoader,
     connections,
     oauthClientConfigs: clientConfigs,
-    oauthClientCredentials: new OAuthClientCredentialsService({ clientConfigs, connections }),
     oauthFlow: new OAuthFlowService({
       clientConfigs,
       connections,

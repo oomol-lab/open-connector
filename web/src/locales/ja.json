@@ -187,7 +187,6 @@
       "needsOAuthClient": "{{name}} を接続するには、先にローカル OAuth client を設定してください。",
       "connectedOAuth": "{{name}} は OAuth で接続済みです。",
       "connectOAuth": "OAuth 認可フローで {{name}} に接続します。",
-      "connectClientCredentials": "OAuth クライアント資格情報で {{name}} に接続します。",
       "saving": "接続を保存中...",
       "openingOAuth": "OAuth を開いています...",
       "configureOAuthFirst": "接続する前に OAuth client を設定してください。",

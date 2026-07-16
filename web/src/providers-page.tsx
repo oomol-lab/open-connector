@@ -565,10 +565,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               description={t("providers.noConnectionMethodDescription")}
             />
           )}
-          {locallyAvailable &&
-          oauthAuth &&
-          (oauthAuth.flow ?? "authorization_code") === "authorization_code" &&
-          selectedAuth?.type === "oauth2" ? (
+          {locallyAvailable && oauthAuth && selectedAuth?.type === "oauth2" ? (
             <div className="provider-inline-oauth-settings">
               <h3>{t("providers.oauthClient")}</h3>
               <OAuthClientSettings
@@ -645,7 +642,7 @@ export function shouldShowDisconnectAction(connection: AppData["connections"][nu
 }
 
 export function shouldEnableConnectionSubmit(auth: AuthDefinition, oauthConfig: OAuthConfig | undefined): boolean {
-  return auth.type !== "oauth2" || auth.flow === "client_credentials" || oauthConfig != null;
+  return auth.type !== "oauth2" || oauthConfig != null;
 }
 
 export function connectionSubmitLabel(auth: AuthDefinition, connected: boolean, providerName: string): string {
@@ -777,8 +774,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const fields = credentialFieldsFor(props.auth);
   const showActions = shouldShowConnectionActions(props.auth);
   const connected = props.connection != null;
-  const usesClientCredentials = props.auth.type === "oauth2" && props.auth.flow === "client_credentials";
-  const needsOAuthClient = props.auth.type === "oauth2" && !usesClientCredentials && !props.oauthConfig;
+  const needsOAuthClient = props.auth.type === "oauth2" && !props.oauthConfig;
   const canSubmit = shouldEnableConnectionSubmit(props.auth, props.oauthConfig);
   const submitLabel =
     props.auth.type === "oauth2"
@@ -804,7 +800,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault();
     setStatus(
-      props.auth.type === "oauth2" && !usesClientCredentials
+      props.auth.type === "oauth2"
         ? t("providers.connectionMessages.openingOAuth")
         : t("providers.connectionMessages.saving"),
     );
@@ -815,8 +811,6 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         await apiPut(`/api/connections/${props.provider.service}`, { authType: "api_key", values });
       } else if (props.auth.type === "custom_credential") {
         await apiPut(`/api/connections/${props.provider.service}`, { authType: "custom_credential", values });
-      } else if (usesClientCredentials) {
-        await apiPut(`/api/connections/${props.provider.service}`, { authType: "oauth2", values });
       } else {
         if (!canSubmit) {
           setStatus(t("providers.connectionMessages.configureOAuthFirst"));
@@ -870,24 +864,13 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
       ) : null}
       {props.auth.type === "oauth2" ? (
         <Alert variant={needsOAuthClient ? "warning" : "default"}>
-          {needsOAuthClient ? (
-            <Settings size={16} />
-          ) : usesClientCredentials ? (
-            <KeyRound size={16} />
-          ) : (
-            <ExternalLink size={16} />
-          )}
+          {needsOAuthClient ? <Settings size={16} /> : <ExternalLink size={16} />}
           <AlertDescription>
             {needsOAuthClient
               ? t("providers.connectionMessages.needsOAuthClient", { name: props.provider.displayName })
               : connected
                 ? t("providers.connectionMessages.connectedOAuth", { name: props.provider.displayName })
-                : t(
-                    usesClientCredentials
-                      ? "providers.connectionMessages.connectClientCredentials"
-                      : "providers.connectionMessages.connectOAuth",
-                    { name: props.provider.displayName },
-                  )}
+                : t("providers.connectionMessages.connectOAuth", { name: props.provider.displayName })}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -908,11 +891,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
             </Button>
           ) : (
             <Button type="submit" disabled={!canSubmit}>
-              {props.auth.type === "oauth2" && !usesClientCredentials ? (
-                <ExternalLink size={16} />
-              ) : (
-                <Check size={16} />
-              )}
+              {props.auth.type === "oauth2" ? <ExternalLink size={16} /> : <Check size={16} />}
               {submitLabel}
             </Button>
           )}

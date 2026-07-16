@@ -27,19 +27,6 @@ describe("D1RuntimeDatabase", () => {
       profile: githubProfile,
       metadata: { login: "octocat" },
     });
-    await database.connectionStore.set("machine", "production", {
-      authType: "oauth2",
-      accessToken: "machine-access-token",
-      tokenType: "Bearer",
-      clientCredentials: {
-        clientId: "machine-client-id",
-        clientSecret: "machine-client-secret",
-        extra: {},
-        secretExtra: {},
-      },
-      profile: githubProfile,
-      metadata: {},
-    });
     await database.oauthClientConfigStore.set({
       service: "gmail",
       clientId: "client-id",
@@ -49,28 +36,20 @@ describe("D1RuntimeDatabase", () => {
     });
 
     expect(d1.value("connections", "service", "github")).not.toContain("github-token");
-    expect(d1.value("connections", "service", "machine")).not.toContain("machine-client-secret");
     expect(d1.value("oauth_client_configs", "service", "gmail")).not.toContain("client-secret");
     await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
       authType: "api_key",
       apiKey: "github-token",
       metadata: { login: "octocat" },
     });
-    await expect(database.connectionStore.get("machine", "production")).resolves.toMatchObject({
-      authType: "oauth2",
-      clientCredentials: { clientSecret: "machine-client-secret" },
-    });
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientId: "client-id",
       clientSecret: "client-secret",
       extra: { tenant: "default" },
     });
-    await expect(database.connectionStore.list()).resolves.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ service: "github", connectionName: "default" }),
-        expect.objectContaining({ service: "machine", connectionName: "production" }),
-      ]),
-    );
+    await expect(database.connectionStore.list()).resolves.toMatchObject([
+      { service: "github", connectionName: "default" },
+    ]);
     await expect(database.oauthClientConfigStore.list()).resolves.toMatchObject([{ service: "gmail" }]);
 
     await database.connectionStore.delete("github", "default");
