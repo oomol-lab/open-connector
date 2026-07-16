@@ -16,10 +16,12 @@ afterEach(() => {
 });
 
 describe("Tailscale provider integration", () => {
-  it("verifies custom credentials and executes device actions with short-lived OAuth tokens", async () => {
+  it("verifies custom credentials and executes representative safe operations", async () => {
     setDefaultGuardedFetchDnsLookup(null);
     let tokenRequests = 0;
     const apiAuthorizations: string[] = [];
+    const apiUrls: string[] = [];
+    const apiMethods: string[] = [];
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       if (url === "https://api.tailscale.com/api/v2/oauth/token") {
@@ -33,6 +35,8 @@ describe("Tailscale provider integration", () => {
       }
 
       apiAuthorizations.push(new Headers(init?.headers).get("authorization") ?? "");
+      apiUrls.push(url);
+      apiMethods.push(init?.method ?? "GET");
       if (url === "https://api.tailscale.com/api/v2/tailnet/-/devices") {
         return Response.json({
           devices: [{ nodeId: "n123", hostname: "example-device", connectedToControl: true }],
@@ -40,6 +44,12 @@ describe("Tailscale provider integration", () => {
       }
       if (url === "https://api.tailscale.com/api/v2/device/n123") {
         return Response.json({ nodeId: "n123", hostname: "example-device", connectedToControl: true });
+      }
+      if (url.startsWith("https://api.tailscale.com/api/v2/tailnet/-/logging/configuration?")) {
+        return Response.json({ version: "1.0", tailnet: "example.ts.net", logs: [] });
+      }
+      if (url.startsWith("https://api.tailscale.com/api/v2/tailnet/-/acl/preview?") && init?.method === "POST") {
+        return Response.json([{ action: "accept", src: ["group:engineering"], dst: ["tag:server:22"] }]);
       }
       return Response.json({ message: "not found" }, { status: 404 });
     });
@@ -93,35 +103,83 @@ describe("Tailscale provider integration", () => {
       output: { nodeId: "n123", hostname: "example-device" },
     });
 
-    expect(tokenRequests).toBe(3);
+    const auditAction = catalog.actionsById.get("tailscale.list_configuration_audit_logs")!;
+    const auditExecutor = await providerLoader.loadActionExecutor("tailscale", auditAction.id, provider.displayName);
+    await expect(
+      executeAction(
+        auditAction,
+        auditExecutor,
+        {
+          start: "2026-07-01T00:00:00Z",
+          end: "2026-07-02T00:00:00Z",
+          actors: ["user-1", "~alice"],
+          events: ["USER.CREATE"],
+        },
+        connections.forConnection("production"),
+      ),
+    ).resolves.toMatchObject({ ok: true, output: { logs: [] } });
+
+    const previewAction = catalog.actionsById.get("tailscale.preview_policy_rule_matches")!;
+    const previewExecutor = await providerLoader.loadActionExecutor(
+      "tailscale",
+      previewAction.id,
+      provider.displayName,
+    );
+    await expect(
+      executeAction(
+        previewAction,
+        previewExecutor,
+        {
+          type: "user",
+          previewFor: "alice@example.com",
+          policy: { acls: [{ action: "accept", src: ["group:engineering"], dst: ["tag:server:22"] }] },
+        },
+        connections.forConnection("production"),
+      ),
+    ).resolves.toMatchObject({ ok: true, output: [{ action: "accept" }] });
+
+    expect(tokenRequests).toBe(5);
     expect(apiAuthorizations).toEqual([
       "Bearer tailscale-token-1",
       "Bearer tailscale-token-2",
       "Bearer tailscale-token-3",
+      "Bearer tailscale-token-4",
+      "Bearer tailscale-token-5",
     ]);
     const tokenBodies = fetcher.mock.calls
       .filter(([input]) => String(input) === "https://api.tailscale.com/api/v2/oauth/token")
       .map(([, init]) => Object.fromEntries(new URLSearchParams(String(init?.body))));
-    expect(tokenBodies).toEqual([
-      {
-        grant_type: "client_credentials",
-        scope: "devices:core:read",
-        client_id: "client-id",
-        client_secret: "client-secret",
-      },
-      {
-        grant_type: "client_credentials",
-        scope: "devices:core:read",
-        client_id: "client-id",
-        client_secret: "client-secret",
-      },
-      {
-        grant_type: "client_credentials",
-        scope: "devices:core:read",
-        client_id: "client-id",
-        client_secret: "client-secret",
-      },
+    expect(tokenBodies.map((body) => body.scope)).toEqual([
+      "devices:core:read",
+      "devices:core:read",
+      "devices:core:read",
+      "logs:configuration:read",
+      "policy_file:read",
     ]);
+    expect(tokenBodies).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          grant_type: "client_credentials",
+          client_id: "client-id",
+          client_secret: "client-secret",
+        }),
+      ]),
+    );
+    expect(apiUrls.at(-2)).toBe(
+      "https://api.tailscale.com/api/v2/tailnet/-/logging/configuration?start=2026-07-01T00%3A00%3A00Z&end=2026-07-02T00%3A00%3A00Z&actor=user-1&actor=%7Ealice&event=USER.CREATE",
+    );
+    expect(apiUrls.at(-1)).toBe(
+      "https://api.tailscale.com/api/v2/tailnet/-/acl/preview?type=user&previewFor=alice%40example.com",
+    );
+    expect(apiMethods.at(-1)).toBe("POST");
+    expect(fetcher.mock.calls.at(-1)?.[1]).toEqual(
+      expect.objectContaining({
+        body: JSON.stringify({
+          acls: [{ action: "accept", src: ["group:engineering"], dst: ["tag:server:22"] }],
+        }),
+      }),
+    );
+    expect(provider.actions).toHaveLength(32);
   });
 });
 

@@ -1,15 +1,16 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderFetch } from "../provider-runtime.ts";
-import type { TailscaleActionName } from "./actions.ts";
+import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { TailscaleOperationDefinition } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   ProviderRequestError,
   readProviderJsonBody,
+  readProviderTextBody,
   requireCustomCredential,
 } from "../provider-runtime.ts";
-import { tailscaleDeviceReadScope } from "./actions.ts";
+import { tailscaleDeviceReadScope, tailscaleOperations } from "./operations.ts";
 
 const service = "tailscale";
 const tailscaleApiBaseUrl = "https://api.tailscale.com/api/v2";
@@ -29,17 +30,9 @@ interface TailscaleAccessToken {
   tokenType: string;
 }
 
-type TailscaleActionHandler = (input: Record<string, unknown>, context: TailscaleContext) => Promise<unknown>;
-
-export const tailscaleActionHandlers: Record<TailscaleActionName, TailscaleActionHandler> = {
-  async list_devices(_input, context) {
-    return tailscaleJsonRequest(`/tailnet/${encodeURIComponent(context.tailnet)}/devices`, context);
-  },
-  async get_device(input, context) {
-    const deviceId = requiredString(input.deviceId, "deviceId", (message) => new ProviderRequestError(400, message));
-    return tailscaleJsonRequest(`/device/${encodeURIComponent(deviceId)}`, context);
-  },
-};
+const tailscaleActionHandlers = Object.fromEntries(
+  tailscaleOperations.map((operation) => [operation.name, createOperationHandler(operation)]),
+) as Record<string, ProviderRuntimeHandler<TailscaleContext>>;
 
 export const executors: ProviderExecutors = defineProviderExecutors<TailscaleContext>({
   service,
@@ -54,7 +47,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<TailscaleCon
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {
     const context = readTailscaleContext(input.values, fetcher, signal);
-    const payload = await tailscaleJsonRequest(`/tailnet/${encodeURIComponent(context.tailnet)}/devices`, context);
+    const payload = await tailscaleRequestUrl(
+      new URL(`${tailscaleApiBaseUrl}/tailnet/${encodeURIComponent(context.tailnet)}/devices`),
+      context,
+      { method: "GET" },
+      [tailscaleDeviceReadScope],
+      "json",
+    );
     const devices = optionalRecord(payload)?.devices;
     return {
       profile: {
@@ -70,6 +69,74 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+function createOperationHandler(operation: TailscaleOperationDefinition): ProviderRuntimeHandler<TailscaleContext> {
+  return async (input, context): Promise<unknown> => {
+    const path = resolveOperationPath(operation, input, context.tailnet);
+    const url = new URL(`${tailscaleApiBaseUrl}${path}`);
+    appendOperationQuery(url, operation, input);
+    return tailscaleRequestUrl(
+      url,
+      context,
+      createOperationRequestInit(operation, input),
+      operation.requiredScopes,
+      operation.responseFormat ?? "json",
+    );
+  };
+}
+
+function createOperationRequestInit(
+  operation: TailscaleOperationDefinition,
+  input: Record<string, unknown>,
+): RequestInit {
+  const init: RequestInit = { method: operation.method };
+  if (operation.bodyInputName) {
+    const body = input[operation.bodyInputName];
+    init.body = operation.bodyFormat === "text" ? String(body) : JSON.stringify(body);
+  } else if (operation.bodyFields) {
+    init.body = JSON.stringify(
+      Object.fromEntries(
+        operation.bodyFields.filter((field) => input[field] !== undefined).map((field) => [field, input[field]]),
+      ),
+    );
+  }
+  if (init.body !== undefined) {
+    init.headers = { "content-type": operation.contentType ?? "application/json" };
+  }
+  return init;
+}
+
+function resolveOperationPath(
+  operation: TailscaleOperationDefinition,
+  input: Record<string, unknown>,
+  tailnet: string,
+): string {
+  let path = operation.path.replace("/tailnet/-", `/tailnet/${encodeURIComponent(tailnet)}`);
+  for (const parameter of operation.pathParameters ?? []) {
+    const value = requiredString(input[parameter], parameter, (message) => new ProviderRequestError(400, message));
+    path = path.replace(`{${parameter}}`, encodeURIComponent(value));
+  }
+  return path;
+}
+
+function appendOperationQuery(url: URL, operation: TailscaleOperationDefinition, input: Record<string, unknown>): void {
+  for (const parameter of operation.queryParameters ?? []) {
+    const value = input[parameter.inputName];
+    if (value === undefined) {
+      continue;
+    }
+    if (parameter.repeated) {
+      if (!Array.isArray(value)) {
+        throw new ProviderRequestError(400, `${parameter.inputName} must be an array.`);
+      }
+      for (const item of value) {
+        url.searchParams.append(parameter.parameterName, String(item));
+      }
+      continue;
+    }
+    url.searchParams.set(parameter.parameterName, String(value));
+  }
+}
 
 function readTailscaleContext(
   values: Record<string, string>,
@@ -90,10 +157,13 @@ function readTailscaleContext(
   };
 }
 
-async function requestTailscaleAccessToken(context: TailscaleContext): Promise<TailscaleAccessToken> {
+async function requestTailscaleAccessToken(
+  context: TailscaleContext,
+  requiredScopes: readonly string[],
+): Promise<TailscaleAccessToken> {
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    scope: tailscaleDeviceReadScope,
+    scope: requiredScopes.join(" "),
     client_id: context.clientId,
     client_secret: context.clientSecret,
   });
@@ -123,21 +193,29 @@ async function requestTailscaleAccessToken(context: TailscaleContext): Promise<T
   };
 }
 
-async function tailscaleJsonRequest(path: string, context: TailscaleContext): Promise<unknown> {
-  const token = await requestTailscaleAccessToken(context);
-  const response = await context.fetcher(`${tailscaleApiBaseUrl}${path}`, {
-    headers: {
-      accept: "application/json",
-      authorization: `${token.tokenType} ${token.accessToken}`,
-    },
+async function tailscaleRequestUrl(
+  url: URL,
+  context: TailscaleContext,
+  init: RequestInit,
+  requiredScopes: readonly string[],
+  responseFormat: "json" | "text",
+): Promise<unknown> {
+  const token = await requestTailscaleAccessToken(context, requiredScopes);
+  const headers = new Headers(init.headers);
+  headers.set("accept", "application/json");
+  headers.set("authorization", `${token.tokenType} ${token.accessToken}`);
+  const response = await context.fetcher(url.toString(), {
+    ...init,
+    headers,
     signal: context.signal,
   });
+  if (response.ok && responseFormat === "text") {
+    return readProviderTextBody(response, "Tailscale text response");
+  }
   const payload = await readTailscaleJsonResponse(response);
-
   if (!response.ok) {
     throwTailscaleRequestError(response.status, payload, "Tailscale request failed");
   }
-
   return payload;
 }
 
