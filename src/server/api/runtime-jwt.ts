@@ -34,19 +34,27 @@ export function createRuntimeJwtVerifier(config: RuntimeJwtConfig): RuntimeJwtVe
   try {
     url = new URL(jwksUri);
   } catch {
-    throw new Error("OOMOL_CONNECT_JWKS_URI must be a valid HTTP or HTTPS URL.");
+    throw new Error("OOMOL_CONNECT_JWKS_URI must be a valid HTTPS URL or HTTP loopback URL.");
   }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error("OOMOL_CONNECT_JWKS_URI must be a valid HTTP or HTTPS URL.");
+  if (url.protocol !== "https:" && !isLoopbackHttpUrl(url)) {
+    throw new Error("OOMOL_CONNECT_JWKS_URI must be a valid HTTPS URL or HTTP loopback URL.");
   }
 
   const jwks = createRemoteJWKSet(url);
   return async (token) => {
     try {
-      await jwtVerify(token, jwks, { issuer, audience });
+      await jwtVerify(token, jwks, { issuer, audience, requiredClaims: ["exp"] });
       return true;
     } catch {
       return false;
     }
   };
+}
+
+function isLoopbackHttpUrl(url: URL): boolean {
+  if (url.protocol !== "http:") {
+    return false;
+  }
+  const hostname = url.hostname.toLowerCase().replace(/\.$/u, "");
+  return hostname === "localhost" || hostname === "[::1]" || /^127(?:\.\d{1,3}){3}$/u.test(hostname);
 }

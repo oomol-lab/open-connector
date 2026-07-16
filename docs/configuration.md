@@ -50,10 +50,11 @@ OOMOL_CONNECT_JWT_AUDIENCE="https://connect-api.example.com" \
 npm run dev
 ```
 
-`OOMOL_CONNECT_JWKS_URI` must be the direct HTTP or HTTPS JWKS endpoint, not an OIDC discovery URL.
-`OOMOL_CONNECT_JWT_AUDIENCE` should identify this API resource, not a web application's OIDC client.
-OpenConnector validates the JWT signature, issuer, audience, and standard token time claims. Clients
-send the access token as `Authorization: Bearer <jwt>`.
+`OOMOL_CONNECT_JWKS_URI` must be the direct HTTPS JWKS endpoint, not an OIDC discovery URL. Plain
+HTTP is accepted only for loopback endpoints used during local development. `OOMOL_CONNECT_JWT_AUDIENCE`
+should identify this API resource, not a web application's OIDC client. OpenConnector requires an
+expiration claim and validates the JWT signature, issuer, audience, expiration, and not-before time.
+Clients send the access token as `Authorization: Bearer <jwt>`.
 
 JWT authentication is additive: the bootstrap runtime token and persistent `oct_...` tokens remain
 valid when JWT verification is configured. For a JWT-only deployment, leave

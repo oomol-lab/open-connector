@@ -65,10 +65,23 @@ describe("createRuntimeJwtVerifier", () => {
     expect(() => createRuntimeJwtVerifier(config)).toThrow(missing);
   });
 
-  it.each(["not a URL", "file:///tmp/jwks.json"])("rejects invalid JWKS URI %s", (value) => {
-    expect(() => createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).toThrow(
-      "OOMOL_CONNECT_JWKS_URI must be a valid HTTP or HTTPS URL.",
-    );
+  it.each(["not a URL", "file:///tmp/jwks.json", "http://idp.example.com/jwks", "http://10.0.0.1/jwks"])(
+    "rejects invalid or insecure JWKS URI %s",
+    (value) => {
+      expect(() => createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).toThrow(
+        "OOMOL_CONNECT_JWKS_URI must be a valid HTTPS URL or HTTP loopback URL.",
+      );
+    },
+  );
+
+  it.each([
+    "https://idp.example.com/jwks",
+    "http://localhost/jwks",
+    "http://localhost./jwks",
+    "http://127.0.0.2/jwks",
+    "http://[::1]/jwks",
+  ])("accepts secure or loopback JWKS URI %s", (value) => {
+    expect(createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).toBeTypeOf("function");
   });
 
   it("accepts a signed token with the expected issuer and audience", async () => {
@@ -119,6 +132,10 @@ describe("createRuntimeJwtVerifier", () => {
       token: async () => await signToken({ expirationTime: "0s" }),
     },
     {
+      name: "token without expiration",
+      token: async () => await signToken({ expirationTime: false }),
+    },
+    {
       name: "token used before nbf",
       token: async () => await signToken({ notBefore: "1h" }),
     },
@@ -145,7 +162,7 @@ interface SignTokenOptions {
   kid?: string;
   tokenIssuer?: string | false;
   tokenAudience?: string | string[] | false;
-  expirationTime?: string;
+  expirationTime?: string | false;
   notBefore?: string;
 }
 
@@ -157,7 +174,9 @@ async function signToken(options: SignTokenOptions = {}): Promise<string> {
   if (options.tokenAudience !== false) {
     token = token.setAudience(options.tokenAudience ?? audience);
   }
-  token = token.setExpirationTime(options.expirationTime ?? "5m");
+  if (options.expirationTime !== false) {
+    token = token.setExpirationTime(options.expirationTime ?? "5m");
+  }
   if (options.notBefore) {
     token = token.setNotBefore(options.notBefore);
   }
