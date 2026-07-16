@@ -1,3 +1,4 @@
+import type { RuntimeJwtVerifier } from "./runtime-jwt.ts";
 import type { Context, MiddlewareHandler } from "hono";
 
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -10,14 +11,15 @@ const authCookieMaxAgeSeconds = 2_592_000;
 const authCookieMaxAgeMs = authCookieMaxAgeSeconds * 1000;
 
 /**
- * Optional local API authentication for HTTP, web console, and MCP callers.
+ * Optional API authentication for HTTP, web console, and MCP callers.
  */
-export type LocalAuthOptions = {
+export interface LocalAuthOptions {
   adminToken?: string;
   runtimeToken?: string;
   hasRuntimeTokens?(): Promise<boolean>;
   verifyRuntimeToken?(token: string): Promise<boolean>;
-};
+  verifyRuntimeJwt?: RuntimeJwtVerifier;
+}
 
 export interface LocalAuthSession {
   adminAuthConfigured: boolean;
@@ -29,7 +31,13 @@ type AuthScope = "admin" | "runtime";
 export function createLocalAuthMiddleware(options: LocalAuthOptions): MiddlewareHandler {
   const adminToken = normalizeToken(options.adminToken);
   const runtimeToken = normalizeToken(options.runtimeToken);
-  if (!adminToken && !runtimeToken && !options.hasRuntimeTokens && !options.verifyRuntimeToken) {
+  if (
+    !adminToken &&
+    !runtimeToken &&
+    !options.hasRuntimeTokens &&
+    !options.verifyRuntimeToken &&
+    !options.verifyRuntimeJwt
+  ) {
     return async (_context, next) => {
       await next();
     };
@@ -126,17 +134,17 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
     if (scope === "admin") {
       return true;
     }
-    if (!(await (options.hasRuntimeTokens?.() ?? false))) {
+    if (!(await (options.hasRuntimeTokens?.() ?? false)) && !options.verifyRuntimeJwt) {
       return true;
     }
-    return hasValidStoredRuntimeToken(context, options);
+    return hasValidRuntimeToken(context, options);
   }
 
   if (await hasRequestToken(context, token)) {
     return true;
   }
 
-  return scope === "runtime" ? await hasValidStoredRuntimeToken(context, options) : false;
+  return scope === "runtime" ? await hasValidRuntimeToken(context, options) : false;
 }
 
 async function hasRequestToken(context: Context, token: string): Promise<boolean> {
@@ -217,9 +225,15 @@ function tokenForScope(options: LocalAuthOptions, scope: AuthScope): string | un
   return scope === "runtime" ? runtimeToken : adminToken;
 }
 
-async function hasValidStoredRuntimeToken(context: Context, options: LocalAuthOptions): Promise<boolean> {
+async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions): Promise<boolean> {
   const token = readBearerToken(context);
-  return token ? await (options.verifyRuntimeToken?.(token) ?? false) : false;
+  if (!token) {
+    return false;
+  }
+  if (await (options.verifyRuntimeToken?.(token) ?? false)) {
+    return true;
+  }
+  return await (options.verifyRuntimeJwt?.(token) ?? false);
 }
 
 function readBearerToken(context: Context): string | undefined {

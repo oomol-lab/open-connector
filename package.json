@@ -37,6 +37,7 @@
     "fast-xml-parser": "^5.9.3",
     "hono": "^4.12.27",
     "imapflow": "^1.4.6",
+    "jose": "^6.2.3",
     "mailparser": "^3.9.14",
     "mdast-util-from-markdown": "^2.0.3",
     "mdast-util-gfm": "^3.1.0",

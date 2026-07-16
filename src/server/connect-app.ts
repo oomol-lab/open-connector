@@ -1,6 +1,7 @@
 import type { CatalogStore } from "../catalog-store.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
+import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
 import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
@@ -24,6 +25,7 @@ export interface ConnectAppOptions {
   secretCodec: ISecretCodec;
   adminToken?: string;
   runtimeToken?: string;
+  verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
   registerStaticRoutes?: (app: Hono) => void;
   logger?: Logger;
@@ -81,12 +83,14 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         runtimeToken: options.runtimeToken,
         hasRuntimeTokens: hasStoredRuntimeTokens,
         verifyRuntimeToken: (token) => runtimeTokens.verifyToken(token),
+        verifyRuntimeJwt: options.verifyRuntimeJwt,
       },
       actionPolicy: options.actionPolicy,
       logger: options.logger,
     }).createApp(),
     runtimeAuthConfigured:
       Boolean(options.runtimeToken) ||
+      Boolean(options.verifyRuntimeJwt) ||
       (options.computeRuntimeAuthConfigured === false ? false : await hasStoredRuntimeTokens()),
   };
 }

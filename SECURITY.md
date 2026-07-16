@@ -127,11 +127,11 @@ responsibility for securing their deployment. At minimum:
   fingerprint, claim state, and timestamps remain unencrypted metadata. Store the encryption key
   outside the database; losing it makes encrypted records unrecoverable.
 - **Require authentication.** Set `OOMOL_CONNECT_ADMIN_TOKEN` to protect `/api`, `/docs`, and the Web
-  Console, and issue scoped runtime tokens for `/v1` and `/mcp`. Both are disabled by default for
-  local development.
+  Console, and issue scoped runtime tokens or configure JWT access-token verification for `/v1` and
+  `/mcp`. Both admin and runtime authentication are disabled by default for local development.
 - **Control network exposure.** The Node server binds `127.0.0.1` by default; the Docker image binds
   `0.0.0.0`. Only expose the gateway on a trusted network or behind an authenticated proxy, and never
-  expose it publicly without admin and runtime tokens set.
+  expose it publicly without admin and runtime authentication enabled.
 - **Protect the data store.** The SQLite database (local), D1 (Cloudflare), and R2 transit files
   contain sensitive material even when encrypted. Restrict file permissions and access, and store
   Cloudflare secrets with `wrangler secret put`. Idempotent Action responses are eligible for replay

@@ -58,6 +58,9 @@ export class RuntimeTokenService {
   }
 
   async verifyToken(token: string): Promise<boolean> {
+    if (!token.startsWith(tokenPrefix)) {
+      return false;
+    }
     const tokenHash = hashRuntimeToken(token);
     const matched = (await this.store.list()).find((record) => equalHashes(record.tokenHash, tokenHash));
     if (!matched) {

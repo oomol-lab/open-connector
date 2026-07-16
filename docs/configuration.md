@@ -12,6 +12,9 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                     |
 | `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.         |
 | `OOMOL_CONNECT_RUNTIME_TOKEN`            | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.             |
+| `OOMOL_CONNECT_JWKS_URI`                 | unset                     | Node-only JWKS endpoint for validating runtime JWT access tokens.              |
+| `OOMOL_CONNECT_JWT_ISSUER`               | unset                     | Expected `iss` claim for runtime JWT access tokens.                            |
+| `OOMOL_CONNECT_JWT_AUDIENCE`             | unset                     | Expected API `aud` claim for runtime JWT access tokens.                        |
 | `OOMOL_CONNECT_ALLOWED_ACTIONS`          | unset                     | Comma-separated executable action allowlist. Supports `service.*` and `*`.     |
 | `OOMOL_CONNECT_BLOCKED_ACTIONS`          | unset                     | Comma-separated executable action denylist. Supports `service.*` and `*`.      |
 | `OOMOL_CONNECT_ALLOWED_PROXIES`          | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.      |
@@ -34,6 +37,33 @@ npm run dev
 Create persistent runtime tokens from the web console Access tab or `POST /api/runtime-tokens`.
 Only token hashes are stored in SQLite. `OOMOL_CONNECT_RUNTIME_TOKEN` remains available for
 bootstrap scripts and backward compatibility.
+
+## JWT access tokens
+
+The Node server can validate JWT access tokens issued by an existing identity provider for `/v1/*`
+and `/mcp`. Configure all three settings together:
+
+```bash
+OOMOL_CONNECT_JWKS_URI="https://idp.example.com/oauth2/jwks" \
+OOMOL_CONNECT_JWT_ISSUER="https://idp.example.com" \
+OOMOL_CONNECT_JWT_AUDIENCE="https://connect-api.example.com" \
+npm run dev
+```
+
+`OOMOL_CONNECT_JWKS_URI` must be the direct HTTP or HTTPS JWKS endpoint, not an OIDC discovery URL.
+`OOMOL_CONNECT_JWT_AUDIENCE` should identify this API resource, not a web application's OIDC client.
+OpenConnector validates the JWT signature, issuer, audience, and standard token time claims. Clients
+send the access token as `Authorization: Bearer <jwt>`.
+
+JWT authentication is additive: the bootstrap runtime token and persistent `oct_...` tokens remain
+valid when JWT verification is configured. For a JWT-only deployment, leave
+`OOMOL_CONNECT_RUNTIME_TOKEN` unset and revoke any persistent runtime tokens. JWTs do not grant
+access to the admin API, docs, or web console, so configure `OOMOL_CONNECT_ADMIN_TOKEN` separately
+before exposing those surfaces.
+
+OpenConnector acts only as a resource server. It does not implement OIDC discovery or login, accept
+ID tokens as API credentials, or map JWT claims to action and proxy policy. JWT verification is
+currently available only on the Node server, not Cloudflare Workers.
 
 ## Private network access
 
@@ -65,9 +95,9 @@ The following targets stay blocked even when the flag is enabled:
 
 ## Cloudflare Workers
 
-Cloudflare uses the same environment variable names for origin, auth tokens, execution policy,
-transit file limits, and data encryption. `PORT`, `HOST`, and `OOMOL_CONNECT_DATA_DIR` are local
-Node-only settings on Workers.
+Cloudflare uses the same environment variable names for origin, static auth tokens, execution
+policy, transit file limits, and data encryption. The JWT settings above, `PORT`, `HOST`, and
+`OOMOL_CONNECT_DATA_DIR` are Node-only settings.
 
 The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
 `wrangler.example.jsonc` to `wrangler.local.jsonc` and fill in your own Cloudflare resource IDs

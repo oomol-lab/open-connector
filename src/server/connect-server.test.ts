@@ -12,6 +12,7 @@ import type { IOAuthClientConfigStore, OAuthClientConfig } from "../oauth/oauth-
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-flow-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
+import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { Logger } from "./logger.ts";
 import type {
   CompleteIdempotencyInput,
@@ -319,6 +320,82 @@ describe("ConnectServer", () => {
       body: JSON.stringify({ input: {} }),
     });
     expect(adminActionRun.status).toBe(404);
+  });
+
+  it("accepts JWT access tokens alongside existing runtime tokens", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const storedToken = await runtimeTokens.createToken("Stored client");
+    const verifyRuntimeJwt = vi.fn(async (token: string) => token === "jwt-access-token");
+    const app = createTestServer([apiKeyProvider], {
+      auth: {
+        adminToken: "local-token",
+        runtimeToken: "runtime-token",
+        verifyRuntimeJwt,
+      },
+      runtimeTokens,
+    }).createApp();
+
+    expect((await app.request("/v1/actions")).status).toBe(401);
+    expect(
+      (
+        await app.request("/v1/actions", {
+          headers: { authorization: "Bearer jwt-access-token" },
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await app.request("/mcp/tools", {
+          headers: { authorization: "Bearer jwt-access-token" },
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await app.request("/api/providers/example", {
+          headers: { authorization: "Bearer jwt-access-token" },
+        })
+      ).status,
+    ).toBe(401);
+    expect(
+      (
+        await app.request("/v1/actions", {
+          headers: { authorization: "Bearer runtime-token" },
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await app.request("/v1/actions", {
+          headers: { authorization: `Bearer ${storedToken.token}` },
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await app.request("/v1/actions", {
+          headers: { authorization: "Bearer invalid-token" },
+        })
+      ).status,
+    ).toBe(401);
+  });
+
+  it("requires authentication when JWT is the only configured runtime credential", async () => {
+    const app = createTestServer([apiKeyProvider], {
+      auth: {
+        adminToken: "local-token",
+        verifyRuntimeJwt: async (token) => token === "jwt-access-token",
+      },
+    }).createApp();
+
+    expect((await app.request("/v1/actions")).status).toBe(401);
+    expect(
+      (
+        await app.request("/v1/actions", {
+          headers: { authorization: "Bearer jwt-access-token" },
+        })
+      ).status,
+    ).toBe(200);
   });
 
   it("serves API routes when static routes are disabled", async () => {
@@ -2196,8 +2273,14 @@ describe("ConnectServer", () => {
   });
 });
 
+interface TestAuthOptions {
+  adminToken?: string;
+  runtimeToken?: string;
+  verifyRuntimeJwt?: RuntimeJwtVerifier;
+}
+
 interface CreateTestServerOptions {
-  auth?: { adminToken?: string; runtimeToken?: string };
+  auth?: TestAuthOptions;
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
   providerLoader?: IProviderLoader;
@@ -2266,6 +2349,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       ...options.auth,
       hasRuntimeTokens: async () => (await runtimeTokens.listTokens()).length > 0,
       verifyRuntimeToken: (token) => runtimeTokens.verifyToken(token),
+      verifyRuntimeJwt: options.auth?.verifyRuntimeJwt,
     },
     actionPolicy: options.actionPolicy,
     actionSearch: options.actionSearch,

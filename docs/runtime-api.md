@@ -15,12 +15,18 @@ of the README.
 | Action guide     | `GET /api/actions/:actionId/agent.md` | Agent-readable markdown guide for one Action.                                            |
 | Web Console      | `GET /`                               | Browser workflow for browsing providers, configuring credentials, and debugging Actions. |
 
-When `OOMOL_CONNECT_RUNTIME_TOKEN` or persistent runtime tokens are configured, `/v1/*` and `/mcp`
-callers should send:
+When runtime authentication is configured, `/v1/*` and `/mcp` callers should send a bootstrap token,
+persistent runtime token, or JWT access token as:
 
 ```text
-Authorization: Bearer oct_...
+Authorization: Bearer <runtime-token-or-jwt>
 ```
+
+The Node server accepts JWT access tokens when `OOMOL_CONNECT_JWKS_URI`,
+`OOMOL_CONNECT_JWT_ISSUER`, and `OOMOL_CONNECT_JWT_AUDIENCE` are configured together. JWT
+authentication coexists with existing runtime tokens and does not apply to admin endpoints. See
+[Configuration](configuration.md#jwt-access-tokens) for the resource-server scope and Node-only
+limitations.
 
 Admin endpoints under `/api/*`, `/docs`, and the Web Console use `OOMOL_CONNECT_ADMIN_TOKEN` when it
 is configured.

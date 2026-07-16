@@ -6,6 +6,7 @@ import { ActionPolicyService, parseActionPolicyList } from "../core/action-polic
 import { parsePrivateNetworkAccessFlag, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executableActionIds, executorModules } from "../providers/registry.generated.ts";
+import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { TransitFileService } from "./files/transit-files.ts";
@@ -22,6 +23,11 @@ const transitFileMaxBytes = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_M
 const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
 const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
 const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
+const verifyRuntimeJwt = createRuntimeJwtVerifier({
+  jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
+  issuer: process.env.OOMOL_CONNECT_JWT_ISSUER,
+  audience: process.env.OOMOL_CONNECT_JWT_AUDIENCE,
+});
 const actionPolicy = new ActionPolicyService({
   allowedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_ACTIONS),
   blockedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_ACTIONS),
@@ -55,6 +61,7 @@ const { app, runtimeAuthConfigured } = await createConnectApp({
   secretCodec,
   adminToken,
   runtimeToken,
+  verifyRuntimeJwt,
   actionPolicy,
   registerStaticRoutes: (app) => registerStaticRoutes(app, staticRoot),
   logger,
@@ -83,7 +90,7 @@ serve(
     }
     if (!runtimeAuthConfigured) {
       logger.warn(
-        "runtime API authentication is disabled; create a runtime token in the web console or set OOMOL_CONNECT_RUNTIME_TOKEN",
+        "runtime API authentication is disabled; create a runtime token in the web console, set OOMOL_CONNECT_RUNTIME_TOKEN, or configure JWT authentication",
       );
     }
     if (!secretCodec.encrypted) {
