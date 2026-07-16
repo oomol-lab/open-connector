@@ -289,8 +289,16 @@ npm run dev
 ```
 
 Provider proxy requests use separate service-level policy variables because `/v1/proxy/:service`
-can reach provider API endpoints beyond the curated action catalog. If any action policy is
-configured, proxy requests are denied by default unless the service is explicitly allowed:
+can reach provider API endpoints beyond the curated action catalog. Action policy and proxy policy
+are independent: the action variables never restrict proxies, and the proxy variables never restrict
+actions. Every provider proxy is allowed until you restrict it:
+
+```bash
+OOMOL_CONNECT_ALLOWED_PROXIES="github" npm run dev
+```
+
+Set `OOMOL_CONNECT_BLOCKED_PROXIES="*"` to disable `/v1/proxy/:service` entirely. Restrict both
+surfaces when you want both restricted:
 
 ```bash
 OOMOL_CONNECT_ALLOWED_ACTIONS="github.get_current_user" \

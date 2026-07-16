@@ -58,16 +58,26 @@ describe("ActionPolicyService", () => {
     expect(new ActionPolicyService().evaluateProxy("github")).toEqual({ allowed: true });
   });
 
-  it("requires explicit proxy allowlists when action policy is configured", () => {
+  it("ignores action policy when evaluating proxies", () => {
     expect(new ActionPolicyService({ allowedActions: ["github.get_current_user"] }).evaluateProxy("github")).toEqual({
-      allowed: false,
-      code: "proxy_not_allowed",
-      message: "github proxy must be explicitly allowed when local action policy is configured.",
+      allowed: true,
     });
     expect(new ActionPolicyService({ blockedActions: ["github.delete_repository"] }).evaluateProxy("github")).toEqual({
+      allowed: true,
+    });
+    expect(new ActionPolicyService({ allowedActions: ["*"] }).evaluateProxy("github")).toEqual({ allowed: true });
+    expect(new ActionPolicyService({ blockedActions: ["*"] }).evaluateProxy("github")).toEqual({ allowed: true });
+  });
+
+  it("ignores proxy policy when evaluating actions", () => {
+    expect(new ActionPolicyService({ blockedProxies: ["*"] }).evaluate(action)).toEqual({ allowed: true });
+    expect(new ActionPolicyService({ allowedProxies: ["slack"] }).evaluate(action)).toEqual({ allowed: true });
+  });
+
+  it("disables every proxy with a blocked wildcard", () => {
+    expect(new ActionPolicyService({ blockedProxies: ["*"] }).evaluateProxy("github")).toMatchObject({
       allowed: false,
-      code: "proxy_not_allowed",
-      message: "github proxy must be explicitly allowed when local action policy is configured.",
+      code: "proxy_blocked",
     });
   });
 

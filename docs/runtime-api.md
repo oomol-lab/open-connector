@@ -195,8 +195,9 @@ Successful responses use the standard `/v1` success envelope with `data.status`,
 `data.data`.
 
 Proxy requests are controlled by `OOMOL_CONNECT_ALLOWED_PROXIES` and
-`OOMOL_CONNECT_BLOCKED_PROXIES`. When action policy is configured, provider proxies are denied by
-default unless explicitly allowlisted.
+`OOMOL_CONNECT_BLOCKED_PROXIES`, and by nothing else: action policy does not affect them. Every
+provider proxy is allowed until one of those variables restricts it, and
+`OOMOL_CONNECT_BLOCKED_PROXIES="*"` disables provider proxies entirely.
 
 ## Local Admin Endpoints
 
