@@ -49,7 +49,14 @@ describe("Tailscale provider integration", () => {
         return Response.json({ version: "1.0", tailnet: "example.ts.net", logs: [] });
       }
       if (url.startsWith("https://api.tailscale.com/api/v2/tailnet/-/acl/preview?") && init?.method === "POST") {
-        return Response.json([{ action: "accept", src: ["group:engineering"], dst: ["tag:server:22"] }]);
+        return Response.json({
+          matches: [{ users: ["group:engineering"], ports: ["tag:server:22"], lineNumber: 19 }],
+          type: "user",
+          previewFor: "alice@example.com",
+        });
+      }
+      if (url.startsWith("https://api.tailscale.com/api/v2/tailnet/-/users?")) {
+        return Response.json({ users: [{ id: "u1", loginName: "alice@example.com", type: "member" }] });
       }
       return Response.json({ message: "not found" }, { status: 404 });
     });
@@ -136,43 +143,70 @@ describe("Tailscale provider integration", () => {
         },
         connections.forConnection("production"),
       ),
-    ).resolves.toMatchObject({ ok: true, output: [{ action: "accept" }] });
+    ).resolves.toMatchObject({
+      ok: true,
+      output: { matches: [{ users: ["group:engineering"], ports: ["tag:server:22"], lineNumber: 19 }] },
+    });
+    // Output is never validated at runtime, so agents rely on this schema alone to read the result.
+    expect(previewAction.outputSchema).toMatchObject({
+      type: "object",
+      required: ["matches"],
+      properties: { matches: { type: "array" } },
+    });
 
-    expect(tokenRequests).toBe(5);
+    const usersAction = catalog.actionsById.get("tailscale.list_users")!;
+    const usersExecutor = await providerLoader.loadActionExecutor("tailscale", usersAction.id, provider.displayName);
+    await expect(
+      executeAction(usersAction, usersExecutor, {}, connections.forConnection("production")),
+    ).resolves.toMatchObject({ ok: true, output: { users: [{ id: "u1" }] } });
+
+    await expect(
+      executeAction(usersAction, usersExecutor, { type: "member" }, connections.forConnection("production")),
+    ).resolves.toMatchObject({ ok: true });
+    expect(apiUrls.at(-1)).toBe("https://api.tailscale.com/api/v2/tailnet/-/users?type=member");
+
+    expect(tokenRequests).toBe(7);
     expect(apiAuthorizations).toEqual([
       "Bearer tailscale-token-1",
       "Bearer tailscale-token-2",
       "Bearer tailscale-token-3",
       "Bearer tailscale-token-4",
       "Bearer tailscale-token-5",
+      "Bearer tailscale-token-6",
+      "Bearer tailscale-token-7",
     ]);
     const tokenBodies = fetcher.mock.calls
       .filter(([input]) => String(input) === "https://api.tailscale.com/api/v2/oauth/token")
       .map(([, init]) => Object.fromEntries(new URLSearchParams(String(init?.body))));
-    expect(tokenBodies.map((body) => body.scope)).toEqual([
-      "devices:core:read",
-      "devices:core:read",
-      "devices:core:read",
-      "logs:configuration:read",
-      "policy_file:read",
+    const credential = { grant_type: "client_credentials", client_id: "client-id", client_secret: "client-secret" };
+    // Credential validation omits `scope` entirely so that any OAuth client can connect; each action
+    // then requests exactly the scopes its own operation declares.
+    expect(tokenBodies).toEqual([
+      credential,
+      { ...credential, scope: "devices:core:read" },
+      { ...credential, scope: "devices:core:read" },
+      { ...credential, scope: "logs:configuration:read" },
+      { ...credential, scope: "policy_file:read" },
+      { ...credential, scope: "users:read" },
+      { ...credential, scope: "users:read" },
     ]);
-    expect(tokenBodies).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          grant_type: "client_credentials",
-          client_id: "client-id",
-          client_secret: "client-secret",
-        }),
-      ]),
-    );
-    expect(apiUrls.at(-2)).toBe(
+    expect(apiUrls).toEqual([
+      "https://api.tailscale.com/api/v2/tailnet/-/devices",
+      "https://api.tailscale.com/api/v2/tailnet/-/devices",
+      "https://api.tailscale.com/api/v2/device/n123",
       "https://api.tailscale.com/api/v2/tailnet/-/logging/configuration?start=2026-07-01T00%3A00%3A00Z&end=2026-07-02T00%3A00%3A00Z&actor=user-1&actor=%7Ealice&event=USER.CREATE",
-    );
-    expect(apiUrls.at(-1)).toBe(
       "https://api.tailscale.com/api/v2/tailnet/-/acl/preview?type=user&previewFor=alice%40example.com",
+      // Tailscale defaults `type` to `member`, so the operation sends `all` to keep an unfiltered
+      // call genuinely unfiltered instead of silently dropping shared users.
+      "https://api.tailscale.com/api/v2/tailnet/-/users?type=all",
+      // An explicit filter still wins over that default.
+      "https://api.tailscale.com/api/v2/tailnet/-/users?type=member",
+    ]);
+    expect(apiMethods).toEqual(["GET", "GET", "GET", "GET", "POST", "GET", "GET"]);
+    const previewCall = fetcher.mock.calls.find(([input]) =>
+      String(input).startsWith("https://api.tailscale.com/api/v2/tailnet/-/acl/preview?"),
     );
-    expect(apiMethods.at(-1)).toBe("POST");
-    expect(fetcher.mock.calls.at(-1)?.[1]).toEqual(
+    expect(previewCall?.[1]).toEqual(
       expect.objectContaining({
         body: JSON.stringify({
           acls: [{ action: "accept", src: ["group:engineering"], dst: ["tag:server:22"] }],
@@ -180,6 +214,88 @@ describe("Tailscale provider integration", () => {
       }),
     );
     expect(provider.actions).toHaveLength(32);
+  });
+
+  it("connects an OAuth client that was never granted device read access", async () => {
+    setDefaultGuardedFetchDnsLookup(null);
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://api.tailscale.com/api/v2/oauth/token") {
+        // This client holds only dns:read, so Tailscale refuses to mint a token for any other
+        // scope. Omitting `scope` asks for nothing in particular and yields what the client holds.
+        const requestedScope = new URLSearchParams(String(init?.body)).get("scope");
+        if (requestedScope !== null && requestedScope !== "dns:read") {
+          return Response.json(
+            { error: "invalid_scope", error_description: `client is not permitted scope ${requestedScope}` },
+            { status: 400 },
+          );
+        }
+        return Response.json({ access_token: "dns-token", token_type: "Bearer", expires_in: 3600, scope: "dns:read" });
+      }
+      return Response.json({ message: "not found" }, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    const catalog = createCatalogStore([provider], {
+      executableActionIds: provider.actions.map((action) => action.id),
+    });
+    const connectionStore = new MemoryConnectionStore();
+    const connections = new ConnectionService({
+      catalog,
+      providerLoader: new ProviderLoader({ tailscale: () => import("./executors.ts") }),
+      store: connectionStore,
+    });
+
+    // The scope-free token exchange proves the credential, so the connection succeeds and reports
+    // the scopes Tailscale actually granted rather than the device scope this client lacks.
+    await expect(
+      connections.connectWithCustomCredential("tailscale", {
+        connectionName: "dns-only",
+        values: { clientId: "client-id", clientSecret: "client-secret" },
+      }),
+    ).resolves.toMatchObject({
+      configured: true,
+      profile: { grantedScopes: ["dns:read"] },
+    });
+    const stored = await connectionStore.get("tailscale", "dns-only");
+    if (stored?.authType !== "custom_credential") {
+      throw new Error("expected a stored custom credential");
+    }
+    expect(stored.metadata).toEqual({ tailnet: "-" });
+    // The device probe is skipped rather than attempted-and-forgiven, so only the token exchange ran.
+    expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual(["https://api.tailscale.com/api/v2/oauth/token"]);
+  });
+
+  it("rejects a credential whose tailnet does not exist", async () => {
+    setDefaultGuardedFetchDnsLookup(null);
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url === "https://api.tailscale.com/api/v2/oauth/token") {
+        return Response.json({
+          access_token: "device-token",
+          token_type: "Bearer",
+          expires_in: 3600,
+          scope: "devices:core:read",
+        });
+      }
+      return Response.json({ message: "tailnet not found" }, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    const connections = new ConnectionService({
+      catalog: createCatalogStore([provider], { executableActionIds: provider.actions.map((action) => action.id) }),
+      providerLoader: new ProviderLoader({ tailscale: () => import("./executors.ts") }),
+      store: new MemoryConnectionStore(),
+    });
+
+    // The token is valid and can read devices, so a failing probe is a real error — a mistyped
+    // tailnet must surface here instead of leaving every action to fail with an opaque 404.
+    await expect(
+      connections.connectWithCustomCredential("tailscale", {
+        connectionName: "typo",
+        values: { clientId: "client-id", clientSecret: "client-secret", tailnet: "typo.example.net" },
+      }),
+    ).rejects.toThrow(/tailnet not found/);
   });
 });
 

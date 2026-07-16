@@ -10,7 +10,7 @@ import {
   readProviderTextBody,
   requireCustomCredential,
 } from "../provider-runtime.ts";
-import { tailscaleDeviceReadScope, tailscaleOperations } from "./operations.ts";
+import { tailscaleOperations } from "./operations.ts";
 
 const service = "tailscale";
 const tailscaleApiBaseUrl = "https://api.tailscale.com/api/v2";
@@ -28,6 +28,7 @@ interface TailscaleContext {
 interface TailscaleAccessToken {
   accessToken: string;
   tokenType: string;
+  grantedScopes: string[];
 }
 
 const tailscaleActionHandlers = Object.fromEntries(
@@ -47,28 +48,50 @@ export const executors: ProviderExecutors = defineProviderExecutors<TailscaleCon
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {
     const context = readTailscaleContext(input.values, fetcher, signal);
-    const payload = await tailscaleRequestUrl(
-      new URL(`${tailscaleApiBaseUrl}/tailnet/${encodeURIComponent(context.tailnet)}/devices`),
-      context,
-      { method: "GET" },
-      [tailscaleDeviceReadScope],
-      "json",
-    );
-    const devices = optionalRecord(payload)?.devices;
+    const token = await requestTailscaleAccessToken(context, []);
+    const metadata: Record<string, unknown> = { tailnet: context.tailnet };
+    if (grantsTailscaleDeviceRead(token.grantedScopes)) {
+      metadata.verifiedDeviceCount = await countTailscaleDevices(context, token);
+    }
     return {
       profile: {
         accountId: `tailscale:${context.tailnet}`,
         displayName: context.tailnet === defaultTailnet ? "Tailscale tailnet" : context.tailnet,
-        grantedScopes: [tailscaleDeviceReadScope],
+        grantedScopes: token.grantedScopes,
       },
-      grantedScopes: [tailscaleDeviceReadScope],
-      metadata: {
-        tailnet: context.tailnet,
-        verifiedDeviceCount: Array.isArray(devices) ? devices.length : 0,
-      },
+      grantedScopes: token.grantedScopes,
+      metadata,
     };
   },
 };
+
+/**
+ * Whether a token can read devices, so validation only probes when the probe can succeed.
+ *
+ * Tailscale reports the coarse `devices` scope or a fine-grained `devices:core*` scope; a client
+ * scoped for only the DNS, policy, or logging actions has neither and skips the probe entirely.
+ */
+function grantsTailscaleDeviceRead(grantedScopes: readonly string[]): boolean {
+  return grantedScopes.some((scope) => scope === "devices" || scope.startsWith("devices:core"));
+}
+
+/**
+ * Count devices for connection metadata, reusing the validation token.
+ *
+ * Failures propagate: reaching this point means the token can read devices, so an error here is a
+ * real problem — a mistyped `tailnet` above all — and must fail the connection rather than hide.
+ */
+async function countTailscaleDevices(context: TailscaleContext, token: TailscaleAccessToken): Promise<number> {
+  const payload = await tailscaleRequestWithToken(
+    new URL(`${tailscaleApiBaseUrl}/tailnet/${encodeURIComponent(context.tailnet)}/devices`),
+    context,
+    { method: "GET" },
+    token,
+    "json",
+  );
+  const devices = optionalRecord(payload)?.devices;
+  return Array.isArray(devices) ? devices.length : 0;
+}
 
 function createOperationHandler(operation: TailscaleOperationDefinition): ProviderRuntimeHandler<TailscaleContext> {
   return async (input, context): Promise<unknown> => {
@@ -121,7 +144,7 @@ function resolveOperationPath(
 
 function appendOperationQuery(url: URL, operation: TailscaleOperationDefinition, input: Record<string, unknown>): void {
   for (const parameter of operation.queryParameters ?? []) {
-    const value = input[parameter.inputName];
+    const value = input[parameter.inputName] ?? parameter.defaultValue;
     if (value === undefined) {
       continue;
     }
@@ -163,10 +186,14 @@ async function requestTailscaleAccessToken(
 ): Promise<TailscaleAccessToken> {
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    scope: requiredScopes.join(" "),
     client_id: context.clientId,
     client_secret: context.clientSecret,
   });
+  // An empty scope list mints a token carrying every scope the OAuth client holds, which is how
+  // Tailscale's own clients verify a credential without assuming any particular scope.
+  if (requiredScopes.length > 0) {
+    body.set("scope", requiredScopes.join(" "));
+  }
   const response = await context.fetcher(tailscaleOAuthTokenUrl, {
     method: "POST",
     headers: {
@@ -190,6 +217,7 @@ async function requestTailscaleAccessToken(
   return {
     accessToken,
     tokenType: optionalString(record?.token_type) ?? "Bearer",
+    grantedScopes: optionalString(record?.scope)?.split(/\s+/).filter(Boolean) ?? [],
   };
 }
 
@@ -201,6 +229,16 @@ async function tailscaleRequestUrl(
   responseFormat: "json" | "text",
 ): Promise<unknown> {
   const token = await requestTailscaleAccessToken(context, requiredScopes);
+  return tailscaleRequestWithToken(url, context, init, token, responseFormat);
+}
+
+async function tailscaleRequestWithToken(
+  url: URL,
+  context: TailscaleContext,
+  init: RequestInit,
+  token: TailscaleAccessToken,
+  responseFormat: "json" | "text",
+): Promise<unknown> {
   const headers = new Headers(init.headers);
   headers.set("accept", "application/json");
   headers.set("authorization", `${token.tokenType} ${token.accessToken}`);

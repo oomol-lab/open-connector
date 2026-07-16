@@ -7,7 +7,8 @@ const service = "tailscale";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Tailscale",
-  description: "Manage devices in a Tailscale tailnet through the official REST API.",
+  description:
+    "Read devices, DNS, users, keys, policy files, logs, and settings from a Tailscale tailnet through the official REST API.",
   categories: ["Security", "Developer Tools"],
   authTypes: ["custom_credential"],
   auth: [

@@ -8,6 +8,8 @@ export interface TailscaleQueryParameter {
   inputName: string;
   parameterName: string;
   repeated?: boolean;
+  /** Sent when the caller omits the input, to override a Tailscale server-side default. */
+  defaultValue?: string;
 }
 
 export interface TailscaleOperationDefinition {
@@ -201,13 +203,15 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     method: "GET",
     path: "/tailnet/-/users",
     queryParameters: [
-      { inputName: "type", parameterName: "type" },
+      { inputName: "type", parameterName: "type", defaultValue: "all" },
       { inputName: "role", parameterName: "role" },
     ],
     requiredScopes: ["users:read"],
     inputSchema: s.actionInput(
       {
-        type: s.stringEnum(["member", "shared", "all"], { description: "User type filter." }),
+        type: s.stringEnum(["member", "shared", "all"], {
+          description: "User type filter. Defaults to all users, including users shared into the tailnet.",
+        }),
         role: s.stringEnum(
           ["owner", "member", "admin", "it-admin", "network-admin", "billing-admin", "auditor", "all"],
           {
@@ -415,9 +419,24 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
       ["type", "previewFor", "policy"],
       "Tailscale policy rule preview input.",
     ),
-    outputSchema: s.array(objectOutput("A matching policy rule."), {
-      description: "The proposed policy rules matching the requested resource.",
-    }),
+    outputSchema: s.object(
+      {
+        matches: s.array(
+          s.looseObject(
+            {
+              users: stringList("Source entities affected by the rule."),
+              ports: stringList("Destinations that can be accessed."),
+              lineNumber: s.integer("The rule's location in the policy file."),
+            },
+            { description: "A matching policy rule." },
+          ),
+          { description: "The proposed policy rules matching the requested resource." },
+        ),
+        type: s.string("Echoes the resource type provided in the request."),
+        previewFor: s.string("Echoes the previewed user or IP address and port provided in the request."),
+      },
+      { required: ["matches"], description: "The proposed policy rules matching the requested resource." },
+    ),
   },
   {
     name: "validate_policy_file",
