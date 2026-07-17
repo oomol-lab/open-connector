@@ -168,10 +168,26 @@ describe("SqliteRuntimeDatabase", () => {
       apiKey: "updated-token",
     });
     expect(updated.id).toBe(created.id);
+    await expect(
+      database.connectionStore.updateCredential({
+        ...updated,
+        credential: { ...credential, apiKey: "refreshed-token" },
+      }),
+    ).resolves.toBe(true);
 
     await database.connectionStore.delete("github", "default");
     const recreated = await database.connectionStore.set("github", "default", credential);
     expect(recreated.id).not.toBe(created.id);
+    await expect(
+      database.connectionStore.updateCredential({
+        ...created,
+        credential: { ...credential, apiKey: "stale-refreshed-token" },
+      }),
+    ).resolves.toBe(false);
+    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+      id: recreated.id,
+      credential: { apiKey: "github-token" },
+    });
     database.close();
   });
 

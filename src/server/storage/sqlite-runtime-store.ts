@@ -164,6 +164,26 @@ export class SqliteConnectionStore implements IConnectionStore {
     return { id: readString(row, "id"), service, connectionName, credential };
   }
 
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const row = this.database
+      .prepare(
+        `
+        update connections
+        set value = ?, updated_at = ?
+        where service = ? and connection_name = ? and id = ?
+        returning id
+      `,
+      )
+      .get(
+        await this.secretCodec.encode(JSON.stringify(input.credential)),
+        new Date().toISOString(),
+        input.service,
+        input.connectionName,
+        input.id,
+      );
+    return row !== undefined;
+  }
+
   async delete(service: string, connectionName: string): Promise<void> {
     this.database
       .prepare("delete from connections where service = ? and connection_name = ?")

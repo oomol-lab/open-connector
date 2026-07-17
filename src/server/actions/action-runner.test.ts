@@ -159,6 +159,10 @@ class MemoryConnectionStore implements IConnectionStore {
     return { id: crypto.randomUUID(), service, connectionName, credential };
   }
 
+  async updateCredential(): Promise<boolean> {
+    return false;
+  }
+
   async delete(): Promise<void> {}
 
   async list(): Promise<StoredConnection[]> {

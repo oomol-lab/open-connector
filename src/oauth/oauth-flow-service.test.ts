@@ -588,6 +588,13 @@ class MemoryConnectionStore implements IConnectionStore {
     return connection;
   }
 
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const key = createConnectionKey(input.service, input.connectionName);
+    if (this.store.get(key)?.id !== input.id) return false;
+    this.store.set(key, input);
+    return true;
+  }
+
   async delete(service: string, connectionName: string): Promise<void> {
     this.store.delete(createConnectionKey(service, connectionName));
   }

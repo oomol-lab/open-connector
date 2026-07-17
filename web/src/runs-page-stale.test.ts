@@ -89,6 +89,19 @@ beforeEach(() => {
 });
 
 describe("RunsPage service loading", () => {
+  it("clears stale rows and pagination when a filtered request fails", async () => {
+    apiMock.apiGet.mockRejectedValue(new Error("filtered request failed"));
+
+    renderRunsPage("gmail", "initial-next");
+    runLatestEffect();
+    await flushMicrotasks();
+
+    expect(hookState.stateSetters[0]).toHaveBeenCalledWith([]);
+    expect(hookState.stateSetters[1]).toHaveBeenCalledWith(undefined);
+    expect(hookState.stateValues[0]).toEqual([]);
+    expect(hookState.stateValues[1]).toBeUndefined();
+  });
+
   it("ignores stale service responses after the selected service changes", async () => {
     const requests = new Map<string, (page: RunLogPage) => void>();
     apiMock.apiGet.mockImplementation(

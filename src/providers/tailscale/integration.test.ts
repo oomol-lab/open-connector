@@ -594,6 +594,13 @@ class MemoryConnectionStore implements IConnectionStore {
     return connection;
   }
 
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const key = `${input.service}:${input.connectionName}`;
+    if (this.connections.get(key)?.id !== input.id) return false;
+    this.connections.set(key, input);
+    return true;
+  }
+
   async delete(service: string, connectionName: string): Promise<void> {
     this.connections.delete(`${service}:${connectionName}`);
   }

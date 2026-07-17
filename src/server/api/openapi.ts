@@ -713,8 +713,10 @@ function createRunPath(): Record<string, unknown> {
           ),
         ),
         400: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
+        403: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
         404: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
         409: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema), idempotencyConflictDescription),
+        429: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
         500: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
       },
     },
@@ -999,8 +1001,10 @@ function createConcreteRunOperation(action: ActionDefinition): Record<string, un
     responses: {
       200: jsonResponse(runtimeSuccessSchema(action.outputSchema, actionResultMetaSchema)),
       400: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
+      403: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
       404: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
       409: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema), idempotencyConflictDescription),
+      429: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
       500: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
     },
   };

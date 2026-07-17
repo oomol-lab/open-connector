@@ -76,6 +76,7 @@ export interface ExecutionConnection {
 export interface IConnectionStore {
   get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
   set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection>;
+  updateCredential(input: StoredConnection): Promise<boolean>;
   delete(service: string, connectionName: string): Promise<void>;
   list(): Promise<StoredConnection[]>;
 }
@@ -212,9 +213,9 @@ export class ConnectionService {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
     }
 
-    let credential = stored?.credential;
-    if (credential?.authType === "oauth2") {
-      credential = await this.resolveOAuthCredential(service, name, credential);
+    let credential: ResolvedCredential | undefined = stored?.credential;
+    if (stored?.credential.authType === "oauth2") {
+      credential = await this.resolveOAuthCredential(stored, stored.credential);
     }
     credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
     const summary = stored
@@ -235,7 +236,7 @@ export class ConnectionService {
     const stored = await this.store.get(service, name);
     if (stored) {
       return stored.credential.authType === "oauth2"
-        ? await this.resolveOAuthCredential(service, name, stored.credential)
+        ? await this.resolveOAuthCredential(stored, stored.credential)
         : stored.credential;
     }
 
@@ -490,10 +491,10 @@ export class ConnectionService {
   }
 
   private async resolveOAuthCredential(
-    service: string,
-    connectionName: string,
+    connection: StoredConnection,
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
   ): Promise<Extract<ResolvedCredential, { authType: "oauth2" }>> {
+    const { id, service, connectionName } = connection;
     if (!isOAuthCredentialExpired(credential)) {
       return credential;
     }
@@ -513,7 +514,13 @@ export class ConnectionService {
     }
 
     const nextCredential = await this.oauthCredentials.refresh(service, credential);
-    await this.store.set(service, connectionName, nextCredential);
+    const updated = await this.store.updateCredential({ id, service, connectionName, credential: nextCredential });
+    if (!updated) {
+      throw new ConnectionError(
+        "connection_not_found",
+        `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
+      );
+    }
     return nextCredential;
   }
 

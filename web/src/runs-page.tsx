@@ -69,6 +69,8 @@ export function RunsPage(props: RunsPageProps): ReactNode {
 
   async function loadFilteredRuns(nextFilters: RunFilters, generation: number): Promise<void> {
     setLoading(true);
+    setRuns([]);
+    setNextCursor(undefined);
     try {
       const page = await apiGet<RunLogPage>(runListPath({ filters: nextFilters }));
       if (generation !== requestGeneration.current) return;
