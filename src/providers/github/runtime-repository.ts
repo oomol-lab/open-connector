@@ -512,7 +512,13 @@ async function listRepositoryContributors(input: Record<string, unknown>, access
   });
 
   // Upstream returns 204 with no body for an empty repository; normalize to an empty list.
-  return { contributors: Array.isArray(payload) ? payload : [] };
+  if (payload === null) {
+    return { contributors: [] };
+  }
+  if (!Array.isArray(payload)) {
+    throw new ProviderRequestError(500, "unexpected github contributors response");
+  }
+  return { contributors: payload };
 }
 
 async function getRepositoryReadme(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {

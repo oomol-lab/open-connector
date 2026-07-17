@@ -1994,7 +1994,7 @@ export const githubActions: ActionDefinition[] = [
   action({
     name: "get_user",
     description: "Get a GitHub user profile by username.",
-    requiredScopes: githubUserReadScopes,
+    requiredScopes: [],
     inputSchema: s.object({
       username: nonEmptyString,
     }),
