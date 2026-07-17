@@ -45,9 +45,27 @@ keep `GET` SSE streams open.
 The MCP server exposes a small discovery-oriented tool set:
 
 - `list_apps`
+- `list_connections`
 - `search_actions`
 - `get_action_guide`
 - `execute_action`
+
+Use `list_connections` to discover configured accounts before selecting one. Both
+`get_action_guide` and `execute_action` accept an optional `connectionName`:
+
+```json
+{
+  "actionId": "example.get_record",
+  "connectionName": "secondary",
+  "input": {
+    "recordId": "record-123"
+  }
+}
+```
+
+Omitting `connectionName` uses the `default` connection. A requested named connection must exist;
+the runtime does not silently fall back to another account. Connection results expose only safe
+account identity fields and never include stored credentials.
 
 Preview MCP tool metadata:
 

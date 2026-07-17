@@ -1,7 +1,7 @@
 import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
 import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
-import type { IRunLogStore, RunLogPage } from "./server/storage/runtime-store.ts";
+import type { IRunLogStore, RunLog, RunLogPage } from "./server/storage/runtime-store.ts";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -38,6 +38,54 @@ const exampleProvider: ProviderDefinition = {
   actions: [echoAction],
 };
 
+const getAccountAction: ActionDefinition = {
+  id: "example_auth.get_account",
+  service: "example_auth",
+  name: "get_account",
+  description: "Return the connected account.",
+  requiredScopes: ["records:read"],
+  providerPermissions: [],
+  inputSchema: {
+    type: "object",
+    properties: {},
+    additionalProperties: false,
+  },
+  outputSchema: { type: "object" },
+};
+
+const authenticatedProvider: ProviderDefinition = {
+  service: "example_auth",
+  displayName: "Authenticated Example",
+  categories: ["Developer Tools"],
+  authTypes: ["api_key"],
+  auth: [{ type: "api_key" }],
+  actions: [getAccountAction],
+};
+
+const defaultCredential: ResolvedCredential = {
+  authType: "api_key",
+  apiKey: "test-token-default",
+  values: { apiKey: "test-token-default" },
+  profile: {
+    accountId: "account-default",
+    displayName: "Default Account",
+    grantedScopes: ["records:read"],
+  },
+  metadata: {},
+};
+
+const secondaryCredential: ResolvedCredential = {
+  authType: "api_key",
+  apiKey: "test-token-secondary",
+  values: { apiKey: "test-token-secondary" },
+  profile: {
+    accountId: "account-secondary",
+    displayName: "Secondary Account",
+    grantedScopes: ["records:read"],
+  },
+  metadata: {},
+};
+
 describe("MCP server", () => {
   it("lists the discovery tools through the MCP protocol", async () => {
     await withMcpClient(async (client) => {
@@ -45,6 +93,7 @@ describe("MCP server", () => {
 
       expect(result.tools.map((tool) => tool.name)).toEqual([
         "list_apps",
+        "list_connections",
         "search_actions",
         "get_action_guide",
         "execute_action",
@@ -57,7 +106,7 @@ describe("MCP server", () => {
       const instructions = client.getInstructions();
 
       expect(instructions).toBeTypeOf("string");
-      expect(instructions).toContain("Start with list_apps or search_actions.");
+      expect(instructions).toContain("use list_connections before choosing among multiple accounts");
       expect(instructions).toContain("Call get_action_guide before execute_action");
     });
   });
@@ -84,10 +133,115 @@ describe("MCP server", () => {
         ],
       });
       expect(run.isError).toBeUndefined();
-      expect(run.structuredContent).toEqual({
+      expect(run.structuredContent).toMatchObject({
         ok: true,
         data: {
           message: "hello",
+        },
+        meta: {
+          executionId: expect.any(String),
+          connection: {
+            service: "example",
+            connectionName: "default",
+            authType: "no_auth",
+            default: true,
+          },
+        },
+      });
+    });
+  });
+
+  it("lists safe connection profiles without exposing credentials", async () => {
+    await withAuthenticatedMcpClient(async (client) => {
+      const result = await client.callTool({
+        name: "list_connections",
+        arguments: { service: "example_auth" },
+      });
+
+      expect(result.isError).toBeUndefined();
+      expect(result.structuredContent).toEqual({
+        ok: true,
+        data: [
+          {
+            id: "example_auth:default",
+            service: "example_auth",
+            connectionName: "default",
+            authType: "api_key",
+            default: true,
+            profile: defaultCredential.profile,
+          },
+          {
+            id: "example_auth:secondary",
+            service: "example_auth",
+            connectionName: "secondary",
+            authType: "api_key",
+            default: false,
+            profile: secondaryCredential.profile,
+          },
+        ],
+      });
+      expect(JSON.stringify(result.structuredContent)).not.toContain("test-token");
+    });
+  });
+
+  it("uses an explicitly selected connection for guides and execution", async () => {
+    const runs = new MemoryRunLogStore();
+    await withAuthenticatedMcpClient(async (client) => {
+      const guide = await client.callTool({
+        name: "get_action_guide",
+        arguments: { actionId: "example_auth.get_account", connectionName: "secondary" },
+      });
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example_auth.get_account", input: {}, connectionName: "secondary" },
+      });
+
+      expect(guide.structuredContent).toMatchObject({
+        ok: true,
+        data: {
+          capability: {
+            connection: {
+              connectionName: "secondary",
+              profile: secondaryCredential.profile,
+            },
+          },
+        },
+      });
+      expect(result.structuredContent).toMatchObject({
+        ok: true,
+        data: { accountId: "account-secondary" },
+        meta: {
+          connection: {
+            connectionName: "secondary",
+            profile: secondaryCredential.profile,
+          },
+        },
+      });
+      expect(JSON.stringify(result.structuredContent)).not.toContain("test-token-secondary");
+      expect(runs.runs).toHaveLength(1);
+      expect(runs.runs[0]).toMatchObject({
+        service: "example_auth",
+        actionId: "example_auth.get_account",
+        caller: "mcp",
+        connectionName: "secondary",
+        connectionProfile: secondaryCredential.profile,
+      });
+    }, runs);
+  });
+
+  it("returns a structured error when a selected connection does not exist", async () => {
+    await withAuthenticatedMcpClient(async (client) => {
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example_auth.get_account", input: {}, connectionName: "missing" },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toEqual({
+        ok: false,
+        error: {
+          code: "connection_not_found",
+          message: "example_auth connection not found: missing.",
         },
       });
     });
@@ -164,8 +318,47 @@ async function withMcpClient(run: (client: Client) => Promise<void>): Promise<vo
   }
 }
 
+async function withAuthenticatedMcpClient(
+  run: (client: Client) => Promise<void>,
+  runs = new MemoryRunLogStore(),
+): Promise<void> {
+  const catalog = createCatalogStore([authenticatedProvider], {
+    executableActionIds: ["example_auth.get_account"],
+  });
+  const providerLoader = new EchoProviderLoader();
+  const connections = new ConnectionService({
+    catalog,
+    providerLoader,
+    store: new MemoryConnectionStore([
+      { service: "example_auth", connectionName: "default", credential: defaultCredential },
+      { service: "example_auth", connectionName: "secondary", credential: secondaryCredential },
+    ]),
+  });
+  const actions = new ActionRunner({ catalog, providerLoader, connections, runs });
+  const server = createMcpServer({ catalog, providerLoader, connections, actions });
+  const client = new Client({ name: "mcp-test", version: "0.0.0" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await server.connect(serverTransport);
+  await client.connect(clientTransport);
+  try {
+    await run(client);
+  } finally {
+    await client.close();
+  }
+}
+
 class EchoProviderLoader implements IProviderLoader {
-  async loadActionExecutor(): Promise<ActionExecutor> {
+  async loadActionExecutor(_service: string, actionId: string): Promise<ActionExecutor> {
+    if (actionId === "example_auth.get_account") {
+      return async (_input, context) => {
+        const credential = await context.getCredential("example_auth");
+        return {
+          ok: true,
+          output: { accountId: credential?.authType === "api_key" ? credential.profile.accountId : undefined },
+        };
+      };
+    }
     return async (input) => ({ ok: true, output: input });
   }
 
@@ -179,23 +372,43 @@ class EchoProviderLoader implements IProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  async get(): Promise<ResolvedCredential | undefined> {
-    return undefined;
+  private readonly connections = new Map<string, StoredConnection>();
+
+  constructor(connections: StoredConnection[] = []) {
+    for (const connection of connections) {
+      this.connections.set(this.key(connection.service, connection.connectionName), connection);
+    }
   }
 
-  async set(): Promise<void> {}
+  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+    return this.connections.get(this.key(service, connectionName))?.credential;
+  }
 
-  async delete(): Promise<void> {}
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
+    this.connections.set(this.key(service, connectionName), { service, connectionName, credential });
+  }
+
+  async delete(service: string, connectionName: string): Promise<void> {
+    this.connections.delete(this.key(service, connectionName));
+  }
 
   async list(): Promise<StoredConnection[]> {
-    return [];
+    return [...this.connections.values()];
+  }
+
+  private key(service: string, connectionName: string): string {
+    return `${service}:${connectionName}`;
   }
 }
 
 class MemoryRunLogStore implements IRunLogStore {
-  async add(): Promise<void> {}
+  readonly runs: RunLog[] = [];
+
+  async add(run: RunLog): Promise<void> {
+    this.runs.push(run);
+  }
 
   async list(): Promise<RunLogPage> {
-    return { items: [] };
+    return { items: this.runs };
   }
 }

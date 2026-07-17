@@ -14,6 +14,7 @@ export type RunLog = {
   completedAt: string;
   durationMs: number;
   ok: boolean;
+  connectionName?: string;
   connectionProfile?: CredentialProfile;
   inputSummary?: unknown;
   errorCode?: string;

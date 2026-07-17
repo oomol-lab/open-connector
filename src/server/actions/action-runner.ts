@@ -1,11 +1,12 @@
 import type { CatalogStore } from "../../catalog-store.ts";
-import type { ConnectionService } from "../../connection-service.ts";
+import type { ConnectionService, ConnectionSummary } from "../../connection-service.ts";
 import type { ActionPolicyService } from "../../core/action-policy.ts";
 import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
 import type { IRunLogStore, RunLogListInput, RunLogPage, RunLogCaller } from "../storage/runtime-store.ts";
 
+import { defaultConnectionName } from "../../connection-service.ts";
 import { executeAction as executeProviderAction } from "../../core/execution.ts";
 import { summarizeForRunLog } from "./run-log-summary.ts";
 
@@ -29,6 +30,7 @@ export interface RunActionInput {
 export interface ActionRunResult {
   executionId: string;
   result: ExecutionResult;
+  connection?: ConnectionSummary;
 }
 
 /**
@@ -64,6 +66,7 @@ export class ActionRunner {
     };
     this.options.logger?.info(logContext, "action run started");
     const connection = await this.options.connections.getConnectionSummary(action.service, input.connectionName);
+    const effectiveConnectionName = input.connectionName?.trim() || defaultConnectionName;
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();
     const executor = action.execution.locallyExecutable
@@ -92,6 +95,7 @@ export class ActionRunner {
       completedAt: new Date(completedAtMs).toISOString(),
       durationMs: completedAtMs - startedAtMs,
       ok: result.ok,
+      connectionName: effectiveConnectionName,
       connectionProfile: connection?.profile,
       inputSummary: summarizeForRunLog(input.input),
       errorCode: result.error?.code,
@@ -111,7 +115,7 @@ export class ActionRunner {
       this.options.logger?.warn(completedLogContext, "action run failed");
     }
 
-    return { executionId, result };
+    return { executionId, result, connection };
   }
 
   listRuns(input?: RunLogListInput): Promise<RunLogPage> {

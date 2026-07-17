@@ -96,6 +96,7 @@ export interface RunLog {
   completedAt: string;
   durationMs: number;
   ok: boolean;
+  connectionName?: string;
   inputSummary?: unknown;
   errorCode?: string;
   errorMessage?: string;

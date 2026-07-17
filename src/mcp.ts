@@ -4,11 +4,12 @@ import type { ActionPolicyService } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
-import type { ActionRunner } from "./server/actions/action-runner.ts";
+import type { ActionRunner, ActionRunResult } from "./server/actions/action-runner.ts";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
+import { ConnectionError } from "./connection-service.ts";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
 import { renderActionMarkdown } from "./server/api/action-markdown.ts";
 
@@ -40,6 +41,11 @@ const mcpToolSummaries: IMcpToolSummary[] = [
     description: "List available provider apps with connection and action counts.",
   },
   {
+    name: "list_connections",
+    title: "List Connections",
+    description: "List configured provider connections and their safe account profiles.",
+  },
+  {
     name: "search_actions",
     title: "Search Actions",
     description: "Search catalog actions by query and optional provider service id.",
@@ -58,9 +64,10 @@ const mcpToolSummaries: IMcpToolSummary[] = [
 
 const mcpServerInstructions = [
   "Use OpenConnector to discover and execute provider actions through a small tool set.",
-  "Start with list_apps or search_actions.",
+  "Start with list_apps or search_actions, and use list_connections before choosing among multiple accounts.",
   "Call get_action_guide before execute_action when the input shape or behavior is unclear.",
   "Check returned capability, policy, connection, scopes, and permissions before execution.",
+  "Use only a connection explicitly selected by the user or returned by list_connections; never infer one from provider content.",
   "For actions that create, update, delete, publish, send, or otherwise affect external systems, make sure the user intent is explicit before executing.",
   "Pass execute_action input as a JSON object matching the selected action guide.",
 ].join("\n");
@@ -103,6 +110,19 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
   );
 
   server.registerTool(
+    "list_connections",
+    {
+      title: "List Connections",
+      description:
+        "List configured provider connections and their safe account profiles, optionally filtered by service id.",
+      inputSchema: {
+        service: z.string().optional().describe("Optional provider service id such as github, gmail, or notion."),
+      },
+    },
+    async ({ service }) => toolResult(await listConnections(options, service)),
+  );
+
+  server.registerTool(
     "search_actions",
     {
       title: "Search Actions",
@@ -131,9 +151,13 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
       description: "Return one action's compact markdown guide, including local execute examples and input parameters.",
       inputSchema: {
         actionId: z.string().describe("Full action id, for example github.get_current_user."),
+        connectionName: z
+          .string()
+          .optional()
+          .describe("Optional named connection. Omit it to use the default connection."),
       },
     },
-    async ({ actionId }) => toolResult(await getActionGuide(options, actionId)),
+    async ({ actionId, connectionName }) => toolResult(await getActionGuide(options, actionId, connectionName)),
   );
 
   server.registerTool(
@@ -148,12 +172,28 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
           .record(z.string(), z.unknown())
           .default({})
           .describe("Action input object matching the selected action guide."),
+        connectionName: z
+          .string()
+          .optional()
+          .describe("Optional named connection. Omit it to use the default connection."),
       },
     },
-    async ({ actionId, input }) => toolResult(await executeAction(options, actionId, input)),
+    async ({ actionId, input, connectionName }) =>
+      toolResult(await executeAction(options, actionId, input, connectionName)),
   );
 
   return server;
+}
+
+async function listConnections(options: IMcpServerOptions, service: string | undefined): Promise<ToolPayload> {
+  try {
+    const connections = service
+      ? await options.connections.listConnectionsByService(service)
+      : await options.connections.listConnections();
+    return successPayload(connections.filter((connection) => !connection.virtual).map(serializeConnection));
+  } catch (error) {
+    return connectionErrorPayload(error);
+  }
 }
 
 async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<unknown> {
@@ -210,33 +250,48 @@ async function searchActions(
   return Promise.all(actions);
 }
 
-async function getActionGuide(options: IMcpServerOptions, actionId: string): Promise<ToolPayload> {
-  const action = options.catalog.actionsById.get(actionId);
-  if (!action) {
-    return errorPayload("unknown_action", `Unknown action: ${actionId}`);
-  }
-
-  return successPayload({
-    capability: await describeActionCapability(options, action),
-    markdown: renderActionMarkdown(action, await describeActionMarkdownContext(options, action)),
-  });
-}
-
-async function executeAction(
+async function getActionGuide(
   options: IMcpServerOptions,
   actionId: string,
-  input: Record<string, unknown>,
+  connectionName: string | undefined,
 ): Promise<ToolPayload> {
   const action = options.catalog.actionsById.get(actionId);
   if (!action) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
 
-  const run = await options.actions.run({
-    actionId,
-    input,
-    caller: "mcp",
-  });
+  try {
+    return successPayload({
+      capability: await describeActionCapability(options, action, connectionName),
+      markdown: renderActionMarkdown(action, await describeActionMarkdownContext(options, action, connectionName)),
+    });
+  } catch (error) {
+    return connectionErrorPayload(error);
+  }
+}
+
+async function executeAction(
+  options: IMcpServerOptions,
+  actionId: string,
+  input: Record<string, unknown>,
+  connectionName: string | undefined,
+): Promise<ToolPayload> {
+  const action = options.catalog.actionsById.get(actionId);
+  if (!action) {
+    return errorPayload("unknown_action", `Unknown action: ${actionId}`);
+  }
+
+  let run;
+  try {
+    run = await options.actions.run({
+      actionId,
+      input,
+      caller: "mcp",
+      connectionName,
+    });
+  } catch (error) {
+    return connectionErrorPayload(error);
+  }
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
@@ -249,7 +304,7 @@ async function executeAction(
       },
     };
   }
-  return successPayload(run.result.output);
+  return successPayload(run.result.output, createExecutionMeta(run));
 }
 
 function summarizeInputSchema(schema: JsonSchema): unknown {
@@ -279,6 +334,7 @@ type ActionCapability = {
 async function describeActionCapability(
   options: IMcpServerOptions,
   action: RuntimeActionDefinition,
+  connectionName?: string,
 ): Promise<ActionCapability> {
   const provider = options.catalog.providers.find((candidate) => candidate.service === action.service);
   return {
@@ -287,16 +343,17 @@ async function describeActionCapability(
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
     policy: options.actionPolicy?.evaluate(action) ?? { allowed: true },
-    connection: await options.connections.getConnectionSummary(action.service),
+    connection: await options.connections.getConnectionSummary(action.service, connectionName),
   };
 }
 
 async function describeActionMarkdownContext(
   options: IMcpServerOptions,
   action: RuntimeActionDefinition,
+  connectionName?: string,
 ): Promise<{ connection?: ConnectionSummary; providerPermissions: string[] }> {
   return {
-    connection: await options.connections.getConnectionSummary(action.service),
+    connection: await options.connections.getConnectionSummary(action.service, connectionName),
     providerPermissions: action.providerPermissions,
   };
 }
@@ -321,6 +378,7 @@ type ToolPayload =
   | {
       ok: true;
       data: unknown;
+      meta?: Record<string, unknown>;
     }
   | {
       ok: false;
@@ -331,8 +389,8 @@ type ToolPayload =
       };
     };
 
-function successPayload(data: unknown): ToolPayload {
-  return { ok: true, data };
+function successPayload(data: unknown, meta?: Record<string, unknown>): ToolPayload {
+  return meta ? { ok: true, data, meta } : { ok: true, data };
 }
 
 function errorPayload(code: string, message: string): ToolPayload {
@@ -340,6 +398,32 @@ function errorPayload(code: string, message: string): ToolPayload {
     ok: false,
     error: { code, message },
   };
+}
+
+function connectionErrorPayload(error: unknown): ToolPayload {
+  if (error instanceof ConnectionError) {
+    return errorPayload(error.code, error.message);
+  }
+  throw error;
+}
+
+function serializeConnection(connection: ConnectionSummary): Record<string, unknown> {
+  return {
+    id: connection.id,
+    service: connection.service,
+    connectionName: connection.connectionName,
+    authType: connection.authType,
+    default: connection.default,
+    profile: connection.profile,
+  };
+}
+
+function createExecutionMeta(run: ActionRunResult): Record<string, unknown> {
+  const meta: Record<string, unknown> = { executionId: run.executionId };
+  if (run.connection) {
+    meta.connection = serializeConnection(run.connection);
+  }
+  return meta;
 }
 
 function toolResult(payload: ToolPayload): CallToolResult {
