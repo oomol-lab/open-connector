@@ -6,15 +6,17 @@ import fr from "./locales/fr.json";
 import ja from "./locales/ja.json";
 import ru from "./locales/ru.json";
 import zhCN from "./locales/zh-CN.json";
+import zhTW from "./locales/zh-TW.json";
 
-export type AppLang = "en" | "zh-CN" | "ja" | "ru" | "fr";
+export type AppLang = "en" | "zh-CN" | "zh-TW" | "ja" | "ru" | "fr";
 
-export const supportedLangs = ["en", "zh-CN", "ja", "ru", "fr"] as const satisfies readonly AppLang[];
+export const supportedLangs = ["en", "zh-CN", "zh-TW", "ja", "ru", "fr"] as const satisfies readonly AppLang[];
 export const langStorageKey = "oomol-connect.lang";
 
 const locales = {
   en,
   "zh-CN": zhCN,
+  "zh-TW": zhTW,
   ja,
   ru,
   fr,
