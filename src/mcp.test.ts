@@ -89,6 +89,8 @@ describe("MCP server", () => {
         data: {
           message: "hello",
         },
+        executionId: expect.any(String),
+        auditPersisted: true,
       });
     });
   });
@@ -103,6 +105,8 @@ describe("MCP server", () => {
       expect(result.isError).toBe(true);
       expect(result.structuredContent).toMatchObject({
         ok: false,
+        executionId: expect.any(String),
+        auditPersisted: true,
         error: {
           code: "invalid_input",
           message: "Action input does not match the action schema.",
@@ -119,6 +123,23 @@ describe("MCP server", () => {
       });
 
       expect(result.isError).toBe(true);
+      expect(result.structuredContent).toEqual({
+        ok: false,
+        error: {
+          code: "unknown_action",
+          message: "Unknown action: example.missing",
+        },
+      });
+    });
+  });
+
+  it("does not assign execution metadata to unknown actions", async () => {
+    await withMcpClient(async (client) => {
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example.missing", input: {} },
+      });
+
       expect(result.structuredContent).toEqual({
         ok: false,
         error: {
@@ -179,11 +200,17 @@ class EchoProviderLoader implements IProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  async get(): Promise<ResolvedCredential | undefined> {
+  async get(): Promise<StoredConnection | undefined> {
     return undefined;
   }
 
-  async set(): Promise<void> {}
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    return { id: crypto.randomUUID(), service, connectionName, credential };
+  }
+
+  async updateCredential(): Promise<boolean> {
+    return false;
+  }
 
   async delete(): Promise<void> {}
 
@@ -193,7 +220,13 @@ class MemoryConnectionStore implements IConnectionStore {
 }
 
 class MemoryRunLogStore implements IRunLogStore {
-  async add(): Promise<void> {}
+  async add(): Promise<{ retentionApplied: boolean }> {
+    return { retentionApplied: true };
+  }
+
+  async get(): Promise<undefined> {
+    return undefined;
+  }
 
   async list(): Promise<RunLogPage> {
     return { items: [] };

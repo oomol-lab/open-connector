@@ -1,5 +1,5 @@
-import type { IConnectionStore } from "../../connection-service.ts";
-import type { ResolvedCredential } from "../../core/types.ts";
+import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { ResolvedCredential, RuntimeLogger } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
@@ -10,33 +10,23 @@ import type {
   IIdempotencyStore,
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
-import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
-import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
+import { DEFAULT_RUN_LIMIT, decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
 type RuntimeRow = Record<string, unknown>;
 type SecretJsonTable = "oauth_client_configs";
 const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 export interface SqliteRuntimeDatabaseOptions {
+  logger?: RuntimeLogger;
   runLimit?: number;
   secretCodec?: ISecretCodec;
-}
-
-interface ConnectionJsonInput {
-  database: DatabaseSync;
-  secretCodec: ISecretCodec;
-  service: string;
-  connectionName: string;
-}
-
-interface SetConnectionJsonInput extends ConnectionJsonInput {
-  value: unknown;
 }
 
 interface SecretJsonInput {
@@ -83,12 +73,12 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   constructor(filename: string, options: SqliteRuntimeDatabaseOptions = {}) {
     this.database = new DatabaseSync(filename);
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
-    this.initialize();
+    this.initialize(options.logger);
     this.connectionStore = new SqliteConnectionStore(this.database, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database);
     this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database);
-    this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? 100);
+    this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? DEFAULT_RUN_LIMIT);
     this.idempotencyStore = new SqliteIdempotencyStore(this.database, this.secretCodec);
   }
 
@@ -123,9 +113,9 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     `);
   }
 
-  private initialize(): void {
+  private initialize(logger?: RuntimeLogger): void {
     this.database.exec("pragma journal_mode = wal;");
-    runSqliteMigrations(this.database);
+    runSqliteMigrations(this.database, logger);
   }
 }
 
@@ -138,23 +128,60 @@ export class SqliteConnectionStore implements IConnectionStore {
     this.secretCodec = secretCodec;
   }
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
-    return await getConnectionJson<ResolvedCredential>({
-      database: this.database,
-      secretCodec: this.secretCodec,
-      service,
-      connectionName,
-    });
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    const row = this.database
+      .prepare("select id, value from connections where service = ? and connection_name = ?")
+      .get(service, connectionName);
+    return row
+      ? {
+          id: readString(row, "id"),
+          service,
+          connectionName,
+          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
+        }
+      : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    await setConnectionJson({
-      database: this.database,
-      secretCodec: this.secretCodec,
-      service,
-      connectionName,
-      value: credential,
-    });
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const row = this.database
+      .prepare(
+        `
+        insert into connections (id, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?)
+        on conflict(service, connection_name) do update set
+          value = excluded.value,
+          updated_at = excluded.updated_at
+        returning id
+      `,
+      )
+      .get(
+        crypto.randomUUID(),
+        service,
+        connectionName,
+        await this.secretCodec.encode(JSON.stringify(credential)),
+        new Date().toISOString(),
+      );
+    return { id: readString(row, "id"), service, connectionName, credential };
+  }
+
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const row = this.database
+      .prepare(
+        `
+        update connections
+        set value = ?, updated_at = ?
+        where service = ? and connection_name = ? and id = ?
+        returning id
+      `,
+      )
+      .get(
+        await this.secretCodec.encode(JSON.stringify(input.credential)),
+        new Date().toISOString(),
+        input.service,
+        input.connectionName,
+        input.id,
+      );
+    return row !== undefined;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -163,12 +190,13 @@ export class SqliteConnectionStore implements IConnectionStore {
       .run(service, connectionName);
   }
 
-  async list(): Promise<Array<{ service: string; connectionName: string; credential: ResolvedCredential }>> {
+  async list(): Promise<StoredConnection[]> {
     const rows = this.database
-      .prepare("select service, connection_name, value from connections order by service, connection_name")
+      .prepare("select id, service, connection_name, value from connections order by service, connection_name")
       .all();
     return await Promise.all(
       rows.map(async (row) => ({
+        id: readString(row, "id"),
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -378,64 +406,62 @@ export class SqliteRunLogStore implements IRunLogStore {
     this.limit = limit;
   }
 
-  async add(run: RunLog): Promise<void> {
+  async add(run: RunLog): Promise<RunLogWriteResult> {
     insertRun(this.database, run);
 
-    this.database
-      .prepare(
-        `
-        delete from runs
-        where id in (
-          select id from runs
-          order by started_at desc, id desc
-          limit -1 offset ?
+    try {
+      this.database
+        .prepare(
+          `
+          delete from runs
+          where id in (
+            select id from runs
+            order by started_at desc, id desc
+            limit -1 offset ?
+          )
+        `,
         )
-      `,
-      )
-      .run(this.limit);
+        .run(this.limit);
+      return { retentionApplied: true };
+    } catch {
+      return { retentionApplied: false };
+    }
+  }
+
+  async get(id: string): Promise<RunLog | undefined> {
+    const row = this.database.prepare("select service, value from runs where id = ?").get(id);
+    return row ? readRunLogRow(row) : undefined;
   }
 
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
     const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
     const cursor = decodeRunLogCursor(input.cursor);
-    const rows =
-      cursor && input.service
-        ? this.database
-            .prepare(
-              `
-              select service, value from runs
-              where (started_at < ? or (started_at = ? and id < ?))
-                and service = ?
-              order by started_at desc, id desc
-              limit ?
-            `,
-            )
-            .all(cursor.startedAt, cursor.startedAt, cursor.id, input.service, limit + 1)
-        : cursor
-          ? this.database
-              .prepare(
-                `
-                select service, value from runs
-                where started_at < ? or (started_at = ? and id < ?)
-                order by started_at desc, id desc
-                limit ?
-              `,
-              )
-              .all(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
-          : input.service
-            ? this.database
-                .prepare(
-                  `
-                  select service, value from runs
-                  where service = ?
-                  order by started_at desc, id desc
-                  limit ?
-                `,
-                )
-                .all(input.service, limit + 1)
-            : this.database
-                .prepare("select service, value from runs order by started_at desc, id desc limit ?")
-                .all(limit + 1);
+    const conditions: string[] = [];
+    const values: Array<string | number> = [];
+    if (cursor) {
+      conditions.push("(started_at < ? or (started_at = ? and id < ?))");
+      values.push(cursor.startedAt, cursor.startedAt, cursor.id);
+    }
+    if (input.service) {
+      conditions.push("service = ?");
+      values.push(input.service);
+    }
+    if (input.actionId) {
+      conditions.push("action_id = ?");
+      values.push(input.actionId);
+    }
+    if (input.caller) {
+      conditions.push("caller = ?");
+      values.push(input.caller);
+    }
+    if (input.ok !== undefined) {
+      conditions.push("ok = ?");
+      values.push(input.ok ? 1 : 0);
+    }
+    const where = conditions.length > 0 ? `where ${conditions.join(" and ")}` : "";
+    const rows = this.database
+      .prepare(`select service, value from runs ${where} order by started_at desc, id desc limit ?`)
+      .all(...values, limit + 1);
     const runs = rows.map(readRunLogRow);
     const items = runs.slice(0, limit);
 
@@ -450,18 +476,28 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
   database
     .prepare(
       `
-      insert into runs (id, service, action_id, started_at, completed_at, ok, value)
-      values (?, ?, ?, ?, ?, ?, ?)
+      insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
+      values (?, ?, ?, ?, ?, ?, ?, ?)
       on conflict(id) do update set
         service = excluded.service,
         action_id = excluded.action_id,
+        caller = excluded.caller,
         started_at = excluded.started_at,
         completed_at = excluded.completed_at,
         ok = excluded.ok,
         value = excluded.value
     `,
     )
-    .run(run.id, run.service, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run));
+    .run(
+      run.id,
+      run.service,
+      run.actionId,
+      run.caller,
+      run.startedAt,
+      run.completedAt,
+      run.ok ? 1 : 0,
+      JSON.stringify(run),
+    );
 }
 
 function readRunLogRow(row: unknown): RunLog {
@@ -469,7 +505,8 @@ function readRunLogRow(row: unknown): RunLog {
   return { ...run, service: readString(row, "service") };
 }
 
-function runSqliteMigrations(database: DatabaseSync): void {
+function runSqliteMigrations(database: DatabaseSync, logger?: RuntimeLogger): void {
+  const startedAt = Date.now();
   database.exec(`
     create table if not exists runtime_migrations (
       name text primary key,
@@ -485,17 +522,44 @@ function runSqliteMigrations(database: DatabaseSync): void {
   const migrationFiles = readdirSync(migrationDirectory)
     .filter((name) => /^\d+_.*\.sql$/.test(name))
     .sort();
+  let newlyAppliedCount = 0;
 
   for (const file of migrationFiles) {
     if (applied.has(file)) {
       continue;
     }
 
-    database.exec(readFileSync(new URL(file, migrationDirectory), "utf8"));
-    database
-      .prepare("insert into runtime_migrations (name, applied_at) values (?, ?)")
-      .run(file, new Date().toISOString());
+    const migrationStartedAt = Date.now();
+    logger?.info({ migration: file }, "sqlite migration started");
+    try {
+      const sql = readFileSync(new URL(file, migrationDirectory), "utf8");
+      runInTransaction(database, () => {
+        database.exec(sql);
+        database
+          .prepare("insert into runtime_migrations (name, applied_at) values (?, ?)")
+          .run(file, new Date().toISOString());
+      });
+    } catch (error) {
+      logger?.error(
+        { migration: file, durationMs: Date.now() - migrationStartedAt, err: error },
+        "sqlite migration failed",
+      );
+      throw error;
+    }
+    applied.add(file);
+    newlyAppliedCount += 1;
+    logger?.info({ migration: file, durationMs: Date.now() - migrationStartedAt }, "sqlite migration completed");
   }
+
+  logger?.info(
+    {
+      migrationCount: migrationFiles.length,
+      appliedCount: migrationFiles.filter((file) => applied.has(file)).length,
+      newlyAppliedCount,
+      durationMs: Date.now() - startedAt,
+    },
+    "sqlite migrations ready",
+  );
 }
 
 async function readRotatedConnectionSecrets(
@@ -591,13 +655,6 @@ async function getSecretJson<T>(input: SecretJsonInput): Promise<T | undefined> 
   return stored ? parseJson<T>(await input.secretCodec.decode(stored)) : undefined;
 }
 
-async function getConnectionJson<T>(input: ConnectionJsonInput): Promise<T | undefined> {
-  const row = input.database
-    .prepare("select value from connections where service = ? and connection_name = ?")
-    .get(input.service, input.connectionName) as RuntimeRow | undefined;
-  return row ? parseJson<T>(await input.secretCodec.decode(readString(row, "value"))) : undefined;
-}
-
 function getStoredValue(
   database: DatabaseSync,
   table: SecretJsonTable,
@@ -606,25 +663,6 @@ function getStoredValue(
 ): string | undefined {
   const row = database.prepare(`select value from ${table} where ${keyColumn} = ?`).get(key) as RuntimeRow | undefined;
   return row ? readString(row, "value") : undefined;
-}
-
-async function setConnectionJson(input: SetConnectionJsonInput): Promise<void> {
-  input.database
-    .prepare(
-      `
-      insert into connections (service, connection_name, value, updated_at)
-      values (?, ?, ?, ?)
-      on conflict(service, connection_name) do update set
-        value = excluded.value,
-        updated_at = excluded.updated_at
-    `,
-    )
-    .run(
-      input.service,
-      input.connectionName,
-      await input.secretCodec.encode(JSON.stringify(input.value)),
-      new Date().toISOString(),
-    );
 }
 
 async function setServiceJson(input: SetServiceJsonInput): Promise<void> {

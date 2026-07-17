@@ -297,8 +297,13 @@ function AppShell(props: {
   const heading = headingForPath(location.pathname);
   const section = location.pathname.split("/").filter(Boolean)[0];
   const isOverviewPage = heading === "overview";
-  const isBrowserPage = section === "actions";
-  const mainClassName = [isBrowserPage ? "main main-browser" : "main", isOverviewPage ? "overview-main" : ""]
+  const isBrowserPage = section === "actions" || section === "runs";
+  const isRunsPage = section === "runs";
+  const mainClassName = [
+    isBrowserPage ? "main main-browser" : "main",
+    isOverviewPage ? "overview-main" : "",
+    isRunsPage ? "runs-main" : "",
+  ]
     .filter(Boolean)
     .join(" ");
   const currentNavItem = navItems.find((item) => item.path.slice(1) === heading) ?? navItems[0];

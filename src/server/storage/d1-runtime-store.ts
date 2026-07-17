@@ -1,4 +1,4 @@
-import type { IConnectionStore } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
@@ -11,12 +11,12 @@ import type {
   IIdempotencyStore,
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
-import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./runtime-store.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
-import { decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
+import { DEFAULT_RUN_LIMIT, decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
 
 type RuntimeRow = Record<string, unknown>;
 type SecretJsonTable = "oauth_client_configs";
@@ -40,7 +40,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
     this.oauthStateStore = new D1OAuthStateStore(database);
     this.runtimeTokenStore = new D1RuntimeTokenStore(database);
-    this.runLogStore = new D1RunLogStore(database, options.runLimit ?? 100);
+    this.runLogStore = new D1RunLogStore(database, options.runLimit ?? DEFAULT_RUN_LIMIT);
     this.idempotencyStore = new D1IdempotencyStore(database, secretCodec);
   }
 }
@@ -54,32 +54,63 @@ export class D1ConnectionStore implements IConnectionStore {
     this.secretCodec = secretCodec;
   }
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     const row = await this.database
-      .prepare("select value from connections where service = ? and connection_name = ?")
+      .prepare("select id, value from connections where service = ? and connection_name = ?")
       .bind(service, connectionName)
       .first<RuntimeRow>();
-    return row ? parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))) : undefined;
+    return row
+      ? {
+          id: readString(row, "id"),
+          service,
+          connectionName,
+          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
+        }
+      : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    await this.database
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const row = await this.database
       .prepare(
         `
-        insert into connections (service, connection_name, value, updated_at)
-        values (?, ?, ?, ?)
+        insert into connections (id, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?)
         on conflict(service, connection_name) do update set
           value = excluded.value,
           updated_at = excluded.updated_at
+        returning id
       `,
       )
       .bind(
+        crypto.randomUUID(),
         service,
         connectionName,
         await this.secretCodec.encode(JSON.stringify(credential)),
         new Date().toISOString(),
       )
-      .run();
+      .first<RuntimeRow>();
+    return { id: readString(row!, "id"), service, connectionName, credential };
+  }
+
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const row = await this.database
+      .prepare(
+        `
+        update connections
+        set value = ?, updated_at = ?
+        where service = ? and connection_name = ? and id = ?
+        returning id
+      `,
+      )
+      .bind(
+        await this.secretCodec.encode(JSON.stringify(input.credential)),
+        new Date().toISOString(),
+        input.service,
+        input.connectionName,
+        input.id,
+      )
+      .first<RuntimeRow>();
+    return row !== null;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -89,12 +120,13 @@ export class D1ConnectionStore implements IConnectionStore {
       .run();
   }
 
-  async list(): Promise<Array<{ service: string; connectionName: string; credential: ResolvedCredential }>> {
+  async list(): Promise<StoredConnection[]> {
     const { results } = await this.database
-      .prepare("select service, connection_name, value from connections order by service, connection_name")
+      .prepare("select id, service, connection_name, value from connections order by service, connection_name")
       .all<RuntimeRow>();
     return await Promise.all(
       results.map(async (row) => ({
+        id: readString(row, "id"),
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -305,84 +337,92 @@ export class D1RunLogStore implements IRunLogStore {
     this.limit = limit;
   }
 
-  async add(run: RunLog): Promise<void> {
+  async add(run: RunLog): Promise<RunLogWriteResult> {
     await this.database
       .prepare(
         `
-        insert into runs (id, service, action_id, started_at, completed_at, ok, value)
-        values (?, ?, ?, ?, ?, ?, ?)
+        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
+        values (?, ?, ?, ?, ?, ?, ?, ?)
         on conflict(id) do update set
           service = excluded.service,
           action_id = excluded.action_id,
+          caller = excluded.caller,
           started_at = excluded.started_at,
           completed_at = excluded.completed_at,
           ok = excluded.ok,
           value = excluded.value
       `,
       )
-      .bind(run.id, run.service, run.actionId, run.startedAt, run.completedAt, run.ok ? 1 : 0, JSON.stringify(run))
+      .bind(
+        run.id,
+        run.service,
+        run.actionId,
+        run.caller,
+        run.startedAt,
+        run.completedAt,
+        run.ok ? 1 : 0,
+        JSON.stringify(run),
+      )
       .run();
 
-    await this.database
-      .prepare(
-        `
-        delete from runs
-        where id in (
-          select id from runs
-          order by started_at desc, id desc
-          limit -1 offset ?
+    try {
+      await this.database
+        .prepare(
+          `
+          delete from runs
+          where id in (
+            select id from runs
+            order by started_at desc, id desc
+            limit -1 offset ?
+          )
+        `,
         )
-      `,
-      )
-      .bind(this.limit)
-      .run();
+        .bind(this.limit)
+        .run();
+      return { retentionApplied: true };
+    } catch {
+      return { retentionApplied: false };
+    }
+  }
+
+  async get(id: string): Promise<RunLog | undefined> {
+    const row = await this.database
+      .prepare("select service, value from runs where id = ?")
+      .bind(id)
+      .first<RuntimeRow>();
+    return row ? readRunLogRow(row) : undefined;
   }
 
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
     const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
     const cursor = decodeRunLogCursor(input.cursor);
-    const { results } =
-      cursor && input.service
-        ? await this.database
-            .prepare(
-              `
-              select service, value from runs
-              where (started_at < ? or (started_at = ? and id < ?))
-                and service = ?
-              order by started_at desc, id desc
-              limit ?
-            `,
-            )
-            .bind(cursor.startedAt, cursor.startedAt, cursor.id, input.service, limit + 1)
-            .all<RuntimeRow>()
-        : cursor
-          ? await this.database
-              .prepare(
-                `
-                select service, value from runs
-                where started_at < ? or (started_at = ? and id < ?)
-                order by started_at desc, id desc
-                limit ?
-              `,
-              )
-              .bind(cursor.startedAt, cursor.startedAt, cursor.id, limit + 1)
-              .all<RuntimeRow>()
-          : input.service
-            ? await this.database
-                .prepare(
-                  `
-                  select service, value from runs
-                  where service = ?
-                  order by started_at desc, id desc
-                  limit ?
-                `,
-                )
-                .bind(input.service, limit + 1)
-                .all<RuntimeRow>()
-            : await this.database
-                .prepare("select service, value from runs order by started_at desc, id desc limit ?")
-                .bind(limit + 1)
-                .all<RuntimeRow>();
+    const conditions: string[] = [];
+    const values: Array<string | number> = [];
+    if (cursor) {
+      conditions.push("(started_at < ? or (started_at = ? and id < ?))");
+      values.push(cursor.startedAt, cursor.startedAt, cursor.id);
+    }
+    if (input.service) {
+      conditions.push("service = ?");
+      values.push(input.service);
+    }
+    if (input.actionId) {
+      conditions.push("action_id = ?");
+      values.push(input.actionId);
+    }
+    if (input.caller) {
+      conditions.push("caller = ?");
+      values.push(input.caller);
+    }
+    if (input.ok !== undefined) {
+      conditions.push("ok = ?");
+      values.push(input.ok ? 1 : 0);
+    }
+    const where = conditions.length > 0 ? `where ${conditions.join(" and ")}` : "";
+    const { results } = await this.database
+      .prepare(`select service, value from runs ${where} order by started_at desc, id desc limit ?`)
+      .bind(...values, limit + 1)
+      .all<RuntimeRow>();
     const runs = results.map(readRunLogRow);
     const items = runs.slice(0, limit);
 

@@ -265,18 +265,27 @@
   "runs": {
     "noRunsTitle": "実行履歴はまだありません",
     "noRunsDescription": "アクションを実行すると、最近の実行履歴が表示されます。",
+    "action": "アクション",
+    "actionPlaceholder": "アクション ID で絞り込む",
+    "applyActionFilter": "アクションフィルターを適用",
     "service": "サービス",
     "allServices": "すべてのサービス",
+    "caller": "呼び出し元",
+    "allCallers": "すべての呼び出し元",
+    "status": "ステータス",
+    "allStatuses": "すべてのステータス",
+    "copyExecutionId": "実行 ID をコピー",
+    "expandResult": "結果を展開",
+    "collapseResult": "結果を折りたたむ",
     "loadMore": "さらに読み込む",
     "loadMoreFailed": "実行履歴の追加読み込みに失敗しました。",
     "table": {
       "action": "アクション",
-      "caller": "呼び出し元",
+      "context": "コンテキスト",
       "status": "ステータス",
-      "started": "開始時刻",
-      "duration": "所要時間",
+      "timing": "日時",
       "input": "入力",
-      "error": "エラー"
+      "result": "結果"
     }
   },
   "access": {

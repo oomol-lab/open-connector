@@ -45,6 +45,8 @@ export function createProviderFetch(options: ProviderFetchOptions = {}): Provide
     fetch: options.fetch,
     allowPrivateNetwork: options.allowPrivateNetwork,
     skipDnsValidation: options.skipDnsValidation,
+    mapTransportError: (error) =>
+      error instanceof TypeError ? new ProviderRequestError(502, "provider network request failed") : error,
     createError: (message) => new ProviderRequestError(502, message),
   });
 }
@@ -745,8 +747,8 @@ export function toProviderExecutionError(error: unknown, fallbackMessage: string
   return {
     ok: false,
     error: {
-      code: "provider_error",
-      message: error instanceof Error ? error.message : fallbackMessage,
+      code: "internal_error",
+      message: fallbackMessage,
     },
   };
 }

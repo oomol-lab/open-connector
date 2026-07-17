@@ -15,6 +15,7 @@ describe("runtime action HTTP results", () => {
       serializeRuntimeActionResult({
         actionId: "example.echo",
         executionId: "execution-1",
+        auditPersisted: true,
         result: { ok: true, output: { value: "hello" } },
       }),
     ).toEqual({
@@ -26,6 +27,7 @@ describe("runtime action HTTP results", () => {
         meta: {
           executionId: "execution-1",
           actionId: "example.echo",
+          auditPersisted: true,
         },
       },
     });
@@ -36,12 +38,15 @@ describe("runtime action HTTP results", () => {
     ["connection_not_found", 404],
     ["rate_limited", 429],
     ["provider_error", 500],
+    ["internal_error", 500],
+    ["oauth_token_expired", 409],
     ["invalid_input", 400],
   ] as const)("maps %s execution failures to status %i", (code, status) => {
     expect(
       serializeRuntimeActionResult({
         actionId: "example.echo",
         executionId: "execution-1",
+        auditPersisted: false,
         result: {
           ok: false,
           error: { code, message: "Action failed.", details: { reason: "example" } },
@@ -57,6 +62,7 @@ describe("runtime action HTTP results", () => {
         meta: {
           executionId: "execution-1",
           actionId: "example.echo",
+          auditPersisted: false,
         },
       },
     });

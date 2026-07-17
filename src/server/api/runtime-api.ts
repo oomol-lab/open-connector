@@ -82,6 +82,7 @@ export interface RuntimeFailureInput {
 export interface RuntimeActionResultInput {
   actionId: string;
   executionId: string;
+  auditPersisted: boolean;
   result: ExecutionResult;
 }
 
@@ -169,8 +170,8 @@ export function serializeRuntimeFailure(input: RuntimeFailureInput): RuntimeActi
 
 /** Build the persistable HTTP response for a completed action execution. */
 export function serializeRuntimeActionResult(input: RuntimeActionResultInput): RuntimeActionHttpResult {
-  const { actionId, executionId, result } = input;
-  const meta = { executionId, actionId };
+  const { actionId, executionId, auditPersisted, result } = input;
+  const meta = { executionId, actionId, auditPersisted };
   if (result.ok) {
     return {
       status: 200,
@@ -229,18 +230,21 @@ export function mapConnectionErrorStatus(error: ConnectionError): 400 | 404 | 40
   return 400;
 }
 
-function mapExecutionErrorStatus(code: string | undefined): 400 | 403 | 404 | 429 | 500 {
+function mapExecutionErrorStatus(code: string | undefined): RuntimeStatus {
+  if (code === "internal_error" || code === "provider_error" || code === "executor_unavailable") {
+    return 500;
+  }
+  if (code === "oauth_token_expired" || code === "oauth_refresh_unavailable") {
+    return 409;
+  }
+  if (code === "connection_not_found" || code === "unknown_service") {
+    return 404;
+  }
   if (code === "authorization_failed") {
     return 403;
   }
-  if (code === "connection_not_found") {
-    return 404;
-  }
   if (code === "rate_limited") {
     return 429;
-  }
-  if (code === "provider_error" || code === "executor_unavailable") {
-    return 500;
   }
   return 400;
 }

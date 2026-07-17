@@ -63,6 +63,8 @@ describe("action execution OpenAPI", () => {
       expect(path.post.responses["409"]?.description).toBe(
         "For idempotency, idempotency_request_in_progress means the original request is still running or its outcome is uncertain, while idempotency_key_conflict means the key was reused for a different action, input, or effective connection. Other runtime conflicts may return their own error code with the same status.",
       );
+      expect(path.post.responses["403"]).toBeDefined();
+      expect(path.post.responses["429"]).toBeDefined();
       expect(path.post.description).toContain("24-hour replay window");
       expect(path.post.description).toContain("original HTTP status and body");
       expect(path.post.description).toContain("completed successes and failures");

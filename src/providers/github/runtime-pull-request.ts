@@ -1,6 +1,12 @@
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
-import { optionalBoolean, optionalInteger, optionalRawString, optionalString } from "../../core/cast.ts";
+import {
+  optionalBoolean,
+  optionalInteger,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import {
   buildGitHubUrl,
   compactObject,
@@ -72,6 +78,35 @@ export const pullRequestActionHandlers: Record<string, GitHubActionHandler> = {
     });
   },
 
+  get_pull_request_review(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/pulls/${String(input.pullNumber)}/reviews/${String(input.reviewId)}`,
+      accessToken,
+      fetcher,
+    });
+  },
+
+  dismiss_pull_request_review(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "PUT",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/pulls/${String(input.pullNumber)}/reviews/${String(input.reviewId)}/dismissals`,
+      body: {
+        message: String(input.message),
+      },
+      accessToken,
+      fetcher,
+    });
+  },
+
+  delete_pending_pull_request_review(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "DELETE",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/pulls/${String(input.pullNumber)}/reviews/${String(input.reviewId)}`,
+      accessToken,
+      fetcher,
+    });
+  },
+
   create_pull_request_review_comment(input, { accessToken, fetcher }) {
     return githubRequestJson<Record<string, unknown>>({
       method: "POST",
@@ -100,6 +135,22 @@ export const pullRequestActionHandlers: Record<string, GitHubActionHandler> = {
       accessToken,
       fetcher,
     });
+  },
+
+  update_pull_request_review_comment(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "PATCH",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/pulls/comments/${String(input.commentId)}`,
+      body: {
+        body: String(input.body),
+      },
+      accessToken,
+      fetcher,
+    });
+  },
+
+  delete_pull_request_review_comment(input, { accessToken, fetcher }) {
+    return deletePullRequestReviewComment(input, accessToken, fetcher);
   },
 
   get_pull_request(input, { accessToken, fetcher }) {
@@ -209,6 +260,26 @@ export const pullRequestActionHandlers: Record<string, GitHubActionHandler> = {
     return listRepositoryWorkflows(input, accessToken, fetcher);
   },
 
+  get_workflow(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/workflows/${encodeURIComponent(String(input.workflowId))}`,
+      accessToken,
+      fetcher,
+    });
+  },
+
+  dispatch_workflow(input, { accessToken, fetcher }) {
+    return dispatchWorkflow(input, accessToken, fetcher);
+  },
+
+  enable_workflow(input, { accessToken, fetcher }) {
+    return enableWorkflow(input, accessToken, fetcher);
+  },
+
+  disable_workflow(input, { accessToken, fetcher }) {
+    return disableWorkflow(input, accessToken, fetcher);
+  },
+
   list_workflow_runs(input, { accessToken, fetcher }) {
     return listWorkflowRuns(input, accessToken, fetcher);
   },
@@ -227,6 +298,18 @@ export const pullRequestActionHandlers: Record<string, GitHubActionHandler> = {
 
   rerun_workflow(input, { accessToken, fetcher }) {
     return rerunWorkflow(input, accessToken, fetcher);
+  },
+
+  rerun_failed_jobs(input, { accessToken, fetcher }) {
+    return rerunFailedJobs(input, accessToken, fetcher);
+  },
+
+  cancel_workflow_run(input, { accessToken, fetcher }) {
+    return cancelWorkflowRun(input, accessToken, fetcher);
+  },
+
+  list_workflow_run_artifacts(input, { accessToken, fetcher }) {
+    return listWorkflowRunArtifacts(input, accessToken, fetcher);
   },
 };
 
@@ -345,6 +428,21 @@ async function listPullRequestReviewComments(
   });
 
   return { comments };
+}
+
+async function deletePullRequestReviewComment(
+  input: Record<string, unknown>,
+  accessToken: string,
+  fetcher: typeof fetch,
+) {
+  await githubRequestNoContent({
+    method: "DELETE",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/pulls/comments/${String(input.commentId)}`,
+    accessToken,
+    fetcher,
+  });
+
+  return { ok: true };
 }
 
 async function updatePullRequestBranch(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
@@ -494,6 +592,43 @@ async function listRepositoryWorkflows(input: Record<string, unknown>, accessTok
   };
 }
 
+async function dispatchWorkflow(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "POST",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/workflows/${encodeURIComponent(String(input.workflowId))}/dispatches`,
+    body: compactObject({
+      ref: String(input.ref),
+      inputs: optionalRecord(input.inputs),
+    }),
+    accessToken,
+    fetcher,
+  });
+
+  return { dispatched: true };
+}
+
+async function enableWorkflow(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "PUT",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/workflows/${encodeURIComponent(String(input.workflowId))}/enable`,
+    accessToken,
+    fetcher,
+  });
+
+  return { ok: true };
+}
+
+async function disableWorkflow(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "PUT",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/workflows/${encodeURIComponent(String(input.workflowId))}/disable`,
+    accessToken,
+    fetcher,
+  });
+
+  return { ok: true };
+}
+
 async function listWorkflowRuns(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
   const response = await githubRequestJson<Record<string, unknown>>({
     path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/runs`,
@@ -549,4 +684,47 @@ async function rerunWorkflow(input: Record<string, unknown>, accessToken: string
   });
 
   return { rerun_requested: true };
+}
+
+async function rerunFailedJobs(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "POST",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/runs/${String(input.runId)}/rerun-failed-jobs`,
+    body: compactObject({
+      enable_debug_logging: optionalBoolean(input.enableDebugLogging),
+    }),
+    accessToken,
+    fetcher,
+  });
+
+  return { rerun_requested: true };
+}
+
+async function cancelWorkflowRun(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "POST",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/runs/${String(input.runId)}/cancel`,
+    accessToken,
+    fetcher,
+  });
+
+  return { cancel_requested: true };
+}
+
+async function listWorkflowRunArtifacts(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const response = await githubRequestJson<Record<string, unknown>>({
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/runs/${String(input.runId)}/artifacts`,
+    query: compactObject({
+      name: optionalString(input.name),
+      per_page: optionalInteger(input.perPage),
+      page: optionalInteger(input.page),
+    }),
+    accessToken,
+    fetcher,
+  });
+
+  return {
+    total_count: Number(response.total_count ?? 0),
+    artifacts: Array.isArray(response.artifacts) ? (response.artifacts as Record<string, unknown>[]) : [],
+  };
 }
