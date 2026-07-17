@@ -265,18 +265,27 @@
   "runs": {
     "noRunsTitle": "尚無執行記錄",
     "noRunsDescription": "執行一個動作以查看近期執行記錄。",
+    "action": "動作",
+    "actionPlaceholder": "依動作 ID 篩選",
+    "applyActionFilter": "套用動作篩選條件",
     "service": "服務",
     "allServices": "所有服務",
+    "caller": "呼叫端",
+    "allCallers": "所有呼叫端",
+    "status": "狀態",
+    "allStatuses": "所有狀態",
+    "copyExecutionId": "複製執行 ID",
+    "expandResult": "展開結果",
+    "collapseResult": "收合結果",
     "loadMore": "載入更多",
     "loadMoreFailed": "無法載入更多執行記錄。",
     "table": {
       "action": "動作",
-      "caller": "呼叫端",
+      "context": "上下文",
       "status": "狀態",
-      "started": "開始時間",
-      "duration": "持續時間",
+      "timing": "時間",
       "input": "輸入",
-      "error": "錯誤"
+      "result": "結果"
     }
   },
   "access": {
