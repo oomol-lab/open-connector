@@ -44,6 +44,8 @@ export interface GuardedFetchOptions {
    * only adds a per-request lookup. On by default.
    */
   skipDnsValidation?: boolean;
+  /** Transform errors thrown by the underlying transport before they escape the guarded fetch. */
+  mapTransportError?: (error: unknown) => unknown;
 }
 
 // Match the platform default for `redirect: "follow"` (undici/browsers follow up
@@ -159,6 +161,16 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
   const maxRedirects = options.maxRedirects ?? defaultMaxRedirects;
   const guardedFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const transport = baseFetch ?? globalThis.fetch;
+    const fetchTransport = async (
+      transportInput: RequestInfo | URL,
+      transportInit?: RequestInit,
+    ): Promise<Response> => {
+      try {
+        return await transport(transportInput, transportInit);
+      } catch (error) {
+        throw options.mapTransportError?.(error) ?? error;
+      }
+    };
     const allowPrivateNetwork =
       typeof options.allowPrivateNetwork === "function"
         ? options.allowPrivateNetwork()
@@ -179,7 +191,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
 
     const redirectMode = init?.redirect ?? request?.redirect ?? "follow";
     if (redirectMode !== "follow") {
-      return transport(input, init);
+      return fetchTransport(input, init);
     }
 
     let method = (init?.method ?? request?.method ?? "GET").toUpperCase();
@@ -190,9 +202,9 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
       const response =
         redirects === 0
           ? request
-            ? await transport(new Request(request, { ...init, redirect: "manual" }))
-            : await transport(url.toString(), { ...init, redirect: "manual" })
-          : await transport(url.toString(), {
+            ? await fetchTransport(new Request(request, { ...init, redirect: "manual" }))
+            : await fetchTransport(url.toString(), { ...init, redirect: "manual" })
+          : await fetchTransport(url.toString(), {
               ...init,
               method,
               // Clone per hop: later hops mutate `headers`, and a transport that

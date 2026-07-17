@@ -32,9 +32,25 @@ describe("summarizeForRunLog", () => {
     });
   });
 
-  it("removes credentials and query data from ordinary URLs", () => {
-    expect(summarizeForRunLog({ callbackUrl: "https://user:pass@example.com/callback?code=secret#part" })).toEqual({
-      callbackUrl: "https://example.com/callback",
+  it("keeps only the origin of ordinary URLs", () => {
+    expect(summarizeForRunLog({ homepageUrl: "https://user:pass@example.com/public/path?view=full#part" })).toEqual({
+      homepageUrl: "https://example.com",
+    });
+  });
+
+  it("redacts sensitive URL contexts and removes path credentials from generic URLs", () => {
+    expect(
+      summarizeForRunLog({
+        url: "https://hooks.slack.com/services/T000/B000/SECRET",
+        webhook: { url: "https://example.com/hooks/SECRET" },
+        callbackUrl: "https://example.com/callback/SECRET",
+        downloadUrl: "https://example.com/files/SECRET",
+      }),
+    ).toEqual({
+      url: "https://hooks.slack.com",
+      webhook: { url: "[redacted-url]" },
+      callbackUrl: "[redacted-url]",
+      downloadUrl: "[redacted-url]",
     });
   });
 

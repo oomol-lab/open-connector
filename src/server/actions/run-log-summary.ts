@@ -10,7 +10,7 @@ const sensitiveKeyPattern =
   /access[-_]?key|api[-_]?key|authorization|client[-_]?secret|cookie|credential|password|private[-_]?key|refresh[-_]?token|secret|session|signature|token/i;
 const sensitiveContextPattern = /(^|\.)(cookies?|credentials?|headers?|secrets?)(\.|$)/i;
 const credentialValuePattern = /^(?:Basic|Bearer)\s+\S+|^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/i;
-const sensitiveUrlKeyPattern = /presigned|signed|temporary/i;
+const sensitiveUrlContextPattern = /callback|download|presigned|signed|temporary|webhook/i;
 const safeErrorMessages: Record<string, string> = {
   action_blocked: "The action was blocked by runtime policy.",
   authorization_failed: "The provider rejected authorization.",
@@ -55,7 +55,7 @@ function summarize(value: unknown, path: string[], depth: number, state: Summary
   state.nodes += 1;
 
   if (typeof value === "string") {
-    return summarizeString(value, path.at(-1));
+    return summarizeString(value, path);
   }
   if (value == null || typeof value === "number" || typeof value === "boolean") {
     return value;
@@ -97,23 +97,19 @@ function summarizeObject(value: object, path: string[], depth: number, state: Su
   }
 }
 
-function summarizeString(value: string, key: string | undefined): string {
+function summarizeString(value: string, path: string[]): string {
   if (credentialValuePattern.test(value)) {
     return "[redacted]";
   }
   if (/^https?:\/\//i.test(value)) {
     const url = new URL(value);
     if (
-      sensitiveUrlKeyPattern.test(key ?? "") ||
+      sensitiveUrlContextPattern.test(path.join(".")) ||
       [...url.searchParams.keys()].some((name) => sensitiveKeyPattern.test(name))
     ) {
       return "[redacted-url]";
     }
-    url.username = "";
-    url.password = "";
-    url.search = "";
-    url.hash = "";
-    return url.toString();
+    return url.origin;
   }
   return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
 }

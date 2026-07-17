@@ -122,6 +122,34 @@ describe("provider egress SSRF guard", () => {
 });
 
 describe("provider runtime fetch", () => {
+  it("maps transport failures to provider errors without exposing the native message", async () => {
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("getaddrinfo ENOTFOUND secret.internal");
+    });
+    const executors = defineProviderExecutors<{ fetcher: typeof fetch }>({
+      service: "test_service",
+      handlers: {
+        async probe(_input, context) {
+          await context.fetcher("https://api.example.com/resource");
+          return {};
+        },
+      },
+      createContext: (_context, fetcher) => ({ fetcher }),
+    });
+
+    const result = await executors["test_service.probe"]!({}, executionContext);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "provider_error",
+        message: "provider network request failed",
+        details: { status: 502 },
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain("secret.internal");
+  });
+
   it("does not forward the provider context as the native fetch receiver", async () => {
     let nativeFetchThis: unknown = null;
     vi.stubGlobal(
