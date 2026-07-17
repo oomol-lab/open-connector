@@ -1,4 +1,4 @@
-import type { IConnectionStore } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
@@ -26,17 +26,6 @@ const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 export interface SqliteRuntimeDatabaseOptions {
   runLimit?: number;
   secretCodec?: ISecretCodec;
-}
-
-interface ConnectionJsonInput {
-  database: DatabaseSync;
-  secretCodec: ISecretCodec;
-  service: string;
-  connectionName: string;
-}
-
-interface SetConnectionJsonInput extends ConnectionJsonInput {
-  value: unknown;
 }
 
 interface SecretJsonInput {
@@ -138,23 +127,40 @@ export class SqliteConnectionStore implements IConnectionStore {
     this.secretCodec = secretCodec;
   }
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
-    return await getConnectionJson<ResolvedCredential>({
-      database: this.database,
-      secretCodec: this.secretCodec,
-      service,
-      connectionName,
-    });
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    const row = this.database
+      .prepare("select id, value from connections where service = ? and connection_name = ?")
+      .get(service, connectionName);
+    return row
+      ? {
+          id: readString(row, "id"),
+          service,
+          connectionName,
+          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
+        }
+      : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    await setConnectionJson({
-      database: this.database,
-      secretCodec: this.secretCodec,
-      service,
-      connectionName,
-      value: credential,
-    });
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const row = this.database
+      .prepare(
+        `
+        insert into connections (id, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?)
+        on conflict(service, connection_name) do update set
+          value = excluded.value,
+          updated_at = excluded.updated_at
+        returning id
+      `,
+      )
+      .get(
+        crypto.randomUUID(),
+        service,
+        connectionName,
+        await this.secretCodec.encode(JSON.stringify(credential)),
+        new Date().toISOString(),
+      );
+    return { id: readString(row, "id"), service, connectionName, credential };
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -163,12 +169,13 @@ export class SqliteConnectionStore implements IConnectionStore {
       .run(service, connectionName);
   }
 
-  async list(): Promise<Array<{ service: string; connectionName: string; credential: ResolvedCredential }>> {
+  async list(): Promise<StoredConnection[]> {
     const rows = this.database
-      .prepare("select service, connection_name, value from connections order by service, connection_name")
+      .prepare("select id, service, connection_name, value from connections order by service, connection_name")
       .all();
     return await Promise.all(
       rows.map(async (row) => ({
+        id: readString(row, "id"),
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -602,13 +609,6 @@ async function getSecretJson<T>(input: SecretJsonInput): Promise<T | undefined> 
   return stored ? parseJson<T>(await input.secretCodec.decode(stored)) : undefined;
 }
 
-async function getConnectionJson<T>(input: ConnectionJsonInput): Promise<T | undefined> {
-  const row = input.database
-    .prepare("select value from connections where service = ? and connection_name = ?")
-    .get(input.service, input.connectionName) as RuntimeRow | undefined;
-  return row ? parseJson<T>(await input.secretCodec.decode(readString(row, "value"))) : undefined;
-}
-
 function getStoredValue(
   database: DatabaseSync,
   table: SecretJsonTable,
@@ -617,25 +617,6 @@ function getStoredValue(
 ): string | undefined {
   const row = database.prepare(`select value from ${table} where ${keyColumn} = ?`).get(key) as RuntimeRow | undefined;
   return row ? readString(row, "value") : undefined;
-}
-
-async function setConnectionJson(input: SetConnectionJsonInput): Promise<void> {
-  input.database
-    .prepare(
-      `
-      insert into connections (service, connection_name, value, updated_at)
-      values (?, ?, ?, ?)
-      on conflict(service, connection_name) do update set
-        value = excluded.value,
-        updated_at = excluded.updated_at
-    `,
-    )
-    .run(
-      input.service,
-      input.connectionName,
-      await input.secretCodec.encode(JSON.stringify(input.value)),
-      new Date().toISOString(),
-    );
 }
 
 async function setServiceJson(input: SetServiceJsonInput): Promise<void> {

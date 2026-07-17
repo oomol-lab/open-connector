@@ -39,9 +39,12 @@ describe("D1RuntimeDatabase", () => {
     expect(d1.value("connections", "service", "github")).not.toContain("github-token");
     expect(d1.value("oauth_client_configs", "service", "gmail")).not.toContain("client-secret");
     await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
-      authType: "api_key",
-      apiKey: "github-token",
-      metadata: { login: "octocat" },
+      id: expect.any(String),
+      credential: {
+        authType: "api_key",
+        apiKey: "github-token",
+        metadata: { login: "octocat" },
+      },
     });
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientId: "client-id",
@@ -57,6 +60,28 @@ describe("D1RuntimeDatabase", () => {
     await database.oauthClientConfigStore.delete("gmail");
     await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toBeUndefined();
+  });
+
+  it("preserves connection identity on update and replaces it after deletion", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const credential = {
+      authType: "api_key" as const,
+      apiKey: "github-token",
+      values: { apiKey: "github-token" },
+      profile: githubProfile,
+      metadata: {},
+    };
+
+    const created = await database.connectionStore.set("github", "default", credential);
+    const updated = await database.connectionStore.set("github", "default", {
+      ...credential,
+      apiKey: "updated-token",
+    });
+    expect(updated.id).toBe(created.id);
+
+    await database.connectionStore.delete("github", "default");
+    const recreated = await database.connectionStore.set("github", "default", credential);
+    expect(recreated.id).not.toBe(created.id);
   });
 
   it("takes OAuth state once", async () => {
@@ -365,6 +390,9 @@ class SqliteD1Database implements D1DatabaseBinding {
     );
     this.database.exec(readFileSync(new URL("../../../migrations/0004_action_run_audit.sql", import.meta.url), "utf8"));
     this.database.exec(readFileSync(new URL("../../../migrations/0005_run_retention.sql", import.meta.url), "utf8"));
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0006_connection_identity.sql", import.meta.url), "utf8"),
+    );
   }
 
   prepare(query: string): D1PreparedStatementBinding {

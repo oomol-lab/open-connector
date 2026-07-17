@@ -1154,11 +1154,12 @@ describe("ConnectServer", () => {
     );
     const app = server.createApp();
 
-    await app.request("/api/connections/example", {
+    const connectedResponse = await app.request("/api/connections/example", {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
+    const connected = (await connectedResponse.json()) as { id: string };
 
     const longQuery = "a".repeat(600);
     const response = await app.request("/v1/actions/example.echo", {
@@ -1188,7 +1189,7 @@ describe("ConnectServer", () => {
           actionId: "example.echo",
           caller: "http",
           ok: true,
-          connectionId: "example:default",
+          connectionId: connected.id,
           connectionProfile: {
             accountId: "example-account",
             displayName: "Example Account",
@@ -1657,11 +1658,12 @@ describe("ConnectServer", () => {
       },
     ).createApp();
 
-    await app.request("/api/connections/example", {
+    const connectedResponse = await app.request("/api/connections/example", {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
+    const connected = (await connectedResponse.json()) as { id: string };
 
     const apps = await app.request("/v1/apps");
     expect(apps.status).toBe(200);
@@ -1671,7 +1673,7 @@ describe("ConnectServer", () => {
       meta: {},
       data: [
         {
-          id: "example:default",
+          id: connected.id,
           service: "example",
           alias: "default",
           authType: "api_key",
@@ -2648,14 +2650,17 @@ class TransitEchoProviderLoader extends EchoProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  private readonly store = new Map<string, ResolvedCredential>();
+  private readonly store = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.store.get(createConnectionKey(service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    this.store.set(createConnectionKey(service, connectionName), credential);
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const key = createConnectionKey(service, connectionName);
+    const connection = { id: this.store.get(key)?.id ?? crypto.randomUUID(), service, connectionName, credential };
+    this.store.set(key, connection);
+    return connection;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -2663,14 +2668,7 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async list(): Promise<StoredConnection[]> {
-    return [...this.store.entries()].map(([key, credential]) => {
-      const [service, connectionName] = key.split(":");
-      return {
-        service: service!,
-        connectionName: connectionName!,
-        credential,
-      };
-    });
+    return [...this.store.values()];
   }
 }
 

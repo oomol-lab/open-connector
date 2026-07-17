@@ -1,4 +1,4 @@
-import type { IConnectionStore } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
@@ -54,32 +54,42 @@ export class D1ConnectionStore implements IConnectionStore {
     this.secretCodec = secretCodec;
   }
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     const row = await this.database
-      .prepare("select value from connections where service = ? and connection_name = ?")
+      .prepare("select id, value from connections where service = ? and connection_name = ?")
       .bind(service, connectionName)
       .first<RuntimeRow>();
-    return row ? parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))) : undefined;
+    return row
+      ? {
+          id: readString(row, "id"),
+          service,
+          connectionName,
+          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
+        }
+      : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    await this.database
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const row = await this.database
       .prepare(
         `
-        insert into connections (service, connection_name, value, updated_at)
-        values (?, ?, ?, ?)
+        insert into connections (id, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?)
         on conflict(service, connection_name) do update set
           value = excluded.value,
           updated_at = excluded.updated_at
+        returning id
       `,
       )
       .bind(
+        crypto.randomUUID(),
         service,
         connectionName,
         await this.secretCodec.encode(JSON.stringify(credential)),
         new Date().toISOString(),
       )
-      .run();
+      .first<RuntimeRow>();
+    return { id: readString(row!, "id"), service, connectionName, credential };
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -89,12 +99,13 @@ export class D1ConnectionStore implements IConnectionStore {
       .run();
   }
 
-  async list(): Promise<Array<{ service: string; connectionName: string; credential: ResolvedCredential }>> {
+  async list(): Promise<StoredConnection[]> {
     const { results } = await this.database
-      .prepare("select service, connection_name, value from connections order by service, connection_name")
+      .prepare("select id, service, connection_name, value from connections order by service, connection_name")
       .all<RuntimeRow>();
     return await Promise.all(
       results.map(async (row) => ({
+        id: readString(row, "id"),
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),

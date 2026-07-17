@@ -96,9 +96,11 @@ describe("Tailscale provider integration", () => {
       profile: { grantedScopes: ["devices:core:read"] },
     });
     await expect(connectionStore.get("tailscale", "production")).resolves.toMatchObject({
-      authType: "custom_credential",
-      values: { clientId: "client-id", clientSecret: "client-secret" },
-      metadata: { tailnet: "-", verifiedDeviceCount: 1 },
+      credential: {
+        authType: "custom_credential",
+        values: { clientId: "client-id", clientSecret: "client-secret" },
+        metadata: { tailnet: "-", verifiedDeviceCount: 1 },
+      },
     });
 
     const listAction = catalog.actionsById.get("tailscale.list_devices")!;
@@ -346,10 +348,10 @@ describe("Tailscale provider integration", () => {
       profile: { grantedScopes: ["dns:read"] },
     });
     const stored = await connectionStore.get("tailscale", "dns-only");
-    if (stored?.authType !== "custom_credential") {
+    if (stored?.credential.authType !== "custom_credential") {
       throw new Error("expected a stored custom credential");
     }
-    expect(stored.metadata).toEqual({ tailnet: "-" });
+    expect(stored.credential.metadata).toEqual({ tailnet: "-" });
     // The device probe is skipped rather than attempted-and-forgiven, so only the token exchange ran.
     expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual(["https://api.tailscale.com/api/v2/oauth/token"]);
   });
@@ -574,14 +576,22 @@ describe("Tailscale provider integration", () => {
 });
 
 class MemoryConnectionStore implements IConnectionStore {
-  private readonly connections = new Map<string, ResolvedCredential>();
+  private readonly connections = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.connections.get(`${service}:${connectionName}`);
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    this.connections.set(`${service}:${connectionName}`, credential);
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const key = `${service}:${connectionName}`;
+    const connection = {
+      id: this.connections.get(key)?.id ?? crypto.randomUUID(),
+      service,
+      connectionName,
+      credential,
+    };
+    this.connections.set(key, connection);
+    return connection;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -589,13 +599,6 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async list(): Promise<StoredConnection[]> {
-    return [...this.connections.entries()].map(([key, credential]) => {
-      const separator = key.indexOf(":");
-      return {
-        service: key.slice(0, separator),
-        connectionName: key.slice(separator + 1),
-        credential,
-      };
-    });
+    return [...this.connections.values()];
   }
 }

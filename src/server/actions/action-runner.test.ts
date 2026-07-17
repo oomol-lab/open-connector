@@ -151,11 +151,13 @@ class TestProviderLoader implements IProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  async get(): Promise<ResolvedCredential | undefined> {
+  async get(): Promise<StoredConnection | undefined> {
     return undefined;
   }
 
-  async set(): Promise<void> {}
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    return { id: crypto.randomUUID(), service, connectionName, credential };
+  }
 
   async delete(): Promise<void> {}
 

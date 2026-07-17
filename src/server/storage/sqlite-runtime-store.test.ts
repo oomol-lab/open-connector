@@ -26,7 +26,7 @@ describe("SqliteRuntimeDatabase", () => {
     const databasePath = await createDatabasePath();
     const first = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
 
-    await first.connectionStore.set("github", "default", {
+    const connection = await first.connectionStore.set("github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -59,9 +59,12 @@ describe("SqliteRuntimeDatabase", () => {
 
     const second = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
     await expect(second.connectionStore.get("github", "default")).resolves.toMatchObject({
-      authType: "api_key",
-      apiKey: "github-token",
-      metadata: { login: "octocat" },
+      id: connection.id,
+      credential: {
+        authType: "api_key",
+        apiKey: "github-token",
+        metadata: { login: "octocat" },
+      },
     });
     await expect(second.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientId: "client-id",
@@ -88,6 +91,29 @@ describe("SqliteRuntimeDatabase", () => {
       ],
     });
     second.close();
+  });
+
+  it("preserves connection identity on update and replaces it after deletion", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    const credential = {
+      authType: "api_key" as const,
+      apiKey: "github-token",
+      values: { apiKey: "github-token" },
+      profile: githubProfile,
+      metadata: {},
+    };
+
+    const created = await database.connectionStore.set("github", "default", credential);
+    const updated = await database.connectionStore.set("github", "default", {
+      ...credential,
+      apiKey: "updated-token",
+    });
+    expect(updated.id).toBe(created.id);
+
+    await database.connectionStore.delete("github", "default");
+    const recreated = await database.connectionStore.set("github", "default", credential);
+    expect(recreated.id).not.toBe(created.id);
+    database.close();
   });
 
   it("claims, completes, and replays idempotent responses across database instances", async () => {
@@ -321,6 +347,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0003_action_idempotency.sql",
       "0004_action_run_audit.sql",
       "0005_run_retention.sql",
+      "0006_connection_identity.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
@@ -344,6 +371,14 @@ describe("SqliteRuntimeDatabase", () => {
     const legacy = new DatabaseSync(databasePath);
     legacy.exec(readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8"));
     legacy
+      .prepare("insert into connections (service, connection_name, value, updated_at) values (?, ?, ?, ?)")
+      .run(
+        "github",
+        "default",
+        JSON.stringify({ authType: "api_key", apiKey: "legacy-token", values: {}, metadata: {} }),
+        "2026-06-30T00:00:00.000Z",
+      );
+    legacy
       .prepare(
         `
         insert into runs (id, action_id, started_at, completed_at, ok, value)
@@ -351,26 +386,33 @@ describe("SqliteRuntimeDatabase", () => {
       `,
       )
       .run(
-        "legacy-gmail",
-        "gmail.search_threads",
+        "legacy-github",
+        "github.search_issues",
         "2026-06-30T00:00:00.000Z",
         "2026-06-30T00:00:01.000Z",
         1,
         JSON.stringify({
-          id: "legacy-gmail",
-          actionId: "gmail.search_threads",
+          id: "legacy-github",
+          actionId: "github.search_issues",
           caller: "http",
           startedAt: "2026-06-30T00:00:00.000Z",
           completedAt: "2026-06-30T00:00:01.000Z",
           durationMs: 1000,
           ok: true,
+          connectionId: "github:default",
         }),
       );
     legacy.close();
 
     const migrated = new SqliteRuntimeDatabase(databasePath, { runLimit: 5 });
-    await expect(migrated.runLogStore.list({ service: "gmail" })).resolves.toMatchObject({
-      items: [{ id: "legacy-gmail", service: "gmail" }],
+    await expect(migrated.runLogStore.list({ service: "github" })).resolves.toMatchObject({
+      items: [{ id: "legacy-github", service: "github" }],
+    });
+    const migratedConnection = await migrated.connectionStore.get("github", "default");
+    expect(migratedConnection).toMatchObject({ credential: { apiKey: "legacy-token" } });
+    expect(migratedConnection?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    await expect(migrated.runLogStore.get("legacy-github")).resolves.toMatchObject({
+      connectionId: migratedConnection?.id,
     });
     await expect(
       migrated.idempotencyStore.claim({
@@ -384,13 +426,19 @@ describe("SqliteRuntimeDatabase", () => {
     migrated.close();
 
     const inspected = new DatabaseSync(databasePath);
-    expect(inspected.prepare("select caller from runs where id = ?").get("legacy-gmail")).toEqual({ caller: "http" });
+    expect(inspected.prepare("select caller from runs where id = ?").get("legacy-github")).toEqual({ caller: "http" });
     expect(
       inspected.prepare("select name from runtime_migrations where name = ?").get("0004_action_run_audit.sql"),
     ).toBeDefined();
     expect(
       inspected.prepare("select name from runtime_migrations where name = ?").get("0005_run_retention.sql"),
     ).toBeDefined();
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0006_connection_identity.sql"),
+    ).toBeDefined();
+    expect(inspected.prepare("pragma table_info(connections)").all()).toContainEqual(
+      expect.objectContaining({ name: "id", notnull: 1 }),
+    );
     expect(
       inspected
         .prepare("select name from sqlite_master where type = 'index' and name = ?")
@@ -436,8 +484,10 @@ describe("SqliteRuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
     });
     await expect(second.connectionStore.get("github", "default")).resolves.toMatchObject({
-      authType: "api_key",
-      apiKey: "github-token",
+      credential: {
+        authType: "api_key",
+        apiKey: "github-token",
+      },
     });
     await expect(second.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).resolves.toEqual({
       kind: "completed",
@@ -559,8 +609,10 @@ describe("SqliteRuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("new-key"),
     });
     await expect(withNewKey.connectionStore.get("github", "default")).resolves.toMatchObject({
-      authType: "api_key",
-      apiKey: "github-token",
+      credential: {
+        authType: "api_key",
+        apiKey: "github-token",
+      },
     });
     await expect(withNewKey.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientSecret: "client-secret",
