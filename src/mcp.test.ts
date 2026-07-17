@@ -189,7 +189,7 @@ describe("MCP server", () => {
     await withAuthenticatedMcpClient(async (client) => {
       const guide = await client.callTool({
         name: "get_action_guide",
-        arguments: { actionId: "example_auth.get_account", connectionName: "secondary" },
+        arguments: { actionId: "example_auth.get_account", connectionName: " secondary " },
       });
       const result = await client.callTool({
         name: "execute_action",
@@ -244,6 +244,28 @@ describe("MCP server", () => {
           message: "example_auth connection not found: missing.",
         },
       });
+    });
+  });
+
+  it("rejects blank connection names instead of selecting the default connection", async () => {
+    await withAuthenticatedMcpClient(async (client) => {
+      const guide = await client.callTool({
+        name: "get_action_guide",
+        arguments: { actionId: "example_auth.get_account", connectionName: "   " },
+      });
+      const execution = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example_auth.get_account", input: {}, connectionName: "" },
+      });
+
+      expect(guide.isError).toBe(true);
+      expect(execution.isError).toBe(true);
+      expect(guide.content).toEqual([
+        expect.objectContaining({ type: "text", text: expect.stringContaining("Connection name must not be empty.") }),
+      ]);
+      expect(execution.content).toEqual([
+        expect.objectContaining({ type: "text", text: expect.stringContaining("Connection name must not be empty.") }),
+      ]);
     });
   });
 

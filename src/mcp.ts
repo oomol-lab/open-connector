@@ -72,6 +72,13 @@ const mcpServerInstructions = [
   "Pass execute_action input as a JSON object matching the selected action guide.",
 ].join("\n");
 
+const optionalConnectionNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Connection name must not be empty.")
+  .optional()
+  .describe("Optional named connection. Omit it to use the default connection.");
+
 /**
  * Return the fixed discovery-oriented MCP tool list.
  *
@@ -151,10 +158,7 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
       description: "Return one action's compact markdown guide, including local execute examples and input parameters.",
       inputSchema: {
         actionId: z.string().describe("Full action id, for example github.get_current_user."),
-        connectionName: z
-          .string()
-          .optional()
-          .describe("Optional named connection. Omit it to use the default connection."),
+        connectionName: optionalConnectionNameSchema,
       },
     },
     async ({ actionId, connectionName }) => toolResult(await getActionGuide(options, actionId, connectionName)),
@@ -172,10 +176,7 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
           .record(z.string(), z.unknown())
           .default({})
           .describe("Action input object matching the selected action guide."),
-        connectionName: z
-          .string()
-          .optional()
-          .describe("Optional named connection. Omit it to use the default connection."),
+        connectionName: optionalConnectionNameSchema,
       },
     },
     async ({ actionId, input, connectionName }) =>

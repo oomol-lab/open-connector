@@ -53,6 +53,17 @@ The MCP server exposes a small discovery-oriented tool set:
 Use `list_connections` to discover configured accounts before selecting one. Both
 `get_action_guide` and `execute_action` accept an optional `connectionName`:
 
+`get_action_guide` request:
+
+```json
+{
+  "actionId": "example.get_record",
+  "connectionName": "secondary"
+}
+```
+
+`execute_action` request:
+
 ```json
 {
   "actionId": "example.get_record",
