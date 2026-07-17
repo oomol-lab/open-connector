@@ -57,6 +57,49 @@ describe("PixelLab expanded runtime", () => {
     });
   });
 
+  it("starts styled rotation generation without a reference image", async () => {
+    const requests: RecordedRequest[] = [];
+    const context = createContext(
+      requests,
+      Response.json({ background_job_id: "job-rotations", status: "processing" }),
+    );
+
+    await expect(
+      pixellabImageExtraActionHandlers.start_generate_rotations_pro!(
+        {
+          method: "create_with_style",
+          description: "a knight in armor",
+          imageSize: { width: 64, height: 64 },
+        },
+        context,
+      ),
+    ).resolves.toEqual({ jobId: "job-rotations", status: "processing" });
+
+    expect(requests[0]?.url).toBe("https://api.pixellab.ai/v2/generate-8-rotations-v2");
+    expect(JSON.parse(String(requests[0]?.init?.body))).toEqual({
+      method: "create_with_style",
+      image_size: { width: 64, height: 64 },
+      description: "a knight in armor",
+    });
+  });
+
+  it("requires a description for styled rotation generation", async () => {
+    const context = createContext([], Response.json({ background_job_id: "unused" }));
+
+    await expect(
+      pixellabImageExtraActionHandlers.start_generate_rotations_pro!(
+        {
+          method: "create_with_style",
+          imageSize: { width: 64, height: 64 },
+        },
+        context,
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "description is required when method is create_with_style.",
+    });
+  });
+
   it("normalizes UI asset creation and listing", async () => {
     const createContextValue = createContext(
       [],

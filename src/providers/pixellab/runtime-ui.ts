@@ -30,7 +30,7 @@ export const pixellabUiActionHandlers: Record<string, PixellabUiHandler> = {
       "POST",
       "/create-ui-asset",
       compactObject({
-        description: inputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         image_size: optionalRecord(input.imageSize),
         pieces: input.pieces === undefined ? undefined : objectArray(input.pieces, "pieces", invalidInputError),
         elements: input.elements === undefined ? undefined : stringArray(input.elements, "elements", invalidInputError),
@@ -65,13 +65,13 @@ export const pixellabUiActionHandlers: Record<string, PixellabUiHandler> = {
   },
 
   async get_ui_asset(input, context) {
-    const uiAssetId = inputString(input.uiAssetId, "uiAssetId");
+    const uiAssetId = requiredString(input.uiAssetId, "uiAssetId", invalidInputError);
     const payload = await pixellabRequestJson("GET", `/ui-assets/${encodeURIComponent(uiAssetId)}`, undefined, context);
     return { asset: normalizeUiAsset(payload, "UI asset") };
   },
 
   async delete_ui_asset(input, context) {
-    const uiAssetId = inputString(input.uiAssetId, "uiAssetId");
+    const uiAssetId = requiredString(input.uiAssetId, "uiAssetId", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("DELETE", `/ui-assets/${encodeURIComponent(uiAssetId)}`, undefined, context),
       "delete UI asset",
@@ -121,10 +121,6 @@ function responseInteger(value: unknown, fieldName: string): number {
     throw invalidResponseError(`${fieldName} must be an integer.`);
   }
   return number;
-}
-
-function inputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
 }
 
 function invalidInputError(message: string): ProviderRequestError {

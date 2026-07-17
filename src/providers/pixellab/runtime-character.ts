@@ -46,8 +46,8 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
       "POST",
       "/create-character-pro",
       compactObject({
-        description: inputString(input.description, "description"),
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         method,
         view: optionalString(input.view),
         template_id: optionalString(input.templateId),
@@ -71,7 +71,7 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
       "POST",
       "/create-character-v3",
       compactObject({
-        description: inputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         reference_image: referenceImage,
         image_size: optionalRecord(input.imageSize),
         view: optionalString(input.view),
@@ -106,7 +106,7 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
       "POST",
       "/characters/animations",
       compactObject({
-        character_id: inputString(input.characterId, "characterId"),
+        character_id: requiredString(input.characterId, "characterId", invalidInputError),
         animation_name: optionalString(input.animationName),
         description: optionalString(input.description),
         action_description: optionalString(input.actionDescription),
@@ -137,8 +137,8 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
       "POST",
       "/create-character-state",
       compactObject({
-        character_id: inputString(input.characterId, "characterId"),
-        edit_description: inputString(input.editDescription, "editDescription"),
+        character_id: requiredString(input.characterId, "characterId", invalidInputError),
+        edit_description: requiredString(input.editDescription, "editDescription", invalidInputError),
         no_background: optionalBoolean(input.noBackground),
         seed: optionalInteger(input.seed),
         use_color_palette_from_reference: optionalBoolean(input.useColorPaletteFromReference),
@@ -164,7 +164,7 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
   },
 
   async get_character(input, context) {
-    const characterId = inputString(input.characterId, "characterId");
+    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
     const payload = await pixellabRequestJson(
       "GET",
       `/characters/${encodeURIComponent(characterId)}`,
@@ -175,7 +175,7 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
   },
 
   async delete_character(input, context) {
-    const characterId = inputString(input.characterId, "characterId");
+    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("DELETE", `/characters/${encodeURIComponent(characterId)}`, undefined, context),
       "delete character",
@@ -191,7 +191,7 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
   },
 
   async download_character_zip(input, context) {
-    const characterId = inputString(input.characterId, "characterId");
+    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
     const file = await downloadPixellabFile(
       `/characters/${encodeURIComponent(characterId)}/zip`,
       `pixellab-character-${safeFileSegment(characterId)}.zip`,
@@ -201,7 +201,7 @@ export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHa
   },
 
   async update_character_tags(input, context) {
-    const characterId = inputString(input.characterId, "characterId");
+    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
     const tags = requiredStringArray(input.tags, "tags", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("PATCH", `/characters/${encodeURIComponent(characterId)}/tags`, { tags }, context),
@@ -224,8 +224,8 @@ async function createDirectionalCharacter(
     "POST",
     path,
     compactObject({
-      description: inputString(input.description, "description"),
-      image_size: inputRecord(input.imageSize, "imageSize"),
+      description: requiredString(input.description, "description", invalidInputError),
+      image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
       mode: includeMode ? optionalString(input.mode) : undefined,
       async_mode: true,
       text_guidance_scale: optionalNumber(input.textGuidanceScale),
@@ -312,14 +312,6 @@ function responseInteger(value: unknown, fieldName: string): number {
     throw invalidResponseError(`${fieldName} must be an integer.`);
   }
   return number;
-}
-
-function inputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
-}
-
-function inputRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, invalidInputError);
 }
 
 function invalidInputError(message: string): ProviderRequestError {

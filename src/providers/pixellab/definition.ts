@@ -7,7 +7,8 @@ const service = "pixellab";
 export const provider: ProviderDefinition = {
   service,
   displayName: "PixelLab",
-  description: "Generate and animate pixel-art characters with PixelLab.",
+  description:
+    "Generate, edit, animate, and manage pixel-art images, UI assets, characters, and objects with PixelLab.",
   categories: ["AI", "Design & Media"],
   authTypes: ["api_key"],
   auth: [

@@ -32,7 +32,7 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
       "POST",
       "/create-1-direction-object",
       compactObject({
-        description: inputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         size: optionalInteger(input.size),
         view: optionalString(input.view),
         style_images: styleImages,
@@ -63,7 +63,7 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
       "POST",
       "/create-8-direction-object",
       compactObject({
-        description: inputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         size: optionalInteger(input.size),
         view: optionalString(input.view),
         reference_image: referenceImage,
@@ -95,7 +95,7 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
     if (input.enhancePrompt === true && optionalString(input.animationDescription) === undefined) {
       throw new ProviderRequestError(400, "animationDescription is required when enhancePrompt is true.");
     }
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson(
         "POST",
@@ -137,12 +137,12 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
   },
 
   async start_create_object_state(input, context) {
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const payload = await pixellabRequestJson(
       "POST",
       `/objects/${encodeURIComponent(objectId)}/states`,
       compactObject({
-        edit_description: inputString(input.editDescription, "editDescription"),
+        edit_description: requiredString(input.editDescription, "editDescription", invalidInputError),
         seed: optionalInteger(input.seed),
       }),
       context,
@@ -151,7 +151,7 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
   },
 
   async select_object_frames(input, context) {
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const indices = integerArray(input.indices, "indices");
     const record = requireResponseRecord(
       await pixellabRequestJson(
@@ -173,7 +173,7 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
   },
 
   async dismiss_object_review(input, context) {
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("POST", `/objects/${encodeURIComponent(objectId)}/dismiss-review`, undefined, context),
       "dismiss object review",
@@ -197,13 +197,13 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
   },
 
   async get_object(input, context) {
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const payload = await pixellabRequestJson("GET", `/objects/${encodeURIComponent(objectId)}`, undefined, context);
     return { object: normalizeObject(payload, "object") };
   },
 
   async delete_object(input, context) {
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("DELETE", `/objects/${encodeURIComponent(objectId)}`, undefined, context),
       "delete object",
@@ -217,7 +217,7 @@ export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler>
   },
 
   async update_object_tags(input, context) {
-    const objectId = inputString(input.objectId, "objectId");
+    const objectId = requiredString(input.objectId, "objectId", invalidInputError);
     const tags = requiredStringArray(input.tags, "tags", invalidInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("PATCH", `/objects/${encodeURIComponent(objectId)}/tags`, { tags }, context),
@@ -323,10 +323,6 @@ function responseInteger(value: unknown, fieldName: string): number {
   const number = optionalInteger(value);
   if (number === undefined) throw invalidResponseError(`${fieldName} must be an integer.`);
   return number;
-}
-
-function inputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
 }
 
 function invalidInputError(message: string): ProviderRequestError {

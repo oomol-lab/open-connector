@@ -53,8 +53,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/generate-image-v2",
       compactObject({
-        description: readInputString(input.description, "description"),
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
         reference_images: referenceImages,
@@ -73,8 +73,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "/generate-with-style-v2",
       compactObject({
         style_images: styleImages,
-        description: readInputString(input.description, "description"),
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         style_description: optionalString(input.styleDescription),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
@@ -90,7 +90,7 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/generate-ui-v2",
       compactObject({
-        description: readInputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         image_size: optionalRecord(input.imageSize),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
@@ -109,8 +109,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/create-image-pixflux",
       compactObject({
-        description: readInputString(input.description, "description"),
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         outline: optionalString(input.outline),
         shading: optionalString(input.shading),
@@ -136,8 +136,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/create-image-pixen",
       compactObject({
-        description: readInputString(input.description, "description"),
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         outline: optionalString(input.outline),
         detail: optionalString(input.detail),
         view: optionalString(input.view),
@@ -166,8 +166,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "/image-to-pixelart",
       compactObject({
         image,
-        image_size: readInputRecord(input.imageSize, "imageSize"),
-        output_size: readInputRecord(input.outputSize, "outputSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        output_size: requiredRecord(input.outputSize, "outputSize", invalidInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         seed: optionalInteger(input.seed),
       }),
@@ -199,10 +199,10 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/resize",
       compactObject({
-        description: readInputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         reference_image: referenceImage,
-        reference_image_size: readInputRecord(input.referenceImageSize, "referenceImageSize"),
-        target_size: readInputRecord(input.targetSize, "targetSize"),
+        reference_image_size: requiredRecord(input.referenceImageSize, "referenceImageSize", invalidInputError),
+        target_size: requiredRecord(input.targetSize, "targetSize", invalidInputError),
         view: optionalString(input.view),
         direction: optionalString(input.direction),
         isometric: optionalBoolean(input.isometric),
@@ -225,7 +225,7 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "/remove-background",
       compactObject({
         image,
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         background_removal_task: optionalString(input.backgroundRemovalTask),
         text: optionalString(input.text),
         seed: optionalInteger(input.seed),
@@ -258,7 +258,7 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       compactObject({
         method,
         edit_images: editImages,
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         description: method === "edit_with_text" ? description : undefined,
         reference_image: method === "edit_with_reference" ? referenceImage : undefined,
         seed: optionalInteger(input.seed),
@@ -270,14 +270,14 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
   },
 
   async start_inpaint(input, context) {
-    const imageSize = readInputRecord(input.imageSize, "imageSize");
+    const imageSize = requiredRecord(input.imageSize, "imageSize", invalidInputError);
     const image = await encodeTransitImage(input.image, "image", context);
     const maskImage = await encodeTransitImage(input.maskImage, "maskImage", context);
     const payload = await pixellabRequestJson(
       "POST",
       "/inpaint-v3",
       compactObject({
-        description: readInputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         inpainting_image: { image, size: imageSize },
         mask_image: { image: maskImage, size: imageSize },
         seed: optionalInteger(input.seed),
@@ -310,8 +310,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/enhance-pixen-prompt",
       compactObject({
-        description: readInputString(input.description, "description"),
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         outline: optionalString(input.outline),
         detail: optionalString(input.detail),
         view: optionalString(input.view),
@@ -328,8 +328,8 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       "POST",
       "/enhance-character-v3-prompt",
       compactObject({
-        description: readInputString(input.description, "description"),
-        image_size: readInputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         view: optionalString(input.view),
         outline: optionalString(input.outline),
         detail: optionalString(input.detail),
@@ -348,7 +348,7 @@ export const pixellabImageActionHandlers: Record<string, PixellabImageActionHand
       compactObject({
         first_frame: firstFrame,
         last_frame: lastFrame,
-        action: readInputString(input.action, "action"),
+        action: requiredString(input.action, "action", invalidInputError),
       }),
       context,
     );
@@ -473,7 +473,7 @@ function normalizeStyleOptions(value: unknown): Record<string, boolean | undefin
 }
 
 function validatePixenImageSize(value: unknown): void {
-  const size = readInputRecord(value, "imageSize");
+  const size = requiredRecord(value, "imageSize", invalidInputError);
   const width = integer(size.width, "imageSize.width", invalidInputError);
   const height = integer(size.height, "imageSize.height", invalidInputError);
   if (width % 4 !== 0 || height % 4 !== 0) {
@@ -482,14 +482,6 @@ function validatePixenImageSize(value: unknown): void {
   if (width * height > 512 * 512) {
     throw new ProviderRequestError(400, "imageSize area cannot exceed 512 by 512 pixels.");
   }
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
-}
-
-function readInputRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, invalidInputError);
 }
 
 function requireResponseNumber(value: unknown, fieldName: string): number {

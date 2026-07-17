@@ -40,9 +40,9 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "POST",
       "/edit-animation-v2",
       compactObject({
-        description: inputString(input.description, "description"),
+        description: requiredString(input.description, "description", invalidInputError),
         frames,
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
       }),
@@ -58,8 +58,8 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       compactObject({
         start_image: await encodeFrame(input.startImage, "startImage", context),
         end_image: await encodeFrame(input.endImage, "endImage", context),
-        action: inputString(input.action, "action"),
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        action: requiredString(input.action, "action", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
       }),
@@ -75,7 +75,7 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       compactObject({
         reference_image: await encodeFrame(input.referenceImage, "referenceImage", context),
         frames: await encodeFrameList(input.frames, "frames", context),
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
         additional_instructions: optionalString(input.additionalInstructions),
@@ -106,9 +106,9 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "POST",
       "/animate-with-text",
       compactObject({
-        image_size: inputRecord(input.imageSize, "imageSize"),
-        description: inputString(input.description, "description"),
-        action: inputString(input.action, "action"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", invalidInputError),
+        action: requiredString(input.action, "action", invalidInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         image_guidance_scale: optionalNumber(input.imageGuidanceScale),
         n_frames: optionalInteger(input.frameCount),
@@ -132,9 +132,9 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "/animate-with-text-v2",
       compactObject({
         reference_image: await encodeTransitImage(input.referenceImage, "referenceImage", context),
-        reference_image_size: inputRecord(input.referenceImageSize, "referenceImageSize"),
-        action: inputString(input.action, "action"),
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        reference_image_size: requiredRecord(input.referenceImageSize, "referenceImageSize", invalidInputError),
+        action: requiredString(input.action, "action", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
         view: optionalString(input.view),
@@ -149,8 +149,12 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
     const method = optionalString(input.method) ?? "rotate_character";
     const referenceImage = await encodeOptionalFlatImage(input.referenceImage, "referenceImage", context);
     const conceptImage = await encodeOptionalFlatImage(input.conceptImage, "conceptImage", context);
-    if ((method === "rotate_character" || method === "create_with_style") && !referenceImage) {
-      throw new ProviderRequestError(400, `referenceImage is required when method is ${method}.`);
+    const description = optionalString(input.description);
+    if (method === "rotate_character" && !referenceImage) {
+      throw new ProviderRequestError(400, "referenceImage is required when method is rotate_character.");
+    }
+    if (method === "create_with_style" && !description) {
+      throw new ProviderRequestError(400, "description is required when method is create_with_style.");
     }
     if (method === "create_from_concept" && !conceptImage) {
       throw new ProviderRequestError(400, "conceptImage is required when method is create_from_concept.");
@@ -160,10 +164,10 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "/generate-8-rotations-v2",
       compactObject({
         method,
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         reference_image: referenceImage,
         concept_image: conceptImage,
-        description: optionalString(input.description),
+        description,
         style_description: optionalString(input.styleDescription),
         view: optionalString(input.view),
         seed: optionalInteger(input.seed),
@@ -184,7 +188,7 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "POST",
       "/rotate",
       compactObject({
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         image_guidance_scale: optionalNumber(input.imageGuidanceScale),
         view_change: optionalInteger(input.viewChange),
         direction_change: optionalInteger(input.directionChange),
@@ -211,8 +215,8 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "POST",
       "/inpaint",
       compactObject({
-        description: inputString(input.description, "description"),
-        image_size: inputRecord(input.imageSize, "imageSize"),
+        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         outline: optionalString(input.outline),
         shading: optionalString(input.shading),
@@ -240,8 +244,8 @@ export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtra
       "/edit-image",
       compactObject({
         image: await encodeTransitImage(input.image, "image", context),
-        image_size: inputRecord(input.imageSize, "imageSize"),
-        description: inputString(input.description, "description"),
+        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", invalidInputError),
         width: optionalInteger(input.width),
         height: optionalInteger(input.height),
         seed: optionalInteger(input.seed),
@@ -260,8 +264,8 @@ async function buildPixfluxBody(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return compactObject({
-    description: inputString(input.description, "description"),
-    image_size: inputRecord(input.imageSize, "imageSize"),
+    description: requiredString(input.description, "description", invalidInputError),
+    image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
     text_guidance_scale: optionalNumber(input.textGuidanceScale),
     outline: optionalString(input.outline),
     shading: optionalString(input.shading),
@@ -341,14 +345,6 @@ async function normalizeSingleImage(
     throw invalidResponseError("PixelLab response did not include an image.");
   }
   return compactObject({ image, usage: normalizeUsage(record.usage) });
-}
-
-function inputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
-}
-
-function inputRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, invalidInputError);
 }
 
 function invalidInputError(message: string): ProviderRequestError {
