@@ -27,7 +27,7 @@ const oauthCompletionStrings = {
     manualClose: "现在可以手动关闭此窗口。",
   },
   "zh-TW": {
-    badge: "已連接",
+    badge: "已連線",
     title: "連線已就緒",
     bodyBefore: "已完成 ",
     bodyAfter: " 的授權，返回 OOMOL Connect 繼續。",
@@ -180,7 +180,7 @@ code {
 <script>(()=>{
 const STR=${scriptJson(oauthCompletionStrings)};
 if("BroadcastChannel" in window){const channel=new BroadcastChannel(${scriptJson(oauthCompletionChannelName)});channel.postMessage(${payload});channel.close();}
-const pick=()=>{const langs=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"];for(const raw of langs){const l=String(raw).toLowerCase();if(l.startsWith("zh"))return (l.includes("tw")||l.includes("hk")||l.includes("hant"))?"zh-TW":"zh-CN";const primary=l.split("-")[0];if(STR[raw])return raw;if(STR[primary])return primary;}return "en";};
+const pick=()=>{const langs=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"];for(const raw of langs){const l=String(raw).toLowerCase();if(l.startsWith("zh"))return (!l.includes("hans")&&(l.includes("tw")||l.includes("hk")||l.includes("mo")||l.includes("hant")))?"zh-TW":"zh-CN";const primary=l.split("-")[0];if(STR[raw])return raw;if(STR[primary])return primary;}return "en";};
 const t=STR[pick()]||STR.en;
 document.documentElement.lang=pick();
 for(const el of document.querySelectorAll("[data-t]")){const key=el.getAttribute("data-t");if(t[key]!=null)el.textContent=t[key];}

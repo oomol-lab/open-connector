@@ -182,7 +182,7 @@ OpenConnector 也可部署至 Fly.io，使用 Node Docker 執行階段，並將 
 使用 GitHub Packages（GHCR）上的預先建置映像檔執行 OpenConnector：`ghcr.io/oomol-lab/open-connector`。
 最新版本使用 `latest`；正式環境請固定版本號，例如 `v1.0.0`；若要使用最新的 `main` 建置則使用 `tip`。
 
-標籤、拉取及執行方式，請參閱 [docker-ghcr.md](docker-ghcr.md)。
+標籤、拉取及執行方式，請參閱 [docker-ghcr.md（英文）](docker-ghcr.md)。
 
 ## 想直接使用？
 
@@ -202,11 +202,11 @@ OpenConnector 也可部署至 Fly.io，使用 Node Docker 執行階段，並將 
 
 - [快速入門](quickstart.md)
 - [開發者工具](sdk-cli.md)
-- [Gmail OAuth 與 SDK 教學](gmail-oauth-sdk.md)
+- [Gmail OAuth 與 SDK 教學（英文）](gmail-oauth-sdk.md)
 - [執行階段 API 與 MCP](runtime-api.md)
 - [Fly.io 部署](fly-io.md)
 - [Cloudflare 部署](cloudflare.md)
-- [Docker 映像檔（GHCR）](docker-ghcr.md)
+- [Docker 映像檔（GHCR）（英文）](docker-ghcr.md)
 - [設定](configuration.md)
 - [憑證與 OAuth](credentials.md)
 - [目錄格式](catalog-format.md)

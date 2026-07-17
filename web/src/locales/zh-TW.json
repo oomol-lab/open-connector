@@ -65,7 +65,7 @@
       },
       "providers": {
         "title": "服務提供者",
-        "subtitle": "連線服務提供者並檢視其功能。"
+        "subtitle": "連線至服務提供者並檢視其功能。"
       },
       "actions": {
         "title": "動作",
@@ -187,7 +187,7 @@
       "noAuth": "此服務提供者無須本機憑證即可執行。",
       "needsOAuthClient": "{{name}} 需要本機 OAuth 用戶端才能連線。",
       "connectedOAuth": "{{name}} 已透過 OAuth 連線。",
-      "connectOAuth": "透過 OAuth 授權流程連線 {{name}}。",
+      "connectOAuth": "透過 {{name}} 的 OAuth 授權流程連線。",
       "saving": "正在儲存連線...",
       "openingOAuth": "正在開啟 OAuth...",
       "configureOAuthFirst": "連線前請先設定 OAuth 用戶端。",
@@ -205,8 +205,8 @@
       "connect": "連線",
       "details": "詳細資料",
       "manageConnection": "管理",
-      "connectProvider": "連線 {{name}}",
-      "reconnectProvider": "重新連線 {{name}}",
+      "connectProvider": "連線至 {{name}}",
+      "reconnectProvider": "重新連線至 {{name}}",
       "disconnect": "中斷連線",
       "saveOAuthClient": "儲存 OAuth 用戶端",
       "updateOAuthClient": "更新 OAuth 用戶端",
@@ -216,9 +216,9 @@
       "configuredTitle": "OAuth 用戶端已設定",
       "requiredTitle": "需要 OAuth 用戶端",
       "missingDescription": "{{name}} 需要本機 OAuth 用戶端才能連線。",
-      "clientId": "用戶端 ID",
-      "clientSecret": "用戶端密鑰",
-      "storedSecretHint": "已儲存的密鑰不會顯示。儲存變更時請再次輸入。",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "storedSecretHint": "已儲存的 secret 不會顯示。儲存變更時請再次輸入。",
       "saving": "正在儲存 OAuth 用戶端...",
       "saved": "OAuth 用戶端已儲存。",
       "failed": "無法儲存 OAuth 用戶端。",
