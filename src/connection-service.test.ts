@@ -549,6 +549,33 @@ describe("ConnectionService", () => {
       code: "oauth_token_expired",
     });
   });
+
+  it("resolves the execution credential and summary from one connection snapshot", async () => {
+    const store = new MemoryConnectionStore();
+    const service = createService([apiKeyProvider], { store });
+    await store.set("uptimerobot", "default", {
+      authType: "api_key",
+      apiKey: "original-key",
+      values: { apiKey: "original-key", accountId: "account-1" },
+      profile: testProfile,
+      metadata: {},
+    });
+
+    const resolved = await service.resolveForExecution("uptimerobot");
+    await store.set("uptimerobot", "default", {
+      authType: "api_key",
+      apiKey: "replacement-key",
+      values: { apiKey: "replacement-key", accountId: "account-2" },
+      profile: { ...testProfile, accountId: "replacement" },
+      metadata: {},
+    });
+
+    expect(resolved.summary?.id).toBe("uptimerobot:default");
+    await expect(resolved.getCredential("uptimerobot")).resolves.toMatchObject({
+      apiKey: "original-key",
+      profile: { accountId: "example-account" },
+    });
+  });
 });
 
 interface CreateServiceOptions {

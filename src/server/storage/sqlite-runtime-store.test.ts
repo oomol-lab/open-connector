@@ -8,7 +8,7 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
-import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
+import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
 
 const tempDirs: string[] = [];
 const githubProfile = {
@@ -293,6 +293,52 @@ describe("SqliteRuntimeDatabase", () => {
     database.close();
   });
 
+  it("filters runs by action, caller, and status and reads one run by id", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath, { runLimit: 5 });
+    const match = {
+      ...createRun("run-match", "2026-06-30T00:00:02.000Z", "gmail.send_message", "gmail"),
+      caller: "mcp" as const,
+      ok: false,
+    };
+
+    await database.runLogStore.add(createRun("run-other", "2026-06-30T00:00:01.000Z"));
+    await database.runLogStore.add(match);
+
+    await expect(
+      database.runLogStore.list({ actionId: "gmail.send_message", caller: "mcp", ok: false }),
+    ).resolves.toMatchObject({ items: [{ id: "run-match" }] });
+    await expect(database.runLogStore.get("run-match")).resolves.toEqual(match);
+    await expect(database.runLogStore.get("missing")).resolves.toBeUndefined();
+    database.close();
+  });
+
+  it("keeps an inserted run when retention cleanup fails", async () => {
+    const raw = new DatabaseSync(":memory:");
+    for (const migration of [
+      "0001_runtime.sql",
+      "0002_run_service.sql",
+      "0003_action_idempotency.sql",
+      "0004_action_run_audit.sql",
+      "0005_run_retention.sql",
+    ]) {
+      raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
+    }
+    const store = new SqliteRunLogStore(raw, 1);
+    await store.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    raw.exec(`
+      create trigger fail_run_retention before delete on runs begin
+        select raise(abort, 'retention failed');
+      end;
+    `);
+
+    await expect(store.add(createRun("run-2", "2026-06-30T00:00:01.000Z"))).resolves.toEqual({
+      retentionApplied: false,
+    });
+    await expect(store.get("run-2")).resolves.toMatchObject({ id: "run-2" });
+    raw.close();
+  });
+
   it("applies pending runtime migrations to existing local databases", async () => {
     const databasePath = await createDatabasePath();
     const legacy = new DatabaseSync(databasePath);
@@ -336,6 +382,21 @@ describe("SqliteRuntimeDatabase", () => {
       }),
     ).resolves.toEqual({ kind: "acquired" });
     migrated.close();
+
+    const inspected = new DatabaseSync(databasePath);
+    expect(inspected.prepare("select caller from runs where id = ?").get("legacy-gmail")).toEqual({ caller: "http" });
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0004_action_run_audit.sql"),
+    ).toBeDefined();
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0005_run_retention.sql"),
+    ).toBeDefined();
+    expect(
+      inspected
+        .prepare("select name from sqlite_master where type = 'index' and name = ?")
+        .get("runs_started_at_id_idx"),
+    ).toBeDefined();
+    inspected.close();
   });
 
   it("encrypts stored credentials when a secret codec is configured", async () => {

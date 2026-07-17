@@ -64,6 +64,11 @@ export interface DisconnectedConnectionSummary {
   configured: false;
 }
 
+export interface ExecutionConnection {
+  summary?: ConnectionSummary;
+  getCredential(service: string): Promise<ResolvedCredential | undefined>;
+}
+
 /**
  * Storage contract for local provider connections.
  */
@@ -184,6 +189,31 @@ export class ConnectionService {
       : this.supportsAuth(provider, "no_auth")
         ? this.createNoAuthConnectionSummary(provider, name)
         : undefined;
+  }
+
+  async resolveForExecution(service: string, connectionName?: string): Promise<ExecutionConnection> {
+    const provider = this.getProvider(service);
+    const name = normalizeConnectionName(connectionName);
+    const stored = await this.store.get(service, name);
+    if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
+      throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
+    }
+
+    let credential = stored;
+    if (credential?.authType === "oauth2") {
+      credential = await this.resolveOAuthCredential(service, name, credential);
+    }
+    credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
+    const summary = stored
+      ? this.createConfiguredConnectionSummary(provider, name, credential!)
+      : credential
+        ? this.createNoAuthConnectionSummary(provider, name)
+        : undefined;
+
+    return {
+      summary,
+      getCredential: async (requestedService) => (requestedService === service ? credential : undefined),
+    };
   }
 
   async getCredential(service: string, connectionName?: string): Promise<ResolvedCredential | undefined> {

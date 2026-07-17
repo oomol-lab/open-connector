@@ -22,6 +22,7 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`    | `false`                   | Allow self-hosted provider connections to target private networks. See below.  |
 | `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                          |
 | `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                              |
+| `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                   |
 
 Example:
 

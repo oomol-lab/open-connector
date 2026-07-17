@@ -293,6 +293,40 @@ describe("D1RuntimeDatabase", () => {
     expect(second.items.map((run) => run.id)).toEqual(["gmail-1"]);
     expect(second.nextCursor).toBeUndefined();
   });
+
+  it("filters runs by action, caller, and status and reads one run by id", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { runLimit: 5 });
+    const match = {
+      ...createRun("run-match", "2026-06-30T00:00:02.000Z", "gmail.send_message", "gmail"),
+      caller: "mcp" as const,
+      ok: false,
+    };
+
+    await database.runLogStore.add(createRun("run-other", "2026-06-30T00:00:01.000Z"));
+    await database.runLogStore.add(match);
+
+    await expect(
+      database.runLogStore.list({ actionId: "gmail.send_message", caller: "mcp", ok: false }),
+    ).resolves.toMatchObject({ items: [{ id: "run-match" }] });
+    await expect(database.runLogStore.get("run-match")).resolves.toEqual(match);
+    await expect(database.runLogStore.get("missing")).resolves.toBeUndefined();
+  });
+
+  it("keeps an inserted run when retention cleanup fails", async () => {
+    const d1 = new SqliteD1Database();
+    const database = new D1RuntimeDatabase(d1, { runLimit: 1 });
+    await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    d1.exec(`
+      create trigger fail_run_retention before delete on runs begin
+        select raise(abort, 'retention failed');
+      end;
+    `);
+
+    await expect(database.runLogStore.add(createRun("run-2", "2026-06-30T00:00:01.000Z"))).resolves.toEqual({
+      retentionApplied: false,
+    });
+    await expect(database.runLogStore.get("run-2")).resolves.toMatchObject({ id: "run-2" });
+  });
 });
 
 function createRun(id: string, startedAt: string, actionId = "hackernews.get_top_stories", service = "hackernews") {
@@ -329,10 +363,16 @@ class SqliteD1Database implements D1DatabaseBinding {
     this.database.exec(
       readFileSync(new URL("../../../migrations/0003_action_idempotency.sql", import.meta.url), "utf8"),
     );
+    this.database.exec(readFileSync(new URL("../../../migrations/0004_action_run_audit.sql", import.meta.url), "utf8"));
+    this.database.exec(readFileSync(new URL("../../../migrations/0005_run_retention.sql", import.meta.url), "utf8"));
   }
 
   prepare(query: string): D1PreparedStatementBinding {
     return new SqliteD1PreparedStatement(this.database, query);
+  }
+
+  exec(sql: string): void {
+    this.database.exec(sql);
   }
 
   value(

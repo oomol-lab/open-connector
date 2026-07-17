@@ -745,8 +745,8 @@ export function toProviderExecutionError(error: unknown, fallbackMessage: string
   return {
     ok: false,
     error: {
-      code: "provider_error",
-      message: error instanceof Error ? error.message : fallbackMessage,
+      code: "internal_error",
+      message: fallbackMessage,
     },
   };
 }

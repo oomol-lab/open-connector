@@ -8,7 +8,7 @@ import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
 import type { Logger } from "./logger.ts";
 import type { IIdempotencyStore } from "./storage/idempotency-store.ts";
-import type { RunLogListInput } from "./storage/runtime-store.ts";
+import type { RunLogCaller, RunLogListInput } from "./storage/runtime-store.ts";
 import type { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 import type { Context } from "hono";
 
@@ -169,6 +169,7 @@ export class ConnectServer {
     app.delete("/api/connections/:service", (context) => this.disconnect(context, context.req.param("service")));
 
     app.get("/api/runs", (context) => this.listRuns(context));
+    app.get("/api/runs/:id", (context) => this.getRun(context, context.req.param("id")));
     app.post("/api/files", (context) => this.createTransitFile(context));
     app.get("/api/files/:fileId", (context) => this.getTransitFile(context, context.req.param("fileId")));
     app.delete("/api/files/:fileId", (context) => this.deleteTransitFile(context, context.req.param("fileId")));
@@ -274,6 +275,11 @@ export class ConnectServer {
     }
 
     return context.json(await this.options.actions.listRuns(query.input));
+  }
+
+  private async getRun(context: Context, id: string): Promise<Response> {
+    const run = await this.options.actions.getRun(id);
+    return run ? context.json(run) : jsonError(context, 404, "run_not_found", `Run not found: ${id}.`);
   }
 
   private async searchApiActions(context: Context): Promise<Response> {
@@ -499,7 +505,12 @@ export class ConnectServer {
         });
       }
 
-      return serializeRuntimeActionResult({ actionId, executionId: run.executionId, result: run.result });
+      return serializeRuntimeActionResult({
+        actionId,
+        executionId: run.executionId,
+        auditPersisted: run.auditPersisted,
+        result: run.result,
+      });
     } catch (error) {
       if (error instanceof ConnectionError) {
         return serializeRuntimeFailure({
@@ -981,8 +992,33 @@ function readRunLogListInput(context: Context): RunLogListQuery {
   if (service !== undefined) {
     input.service = service;
   }
+  const actionId = optionalString(context.req.query("actionId"));
+  if (actionId !== undefined) {
+    if (actionId.length > 256) {
+      return { ok: false, message: "actionId must be at most 256 characters." };
+    }
+    input.actionId = actionId;
+  }
+  const caller = optionalString(context.req.query("caller"));
+  if (caller !== undefined) {
+    if (!isRunLogCaller(caller)) {
+      return { ok: false, message: "caller must be one of http, mcp, or web." };
+    }
+    input.caller = caller;
+  }
+  const ok = optionalString(context.req.query("ok"));
+  if (ok !== undefined) {
+    if (ok !== "true" && ok !== "false") {
+      return { ok: false, message: "ok must be true or false." };
+    }
+    input.ok = ok === "true";
+  }
 
   return { ok: true, input };
+}
+
+function isRunLogCaller(value: string): value is RunLogCaller {
+  return value === "http" || value === "mcp" || value === "web";
 }
 
 function readSearchQuery(context: Context, defaultLimit = DEFAULT_ACTION_SEARCH_LIMIT): SearchQuery {

@@ -2,11 +2,28 @@ import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setPrivateNetworkAccessAllowed } from "../core/request.ts";
-import { defineProviderExecutors, defineProviderProxy, providerFetch } from "./provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  providerFetch,
+  toProviderExecutionError,
+} from "./provider-runtime.ts";
 
 afterEach(() => {
   vi.unstubAllGlobals();
   setPrivateNetworkAccessAllowed(false);
+});
+
+describe("toProviderExecutionError", () => {
+  it("maps unknown exceptions to a generic internal error", () => {
+    expect(toProviderExecutionError(new Error("secret provider response"), "Provider request failed.")).toEqual({
+      ok: false,
+      error: {
+        code: "internal_error",
+        message: "Provider request failed.",
+      },
+    });
+  });
 });
 
 const apiKeyCredential: ResolvedCredential = {

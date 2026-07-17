@@ -247,9 +247,16 @@ async function executeAction(
         code: "execution_failed",
         message: "Action execution failed.",
       },
+      executionId: run.executionId,
+      auditPersisted: run.auditPersisted,
     };
   }
-  return successPayload(run.result.output);
+  return {
+    ok: true,
+    data: run.result.output,
+    executionId: run.executionId,
+    auditPersisted: run.auditPersisted,
+  };
 }
 
 function summarizeInputSchema(schema: JsonSchema): unknown {
@@ -317,19 +324,24 @@ function describeSchemaType(schema: JsonSchema | undefined): string {
   return typeof schema.type === "string" ? schema.type : "unknown";
 }
 
-type ToolPayload =
-  | {
-      ok: true;
-      data: unknown;
-    }
-  | {
-      ok: false;
-      error: {
-        code: string;
-        message: string;
-        details?: unknown;
-      };
-    };
+interface ToolExecutionMeta {
+  executionId: string;
+  auditPersisted: boolean;
+}
+
+interface ToolError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+type ToolPayload = Record<string, unknown> &
+  (
+    | { ok: true; data: unknown; executionId?: never; auditPersisted?: never }
+    | { ok: false; error: ToolError; executionId?: never; auditPersisted?: never }
+    | ({ ok: true; data: unknown } & ToolExecutionMeta)
+    | ({ ok: false; error: ToolError } & ToolExecutionMeta)
+  );
 
 function successPayload(data: unknown): ToolPayload {
   return { ok: true, data };
