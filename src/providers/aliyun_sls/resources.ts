@@ -29,6 +29,7 @@ export interface AliyunSlsLogstoreTarget extends AliyunSlsProjectTarget {
 }
 
 const resourceScopeKeys = new Set(["endpoint", "project", "logstores"]);
+const aliyunSlsEndpointPattern = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.log\.aliyuncs\.com$/;
 
 /** Parse and validate all user-configured SLS credential values. */
 export function parseAliyunSlsCredential(values: Record<string, string>): AliyunSlsCredential {
@@ -47,7 +48,7 @@ export function parseAliyunSlsCredential(values: Record<string, string>): Aliyun
   return credential;
 }
 
-/** Normalize a regional endpoint to a public HTTPS host without path state. */
+/** Normalize an official regional SLS endpoint to a public HTTPS host without path state. */
 export function normalizeAliyunSlsEndpoint(value: string, fieldName = "endpoint"): string {
   const raw = requiredString(value, fieldName, badRequest);
   const candidate = raw.includes("://") ? raw : `https://${raw}`;
@@ -64,7 +65,11 @@ export function normalizeAliyunSlsEndpoint(value: string, fieldName = "endpoint"
   if (url.pathname !== "/" || url.search || url.hash) {
     throw badRequest(`${fieldName} must not include a path, query, or hash`);
   }
-  return url.host.toLowerCase();
+  const hostname = url.hostname.toLowerCase();
+  if (url.port || !aliyunSlsEndpointPattern.test(hostname)) {
+    throw badRequest(`${fieldName} must be an official Alibaba Cloud SLS endpoint under log.aliyuncs.com`);
+  }
+  return hostname;
 }
 
 /** Parse the optional connector-local SLS resource allowlist. */
@@ -103,7 +108,7 @@ export function parseAliyunSlsResourceScope(
       throw badRequest(`resourceScope[${index}] contains unsupported field ${unknownKey}`);
     }
 
-    const project = normalizeProjectName(record.project, `resourceScope[${index}].project`);
+    const project = normalizeAliyunSlsProjectName(record.project, `resourceScope[${index}].project`);
     const endpoint =
       "endpoint" in record
         ? normalizeAliyunSlsEndpoint(
@@ -170,7 +175,7 @@ export function resolveAliyunSlsProjectTarget(
   const explicitProject = optionalString(projectInput);
 
   if (explicitProject) {
-    const project = normalizeProjectName(explicitProject, "project");
+    const project = normalizeAliyunSlsProjectName(explicitProject, "project");
     const scopeEntry = entries?.find((entry) => entry.project === project);
     if (entries && !scopeEntry) {
       throw forbidden(`Project ${project} on endpoint ${endpoint} is outside the configured resourceScope allowlist`);
@@ -264,7 +269,7 @@ function parseScopedLogstores(record: Record<string, unknown>, index: number): s
   return logstores;
 }
 
-function normalizeProjectName(value: unknown, fieldName: string): string {
+export function normalizeAliyunSlsProjectName(value: unknown, fieldName: string): string {
   const project = requiredString(value, fieldName, badRequest);
   if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(project)) {
     throw badRequest(`${fieldName} must be a valid 3 to 63 character Simple Log Service Project name`);

@@ -75,7 +75,7 @@ describe("Alibaba Cloud SLS runtime", () => {
       scopedContext,
     );
     expect(fetchMock.mock.calls[1]![0]).toBe(
-      "https://project-a.cn-hangzhou.log.aliyuncs.com/logstores?logstoreName=a&offset=0&size=20",
+      "https://project-a.cn-hangzhou.log.aliyuncs.com/logstores?logstoreName=a&offset=0&size=500",
     );
     expect(logstores).toEqual({
       endpoint: defaultEndpoint,
@@ -84,6 +84,43 @@ describe("Alibaba Cloud SLS runtime", () => {
       total: 2,
       logstores: ["application", "audit"],
     });
+  });
+
+  it("filters scoped Projects and Logstores before applying caller pagination", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      const offset = url.searchParams.get("offset");
+      if (url.pathname === "/") {
+        return offset === "0"
+          ? jsonResponse({ count: 1, total: 2, projects: [project("project-b", "cn-hangzhou")] })
+          : jsonResponse({ count: 1, total: 2, projects: [project("project-a", "cn-hangzhou")] });
+      }
+      return offset === "0"
+        ? jsonResponse({ count: 1, total: 2, logstores: ["other"] })
+        : jsonResponse({ count: 1, total: 2, logstores: ["audit"] });
+    });
+    const scopedContext = context(fetchMock, {
+      resourceScope: '[{"project":"project-a","logstores":["audit"]}]',
+    });
+
+    const projects = await aliyunSlsActionHandlers.list_projects({ offset: 0, size: 1 }, scopedContext);
+    expect(projects).toMatchObject({ count: 1, total: 1 });
+    expect((projects as { projects: Array<{ projectName: string }> }).projects[0]?.projectName).toBe("project-a");
+
+    const logstores = await aliyunSlsActionHandlers.list_logstores({ offset: 0, size: 1 }, scopedContext);
+    expect(logstores).toEqual({
+      endpoint: defaultEndpoint,
+      project: "project-a",
+      count: 1,
+      total: 1,
+      logstores: ["audit"],
+    });
+    expect(fetchMock.mock.calls.map(([input]) => new URL(String(input)).searchParams.get("offset"))).toEqual([
+      "0",
+      "1",
+      "0",
+      "1",
+    ]);
   });
 
   it("queries logs with inferred scope, official defaults, and stable response fields", async () => {
@@ -151,7 +188,7 @@ describe("Alibaba Cloud SLS runtime", () => {
     );
 
     expect(fetchMock.mock.calls[0]![0]).toBe(
-      "https://project-a.cn-hangzhou.log.aliyuncs.com/logstores/application/index?from=100&query=level%3Aerror&to=200&type=histogram",
+      "https://project-a.cn-hangzhou.log.aliyuncs.com/logstores/application?from=100&query=level%3Aerror&to=200&type=histogram",
     );
     expect(output).toMatchObject({
       progress: "Complete",
@@ -183,6 +220,33 @@ describe("Alibaba Cloud SLS runtime", () => {
     expect(headers.get("x-log-bodyrawsize")).toBe("18");
   });
 
+  it("rejects non-SLS request targets before credentials can be sent", async () => {
+    const fetchMock = vi.fn();
+    await expect(
+      requestAliyunSlsJson(context(fetchMock), {
+        operation: "unsafe request",
+        endpoint: "example.com",
+        method: "GET",
+        path: "/",
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unsafe Project authority before credentials can be sent", async () => {
+    const fetchMock = vi.fn();
+    await expect(
+      requestAliyunSlsJson(context(fetchMock), {
+        operation: "unsafe request",
+        endpoint: defaultEndpoint,
+        project: "example.com@attacker.example/path",
+        method: "GET",
+        path: "/",
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("paginates every supplied region and deduplicates by region and Project name", async () => {
     const seenOffsets: string[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -191,15 +255,15 @@ describe("Alibaba Cloud SLS runtime", () => {
       seenOffsets.push(`${url.hostname}:${offset}`);
       if (url.hostname === "cn-a.log.aliyuncs.com" && offset === "0") {
         return jsonResponse({
-          count: 500,
-          total: 501,
+          count: 1,
+          total: 2,
           projects: [project("shared-project", "region-a")],
         });
       }
       if (url.hostname === "cn-a.log.aliyuncs.com") {
         return jsonResponse({
           count: 1,
-          total: 501,
+          total: 2,
           projects: [project("last-project", "region-a")],
         });
       }
@@ -220,7 +284,7 @@ describe("Alibaba Cloud SLS runtime", () => {
       }),
     );
 
-    expect(seenOffsets).toContain("cn-a.log.aliyuncs.com:500");
+    expect(seenOffsets).toContain("cn-a.log.aliyuncs.com:1");
     expect(output).toMatchObject({
       total: 2,
       complete: true,
@@ -293,6 +357,66 @@ describe("Alibaba Cloud SLS runtime", () => {
       status: 502,
       message: expect.stringContaining("invalid JSON"),
     });
+  });
+
+  it.each([
+    [
+      "a count greater than the requested size",
+      { count: 501, total: 501, projects: [project("project-a", "region-a")] },
+      "exceeds requested size",
+    ],
+    [
+      "a count that does not match the returned array",
+      { count: 2, total: 2, projects: [project("project-a", "region-a")] },
+      "does not match",
+    ],
+    ["an empty page before total completion", { count: 0, total: 1, projects: [] }, "empty page"],
+    [
+      "a total above the collection item ceiling",
+      { count: 1, total: 10_001, projects: [project("project-a", "region-a")] },
+      "item limit",
+    ],
+  ])("rejects regional pagination with %s", async (_name, response, message) => {
+    const fetchMock = vi.fn(async () => jsonResponse(response));
+    await expect(
+      aliyunSlsActionHandlers.list_projects_across_regions(
+        { endpoints: ["cn-hangzhou.log.aliyuncs.com"] },
+        context(fetchMock),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: expect.stringContaining(message) });
+  });
+
+  it("rejects regional pagination when total changes between pages", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const offset = new URL(String(input)).searchParams.get("offset");
+      return offset === "0"
+        ? jsonResponse({ count: 1, total: 2, projects: [project("project-a", "region-a")] })
+        : jsonResponse({ count: 1, total: 3, projects: [project("project-b", "region-a")] });
+    });
+    await expect(
+      aliyunSlsActionHandlers.list_projects_across_regions(
+        { endpoints: ["cn-hangzhou.log.aliyuncs.com"] },
+        context(fetchMock),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: expect.stringContaining("total changed") });
+  });
+
+  it("rejects regional pagination that exceeds the page ceiling", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const offset = Number(new URL(String(input)).searchParams.get("offset"));
+      return jsonResponse({
+        count: 1,
+        total: 21,
+        projects: [project(`project-${offset}`, "region-a")],
+      });
+    });
+    await expect(
+      aliyunSlsActionHandlers.list_projects_across_regions(
+        { endpoints: ["cn-hangzhou.log.aliyuncs.com"] },
+        context(fetchMock),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: expect.stringContaining("page pagination limit") });
+    expect(fetchMock).toHaveBeenCalledTimes(20);
   });
 
   it("validates credentials with one low-cost bare-host ListProject request", async () => {

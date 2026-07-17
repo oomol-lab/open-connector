@@ -63,9 +63,18 @@ describe("Alibaba Cloud SLS resourceScope", () => {
     "https://cn-hangzhou.log.aliyuncs.com#hash",
     "https://127.0.0.1",
     "https://localhost",
+    "https://example.com",
+    "https://cn-hangzhou.log.aliyuncs.com.example.com",
   ])("rejects unsafe endpoint %s", (value) => {
     expect(() => normalizeAliyunSlsEndpoint(value)).toThrow(ProviderRequestError);
   });
+
+  it.each(["cn-hangzhou-intranet.log.aliyuncs.com", "cn-shanghai-finance-1.log.aliyuncs.com"])(
+    "accepts official SLS endpoint variant %s",
+    (value) => {
+      expect(normalizeAliyunSlsEndpoint(value)).toBe(value);
+    },
+  );
 
   it("infers only unique scoped Projects and Logstores", () => {
     const credential = parseAliyunSlsCredential({

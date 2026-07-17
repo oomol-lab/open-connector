@@ -1,15 +1,19 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { AliyunSlsActionName } from "./actions.ts";
-import type { AliyunSlsCredential, AliyunSlsResourceScopeEntry } from "./resources.ts";
+import type { AliyunSlsCredential } from "./resources.ts";
 
 import { Buffer } from "node:buffer";
 import {
+  objectArray,
   optionalBoolean,
   optionalInteger,
   optionalIntegerLike,
   optionalRawString,
   optionalRecord,
   optionalString,
+  requiredRecord,
+  requiredString,
+  requiredStringArray,
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
 import {
@@ -18,6 +22,7 @@ import {
   filterAliyunSlsProjects,
   normalizeAliyunSlsEndpoint,
   normalizeAliyunSlsEndpointList,
+  normalizeAliyunSlsProjectName,
   parseAliyunSlsCredential,
   resolveAliyunSlsLogstoreTarget,
   resolveAliyunSlsProjectTarget,
@@ -28,6 +33,8 @@ const listProjectDefaultSize = 100;
 const listLogstoreDefaultSize = 200;
 const maximumListSize = 500;
 const maximumQueryLines = 100;
+const maximumPaginationPages = 20;
+const maximumPaginatedItems = maximumListSize * maximumPaginationPages;
 const regionalConcurrency = 5;
 
 export interface AliyunSlsActionContext {
@@ -53,12 +60,9 @@ export interface AliyunSlsJsonResponse {
   headers: Headers;
 }
 
-interface AliyunSlsProjectPage {
-  count: number;
+interface AliyunSlsPage<T> {
+  items: T[];
   total: number;
-  providerTotal: number;
-  rawCount: number;
-  projects: Array<Record<string, unknown>>;
 }
 
 interface AliyunSlsRegionSuccess {
@@ -136,7 +140,10 @@ export async function requestAliyunSlsJson(
   context: AliyunSlsActionContext,
   input: AliyunSlsRequestInput,
 ): Promise<AliyunSlsJsonResponse> {
-  const url = buildAliyunSlsRequestUrl(input.endpoint, input.project, input.path, input.query);
+  const endpoint = normalizeAliyunSlsEndpoint(input.endpoint);
+  const project =
+    input.project === undefined ? undefined : normalizeAliyunSlsProjectName(input.project, "request project");
+  const url = buildAliyunSlsRequestUrl(endpoint, project, input.path, input.query);
   const signed = signAliyunSlsRequest({
     method: input.method,
     path: input.path,
@@ -218,19 +225,32 @@ async function listProjects(
   const endpointInput = optionalString(input.endpoint);
   const endpoint = endpointInput ? normalizeAliyunSlsEndpoint(endpointInput) : context.credential.endpoint;
   const scopeEntries = assertAliyunSlsEndpointAllowed(context.credential.resourceScope, endpoint);
-  const page = await requestProjectPage(context, {
+  const offset = readBoundedInteger(input.offset, "offset", 0, 0);
+  const size = readBoundedInteger(input.size, "size", listProjectDefaultSize, 1, maximumListSize);
+  const queryOptions: AliyunSlsProjectQueryOptions = {
     endpoint,
-    offset: readBoundedInteger(input.offset, "offset", 0, 0),
-    size: readBoundedInteger(input.size, "size", listProjectDefaultSize, 1, maximumListSize),
     projectName: optionalString(input.projectName),
     resourceGroupId: optionalString(input.resourceGroupId),
-    scopeEntries,
-  });
+  };
+  let projects: Array<Record<string, unknown>>;
+  let total: number;
+  if (scopeEntries) {
+    const scopedProjects = filterAliyunSlsProjects(
+      await collectAllProjectsForEndpoint(context, queryOptions),
+      scopeEntries,
+    );
+    projects = scopedProjects.slice(offset, offset + size);
+    total = scopedProjects.length;
+  } else {
+    const page = await requestProjectPage(context, { ...queryOptions, offset, size });
+    projects = page.items;
+    total = page.total;
+  }
   return {
     endpoint,
-    count: page.count,
-    total: page.total,
-    projects: page.projects,
+    count: projects.length,
+    total,
+    projects,
   };
 }
 
@@ -263,8 +283,8 @@ async function listProjectsAcrossRegions(
   const uniqueProjects = new Map<string, Record<string, unknown>>();
   for (const success of successes) {
     for (const project of success.projects) {
-      const region = requireResponseString(project.region, "Project region");
-      const projectNameValue = requireResponseString(project.projectName, "Project name");
+      const region = requiredString(project.region, "Project region", badGateway);
+      const projectNameValue = requiredString(project.projectName, "Project name", badGateway);
       const key = `${region}\u0000${projectNameValue}`;
       if (!uniqueProjects.has(key)) uniqueProjects.set(key, project);
     }
@@ -291,37 +311,37 @@ async function listAllProjectsForEndpoint(
   resourceGroupId?: string,
 ): Promise<AliyunSlsRegionSuccess> {
   const scopeEntries = assertAliyunSlsEndpointAllowed(context.credential.resourceScope, endpoint);
-  const projects: Array<Record<string, unknown>> = [];
-  let offset = 0;
-  while (true) {
-    const page = await requestProjectPage(context, {
-      endpoint,
-      offset,
-      size: maximumListSize,
-      projectName,
-      resourceGroupId,
-      scopeEntries,
-    });
-    projects.push(...page.projects);
-    if (page.rawCount === 0 || offset + page.rawCount >= page.providerTotal) break;
-    offset += page.rawCount;
-  }
+  const projects = filterAliyunSlsProjects(
+    await collectAllProjectsForEndpoint(context, { endpoint, projectName, resourceGroupId }),
+    scopeEntries,
+  );
   return { endpoint, projects };
 }
 
-interface RequestProjectPageOptions {
+interface AliyunSlsProjectQueryOptions {
   endpoint: string;
-  offset: number;
-  size: number;
   projectName?: string;
   resourceGroupId?: string;
-  scopeEntries?: AliyunSlsResourceScopeEntry[];
+}
+
+interface RequestProjectPageOptions extends AliyunSlsProjectQueryOptions {
+  offset: number;
+  size: number;
+}
+
+async function collectAllProjectsForEndpoint(
+  context: AliyunSlsActionContext,
+  options: AliyunSlsProjectQueryOptions,
+): Promise<Array<Record<string, unknown>>> {
+  return collectAllAliyunSlsPages("ListProject", (offset, size) =>
+    requestProjectPage(context, { ...options, offset, size }),
+  );
 }
 
 async function requestProjectPage(
   context: AliyunSlsActionContext,
   options: RequestProjectPageOptions,
-): Promise<AliyunSlsProjectPage> {
+): Promise<AliyunSlsPage<Record<string, unknown>>> {
   const query: Record<string, string> = {
     offset: String(options.offset),
     size: String(options.size),
@@ -335,20 +355,19 @@ async function requestProjectPage(
     path: "/",
     query,
   });
-  const payload = requireResponseRecord(response.data, "ListProject response");
-  const rawProjects = requireResponseObjectArray(payload.projects, "ListProject projects");
-  const projects = filterAliyunSlsProjects(
-    rawProjects.map((project) => normalizeProject(project, options.endpoint)),
-    options.scopeEntries,
+  const payload = requiredRecord(response.data, "ListProject response", badGateway);
+  const rawProjects = objectArray(payload.projects, "ListProject projects", badGateway);
+  const page = validateAliyunSlsPage(
+    rawProjects,
+    payload.count,
+    payload.total,
+    "ListProject",
+    options.offset,
+    options.size,
   );
-  const rawCount = readResponseInteger(payload.count, rawProjects.length, "ListProject count");
-  const providerTotal = readResponseInteger(payload.total, rawCount, "ListProject total");
   return {
-    count: projects.length,
-    total: options.scopeEntries ? projects.length : providerTotal,
-    providerTotal,
-    rawCount,
-    projects,
+    items: page.items.map((project) => normalizeProject(project, options.endpoint)),
+    total: page.total,
   };
 }
 
@@ -357,28 +376,27 @@ async function listLogstores(
   context: AliyunSlsActionContext,
 ): Promise<Record<string, unknown>> {
   const target = resolveAliyunSlsProjectTarget(context.credential, input.endpoint, input.project);
-  const query: Record<string, string> = {
-    offset: String(readBoundedInteger(input.offset, "offset", 0, 0)),
-    size: String(readBoundedInteger(input.size, "size", listLogstoreDefaultSize, 1, maximumListSize)),
-  };
-  const logstoreName = optionalString(input.logstoreName);
-  if (logstoreName) query.logstoreName = logstoreName;
-  const response = await requestAliyunSlsJson(context, {
-    operation: "Alibaba Cloud SLS ListLogStores",
+  const offset = readBoundedInteger(input.offset, "offset", 0, 0);
+  const size = readBoundedInteger(input.size, "size", listLogstoreDefaultSize, 1, maximumListSize);
+  const queryOptions: AliyunSlsLogstoreQueryOptions = {
     endpoint: target.endpoint,
     project: target.project,
-    method: "GET",
-    path: "/logstores",
-    query,
-  });
-  const payload = requireResponseRecord(response.data, "ListLogStores response");
-  if (!Array.isArray(payload.logstores) || payload.logstores.some((value) => typeof value !== "string")) {
-    throw new ProviderRequestError(502, "ListLogStores returned invalid logstores");
+    logstoreName: optionalString(input.logstoreName),
+  };
+  let logstores: string[];
+  let total: number;
+  if (target.scopeEntry?.logstores) {
+    const scopedLogstores = filterAliyunSlsLogstores(
+      await collectAllLogstoresForProject(context, queryOptions),
+      target.scopeEntry,
+    );
+    logstores = scopedLogstores.slice(offset, offset + size);
+    total = scopedLogstores.length;
+  } else {
+    const page = await requestLogstorePage(context, { ...queryOptions, offset, size });
+    logstores = page.items;
+    total = page.total;
   }
-  const logstores = filterAliyunSlsLogstores(payload.logstores as string[], target.scopeEntry);
-  const total = target.scopeEntry?.logstores
-    ? logstores.length
-    : readResponseInteger(payload.total, logstores.length, "ListLogStores total");
   return {
     endpoint: target.endpoint,
     project: target.project,
@@ -386,6 +404,48 @@ async function listLogstores(
     total,
     logstores,
   };
+}
+
+interface AliyunSlsLogstoreQueryOptions {
+  endpoint: string;
+  project: string;
+  logstoreName?: string;
+}
+
+interface RequestLogstorePageOptions extends AliyunSlsLogstoreQueryOptions {
+  offset: number;
+  size: number;
+}
+
+async function collectAllLogstoresForProject(
+  context: AliyunSlsActionContext,
+  options: AliyunSlsLogstoreQueryOptions,
+): Promise<string[]> {
+  return collectAllAliyunSlsPages("ListLogStores", (offset, size) =>
+    requestLogstorePage(context, { ...options, offset, size }),
+  );
+}
+
+async function requestLogstorePage(
+  context: AliyunSlsActionContext,
+  options: RequestLogstorePageOptions,
+): Promise<AliyunSlsPage<string>> {
+  const query: Record<string, string> = {
+    offset: String(options.offset),
+    size: String(options.size),
+  };
+  if (options.logstoreName) query.logstoreName = options.logstoreName;
+  const response = await requestAliyunSlsJson(context, {
+    operation: "Alibaba Cloud SLS ListLogStores",
+    endpoint: options.endpoint,
+    project: options.project,
+    method: "GET",
+    path: "/logstores",
+    query,
+  });
+  const payload = requiredRecord(response.data, "ListLogStores response", badGateway);
+  const logstores = requiredStringArray(payload.logstores, "ListLogStores logstores", badGateway);
+  return validateAliyunSlsPage(logstores, payload.count, payload.total, "ListLogStores", options.offset, options.size);
 }
 
 async function queryLogs(
@@ -440,7 +500,7 @@ async function getHistograms(
     endpoint: target.endpoint,
     project: target.project,
     method: "GET",
-    path: `/logstores/${encodeURIComponent(target.logstore)}/index`,
+    path: `/logstores/${encodeURIComponent(target.logstore)}`,
     query,
   });
   const histograms = normalizeHistograms(response.data);
@@ -448,7 +508,7 @@ async function getHistograms(
     endpoint: target.endpoint,
     project: target.project,
     logstore: target.logstore,
-    progress: requireResponseHeader(response.headers, "x-log-progress", "GetHistograms progress"),
+    progress: requiredResponseHeader(response.headers, "x-log-progress", "GetHistograms progress"),
     count: histograms.reduce((total, histogram) => total + histogram.count, 0),
     histograms,
   };
@@ -457,8 +517,8 @@ async function getHistograms(
 function normalizeProject(project: Record<string, unknown>, endpoint: string): Record<string, unknown> {
   return {
     endpoint,
-    projectName: requireResponseString(project.projectName, "Project projectName"),
-    region: requireResponseString(project.region, "Project region"),
+    projectName: requiredString(project.projectName, "Project projectName", badGateway),
+    region: requiredString(project.region, "Project region", badGateway),
     description: responseString(project.description),
     status: responseString(project.status),
     createTime: responseString(project.createTime),
@@ -479,9 +539,9 @@ function normalizeLogsResponse(response: AliyunSlsJsonResponse): Record<string, 
     logsValue = record.data;
     meta = optionalRecord(record.meta);
   }
-  const logs = requireResponseObjectArray(logsValue, "GetLogs data");
+  const logs = objectArray(logsValue, "GetLogs data", badGateway);
   const progress =
-    optionalString(meta?.progress) ?? requireResponseHeader(response.headers, "x-log-progress", "GetLogs progress");
+    optionalString(meta?.progress) ?? requiredResponseHeader(response.headers, "x-log-progress", "GetLogs progress");
   return {
     progress,
     count: readResponseInteger(meta?.count, logs.length, "GetLogs count"),
@@ -495,16 +555,12 @@ function normalizeLogsResponse(response: AliyunSlsJsonResponse): Record<string, 
 }
 
 function normalizeHistograms(value: unknown): AliyunSlsHistogram[] {
-  if (!Array.isArray(value)) {
-    throw new ProviderRequestError(502, "GetHistograms returned invalid histogram data");
-  }
-  return value.map((item, index) => {
-    const record = requireResponseRecord(item, `GetHistograms histogram[${index}]`);
+  return objectArray(value, "GetHistograms histogram data", badGateway).map((record, index) => {
     return {
       from: readRequiredResponseInteger(record.from, `histogram[${index}].from`),
       to: readRequiredResponseInteger(record.to, `histogram[${index}].to`),
       count: readRequiredResponseInteger(record.count, `histogram[${index}].count`),
-      progress: requireResponseString(record.progress, `histogram[${index}].progress`),
+      progress: requiredString(record.progress, `histogram[${index}].progress`, badGateway),
     };
   });
 }
@@ -577,25 +633,6 @@ function readOptionalResponseBoolean(value: unknown): boolean | null {
   return null;
 }
 
-function requireResponseRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${fieldName} is not an object`);
-  return record;
-}
-
-function requireResponseObjectArray(value: unknown, fieldName: string): Array<Record<string, unknown>> {
-  if (!Array.isArray(value)) {
-    throw new ProviderRequestError(502, `${fieldName} is not an array`);
-  }
-  return value.map((item, index) => requireResponseRecord(item, `${fieldName}[${index}]`));
-}
-
-function requireResponseString(value: unknown, fieldName: string): string {
-  const resolved = optionalString(value);
-  if (!resolved) throw new ProviderRequestError(502, `${fieldName} is missing`);
-  return resolved;
-}
-
 function responseString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
@@ -604,10 +641,61 @@ function responseNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-function requireResponseHeader(headers: Headers, name: string, fieldName: string): string {
-  const value = optionalString(headers.get(name));
-  if (!value) throw new ProviderRequestError(502, `${fieldName} response header is missing`);
-  return value;
+function requiredResponseHeader(headers: Headers, name: string, fieldName: string): string {
+  return requiredString(headers.get(name), `${fieldName} response header`, badGateway);
+}
+
+function validateAliyunSlsPage<T>(
+  items: T[],
+  countValue: unknown,
+  totalValue: unknown,
+  operation: string,
+  offset: number,
+  requestedSize: number,
+): AliyunSlsPage<T> {
+  const count = readRequiredResponseInteger(countValue, `${operation} count`);
+  const total = readRequiredResponseInteger(totalValue, `${operation} total`);
+  if (count > requestedSize) {
+    throw badGateway(`${operation} count ${count} exceeds requested size ${requestedSize}`);
+  }
+  if (count !== items.length) {
+    throw badGateway(`${operation} count ${count} does not match the ${items.length} returned items`);
+  }
+  if (count > 0 && offset + count > total) {
+    throw badGateway(`${operation} page exceeds its reported total ${total}`);
+  }
+  if (count === 0 && offset < total) {
+    throw badGateway(`${operation} returned an empty page before its reported total ${total} was reached`);
+  }
+  return { items, total };
+}
+
+async function collectAllAliyunSlsPages<T>(
+  operation: string,
+  requestPage: (offset: number, size: number) => Promise<AliyunSlsPage<T>>,
+): Promise<T[]> {
+  const items: T[] = [];
+  let expectedTotal: number | undefined;
+  for (let pageNumber = 0; pageNumber < maximumPaginationPages; pageNumber += 1) {
+    const page = await requestPage(items.length, maximumListSize);
+    if (expectedTotal === undefined) {
+      expectedTotal = page.total;
+      if (expectedTotal > maximumPaginatedItems) {
+        throw badGateway(`${operation} total ${expectedTotal} exceeds the ${maximumPaginatedItems} item limit`);
+      }
+    } else if (page.total !== expectedTotal) {
+      throw badGateway(`${operation} total changed from ${expectedTotal} to ${page.total} during pagination`);
+    }
+    items.push(...page.items);
+    if (items.length === expectedTotal) {
+      return items;
+    }
+  }
+  throw badGateway(`${operation} exceeded the ${maximumPaginationPages} page pagination limit`);
+}
+
+function badGateway(message: string): ProviderRequestError {
+  return new ProviderRequestError(502, message);
 }
 
 function createAliyunSlsResponseError(operation: string, response: Response, text: string): ProviderRequestError {
