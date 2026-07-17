@@ -264,18 +264,27 @@
   "runs": {
     "noRunsTitle": "Запусков пока нет",
     "noRunsDescription": "Запустите действие, чтобы увидеть недавнюю историю выполнения.",
+    "action": "Действие",
+    "actionPlaceholder": "Фильтр по ID действия",
+    "applyActionFilter": "Применить фильтр действия",
     "service": "Сервис",
     "allServices": "Все сервисы",
+    "caller": "Вызывающий",
+    "allCallers": "Все вызывающие",
+    "status": "Статус",
+    "allStatuses": "Все статусы",
+    "copyExecutionId": "Копировать ID выполнения",
+    "expandResult": "Развернуть результат",
+    "collapseResult": "Свернуть результат",
     "loadMore": "Загрузить еще",
     "loadMoreFailed": "Не удалось загрузить больше запусков.",
     "table": {
       "action": "Действие",
-      "caller": "Вызывающий",
+      "context": "Контекст",
       "status": "Статус",
-      "started": "Начато",
-      "duration": "Длительность",
+      "timing": "Время",
       "input": "Ввод",
-      "error": "Ошибка"
+      "result": "Результат"
     }
   },
   "access": {
