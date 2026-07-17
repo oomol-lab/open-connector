@@ -1,6 +1,7 @@
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { nullableInteger, optionalInteger, optionalRawString, optionalString } from "../../core/cast.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   buildIssueAndPullRequestSearchQuery,
   compactObject,
@@ -154,6 +155,120 @@ export const issueActionHandlers: Record<string, GitHubActionHandler> = {
 
   list_repository_issue_events(input, { accessToken, fetcher }) {
     return listRepositoryIssueEvents(input, accessToken, fetcher);
+  },
+
+  list_milestones(input, { accessToken, fetcher }) {
+    return listMilestones(input, accessToken, fetcher);
+  },
+
+  get_milestone(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/milestones/${String(input.milestoneNumber)}`,
+      accessToken,
+      fetcher,
+    });
+  },
+
+  create_milestone(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "POST",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/milestones`,
+      body: compactObject({
+        title: String(input.title),
+        state: optionalString(input.state),
+        description: optionalRawString(input.description),
+        due_on: optionalString(input.dueOn),
+      }),
+      accessToken,
+      fetcher,
+    });
+  },
+
+  update_milestone(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "PATCH",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/milestones/${String(input.milestoneNumber)}`,
+      body: compactObject({
+        title: optionalRawString(input.title),
+        state: optionalString(input.state),
+        description: optionalRawString(input.description),
+        due_on: optionalString(input.dueOn),
+      }),
+      accessToken,
+      fetcher,
+    });
+  },
+
+  delete_milestone(input, { accessToken, fetcher }) {
+    return deleteMilestone(input, accessToken, fetcher);
+  },
+
+  get_issue_comment(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/issues/comments/${String(input.commentId)}`,
+      accessToken,
+      fetcher,
+    });
+  },
+
+  update_issue_comment(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "PATCH",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/issues/comments/${String(input.commentId)}`,
+      body: {
+        body: String(input.body),
+      },
+      accessToken,
+      fetcher,
+    });
+  },
+
+  delete_issue_comment(input, { accessToken, fetcher }) {
+    return deleteIssueComment(input, accessToken, fetcher);
+  },
+
+  get_label(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/labels/${encodeURIComponent(String(input.name))}`,
+      accessToken,
+      fetcher,
+    });
+  },
+
+  update_label(input, { accessToken, fetcher }) {
+    return updateLabel(input, accessToken, fetcher);
+  },
+
+  delete_label(input, { accessToken, fetcher }) {
+    return deleteLabel(input, accessToken, fetcher);
+  },
+
+  list_assignees(input, { accessToken, fetcher }) {
+    return listAssignees(input, accessToken, fetcher);
+  },
+
+  create_issue_reaction(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "POST",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/issues/${String(input.issueNumber)}/reactions`,
+      body: {
+        content: String(input.content),
+      },
+      accessToken,
+      fetcher,
+    });
+  },
+
+  create_issue_comment_reaction(input, { accessToken, fetcher }) {
+    return githubRequestJson<Record<string, unknown>>({
+      method: "POST",
+      path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/issues/comments/${String(input.commentId)}/reactions`,
+      body: {
+        content: String(input.content),
+      },
+      accessToken,
+      fetcher,
+    });
   },
 };
 
@@ -356,4 +471,87 @@ async function listRepositoryIssueEvents(input: Record<string, unknown>, accessT
   });
 
   return { events };
+}
+
+async function listMilestones(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const milestones = await githubRequestJson<Record<string, unknown>[]>({
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/milestones`,
+    query: compactObject({
+      state: optionalString(input.state),
+      sort: optionalString(input.sort),
+      direction: optionalString(input.direction),
+      per_page: optionalInteger(input.perPage),
+      page: optionalInteger(input.page),
+    }),
+    accessToken,
+    fetcher,
+  });
+
+  return { milestones };
+}
+
+async function deleteMilestone(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "DELETE",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/milestones/${String(input.milestoneNumber)}`,
+    accessToken,
+    fetcher,
+  });
+
+  return { ok: true };
+}
+
+async function deleteIssueComment(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "DELETE",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/issues/comments/${String(input.commentId)}`,
+    accessToken,
+    fetcher,
+  });
+
+  return { ok: true };
+}
+
+async function updateLabel(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const color = optionalRawString(input.color);
+  if (color !== undefined && !/^[0-9a-fA-F]{6}$/u.test(color)) {
+    throw new ProviderRequestError(400, "color must be a 6-character hex color without #");
+  }
+
+  return githubRequestJson<Record<string, unknown>>({
+    method: "PATCH",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/labels/${encodeURIComponent(String(input.name))}`,
+    body: compactObject({
+      new_name: optionalRawString(input.newName),
+      color,
+      description: optionalRawString(input.description),
+    }),
+    accessToken,
+    fetcher,
+  });
+}
+
+async function deleteLabel(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  await githubRequestNoContent({
+    method: "DELETE",
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/labels/${encodeURIComponent(String(input.name))}`,
+    accessToken,
+    fetcher,
+  });
+
+  return { ok: true };
+}
+
+async function listAssignees(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const assignees = await githubRequestJson<Record<string, unknown>[]>({
+    path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/assignees`,
+    query: compactObject({
+      per_page: optionalInteger(input.perPage),
+      page: optionalInteger(input.page),
+    }),
+    accessToken,
+    fetcher,
+  });
+
+  return { assignees };
 }
