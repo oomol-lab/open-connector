@@ -45,6 +45,7 @@ const catalog = await loadCatalog(undefined, {
 });
 const providerLoader = new ProviderLoader(executorModules);
 const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"), {
+  logger,
   secretCodec,
   runLimit,
 });

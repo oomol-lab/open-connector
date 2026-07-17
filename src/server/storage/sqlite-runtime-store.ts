@@ -1,5 +1,5 @@
 import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
-import type { ResolvedCredential } from "../../core/types.ts";
+import type { ResolvedCredential, RuntimeLogger } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
@@ -24,6 +24,7 @@ type SecretJsonTable = "oauth_client_configs";
 const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 export interface SqliteRuntimeDatabaseOptions {
+  logger?: RuntimeLogger;
   runLimit?: number;
   secretCodec?: ISecretCodec;
 }
@@ -72,7 +73,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   constructor(filename: string, options: SqliteRuntimeDatabaseOptions = {}) {
     this.database = new DatabaseSync(filename);
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
-    this.initialize();
+    this.initialize(options.logger);
     this.connectionStore = new SqliteConnectionStore(this.database, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database);
@@ -112,9 +113,9 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     `);
   }
 
-  private initialize(): void {
+  private initialize(logger?: RuntimeLogger): void {
     this.database.exec("pragma journal_mode = wal;");
-    runSqliteMigrations(this.database);
+    runSqliteMigrations(this.database, logger);
   }
 }
 
@@ -484,7 +485,8 @@ function readRunLogRow(row: unknown): RunLog {
   return { ...run, service: readString(row, "service") };
 }
 
-function runSqliteMigrations(database: DatabaseSync): void {
+function runSqliteMigrations(database: DatabaseSync, logger?: RuntimeLogger): void {
+  const startedAt = Date.now();
   database.exec(`
     create table if not exists runtime_migrations (
       name text primary key,
@@ -500,20 +502,44 @@ function runSqliteMigrations(database: DatabaseSync): void {
   const migrationFiles = readdirSync(migrationDirectory)
     .filter((name) => /^\d+_.*\.sql$/.test(name))
     .sort();
+  let newlyAppliedCount = 0;
 
   for (const file of migrationFiles) {
     if (applied.has(file)) {
       continue;
     }
 
-    const sql = readFileSync(new URL(file, migrationDirectory), "utf8");
-    runInTransaction(database, () => {
-      database.exec(sql);
-      database
-        .prepare("insert into runtime_migrations (name, applied_at) values (?, ?)")
-        .run(file, new Date().toISOString());
-    });
+    const migrationStartedAt = Date.now();
+    logger?.info({ migration: file }, "sqlite migration started");
+    try {
+      const sql = readFileSync(new URL(file, migrationDirectory), "utf8");
+      runInTransaction(database, () => {
+        database.exec(sql);
+        database
+          .prepare("insert into runtime_migrations (name, applied_at) values (?, ?)")
+          .run(file, new Date().toISOString());
+      });
+    } catch (error) {
+      logger?.error(
+        { migration: file, durationMs: Date.now() - migrationStartedAt, err: error },
+        "sqlite migration failed",
+      );
+      throw error;
+    }
+    applied.add(file);
+    newlyAppliedCount += 1;
+    logger?.info({ migration: file, durationMs: Date.now() - migrationStartedAt }, "sqlite migration completed");
   }
+
+  logger?.info(
+    {
+      migrationCount: migrationFiles.length,
+      appliedCount: migrationFiles.filter((file) => applied.has(file)).length,
+      newlyAppliedCount,
+      durationMs: Date.now() - startedAt,
+    },
+    "sqlite migrations ready",
+  );
 }
 
 async function readRotatedConnectionSecrets(

@@ -22,6 +22,65 @@ afterEach(async () => {
 });
 
 describe("SqliteRuntimeDatabase", () => {
+  it("logs applied migrations and the ready state", async () => {
+    const databasePath = await createDatabasePath();
+    const entries: Array<{ fields: Record<string, unknown>; message: string }> = [];
+    const logger = {
+      error(fields: Record<string, unknown>, message: string): void {
+        entries.push({ fields, message });
+      },
+      info(fields: Record<string, unknown>, message: string): void {
+        entries.push({ fields, message });
+      },
+      warn(): void {},
+    };
+
+    const first = new SqliteRuntimeDatabase(databasePath, { logger });
+    first.close();
+
+    const migrations = [
+      "0001_runtime.sql",
+      "0002_run_service.sql",
+      "0003_action_idempotency.sql",
+      "0004_action_run_audit.sql",
+      "0005_run_retention.sql",
+      "0006_connection_identity.sql",
+    ];
+    expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
+      migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
+    );
+    expect(entries.filter((entry) => entry.message === "sqlite migration completed")).toEqual(
+      migrations.map((migration) => ({
+        fields: { migration, durationMs: expect.any(Number) },
+        message: "sqlite migration completed",
+      })),
+    );
+    expect(entries.at(-1)).toEqual({
+      fields: {
+        migrationCount: migrations.length,
+        appliedCount: migrations.length,
+        newlyAppliedCount: migrations.length,
+        durationMs: expect.any(Number),
+      },
+      message: "sqlite migrations ready",
+    });
+
+    entries.length = 0;
+    const reopened = new SqliteRuntimeDatabase(databasePath, { logger });
+    reopened.close();
+    expect(entries).toEqual([
+      {
+        fields: {
+          migrationCount: migrations.length,
+          appliedCount: migrations.length,
+          newlyAppliedCount: 0,
+          durationMs: expect.any(Number),
+        },
+        message: "sqlite migrations ready",
+      },
+    ]);
+  });
+
   it("persists local runtime state across database instances", async () => {
     const databasePath = await createDatabasePath();
     const first = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
