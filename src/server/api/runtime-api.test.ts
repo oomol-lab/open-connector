@@ -4,10 +4,43 @@ import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import {
   parseRuntimeActionHttpResult,
+  serializeRuntimeAction,
   serializeRuntimeActionResult,
   serializeRuntimeFailure,
   writeRuntimeActionHttpResult,
 } from "./runtime-api.ts";
+
+describe("runtime action metadata", () => {
+  it("includes the execution status advertised by the runtime catalog", () => {
+    expect(
+      serializeRuntimeAction({
+        id: "example.echo",
+        service: "example",
+        name: "echo",
+        description: "Echo the provided value.",
+        requiredScopes: [],
+        providerPermissions: [],
+        inputSchema: { type: "object" },
+        outputSchema: { type: "object" },
+        execution: {
+          locallyExecutable: true,
+          catalogOnly: false,
+          requiredAuthTypes: ["api_key"],
+          noAuthRunnable: false,
+          needsCredential: true,
+        },
+      }),
+    ).toMatchObject({
+      execution: {
+        locallyExecutable: true,
+        catalogOnly: false,
+        requiredAuthTypes: ["api_key"],
+        noAuthRunnable: false,
+        needsCredential: true,
+      },
+    });
+  });
+});
 
 describe("runtime action HTTP results", () => {
   it("serializes a successful execution without changing its wire shape", () => {
