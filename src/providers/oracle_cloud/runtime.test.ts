@@ -246,6 +246,84 @@ describe("Oracle Cloud provider contract", () => {
     ).resolves.toMatchObject({ commandExecution: { lifecycleState: "SUCCEEDED", exitCode: 0 } });
   });
 
+  it("rejects Instance Agent command timeouts beyond the four-minute polling contract", async () => {
+    const fetcher = vi.fn() as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.run_instance_agent_command(
+        {
+          instanceId: "ocid1.instance.oc1..instance",
+          displayName: "long-command",
+          script: "sleep 300",
+          executionTimeoutInSeconds: 300,
+        },
+        createOracleCloudContext(values, fetcher),
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "executionTimeoutInSeconds must be between 1 and 240",
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("includes the tenancy root only on the first compartment page", async () => {
+    const firstPageFetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = new URL(input.toString());
+      if (url.pathname === "/20160918/compartments") {
+        return jsonResponse([{ id: "ocid1.compartment.oc1..child" }], { "opc-next-page": "page-2" });
+      }
+      expect(url.pathname).toBe(`/20160918/compartments/${values.tenancyId}`);
+      return jsonResponse({ id: values.tenancyId, name: "root" });
+    }) as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.list_compartments({}, createOracleCloudContext(values, firstPageFetcher)),
+    ).resolves.toMatchObject({
+      compartments: [{ id: "ocid1.compartment.oc1..child" }, { id: values.tenancyId, name: "root" }],
+      nextPage: "page-2",
+    });
+    expect(firstPageFetcher).toHaveBeenCalledTimes(2);
+
+    const nextPageFetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = new URL(input.toString());
+      expect(url.pathname).toBe("/20160918/compartments");
+      expect(url.searchParams.get("page")).toBe("page-2");
+      return jsonResponse([{ id: "ocid1.compartment.oc1..next-child" }]);
+    }) as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.list_compartments(
+        { page: "page-2" },
+        createOracleCloudContext(values, nextPageFetcher),
+      ),
+    ).resolves.toMatchObject({ compartments: [{ id: "ocid1.compartment.oc1..next-child" }] });
+    expect(nextPageFetcher).toHaveBeenCalledOnce();
+  });
+
+  it("normalizes response body read failures while the request timeout is active", async () => {
+    const fetcher = vi.fn(async () => {
+      return {
+        text: async () => {
+          throw new TypeError("response stream failed");
+        },
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.list_instances({}, createOracleCloudContext(values, fetcher)),
+    ).rejects.toMatchObject({ status: 502, message: "OCI request failed: response stream failed" });
+  });
+
+  it("accepts a signed 403 response as valid credentials with insufficient Compute permissions", async () => {
+    const fetcher = vi.fn(async () =>
+      jsonResponse({ code: "NotAuthorized", message: "The principal lacks INSTANCE_READ." }, {}, 403),
+    ) as unknown as typeof fetch;
+
+    await expect(validateOracleCloudCredential(values, fetcher)).resolves.toMatchObject({
+      profile: { accountId: values.userId, displayName: "OCI us-ashburn-1" },
+    });
+  });
+
   it("maps OCI authorization failures during credential validation to invalid credentials", async () => {
     const fetcher = vi.fn(async () =>
       jsonResponse({ code: "NotAuthenticated", message: "The required information was not supplied." }, {}, 401),

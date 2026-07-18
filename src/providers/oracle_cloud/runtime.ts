@@ -17,11 +17,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
-import { oracleInstanceActions } from "./actions.ts";
+import { oracleInstanceActions, oracleInstanceAgentMaxWaitSeconds } from "./actions.ts";
 import { parseOracleApiPrivateKey, signOracleApiRequest } from "./request-signer.ts";
 
 const requestTimeoutMs = 30_000;
-const commandWaitMs = 240_000;
+const commandWaitMs = oracleInstanceAgentMaxWaitSeconds * 1_000;
 const defaultRealm = "oc1";
 
 export const oracleRealmDomains = {
@@ -236,12 +236,16 @@ export async function validateOracleCloudCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = createOracleCloudContext(values, fetcher, signal);
-  await requestOracle({
-    context,
-    path: "/instances",
-    phase: "validate",
-    query: { compartmentId: context.defaultCompartmentId, limit: 1 },
-  });
+  try {
+    await requestOracle({
+      context,
+      path: "/instances",
+      phase: "validate",
+      query: { compartmentId: context.defaultCompartmentId, limit: 1 },
+    });
+  } catch (error) {
+    if (!(error instanceof ProviderRequestError) || error.status !== 403) throw error;
+  }
   return {
     profile: { accountId: context.userId, displayName: `OCI ${context.region}` },
     grantedScopes: [],
@@ -401,7 +405,7 @@ async function listCompartments(
     }),
   });
   const result = listResult("compartments", response);
-  if (optionalBoolean(input.includeRoot) !== false) {
+  if (optionalBoolean(input.includeRoot) !== false && optionalString(input.page) === undefined) {
     const root = await requestOracle({
       context,
       service: "identity",
@@ -440,6 +444,7 @@ async function runInstanceAgentCommand(
   context: OracleCloudContext,
 ): Promise<Record<string, unknown>> {
   const instanceId = requireOcid(input.instanceId, "instanceId", ["instance"]);
+  const executionTimeoutInSeconds = readCommandTimeout(input.executionTimeoutInSeconds);
   const createResponse = await requestOracle({
     context,
     service: "instanceAgent",
@@ -454,8 +459,7 @@ async function runInstanceAgentCommand(
         source: { sourceType: "TEXT", text: requiredString(input.script, "script", inputError) },
         output: { outputType: "TEXT" },
       },
-      executionTimeOutInSeconds:
-        optionalIntegerLike(input.executionTimeoutInSeconds, "executionTimeoutInSeconds", inputError) ?? 30,
+      executionTimeOutInSeconds: executionTimeoutInSeconds,
     },
   });
   const command = requiredRecord(createResponse.payload, "OCI instance agent command", responseError);
@@ -588,8 +592,10 @@ export async function requestOracle(input: OracleRequestInput): Promise<OracleRe
   const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
 
   let response: Response;
+  let text: string;
   try {
     response = await input.context.fetcher(url, { method, headers, body, signal: timeout.signal });
+    text = await response.text();
   } catch (error) {
     if (timeout.didTimeout() || isAbortLikeError(error)) throw new ProviderRequestError(504, "OCI request timed out");
     throw new ProviderRequestError(
@@ -600,7 +606,6 @@ export async function requestOracle(input: OracleRequestInput): Promise<OracleRe
     timeout.cleanup();
   }
 
-  const text = await response.text();
   const payload = parsePayload(text, response.ok);
   if (!response.ok) throw createApiError(response, payload, input.phase);
   return {
@@ -628,11 +633,11 @@ function createApiError(response: Response, payload: unknown, phase: RequestPhas
   const code = optionalString(record?.code);
   const message = optionalString(record?.message) ?? response.statusText ?? `HTTP ${response.status}`;
   const detail = code ? `${code}: ${message}` : message;
-  if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(
-      phase === "validate" ? 400 : response.status,
-      `OCI authorization failed: ${detail}`,
-    );
+  if (response.status === 401) {
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, `OCI authorization failed: ${detail}`);
+  }
+  if (response.status === 403) {
+    return new ProviderRequestError(403, `OCI authorization failed: ${detail}`);
   }
   if ([400, 404, 409, 412, 429].includes(response.status)) {
     return new ProviderRequestError(response.status, `OCI request failed: ${detail}`, payload);
@@ -676,6 +681,14 @@ function readLimit(value: unknown): number | undefined {
   const resolved = optionalIntegerLike(value, "limit", inputError);
   if (resolved !== undefined && (resolved < 1 || resolved > 1_000))
     throw inputError("limit must be between 1 and 1000");
+  return resolved;
+}
+
+function readCommandTimeout(value: unknown): number {
+  const resolved = optionalIntegerLike(value, "executionTimeoutInSeconds", inputError) ?? 30;
+  if (resolved < 1 || resolved > oracleInstanceAgentMaxWaitSeconds) {
+    throw inputError(`executionTimeoutInSeconds must be between 1 and ${oracleInstanceAgentMaxWaitSeconds}`);
+  }
   return resolved;
 }
 

@@ -15,6 +15,7 @@ export const oracleInstanceActions: string[] = [
   "DIAGNOSTICREBOOT",
   "REBOOTMIGRATE",
 ];
+export const oracleInstanceAgentMaxWaitSeconds = 240;
 
 const ocid = (description: string): JsonSchema => s.nonEmptyString(description);
 const compartmentId = ocid("Compartment or tenancy OCID. Defaults to the connection's default compartment.");
@@ -347,7 +348,10 @@ export const oracleCloudActions: ActionDefinition[] = [
         compartmentId,
         compartmentIdInSubtree: s.boolean("Traverse the entire tenancy subtree."),
         accessLevel: s.stringEnum("Permission filtering mode.", ["ANY", "ACCESSIBLE"]),
-        includeRoot: s.boolean("Include the tenancy root compartment."),
+        includeRoot: s.boolean({
+          description: "Include the tenancy root compartment on the first page.",
+          default: true,
+        }),
         ...pagination,
       },
       ["compartmentId", "compartmentIdInSubtree", "accessLevel", "includeRoot", "limit", "page"],
@@ -408,7 +412,10 @@ export const oracleCloudActions: ActionDefinition[] = [
         instanceId,
         displayName: s.nonEmptyString("Command display name."),
         script: s.nonEmptyString("Plain-text script to execute."),
-        executionTimeoutInSeconds: s.positiveInteger("On-host command timeout in seconds."),
+        executionTimeoutInSeconds: s.positiveInteger(
+          "On-host command timeout in seconds. OpenConnector waits at most four minutes for completion.",
+          { maximum: oracleInstanceAgentMaxWaitSeconds },
+        ),
       },
       ["compartmentId", "executionTimeoutInSeconds"],
     ),
