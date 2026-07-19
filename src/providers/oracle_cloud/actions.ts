@@ -31,7 +31,8 @@ const listMetadata = {
   nextPage: s.nullableString("Token for the next page, or null."),
 };
 
-function input(description: string, properties: Record<string, JsonSchema>, optional: string[] = []): JsonSchema {
+/** Every call must name its optional properties; `s.object` treats an empty list as "all required". */
+function input(description: string, properties: Record<string, JsonSchema>, optional: string[]): JsonSchema {
   return s.object(description, properties, { optional });
 }
 
@@ -202,11 +203,15 @@ export const oracleCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_vcn",
     description: "Create a virtual cloud network.",
-    inputSchema: input("VCN creation.", {
-      compartmentId,
-      cidrBlock: s.nonEmptyString("IPv4 CIDR block."),
-      displayName: s.nonEmptyString("VCN display name."),
-    }),
+    inputSchema: input(
+      "VCN creation.",
+      {
+        compartmentId,
+        cidrBlock: s.nonEmptyString("IPv4 CIDR block."),
+        displayName: s.nonEmptyString("VCN display name."),
+      },
+      ["compartmentId"],
+    ),
     outputSchema: entityOutput("vcn"),
   }),
   defineProviderAction(service, {
@@ -229,12 +234,16 @@ export const oracleCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_subnet",
     description: "Create a subnet in a VCN.",
-    inputSchema: input("Subnet creation.", {
-      vcnId: ocid("VCN OCID."),
-      compartmentId,
-      cidrBlock: s.nonEmptyString("Subnet IPv4 CIDR block."),
-      displayName: s.nonEmptyString("Subnet display name."),
-    }),
+    inputSchema: input(
+      "Subnet creation.",
+      {
+        vcnId: ocid("VCN OCID."),
+        compartmentId,
+        cidrBlock: s.nonEmptyString("Subnet IPv4 CIDR block."),
+        displayName: s.nonEmptyString("Subnet display name."),
+      },
+      ["compartmentId"],
+    ),
     outputSchema: entityOutput("subnet"),
   }),
   defineProviderAction(service, {
@@ -349,7 +358,8 @@ export const oracleCloudActions: ActionDefinition[] = [
         compartmentIdInSubtree: s.boolean("Traverse the entire tenancy subtree."),
         accessLevel: s.stringEnum("Permission filtering mode.", ["ANY", "ACCESSIBLE"]),
         includeRoot: s.boolean({
-          description: "Include the tenancy root compartment on the first page.",
+          description:
+            "Include the tenancy root compartment on the first page. Applies only when listing the tenancy itself.",
           default: true,
         }),
         ...pagination,

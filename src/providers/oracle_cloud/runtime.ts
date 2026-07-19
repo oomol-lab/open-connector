@@ -24,6 +24,12 @@ const requestTimeoutMs = 30_000;
 const commandWaitMs = oracleInstanceAgentMaxWaitSeconds * 1_000;
 const defaultRealm = "oc1";
 
+/**
+ * Non-terminal `InstanceAgentCommandExecution.lifecycleState` values. Every other state
+ * (SUCCEEDED, FAILED, TIMED_OUT, CANCELED, or one OCI adds later) ends the polling loop.
+ */
+const oracleInstanceAgentPendingStates = new Set(["ACCEPTED", "IN_PROGRESS"]);
+
 export const oracleRealmDomains = {
   oc1: "oraclecloud.com",
   oc2: "oraclegovcloud.com",
@@ -391,13 +397,14 @@ async function listCompartments(
   input: Record<string, unknown>,
   context: OracleCloudContext,
 ): Promise<Record<string, unknown>> {
+  const parentId = compartment(input, context);
   const response = await requestOracle({
     context,
     service: "identity",
     path: "/compartments",
     phase: "execute",
     query: compactObject({
-      compartmentId: compartment(input, context),
+      compartmentId: parentId,
       compartmentIdInSubtree: optionalBoolean(input.compartmentIdInSubtree) ?? false,
       accessLevel: optionalString(input.accessLevel) ?? "ANY",
       limit: readLimit(input.limit),
@@ -405,16 +412,34 @@ async function listCompartments(
     }),
   });
   const result = listResult("compartments", response);
-  if (optionalBoolean(input.includeRoot) !== false && optionalString(input.page) === undefined) {
+  const includeRoot =
+    optionalBoolean(input.includeRoot) !== false &&
+    optionalString(input.page) === undefined &&
+    parentId === context.tenancyId;
+  if (includeRoot) {
+    const root = await readRootCompartment(context);
+    if (root) (result.compartments as Array<unknown>).push(root);
+  }
+  return result;
+}
+
+/**
+ * Read the tenancy root compartment. It is supplementary data appended to a listing that already
+ * succeeded, so a tenancy the caller cannot inspect omits the root instead of failing the action.
+ */
+async function readRootCompartment(context: OracleCloudContext): Promise<Record<string, unknown> | null> {
+  try {
     const root = await requestOracle({
       context,
       service: "identity",
       path: `/compartments/${encodeURIComponent(context.tenancyId)}`,
       phase: "execute",
     });
-    (result.compartments as Array<unknown>).push(requiredRecord(root.payload, "OCI root compartment", responseError));
+    return requiredRecord(root.payload, "OCI root compartment", responseError);
+  } catch (error) {
+    if (error instanceof ProviderRequestError && error.status < 500) return null;
+    throw error;
   }
-  return result;
 }
 
 async function getCompartmentByName(
@@ -474,7 +499,7 @@ async function runInstanceAgentCommand(
       query: { instanceId },
     });
     const lifecycleState = optionalString(optionalRecord(execution.payload)?.lifecycleState);
-    if (lifecycleState === "SUCCEEDED" || lifecycleState === "FAILED" || lifecycleState === "CANCELED") {
+    if (lifecycleState !== undefined && !oracleInstanceAgentPendingStates.has(lifecycleState)) {
       return entityResult("commandExecution", execution);
     }
     await waitForPoll(context.signal);

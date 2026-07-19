@@ -246,6 +246,24 @@ describe("Oracle Cloud provider contract", () => {
     ).resolves.toMatchObject({ commandExecution: { lifecycleState: "SUCCEEDED", exitCode: 0 } });
   });
 
+  it("returns the execution as soon as it reaches a terminal state such as TIMED_OUT", async () => {
+    const commandId = "ocid1.instanceagentcommand.oc1..command";
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      if (init?.method === "POST") return jsonResponse({ id: commandId });
+      const url = new URL(input.toString());
+      expect(url.pathname).toBe(`/20180530/instanceAgentCommands/${commandId}/status`);
+      return jsonResponse({ lifecycleState: "TIMED_OUT", exitCode: 124 });
+    }) as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.run_instance_agent_command(
+        { instanceId: "ocid1.instance.oc1..instance", displayName: "sleep", script: "sleep 300" },
+        createOracleCloudContext(values, fetcher),
+      ),
+    ).resolves.toMatchObject({ commandExecution: { lifecycleState: "TIMED_OUT", exitCode: 124 } });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
   it("rejects Instance Agent command timeouts beyond the four-minute polling contract", async () => {
     const fetcher = vi.fn() as unknown as typeof fetch;
 
@@ -266,7 +284,7 @@ describe("Oracle Cloud provider contract", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it("includes the tenancy root only on the first compartment page", async () => {
+  it("includes the tenancy root only on the first page of a tenancy listing", async () => {
     const firstPageFetcher = vi.fn(async (input: URL | RequestInfo) => {
       const url = new URL(input.toString());
       if (url.pathname === "/20160918/compartments") {
@@ -277,7 +295,10 @@ describe("Oracle Cloud provider contract", () => {
     }) as unknown as typeof fetch;
 
     await expect(
-      oracleCloudActionHandlers.list_compartments({}, createOracleCloudContext(values, firstPageFetcher)),
+      oracleCloudActionHandlers.list_compartments(
+        { compartmentId: values.tenancyId },
+        createOracleCloudContext(values, firstPageFetcher),
+      ),
     ).resolves.toMatchObject({
       compartments: [{ id: "ocid1.compartment.oc1..child" }, { id: values.tenancyId, name: "root" }],
       nextPage: "page-2",
@@ -293,11 +314,43 @@ describe("Oracle Cloud provider contract", () => {
 
     await expect(
       oracleCloudActionHandlers.list_compartments(
-        { page: "page-2" },
+        { compartmentId: values.tenancyId, page: "page-2" },
         createOracleCloudContext(values, nextPageFetcher),
       ),
     ).resolves.toMatchObject({ compartments: [{ id: "ocid1.compartment.oc1..next-child" }] });
     expect(nextPageFetcher).toHaveBeenCalledOnce();
+  });
+
+  it("omits the tenancy root when listing a child compartment", async () => {
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = new URL(input.toString());
+      expect(url.pathname).toBe("/20160918/compartments");
+      expect(url.searchParams.get("compartmentId")).toBe(values.defaultCompartmentId);
+      return jsonResponse([{ id: "ocid1.compartment.oc1..grandchild" }]);
+    }) as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.list_compartments({}, createOracleCloudContext(values, fetcher)),
+    ).resolves.toMatchObject({ compartments: [{ id: "ocid1.compartment.oc1..grandchild" }] });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a tenancy listing usable when the root compartment is not readable", async () => {
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = new URL(input.toString());
+      if (url.pathname === "/20160918/compartments") {
+        return jsonResponse([{ id: "ocid1.compartment.oc1..child" }]);
+      }
+      return jsonResponse({ code: "NotAuthorizedOrNotFound", message: "Authorization failed." }, {}, 404);
+    }) as unknown as typeof fetch;
+
+    await expect(
+      oracleCloudActionHandlers.list_compartments(
+        { compartmentId: values.tenancyId },
+        createOracleCloudContext(values, fetcher),
+      ),
+    ).resolves.toMatchObject({ compartments: [{ id: "ocid1.compartment.oc1..child" }] });
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("normalizes response body read failures while the request timeout is active", async () => {
