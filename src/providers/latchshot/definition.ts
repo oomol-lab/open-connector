@@ -16,7 +16,7 @@ export const provider: ProviderDefinition = {
       label: "API Key",
       placeholder: "ls_live_...",
       description:
-        "Latchshot API key sent as a Bearer token. Get a recurring Free-plan key from https://latchshot.fly.dev/#trial.",
+        "Latchshot API key sent as a Bearer token. Get a recurring Free-plan key from https://latchshot.fly.dev/?intent=openconnector#trial.",
     },
   ],
   homepageUrl: "https://latchshot.fly.dev",
