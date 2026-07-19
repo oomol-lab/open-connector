@@ -22,7 +22,7 @@ const service = "latchshot";
 const latchshotApiBaseUrl = "https://latchshot.fly.dev";
 const latchshotRenderPath = "/v1/render";
 const latchshotUsagePath = "/v1/usage";
-const latchshotErrorMaxBytes = 64 * 1024;
+const latchshotJsonMaxBytes = 64 * 1024;
 const planValues = new Set(["trial", "launch", "build", "scale"]);
 const upgradePlanValues = new Set(["launch", "build", "scale"]);
 const upgradeStatusValues = new Set(["new", "contacted", "fulfilled", "declined"]);
@@ -101,7 +101,6 @@ async function captureLatchshotPage(
     throw await createLatchshotError(response, "execute");
   }
 
-  const artifact = resolveArtifact(response.headers.get("content-type"), format);
   const bytes = await readBoundedResponseBytes(response, {
     maxBytes: context.transitFiles.maxBytes,
     fieldName: "Latchshot artifact",
@@ -111,6 +110,7 @@ async function captureLatchshotPage(
     throw new ProviderRequestError(502, "Latchshot returned an empty artifact.");
   }
 
+  const artifact = resolveArtifact(response.headers.get("content-type"), format);
   const stored = await context.transitFiles.create(
     new File([Uint8Array.from(bytes)], `latchshot-capture.${artifact.extension}`, { type: artifact.mimeType }),
   );
@@ -153,7 +153,7 @@ async function requestLatchshotUsage(
     throw await createLatchshotError(response, phase);
   }
 
-  const text = await readProviderTextBody(response, "Latchshot usage response", latchshotErrorMaxBytes);
+  const text = await readProviderTextBody(response, "Latchshot usage response", latchshotJsonMaxBytes);
   let payload: unknown;
   try {
     payload = JSON.parse(text) as unknown;
@@ -188,7 +188,7 @@ async function fetchLatchshot(
 }
 
 async function createLatchshotError(response: Response, phase: LatchshotRequestPhase): Promise<ProviderRequestError> {
-  const text = await readProviderTextBody(response, "Latchshot error response", latchshotErrorMaxBytes);
+  const text = await readProviderTextBody(response, "Latchshot error response", latchshotJsonMaxBytes);
   const message = extractLatchshotErrorMessage(text) ?? `Latchshot request failed with HTTP ${response.status}.`;
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {

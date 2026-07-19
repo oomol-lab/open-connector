@@ -90,6 +90,64 @@ describe("Latchshot provider", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      kind: "screenshot",
+      format: "jpeg",
+      contentType: "image/jpeg",
+      extension: "jpg",
+    },
+    {
+      kind: "pdf",
+      format: undefined,
+      contentType: "application/pdf",
+      extension: "pdf",
+    },
+  ])("stores $format $kind output with matching artifact metadata", async (sample) => {
+    const requests: RecordedRequest[] = [];
+    const context = createContext(
+      requests,
+      new Response(Uint8Array.from([1, 2, 3, 4]), {
+        headers: { "content-type": sample.contentType },
+      }),
+    );
+
+    const input = {
+      url: "https://example.com",
+      kind: sample.kind,
+      ...(sample.format ? { format: sample.format } : {}),
+    };
+    const result = await latchshotActionHandlers.capture_page!(input, context);
+
+    expect(result).toMatchObject({
+      file: {
+        name: `latchshot-capture.${sample.extension}`,
+        mimeType: sample.contentType,
+        sizeBytes: 4,
+      },
+    });
+    expect(JSON.parse(String(requests[0]?.init?.body))).toMatchObject({
+      kind: sample.kind,
+      format: sample.kind === "pdf" ? "pdf" : sample.format,
+    });
+  });
+
+  it("consumes a mismatched artifact response without storing it", async () => {
+    const response = new Response(pngBytes, { headers: { "content-type": "image/jpeg" } });
+    const context = createContext([], response);
+    const createFile = vi.spyOn(context.transitFiles!, "create");
+
+    await expect(
+      latchshotActionHandlers.capture_page!({ url: "https://example.com", format: "png" }, context),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "Latchshot artifact type did not match the requested format.",
+    });
+
+    expect(response.bodyUsed).toBe(true);
+    expect(createFile).not.toHaveBeenCalled();
+  });
+
   it("validates credentials through the non-billable usage endpoint", async () => {
     const requests: RecordedRequest[] = [];
     const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
