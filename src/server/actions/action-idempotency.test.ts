@@ -47,6 +47,21 @@ describe("action idempotency", () => {
     expect(hashIdempotencyKey("request-1")).not.toBe("request-1");
   });
 
+  it("binds stored-token requests without changing unscoped fingerprints", () => {
+    const request = {
+      actionId: "example.echo",
+      connectionName: "default",
+      input: { message: "hello" },
+    };
+    const unscoped = hashActionRequest(request);
+
+    expect(hashActionRequest({ ...request, runtimeTokenId: undefined })).toBe(unscoped);
+    expect(hashActionRequest({ ...request, runtimeTokenId: "token-a" })).not.toBe(unscoped);
+    expect(hashActionRequest({ ...request, runtimeTokenId: "token-a" })).not.toBe(
+      hashActionRequest({ ...request, runtimeTokenId: "token-b" }),
+    );
+  });
+
   it("rejects action inputs beyond the fingerprint depth limit", () => {
     expect(() =>
       hashActionRequest({

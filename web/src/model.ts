@@ -78,8 +78,36 @@ export interface OAuthConfig {
 export interface RuntimeTokenSummary {
   id: string;
   name: string;
+  allowedActions: string[];
+  blockedActions: string[];
   createdAt: string;
   lastUsedAt?: string;
+}
+
+export interface PolicyRules {
+  allowedActions: string[];
+  blockedActions: string[];
+  allowedProxies: string[];
+  blockedProxies: string[];
+}
+
+export interface RuntimePolicyState {
+  deployment: PolicyRules;
+  runtime: PolicyRules;
+  updatedAt?: string;
+}
+
+export interface PolicyCheck {
+  source: "deployment" | "runtime" | "token";
+  outcome: "allow_match" | "block_match" | "allow_miss";
+  rule?: string;
+}
+
+export interface PolicyDecision {
+  allowed: boolean;
+  code?: string;
+  message?: string;
+  checks: PolicyCheck[];
 }
 
 export interface RuntimeTokenCreation {
@@ -97,6 +125,8 @@ export interface RunLog {
   durationMs: number;
   ok: boolean;
   connectionId?: string;
+  runtimeTokenId?: string;
+  policy?: PolicyDecision;
   connectionProfile?: {
     displayName?: string;
   };
@@ -133,6 +163,7 @@ export interface AppData {
   connections: ConnectionRecord[];
   oauthConfigs: OAuthConfig[];
   runtimeTokens: RuntimeTokenSummary[];
+  runtimePolicy?: RuntimePolicyState;
   runs: RunLog[];
   runsNextCursor?: string;
 }
@@ -216,8 +247,21 @@ export const emptyData: AppData = {
   connections: [],
   oauthConfigs: [],
   runtimeTokens: [],
+  runtimePolicy: {
+    deployment: emptyPolicyRules(),
+    runtime: emptyPolicyRules(),
+  },
   runs: [],
 };
+
+function emptyPolicyRules(): PolicyRules {
+  return {
+    allowedActions: [],
+    blockedActions: [],
+    allowedProxies: [],
+    blockedProxies: [],
+  };
+}
 
 export function createOverviewSummary(data: AppData): OverviewSummary {
   const actions = data.providers.flatMap((provider) => provider.actions);

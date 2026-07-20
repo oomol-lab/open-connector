@@ -6,6 +6,7 @@ import {
   idempotencyKeyMaxBytes,
   idempotencyRetentionHours,
 } from "../actions/action-idempotency.ts";
+import { policyRequestMaxBytes, policyRuleListMaxItems, policyRuleMaxBytes } from "./policy-input.ts";
 
 /**
  * Minimal OpenAPI document shape returned by the local runtime.
@@ -103,7 +104,7 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
 );
 
 const actionIdempotencyDescription =
-  `Requests with the same Idempotency-Key, action, input, and effective connection replay the original HTTP status and body of completed successes and failures during the ${idempotencyRetentionHours}-hour replay window. ` +
+  `Requests with the same Idempotency-Key, action, input, effective connection, and stored runtime token identity replay the original HTTP status and body of completed successes and failures during the ${idempotencyRetentionHours}-hour replay window. ` +
   "Requests that are still in progress, or whose outcome is uncertain, are not automatically dispatched again. " +
   "Duplicate suppression does not guarantee exactly-once execution by the provider.";
 
@@ -119,11 +120,11 @@ const idempotencyKeyParameter = {
   in: "header",
   required: false,
   schema: { type: "string", minLength: 1 },
-  description: `Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed ${idempotencyKeyMaxBytes} UTF-8 bytes. Reuse a key only for retries of the same action, input, and effective connection. When this header is present, the action input must not exceed an object/array nesting depth of ${actionInputMaxDepth} levels.`,
+  description: `Optional runtime-wide key for deduplicating retries of the same action request. Leading and trailing whitespace is trimmed; the remaining value must be non-empty and must not exceed ${idempotencyKeyMaxBytes} UTF-8 bytes. Reuse a key only for retries with the same action, input, effective connection, and stored runtime token. When this header is present, the action input must not exceed an object/array nesting depth of ${actionInputMaxDepth} levels.`,
 };
 
 const idempotencyConflictDescription =
-  "For idempotency, idempotency_request_in_progress means the original request is still running or its outcome is uncertain, while idempotency_key_conflict means the key was reused for a different action, input, or effective connection. Other runtime conflicts may return their own error code with the same status.";
+  "For idempotency, idempotency_request_in_progress means the original request is still running or its outcome is uncertain, while idempotency_key_conflict means the key was reused for a different action, input, effective connection, or stored runtime token. Other runtime conflicts may return their own error code with the same status.";
 
 /**
  * Build OpenAPI docs from the generated catalog.
@@ -208,6 +209,7 @@ export function createOpenApiDocument(
     "/api/oauth/authorizations": createOAuthAuthorizationPath(),
     "/api/runtime-tokens": createRuntimeTokensPath(),
     "/api/runtime-tokens/{id}": createRuntimeTokenPath(),
+    "/api/runtime-policy": createRuntimePolicyPath(),
     "/api/files": createTransitFilesPath(),
     "/api/files/{fileId}": createTransitFilePath(),
     "/v1/actions/{actionId}": runPath,
@@ -235,7 +237,7 @@ export function createOpenApiDocument(
       { name: "Catalog", description: "Provider and action metadata used by users and agents." },
       { name: "Connections", description: "Local provider credentials and connection state." },
       { name: "OAuth", description: "Local OAuth client configuration and authorization flow." },
-      { name: "Access", description: "Runtime bearer tokens for /v1 and MCP clients." },
+      { name: "Access", description: "Runtime execution policy and bearer tokens for /v1 and MCP clients." },
       { name: "Files", description: "Local temporary file transit for provider actions." },
       { name: "Runs", description: "Local action execution and recent run history." },
       { name: "Proxy", description: "Provider API proxy requests through local credentials." },
@@ -350,21 +352,77 @@ export function createOpenApiDocument(
           {
             id: jsonSchema.string({ description: "Runtime token identifier." }),
             name: jsonSchema.string({ description: "User-facing token label." }),
+            allowedActions: policyRuleArraySchema("Action allow rules applied to this stored runtime token."),
+            blockedActions: policyRuleArraySchema("Action block rules applied to this stored runtime token."),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
           },
           {
-            required: ["id", "name", "createdAt"],
+            required: ["id", "name", "allowedActions", "blockedActions", "createdAt"],
             description: "Runtime API token summary. Plaintext tokens and token hashes are not returned.",
           },
         ),
         RuntimeTokenCreateRequest: jsonSchema.object(
           {
             name: jsonSchema.string({ description: "User-facing token label." }),
+            allowedActions: policyRuleArraySchema("Optional action allow rules for the new token."),
+            blockedActions: policyRuleArraySchema("Optional action block rules for the new token."),
           },
           {
             required: ["name"],
             description: "Runtime token creation request.",
+          },
+        ),
+        TokenActionPolicy: jsonSchema.object(
+          {
+            allowedActions: policyRuleArraySchema("Action allow rules for this token."),
+            blockedActions: policyRuleArraySchema("Action block rules for this token."),
+          },
+          {
+            required: ["allowedActions", "blockedActions"],
+            description: "Complete replacement of one stored runtime token's action policy.",
+          },
+        ),
+        PolicyRules: policyRulesSchema(),
+        RuntimePolicyState: jsonSchema.object(
+          {
+            deployment: { $ref: "#/components/schemas/PolicyRules" },
+            runtime: { $ref: "#/components/schemas/PolicyRules" },
+            updatedAt: jsonSchema.string({ description: "Last Runtime policy update timestamp, when configured." }),
+          },
+          {
+            required: ["deployment", "runtime"],
+            description: "Deployment and persisted Runtime policy layers. Deployment rules are read-only.",
+          },
+        ),
+        PolicyCheck: jsonSchema.object(
+          {
+            source: { type: "string", enum: ["deployment", "runtime", "token"] },
+            outcome: { type: "string", enum: ["allow_match", "block_match", "allow_miss"] },
+            rule: jsonSchema.string({ description: "First matching policy rule, when one matched." }),
+          },
+          {
+            required: ["source", "outcome"],
+            description: "One policy layer's decisive or matching check.",
+          },
+        ),
+        PolicyDecision: jsonSchema.object(
+          {
+            allowed: jsonSchema.boolean({ description: "Whether policy permits execution." }),
+            code: {
+              type: "string",
+              enum: ["action_not_allowed", "action_blocked", "proxy_not_allowed", "proxy_blocked"],
+            },
+            message: jsonSchema.string({ description: "Policy denial message." }),
+            checks: {
+              type: "array",
+              maxItems: 3,
+              items: { $ref: "#/components/schemas/PolicyCheck" },
+            },
+          },
+          {
+            required: ["allowed", "checks"],
+            description: "Layered execution policy decision. code and message are present on denial.",
           },
         ),
         TransitFileUpload: jsonSchema.object(
@@ -398,6 +456,8 @@ export function createOpenApiDocument(
               "Provider account identity that the action used, when a connection was available.",
             ),
             connectionId: jsonSchema.string({ description: "Stable connection identifier used by the run." }),
+            runtimeTokenId: jsonSchema.string({ description: "Stored runtime token identifier used by the run." }),
+            policy: { $ref: "#/components/schemas/PolicyDecision" },
             inputSummary: {
               description: "Redacted action input summary.",
             },
@@ -532,7 +592,7 @@ function createRuntimeTokensPath(): Record<string, unknown> {
     post: {
       tags: ["Access"],
       summary: "Create a runtime API token.",
-      description: "The plaintext token is returned once. Only a hash is stored locally.",
+      description: `The plaintext token is returned once. Only a hash is stored locally. Policy request bodies must not exceed ${policyRequestMaxBytes} bytes.`,
       requestBody: {
         required: true,
         content: {
@@ -555,6 +615,7 @@ function createRuntimeTokensPath(): Record<string, unknown> {
           ),
         ),
         400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        413: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
   };
@@ -562,6 +623,25 @@ function createRuntimeTokensPath(): Record<string, unknown> {
 
 function createRuntimeTokenPath(): Record<string, unknown> {
   return {
+    put: {
+      tags: ["Access"],
+      summary: "Replace one stored runtime token's action policy.",
+      description: `Policy request bodies must not exceed ${policyRequestMaxBytes} bytes.`,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/TokenActionPolicy" },
+          },
+        },
+      },
+      responses: {
+        200: jsonResponse({ $ref: "#/components/schemas/RuntimeTokenSummary" }),
+        400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        413: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      },
+    },
     delete: {
       tags: ["Access"],
       summary: "Revoke a runtime API token.",
@@ -581,6 +661,67 @@ function createRuntimeTokenPath(): Record<string, unknown> {
         404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
+  };
+}
+
+function createRuntimePolicyPath(): Record<string, unknown> {
+  return {
+    get: {
+      tags: ["Access"],
+      summary: "Read deployment and persisted Runtime policy layers.",
+      responses: {
+        200: jsonResponse({ $ref: "#/components/schemas/RuntimePolicyState" }),
+        500: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      },
+    },
+    put: {
+      tags: ["Access"],
+      summary: "Replace the persisted Runtime action and proxy policy.",
+      description: `Deployment policy remains read-only. Block rules take precedence and non-empty allowlists intersect. Policy request bodies must not exceed ${policyRequestMaxBytes} bytes.`,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/PolicyRules" },
+          },
+        },
+      },
+      responses: {
+        200: jsonResponse({ $ref: "#/components/schemas/RuntimePolicyState" }),
+        400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        413: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        500: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      },
+    },
+  };
+}
+
+function policyRulesSchema(): JsonSchema {
+  return jsonSchema.object(
+    {
+      allowedActions: policyRuleArraySchema("Action allow rules."),
+      blockedActions: policyRuleArraySchema("Action block rules."),
+      allowedProxies: policyRuleArraySchema("Proxy service allow rules."),
+      blockedProxies: policyRuleArraySchema("Proxy service block rules."),
+    },
+    {
+      required: ["allowedActions", "blockedActions", "allowedProxies", "blockedProxies"],
+      description: "One complete action and proxy policy layer.",
+    },
+  );
+}
+
+function policyRuleArraySchema(description: string): JsonSchema {
+  return {
+    type: "array",
+    maxItems: policyRuleListMaxItems,
+    items: {
+      type: "string",
+      minLength: 1,
+      maxLength: policyRuleMaxBytes,
+      description: `Policy rule. The server enforces a ${policyRuleMaxBytes}-byte UTF-8 limit.`,
+    },
+    description,
   };
 }
 

@@ -1,0 +1,103 @@
+@layer base {
+  * {
+    box-sizing: border-box;
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 32%, transparent) transparent;
+    scrollbar-width: thin;
+    @apply border-border outline-ring/50;
+  }
+
+  *:hover {
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 48%, transparent) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-color: color-mix(in oklch, var(--muted-foreground) 28%, transparent);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100svh;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+  }
+
+  body,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    @apply transition-colors;
+  }
+
+  button {
+    color: inherit;
+  }
+
+  button:hover {
+    cursor: pointer;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  select:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--ring) 70%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.18;
+  font-weight: 680;
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 660;
+}
+
+h3 {
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 660;
+}

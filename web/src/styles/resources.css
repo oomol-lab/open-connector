@@ -1,0 +1,135 @@
+.resources-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.mcp-config-card {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  gap: 24px;
+  padding: 18px;
+}
+
+.mcp-config-summary {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 18px;
+  min-width: 0;
+}
+
+.mcp-config-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mcp-config-heading h2 {
+  margin: 1px 0 5px;
+  font-size: 16px;
+}
+
+.mcp-config-heading p {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.mcp-config-field {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+}
+
+.mcp-config-field > span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.mcp-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 4px 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--muted) 58%, transparent);
+}
+
+.mcp-endpoint code {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  font-family: var(--oomol-font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.mcp-config-code {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--muted) 58%, transparent);
+}
+
+.mcp-config-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: 4px 6px 4px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mcp-config-code-header strong {
+  font-size: 13px;
+}
+
+.mcp-config-code pre {
+  min-height: 192px;
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  font-family: var(--oomol-font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.doc-card {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-height: 172px;
+  padding: 18px;
+  text-decoration: none;
+}
+
+.doc-card p {
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.doc-card > svg {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 960px) {
+  .mcp-config-card,
+  .docs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

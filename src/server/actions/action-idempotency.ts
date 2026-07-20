@@ -27,6 +27,7 @@ export interface ActionRequestFingerprintInput {
   actionId: string;
   connectionName: string;
   input: unknown;
+  runtimeTokenId?: string;
 }
 
 /**
@@ -64,6 +65,7 @@ export function hashActionRequest(input: ActionRequestFingerprintInput): string 
       actionId: input.actionId,
       connectionName: input.connectionName,
       input: canonicalize(input.input, 1),
+      runtimeTokenId: input.runtimeTokenId,
     }),
   );
 }

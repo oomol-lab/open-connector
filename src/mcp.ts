@@ -1,15 +1,17 @@
 import type { CatalogStore, RuntimeActionDefinition } from "./catalog-store.ts";
 import type { ConnectionService, ConnectionSummary } from "./connection-service.ts";
-import type { ActionPolicyService } from "./core/action-policy.ts";
+import type { ActionPolicyDecision, ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 import type { ActionRunner, ActionRunResult } from "./server/actions/action-runner.ts";
+import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import { ConnectionError } from "./connection-service.ts";
+import { ActionPolicyService, emptyPolicyRules } from "./core/action-policy.ts";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
 import { renderActionMarkdown } from "./server/api/action-markdown.ts";
 
@@ -23,6 +25,8 @@ export interface IMcpServerOptions {
   actions: ActionRunner;
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
+  getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
+  runtimeGrant?: RuntimeGrant;
 }
 
 /**
@@ -147,8 +151,7 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
         limit: z.number().int().min(1).max(50).default(20).describe("Maximum number of actions to return."),
       },
     },
-    async ({ query, service, limit }) =>
-      toolResult(successPayload(await searchActions(options, { query, service, limit }))),
+    async ({ query, service, limit }) => toolResult(await searchActions(options, { query, service, limit })),
   );
 
   server.registerTool(
@@ -229,7 +232,13 @@ async function listApps(options: IMcpServerOptions, query: string | undefined): 
 async function searchActions(
   options: IMcpServerOptions,
   input: { query?: string; service?: string; limit: number },
-): Promise<unknown> {
+): Promise<ToolPayload> {
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
   const query = input.query?.trim();
   const actionSearch = options.actionSearch ?? createActionSearchIndexProvider(options.catalog.actions);
   const rankedActions = query
@@ -244,11 +253,11 @@ async function searchActions(
     service: action.service,
     name: action.name,
     description: action.description,
-    capability: await describeActionCapability(options, action),
+    capability: await describeActionCapability(options, action, undefined, policy),
     inputSummary: summarizeInputSchema(action.inputSchema),
   }));
 
-  return Promise.all(actions);
+  return successPayload(await Promise.all(actions));
 }
 
 async function getActionGuide(
@@ -261,10 +270,19 @@ async function getActionGuide(
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
 
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
   try {
     return successPayload({
-      capability: await describeActionCapability(options, action, connectionName),
-      markdown: renderActionMarkdown(action, await describeActionMarkdownContext(options, action, connectionName)),
+      capability: await describeActionCapability(options, action, connectionName, policy),
+      markdown: renderActionMarkdown(
+        action,
+        await describeActionMarkdownContext(options, action, connectionName, policy),
+      ),
     });
   } catch (error) {
     return connectionErrorPayload(error);
@@ -282,7 +300,13 @@ async function executeAction(
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
 
-  if (connectionName) {
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
+  if (connectionName && policy.evaluate(action).allowed) {
     try {
       await getSelectedConnectionSummary(options, action.service, connectionName);
     } catch (error) {
@@ -294,6 +318,8 @@ async function executeAction(
     input,
     caller: "mcp",
     connectionName,
+    policy,
+    runtimeTokenId: options.runtimeGrant?.tokenId,
   });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
@@ -336,7 +362,7 @@ type ActionCapability = {
   authTypes: ProviderDefinition["authTypes"];
   requiredScopes: string[];
   providerPermissions: string[];
-  policy: ReturnType<ActionPolicyService["evaluate"]> | { allowed: true };
+  policy: ActionPolicyDecision;
   connection?: ConnectionSummary;
 };
 
@@ -344,6 +370,7 @@ async function describeActionCapability(
   options: IMcpServerOptions,
   action: RuntimeActionDefinition,
   connectionName?: string,
+  policy?: ActionPolicySnapshot,
 ): Promise<ActionCapability> {
   const provider = options.catalog.providers.find((candidate) => candidate.service === action.service);
   return {
@@ -351,7 +378,7 @@ async function describeActionCapability(
     authTypes: provider?.authTypes ?? [],
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
-    policy: options.actionPolicy?.evaluate(action) ?? { allowed: true },
+    policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),
     connection: await getSelectedConnectionSummary(options, action.service, connectionName),
   };
 }
@@ -360,11 +387,20 @@ async function describeActionMarkdownContext(
   options: IMcpServerOptions,
   action: RuntimeActionDefinition,
   connectionName?: string,
-): Promise<{ connection?: ConnectionSummary; providerPermissions: string[] }> {
+  policy?: ActionPolicySnapshot,
+): Promise<{ connection?: ConnectionSummary; providerPermissions: string[]; policy: ActionPolicyDecision }> {
   return {
     connection: await getSelectedConnectionSummary(options, action.service, connectionName),
     providerPermissions: action.providerPermissions,
+    policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),
   };
+}
+
+async function getPolicySnapshot(options: IMcpServerOptions): Promise<ActionPolicySnapshot> {
+  if (options.getPolicySnapshot) {
+    return options.getPolicySnapshot();
+  }
+  return (options.actionPolicy ?? new ActionPolicyService()).createSnapshot(emptyPolicyRules(), options.runtimeGrant);
 }
 
 async function getSelectedConnectionSummary(

@@ -7,6 +7,7 @@ import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "../stora
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
 import { ConnectionService } from "../../connection-service.ts";
+import { ActionPolicyService } from "../../core/action-policy.ts";
 import { ActionRunner } from "./action-runner.ts";
 import * as runLogSummary from "./run-log-summary.ts";
 
@@ -115,9 +116,46 @@ describe("ActionRunner", () => {
     expect(runs.items[0]).toMatchObject({ ok: false, errorCode: "internal_error" });
     expect(JSON.stringify(entries)).not.toContain("secret-in-executor");
   });
+
+  it("records policy denial before resolving a connection or loading an executor", async () => {
+    const runs = new MemoryRunLogStore();
+    const { logger } = createTestLogger();
+    const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const actionPolicy = new ActionPolicyService({ blockedActions: ["example.echo"] });
+    const runner = createRunner({ runs, logger, providerLoader, actionPolicy });
+
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      policy: actionPolicy.createSnapshot(),
+      runtimeTokenId: "token-1",
+    });
+
+    expect(run).toMatchObject({
+      result: { ok: false, error: { code: "action_blocked" } },
+      auditPersisted: true,
+    });
+    expect(resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(runs.items[0]).toMatchObject({
+      runtimeTokenId: "token-1",
+      policy: {
+        allowed: false,
+        checks: [{ source: "deployment", outcome: "block_match", rule: "example.echo" }],
+      },
+    });
+  });
 });
 
-function createRunner(options: { runs: IRunLogStore; logger: Logger; providerLoader?: IProviderLoader }): ActionRunner {
+function createRunner(options: {
+  runs: IRunLogStore;
+  logger: Logger;
+  providerLoader?: IProviderLoader;
+  actionPolicy?: ActionPolicyService;
+}): ActionRunner {
   const catalog = createCatalogStore([exampleProvider], { executableActionIds: [echoAction.id] });
   const providerLoader =
     options.providerLoader ?? new TestProviderLoader(async () => ({ ok: true, output: { message: "ok" } }));
@@ -126,6 +164,7 @@ function createRunner(options: { runs: IRunLogStore; logger: Logger; providerLoa
     providerLoader,
     connections: new ConnectionService({ catalog, providerLoader, store: new MemoryConnectionStore() }),
     runs: options.runs,
+    actionPolicy: options.actionPolicy,
     logger: options.logger,
   });
 }

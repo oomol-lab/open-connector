@@ -1,4 +1,5 @@
 import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { TokenActionPolicy } from "../../core/action-policy.ts";
 import type { ResolvedCredential, RuntimeLogger } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
@@ -10,6 +11,7 @@ import type {
   IIdempotencyStore,
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
+import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
@@ -64,6 +66,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   readonly oauthClientConfigStore: SqliteOAuthClientConfigStore;
   readonly oauthStateStore: SqliteOAuthStateStore;
   readonly runtimeTokenStore: SqliteRuntimeTokenStore;
+  readonly runtimePolicyStore: SqliteRuntimePolicyStore;
   readonly runLogStore: SqliteRunLogStore;
   readonly idempotencyStore: SqliteIdempotencyStore;
 
@@ -78,6 +81,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database);
     this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database);
+    this.runtimePolicyStore = new SqliteRuntimePolicyStore(this.database);
     this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? DEFAULT_RUN_LIMIT);
     this.idempotencyStore = new SqliteIdempotencyStore(this.database, this.secretCodec);
   }
@@ -108,6 +112,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from oauth_client_configs;
       delete from oauth_states;
       delete from runtime_tokens;
+      delete from runtime_policy;
       delete from runs;
       delete from idempotency_records;
     `);
@@ -282,31 +287,62 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     this.database
       .prepare(
         `
-        insert into runtime_tokens (id, name, token_hash, created_at, last_used_at)
-        values (?, ?, ?, ?, ?)
+        insert into runtime_tokens (
+          id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
+        )
+        values (?, ?, ?, ?, ?, ?, ?)
       `,
       )
-      .run(record.id, record.name, record.tokenHash, record.createdAt, record.lastUsedAt ?? null);
+      .run(
+        record.id,
+        record.name,
+        record.tokenHash,
+        JSON.stringify(record.allowedActions),
+        JSON.stringify(record.blockedActions),
+        record.createdAt,
+        record.lastUsedAt ?? null,
+      );
   }
 
   async list(): Promise<RuntimeTokenRecord[]> {
     return this.database
       .prepare(
         `
-        select id, name, token_hash, created_at, last_used_at
+        select id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
         from runtime_tokens
         where revoked_at is null
         order by created_at desc, id desc
       `,
       )
       .all()
-      .map((row) => ({
-        id: readString(row, "id"),
-        name: readString(row, "name"),
-        tokenHash: readString(row, "token_hash"),
-        createdAt: readString(row, "created_at"),
-        lastUsedAt: readOptionalString(row, "last_used_at"),
-      }));
+      .map(readRuntimeTokenRow);
+  }
+
+  async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
+    const row = this.database
+      .prepare(
+        `
+        select id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
+        from runtime_tokens
+        where token_hash = ? and revoked_at is null
+      `,
+      )
+      .get(tokenHash);
+    return row ? readRuntimeTokenRow(row) : undefined;
+  }
+
+  async updatePolicy(id: string, policy: TokenActionPolicy): Promise<RuntimeTokenRecord | undefined> {
+    const row = this.database
+      .prepare(
+        `
+        update runtime_tokens
+        set allowed_actions = ?, blocked_actions = ?
+        where id = ? and revoked_at is null
+        returning id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
+      `,
+      )
+      .get(JSON.stringify(policy.allowedActions), JSON.stringify(policy.blockedActions), id);
+    return row ? readRuntimeTokenRow(row) : undefined;
   }
 
   async revoke(id: string): Promise<boolean> {
@@ -318,6 +354,48 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     this.database
       .prepare("update runtime_tokens set last_used_at = ? where id = ? and revoked_at is null")
       .run(usedAt, id);
+  }
+}
+
+function readRuntimeTokenRow(row: unknown): RuntimeTokenRecord {
+  return {
+    id: readString(row, "id"),
+    name: readString(row, "name"),
+    tokenHash: readString(row, "token_hash"),
+    allowedActions: parseJson(readString(row, "allowed_actions")),
+    blockedActions: parseJson(readString(row, "blocked_actions")),
+    createdAt: readString(row, "created_at"),
+    lastUsedAt: readOptionalString(row, "last_used_at"),
+  };
+}
+
+export class SqliteRuntimePolicyStore implements IRuntimePolicyStore {
+  private readonly database: DatabaseSync;
+
+  constructor(database: DatabaseSync) {
+    this.database = database;
+  }
+
+  async get(): Promise<RuntimePolicyRecord | undefined> {
+    const row = this.database.prepare("select value, updated_at from runtime_policy where id = 1").get();
+    return row
+      ? {
+          rules: parseJson(readString(row, "value")),
+          updatedAt: readString(row, "updated_at"),
+        }
+      : undefined;
+  }
+
+  async set(record: RuntimePolicyRecord): Promise<void> {
+    this.database
+      .prepare(
+        `
+        insert into runtime_policy (id, value, updated_at)
+        values (1, ?, ?)
+        on conflict(id) do update set value = excluded.value, updated_at = excluded.updated_at
+      `,
+      )
+      .run(JSON.stringify(record.rules), record.updatedAt);
   }
 }
 

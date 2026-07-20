@@ -1,6 +1,6 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService } from "../../connection-service.ts";
-import type { ActionPolicyService } from "../../core/action-policy.ts";
+import type { ActionPolicyService, ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
@@ -23,6 +23,7 @@ export interface RunProxyInput {
   service: string;
   input: unknown;
   connectionName?: string;
+  policy?: ActionPolicySnapshot;
 }
 
 export type ProxyRunResult =
@@ -66,7 +67,7 @@ export class ProxyRunner {
       };
     }
 
-    const decision = this.options.actionPolicy?.evaluateProxy(provider.service);
+    const decision = (input.policy ?? this.options.actionPolicy?.createSnapshot())?.evaluateProxy(provider.service);
     if (decision && !decision.allowed) {
       return {
         ok: false,

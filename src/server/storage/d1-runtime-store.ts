@@ -1,4 +1,5 @@
 import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { TokenActionPolicy } from "../../core/action-policy.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
@@ -11,6 +12,7 @@ import type {
   IIdempotencyStore,
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
+import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
@@ -31,6 +33,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
   readonly oauthClientConfigStore: D1OAuthClientConfigStore;
   readonly oauthStateStore: D1OAuthStateStore;
   readonly runtimeTokenStore: D1RuntimeTokenStore;
+  readonly runtimePolicyStore: D1RuntimePolicyStore;
   readonly runLogStore: D1RunLogStore;
   readonly idempotencyStore: D1IdempotencyStore;
 
@@ -40,6 +43,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
     this.oauthStateStore = new D1OAuthStateStore(database);
     this.runtimeTokenStore = new D1RuntimeTokenStore(database);
+    this.runtimePolicyStore = new D1RuntimePolicyStore(database);
     this.runLogStore = new D1RunLogStore(database, options.runLimit ?? DEFAULT_RUN_LIMIT);
     this.idempotencyStore = new D1IdempotencyStore(database, secretCodec);
   }
@@ -215,11 +219,21 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     await this.database
       .prepare(
         `
-        insert into runtime_tokens (id, name, token_hash, created_at, last_used_at)
-        values (?, ?, ?, ?, ?)
+        insert into runtime_tokens (
+          id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
+        )
+        values (?, ?, ?, ?, ?, ?, ?)
       `,
       )
-      .bind(record.id, record.name, record.tokenHash, record.createdAt, record.lastUsedAt ?? null)
+      .bind(
+        record.id,
+        record.name,
+        record.tokenHash,
+        JSON.stringify(record.allowedActions),
+        JSON.stringify(record.blockedActions),
+        record.createdAt,
+        record.lastUsedAt ?? null,
+      )
       .run();
   }
 
@@ -227,20 +241,43 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const { results } = await this.database
       .prepare(
         `
-        select id, name, token_hash, created_at, last_used_at
+        select id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
         from runtime_tokens
         where revoked_at is null
         order by created_at desc, id desc
       `,
       )
       .all<RuntimeRow>();
-    return results.map((row) => ({
-      id: readString(row, "id"),
-      name: readString(row, "name"),
-      tokenHash: readString(row, "token_hash"),
-      createdAt: readString(row, "created_at"),
-      lastUsedAt: readOptionalString(row, "last_used_at"),
-    }));
+    return results.map(readRuntimeTokenRow);
+  }
+
+  async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
+    const row = await this.database
+      .prepare(
+        `
+        select id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
+        from runtime_tokens
+        where token_hash = ? and revoked_at is null
+      `,
+      )
+      .bind(tokenHash)
+      .first<RuntimeRow>();
+    return row ? readRuntimeTokenRow(row) : undefined;
+  }
+
+  async updatePolicy(id: string, policy: TokenActionPolicy): Promise<RuntimeTokenRecord | undefined> {
+    const row = await this.database
+      .prepare(
+        `
+        update runtime_tokens
+        set allowed_actions = ?, blocked_actions = ?
+        where id = ? and revoked_at is null
+        returning id, name, token_hash, allowed_actions, blocked_actions, created_at, last_used_at
+      `,
+      )
+      .bind(JSON.stringify(policy.allowedActions), JSON.stringify(policy.blockedActions), id)
+      .first<RuntimeRow>();
+    return row ? readRuntimeTokenRow(row) : undefined;
   }
 
   async revoke(id: string): Promise<boolean> {
@@ -252,6 +289,51 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     await this.database
       .prepare("update runtime_tokens set last_used_at = ? where id = ? and revoked_at is null")
       .bind(usedAt, id)
+      .run();
+  }
+}
+
+function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
+  return {
+    id: readString(row, "id"),
+    name: readString(row, "name"),
+    tokenHash: readString(row, "token_hash"),
+    allowedActions: parseJson(readString(row, "allowed_actions")),
+    blockedActions: parseJson(readString(row, "blocked_actions")),
+    createdAt: readString(row, "created_at"),
+    lastUsedAt: readOptionalString(row, "last_used_at"),
+  };
+}
+
+export class D1RuntimePolicyStore implements IRuntimePolicyStore {
+  private readonly database: D1DatabaseBinding;
+
+  constructor(database: D1DatabaseBinding) {
+    this.database = database;
+  }
+
+  async get(): Promise<RuntimePolicyRecord | undefined> {
+    const row = await this.database
+      .prepare("select value, updated_at from runtime_policy where id = 1")
+      .first<RuntimeRow>();
+    return row
+      ? {
+          rules: parseJson(readString(row, "value")),
+          updatedAt: readString(row, "updated_at"),
+        }
+      : undefined;
+  }
+
+  async set(record: RuntimePolicyRecord): Promise<void> {
+    await this.database
+      .prepare(
+        `
+        insert into runtime_policy (id, value, updated_at)
+        values (1, ?, ?)
+        on conflict(id) do update set value = excluded.value, updated_at = excluded.updated_at
+      `,
+      )
+      .bind(JSON.stringify(record.rules), record.updatedAt)
       .run();
   }
 }

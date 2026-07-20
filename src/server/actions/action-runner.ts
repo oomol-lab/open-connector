@@ -1,6 +1,6 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService, ConnectionSummary, ExecutionConnection } from "../../connection-service.ts";
-import type { ActionPolicyService } from "../../core/action-policy.ts";
+import type { ActionPolicyDecision, ActionPolicyService, ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
@@ -25,6 +25,8 @@ export interface RunActionInput {
   input: unknown;
   caller: RunLogCaller;
   connectionName?: string;
+  policy?: ActionPolicySnapshot;
+  runtimeTokenId?: string;
 }
 
 export interface ActionRunResult {
@@ -68,32 +70,38 @@ export class ActionRunner {
     this.options.logger?.info(logContext, "action run started");
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();
+    const policy: ActionPolicyDecision = (input.policy ?? this.options.actionPolicy?.createSnapshot())?.evaluate(
+      action,
+    ) ?? { allowed: true, checks: [] };
     let connection: ExecutionConnection | undefined;
     let result: ExecutionResult;
-    try {
-      connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
-      const executor = action.execution.locallyExecutable
-        ? await this.options.providerLoader.loadActionExecutor(
-            action.service,
-            action.id,
-            this.options.catalog.providers.find((provider) => provider.service === action.service)?.displayName,
-          )
-        : undefined;
-      result = await executeProviderAction(
-        action,
-        executor,
-        input.input,
-        this.createExecutionContext(connection.getCredential),
-        this.options.actionPolicy,
-      );
-    } catch (error) {
-      result =
-        error instanceof ConnectionError
-          ? { ok: false, error: { code: error.code, message: error.message } }
-          : {
-              ok: false,
-              error: { code: "internal_error", message: "Action execution failed unexpectedly." },
-            };
+    if (!policy.allowed) {
+      result = { ok: false, error: { code: policy.code, message: policy.message } };
+    } else {
+      try {
+        connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
+        const executor = action.execution.locallyExecutable
+          ? await this.options.providerLoader.loadActionExecutor(
+              action.service,
+              action.id,
+              this.options.catalog.providers.find((provider) => provider.service === action.service)?.displayName,
+            )
+          : undefined;
+        result = await executeProviderAction(
+          action,
+          executor,
+          input.input,
+          this.createExecutionContext(connection.getCredential),
+        );
+      } catch (error) {
+        result =
+          error instanceof ConnectionError
+            ? { ok: false, error: { code: error.code, message: error.message } }
+            : {
+                ok: false,
+                error: { code: "internal_error", message: "Action execution failed unexpectedly." },
+              };
+      }
     }
     const completedAtMs = Date.now();
     const durationMs = completedAtMs - startedAtMs;
@@ -109,6 +117,8 @@ export class ActionRunner {
       ok: result.ok,
       connectionId: connection?.summary?.id,
       connectionProfile: connection?.summary?.profile,
+      runtimeTokenId: input.runtimeTokenId,
+      policy,
       inputSummary: this.summarizeAuditValue(input.input, logContext),
       outputSummary: result.ok ? this.summarizeAuditValue(result.output, logContext) : undefined,
       ...auditError,

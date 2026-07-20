@@ -183,6 +183,10 @@ describe("loadRuntimeData", () => {
         if (path === "/api/runs") {
           return Response.json({ items: [], nextCursor: null });
         }
+        if (path === "/api/runtime-policy") {
+          const rules = { allowedActions: [], blockedActions: [], allowedProxies: [], blockedProxies: [] };
+          return Response.json({ deployment: rules, runtime: rules });
+        }
         return Response.json([]);
       }),
     );
@@ -195,6 +199,7 @@ describe("loadRuntimeData", () => {
       "/api/connections",
       "/api/oauth/configs",
       "/api/runtime-tokens",
+      "/api/runtime-policy",
       "/api/runs",
     ]);
     expect(calls[0]?.headers.get("authorization")).toBe("Bearer local-token");

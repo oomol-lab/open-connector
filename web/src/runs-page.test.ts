@@ -112,6 +112,26 @@ describe("RunsPage", () => {
     expect(markup).toContain("rate_limited");
     expect(markup).toContain("The provider rate limit was reached.");
   });
+
+  it("renders policy and stored token context without adding a table column", () => {
+    const auditRun: RunLog = {
+      ...run("execution-policy", "github.delete_repository", "github"),
+      ok: false,
+      runtimeTokenId: "token-1",
+      policy: {
+        allowed: false,
+        checks: [{ source: "token", outcome: "block_match", rule: "github.delete_repository" }],
+      },
+    };
+    const markup = renderToStaticMarkup(
+      createElement(MemoryRouter, null, createElement(RunsPage, { initialRuns: [auditRun] })),
+    );
+
+    expect(markup).toContain("runs.policyBlocked");
+    expect(markup).toContain("token: github.delete_repository");
+    expect(markup).toContain("runs.runtimeToken: token-1");
+    expect(markup).not.toContain("runs.table.policy");
+  });
 });
 
 function filters(input: Partial<ReturnType<typeof runFiltersFromSearchParams>> = {}) {

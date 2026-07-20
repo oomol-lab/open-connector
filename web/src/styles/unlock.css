@@ -1,0 +1,58 @@
+.unlock-screen {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: 24px;
+  background: var(--background);
+}
+
+.unlock-panel {
+  display: grid;
+  gap: 22px;
+  width: min(420px, 100%);
+  padding: 22px;
+}
+
+.unlock-panel .brand {
+  padding: 0;
+}
+
+.unlock-submit {
+  display: grid;
+  grid-template-columns: 16px auto 16px;
+  column-gap: 6px;
+  justify-content: center;
+}
+
+.unlock-submit[data-loading="true"]:disabled {
+  opacity: 1;
+}
+
+.unlock-button-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.unlock-button-spinner.idle {
+  visibility: hidden;
+}
+
+.unlock-button-spinner.spin {
+  opacity: 0;
+  animation:
+    unlock-spinner-reveal 1ms linear 180ms forwards,
+    spin 0.9s linear 180ms infinite;
+}
+
+.unlock-status .inline-error {
+  margin-bottom: 0;
+}
+
+@keyframes unlock-spinner-reveal {
+  to {
+    opacity: 1;
+  }
+}

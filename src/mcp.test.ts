@@ -1,13 +1,15 @@
 import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
+import type { ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 import type { IRunLogStore, RunLog, RunLogPage } from "./server/storage/runtime-store.ts";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "./catalog-store.ts";
 import { ConnectionService } from "./connection-service.ts";
+import { ActionPolicyService, emptyPolicyRules } from "./core/action-policy.ts";
 import { createMcpServer } from "./mcp.ts";
 import { ActionRunner } from "./server/actions/action-runner.ts";
 
@@ -384,9 +386,91 @@ describe("MCP server", () => {
       });
     });
   });
+
+  it("loads policy lazily and reuses a memoized snapshot across policy tools", async () => {
+    const load = vi.fn(async () => new ActionPolicyService().createSnapshot());
+    let memo: Promise<ActionPolicySnapshot> | undefined;
+    await withMcpClient(
+      async (client) => {
+        await client.callTool({ name: "list_apps", arguments: {} });
+        await client.callTool({ name: "list_connections", arguments: {} });
+        expect(load).not.toHaveBeenCalled();
+
+        await client.callTool({ name: "search_actions", arguments: { limit: 5 } });
+        await client.callTool({ name: "get_action_guide", arguments: { actionId: "example.echo" } });
+        expect(load).toHaveBeenCalledTimes(1);
+      },
+      { getPolicySnapshot: () => (memo ??= load()) },
+    );
+  });
+
+  it("fails policy tools closed when the snapshot cannot be loaded", async () => {
+    await withMcpClient(
+      async (client) => {
+        for (const request of [
+          { name: "search_actions", arguments: { limit: 5 } },
+          { name: "get_action_guide", arguments: { actionId: "example.echo" } },
+          { name: "execute_action", arguments: { actionId: "example.echo", input: { message: "hello" } } },
+        ]) {
+          const result = await client.callTool(request);
+          expect(result.structuredContent).toEqual({
+            ok: false,
+            error: { code: "internal_error", message: "Runtime policy is unavailable." },
+          });
+        }
+      },
+      { getPolicySnapshot: async () => Promise.reject(new Error("database unavailable")) },
+    );
+  });
+
+  it("applies token policy to MCP guides and execution", async () => {
+    const policy = new ActionPolicyService().createSnapshot(emptyPolicyRules(), {
+      allowedActions: ["example.*"],
+      blockedActions: ["example.echo"],
+    });
+    await withMcpClient(
+      async (client) => {
+        const guide = await client.callTool({
+          name: "get_action_guide",
+          arguments: { actionId: "example.echo" },
+        });
+        expect(guide.structuredContent).toMatchObject({
+          ok: true,
+          data: {
+            capability: {
+              policy: {
+                allowed: false,
+                checks: [{ source: "token", outcome: "block_match", rule: "example.echo" }],
+              },
+            },
+            markdown: expect.stringContaining("`token`: `block_match` via `example.echo`"),
+          },
+        });
+
+        const execution = await client.callTool({
+          name: "execute_action",
+          arguments: { actionId: "example.echo", input: { message: "hello" } },
+        });
+        expect(execution.structuredContent).toMatchObject({
+          ok: false,
+          error: { code: "action_blocked" },
+        });
+      },
+      {
+        getPolicySnapshot: async () => policy,
+        runtimeGrant: { tokenId: "token-1", allowedActions: ["example.*"], blockedActions: ["example.echo"] },
+      },
+    );
+  });
 });
 
-async function withMcpClient(run: (client: Client) => Promise<void>): Promise<void> {
+async function withMcpClient(
+  run: (client: Client) => Promise<void>,
+  policy: {
+    getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
+    runtimeGrant?: { tokenId: string; allowedActions: string[]; blockedActions: string[] };
+  } = {},
+): Promise<void> {
   const catalog = createCatalogStore([exampleProvider], {
     executableActionIds: ["example.echo"],
   });
@@ -407,6 +491,7 @@ async function withMcpClient(run: (client: Client) => Promise<void>): Promise<vo
     providerLoader,
     connections,
     actions,
+    ...policy,
   });
   const client = new Client({ name: "mcp-test", version: "0.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();

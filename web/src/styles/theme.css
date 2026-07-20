@@ -1,0 +1,190 @@
+@custom-variant dark (&:is(.dark *));
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
+}
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--oomol-font-sans);
+  --font-mono: var(--oomol-font-mono);
+  --shadow-console-sm: var(--console-shadow-sm);
+  --shadow-console-md: var(--console-shadow-md);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand: var(--brand);
+  --color-destructive: var(--destructive);
+  --color-reward: var(--reward);
+  --color-success: var(--success);
+  --color-visibility-private: var(--visibility-private);
+  --color-visibility-public: var(--visibility-public);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+:root {
+  color-scheme: light;
+  --oomol-font-sans:
+    "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --oomol-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --console-shadow-sm:
+    0 1px 2px color-mix(in oklch, black 5%, transparent), 0 0 1px color-mix(in oklch, black 8%, transparent);
+  --console-shadow-md:
+    0 2px 6px color-mix(in oklch, black 6%, transparent), 0 1px 2px color-mix(in oklch, black 8%, transparent);
+  --background: rgb(255, 255, 255);
+  --foreground: rgb(41, 41, 41);
+  --card: rgb(255, 255, 255);
+  --card-foreground: rgb(41, 41, 41);
+  --popover: rgb(255, 255, 255);
+  --popover-foreground: rgb(41, 41, 41);
+  --primary: rgb(41, 41, 41);
+  --primary-foreground: rgb(255, 255, 255);
+  --secondary: rgb(246, 246, 246);
+  --secondary-foreground: rgb(41, 41, 41);
+  --muted: rgb(244, 244, 244);
+  --muted-foreground: color-mix(in oklab, var(--foreground) 55%, transparent);
+  --accent: rgb(240, 240, 240);
+  --accent-foreground: rgb(41, 41, 41);
+  --brand: rgb(124, 157, 255);
+  --brand-foreground: rgb(255, 255, 255);
+  --destructive: rgb(215, 50, 32);
+  --info: rgb(59, 99, 251);
+  --reward: rgb(252, 125, 0);
+  --success: rgb(5, 131, 78);
+  --warning: rgb(252, 125, 0);
+  --visibility-private: rgb(59, 99, 251);
+  --visibility-public: rgb(5, 131, 78);
+  --border: rgb(233, 233, 233);
+  --input: rgb(233, 233, 233);
+  --ring: rgb(124, 157, 255);
+  --chart-1: rgb(124, 157, 255);
+  --chart-2: rgb(59, 99, 251);
+  --chart-3: rgb(5, 131, 78);
+  --chart-4: rgb(252, 125, 0);
+  --chart-5: rgb(215, 50, 32);
+  --radius: 0.5rem;
+  --sidebar: rgb(248, 248, 248);
+  --sidebar-foreground: rgb(41, 41, 41);
+  --sidebar-primary: rgb(41, 41, 41);
+  --sidebar-primary-foreground: rgb(255, 255, 255);
+  --sidebar-accent: rgb(233, 233, 233);
+  --sidebar-accent-foreground: rgb(41, 41, 41);
+  --sidebar-border: rgb(233, 233, 233);
+  --sidebar-ring: rgb(124, 157, 255);
+}
+.dark {
+  color-scheme: dark;
+  --console-shadow-sm:
+    0 1px 2px color-mix(in oklch, black 22%, transparent), 0 0 1px color-mix(in oklch, white 10%, transparent);
+  --console-shadow-md:
+    0 2px 8px color-mix(in oklch, black 26%, transparent), 0 0 1px color-mix(in oklch, white 12%, transparent);
+  --background: rgb(17, 17, 17);
+  --foreground: rgb(235, 235, 235);
+  --card: rgb(27, 27, 27);
+  --card-foreground: rgb(235, 235, 235);
+  --popover: rgb(34, 34, 34);
+  --popover-foreground: rgb(235, 235, 235);
+  --primary: rgb(235, 235, 235);
+  --primary-foreground: rgb(17, 17, 17);
+  --secondary: rgb(34, 34, 34);
+  --secondary-foreground: rgb(235, 235, 235);
+  --muted: rgb(34, 34, 34);
+  --muted-foreground: color-mix(in oklab, var(--foreground) 64%, transparent);
+  --accent: rgb(57, 57, 57);
+  --accent-foreground: rgb(235, 235, 235);
+  --brand: rgb(124, 157, 255);
+  --brand-foreground: rgb(255, 255, 255);
+  --destructive: rgb(223, 52, 34);
+  --info: rgb(64, 105, 253);
+  --reward: rgb(218, 159, 0);
+  --success: rgb(6, 136, 80);
+  --warning: rgb(218, 159, 0);
+  --visibility-private: rgb(64, 105, 253);
+  --visibility-public: rgb(6, 136, 80);
+  --border: rgb(57, 57, 57);
+  --input: rgb(57, 57, 57);
+  --ring: rgb(124, 157, 255);
+  --chart-1: rgb(124, 157, 255);
+  --chart-2: rgb(64, 105, 253);
+  --chart-3: rgb(6, 136, 80);
+  --chart-4: rgb(218, 159, 0);
+  --chart-5: rgb(223, 52, 34);
+  --sidebar: rgb(27, 27, 27);
+  --sidebar-foreground: rgb(235, 235, 235);
+  --sidebar-primary: rgb(235, 235, 235);
+  --sidebar-primary-foreground: rgb(17, 17, 17);
+  --sidebar-accent: rgb(57, 57, 57);
+  --sidebar-accent-foreground: rgb(235, 235, 235);
+  --sidebar-border: rgb(57, 57, 57);
+  --sidebar-ring: rgb(124, 157, 255);
+}
+/* Unlayered, like the :root default above: normal declarations outside a cascade
+   layer beat every layered one, so these lose from inside `@layer base`. */
+html[lang="zh-CN"] {
+  --oomol-font-sans:
+    "SF Pro SC", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei",
+    "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif;
+}
+html[lang="zh-TW"] {
+  --oomol-font-sans:
+    "SF Pro TC", "SF Pro Text", "PingFang TC", "Hiragino Sans CNS", "Segoe UI", "Microsoft JhengHei UI",
+    "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", "Source Han Sans TC", system-ui, sans-serif;
+}

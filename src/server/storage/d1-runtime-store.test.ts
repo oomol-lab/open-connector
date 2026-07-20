@@ -120,7 +120,10 @@ describe("D1RuntimeDatabase", () => {
     const database = new D1RuntimeDatabase(new SqliteD1Database());
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
 
-    const created = await tokens.createToken("Claude Desktop");
+    const created = await tokens.createToken("Claude Desktop", {
+      allowedActions: ["github.*"],
+      blockedActions: ["github.delete_repository"],
+    });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.tokenHash).not.toBe(created.token);
 
@@ -129,13 +132,42 @@ describe("D1RuntimeDatabase", () => {
     expect(listed).toMatchObject({
       id: created.record.id,
       name: "Claude Desktop",
+      allowedActions: ["github.*"],
+      blockedActions: ["github.delete_repository"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
+
+    await expect(
+      tokens.updateTokenPolicy(created.record.id, {
+        allowedActions: ["github.get_current_user"],
+        blockedActions: [],
+      }),
+    ).resolves.toMatchObject({
+      allowedActions: ["github.get_current_user"],
+      blockedActions: [],
+    });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
     await expect(tokens.listTokens()).resolves.toEqual([]);
     await expect(tokens.verifyToken(created.token)).resolves.toBe(false);
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(false);
+  });
+
+  it("persists the singleton runtime policy", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const record = {
+      rules: {
+        allowedActions: ["github.*"],
+        blockedActions: [],
+        allowedProxies: ["github"],
+        blockedProxies: ["slack"],
+      },
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    };
+
+    await expect(database.runtimePolicyStore.get()).resolves.toBeUndefined();
+    await database.runtimePolicyStore.set(record);
+    await expect(database.runtimePolicyStore.get()).resolves.toEqual(record);
   });
 
   it("atomically claims idempotency keys", async () => {
@@ -408,6 +440,10 @@ class SqliteD1Database implements D1DatabaseBinding {
     this.database.exec(readFileSync(new URL("../../../migrations/0005_run_retention.sql", import.meta.url), "utf8"));
     this.database.exec(
       readFileSync(new URL("../../../migrations/0006_connection_identity.sql", import.meta.url), "utf8"),
+    );
+    this.database.exec(readFileSync(new URL("../../../migrations/0007_runtime_policy.sql", import.meta.url), "utf8"));
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0008_runtime_token_policy.sql", import.meta.url), "utf8"),
     );
   }
 

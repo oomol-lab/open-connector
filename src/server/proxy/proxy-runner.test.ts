@@ -81,6 +81,36 @@ describe("ProxyRunner", () => {
     expect(connections.getConnectionSummary).not.toHaveBeenCalled();
   });
 
+  it("combines deployment and Runtime proxy policy while ignoring token action rules", async () => {
+    const loadProxyExecutor = vi.fn();
+    const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
+    const runner = createRunner({
+      actionPolicy,
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+        loadProxyExecutor,
+      },
+    });
+    const policy = actionPolicy.createSnapshot(
+      {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        blockedProxies: ["example"],
+      },
+      { allowedActions: [], blockedActions: ["example.*"] },
+    );
+
+    await expect(
+      runner.run({ service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
+    ).resolves.toMatchObject({
+      ok: false,
+      errorCode: "proxy_blocked",
+    });
+    expect(loadProxyExecutor).not.toHaveBeenCalled();
+  });
+
   it("runs allowlisted proxies regardless of action policy", async () => {
     const proxy: ProviderProxyExecutor = vi.fn(
       async (): Promise<ProxyExecutionResult> => ({

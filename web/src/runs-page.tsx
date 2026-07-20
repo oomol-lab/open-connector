@@ -195,6 +195,7 @@ export function RunsPage(props: RunsPageProps): ReactNode {
                   const expanded = expandedResults.has(run.id);
                   const output = run.outputSummary == null ? "" : JSON.stringify(run.outputSummary);
                   const expandable = output.length > 120;
+                  const policyCheck = run.policy?.checks.at(-1);
                   return (
                     <Fragment key={run.id}>
                       <TableRow>
@@ -233,6 +234,19 @@ export function RunsPage(props: RunsPageProps): ReactNode {
                           <div className="run-secondary">
                             {run.connectionProfile?.displayName ?? run.connectionId ?? "-"}
                           </div>
+                          {run.policy ? (
+                            <div className="run-secondary mono">
+                              {t(run.policy.allowed ? "runs.policyAllowed" : "runs.policyBlocked")}
+                              {policyCheck
+                                ? ` · ${policyCheck.source}${policyCheck.rule ? `: ${policyCheck.rule}` : ""}`
+                                : ""}
+                            </div>
+                          ) : null}
+                          {run.runtimeTokenId ? (
+                            <div className="run-secondary mono">
+                              {t("runs.runtimeToken")}: {run.runtimeTokenId}
+                            </div>
+                          ) : null}
                         </TableCell>
                         <TableCell className="mono run-summary run-col-summary">
                           {compactJson(run.inputSummary)}

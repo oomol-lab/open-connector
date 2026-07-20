@@ -45,6 +45,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0004_action_run_audit.sql",
       "0005_run_retention.sql",
       "0006_connection_identity.sql",
+      "0007_runtime_policy.sql",
+      "0008_runtime_token_policy.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -423,6 +425,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0004_action_run_audit.sql",
       "0005_run_retention.sql",
       "0006_connection_identity.sql",
+      "0007_runtime_policy.sql",
+      "0008_runtime_token_policy.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
@@ -477,6 +481,9 @@ describe("SqliteRuntimeDatabase", () => {
           connectionId: "github:default",
         }),
       );
+    legacy
+      .prepare("insert into runtime_tokens (id, name, token_hash, created_at) values (?, ?, ?, ?)")
+      .run("legacy-token", "Legacy", "legacy-hash", "2026-06-30T00:00:00.000Z");
     legacy.close();
 
     const migrated = new SqliteRuntimeDatabase(databasePath, { runLimit: 5 });
@@ -489,6 +496,10 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(migrated.runLogStore.get("legacy-github")).resolves.toMatchObject({
       connectionId: migratedConnection?.id,
     });
+    await expect(migrated.runtimeTokenStore.list()).resolves.toMatchObject([
+      { id: "legacy-token", allowedActions: [], blockedActions: [] },
+    ]);
+    await expect(migrated.runtimePolicyStore.get()).resolves.toBeUndefined();
     await expect(
       migrated.idempotencyStore.claim({
         keyHash: "key-hash",
@@ -510,6 +521,12 @@ describe("SqliteRuntimeDatabase", () => {
     ).toBeDefined();
     expect(
       inspected.prepare("select name from runtime_migrations where name = ?").get("0006_connection_identity.sql"),
+    ).toBeDefined();
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0007_runtime_policy.sql"),
+    ).toBeDefined();
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0008_runtime_token_policy.sql"),
     ).toBeDefined();
     expect(inspected.prepare("pragma table_info(connections)").all()).toContainEqual(
       expect.objectContaining({ name: "id", notnull: 1 }),
@@ -576,7 +593,10 @@ describe("SqliteRuntimeDatabase", () => {
     const database = new SqliteRuntimeDatabase(databasePath);
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
 
-    const created = await tokens.createToken("Claude Desktop");
+    const created = await tokens.createToken("Claude Desktop", {
+      allowedActions: ["github.*"],
+      blockedActions: ["github.delete_repository"],
+    });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.name).toBe("Claude Desktop");
     expect(created.record.tokenHash).not.toBe(created.token);
@@ -587,15 +607,49 @@ describe("SqliteRuntimeDatabase", () => {
     expect(listed).toMatchObject({
       id: created.record.id,
       name: "Claude Desktop",
+      allowedActions: ["github.*"],
+      blockedActions: ["github.delete_repository"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
     expect(JSON.stringify(listed)).not.toContain(created.token);
+
+    await expect(
+      tokens.updateTokenPolicy(created.record.id, {
+        allowedActions: ["github.get_current_user"],
+        blockedActions: [],
+      }),
+    ).resolves.toMatchObject({
+      allowedActions: ["github.get_current_user"],
+      blockedActions: [],
+    });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
     await expect(tokens.listTokens()).resolves.toEqual([]);
     await expect(tokens.verifyToken(created.token)).resolves.toBe(false);
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(false);
     database.close();
+  });
+
+  it("persists the singleton runtime policy", async () => {
+    const databasePath = await createDatabasePath();
+    const first = new SqliteRuntimeDatabase(databasePath);
+    const record = {
+      rules: {
+        allowedActions: ["github.*"],
+        blockedActions: ["github.delete_repository"],
+        allowedProxies: ["github"],
+        blockedProxies: [],
+      },
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    };
+
+    await expect(first.runtimePolicyStore.get()).resolves.toBeUndefined();
+    await first.runtimePolicyStore.set(record);
+    first.close();
+
+    const second = new SqliteRuntimeDatabase(databasePath);
+    await expect(second.runtimePolicyStore.get()).resolves.toEqual(record);
+    second.close();
   });
 
   it("resets runtime data", async () => {
@@ -609,6 +663,15 @@ describe("SqliteRuntimeDatabase", () => {
       metadata: {},
     });
     await database.runLogStore.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
+    await database.runtimePolicyStore.set({
+      rules: {
+        allowedActions: ["github.*"],
+        blockedActions: [],
+        allowedProxies: [],
+        blockedProxies: [],
+      },
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    });
     await database.idempotencyStore.claim({
       keyHash: "key-hash",
       requestHash: "request-hash",
@@ -621,6 +684,7 @@ describe("SqliteRuntimeDatabase", () => {
 
     await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
     await expect(database.runLogStore.list()).resolves.toEqual({ items: [] });
+    await expect(database.runtimePolicyStore.get()).resolves.toBeUndefined();
     await expect(
       database.idempotencyStore.claim({
         keyHash: "key-hash",

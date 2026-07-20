@@ -5,6 +5,7 @@ import type {
   OAuthConfig,
   ProviderDefinition,
   RunLogPage,
+  RuntimePolicyState,
   RuntimeTokenSummary,
 } from "./model";
 import type { ThemeMode } from "./theme";
@@ -132,11 +133,12 @@ export async function loadRuntimeData(unlockToken: string): Promise<RuntimeLoadR
     return { authSession, data: emptyData };
   }
 
-  const [providers, connections, oauthConfigs, runtimeTokens, runPage] = await Promise.all([
+  const [providers, connections, oauthConfigs, runtimeTokens, runtimePolicy, runPage] = await Promise.all([
     apiGet<ProviderDefinition[]>("/api/providers"),
     apiGet<ConnectionRecord[]>("/api/connections"),
     apiGet<OAuthConfig[]>("/api/oauth/configs"),
     apiGet<RuntimeTokenSummary[]>("/api/runtime-tokens"),
+    apiGet<RuntimePolicyState>("/api/runtime-policy"),
     apiGet<RunLogPage>("/api/runs"),
   ]);
 
@@ -147,6 +149,7 @@ export async function loadRuntimeData(unlockToken: string): Promise<RuntimeLoadR
       connections,
       oauthConfigs,
       runtimeTokens,
+      runtimePolicy,
       runs: runPage.items,
       runsNextCursor: runPage.nextCursor,
     },
@@ -389,7 +392,14 @@ function AppShell(props: {
             />
             <Route
               path="/access"
-              element={<AccessPage tokens={props.data.runtimeTokens} onRefresh={props.onRefresh} />}
+              element={
+                <AccessPage
+                  providers={props.data.providers}
+                  tokens={props.data.runtimeTokens}
+                  policy={props.data.runtimePolicy ?? emptyData.runtimePolicy!}
+                  onRefresh={props.onRefresh}
+                />
+              }
             />
             <Route path="/resources" element={<ResourcesPage />} />
             <Route path="*" element={<Navigate to="/overview" replace />} />

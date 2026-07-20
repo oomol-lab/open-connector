@@ -1,5 +1,6 @@
 import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
+import type { TokenActionPolicy } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
 import type {
   ActionDefinition,
@@ -20,6 +21,7 @@ import type {
   IdempotencyClaimResult,
   IIdempotencyStore,
 } from "./storage/idempotency-store.ts";
+import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./storage/runtime-policy-store.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./storage/runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-token-service.ts";
 
@@ -33,7 +35,7 @@ import { ActionPolicyService as LocalActionPolicyService } from "../core/action-
 import { buildActionSearchIndex } from "../core/action-search.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
-import { actionInputMaxDepth } from "./actions/action-idempotency.ts";
+import { actionInputMaxDepth, hashActionRequest, hashIdempotencyKey } from "./actions/action-idempotency.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
@@ -1085,7 +1087,11 @@ describe("ConnectServer", () => {
         authorization: "Bearer local-token",
         "content-type": "application/json",
       },
-      body: JSON.stringify({ name: "Claude Desktop" }),
+      body: JSON.stringify({
+        name: "Claude Desktop",
+        allowedActions: [" example.* ", "example.*"],
+        blockedActions: ["example.delete"],
+      }),
     });
     expect(created.status).toBe(200);
     const createdBody = (await created.json()) as { token: string; record: RuntimeTokenRecord };
@@ -1111,13 +1117,19 @@ describe("ConnectServer", () => {
     const created = await app.request("/api/runtime-tokens", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name: "Claude Desktop" }),
+      body: JSON.stringify({
+        name: "Claude Desktop",
+        allowedActions: [" example.* ", "example.*"],
+        blockedActions: ["example.delete"],
+      }),
     });
     expect(created.status).toBe(200);
     const createdBody = (await created.json()) as { token: string; record: RuntimeTokenRecord };
     expect(createdBody.token).toMatch(/^oct_/);
     expect(createdBody.record).toMatchObject({
       name: "Claude Desktop",
+      allowedActions: ["example.*"],
+      blockedActions: ["example.delete"],
     });
     expect(JSON.stringify(createdBody.record)).not.toContain(createdBody.token);
 
@@ -1127,8 +1139,21 @@ describe("ConnectServer", () => {
       {
         id: createdBody.record.id,
         name: "Claude Desktop",
+        allowedActions: ["example.*"],
+        blockedActions: ["example.delete"],
       },
     ]);
+
+    const updated = await app.request(`/api/runtime-tokens/${createdBody.record.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ allowedActions: ["example.echo"], blockedActions: [] }),
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({
+      allowedActions: ["example.echo"],
+      blockedActions: [],
+    });
 
     const unauthorized = await app.request("/v1/actions");
     expect(unauthorized.status).toBe(401);
@@ -1152,6 +1177,320 @@ describe("ConnectServer", () => {
       headers: { authorization: `Bearer ${createdBody.token}` },
     });
     expect(reopened.status).toBe(200);
+  });
+
+  it("reads and replaces Runtime policy without changing deployment rules", async () => {
+    const runtimePolicyStore = new MemoryRuntimePolicyStore();
+    const app = createTestServer([apiKeyProvider], {
+      actionPolicy: new LocalActionPolicyService({ blockedActions: ["example.dangerous"] }),
+      runtimePolicyStore,
+    }).createApp();
+    const rules = {
+      allowedActions: [" example.* ", "example.*"],
+      blockedActions: ["example.echo"],
+      allowedProxies: ["example"],
+      blockedProxies: [],
+    };
+
+    const updated = await app.request("/api/runtime-policy", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(rules),
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({
+      deployment: { blockedActions: ["example.dangerous"] },
+      runtime: { ...rules, allowedActions: ["example.*"] },
+    });
+    expect(runtimePolicyStore.writes).toBe(1);
+    expect(runtimePolicyStore.reads).toBe(0);
+
+    const read = await app.request("/api/runtime-policy");
+    expect(read.status).toBe(200);
+    await expect(read.json()).resolves.toMatchObject({
+      deployment: { blockedActions: ["example.dangerous"] },
+      runtime: { ...rules, allowedActions: ["example.*"] },
+    });
+    expect(runtimePolicyStore.reads).toBe(1);
+  });
+
+  it("validates Runtime policy input and rejects oversized bodies", async () => {
+    const app = createTestServer([apiKeyProvider], {
+      runtimePolicyStore: new MemoryRuntimePolicyStore(),
+    }).createApp();
+    const invalid = await app.request("/api/runtime-policy", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        allowedActions: ["example*"],
+        blockedActions: [],
+        allowedProxies: [],
+        blockedProxies: [],
+      }),
+    });
+    expect(invalid.status).toBe(400);
+    await expect(invalid.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+
+    const oversized = await app.request("/api/runtime-policy", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ padding: "x".repeat(256 * 1024) }),
+    });
+    expect(oversized.status).toBe(413);
+    await expect(oversized.json()).resolves.toMatchObject({ error: { code: "payload_too_large" } });
+
+    const invalidToken = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Invalid", allowedActions: ["example*"], blockedActions: [] }),
+    });
+    expect(invalidToken.status).toBe(400);
+    const oversizedToken = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Large", padding: "x".repeat(256 * 1024) }),
+    });
+    expect(oversizedToken.status).toBe(413);
+  });
+
+  it("applies a tightened Runtime policy before replaying an idempotent response", async () => {
+    let executions = 0;
+    const runtimePolicyStore = new MemoryRuntimePolicyStore();
+    const idempotency = new MemoryIdempotencyStore();
+    const claim = vi.spyOn(idempotency, "claim");
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimePolicyStore,
+      idempotency,
+      runs,
+      providerLoader: new ActionProviderLoader(async (input, context) => {
+        executions += 1;
+        await context.getCredential("example");
+        return { ok: true, output: input };
+      }),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+    const request = {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": "runtime-tightening" },
+      body: JSON.stringify({ input: { message: "hello" } }),
+    };
+    expect((await app.request("/v1/actions/example.echo", request)).status).toBe(200);
+
+    await app.request("/api/runtime-policy", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        allowedActions: [],
+        blockedActions: ["example.echo"],
+        allowedProxies: [],
+        blockedProxies: [],
+      }),
+    });
+    const denied = await app.request("/v1/actions/example.echo", request);
+    expect(denied.status).toBe(400);
+    await expect(denied.json()).resolves.toMatchObject({ errorCode: "action_blocked" });
+    expect(executions).toBe(1);
+    expect(claim).toHaveBeenCalledTimes(1);
+    expect(runtimePolicyStore.reads).toBe(2);
+    expect((await runs.list()).items[0]).toMatchObject({
+      policy: { allowed: false, checks: [{ source: "runtime", outcome: "block_match" }] },
+    });
+  });
+
+  it("applies stored token action policy and records the token id", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimeTokens,
+      runs,
+      providerLoader: new EchoProviderLoader(),
+    }).createApp();
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Read only",
+        allowedActions: ["example.*"],
+        blockedActions: ["example.echo"],
+      }),
+    });
+    const token = (await created.json()) as { token: string; record: RuntimeTokenRecord };
+
+    const denied = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ input: {} }),
+    });
+    expect(denied.status).toBe(400);
+    await expect(denied.json()).resolves.toMatchObject({ errorCode: "action_blocked" });
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [
+        {
+          runtimeTokenId: token.record.id,
+          policy: {
+            allowed: false,
+            checks: [{ source: "token", outcome: "block_match", rule: "example.echo" }],
+          },
+        },
+      ],
+    });
+  });
+
+  it("returns an idempotency conflict when different stored tokens reuse one key", async () => {
+    let executions = 0;
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimeTokens,
+      providerLoader: new ActionProviderLoader(async (input, context) => {
+        executions += 1;
+        await context.getCredential("example");
+        return { ok: true, output: input };
+      }),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+    const createToken = async (name: string): Promise<string> => {
+      const response = await app.request("/api/runtime-tokens", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      return ((await response.json()) as { token: string }).token;
+    };
+    const tokenA = await createToken("Token A");
+    const tokenB = await createToken("Token B");
+    const request = (token: string) => ({
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "idempotency-key": "shared-key",
+      },
+      body: JSON.stringify({ input: { message: "hello" } }),
+    });
+
+    expect((await app.request("/v1/actions/example.echo", request(tokenA))).status).toBe(200);
+    const conflict = await app.request("/v1/actions/example.echo", request(tokenB));
+    expect(conflict.status).toBe(409);
+    await expect(conflict.json()).resolves.toMatchObject({ errorCode: "idempotency_key_conflict" });
+    expect(executions).toBe(1);
+  });
+
+  it("does not replay legacy unscoped records to stored tokens and allows them after expiry", async () => {
+    let executions = 0;
+    const idempotency = new MemoryIdempotencyStore();
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const input = { message: "hello" };
+    const seedLegacy = async (key: string, expiresAt: string): Promise<void> => {
+      const keyHash = hashIdempotencyKey(key);
+      const requestHash = hashActionRequest({
+        actionId: "example.echo",
+        connectionName: "default",
+        input,
+      });
+      await idempotency.claim({
+        keyHash,
+        requestHash,
+        claimId: `claim-${key}`,
+        now: "2026-07-19T00:00:00.000Z",
+        expiresAt,
+      });
+      await idempotency.complete({
+        keyHash,
+        requestHash,
+        claimId: `claim-${key}`,
+        response: {
+          status: 200,
+          body: { success: true, message: "OK", data: { legacySecret: true }, meta: {} },
+        },
+        expiresAt,
+      });
+    };
+    await seedLegacy("legacy-live", "2099-01-01T00:00:00.000Z");
+    await seedLegacy("legacy-expired", "2026-07-19T00:00:01.000Z");
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      idempotency,
+      runtimeTokens,
+      providerLoader: new ActionProviderLoader(async (value, context) => {
+        executions += 1;
+        await context.getCredential("example");
+        return { ok: true, output: value };
+      }),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Stored token" }),
+    });
+    const token = ((await created.json()) as { token: string }).token;
+    const request = (key: string) => ({
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "idempotency-key": key,
+      },
+      body: JSON.stringify({ input }),
+    });
+
+    const conflict = await app.request("/v1/actions/example.echo", request("legacy-live"));
+    expect(conflict.status).toBe(409);
+    expect(await conflict.text()).not.toContain("legacySecret");
+    expect(executions).toBe(0);
+
+    expect((await app.request("/v1/actions/example.echo", request("legacy-expired"))).status).toBe(200);
+    expect(executions).toBe(1);
+  });
+
+  it("does not read policy storage for unrelated routes and fails closed when a policy read fails", async () => {
+    const runtimePolicyStore = new MemoryRuntimePolicyStore();
+    const providerLoader = new ActionProviderLoader(async (input) => ({ ok: true, output: input }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    const loadProxyExecutor = vi.spyOn(providerLoader, "loadProxyExecutor");
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimePolicyStore,
+      providerLoader,
+    }).createApp();
+
+    expect((await app.request("/health")).status).toBe(200);
+    expect((await app.request("/api/connections")).status).toBe(200);
+    expect(runtimePolicyStore.reads).toBe(0);
+
+    runtimePolicyStore.get = async () => {
+      runtimePolicyStore.reads += 1;
+      throw new Error("database unavailable");
+    };
+    const failed = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ input: {} }),
+    });
+    expect(failed.status).toBe(500);
+    await expect(failed.json()).resolves.toMatchObject({ errorCode: "internal_error" });
+    expect((await app.request("/api/runtime-policy")).status).toBe(500);
+    expect((await app.request("/api/actions/example.echo/agent.md")).status).toBe(500);
+    const proxy = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    });
+    expect(proxy.status).toBe(500);
+    expect(runtimePolicyStore.reads).toBe(4);
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(loadProxyExecutor).not.toHaveBeenCalled();
   });
 
   it("stores redacted run log summaries for HTTP action execution", async () => {
@@ -2445,6 +2784,7 @@ interface CreateTestServerOptions {
   logger?: Logger;
   idempotency?: IIdempotencyStore;
   runtimeTokens?: RuntimeTokenService;
+  runtimePolicyStore?: IRuntimePolicyStore;
   runs?: MemoryRunLogStore;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
@@ -2502,11 +2842,12 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     idempotency,
     transitFiles,
     runtimeTokens,
+    runtimePolicyStore: options.runtimePolicyStore ?? new MemoryRuntimePolicyStore(),
     registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, staticRoot) : undefined,
     auth: {
       ...options.auth,
       hasRuntimeTokens: async () => (await runtimeTokens.listTokens()).length > 0,
-      verifyRuntimeToken: (token) => runtimeTokens.verifyToken(token),
+      resolveRuntimeToken: (token) => runtimeTokens.resolveToken(token),
       verifyRuntimeJwt: options.auth?.verifyRuntimeJwt,
     },
     actionPolicy: options.actionPolicy,
@@ -2748,6 +3089,20 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
     );
   }
 
+  async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
+    return [...this.tokens.values()].find((token) => token.tokenHash === tokenHash);
+  }
+
+  async updatePolicy(id: string, policy: TokenActionPolicy): Promise<RuntimeTokenRecord | undefined> {
+    const token = this.tokens.get(id);
+    if (!token) {
+      return undefined;
+    }
+    const updated = { ...token, ...policy };
+    this.tokens.set(id, updated);
+    return updated;
+  }
+
   async revoke(id: string): Promise<boolean> {
     return this.tokens.delete(id);
   }
@@ -2757,6 +3112,22 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
     if (token) {
       this.tokens.set(id, { ...token, lastUsedAt: usedAt });
     }
+  }
+}
+
+class MemoryRuntimePolicyStore implements IRuntimePolicyStore {
+  record?: RuntimePolicyRecord;
+  reads = 0;
+  writes = 0;
+
+  async get(): Promise<RuntimePolicyRecord | undefined> {
+    this.reads += 1;
+    return this.record;
+  }
+
+  async set(record: RuntimePolicyRecord): Promise<void> {
+    this.writes += 1;
+    this.record = record;
   }
 }
 

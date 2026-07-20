@@ -1,3 +1,4 @@
+import type { ActionPolicyDecision } from "../../core/action-policy.ts";
 import type { CredentialProfile } from "../../core/types.ts";
 
 export const DEFAULT_RUN_LIMIT = 5_000;
@@ -18,6 +19,8 @@ export interface RunLog {
   ok: boolean;
   connectionId?: string;
   connectionProfile?: CredentialProfile;
+  runtimeTokenId?: string;
+  policy?: ActionPolicyDecision;
   inputSummary?: unknown;
   outputSummary?: unknown;
   errorCode?: string;

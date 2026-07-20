@@ -1,4 +1,5 @@
 import type { ConnectionSummary } from "../../connection-service.ts";
+import type { ActionPolicyDecision } from "../../core/action-policy.ts";
 import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import type { BlockContent, DefinitionContent, ListItem, PhrasingContent, Root, TableCell, TableRow } from "mdast";
 
@@ -10,6 +11,7 @@ import { gfm } from "micromark-extension-gfm";
 export type ActionMarkdownContext = {
   connection?: ConnectionSummary;
   providerPermissions?: string[];
+  policy?: ActionPolicyDecision;
 };
 
 /**
@@ -51,6 +53,8 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       ...describeStringList(action.requiredScopes, "No provider scopes are required."),
       heading(2, "Provider Permissions"),
       ...describeStringList(providerPermissions, "No provider permissions are declared."),
+      heading(2, "Execution Policy"),
+      ...describePolicy(context.policy),
       heading(2, "Current Connection"),
       ...describeConnection(context.connection),
       heading(2, "Notes For Agents"),
@@ -70,6 +74,31 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
     fences: true,
     extensions: [gfmToMarkdown()],
   });
+}
+
+function describePolicy(policy: ActionPolicyDecision | undefined): BlockContent[] {
+  if (!policy) {
+    return [textParagraph("Allowed. No execution policy restrictions apply.")];
+  }
+  const summary = textParagraph(
+    policy.allowed ? "Allowed by the current execution policy." : `Denied: ${policy.message}`,
+  );
+  if (policy.checks.length === 0) {
+    return [summary, textParagraph("No policy rules matched or restricted this action.")];
+  }
+  return [
+    summary,
+    list(
+      policy.checks.map((check) =>
+        paragraph([
+          inlineCode(check.source),
+          ": ",
+          inlineCode(check.outcome),
+          ...(check.rule ? [" via ", inlineCode(check.rule)] : []),
+        ]),
+      ),
+    ),
+  ];
 }
 
 function describeConnection(connection: ConnectionSummary | undefined): BlockContent[] {
