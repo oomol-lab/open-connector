@@ -176,7 +176,7 @@
       "noSetup": "Ce fournisseur peut s’exécuter sans identifiants locaux.",
       "adding": "Configurez une nouvelle connexion nommée.",
       "connected": "Les identifiants locaux sont configurés avec {{authType}}.",
-      "saved": "{{count}} connexions enregistrées. Sélectionnez-en une à gérer ou ajoutez-en une autre.",
+      "saved": "Connexions enregistrées : {{count}}. Sélectionnez-en une à gérer ou ajoutez-en une autre.",
       "oauthClientRequired": "{{name}} nécessite un client OAuth local avant de lancer OAuth.",
       "notConnected": "Configurez des identifiants locaux avant d’exécuter les actions {{name}} qui en ont besoin.",
       "unavailable": "Les connexions ne peuvent pas être configurées dans l’environnement d’exécution actuel."

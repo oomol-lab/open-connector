@@ -371,6 +371,8 @@ function RunActionModal(props: RunActionModalProps): ReactNode {
   const [actionId, setActionId] = useState(props.action.id);
   const initialConnectionName = initialActionConnectionName(props.connections);
   const connectionSignature = props.connections.map((connection) => actionConnectionName(connection)).join("\0");
+  const connectionsRef = useRef(props.connections);
+  connectionsRef.current = props.connections;
   const [selectedConnectionName, setSelectedConnectionName] = useState(() => initialConnectionName);
   const connectionSelectionRequired = props.connections.length > 1 && !selectedConnectionName;
 
@@ -386,7 +388,7 @@ function RunActionModal(props: RunActionModalProps): ReactNode {
   }, [actionId, initialConnectionName, props.action.id, props.action.inputSchema]);
 
   useEffect(() => {
-    setSelectedConnectionName((current) => reconcileActionConnectionName(current, props.connections));
+    setSelectedConnectionName((current) => reconcileActionConnectionName(current, connectionsRef.current));
   }, [connectionSignature]);
 
   async function run(): Promise<void> {
