@@ -269,10 +269,13 @@ describe("ConnectServer", () => {
     });
 
     expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({
-      error: {
-        code: "internal_error",
-        message: "Internal server error.",
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "internal_error",
+      message: "Action execution failed unexpectedly.",
+      meta: {
+        actionId: "example.echo",
+        auditPersisted: true,
       },
     });
   });
@@ -802,6 +805,68 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("documents action run audit queries in OpenAPI", async () => {
+    const app = createTestServer([apiKeyProvider]).createApp();
+    const document = (await (await app.request("/openapi.json")).json()) as {
+      paths: Record<
+        string,
+        {
+          get?: { parameters?: Array<{ name: string }> };
+          post?: {
+            responses?: Record<
+              string,
+              { content?: { "application/json"?: { schema?: { properties?: Record<string, unknown> } } } }
+            >;
+          };
+        }
+      >;
+      components: {
+        schemas: {
+          ConnectionSummary: { properties: Record<string, unknown>; required: string[] };
+          RunLog: { properties: Record<string, unknown> };
+        };
+      };
+    };
+
+    expect(document.paths["/api/runs/{id}"]?.get).toBeDefined();
+    expect(document.paths["/api/runs"]?.get?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "actionId" }),
+        expect.objectContaining({ name: "caller" }),
+        expect.objectContaining({ name: "ok" }),
+      ]),
+    );
+    expect(document.components.schemas.RunLog.properties).toMatchObject({
+      connectionId: expect.any(Object),
+      outputSummary: expect.any(Object),
+    });
+    expect(document.components.schemas.ConnectionSummary).toMatchObject({
+      properties: { id: expect.any(Object) },
+      required: expect.arrayContaining(["id"]),
+    });
+    expect(document.paths["/v1/actions/{actionId}"]?.post?.responses).toMatchObject({
+      200: {
+        content: {
+          "application/json": {
+            schema: {
+              properties: {
+                meta: {
+                  required: ["executionId", "actionId", "auditPersisted"],
+                  properties: {
+                    executionId: expect.any(Object),
+                    actionId: expect.any(Object),
+                    auditPersisted: expect.any(Object),
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      409: expect.any(Object),
+    });
+  });
+
   it("rejects non-POST MCP requests", async () => {
     const app = createTestServer([apiKeyProvider]).createApp();
 
@@ -1105,11 +1170,12 @@ describe("ConnectServer", () => {
     );
     const app = server.createApp();
 
-    await app.request("/api/connections/example", {
+    const connectedResponse = await app.request("/api/connections/example", {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
+    const connected = (await connectedResponse.json()) as { id: string };
 
     const longQuery = "a".repeat(600);
     const response = await app.request("/v1/actions/example.echo", {
@@ -1125,24 +1191,69 @@ describe("ConnectServer", () => {
     });
 
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      meta: {
+        actionId: "example.echo",
+        executionId: expect.any(String),
+        auditPersisted: true,
+      },
+    });
     await expect(runs.list()).resolves.toMatchObject({
       items: [
         {
           actionId: "example.echo",
           caller: "http",
           ok: true,
+          connectionId: connected.id,
           connectionProfile: {
             accountId: "example-account",
             displayName: "Example Account",
             grantedScopes: [],
           },
           inputSummary: {
-            query: `${"a".repeat(500)}[truncated]`,
+            query: `${"a".repeat(256)}[truncated]`,
+            apiKey: "[redacted]",
+            nested: { password: "[redacted]" },
+          },
+          outputSummary: {
+            query: `${"a".repeat(256)}[truncated]`,
             apiKey: "[redacted]",
             nested: { password: "[redacted]" },
           },
         },
       ],
+    });
+  });
+
+  it("returns action results when audit persistence fails", async () => {
+    const runs = new MemoryRunLogStore(new Error("audit unavailable"));
+    const app = createTestServer(
+      [
+        {
+          ...apiKeyProvider,
+          actions: [echoAction],
+        },
+      ],
+      { providerLoader: new EchoProviderLoader(), runs },
+    ).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+
+    const response = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ input: { message: "hello" } }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      data: { message: "hello" },
+      meta: { executionId: expect.any(String), auditPersisted: false },
     });
   });
 
@@ -1563,11 +1674,12 @@ describe("ConnectServer", () => {
       },
     ).createApp();
 
-    await app.request("/api/connections/example", {
+    const connectedResponse = await app.request("/api/connections/example", {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
+    const connected = (await connectedResponse.json()) as { id: string };
 
     const apps = await app.request("/v1/apps");
     expect(apps.status).toBe(200);
@@ -1577,7 +1689,7 @@ describe("ConnectServer", () => {
       meta: {},
       data: [
         {
-          id: "example:default",
+          id: connected.id,
           service: "example",
           alias: "default",
           authType: "api_key",
@@ -1819,7 +1931,7 @@ describe("ConnectServer", () => {
     expect(executions).toBe(1);
   });
 
-  it("keeps uncertain idempotent executions in progress instead of retrying them", async () => {
+  it("replays audited internal failures instead of retrying them", async () => {
     let executions = 0;
     const providerLoader = new ActionProviderLoader(async (_input, context) => {
       executions += 1;
@@ -1851,15 +1963,20 @@ describe("ConnectServer", () => {
     };
     const first = await app.request("/v1/actions/example.echo", request);
     expect(first.status).toBe(500);
-    await expect(first.json()).resolves.toEqual({
-      error: { code: "internal_error", message: "Internal server error." },
+    await expect(first.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "internal_error",
+      message: "Action execution failed unexpectedly.",
+      meta: { auditPersisted: true },
     });
 
     const duplicate = await app.request("/v1/actions/example.echo", request);
-    expect(duplicate.status).toBe(409);
+    expect(duplicate.status).toBe(500);
     await expect(duplicate.json()).resolves.toMatchObject({
       success: false,
-      errorCode: "idempotency_request_in_progress",
+      errorCode: "internal_error",
+      message: "Action execution failed unexpectedly.",
+      meta: { auditPersisted: true },
     });
     expect(executions).toBe(1);
   });
@@ -2287,6 +2404,31 @@ describe("ConnectServer", () => {
     expect(secondBody.items.map((run) => run.id)).toEqual(["gmail-1"]);
     expect(secondBody.nextCursor).toBeUndefined();
   });
+
+  it("filters run logs by action, caller, and status and returns run details", async () => {
+    const runs = new MemoryRunLogStore();
+    await runs.add(createRunLog("run-other", "2026-06-30T00:00:00.000Z"));
+    await runs.add({
+      ...createRunLog("run-match", "2026-06-30T00:00:01.000Z"),
+      actionId: "example.failed",
+      caller: "mcp",
+      ok: false,
+    });
+    const app = createTestServer([apiKeyProvider], { runs }).createApp();
+
+    const response = await app.request("/api/runs?actionId=example.failed&caller=mcp&ok=false");
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ items: [{ id: "run-match" }] });
+
+    const detail = await app.request("/api/runs/run-match");
+    expect(detail.status).toBe(200);
+    await expect(detail.json()).resolves.toMatchObject({ id: "run-match", actionId: "example.failed" });
+    expect((await app.request("/api/runs/missing")).status).toBe(404);
+
+    expect((await app.request("/api/runs?caller=unknown")).status).toBe(400);
+    expect((await app.request("/api/runs?ok=maybe")).status).toBe(400);
+    expect((await app.request(`/api/runs?actionId=${"a".repeat(257)}`)).status).toBe(400);
+  });
 });
 
 interface TestAuthOptions {
@@ -2524,14 +2666,24 @@ class TransitEchoProviderLoader extends EchoProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  private readonly store = new Map<string, ResolvedCredential>();
+  private readonly store = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.store.get(createConnectionKey(service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    this.store.set(createConnectionKey(service, connectionName), credential);
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const key = createConnectionKey(service, connectionName);
+    const connection = { id: this.store.get(key)?.id ?? crypto.randomUUID(), service, connectionName, credential };
+    this.store.set(key, connection);
+    return connection;
+  }
+
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const key = createConnectionKey(input.service, input.connectionName);
+    if (this.store.get(key)?.id !== input.id) return false;
+    this.store.set(key, input);
+    return true;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -2539,14 +2691,7 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async list(): Promise<StoredConnection[]> {
-    return [...this.store.entries()].map(([key, credential]) => {
-      const [service, connectionName] = key.split(":");
-      return {
-        service: service!,
-        connectionName: connectionName!,
-        credential,
-      };
-    });
+    return [...this.store.values()];
   }
 }
 
@@ -2687,16 +2832,33 @@ class FailingCompleteIdempotencyStore extends MemoryIdempotencyStore {
 
 class MemoryRunLogStore implements IRunLogStore {
   private readonly runs: RunLog[] = [];
+  private readonly addError?: Error;
 
-  async add(run: RunLog): Promise<void> {
+  constructor(addError?: Error) {
+    this.addError = addError;
+  }
+
+  async add(run: RunLog): Promise<{ retentionApplied: boolean }> {
+    if (this.addError) throw this.addError;
     this.runs.unshift(run);
+    return { retentionApplied: true };
+  }
+
+  async get(id: string): Promise<RunLog | undefined> {
+    return this.runs.find((run) => run.id === id);
   }
 
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
     const defaultLimit = this.runs.length || 1;
     const limit = Math.max(1, Math.min(input.limit ?? defaultLimit, defaultLimit));
     const cursor = decodeRunLogCursor(input.cursor);
-    const filteredRuns = input.service ? this.runs.filter((run) => run.service === input.service) : this.runs;
+    const filteredRuns = this.runs.filter(
+      (run) =>
+        (!input.service || run.service === input.service) &&
+        (!input.actionId || run.actionId === input.actionId) &&
+        (!input.caller || run.caller === input.caller) &&
+        (input.ok === undefined || run.ok === input.ok),
+    );
     const start = cursor
       ? filteredRuns.findIndex((run) => run.startedAt === cursor.startedAt && run.id === cursor.id) + 1
       : 0;

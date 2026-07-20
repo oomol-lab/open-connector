@@ -32,6 +32,7 @@
     "label": "Language",
     "en": "English",
     "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
     "ja": "日本語",
     "ru": "Русский",
     "fr": "Français"
@@ -264,18 +265,27 @@
   "runs": {
     "noRunsTitle": "No runs yet",
     "noRunsDescription": "Run an action to see recent execution history.",
+    "action": "Action",
+    "actionPlaceholder": "Filter by action ID",
+    "applyActionFilter": "Apply action filter",
     "service": "Service",
     "allServices": "All services",
+    "caller": "Caller",
+    "allCallers": "All callers",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "copyExecutionId": "Copy execution ID",
+    "expandResult": "Expand result",
+    "collapseResult": "Collapse result",
     "loadMore": "Load more",
     "loadMoreFailed": "Failed to load more runs.",
     "table": {
       "action": "Action",
-      "caller": "Caller",
+      "context": "Context",
       "status": "Status",
-      "started": "Started",
-      "duration": "Duration",
+      "timing": "Timing",
       "input": "Input",
-      "error": "Error"
+      "result": "Result"
     }
   },
   "access": {

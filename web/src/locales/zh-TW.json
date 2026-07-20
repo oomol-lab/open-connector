@@ -1,0 +1,342 @@
+{
+  "common": {
+    "active": "啟用中",
+    "apiUnavailable": "API 無法使用",
+    "catalogOnly": "僅供目錄查閱",
+    "clear": "清除",
+    "close": "關閉",
+    "connected": "已連線",
+    "copied": "已複製 {{label}}",
+    "copy": "複製 {{label}}",
+    "credential": "憑證",
+    "currentSelection": "目前選取項目",
+    "docs": "文件",
+    "failed": "失敗",
+    "loadingRuntimeData": "正在載入執行階段資料...",
+    "local": "本機",
+    "noAuth": "無須驗證",
+    "notConnected": "尚未連線",
+    "open": "開啟",
+    "refresh": "重新整理",
+    "required": "必填",
+    "runtimeReady": "執行階段已就緒",
+    "showMore": "顯示更多",
+    "showing": "顯示 {{shown}} / {{total}}",
+    "success": "成功"
+  },
+  "brand": {
+    "subtitle": "本機執行階段控制台",
+    "adminAccess": "管理員存取權"
+  },
+  "language": {
+    "label": "語言",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "fr": "Français"
+  },
+  "nav": {
+    "overview": "總覽",
+    "providers": "服務提供者",
+    "actions": "動作",
+    "runs": "執行記錄",
+    "access": "API 金鑰",
+    "docs": "文件"
+  },
+  "shell": {
+    "invalidUnlockToken": "請輸入有效的管理員權杖以解鎖控制台。",
+    "loadRuntimeFailed": "無法載入執行階段資料。請重新整理，或確認執行階段正在運作。",
+    "logoutFailed": "無法登出，請再試一次。",
+    "primaryNav": "主要導覽",
+    "refreshData": "重新整理資料",
+    "logout": "登出",
+    "theme": "佈景主題",
+    "themeMode": {
+      "auto": "自動",
+      "light": "淺色",
+      "dark": "深色"
+    },
+    "headings": {
+      "overview": {
+        "title": "總覽",
+        "subtitle": "執行階段狀態與健康情形。"
+      },
+      "providers": {
+        "title": "服務提供者",
+        "subtitle": "連線至服務提供者並檢視其功能。"
+      },
+      "actions": {
+        "title": "動作",
+        "subtitle": "搜尋、檢視及偵錯本機執行階段動作。"
+      },
+      "runs": {
+        "title": "執行記錄",
+        "subtitle": "近期的本機動作執行記錄。"
+      },
+      "access": {
+        "title": "API 金鑰",
+        "subtitle": "管理供 Agent 與用戶端使用的執行階段 API 權杖。"
+      },
+      "resources": {
+        "title": "資源",
+        "subtitle": "產生的 API 參考文件與工具中繼資料。"
+      }
+    }
+  },
+  "unlock": {
+    "token": "管理員權杖",
+    "unlockConsole": "解鎖控制台"
+  },
+  "overview": {
+    "runtimeReady": "執行階段已就緒",
+    "connectedProviders": "已連線 {{count}} 個服務提供者",
+    "capabilityStatus": "功能狀態",
+    "metrics": {
+      "providers": "服務提供者",
+      "actions": "動作",
+      "executable": "可執行",
+      "runHealth": "執行健康情形"
+    },
+    "availableServices": "可用服務",
+    "localActions": "本機動作",
+    "recentFailuresMeta": "近期失敗",
+    "ready": "就緒",
+    "unavailable": "無法使用",
+    "needsAttention": "需要注意",
+    "recentFailures": "近期失敗",
+    "noFailedRunsTitle": "沒有失敗的執行記錄",
+    "noFailedRunsDescription": "近期的動作執行皆正常。",
+    "callTrend": "工具呼叫趨勢",
+    "callTrendLegend": "服務",
+    "noCallTrendTitle": "尚無呼叫趨勢",
+    "noCallTrendDescription": "執行一個動作以查看每日服務呼叫量。",
+    "recentCalls": "近期呼叫",
+    "viewRuns": "檢視",
+    "callCountOne": "{{count}} 次呼叫",
+    "callCountMany": "{{count}} 次呼叫",
+    "noRecentCallsTitle": "沒有近期呼叫",
+    "noRecentCallsDescription": "執行一個動作以查看服務提供者的呼叫次數。"
+  },
+  "providers": {
+    "catalogTitle": "服務提供者",
+    "searchPlaceholder": "搜尋服務提供者",
+    "statusFilterLabel": "服務提供者狀態",
+    "filters": {
+      "all": "全部",
+      "connected": "已連線",
+      "notConnected": "尚未連線",
+      "oauthNeedsConfig": "OAuth 需要設定"
+    },
+    "providerMeta": "{{service}} · {{authTypes}} · {{count}} 個動作",
+    "noAuth": "無須驗證",
+    "oauthConfigBadge": "OAuth 設定",
+    "noProvidersTitle": "找不到服務提供者",
+    "noProvidersDescription": "請嘗試其他搜尋條件或狀態篩選器。",
+    "resultCount": "顯示 {{shown}} / {{total}}",
+    "showMore": "顯示更多",
+    "resetFilters": "重設篩選條件",
+    "providerNotFoundTitle": "找不到服務提供者",
+    "providerNotFoundDescription": "{{service}} 與目前的目錄不符。",
+    "backToProviders": "返回服務提供者",
+    "providerHomepage": "首頁",
+    "selectProviderTitle": "選取服務提供者",
+    "selectProviderDescription": "選取服務提供者以檢視連線設定。",
+    "connectedBy": "透過 {{authType}} 連線",
+    "configuredBadge": "已設定",
+    "noSetupBadge": "無須設定",
+    "unconfiguredBadge": "尚未連線",
+    "oauthClientRequiredBadge": "需要 OAuth 用戶端",
+    "runtimeUnavailableBadge": "無法使用",
+    "runtimeUnavailableTitle": "無法在此執行階段使用",
+    "runtimeUnavailableDescription": "{{name}} 仍會顯示供目錄查閱，但目前的執行階段無法使用其連線與動作。",
+    "summary": {
+      "actions": "動作",
+      "auth": "驗證",
+      "oauthConfig": "OAuth 設定",
+      "configured": "已設定",
+      "required": "必要",
+      "notUsed": "未使用"
+    },
+    "connection": "連線",
+    "connectionMethod": "連線方式",
+    "connectionDescriptions": {
+      "noSetup": "此服務提供者無須本機憑證即可執行。",
+      "connected": "已透過 {{authType}} 設定本機憑證。",
+      "oauthClientRequired": "{{name}} 需要本機 OAuth 用戶端才能啟動 OAuth。",
+      "notConnected": "執行需要憑證的 {{name}} 動作前，請先設定本機憑證。",
+      "unavailable": "目前的執行階段無法設定連線。"
+    },
+    "noConnectionMethodTitle": "無連線方式",
+    "noConnectionMethodDescription": "此服務提供者不需要本機憑證。",
+    "oauthClient": "OAuth 用戶端",
+    "scopes": "權限範圍",
+    "scopesDescription": "此服務提供者的本機動作所要求的權限範圍。",
+    "actions": "動作",
+    "actionsDescription": "目錄中有 {{count}} 個本機執行階段動作。",
+    "noScopes": "無權限範圍",
+    "noActions": "無動作。",
+    "authLabels": {
+      "apiKey": "API 金鑰",
+      "oauth": "OAuth",
+      "custom": "自訂",
+      "noAuth": "無須驗證"
+    },
+    "connectionMessages": {
+      "noAuth": "此服務提供者無須本機憑證即可執行。",
+      "needsOAuthClient": "{{name}} 需要本機 OAuth 用戶端才能連線。",
+      "connectedOAuth": "{{name}} 已透過 OAuth 連線。",
+      "connectOAuth": "透過 {{name}} 的 OAuth 授權流程連線。",
+      "saving": "正在儲存連線...",
+      "openingOAuth": "正在開啟 OAuth...",
+      "configureOAuthFirst": "連線前請先設定 OAuth 用戶端。",
+      "oauthWindowOpened": "OAuth 視窗已開啟。",
+      "updated": "連線已更新。",
+      "failed": "連線失敗。",
+      "disconnecting": "正在中斷連線...",
+      "disconnected": "已中斷連線。",
+      "disconnectFailed": "中斷連線失敗。"
+    },
+    "buttons": {
+      "configureOAuthClient": "設定 OAuth 用戶端",
+      "editOAuthClient": "編輯 OAuth 用戶端",
+      "saveConnection": "儲存連線",
+      "connect": "連線",
+      "details": "詳細資料",
+      "manageConnection": "管理",
+      "connectProvider": "連線至 {{name}}",
+      "reconnectProvider": "重新連線至 {{name}}",
+      "disconnect": "中斷連線",
+      "saveOAuthClient": "儲存 OAuth 用戶端",
+      "updateOAuthClient": "更新 OAuth 用戶端",
+      "resetOAuthClient": "重設 OAuth 用戶端"
+    },
+    "oauthClientSettings": {
+      "configuredTitle": "OAuth 用戶端已設定",
+      "requiredTitle": "需要 OAuth 用戶端",
+      "missingDescription": "{{name}} 需要本機 OAuth 用戶端才能連線。",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "storedSecretHint": "已儲存的 secret 不會顯示。儲存變更時請再次輸入。",
+      "saving": "正在儲存 OAuth 用戶端...",
+      "saved": "OAuth 用戶端已儲存。",
+      "failed": "無法儲存 OAuth 用戶端。",
+      "resetting": "正在重設 OAuth 用戶端...",
+      "reset": "OAuth 用戶端已重設。",
+      "resetFailed": "無法重設 OAuth 用戶端。"
+    },
+    "execution": {
+      "executable": "可執行",
+      "catalogOnly": "僅供目錄查閱"
+    }
+  },
+  "actions": {
+    "searchPlaceholder": "依名稱、ID 或服務提供者搜尋動作",
+    "provider": "服務提供者",
+    "allProviders": "所有服務提供者",
+    "actionsCount": "{{count}} 個動作",
+    "noActionsTitle": "找不到動作",
+    "noActionsDescription": "請嘗試其他搜尋條件或服務提供者篩選器。",
+    "actionNotFoundTitle": "找不到動作",
+    "noActionSelectedTitle": "尚未選取動作",
+    "actionNotFoundDescription": "動作路由與目前的目錄不符。",
+    "selectActionDescription": "選取動作以檢視並執行。",
+    "locallyExecutable": "可在本機執行",
+    "needsCredential": "需要憑證",
+    "debugAction": "偵錯動作",
+    "requiredScopes": "必要權限範圍",
+    "parameters": "參數",
+    "fieldsCount": "{{count}} 個欄位",
+    "noInputParameters": "無輸入參數。",
+    "required": "必填",
+    "optional": "選填",
+    "actionExamples": "動作範例",
+    "open": "開啟",
+    "copyExample": "複製 {{label}}",
+    "copiedExample": "已複製 {{label}}",
+    "closeDebugAction": "關閉動作偵錯",
+    "input": "輸入",
+    "run": "執行",
+    "running": "執行中",
+    "runningAction": "正在執行動作...",
+    "actionFailed": "動作執行失敗。"
+  },
+  "runs": {
+    "noRunsTitle": "尚無執行記錄",
+    "noRunsDescription": "執行一個動作以查看近期執行記錄。",
+    "action": "動作",
+    "actionPlaceholder": "依動作 ID 篩選",
+    "applyActionFilter": "套用動作篩選條件",
+    "service": "服務",
+    "allServices": "所有服務",
+    "caller": "呼叫端",
+    "allCallers": "所有呼叫端",
+    "status": "狀態",
+    "allStatuses": "所有狀態",
+    "copyExecutionId": "複製執行 ID",
+    "expandResult": "展開結果",
+    "collapseResult": "收合結果",
+    "loadMore": "載入更多",
+    "loadMoreFailed": "無法載入更多執行記錄。",
+    "table": {
+      "action": "動作",
+      "context": "上下文",
+      "status": "狀態",
+      "timing": "時間",
+      "input": "輸入",
+      "result": "結果"
+    }
+  },
+  "access": {
+    "title": "執行階段權杖",
+    "description": "為 /v1 與 MCP 用戶端核發 Bearer 權杖。新權杖僅顯示一次。",
+    "name": "名稱",
+    "namePlaceholder": "本機 MCP 用戶端",
+    "createToken": "建立權杖",
+    "createTokenDescription": "為使用此執行階段權杖的用戶端命名。",
+    "closeCreateToken": "關閉建立權杖對話方塊",
+    "creating": "正在建立權杖...",
+    "created": "權杖已建立。",
+    "createFailed": "無法建立權杖。",
+    "revoking": "正在撤銷權杖...",
+    "revoked": "權杖已撤銷。",
+    "revokeFailed": "無法撤銷權杖。",
+    "newToken": "新權杖",
+    "tokenShownOnce": "此權杖僅顯示一次。關閉此對話方塊前請先複製。",
+    "copyToken": "複製權杖",
+    "copiedToken": "已複製",
+    "copyRuntimeToken": "複製執行階段權杖",
+    "copiedRuntimeToken": "已複製執行階段權杖",
+    "noTokensTitle": "尚無執行階段權杖",
+    "noTokensDescription": "連線 MCP 用戶端或本機指令碼前，請先建立權杖。權杖僅顯示一次。",
+    "table": {
+      "name": "名稱",
+      "status": "狀態",
+      "created": "建立時間",
+      "lastUsed": "上次使用時間"
+    },
+    "revoke": "撤銷"
+  },
+  "resources": {
+    "apiReference": {
+      "title": "API 參考文件",
+      "description": "在 Scalar 中瀏覽本機執行階段路由。"
+    },
+    "mcp": {
+      "title": "MCP 連線",
+      "description": "將 Claude Desktop 或 Cursor 連線至此本機執行階段。",
+      "endpoint": "MCP 網址",
+      "copyEndpoint": "複製 MCP 網址",
+      "copiedEndpoint": "已複製 MCP 網址",
+      "configTitle": "JSON 設定",
+      "copyConfig": "複製 JSON 設定",
+      "copiedConfig": "已複製 JSON 設定",
+      "createToken": "產生執行階段權杖"
+    },
+    "openapi": {
+      "title": "OpenAPI JSON",
+      "description": "在指令碼或工具匯入器中使用產生的規格。"
+    }
+  }
+}

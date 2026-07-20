@@ -138,14 +138,13 @@ describe("MCP server", () => {
         data: {
           message: "hello",
         },
-        meta: {
-          executionId: expect.any(String),
-          connection: {
-            service: "example",
-            connectionName: "default",
-            authType: "no_auth",
-            default: true,
-          },
+        executionId: expect.any(String),
+        auditPersisted: true,
+        connection: {
+          service: "example",
+          connectionName: "default",
+          authType: "no_auth",
+          default: true,
         },
       });
     });
@@ -163,7 +162,7 @@ describe("MCP server", () => {
         ok: true,
         data: [
           {
-            id: "example_auth:default",
+            id: "connection-default",
             service: "example_auth",
             connectionName: "default",
             authType: "api_key",
@@ -171,7 +170,7 @@ describe("MCP server", () => {
             profile: defaultCredential.profile,
           },
           {
-            id: "example_auth:secondary",
+            id: "connection-secondary",
             service: "example_auth",
             connectionName: "secondary",
             authType: "api_key",
@@ -210,11 +209,11 @@ describe("MCP server", () => {
       expect(result.structuredContent).toMatchObject({
         ok: true,
         data: { accountId: "account-secondary" },
-        meta: {
-          connection: {
-            connectionName: "secondary",
-            profile: secondaryCredential.profile,
-          },
+        executionId: expect.any(String),
+        auditPersisted: true,
+        connection: {
+          connectionName: "secondary",
+          profile: secondaryCredential.profile,
         },
       });
       expect(JSON.stringify(result.structuredContent)).not.toContain("test-token-secondary");
@@ -223,10 +222,38 @@ describe("MCP server", () => {
         service: "example_auth",
         actionId: "example_auth.get_account",
         caller: "mcp",
-        connectionName: "secondary",
+        connectionId: "connection-secondary",
         connectionProfile: secondaryCredential.profile,
       });
     }, runs);
+  });
+
+  it("returns the selected connection when execution fails", async () => {
+    await withAuthenticatedMcpClient(async (client) => {
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: {
+          actionId: "example_auth.get_account",
+          input: { unexpected: true },
+          connectionName: "secondary",
+        },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "invalid_input",
+          message: "Action input does not match the action schema.",
+        },
+        executionId: expect.any(String),
+        auditPersisted: true,
+        connection: {
+          connectionName: "secondary",
+          profile: secondaryCredential.profile,
+        },
+      });
+    });
   });
 
   it("returns a structured error when a selected connection does not exist", async () => {
@@ -242,6 +269,34 @@ describe("MCP server", () => {
         error: {
           code: "connection_not_found",
           message: "example_auth connection not found: missing.",
+        },
+      });
+    });
+  });
+
+  it("does not fall back to a virtual no-auth connection for an unknown name", async () => {
+    await withMcpClient(async (client) => {
+      const guide = await client.callTool({
+        name: "get_action_guide",
+        arguments: { actionId: "example.echo", connectionName: "missing" },
+      });
+      const execution = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example.echo", input: { message: "hello" }, connectionName: "missing" },
+      });
+
+      expect(guide.structuredContent).toEqual({
+        ok: false,
+        error: {
+          code: "connection_not_found",
+          message: "example connection not found: missing.",
+        },
+      });
+      expect(execution.structuredContent).toEqual({
+        ok: false,
+        error: {
+          code: "connection_not_found",
+          message: "example connection not found: missing.",
         },
       });
     });
@@ -279,6 +334,14 @@ describe("MCP server", () => {
       expect(result.isError).toBe(true);
       expect(result.structuredContent).toMatchObject({
         ok: false,
+        executionId: expect.any(String),
+        auditPersisted: true,
+        connection: {
+          service: "example",
+          connectionName: "default",
+          authType: "no_auth",
+          default: true,
+        },
         error: {
           code: "invalid_input",
           message: "Action input does not match the action schema.",
@@ -295,6 +358,23 @@ describe("MCP server", () => {
       });
 
       expect(result.isError).toBe(true);
+      expect(result.structuredContent).toEqual({
+        ok: false,
+        error: {
+          code: "unknown_action",
+          message: "Unknown action: example.missing",
+        },
+      });
+    });
+  });
+
+  it("does not assign execution metadata to unknown actions", async () => {
+    await withMcpClient(async (client) => {
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example.missing", input: {} },
+      });
+
       expect(result.structuredContent).toEqual({
         ok: false,
         error: {
@@ -352,8 +432,18 @@ async function withAuthenticatedMcpClient(
     catalog,
     providerLoader,
     store: new MemoryConnectionStore([
-      { service: "example_auth", connectionName: "default", credential: defaultCredential },
-      { service: "example_auth", connectionName: "secondary", credential: secondaryCredential },
+      {
+        id: "connection-default",
+        service: "example_auth",
+        connectionName: "default",
+        credential: defaultCredential,
+      },
+      {
+        id: "connection-secondary",
+        service: "example_auth",
+        connectionName: "secondary",
+        credential: secondaryCredential,
+      },
     ]),
   });
   const actions = new ActionRunner({ catalog, providerLoader, connections, runs });
@@ -402,12 +492,27 @@ class MemoryConnectionStore implements IConnectionStore {
     }
   }
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
-    return this.connections.get(this.key(service, connectionName))?.credential;
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    return this.connections.get(this.key(service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    this.connections.set(this.key(service, connectionName), { service, connectionName, credential });
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const key = this.key(service, connectionName);
+    const connection = {
+      id: this.connections.get(key)?.id ?? crypto.randomUUID(),
+      service,
+      connectionName,
+      credential,
+    };
+    this.connections.set(key, connection);
+    return connection;
+  }
+
+  async updateCredential(connection: StoredConnection): Promise<boolean> {
+    const key = this.key(connection.service, connection.connectionName);
+    if (this.connections.get(key)?.id !== connection.id) return false;
+    this.connections.set(key, connection);
+    return true;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -426,8 +531,13 @@ class MemoryConnectionStore implements IConnectionStore {
 class MemoryRunLogStore implements IRunLogStore {
   readonly runs: RunLog[] = [];
 
-  async add(run: RunLog): Promise<void> {
+  async add(run: RunLog): Promise<{ retentionApplied: boolean }> {
     this.runs.push(run);
+    return { retentionApplied: true };
+  }
+
+  async get(id: string): Promise<RunLog | undefined> {
+    return this.runs.find((run) => run.id === id);
   }
 
   async list(): Promise<RunLogPage> {

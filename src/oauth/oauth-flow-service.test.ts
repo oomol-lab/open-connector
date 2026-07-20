@@ -575,14 +575,24 @@ class EmptyProviderLoader implements IProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  private readonly store = new Map<string, ResolvedCredential>();
+  private readonly store = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<ResolvedCredential | undefined> {
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.store.get(createConnectionKey(service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<void> {
-    this.store.set(createConnectionKey(service, connectionName), credential);
+  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+    const key = createConnectionKey(service, connectionName);
+    const connection = { id: this.store.get(key)?.id ?? crypto.randomUUID(), service, connectionName, credential };
+    this.store.set(key, connection);
+    return connection;
+  }
+
+  async updateCredential(input: StoredConnection): Promise<boolean> {
+    const key = createConnectionKey(input.service, input.connectionName);
+    if (this.store.get(key)?.id !== input.id) return false;
+    this.store.set(key, input);
+    return true;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {
@@ -590,14 +600,7 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async list(): Promise<StoredConnection[]> {
-    return [...this.store.entries()].map(([key, credential]) => {
-      const [service, connectionName] = key.split(":");
-      return {
-        service: service!,
-        connectionName: connectionName!,
-        credential,
-      };
-    });
+    return [...this.store.values()];
   }
 }
 

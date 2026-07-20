@@ -451,11 +451,6 @@ export const registeredProxyExecutors: Record<string, ProviderProxyExecutor> = {
     baseUrl: "https://api.gigasheet.com",
     auth: { type: "api_key_header", name: "x-gigasheet-token" },
   }),
-  gitlab: defineProviderProxy({
-    service: "gitlab",
-    baseUrl: "https://gitlab.com/api/v4",
-    auth: { type: "api_key_header", name: "private-token" },
-  }),
   healthchecks_io: defineProviderProxy({
     service: "healthchecks_io",
     baseUrl: "https://healthchecks.io/api/v3",

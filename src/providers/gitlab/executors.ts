@@ -1,4 +1,9 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -7,16 +12,26 @@ import {
   optionalIntegerLike,
   optionalString as asOptionalString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import {
+  createProviderFetch,
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 
-const gitlabApiBaseUrl = "https://gitlab.com/api/v4";
+const defaultGitlabApiBaseUrl = "https://gitlab.com/api/v4";
 const service = "gitlab";
 
 type GitlabRequestPhase = "validate" | "execute";
 type GitlabActionInput = Record<string, unknown>;
 type GitlabActionHandler = (input: GitlabActionInput, context: GitlabActionContext) => Promise<unknown>;
 
-type GitlabActionContext = ApiKeyProviderContext;
+interface GitlabActionContext extends ApiKeyProviderContext {
+  apiBaseUrl: string;
+}
 
 interface GitlabRequestOptions {
   method?: "GET" | "POST";
@@ -43,23 +58,71 @@ export const gitlabActionHandlers: Record<string, GitlabActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, gitlabActionHandlers);
+export const executors: ProviderExecutors = defineProviderExecutors<GitlabActionContext>({
+  service,
+  handlers: gitlabActionHandlers,
+  async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<GitlabActionContext> {
+    const credential = await requireApiKeyCredential(context, service);
+    const providerContext: GitlabActionContext = {
+      apiKey: credential.apiKey,
+      apiBaseUrl: normalizeGitlabApiBaseUrl(credential.values.baseUrl),
+      fetcher,
+      signal: context.signal,
+    };
+    if (context.transitFiles) {
+      providerContext.transitFiles = context.transitFiles;
+    }
+    return providerContext;
+  },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    const value = asOptionalString(credential.metadata.apiBaseUrl) ?? asOptionalString(credential.values.baseUrl);
+    return normalizeGitlabApiBaseUrl(value);
+  },
+  auth: { type: "api_key_header", name: "private-token" },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
-    const user = await gitlabRequestJson("/user", { apiKey: input.apiKey, fetcher }, "validate");
+    const apiBaseUrl = normalizeGitlabApiBaseUrl(input.values.baseUrl);
+    // Re-guard the shared validator fetcher with GitLab's private-network
+    // opt-in so validating a self-hosted instance on a private network works
+    // when the deployment allows it (createProviderFetch unwraps an
+    // already-guarded fetcher).
+    const guardedFetcher = createProviderFetch({
+      fetch: fetcher,
+      allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+    });
+    const user = await gitlabRequestJson(
+      "/user",
+      { apiKey: input.apiKey, apiBaseUrl, fetcher: guardedFetcher },
+      "validate",
+    );
     const userObject = asGitlabObject(user);
     const userId = readOptionalPrimitive(userObject.id);
     const username = asOptionalString(userObject.username);
     const name = asOptionalString(userObject.name);
+    // Scope the account id by instance host for self-hosted connections so the
+    // same numeric user id on different instances never collides.
+    const instanceHost = apiBaseUrl === defaultGitlabApiBaseUrl ? undefined : new URL(apiBaseUrl).host;
 
     return {
       profile: {
-        accountId: userId ? `gitlab:${userId}` : (username ?? "gitlab:user"),
+        accountId: instanceHost
+          ? `gitlab:${instanceHost}:${userId ?? username ?? "user"}`
+          : userId
+            ? `gitlab:${userId}`
+            : (username ?? "gitlab:user"),
         displayName: name ?? username ?? "GitLab User",
       },
       metadata: compactObject({
-        apiBaseUrl: gitlabApiBaseUrl,
+        apiBaseUrl,
         validationEndpoint: "/user",
         userId,
         username,
@@ -68,6 +131,42 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+/**
+ * Resolves the GitLab API base URL for a connection. Empty input targets
+ * GitLab.com; otherwise the self-hosted instance URL is validated, embedded
+ * credentials are rejected, query/hash components are removed, and the path
+ * is ensured to end in `/api/v4`. Private/overlay targets (RFC 1918,
+ * Tailscale, NetBird, private hostnames) are only accepted when the
+ * deployment opts in through `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`;
+ * `allowPrivateNetwork` may be passed explicitly (used by tests).
+ */
+export function normalizeGitlabApiBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
+  const instanceUrl = trimOptionalString(value);
+  if (!instanceUrl) {
+    return defaultGitlabApiBaseUrl;
+  }
+  const url = assertPublicHttpUrl(instanceUrl, {
+    fieldName: "baseUrl",
+    createError: credentialError,
+    allowPrivateNetwork,
+  });
+  if (url.username || url.password) {
+    throw credentialError("baseUrl must not include credentials");
+  }
+  url.hash = "";
+  url.search = "";
+  const path = url.pathname.replace(/\/+$/u, "");
+  url.pathname = path.endsWith("/api/v4") ? path : `${path}/api/v4`;
+  return url.toString().replace(/\/$/u, "");
+}
+
+function credentialError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
+}
 
 async function listGitlabProjects(
   input: GitlabActionInput,
@@ -174,7 +273,7 @@ async function gitlabRequest(
   context: GitlabActionContext,
   options: GitlabRequestOptions = {},
 ): Promise<Response> {
-  const url = new URL(`${gitlabApiBaseUrl}${path}`);
+  const url = new URL(`${context.apiBaseUrl}${path}`);
   for (const [key, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) {
       url.searchParams.set(key, String(value));

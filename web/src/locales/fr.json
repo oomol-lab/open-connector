@@ -32,6 +32,7 @@
     "label": "Langue",
     "en": "English",
     "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
     "ja": "日本語",
     "ru": "Русский",
     "fr": "Français"
@@ -264,18 +265,27 @@
   "runs": {
     "noRunsTitle": "Aucune exécution",
     "noRunsDescription": "Exécutez une action pour voir l’historique récent.",
+    "action": "Action",
+    "actionPlaceholder": "Filtrer par ID d’action",
+    "applyActionFilter": "Appliquer le filtre d’action",
     "service": "Service",
     "allServices": "Tous les services",
+    "caller": "Appelant",
+    "allCallers": "Tous les appelants",
+    "status": "Statut",
+    "allStatuses": "Tous les statuts",
+    "copyExecutionId": "Copier l’ID d’exécution",
+    "expandResult": "Développer le résultat",
+    "collapseResult": "Réduire le résultat",
     "loadMore": "Charger plus",
     "loadMoreFailed": "Échec du chargement d’exécutions supplémentaires.",
     "table": {
       "action": "Action",
-      "caller": "Appelant",
+      "context": "Contexte",
       "status": "Statut",
-      "started": "Début",
-      "duration": "Durée",
+      "timing": "Horaire",
       "input": "Entrée",
-      "error": "Erreur"
+      "result": "Résultat"
     }
   },
   "access": {

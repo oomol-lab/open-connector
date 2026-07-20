@@ -32,6 +32,7 @@
     "label": "语言",
     "en": "English",
     "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
     "ja": "日本語",
     "ru": "Русский",
     "fr": "Français"
@@ -264,18 +265,27 @@
   "runs": {
     "noRunsTitle": "暂无运行记录",
     "noRunsDescription": "运行一个操作后会显示最近执行历史。",
+    "action": "操作",
+    "actionPlaceholder": "按操作 ID 筛选",
+    "applyActionFilter": "应用操作筛选",
     "service": "服务",
     "allServices": "全部服务",
+    "caller": "调用方",
+    "allCallers": "全部调用方",
+    "status": "状态",
+    "allStatuses": "全部状态",
+    "copyExecutionId": "复制 execution ID",
+    "expandResult": "展开结果",
+    "collapseResult": "收起结果",
     "loadMore": "加载更多",
     "loadMoreFailed": "加载更多运行记录失败。",
     "table": {
       "action": "操作",
-      "caller": "调用方",
+      "context": "上下文",
       "status": "状态",
-      "started": "开始时间",
-      "duration": "耗时",
+      "timing": "时间",
       "input": "输入",
-      "error": "错误"
+      "result": "结果"
     }
   },
   "access": {

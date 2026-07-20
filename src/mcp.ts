@@ -282,20 +282,23 @@ async function executeAction(
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
 
-  let run;
-  try {
-    run = await options.actions.run({
-      actionId,
-      input,
-      caller: "mcp",
-      connectionName,
-    });
-  } catch (error) {
-    return connectionErrorPayload(error);
+  if (connectionName) {
+    try {
+      await getSelectedConnectionSummary(options, action.service, connectionName);
+    } catch (error) {
+      return connectionErrorPayload(error);
+    }
   }
+  const run = await options.actions.run({
+    actionId,
+    input,
+    caller: "mcp",
+    connectionName,
+  });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
+  const executionMeta = createExecutionMeta(run);
   if (!run.result.ok) {
     return {
       ok: false,
@@ -303,9 +306,14 @@ async function executeAction(
         code: "execution_failed",
         message: "Action execution failed.",
       },
+      ...executionMeta,
     };
   }
-  return successPayload(run.result.output, createExecutionMeta(run));
+  return {
+    ok: true,
+    data: run.result.output,
+    ...executionMeta,
+  };
 }
 
 function summarizeInputSchema(schema: JsonSchema): unknown {
@@ -344,7 +352,7 @@ async function describeActionCapability(
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
     policy: options.actionPolicy?.evaluate(action) ?? { allowed: true },
-    connection: await options.connections.getConnectionSummary(action.service, connectionName),
+    connection: await getSelectedConnectionSummary(options, action.service, connectionName),
   };
 }
 
@@ -354,9 +362,21 @@ async function describeActionMarkdownContext(
   connectionName?: string,
 ): Promise<{ connection?: ConnectionSummary; providerPermissions: string[] }> {
   return {
-    connection: await options.connections.getConnectionSummary(action.service, connectionName),
+    connection: await getSelectedConnectionSummary(options, action.service, connectionName),
     providerPermissions: action.providerPermissions,
   };
+}
+
+async function getSelectedConnectionSummary(
+  options: IMcpServerOptions,
+  service: string,
+  connectionName: string | undefined,
+): Promise<ConnectionSummary | undefined> {
+  const connection = await options.connections.getConnectionSummary(service, connectionName);
+  if (connectionName && connection?.virtual && !connection.default) {
+    throw new ConnectionError("connection_not_found", `${service} connection not found: ${connection.connectionName}.`);
+  }
+  return connection;
 }
 
 function describeSchemaType(schema: JsonSchema | undefined): string {
@@ -375,23 +395,28 @@ function describeSchemaType(schema: JsonSchema | undefined): string {
   return typeof schema.type === "string" ? schema.type : "unknown";
 }
 
-type ToolPayload =
-  | {
-      ok: true;
-      data: unknown;
-      meta?: Record<string, unknown>;
-    }
-  | {
-      ok: false;
-      error: {
-        code: string;
-        message: string;
-        details?: unknown;
-      };
-    };
+interface ToolExecutionMeta {
+  executionId: string;
+  auditPersisted: boolean;
+  connection?: Record<string, unknown>;
+}
 
-function successPayload(data: unknown, meta?: Record<string, unknown>): ToolPayload {
-  return meta ? { ok: true, data, meta } : { ok: true, data };
+interface ToolError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+type ToolPayload = Record<string, unknown> &
+  (
+    | { ok: true; data: unknown; executionId?: never; auditPersisted?: never }
+    | { ok: false; error: ToolError; executionId?: never; auditPersisted?: never }
+    | ({ ok: true; data: unknown } & ToolExecutionMeta)
+    | ({ ok: false; error: ToolError } & ToolExecutionMeta)
+  );
+
+function successPayload(data: unknown): ToolPayload {
+  return { ok: true, data };
 }
 
 function errorPayload(code: string, message: string): ToolPayload {
@@ -419,8 +444,11 @@ function serializeConnection(connection: ConnectionSummary): Record<string, unkn
   };
 }
 
-function createExecutionMeta(run: ActionRunResult): Record<string, unknown> {
-  const meta: Record<string, unknown> = { executionId: run.executionId };
+function createExecutionMeta(run: ActionRunResult): ToolExecutionMeta {
+  const meta: ToolExecutionMeta = {
+    executionId: run.executionId,
+    auditPersisted: run.auditPersisted,
+  };
   if (run.connection) {
     meta.connection = serializeConnection(run.connection);
   }

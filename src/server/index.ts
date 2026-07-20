@@ -12,6 +12,7 @@ import { createConnectApp } from "./connect-app.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
+import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -20,6 +21,7 @@ const publicOrigin = process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${por
 const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data");
 const transitFileTtlSeconds = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS", 86_400);
 const transitFileMaxBytes = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES", 100 * 1024 * 1024);
+const runLimit = readPositiveIntegerEnv("OOMOL_CONNECT_RUN_LIMIT", DEFAULT_RUN_LIMIT);
 const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
 const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
 const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
@@ -43,7 +45,9 @@ const catalog = await loadCatalog(undefined, {
 });
 const providerLoader = new ProviderLoader(executorModules);
 const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"), {
+  logger,
   secretCodec,
+  runLimit,
 });
 const transitFiles = new TransitFileService({
   rootDir: join(dataDir, "files"),
