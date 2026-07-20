@@ -51,7 +51,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -509,16 +509,18 @@ function PolicyTester(props: {
         </ToggleGroup>
         {resource === "action" && props.tokens.length > 0 ? (
           <Select value={tokenId} onValueChange={setTokenId}>
-            <SelectTrigger aria-label={t("access.policy.tester.tokenLabel")}>
+            <SelectTrigger className="policy-token-select-trigger" aria-label={t("access.policy.tester.tokenLabel")}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{t("access.policy.tester.noToken")}</SelectItem>
-              {props.tokens.map((item) => (
-                <SelectItem value={item.id} key={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
+            <SelectContent className="policy-token-select-content" position="popper" align="start" sideOffset={4}>
+              <SelectGroup>
+                <SelectItem value="none">{t("access.policy.tester.noToken")}</SelectItem>
+                {props.tokens.map((item) => (
+                  <SelectItem value={item.id} key={item.id}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         ) : null}

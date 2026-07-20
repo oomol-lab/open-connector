@@ -95,8 +95,13 @@
   gap: 8px;
 }
 
-.policy-tester-form > [data-slot="select-trigger"] {
-  max-width: 180px;
+.policy-token-select-trigger {
+  width: 180px;
+}
+
+.policy-token-select-content {
+  width: var(--radix-select-trigger-width);
+  min-width: 180px;
 }
 
 .policy-resource-control {
