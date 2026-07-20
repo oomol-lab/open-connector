@@ -94,6 +94,7 @@ const crossOriginCredentialHeaders = new Set([
   "x-csrf-token",
   "x-xsrf-token",
   "x-goog-api-key",
+  "x-acs-security-token",
   "x-amz-security-token",
 ]);
 /** Body-describing headers dropped when a redirect rewrites the method to GET, mirroring the fetch spec. */

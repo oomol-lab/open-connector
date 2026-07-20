@@ -115,21 +115,13 @@ export function createAliyunSlsContext(
   };
 }
 
-export async function validateAliyunSlsCredential(
-  values: Record<string, string>,
-  fetcher: typeof fetch,
-  signal?: AbortSignal,
-): Promise<CredentialValidationResult> {
-  const context = createAliyunSlsContext(values, fetcher, signal);
-  await requestProjectPage(context, {
-    endpoint: context.credential.endpoint,
-    offset: 0,
-    size: 1,
-  });
+/** Validate local credential structure without requiring a provider-wide RAM permission. */
+export function validateAliyunSlsCredential(values: Record<string, string>): CredentialValidationResult {
+  const credential = parseAliyunSlsCredential(values);
   return {
     profile: {
-      accountId: context.credential.accessKeyId,
-      displayName: `${context.credential.accessKeyId}@${context.credential.endpoint}`,
+      accountId: credential.accessKeyId,
+      displayName: `${credential.accessKeyId}@${credential.endpoint}`,
     },
     grantedScopes: [],
   };
@@ -161,6 +153,7 @@ export async function requestAliyunSlsJson(
   const requestInit: RequestInit = {
     method: input.method,
     headers: signed.headers,
+    redirect: "error",
     signal: context.signal,
   };
   if (signed.bodyBytes.byteLength > 0) {

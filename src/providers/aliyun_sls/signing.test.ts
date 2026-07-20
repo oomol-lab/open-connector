@@ -12,6 +12,7 @@ describe("Alibaba Cloud SLS request signing", () => {
         offset: "0",
       },
       headers: {
+        "x-log-date": "stale-proxy-date",
         "x-log-zeta": "z",
       },
       credential: {
@@ -37,6 +38,7 @@ describe("Alibaba Cloud SLS request signing", () => {
     expect(signed.contentMd5).toBeUndefined();
     expect(signed.signature).toBe("nuyu9oBaK4Q7R7/zSDoCjKepUok=");
     expect(signed.headers.get("authorization")).toBe("LOG testAccessKeyId:nuyu9oBaK4Q7R7/zSDoCjKepUok=");
+    expect(signed.headers.get("x-log-date")).toBe("Mon, 03 Jan 2022 04:05:06 GMT");
     expect(signed.headers.get("content-md5")).toBeNull();
   });
 

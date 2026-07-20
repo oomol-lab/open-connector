@@ -210,6 +210,7 @@ describe("createGuardedFetch redirects", () => {
         "x-api-key": "provider-secret",
         "x-auth-token": "tok",
         "x-seq-apikey": "seq-secret",
+        "x-acs-security-token": "aliyun-sts-secret",
         "x-trace": "keep",
         // Look-alike but non-credential headers must survive cross-origin.
         "idempotency-key": "abc",
@@ -221,12 +222,14 @@ describe("createGuardedFetch redirects", () => {
     expect(sameOriginHeaders.get("authorization")).toBe("Bearer secret");
     expect(sameOriginHeaders.get("x-api-key")).toBe("provider-secret");
     expect(sameOriginHeaders.get("x-seq-apikey")).toBe("seq-secret");
+    expect(sameOriginHeaders.get("x-acs-security-token")).toBe("aliyun-sts-secret");
     const crossOriginHeaders = new Headers(calls[2]?.init?.headers);
     expect(crossOriginHeaders.has("authorization")).toBe(false);
     expect(crossOriginHeaders.has("cookie")).toBe(false);
     expect(crossOriginHeaders.has("x-api-key")).toBe(false);
     expect(crossOriginHeaders.has("x-auth-token")).toBe(false);
     expect(crossOriginHeaders.has("x-seq-apikey")).toBe(false);
+    expect(crossOriginHeaders.has("x-acs-security-token")).toBe(false);
     expect(crossOriginHeaders.get("x-trace")).toBe("keep");
     expect(crossOriginHeaders.get("idempotency-key")).toBe("abc");
     expect(crossOriginHeaders.get("x-correlation-id")).toBe("cid");

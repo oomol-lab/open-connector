@@ -21,7 +21,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<AliyunSlsAct
 });
 
 export const credentialValidators: CredentialValidators = {
-  customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    return validateAliyunSlsCredential(input.values, fetcher, signal);
+  async customCredential(input): Promise<CredentialValidationResult> {
+    return validateAliyunSlsCredential(input.values);
   },
 };

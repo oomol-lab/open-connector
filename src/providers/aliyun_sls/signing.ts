@@ -33,6 +33,7 @@ export function signAliyunSlsRequest(input: SignAliyunSlsRequestInput): SignedAl
   const headers = new Headers(input.headers);
   const date = input.date.toUTCString();
   headers.set("date", date);
+  headers.delete("x-log-date");
   headers.set("x-log-apiversion", aliyunSlsApiVersion);
   headers.set("x-log-signaturemethod", aliyunSlsSignatureMethod);
   headers.set("x-log-bodyrawsize", String(bodyBytes.byteLength));
@@ -61,6 +62,8 @@ export function signAliyunSlsRequest(input: SignAliyunSlsRequestInput): SignedAl
     .update(canonicalString, "utf8")
     .digest("base64");
   headers.set("authorization", `LOG ${input.credential.accessKeyId}:${signature}`);
+  // Official V1 SDKs add this after signing as a fallback for proxies that drop Date.
+  headers.set("x-log-date", date);
 
   const result: SignedAliyunSlsRequest = {
     headers,

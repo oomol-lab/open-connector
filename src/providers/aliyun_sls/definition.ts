@@ -42,7 +42,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "cn-hangzhou.log.aliyuncs.com",
           description:
-            "The default regional Simple Log Service endpoint used for validation and actions that omit endpoint, for example cn-hangzhou.log.aliyuncs.com.",
+            "The default regional Simple Log Service endpoint used by actions that omit endpoint, for example cn-hangzhou.log.aliyuncs.com.",
         },
         {
           key: "securityToken",

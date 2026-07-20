@@ -214,6 +214,7 @@ describe("Alibaba Cloud SLS runtime", () => {
     });
 
     const init = fetchMock.mock.calls[0]![1]!;
+    expect(init.redirect).toBe("error");
     expect(new Uint8Array(await new Response(init.body).arrayBuffer())).toEqual(bodyBytes);
     const headers = new Headers(init.headers);
     expect(headers.get("content-md5")).toBe("EF2643B9A23580637AD32EAE4284DD9C");
@@ -419,22 +420,14 @@ describe("Alibaba Cloud SLS runtime", () => {
     expect(fetchMock).toHaveBeenCalledTimes(20);
   });
 
-  it("validates credentials with one low-cost bare-host ListProject request", async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      jsonResponse({ count: 0, total: 0, projects: [] }),
-    );
-    const result = await validateAliyunSlsCredential(
-      {
-        accessKeyId: "access-key",
-        accessKeySecret: "secret-key",
-        endpoint: defaultEndpoint,
-        resourceScope:
-          '[{"endpoint":"cn-shanghai.log.aliyuncs.com","project":"project-a","logstores":["application"]}]',
-      },
-      fetchMock as unknown as typeof fetch,
-    );
+  it("validates credential structure without requiring ListProject permission", () => {
+    const result = validateAliyunSlsCredential({
+      accessKeyId: "access-key",
+      accessKeySecret: "secret-key",
+      endpoint: defaultEndpoint,
+      resourceScope: '[{"endpoint":"cn-shanghai.log.aliyuncs.com","project":"project-a","logstores":["application"]}]',
+    });
 
-    expect(fetchMock.mock.calls[0]![0]).toBe("https://cn-hangzhou.log.aliyuncs.com/?offset=0&size=1");
     expect(result).toEqual({
       profile: {
         accountId: "access-key",
