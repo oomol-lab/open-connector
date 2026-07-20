@@ -202,6 +202,18 @@ describe("Latchshot provider", () => {
         createdAt: "2026-07-18T00:00:00.000Z",
         updatedAt: "2026-07-19T00:00:00.000Z",
       },
+      links: usageLinks(),
+    });
+  });
+
+  it("rejects a usage response without owner-managed continuation links", async () => {
+    const payload = usagePayload();
+    delete payload.links;
+    const context = createContext([], Response.json(payload));
+
+    await expect(latchshotActionHandlers.get_usage!({}, context)).rejects.toMatchObject({
+      status: 502,
+      message: "Latchshot usage response is missing continuation links.",
     });
   });
 
@@ -278,6 +290,7 @@ function usagePayload(): Record<string, unknown> {
       updatedAt: null,
     },
     upgradeRequest: null,
+    links: usageLinks(),
   };
 }
 
@@ -307,5 +320,14 @@ function forwardCompatibleUsagePayload(): Record<string, unknown> {
       createdAt: "2026-07-18T00:00:00.000Z",
       updatedAt: "2026-07-19T00:00:00.000Z",
     },
+    links: usageLinks(),
+  };
+}
+
+function usageLinks(): Record<string, string> {
+  return {
+    plans: "https://latchshot.fly.dev/#pricing",
+    requestPaidPlan: "https://latchshot.fly.dev/#upgrade",
+    requestPaidPlanDocs: "https://latchshot.fly.dev/docs.md#request-a-paid-plan",
   };
 }

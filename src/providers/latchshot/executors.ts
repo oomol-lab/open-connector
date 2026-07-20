@@ -236,6 +236,7 @@ function normalizeUsagePayload(payload: unknown): {
   customer: { name: string; plan: string };
   usage: Record<string, unknown>;
   upgradeRequest: Record<string, unknown> | null;
+  links: Record<string, string>;
 } {
   const record = requireObject(payload, "Latchshot usage response must be an object.");
   const customer = requireObject(record.customer, "Latchshot usage response is missing customer data.");
@@ -261,6 +262,16 @@ function normalizeUsagePayload(payload: unknown): {
         usage.updatedAt === null ? null : requiredString(usage.updatedAt, "usage.updatedAt", invalidResponseError),
     },
     upgradeRequest: normalizeUpgradeRequest(record.upgradeRequest),
+    links: normalizeUsageLinks(record.links),
+  };
+}
+
+function normalizeUsageLinks(value: unknown): Record<string, string> {
+  const links = requireObject(value, "Latchshot usage response is missing continuation links.");
+  return {
+    plans: requiredString(links.plans, "links.plans", invalidResponseError),
+    requestPaidPlan: requiredString(links.requestPaidPlan, "links.requestPaidPlan", invalidResponseError),
+    requestPaidPlanDocs: requiredString(links.requestPaidPlanDocs, "links.requestPaidPlanDocs", invalidResponseError),
   };
 }
 

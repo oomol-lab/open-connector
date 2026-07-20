@@ -149,6 +149,12 @@ const upgradeRequestSchema = s.object(
   { required: ["id", "keyId", "requestedPlan", "note", "status", "createdAt", "updatedAt"] },
 );
 
+const usageLinksSchema = s.requiredObject("Owner-managed paid-plan continuation links.", {
+  plans: s.url("The public Latchshot plan comparison."),
+  requestPaidPlan: s.url("The human paid-plan request form."),
+  requestPaidPlanDocs: s.url("The authenticated paid-plan request API documentation."),
+});
+
 const usageOutputSchema = s.requiredObject("The current Latchshot plan and quota snapshot.", {
   customer: s.requiredObject("The display identity attached to the API key.", {
     name: s.nonEmptyString("The display name attached to the API key."),
@@ -156,6 +162,7 @@ const usageOutputSchema = s.requiredObject("The current Latchshot plan and quota
   }),
   usage: usageSchema,
   upgradeRequest: s.nullable(upgradeRequestSchema),
+  links: usageLinksSchema,
 });
 
 export const latchshotActions: ActionDefinition[] = [
@@ -168,7 +175,8 @@ export const latchshotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
-    description: "Read the current Latchshot plan, successful-render quota, reset time, and upgrade-request status.",
+    description:
+      "Read the current Latchshot plan, successful-render quota, reset time, upgrade-request status, and owner-managed paid-plan links. This action never initiates payment or an upgrade.",
     inputSchema: s.object("No input is required to read usage for the configured API key.", {}),
     outputSchema: usageOutputSchema,
   }),
