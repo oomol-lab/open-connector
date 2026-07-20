@@ -5,6 +5,7 @@ import {
   compactObject,
   objectArray,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   requiredString,
@@ -15,6 +16,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  readProviderJsonBody,
 } from "../provider-runtime.ts";
 
 type AnySearchRequestPhase = "validate" | "execute";
@@ -234,23 +236,18 @@ async function requestAnySearchJson(
 }
 
 async function readAnySearchPayload(response: Response): Promise<unknown> {
-  const text = await response.text();
-  if (text.trim() === "") {
-    return null;
-  }
-
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    throw new ProviderRequestError(502, "AnySearch returned invalid JSON");
-  }
+  return readProviderJsonBody(response, {
+    emptyBody: null,
+    invalidJsonMessage: "AnySearch returned invalid JSON",
+    invalidJsonFallback: response.ok ? undefined : (text) => ({ message: text.slice(0, 500) }),
+  });
 }
 
 function unwrapAnySearchRestPayload(payload: unknown): Record<string, unknown> {
   const envelope = optionalRecord(payload);
   const data = optionalRecord(envelope?.data);
   const metadata = optionalRecord(data?.metadata);
-  const requestId = readNonEmptyString(envelope?.request_id) ?? readNonEmptyString(metadata?.request_id);
+  const requestId = optionalString(envelope?.request_id) ?? optionalString(metadata?.request_id);
 
   if (envelope?.code !== 0 || !data || !metadata || !requestId) {
     throw new ProviderRequestError(
@@ -261,8 +258,22 @@ function unwrapAnySearchRestPayload(payload: unknown): Record<string, unknown> {
   }
 
   const results = readSearchResults(data.results);
-  const totalResults = readNonNegativeInteger(metadata.total_results, "metadata.total_results");
-  const searchTimeMs = readNonNegativeInteger(metadata.search_time_ms, "metadata.search_time_ms");
+  const totalResults = optionalInteger(metadata.total_results);
+  if (totalResults === undefined || totalResults < 0) {
+    throw new ProviderRequestError(
+      502,
+      "AnySearch response metadata.total_results must be a non-negative integer",
+      metadata.total_results,
+    );
+  }
+  const searchTimeMs = optionalInteger(metadata.search_time_ms);
+  if (searchTimeMs === undefined || searchTimeMs < 0) {
+    throw new ProviderRequestError(
+      502,
+      "AnySearch response metadata.search_time_ms must be a non-negative integer",
+      metadata.search_time_ms,
+    );
+  }
   const { request_id: _requestId, ...restMetadata } = metadata;
 
   return {
@@ -286,10 +297,15 @@ function readSearchResults(value: unknown): Array<Record<string, unknown>> {
     if (!result) {
       throw new ProviderRequestError(502, "AnySearch result " + index + " must be an object", item);
     }
-    readOutputString(result.title, "results[" + index + "].title");
-    readOutputString(result.url, "results[" + index + "].url");
-    readOutputString(result.snippet, "results[" + index + "].snippet");
-    readOutputString(result.content, "results[" + index + "].content");
+    for (const fieldName of ["title", "url", "snippet", "content"]) {
+      if (optionalRawString(result[fieldName]) === undefined) {
+        throw new ProviderRequestError(
+          502,
+          "AnySearch response results[" + index + "]." + fieldName + " must be a string",
+          result[fieldName],
+        );
+      }
+    }
     return result;
   });
 }
@@ -302,7 +318,7 @@ function unwrapAnySearchMcpPayload(payload: unknown, toolName: AnySearchMcpToolN
 
   const rpcError = optionalRecord(envelope.error);
   if (rpcError) {
-    const message = readNonEmptyString(rpcError.message) ?? "AnySearch MCP request failed";
+    const message = optionalString(rpcError.message) ?? "AnySearch MCP request failed";
     const code = typeof rpcError.code === "number" ? rpcError.code : undefined;
     throw new ProviderRequestError(code === -32602 ? 400 : 502, message, rpcError);
   }
@@ -322,14 +338,18 @@ function unwrapAnySearchMcpPayload(payload: unknown, toolName: AnySearchMcpToolN
 
   const metadata = optionalRecord(result._meta);
   if (toolName === "batch_search") {
-    const requestIds = readNonEmptyStringArray(metadata?.request_ids);
-    if (!requestIds || requestIds.length > 5) {
+    const requestIdsValue = metadata?.request_ids;
+    if (!Array.isArray(requestIdsValue)) {
+      throw new ProviderRequestError(502, "AnySearch batch search result has invalid request identifiers", result);
+    }
+    const requestIds = requestIdsValue.map(optionalString).filter((item): item is string => item !== undefined);
+    if (requestIds.length === 0 || requestIds.length > 5 || requestIds.length !== requestIdsValue.length) {
       throw new ProviderRequestError(502, "AnySearch batch search result has invalid request identifiers", result);
     }
     return { content, request_ids: requestIds };
   }
 
-  const requestId = readNonEmptyString(metadata?.request_id);
+  const requestId = optionalString(metadata?.request_id);
   if (!requestId) {
     throw new ProviderRequestError(502, "AnySearch " + toolName + " result has no request identifier", result);
   }
@@ -411,11 +431,11 @@ function readMcpErrorSymbol(content: string | undefined): string | undefined {
 function readAnySearchErrorMessage(payload: unknown): string | undefined {
   const record = optionalRecord(payload);
   const error = optionalRecord(record?.error);
-  return readNonEmptyString(record?.message) ?? readNonEmptyString(record?.error) ?? readNonEmptyString(error?.message);
+  return optionalString(record?.message) ?? optionalString(record?.error) ?? optionalString(error?.message);
 }
 
 function readAnySearchErrorSymbol(payload: unknown): string | undefined {
-  return readNonEmptyString(optionalRecord(payload)?.symbol);
+  return optionalString(optionalRecord(payload)?.symbol);
 }
 
 function readMcpTextContent(value: unknown): string | undefined {
@@ -425,35 +445,9 @@ function readMcpTextContent(value: unknown): string | undefined {
   const text = value
     .map((item) => {
       const record = optionalRecord(item);
-      return record?.type === "text" ? readNonEmptyString(record.text) : undefined;
+      return record?.type === "text" ? optionalString(record.text) : undefined;
     })
     .filter((item): item is string => item !== undefined)
     .join("\n\n");
   return text || undefined;
-}
-
-function readNonEmptyStringArray(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-  const strings = value.map(readNonEmptyString);
-  return strings.every((item): item is string => item !== undefined) && strings.length > 0 ? strings : undefined;
-}
-
-function readNonEmptyString(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim() !== "" ? value.trim() : undefined;
-}
-
-function readOutputString(value: unknown, fieldName: string): string {
-  if (typeof value !== "string") {
-    throw new ProviderRequestError(502, "AnySearch response " + fieldName + " must be a string", value);
-  }
-  return value;
-}
-
-function readNonNegativeInteger(value: unknown, fieldName: string): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
-    throw new ProviderRequestError(502, "AnySearch response " + fieldName + " must be a non-negative integer", value);
-  }
-  return value;
 }
