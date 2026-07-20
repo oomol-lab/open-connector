@@ -128,7 +128,7 @@ describe("RunsPage", () => {
     );
 
     expect(markup).toContain("runs.policyBlocked");
-    expect(markup).toContain("token: github.delete_repository");
+    expect(markup).toContain("access.policy.sources.token: github.delete_repository");
     expect(markup).toContain("runs.runtimeToken: token-1");
     expect(markup).not.toContain("runs.table.policy");
   });

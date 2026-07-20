@@ -238,7 +238,7 @@ export function RunsPage(props: RunsPageProps): ReactNode {
                             <div className="run-secondary mono">
                               {t(run.policy.allowed ? "runs.policyAllowed" : "runs.policyBlocked")}
                               {policyCheck
-                                ? ` · ${policyCheck.source}${policyCheck.rule ? `: ${policyCheck.rule}` : ""}`
+                                ? ` · ${t(`access.policy.sources.${policyCheck.source}`)}${policyCheck.rule ? `: ${policyCheck.rule}` : ""}`
                                 : ""}
                             </div>
                           ) : null}

@@ -28,7 +28,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { formatDate } from "./model";
 import {
@@ -102,6 +102,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   const [createOpen, setCreateOpen] = useState(false);
   const [runtimeStatus, setRuntimeStatus] = useState<string | null>(null);
   const [tokenStatus, setTokenStatus] = useState<string | null>(null);
+  const previousPolicy = useRef(props.policy);
   const { copy, copied } = useClipboard();
   const savedRuntimeDraft = useMemo(() => createPolicyEditorDraft(policy.runtime), [policy.runtime]);
   const runtimeDirty = !policyEditorDraftEquals(runtimeDraft, savedRuntimeDraft);
@@ -115,6 +116,17 @@ export function AccessPage(props: AccessPageProps): ReactNode {
     () => (runtimeEditing ? policyRisk(runtimeDraftState, props.providers) : null),
     [runtimeDraftState, props.providers, runtimeEditing],
   );
+
+  useEffect(() => {
+    if (props.policy === previousPolicy.current) {
+      return;
+    }
+    previousPolicy.current = props.policy;
+    if (!runtimeEditing) {
+      setPolicy(props.policy);
+      setRuntimeDraft(createPolicyEditorDraft(props.policy.runtime));
+    }
+  }, [props.policy, runtimeEditing]);
 
   async function submitToken(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -232,7 +244,8 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   }
 
   function discardRuntimeEditing(): void {
-    setRuntimeDraft(createPolicyEditorDraft(policy.runtime));
+    setPolicy(props.policy);
+    setRuntimeDraft(createPolicyEditorDraft(props.policy.runtime));
     setRuntimeStatus(null);
     setRuntimeEditing(false);
   }

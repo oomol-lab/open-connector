@@ -1,7 +1,5 @@
 import type { Context } from "hono";
 
-import { Buffer } from "node:buffer";
-
 /**
  * Loose JSON body shape accepted by local HTTP handlers.
  */
@@ -32,9 +30,33 @@ export async function readJsonBody(context: Context, maxBytes?: number): Promise
     if (maxBytes !== undefined && Number.isFinite(contentLength) && contentLength > maxBytes) {
       throw new HttpRequestError("payload_too_large", `Request body must not exceed ${maxBytes} bytes.`, 413);
     }
-    const text = await context.req.raw.text();
-    if (maxBytes !== undefined && Buffer.byteLength(text, "utf8") > maxBytes) {
-      throw new HttpRequestError("payload_too_large", `Request body must not exceed ${maxBytes} bytes.`, 413);
+    let text: string;
+    if (maxBytes === undefined) {
+      text = await context.req.raw.text();
+    } else if (!context.req.raw.body) {
+      text = "";
+    } else {
+      const reader = context.req.raw.body.getReader();
+      const decoder = new TextDecoder();
+      let byteLength = 0;
+      text = "";
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          byteLength += value.byteLength;
+          if (byteLength > maxBytes) {
+            await reader.cancel().catch(() => undefined);
+            throw new HttpRequestError("payload_too_large", `Request body must not exceed ${maxBytes} bytes.`, 413);
+          }
+          text += decoder.decode(value, { stream: true });
+        }
+        text += decoder.decode();
+      } finally {
+        reader.releaseLock();
+      }
     }
     const body = text ? (JSON.parse(text) as unknown) : {};
     if (!body || typeof body !== "object" || Array.isArray(body)) {
