@@ -561,9 +561,4 @@ export const netlifyActions: ActionDefinition[] = actionSources.map((action) =>
   }),
 );
 
-export const netlifyConnectorScopes: readonly string[] = [
-  netlifyReadScope,
-  netlifySiteWriteScope,
-  netlifyDeployWriteScope,
-  netlifyFormWriteScope,
-];
+export const netlifyConnectorScopes: readonly string[] = [];
