@@ -5,6 +5,7 @@ import {
   compactObject,
   optionalBoolean,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   requiredString,
@@ -23,9 +24,6 @@ const latchshotApiBaseUrl = "https://latchshot.fly.dev";
 const latchshotRenderPath = "/v1/render";
 const latchshotUsagePath = "/v1/usage";
 const latchshotJsonMaxBytes = 64 * 1024;
-const planValues = new Set(["trial", "launch", "build", "scale"]);
-const upgradePlanValues = new Set(["launch", "build", "scale"]);
-const upgradeStatusValues = new Set(["new", "contacted", "fulfilled", "declined"]);
 
 type LatchshotActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type LatchshotRequestPhase = "validate" | "execute";
@@ -242,18 +240,16 @@ function normalizeUsagePayload(payload: unknown): {
   const record = requireObject(payload, "Latchshot usage response must be an object.");
   const customer = requireObject(record.customer, "Latchshot usage response is missing customer data.");
   const usage = requireObject(record.usage, "Latchshot usage response is missing usage data.");
-  const customerPlan = requireEnum(customer.plan, "customer.plan", planValues);
-  const usagePlan = requireEnum(usage.plan, "usage.plan", planValues);
 
   return {
     customer: {
       name: requiredString(customer.name, "customer.name", invalidResponseError),
-      plan: customerPlan,
+      plan: requiredString(customer.plan, "customer.plan", invalidResponseError),
     },
     usage: {
       period: requiredString(usage.period, "usage.period", invalidResponseError),
-      plan: usagePlan,
-      limit: requireNonNegativeInteger(usage.limit, "usage.limit", true),
+      plan: requiredString(usage.plan, "usage.plan", invalidResponseError),
+      limit: requireNonNegativeInteger(usage.limit, "usage.limit"),
       remaining: requireNonNegativeInteger(usage.remaining, "usage.remaining"),
       resetAt: requiredString(usage.resetAt, "usage.resetAt", invalidResponseError),
       successful: requireNonNegativeInteger(usage.successful, "usage.successful"),
@@ -276,9 +272,9 @@ function normalizeUpgradeRequest(value: unknown): Record<string, unknown> | null
   return {
     id: requireNonNegativeInteger(request.id, "upgradeRequest.id", true),
     keyId: requireNonNegativeInteger(request.keyId, "upgradeRequest.keyId", true),
-    requestedPlan: requireEnum(request.requestedPlan, "upgradeRequest.requestedPlan", upgradePlanValues),
-    note: request.note === null ? null : requiredString(request.note, "upgradeRequest.note", invalidResponseError),
-    status: requireEnum(request.status, "upgradeRequest.status", upgradeStatusValues),
+    requestedPlan: requiredString(request.requestedPlan, "upgradeRequest.requestedPlan", invalidResponseError),
+    note: optionalRawString(request.note) ?? null,
+    status: requiredString(request.status, "upgradeRequest.status", invalidResponseError),
     createdAt: requiredString(request.createdAt, "upgradeRequest.createdAt", invalidResponseError),
     updatedAt: requiredString(request.updatedAt, "upgradeRequest.updatedAt", invalidResponseError),
   };
@@ -290,14 +286,6 @@ function requireObject(value: unknown, message: string): Record<string, unknown>
     return record;
   }
   throw new ProviderRequestError(502, message);
-}
-
-function requireEnum(value: unknown, fieldName: string, allowed: Set<string>): string {
-  const text = optionalString(value);
-  if (text && allowed.has(text)) {
-    return text;
-  }
-  throw invalidResponseError(`${fieldName} is invalid.`);
 }
 
 function requireNonNegativeInteger(value: unknown, fieldName: string, positive = false): number {

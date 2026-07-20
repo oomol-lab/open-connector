@@ -5,7 +5,9 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "latchshot";
 
-const planSchema = s.stringEnum("The current Latchshot plan identifier.", ["trial", "launch", "build", "scale"]);
+const planSchema = s.nonEmptyString(
+  "The current Latchshot plan identifier. Known values are trial, launch, build, and scale; newer tiers are passed through unchanged.",
+);
 
 const transitFileSchema = s.requiredObject("The rendered artifact stored in local transit storage.", {
   fileId: s.nonEmptyString("The local transit file identifier."),
@@ -32,7 +34,7 @@ const diagnosticsSchema = s.object(
 const quotaSchema = s.object(
   "The successful-render quota snapshot returned with the artifact.",
   {
-    limit: s.positiveInteger("The successful-render allowance for the current UTC calendar month."),
+    limit: s.nonNegativeInteger("The successful-render allowance for the current UTC calendar month."),
     remaining: s.nonNegativeInteger("The successful renders remaining in the current month."),
     resetAt: s.dateTime("The start of the next UTC calendar month."),
   },
@@ -118,7 +120,7 @@ const captureOutputSchema = s.object(
 const usageSchema = s.requiredObject("Current successful-render usage for the UTC calendar month.", {
   period: s.string({ pattern: "^[0-9]{4}-[0-9]{2}$", description: "The current UTC calendar month." }),
   plan: planSchema,
-  limit: s.positiveInteger("The successful-render allowance for the current month."),
+  limit: s.nonNegativeInteger("The successful-render allowance for the current month."),
   remaining: s.nonNegativeInteger("The successful renders remaining in the current month."),
   resetAt: s.dateTime("The start of the next UTC calendar month."),
   successful: s.nonNegativeInteger("The successful renders completed in the current month."),
@@ -134,9 +136,13 @@ const upgradeRequestSchema = s.object(
   {
     id: s.positiveInteger("The request identifier."),
     keyId: s.positiveInteger("The API key record identifier."),
-    requestedPlan: s.stringEnum("The requested paid plan.", ["launch", "build", "scale"]),
+    requestedPlan: s.nonEmptyString(
+      "The requested paid plan. Known values are launch, build, and scale; newer tiers are passed through unchanged.",
+    ),
     note: s.nullable(s.string("The optional request note.")),
-    status: s.stringEnum("The request review status.", ["new", "contacted", "fulfilled", "declined"]),
+    status: s.nonEmptyString(
+      "The request review status. Known values are new, contacted, fulfilled, and declined; newer statuses are passed through unchanged.",
+    ),
     createdAt: s.dateTime("When the request was created."),
     updatedAt: s.dateTime("When the request was last updated."),
   },

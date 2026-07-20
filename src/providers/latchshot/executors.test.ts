@@ -175,6 +175,45 @@ describe("Latchshot provider", () => {
     expect(new Headers(requests[0]?.init?.headers).get("authorization")).toBe("Bearer test-api-key");
   });
 
+  it("reads usage without rejecting newer plan tiers, a spent allowance, or a blank note", async () => {
+    const context = createContext([], Response.json(forwardCompatibleUsagePayload()));
+
+    await expect(latchshotActionHandlers.get_usage!({}, context)).resolves.toEqual({
+      customer: { name: "Open Connector QA", plan: "enterprise" },
+      usage: {
+        period: "2026-07",
+        plan: "enterprise",
+        limit: 0,
+        remaining: 0,
+        resetAt: "2026-08-01T00:00:00.000Z",
+        successful: 12,
+        failed: 0,
+        reserved: 0,
+        outputBytes: 4096,
+        renderMs: 512,
+        updatedAt: "2026-07-19T00:00:00.000Z",
+      },
+      upgradeRequest: {
+        id: 7,
+        keyId: 3,
+        requestedPlan: "enterprise",
+        note: "",
+        status: "escalated",
+        createdAt: "2026-07-18T00:00:00.000Z",
+        updatedAt: "2026-07-19T00:00:00.000Z",
+      },
+    });
+  });
+
+  it("rejects a usage response whose fields have the wrong type", async () => {
+    const context = createContext([], Response.json({ customer: { name: "QA", plan: 7 }, usage: {} }));
+
+    await expect(latchshotActionHandlers.get_usage!({}, context)).rejects.toMatchObject({
+      status: 502,
+      message: "customer.plan is required.",
+    });
+  });
+
   it("preserves a safe provider error without storing an artifact", async () => {
     const context = createContext(
       [],
@@ -239,5 +278,34 @@ function usagePayload(): Record<string, unknown> {
       updatedAt: null,
     },
     upgradeRequest: null,
+  };
+}
+
+/** A payload from a future Latchshot release: unknown plan and status values, a spent allowance, and a blank note. */
+function forwardCompatibleUsagePayload(): Record<string, unknown> {
+  return {
+    customer: { name: "Open Connector QA", plan: "enterprise" },
+    usage: {
+      period: "2026-07",
+      plan: "enterprise",
+      limit: 0,
+      remaining: 0,
+      resetAt: "2026-08-01T00:00:00.000Z",
+      successful: 12,
+      failed: 0,
+      reserved: 0,
+      outputBytes: 4096,
+      renderMs: 512,
+      updatedAt: "2026-07-19T00:00:00.000Z",
+    },
+    upgradeRequest: {
+      id: 7,
+      keyId: 3,
+      requestedPlan: "enterprise",
+      note: "",
+      status: "escalated",
+      createdAt: "2026-07-18T00:00:00.000Z",
+      updatedAt: "2026-07-19T00:00:00.000Z",
+    },
   };
 }
