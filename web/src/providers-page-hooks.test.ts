@@ -23,7 +23,7 @@ beforeEach(() => {
 });
 
 describe("ProvidersPage OAuth polling effects", () => {
-  it("stops OAuth refresh polling when the refreshed connection record changes", () => {
+  it("does not mount the OAuth editor while saved connections are collapsed", () => {
     renderToStaticMarkup(
       createElement(
         I18nProvider,
@@ -45,7 +45,7 @@ describe("ProvidersPage OAuth polling effects", () => {
 
     expect(
       useEffectMock.mock.calls.some(([, deps]) => Array.isArray(deps) && deps.length === 1 && deps[0] === connection),
-    ).toBe(true);
+    ).toBe(false);
   });
 });
 

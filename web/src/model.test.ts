@@ -179,7 +179,7 @@ describe("resolveProviderConnectionStatus", () => {
     expect(status.connection?.authType).toBe("oauth2");
   });
 
-  it("can show an OAuth client warning alongside another credential connection", () => {
+  it("does not show an OAuth client warning alongside a usable API-key connection", () => {
     const status = resolveProviderConnectionStatus(
       {
         ...oauthProvider("notion", "Notion"),
@@ -192,6 +192,15 @@ describe("resolveProviderConnectionStatus", () => {
 
     expect(status).toMatchObject({
       connected: true,
+      oauthClientRequired: false,
+    });
+  });
+
+  it("keeps the OAuth client warning for an unconfigured OAuth-only provider", () => {
+    const status = resolveProviderConnectionStatus(oauthProvider("gmail", "Gmail"), [], []);
+
+    expect(status).toMatchObject({
+      connected: false,
       oauthClientRequired: true,
     });
   });
@@ -207,6 +216,22 @@ describe("resolveProviderConnectionStatus", () => {
     );
 
     expect(status.connection?.authType).toBe("api_key");
+    expect(status.connections).toHaveLength(2);
+  });
+
+  it("excludes virtual, no-auth, and explicitly unconfigured records", () => {
+    const status = resolveProviderConnectionStatus(
+      oauthProvider("slack", "Slack"),
+      [
+        { service: "slack", connectionName: "work", authType: "oauth2", metadata: {} },
+        { service: "slack", connectionName: "virtual", authType: "oauth2", virtual: true, metadata: {} },
+        { service: "slack", connectionName: "disabled", authType: "oauth2", configured: false, metadata: {} },
+        { service: "slack", connectionName: "anonymous", authType: "no_auth", metadata: {} },
+      ],
+      [{ service: "slack", configured: true, clientId: "slack-client-id" }],
+    );
+
+    expect(status.connections.map((connection) => connection.connectionName)).toEqual(["work"]);
   });
 });
 

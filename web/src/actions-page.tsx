@@ -1,4 +1,11 @@
-import type { ActionDefinition, AppData, ExecutionResult, JsonSchema, RuntimeActionResponse } from "./model";
+import type {
+  ActionDefinition,
+  AppData,
+  ConnectionRecord,
+  ExecutionResult,
+  JsonSchema,
+  RuntimeActionResponse,
+} from "./model";
 import type { ReactNode } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
@@ -6,7 +13,13 @@ import { useClipboard } from "foxact/use-clipboard";
 import { Check, ChevronRight, Code2, Copy, ExternalLink, Loader2, Play, Search, TerminalSquare, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import { buildActionExamples, exampleInput, filterActions, parameterSummaries } from "./model";
+import {
+  buildActionExamples,
+  exampleInput,
+  filterActions,
+  parameterSummaries,
+  usableConnectionsForService,
+} from "./model";
 import { Badge, EmptyState, TagList } from "./shared-ui";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,6 +37,7 @@ interface ActionsPageProps {
 interface ActionDetailProps {
   action: ActionDefinition;
   providerName: string;
+  connections: ConnectionRecord[];
   onRefresh(): void;
 }
 
@@ -178,6 +192,7 @@ export function ActionsPage(props: ActionsPageProps): ReactNode {
             <ActionDetail
               action={selectedAction}
               providerName={providerNames.get(selectedAction.service) ?? selectedAction.service}
+              connections={usableConnectionsForService(props.data.connections, selectedAction.service)}
               onRefresh={props.onRefresh}
             />
           ) : (
@@ -243,7 +258,12 @@ function ActionDetail(props: ActionDetailProps): ReactNode {
       <ParameterList schema={props.action.inputSchema} />
       <ExampleTabs action={props.action} examples={examples} />
       {debugOpen ? (
-        <RunActionModal action={props.action} onRefresh={props.onRefresh} onClose={() => setDebugOpen(false)} />
+        <RunActionModal
+          action={props.action}
+          connections={props.connections}
+          onRefresh={props.onRefresh}
+          onClose={() => setDebugOpen(false)}
+        />
       ) : null}
     </>
   );
@@ -336,12 +356,23 @@ function ExampleTabs(props: ExampleTabsProps): ReactNode {
   );
 }
 
-function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; onClose(): void }): ReactNode {
+interface RunActionModalProps {
+  action: ActionDefinition;
+  connections: ConnectionRecord[];
+  onRefresh(): void;
+  onClose(): void;
+}
+
+function RunActionModal(props: RunActionModalProps): ReactNode {
   const t = useTranslate();
   const [input, setInput] = useState(() => exampleInput(props.action.inputSchema));
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [running, setRunning] = useState(false);
   const [actionId, setActionId] = useState(props.action.id);
+  const initialConnectionName = initialActionConnectionName(props.connections);
+  const connectionSignature = props.connections.map((connection) => actionConnectionName(connection)).join("\0");
+  const [selectedConnectionName, setSelectedConnectionName] = useState(() => initialConnectionName);
+  const connectionSelectionRequired = props.connections.length > 1 && !selectedConnectionName;
 
   useEffect(() => {
     if (!shouldResetRunActionModal(actionId, props.action.id)) {
@@ -351,7 +382,12 @@ function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; on
     setActionId(props.action.id);
     setInput(exampleInput(props.action.inputSchema));
     setResult(null);
-  }, [actionId, props.action.id, props.action.inputSchema]);
+    setSelectedConnectionName(initialConnectionName);
+  }, [actionId, initialConnectionName, props.action.id, props.action.inputSchema]);
+
+  useEffect(() => {
+    setSelectedConnectionName((current) => reconcileActionConnectionName(current, props.connections));
+  }, [connectionSignature]);
 
   async function run(): Promise<void> {
     setRunning(true);
@@ -362,7 +398,7 @@ function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; on
         method: "POST",
         headers: new Headers({ "content-type": "application/json" }),
         credentials: "same-origin",
-        body: JSON.stringify({ input: parsed }),
+        body: JSON.stringify(actionRequestBody(parsed, selectedConnectionName)),
       });
       const payload = (await response.json()) as RuntimeActionResponse;
       setResult(
@@ -407,6 +443,32 @@ function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; on
           </Button>
         </DialogHeader>
         <div className={result ? "run-action-dialog-body has-result" : "run-action-dialog-body"}>
+          {props.connections.length === 1 ? (
+            <div className="field">
+              <span>{t("actions.connection")}</span>
+              <div className="action-connection-value">{actionConnectionLabel(props.connections[0]!)}</div>
+            </div>
+          ) : props.connections.length > 1 ? (
+            <Label className="field">
+              <span>{t("actions.connection")}</span>
+              <Select value={selectedConnectionName} onValueChange={setSelectedConnectionName}>
+                <SelectTrigger aria-label={t("actions.connection")}>
+                  <SelectValue placeholder={t("actions.selectConnection")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.connections.map((connection) => {
+                    const connectionName = actionConnectionName(connection);
+                    return (
+                      <SelectItem key={connection.id ?? connectionName} value={connectionName}>
+                        {actionConnectionLabel(connection)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {connectionSelectionRequired ? <small>{t("actions.connectionRequired")}</small> : null}
+            </Label>
+          ) : null}
           <Label className="field">
             <span>{t("actions.input")}</span>
             <Textarea
@@ -417,7 +479,7 @@ function RunActionModal(props: { action: ActionDefinition; onRefresh(): void; on
             />
           </Label>
           <div className="button-row">
-            <Button type="button" onClick={() => void run()} disabled={running}>
+            <Button type="button" onClick={() => void run()} disabled={running || connectionSelectionRequired}>
               {running ? <Loader2 className="spin" size={16} /> : <Play size={16} />}
               {running ? t("actions.running") : t("actions.run")}
             </Button>
@@ -452,6 +514,35 @@ function ResultPanel(props: { actionId: string; result: ExecutionResult }): Reac
 
 export function shouldResetRunActionModal(currentActionId: string, nextActionId: string): boolean {
   return currentActionId !== nextActionId;
+}
+
+export function initialActionConnectionName(connections: ConnectionRecord[]): string | undefined {
+  if (connections.length === 1) return actionConnectionName(connections[0]!);
+  return connections.find((connection) => actionConnectionName(connection) === "default") ? "default" : undefined;
+}
+
+export function reconcileActionConnectionName(
+  current: string | undefined,
+  connections: ConnectionRecord[],
+): string | undefined {
+  if (current && connections.some((connection) => actionConnectionName(connection) === current)) return current;
+  return initialActionConnectionName(connections);
+}
+
+export function actionRequestBody(input: unknown, connectionName: string | undefined): Record<string, unknown> {
+  return { input, ...(connectionName ? { connectionName } : {}) };
+}
+
+function actionConnectionName(connection: ConnectionRecord): string {
+  return connection.connectionName?.trim() || "default";
+}
+
+function actionConnectionLabel(connection: ConnectionRecord): string {
+  const connectionName = actionConnectionName(connection);
+  const displayName = connection.profile?.displayName;
+  return typeof displayName === "string" && displayName.trim() && displayName.trim() !== connectionName
+    ? `${connectionName} · ${displayName.trim()}`
+    : connectionName;
 }
 
 function buildAgentPrompt(action: ActionDefinition): { prompt: string } {

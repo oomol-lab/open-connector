@@ -160,10 +160,23 @@
       "notUsed": "Не используется"
     },
     "connection": "Подключение",
+    "connectionCount": "Подключений: {{count}}",
+    "savedConnections": "Сохраненные подключения",
+    "defaultConnection": "По умолчанию",
+    "connectionName": "Имя подключения",
+    "connectionNamePlaceholder": "например, work",
+    "connectionNameDescription": "Используйте это имя для выбора аккаунта при запуске действий.",
+    "connectionNameErrors": {
+      "required": "Введите имя подключения.",
+      "invalid": "Начните с буквы или цифры и используйте не более 64 букв, цифр, знаков подчеркивания или дефисов.",
+      "duplicate": "Это имя уже используется. Выберите это подключение, чтобы обновить его."
+    },
     "connectionMethod": "Способ подключения",
     "connectionDescriptions": {
       "noSetup": "Этот провайдер может работать без локальных учетных данных.",
+      "adding": "Настройте новое именованное подключение.",
       "connected": "Локальные учетные данные настроены через {{authType}}.",
+      "saved": "Сохранено подключений: {{count}}. Выберите подключение для управления или добавьте новое.",
       "oauthClientRequired": "{{name}} требует локальный OAuth client перед запуском OAuth.",
       "notConnected": "Настройте локальные учетные данные перед запуском действий {{name}}, которым они нужны.",
       "unavailable": "Подключения нельзя настроить в текущей среде выполнения."
@@ -202,6 +215,10 @@
       "configureOAuthClient": "Настроить OAuth Client",
       "editOAuthClient": "Изменить OAuth Client",
       "saveConnection": "Сохранить подключение",
+      "addConnection": "Добавить подключение",
+      "cancel": "Отмена",
+      "clearSelection": "Снять выбор",
+      "selected": "Выбрано",
       "connect": "Подключить",
       "details": "Детали",
       "manageConnection": "Управлять",
@@ -232,6 +249,9 @@
     }
   },
   "actions": {
+    "connection": "Подключение",
+    "selectConnection": "Выберите подключение",
+    "connectionRequired": "Выберите подключение для выполнения этого действия.",
     "searchPlaceholder": "Искать действия по имени, ID или провайдеру",
     "provider": "Провайдер",
     "allProviders": "Все провайдеры",

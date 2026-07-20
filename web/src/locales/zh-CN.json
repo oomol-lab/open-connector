@@ -160,10 +160,23 @@
       "notUsed": "未使用"
     },
     "connection": "连接",
+    "connectionCount": "{{count}} 个连接",
+    "savedConnections": "已保存的连接",
+    "defaultConnection": "默认",
+    "connectionName": "连接名称",
+    "connectionNamePlaceholder": "例如 work",
+    "connectionNameDescription": "运行操作时使用这个名称选择账号。",
+    "connectionNameErrors": {
+      "required": "请输入连接名称。",
+      "invalid": "请以字母或数字开头，并仅使用最多 64 个字母、数字、下划线或连字符。",
+      "duplicate": "这个名称已被使用，请选择已有连接进行更新。"
+    },
     "connectionMethod": "连接方式",
     "connectionDescriptions": {
       "noSetup": "这个提供商无需本地凭证即可运行。",
+      "adding": "配置一个新的命名连接。",
       "connected": "本地凭证已通过 {{authType}} 配置。",
+      "saved": "{{count}} 个已保存的连接。选择一个进行管理，或添加新连接。",
       "oauthClientRequired": "{{name}} 需要先配置本地 OAuth client 才能开始 OAuth。",
       "notConnected": "运行需要凭证的 {{name}} 操作前，请先配置本地凭证。",
       "unavailable": "当前运行时无法配置连接。"
@@ -202,6 +215,10 @@
       "configureOAuthClient": "配置 OAuth Client",
       "editOAuthClient": "编辑 OAuth Client",
       "saveConnection": "保存连接",
+      "addConnection": "添加连接",
+      "cancel": "取消",
+      "clearSelection": "取消选择",
+      "selected": "已选择",
       "connect": "连接",
       "details": "详情",
       "manageConnection": "管理",
@@ -232,6 +249,9 @@
     }
   },
   "actions": {
+    "connection": "连接",
+    "selectConnection": "选择连接",
+    "connectionRequired": "请选择用于运行此操作的连接。",
     "searchPlaceholder": "按名称、ID 或提供商搜索操作",
     "provider": "提供商",
     "allProviders": "全部提供商",

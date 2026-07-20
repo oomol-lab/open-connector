@@ -321,6 +321,7 @@
 }
 
 .provider-connection-card > .auth-method-control,
+.provider-connection-card > .connection-manager,
 .provider-connection-card > .connection-form,
 .provider-inline-oauth-settings,
 .provider-detail-card > .tag-list,
@@ -331,6 +332,78 @@
 
 .provider-connection-card > .auth-method-control {
   margin-bottom: 0;
+}
+
+.connection-manager {
+  display: grid;
+  gap: 12px;
+}
+
+.connection-list {
+  display: grid;
+  gap: 8px;
+}
+
+.connection-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--muted) 32%, transparent);
+}
+
+.connection-list-copy,
+.connection-list-title {
+  min-width: 0;
+}
+
+.connection-list-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.connection-list-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.connection-list-title strong {
+  overflow-wrap: anywhere;
+}
+
+.connection-list-copy small {
+  color: var(--muted-foreground);
+}
+
+.connection-manager-new {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.connection-manager-new .field {
+  flex: 1;
+}
+
+.connection-add-button {
+  justify-self: start;
+}
+
+.connection-manager-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.field-error {
+  color: var(--destructive) !important;
 }
 
 .provider-inline-oauth-settings {
@@ -531,6 +604,17 @@
 
   .oauth-client-actions {
     justify-content: flex-start;
+  }
+
+  .connection-list-item,
+  .connection-manager-new {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .connection-list-item [data-slot="button"],
+  .connection-manager-new [data-slot="button"] {
+    align-self: flex-start;
   }
 
   .provider-row,

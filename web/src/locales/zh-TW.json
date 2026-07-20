@@ -160,10 +160,23 @@
       "notUsed": "未使用"
     },
     "connection": "連線",
+    "connectionCount": "{{count}} 個連線",
+    "savedConnections": "已儲存的連線",
+    "defaultConnection": "預設",
+    "connectionName": "連線名稱",
+    "connectionNamePlaceholder": "例如 work",
+    "connectionNameDescription": "執行操作時使用此名稱選擇帳號。",
+    "connectionNameErrors": {
+      "required": "請輸入連線名稱。",
+      "invalid": "請以字母或數字開頭，並僅使用最多 64 個字母、數字、底線或連字號。",
+      "duplicate": "此名稱已被使用，請選擇現有連線進行更新。"
+    },
     "connectionMethod": "連線方式",
     "connectionDescriptions": {
       "noSetup": "此服務提供者無須本機憑證即可執行。",
+      "adding": "設定新的命名連線。",
       "connected": "已透過 {{authType}} 設定本機憑證。",
+      "saved": "已有 {{count}} 個已儲存的連線。請選擇一個進行管理，或新增連線。",
       "oauthClientRequired": "{{name}} 需要本機 OAuth 用戶端才能啟動 OAuth。",
       "notConnected": "執行需要憑證的 {{name}} 動作前，請先設定本機憑證。",
       "unavailable": "目前的執行階段無法設定連線。"
@@ -202,6 +215,10 @@
       "configureOAuthClient": "設定 OAuth 用戶端",
       "editOAuthClient": "編輯 OAuth 用戶端",
       "saveConnection": "儲存連線",
+      "addConnection": "新增連線",
+      "cancel": "取消",
+      "clearSelection": "取消選取",
+      "selected": "已選取",
       "connect": "連線",
       "details": "詳細資料",
       "manageConnection": "管理",
@@ -232,6 +249,9 @@
     }
   },
   "actions": {
+    "connection": "連線",
+    "selectConnection": "選擇連線",
+    "connectionRequired": "請選擇用於執行此操作的連線。",
     "searchPlaceholder": "依名稱、ID 或服務提供者搜尋動作",
     "provider": "服務提供者",
     "allProviders": "所有服務提供者",

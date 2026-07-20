@@ -7,10 +7,15 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
 import {
+  configurableConnectionsForProvider,
+  connectionDeletePath,
+  connectionDisplayLabel,
   connectionSubmitLabel,
   createOAuthPopupFeatures,
+  credentialConnectionRequestBody,
   isProviderLocallyAvailable,
   oauthClientActionLabel,
+  oauthAuthorizationRequestBody,
   oauthConfigForProvider,
   providerBrowserResetKey,
   ProvidersPage,
@@ -20,6 +25,7 @@ import {
   shouldShowDisconnectAction,
   shouldShowOAuthClientForm,
   startOAuthRefreshPolling,
+  validateNewConnectionName,
 } from "./providers-page";
 
 afterEach(() => {
@@ -188,6 +194,130 @@ describe("ProvidersPage route shell", () => {
     expect(markup).toContain("Configure OAuth Client");
   });
 
+  it("does not show an OAuth warning when an API-key connection is already usable", () => {
+    const githubProvider: ProviderDefinition = {
+      ...oauthProvider,
+      service: "github",
+      displayName: "GitHub",
+      authTypes: ["oauth2", "api_key"],
+      auth: [{ type: "oauth2", scopes: [] }, { type: "api_key" }],
+    };
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        providers: [githubProvider],
+        connections: [
+          {
+            id: "github-default",
+            service: "github",
+            connectionName: "default",
+            authType: "api_key",
+            configured: true,
+            metadata: {},
+          },
+        ],
+        oauthConfigs: [],
+      },
+      "/providers/github",
+    );
+
+    expect(markup).toContain("Configured");
+    expect(markup).not.toContain("OAuth client required");
+  });
+
+  it("shows every named connection and only safe account profile fields", () => {
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        connections: [
+          {
+            id: "gmail-default",
+            service: "gmail",
+            connectionName: "default",
+            authType: "oauth2",
+            configured: true,
+            default: true,
+            profile: { displayName: "personal@example.com" },
+            metadata: { accessToken: "must-not-render" },
+          },
+          {
+            id: "gmail-work",
+            service: "gmail",
+            connectionName: "work",
+            authType: "oauth2",
+            configured: true,
+            profile: { displayName: "work@example.com" },
+            metadata: { refreshToken: "must-not-render-either" },
+          },
+        ],
+      },
+      "/providers/gmail",
+    );
+
+    expect(markup).toContain("default · personal@example.com");
+    expect(markup).toContain("work · work@example.com");
+    expect(markup).toContain("2 connections");
+    expect(markup).toContain("Add Connection");
+    expect(markup).not.toContain("Reconnect Gmail");
+    expect(markup).not.toContain("Clear selection");
+    expect(markup).not.toContain("must-not-render");
+  });
+
+  it("keeps the original connection form visible when no connection exists", () => {
+    const markup = renderProvidersPage(providerData, "/providers/gmail");
+
+    expect(markup).toContain('value="default"');
+    expect(markup).toContain("Connect Gmail");
+    expect(markup).toContain("OAuth Client");
+    expect(markup).not.toContain("Add Connection");
+  });
+
+  it("lists OAuth and API-key connections together before opening either editor", () => {
+    const githubProvider: ProviderDefinition = {
+      ...oauthProvider,
+      service: "github",
+      displayName: "GitHub",
+      authTypes: ["oauth2", "api_key"],
+      auth: [
+        { type: "oauth2", scopes: [] },
+        { type: "api_key", label: "Personal access token" },
+      ],
+    };
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        providers: [githubProvider],
+        connections: [
+          {
+            id: "github-personal",
+            service: "github",
+            connectionName: "personal",
+            authType: "oauth2",
+            configured: true,
+            profile: { displayName: "octocat" },
+            metadata: {},
+          },
+          {
+            id: "github-work",
+            service: "github",
+            connectionName: "work",
+            authType: "api_key",
+            configured: true,
+            profile: { displayName: "work account" },
+            metadata: {},
+          },
+        ],
+      },
+      "/providers/github",
+    );
+
+    expect(markup).toContain("personal · octocat");
+    expect(markup).toContain("work · work account");
+    expect(markup).toContain("Add Connection");
+    expect(markup).not.toContain("Connection name");
+    expect(markup).not.toContain("Personal access token");
+  });
+
   it("shows catalog-only providers as unavailable without connection controls", () => {
     const data = { ...providerData, providers: [catalogOnlyProvider], oauthConfigs: [] };
     const browserMarkup = renderProvidersPage(data, "/providers");
@@ -204,7 +334,7 @@ describe("ProvidersPage route shell", () => {
     expect(detailMarkup).not.toContain("Host");
   });
 
-  it("allows stale catalog-only connections to be removed", () => {
+  it("keeps stale catalog-only connections available to manage", () => {
     const markup = renderProvidersPage(
       {
         ...providerData,
@@ -215,7 +345,8 @@ describe("ProvidersPage route shell", () => {
       "/providers/catalog-only",
     );
 
-    expect(markup).toContain("Disconnect");
+    expect(markup).toContain("Manage");
+    expect(markup).not.toContain("Disconnect");
     expect(markup).not.toContain("Save Connection");
   });
 
@@ -241,6 +372,59 @@ describe("ProvidersPage route shell", () => {
     expect(markup).toContain("Show more");
     expect(markup).toContain("Clock 47");
     expect(markup).not.toContain("Clock 48");
+  });
+});
+
+describe("named provider connections", () => {
+  const connections: AppData["connections"] = [
+    {
+      service: "gmail",
+      connectionName: "default",
+      authType: "oauth2",
+      profile: { displayName: "personal@example.com" },
+      metadata: {},
+    },
+    { service: "gmail", connectionName: "work", authType: "oauth2", metadata: {} },
+  ];
+
+  it("filters configurable records and formats safe labels", () => {
+    expect(
+      configurableConnectionsForProvider(
+        [
+          ...connections,
+          { service: "gmail", connectionName: "virtual", authType: "oauth2", virtual: true, metadata: {} },
+          { service: "slack", connectionName: "work", authType: "oauth2", metadata: {} },
+        ],
+        "gmail",
+      ).map((connection) => connection.connectionName),
+    ).toEqual(["default", "work"]);
+    expect(connectionDisplayLabel(connections[0]!)).toBe("default · personal@example.com");
+    expect(connectionDisplayLabel(connections[1]!)).toBe("work");
+  });
+
+  it("validates names before sending credentials", () => {
+    expect(validateNewConnectionName("", connections)).toBe("required");
+    expect(validateNewConnectionName("bad name", connections)).toBe("invalid");
+    expect(validateNewConnectionName("work", connections)).toBe("duplicate");
+    expect(validateNewConnectionName("team-2", connections)).toBeUndefined();
+  });
+
+  it("targets one encoded connection when disconnecting", () => {
+    expect(connectionDeletePath("google/mail", "work team")).toBe(
+      "/api/connections/google%2Fmail?connectionName=work%20team",
+    );
+  });
+
+  it("includes the named connection in credential and OAuth requests", () => {
+    expect(credentialConnectionRequestBody("api_key", "work", { apiKey: "secret" })).toEqual({
+      authType: "api_key",
+      connectionName: "work",
+      values: { apiKey: "secret" },
+    });
+    expect(oauthAuthorizationRequestBody("gmail", "personal")).toEqual({
+      service: "gmail",
+      connectionName: "personal",
+    });
   });
 });
 

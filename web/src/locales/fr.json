@@ -160,10 +160,23 @@
       "notUsed": "Non utilisé"
     },
     "connection": "Connexion",
+    "connectionCount": "{{count}} connexions",
+    "savedConnections": "Connexions enregistrées",
+    "defaultConnection": "Par défaut",
+    "connectionName": "Nom de la connexion",
+    "connectionNamePlaceholder": "par exemple, work",
+    "connectionNameDescription": "Utilisez ce nom pour sélectionner le compte lors de l’exécution d’actions.",
+    "connectionNameErrors": {
+      "required": "Saisissez un nom de connexion.",
+      "invalid": "Commencez par une lettre ou un chiffre et utilisez au plus 64 lettres, chiffres, tirets bas ou tirets.",
+      "duplicate": "Ce nom est déjà utilisé. Sélectionnez cette connexion pour la mettre à jour."
+    },
     "connectionMethod": "Méthode de connexion",
     "connectionDescriptions": {
       "noSetup": "Ce fournisseur peut s’exécuter sans identifiants locaux.",
+      "adding": "Configurez une nouvelle connexion nommée.",
       "connected": "Les identifiants locaux sont configurés avec {{authType}}.",
+      "saved": "{{count}} connexions enregistrées. Sélectionnez-en une à gérer ou ajoutez-en une autre.",
       "oauthClientRequired": "{{name}} nécessite un client OAuth local avant de lancer OAuth.",
       "notConnected": "Configurez des identifiants locaux avant d’exécuter les actions {{name}} qui en ont besoin.",
       "unavailable": "Les connexions ne peuvent pas être configurées dans l’environnement d’exécution actuel."
@@ -202,6 +215,10 @@
       "configureOAuthClient": "Configurer le client OAuth",
       "editOAuthClient": "Modifier le client OAuth",
       "saveConnection": "Enregistrer la connexion",
+      "addConnection": "Ajouter une connexion",
+      "cancel": "Annuler",
+      "clearSelection": "Annuler la sélection",
+      "selected": "Sélectionnée",
       "connect": "Connecter",
       "details": "Détails",
       "manageConnection": "Gérer",
@@ -232,6 +249,9 @@
     }
   },
   "actions": {
+    "connection": "Connexion",
+    "selectConnection": "Sélectionner une connexion",
+    "connectionRequired": "Choisissez la connexion qui doit exécuter cette action.",
     "searchPlaceholder": "Rechercher des actions par nom, ID ou fournisseur",
     "provider": "Fournisseur",
     "allProviders": "Tous les fournisseurs",

@@ -160,10 +160,23 @@
       "notUsed": "Not used"
     },
     "connection": "Connection",
+    "connectionCount": "{{count}} connections",
+    "savedConnections": "Saved connections",
+    "defaultConnection": "Default",
+    "connectionName": "Connection name",
+    "connectionNamePlaceholder": "for example, work",
+    "connectionNameDescription": "Use this name to select the account when running actions.",
+    "connectionNameErrors": {
+      "required": "Enter a connection name.",
+      "invalid": "Start with a letter or digit and use at most 64 letters, digits, underscores, or hyphens.",
+      "duplicate": "This name is already in use. Select that connection to update it."
+    },
     "connectionMethod": "Connection method",
     "connectionDescriptions": {
       "noSetup": "This provider can run without local credentials.",
+      "adding": "Configure a new named connection.",
       "connected": "Local credentials are configured with {{authType}}.",
+      "saved": "{{count}} saved connections. Select one to manage it or add another.",
       "oauthClientRequired": "{{name}} needs a local OAuth client before OAuth can start.",
       "notConnected": "Configure local credentials before running credentialed {{name}} actions.",
       "unavailable": "Connections cannot be configured in the current runtime."
@@ -202,6 +215,10 @@
       "configureOAuthClient": "Configure OAuth Client",
       "editOAuthClient": "Edit OAuth Client",
       "saveConnection": "Save Connection",
+      "addConnection": "Add Connection",
+      "cancel": "Cancel",
+      "clearSelection": "Clear selection",
+      "selected": "Selected",
       "connect": "Connect",
       "details": "Details",
       "manageConnection": "Manage",
@@ -232,6 +249,9 @@
     }
   },
   "actions": {
+    "connection": "Connection",
+    "selectConnection": "Select a connection",
+    "connectionRequired": "Choose which connection should run this action.",
     "searchPlaceholder": "Search actions by name, id, or provider",
     "provider": "Provider",
     "allProviders": "All providers",

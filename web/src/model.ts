@@ -182,6 +182,7 @@ export interface ProviderConnectionStatus {
   noSetupRequired: boolean;
   connected: boolean;
   oauthClientRequired: boolean;
+  connections: ConnectionRecord[];
   connection?: ConnectionRecord;
 }
 
@@ -283,14 +284,20 @@ export function resolveProviderConnectionStatus(
   oauthConfigs: OAuthConfig[],
 ): ProviderConnectionStatus {
   const noSetupRequired = isNoAuthOnlyProvider(provider);
-  const serviceConnections = connections.filter((connection) => connection.service === provider.service);
-  const connection = noSetupRequired ? undefined : pickUsableCredentialConnection(serviceConnections);
+  const serviceConnections = noSetupRequired ? [] : usableConnectionsForService(connections, provider.service);
+  const connection = pickUsableCredentialConnection(serviceConnections);
   return {
     noSetupRequired,
     connected: connection != null,
-    oauthClientRequired: providerHasOAuth(provider) && !oauthClientConfigured(provider.service, oauthConfigs),
+    oauthClientRequired:
+      connection == null && providerRequiresOAuth(provider) && !oauthClientConfigured(provider.service, oauthConfigs),
+    connections: serviceConnections,
     connection,
   };
+}
+
+export function usableConnectionsForService(connections: ConnectionRecord[], service: string): ConnectionRecord[] {
+  return connections.filter((connection) => connection.service === service && isUsableCredentialConnection(connection));
 }
 
 export function isNoAuthOnlyProvider(provider: ProviderDefinition): boolean {
@@ -312,8 +319,9 @@ function isUsableCredentialConnection(connection: ConnectionRecord | undefined):
   );
 }
 
-function providerHasOAuth(provider: ProviderDefinition): boolean {
-  return provider.auth.some((auth) => auth.type === "oauth2") || provider.authTypes.includes("oauth2");
+function providerRequiresOAuth(provider: ProviderDefinition): boolean {
+  const authTypes = provider.auth.length > 0 ? provider.auth.map((auth) => auth.type) : provider.authTypes;
+  return authTypes.includes("oauth2") && authTypes.every((authType) => authType === "oauth2");
 }
 
 function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): boolean {
