@@ -90,11 +90,14 @@ async function listRoutingRules(
   input: Record<string, unknown>,
   context: CloudflareEmailRoutingContext,
 ): Promise<unknown> {
-  const zone = optionalString(input.zoneId) ?? context.zoneId;
-  const account = optionalString(input.accountId) ?? context.accountId;
-  const scope = zone
-    ? `zones/${encodeURIComponent(zone)}`
-    : `accounts/${encodeURIComponent(requireInputString(account, "accountId"))}`;
+  const explicitAccount = optionalString(input.accountId);
+  const zone = explicitAccount ? undefined : (optionalString(input.zoneId) ?? context.zoneId);
+  const account = explicitAccount ?? context.accountId;
+  const scope = explicitAccount
+    ? `accounts/${encodeURIComponent(explicitAccount)}`
+    : zone
+      ? `zones/${encodeURIComponent(zone)}`
+      : `accounts/${encodeURIComponent(requireInputString(account, "accountId"))}`;
   const envelope = await requestCloudflare(
     context,
     {
@@ -116,12 +119,20 @@ async function mutateRoutingRule(
 ): Promise<unknown> {
   const zone = encodeURIComponent(optionalString(input.zoneId) ?? requireInputString(context.zoneId, "zoneId"));
   const suffix = method === "PUT" ? `/${encodeURIComponent(requireInputString(input.ruleId, "ruleId"))}` : "";
+  const bodyInput =
+    method === "PUT"
+      ? {
+          ...input,
+          actions: requireInputArray(input.actions, "actions"),
+          matchers: requireInputArray(input.matchers, "matchers"),
+        }
+      : input;
   const envelope = await requestCloudflare(
     context,
     {
       method,
       path: `/zones/${zone}/email/routing/rules${suffix}`,
-      body: buildRuleBody(input),
+      body: buildRuleBody(bodyInput),
     },
     "execute",
   );
@@ -170,6 +181,11 @@ function buildRuleBody(input: Record<string, unknown>): Record<string, unknown> 
     priority: optionalInteger(input.priority),
     source: optionalString(input.source),
   });
+}
+
+function requireInputArray(value: unknown, field: string): unknown[] {
+  if (!Array.isArray(value) || value.length === 0) throw new ProviderRequestError(400, `${field} is required`);
+  return value;
 }
 
 async function requestCloudflare(

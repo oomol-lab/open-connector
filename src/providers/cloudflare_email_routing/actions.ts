@@ -75,9 +75,8 @@ const createInput = s.object(
 const updateInput = s.object(
   "The input payload for this action.",
   { zoneId, ruleId, ...ruleFields },
-  { required: ["ruleId"], optional: ["zoneId", "actions", "matchers", "enabled", "name", "priority", "source"] },
+  { required: ["ruleId", "actions", "matchers"], optional: ["zoneId", "enabled", "name", "priority", "source"] },
 );
-updateInput.anyOf = Object.keys(ruleFields).map((field) => ({ required: [field] }));
 const listRulesInput = s.object(
   "The input payload for this action.",
   { zoneId, accountId, ...paginationFields },
