@@ -65,10 +65,16 @@ const issue = s.object(
   },
   { additionalProperties: true, description: "Jira issue." },
 );
+const commentBody = s.union(
+  [adfDocument, s.string({ description: "Plain text comment body (Jira Server/Data Center)." })],
+  {
+    description: "Jira comment body: an ADF document (Cloud) or plain text (Server/Data Center).",
+  },
+);
 const comment = s.object(
   {
     id: s.string({ description: "Jira comment ID." }),
-    body: adfDocument,
+    body: commentBody,
     raw: objectSchema,
   },
   { additionalProperties: true, description: "Jira comment." },

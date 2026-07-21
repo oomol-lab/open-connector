@@ -37,7 +37,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://jira.example.com",
           description:
-            "Jira Data Center or Server instance root URL. A deployment context path is supported. Private-network instances require OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK.",
+            "Jira Data Center or Server instance root URL (a deployment context path is supported), without an API endpoint path. Public addresses work by default; private targets (RFC 1918, Tailscale, NetBird, private hostnames) require the self-hosted runtime to enable OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK. Unsafe local, reserved, and cloud-metadata targets always remain blocked.",
         },
         {
           key: "personalAccessToken",

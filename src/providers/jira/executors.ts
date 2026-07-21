@@ -374,9 +374,12 @@ async function searchIssues(input: Record<string, unknown>, context: JiraActionC
     body: compactObject({
       jql: requireString(input.jql, "jql"),
       maxResults: asOptionalInteger(input.limit) ?? 50,
-      ...(isServer ? { startAt: parseNumericCursor(input.cursor) } : { nextPageToken: asOptionalString(input.cursor) }),
       fields: mergeUniqueFieldIds(defaultIssueFieldIds, readStringArray(input.includeFields)),
-      expand: joinOptionalList(readStringArray(input.expand)),
+      // Jira Server/DC POST /rest/api/2/search binds a SearchRequestBean whose `expand` is a
+      // List<String>; the Cloud enhanced POST /rest/api/3/search/jql takes it as a comma string.
+      ...(isServer
+        ? { startAt: parseNumericCursor(input.cursor), expand: optionalStringList(readStringArray(input.expand)) }
+        : { nextPageToken: asOptionalString(input.cursor), expand: joinOptionalList(readStringArray(input.expand)) }),
     }),
   });
 
@@ -431,7 +434,7 @@ async function createIssue(input: Record<string, unknown>, context: JiraActionCo
     asOptionalString(createPayload.id) ??
     requireNonEmptyString(createPayload.self, "jira created issue self");
 
-  const issueLookupPath = createdIssueIdOrKey.startsWith("https://")
+  const issueLookupPath = isAbsoluteUrl(createdIssueIdOrKey)
     ? createdIssueIdOrKey
     : `/issue/${encodeURIComponent(createdIssueIdOrKey)}`;
 
@@ -491,14 +494,7 @@ async function addComment(input: Record<string, unknown>, context: JiraActionCon
     path: `/issue/${encodeURIComponent(issueIdOrKey)}/comment`,
     method: "POST",
     body: {
-      body:
-        context.deployment === "server"
-          ? rawBody !== undefined
-            ? adfToPlainText(normalizeLooseRecord(rawBody, "body"))
-            : (textBody ?? "")
-          : rawBody !== undefined
-            ? normalizeLooseRecord(rawBody, "body")
-            : textToAdfDocument(textBody ?? ""),
+      body: buildCommentBody(rawBody, textBody, context.deployment),
     },
     notFoundAsInvalidInput: true,
   });
@@ -506,6 +502,17 @@ async function addComment(input: Record<string, unknown>, context: JiraActionCon
   return {
     comment: normalizeComment(payload),
   };
+}
+
+function buildCommentBody(rawBody: unknown, textBody: string | undefined, deployment: JiraActionContext["deployment"]) {
+  if (deployment === "server") {
+    const text = rawBody !== undefined ? adfToPlainText(normalizeLooseRecord(rawBody, "body")) : (textBody ?? "");
+    if (!text) {
+      throw new ProviderRequestError(400, "comment body or bodyText is required");
+    }
+    return text;
+  }
+  return rawBody !== undefined ? normalizeLooseRecord(rawBody, "body") : textToAdfDocument(textBody ?? "");
 }
 
 async function jiraJsonRequest<T>(input: JiraRequestInput) {
@@ -608,8 +615,10 @@ export function normalizeJiraServerApiBaseUrl(
 
   url.hash = "";
   url.search = "";
-  const path = url.pathname.replace(/\/+$/u, "");
-  url.pathname = path.endsWith("/rest/api/2") ? path : `${path}/rest/api/2`;
+  // Strip a trailing REST API segment the user may have pasted (…/rest/api/2|3|latest) so we do
+  // not double-append and 404 every request, then pin to the v2 API this provider speaks.
+  const path = url.pathname.replace(/\/+$/u, "").replace(/\/rest\/api\/(?:2|3|latest)$/u, "");
+  url.pathname = `${path}/rest/api/2`;
   return url.toString().replace(/\/$/u, "");
 }
 
@@ -911,6 +920,19 @@ function appendAdfText(value: unknown, parts: string[]): void {
     }
   } else if (type === "hardBreak") {
     parts.push("\n");
+  } else if (type === "mention" || type === "emoji" || type === "date" || type === "status") {
+    // These inline nodes carry their visible text in attrs.text rather than a text child.
+    const attrs = asOptionalObject(record.attrs);
+    const text = asOptionalString(attrs?.text);
+    if (text) {
+      parts.push(text);
+    }
+  } else if (type === "inlineCard") {
+    const attrs = asOptionalObject(record.attrs);
+    const url = asOptionalString(attrs?.url);
+    if (url) {
+      parts.push(url);
+    }
   }
 
   const content = Array.isArray(record.content) ? record.content : [];
@@ -1048,6 +1070,10 @@ function mergeUniqueFieldIds(baseFields: string[], extraFields: string[]) {
 
 function joinOptionalList(values: string[]) {
   return values.length > 0 ? values.join(",") : undefined;
+}
+
+function optionalStringList(values: string[]) {
+  return values.length > 0 ? values : undefined;
 }
 
 function parseNumericCursor(value: unknown) {

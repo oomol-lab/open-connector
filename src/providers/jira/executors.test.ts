@@ -25,6 +25,12 @@ describe("normalizeJiraServerApiBaseUrl", () => {
     expect(normalizeJiraServerApiBaseUrl("https://jira.example.com/rest/api/2?a=1#fragment")).toBe(
       "https://jira.example.com/rest/api/2",
     );
+    expect(normalizeJiraServerApiBaseUrl("https://jira.example.com/rest/api/3")).toBe(
+      "https://jira.example.com/rest/api/2",
+    );
+    expect(normalizeJiraServerApiBaseUrl("https://jira.example.com/jira/rest/api/latest")).toBe(
+      "https://jira.example.com/jira/rest/api/2",
+    );
   });
 
   it("rejects embedded credentials and private targets unless enabled", () => {
@@ -151,6 +157,128 @@ describe("Jira Data Center proxy", () => {
 
     expect(requests.map((request) => request.url)).toEqual(["https://example.com/jira/rest/api/2/myself"]);
     expect(new Headers(requests[0]?.init?.headers).get("authorization")).toBe(`Bearer ${personalAccessToken}`);
+  });
+});
+
+describe("Jira Data Center server payloads", () => {
+  const serverContext = (fetcher: typeof fetch) => ({
+    accessToken: personalAccessToken,
+    fetcher,
+    providerMetadata: { apiBaseUrl: "https://jira.example.com/rest/api/2" },
+    deployment: "server" as const,
+  });
+
+  it("sends expand as an array on POST /search", async () => {
+    const requests: RecordedRequest[] = [];
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      requests.push({ url: String(input), init });
+      return Response.json({ issues: [], total: 0 });
+    });
+
+    await jiraActionHandlers.search_issues(
+      { jql: "project = PROJ", expand: ["names", "schema"] },
+      serverContext(fetcher),
+    );
+
+    expect(readJsonBody(requests[0])).toMatchObject({ expand: ["names", "schema"] });
+  });
+
+  it("preserves mention text and rejects an empty comment body", async () => {
+    const requests: RecordedRequest[] = [];
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      requests.push({ url: String(input), init });
+      return Response.json({ id: "1" });
+    });
+    // A mention-only body used to convert to "" (mention text lives in attrs.text); assert it survives.
+    const mentionAdf = {
+      type: "doc",
+      version: 1,
+      content: [{ type: "paragraph", content: [{ type: "mention", attrs: { text: "@alex" } }] }],
+    };
+
+    await jiraActionHandlers.add_comment({ issueIdOrKey: "PROJ-1", body: mentionAdf }, serverContext(fetcher));
+    expect(readJsonBody(requests[0])).toEqual({ body: "@alex" });
+
+    const emptyAdf = { type: "doc", version: 1, content: [{ type: "paragraph", content: [] }] };
+    await expect(
+      jiraActionHandlers.add_comment({ issueIdOrKey: "PROJ-1", body: emptyAdf }, serverContext(fetcher)),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(requests).toHaveLength(1);
+  });
+});
+
+describe("Jira Cloud write payloads", () => {
+  const cloudContext = (fetcher: typeof fetch) => ({
+    accessToken: "cloud-token",
+    fetcher,
+    providerMetadata: { cloudId: "cloud-id" },
+    deployment: "cloud" as const,
+  });
+  const adf = {
+    type: "doc",
+    version: 1,
+    content: [{ type: "paragraph", content: [{ type: "text", text: "line" }] }],
+  };
+
+  it("keeps ADF description and accountId assignee for create_issue", async () => {
+    const requests: RecordedRequest[] = [];
+    const responses = [
+      { id: "10", key: "PROJ-9" },
+      { id: "10", key: "PROJ-9", fields: { summary: "Created" } },
+    ];
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      requests.push({ url: String(input), init });
+      return Response.json(responses.shift());
+    });
+
+    await jiraActionHandlers.create_issue(
+      { projectKey: "PROJ", issueTypeName: "Task", summary: "Created", description: adf, assigneeAccountId: "acc-1" },
+      cloudContext(fetcher),
+    );
+
+    expect(requests[0]?.url).toBe("https://api.atlassian.com/ex/jira/cloud-id/rest/api/3/issue");
+    expect(readJsonBody(requests[0])).toMatchObject({
+      fields: { description: adf, assignee: { accountId: "acc-1" } },
+    });
+  });
+
+  it("converts bodyText to an ADF document for add_comment", async () => {
+    const requests: RecordedRequest[] = [];
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      requests.push({ url: String(input), init });
+      return Response.json({ id: "1" });
+    });
+
+    await jiraActionHandlers.add_comment({ issueIdOrKey: "PROJ-1", bodyText: "hello" }, cloudContext(fetcher));
+
+    expect(readJsonBody(requests[0])).toMatchObject({
+      body: { type: "doc", version: 1, content: [{ type: "paragraph", content: [{ type: "text", text: "hello" }] }] },
+    });
+  });
+});
+
+describe("Jira error mapping", () => {
+  const serverContext = (fetcher: typeof fetch) => ({
+    accessToken: personalAccessToken,
+    fetcher,
+    providerMetadata: { apiBaseUrl: "https://jira.example.com/rest/api/2" },
+    deployment: "server" as const,
+  });
+
+  it("maps a 404 on get_issue to invalid input (status 400)", async () => {
+    const fetcher = vi.fn(
+      async (): Promise<Response> => Response.json({ errorMessages: ["Issue does not exist"] }, { status: 404 }),
+    );
+
+    await expect(
+      jiraActionHandlers.get_issue({ issueIdOrKey: "PROJ-404" }, serverContext(fetcher)),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("maps a 5xx response to a provider error (status 502)", async () => {
+    const fetcher = vi.fn(async (): Promise<Response> => Response.json({ message: "boom" }, { status: 503 }));
+
+    await expect(jiraActionHandlers.list_projects({}, serverContext(fetcher))).rejects.toMatchObject({ status: 502 });
   });
 });
 
