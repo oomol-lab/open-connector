@@ -6,13 +6,13 @@ import { jiraOAuthScopes } from "./scopes.ts";
 const service = "jira";
 
 /**
- * Jira provider backed by Atlassian OAuth 2.0 and Jira Cloud REST API v3.
+ * Jira provider backed by Jira Cloud OAuth 2.0 and Jira Data Center personal access tokens.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Jira",
   categories: ["Productivity", "Developer Tools"],
-  authTypes: ["oauth2"],
+  authTypes: ["oauth2", "custom_credential"],
   auth: [
     {
       type: "oauth2",
@@ -25,6 +25,30 @@ export const provider: ProviderDefinition = {
         audience: "api.atlassian.com",
         prompt: "consent",
       },
+    },
+    {
+      type: "custom_credential",
+      fields: [
+        {
+          key: "baseUrl",
+          label: "Instance URL",
+          inputType: "text",
+          required: true,
+          secret: false,
+          placeholder: "https://jira.example.com",
+          description:
+            "Jira Data Center or Server instance root URL. A deployment context path is supported. Private-network instances require OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK.",
+        },
+        {
+          key: "personalAccessToken",
+          label: "Personal access token",
+          inputType: "password",
+          required: true,
+          secret: true,
+          placeholder: "JIRA_PAT",
+          description: "Jira Data Center or Server personal access token.",
+        },
+      ],
     },
   ],
   homepageUrl: "https://www.atlassian.com/software/jira",
