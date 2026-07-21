@@ -57,7 +57,7 @@ export async function validateCloudflareEmailRoutingCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requireCredentialValue(values.apiKey, "apiKey");
+  const apiKey = requireInputString(values.apiKey, "apiKey");
   if (apiKey.startsWith("cfat_") || apiKey.startsWith("cfpat_")) {
     throw new ProviderRequestError(
       400,
@@ -73,7 +73,7 @@ export async function validateCloudflareEmailRoutingCredential(
       metadata: { validationEndpoint: "/user/tokens/verify", tokenStatus: optionalString(verification.status) },
     };
   }
-  const email = requireCredentialValue(values.email, "email");
+  const email = requireInputString(values.email, "email");
   const envelope = await requestCloudflare({ email, apiKey, fetcher, signal }, { path: "/user" }, "validate");
   const user = readObject(envelope.result, "cloudflare user");
   return {
@@ -107,7 +107,7 @@ async function listRoutingRules(
     "execute",
   );
   return {
-    rules: normalizeList(envelope.result, "cloudflare routing rules"),
+    rules: normalizeRuleList(envelope.result, "cloudflare routing rules"),
     resultInfo: normalizeResultInfo(envelope.result_info),
   };
 }
@@ -136,7 +136,7 @@ async function mutateRoutingRule(
     },
     "execute",
   );
-  return { rule: normalizeObject(envelope.result, "cloudflare routing rule") };
+  return { rule: normalizeRule(envelope.result, "cloudflare routing rule") };
 }
 
 async function deleteRoutingRule(
@@ -167,7 +167,7 @@ async function listDestinationAddresses(
     "execute",
   );
   return {
-    addresses: normalizeList(envelope.result, "cloudflare destination addresses"),
+    addresses: normalizeAddressList(envelope.result, "cloudflare destination addresses"),
     resultInfo: normalizeResultInfo(envelope.result_info),
   };
 }
@@ -217,7 +217,7 @@ function buildHeaders(context: { email?: string; apiKey: string }, hasBody: bool
   }
   return {
     accept: "application/json",
-    "x-auth-email": requireCredentialValue(context.email, "email"),
+    "x-auth-email": requireInputString(context.email, "email"),
     "x-auth-key": context.apiKey,
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),
@@ -269,12 +269,17 @@ function readErrorMessage(envelope: CloudflareEnvelope): string | undefined {
   return undefined;
 }
 
-function normalizeList(value: unknown, label: string): Array<Record<string, unknown>> {
+function normalizeRuleList(value: unknown, label: string): Array<Record<string, unknown>> {
   if (!Array.isArray(value)) throw new ProviderRequestError(502, `malformed ${label} response`);
-  return value.map((item) => normalizeObject(item, label));
+  return value.map((item) => normalizeRule(item, label));
 }
 
-function normalizeObject(value: unknown, label: string): Record<string, unknown> {
+function normalizeAddressList(value: unknown, label: string): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) throw new ProviderRequestError(502, `malformed ${label} response`);
+  return value.map((item) => normalizeAddress(item, label));
+}
+
+function normalizeRule(value: unknown, label: string): Record<string, unknown> {
   const object = readObject(value, label);
   return compactObject({
     id: optionalString(object.id),
@@ -285,6 +290,13 @@ function normalizeObject(value: unknown, label: string): Record<string, unknown>
     priority: optionalInteger(object.priority),
     source: optionalString(object.source),
     zone: optionalRecord(object.zone),
+  });
+}
+
+function normalizeAddress(value: unknown, label: string): Record<string, unknown> {
+  const object = readObject(value, label);
+  return compactObject({
+    id: optionalString(object.id),
     email: optionalString(object.email),
     created: optionalString(object.created),
     modified: optionalString(object.modified),
@@ -318,10 +330,6 @@ function readObject(value: unknown, label: string): Record<string, unknown> {
   const object = optionalRecord(value);
   if (!object) throw new ProviderRequestError(502, `malformed ${label} response`);
   return object;
-}
-
-function requireCredentialValue(value: unknown, field: string): string {
-  return requireInputString(value, field);
 }
 
 function requireInputString(value: unknown, field: string): string {
