@@ -33,6 +33,9 @@ type JiraAccessibleResource = {
 type JiraCurrentUserPayload = {
   accountId?: unknown;
   accountType?: unknown;
+  // Jira Server/Data Center /myself returns key/name instead of a Cloud accountId.
+  key?: unknown;
+  name?: unknown;
   displayName?: unknown;
   emailAddress?: unknown;
   active?: unknown;
@@ -190,9 +193,7 @@ async function fetchJiraServerCurrentAccount(
     path: jiraCurrentUserPath,
   });
   const accountKey =
-    asOptionalString(currentUser.accountId) ??
-    asOptionalString((currentUser as Record<string, unknown>).key) ??
-    asOptionalString((currentUser as Record<string, unknown>).name);
+    asOptionalString(currentUser.accountId) ?? asOptionalString(currentUser.key) ?? asOptionalString(currentUser.name);
   if (!accountKey) {
     throw new ProviderRequestError(502, "jira current user response is missing an account identifier");
   }
@@ -305,6 +306,10 @@ async function listProjects(input: Record<string, unknown>, context: JiraActionC
   const expand = joinOptionalList(readStringArray(input.expand));
 
   if (context.deployment === "server") {
+    // Jira Data Center has no paginated /project/search, so we fetch the full /project list and
+    // page in memory. Each page re-fetches rather than caching: the stateless runtime exposes no
+    // per-context cache, and a credential-keyed module cache would trade this for staleness and
+    // unbounded per-instance memory — not worth it for typical DC project counts.
     const payload = await jiraJsonValueRequest({
       accessToken: context.accessToken,
       fetcher: context.fetcher,
@@ -596,6 +601,15 @@ function buildJiraApiBaseUrl(cloudId: string) {
   return `${jiraApiOrigin}/ex/jira/${encodeURIComponent(cloudId)}/rest/api/3`;
 }
 
+/**
+ * Normalize a user-supplied Jira Data Center / Server instance URL into its REST API v2 base.
+ *
+ * Enforces the provider's egress contract: the URL must be a public http(s) target
+ * ({@link assertPublicHttpUrl}; private networks only when `allowPrivateNetwork` is set, and
+ * loopback/reserved/cloud-metadata stay blocked), must not embed credentials, and has its query
+ * and fragment stripped. A trailing `/rest/api/{2,3,latest}` is normalized to the `/rest/api/2`
+ * suffix this provider speaks, so a pasted API URL is not double-appended.
+ */
 export function normalizeJiraServerApiBaseUrl(
   value: unknown,
   allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
@@ -832,6 +846,9 @@ function normalizeOptionalUser(value: unknown) {
   return compactObject({
     accountId: asOptionalString(record.accountId),
     accountType: asOptionalString(record.accountType),
+    // Jira Server/Data Center identifies users by name/key rather than a Cloud accountId.
+    name: asOptionalString(record.name),
+    key: asOptionalString(record.key),
     displayName: asOptionalString(record.displayName),
     emailAddress: asOptionalString(record.emailAddress),
     active: optionalBoolean(record.active),

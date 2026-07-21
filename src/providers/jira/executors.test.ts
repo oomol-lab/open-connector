@@ -205,6 +205,23 @@ describe("Jira Data Center server payloads", () => {
     ).rejects.toMatchObject({ status: 400 });
     expect(requests).toHaveLength(1);
   });
+
+  it("preserves Server user name/key when normalizing an issue", async () => {
+    const fetcher = vi.fn(
+      async (): Promise<Response> =>
+        Response.json({
+          id: "1",
+          key: "PROJ-1",
+          fields: { summary: "S", assignee: { name: "alex", key: "alex", displayName: "Alex" } },
+        }),
+    );
+
+    const result = (await jiraActionHandlers.get_issue({ issueIdOrKey: "PROJ-1" }, serverContext(fetcher))) as {
+      issue: { assignee?: { name?: string; key?: string; displayName?: string } };
+    };
+
+    expect(result.issue.assignee).toMatchObject({ name: "alex", key: "alex", displayName: "Alex" });
+  });
 });
 
 describe("Jira Cloud write payloads", () => {
