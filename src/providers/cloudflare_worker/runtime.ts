@@ -584,7 +584,7 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareWor
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      Array.isArray(context.metadata.availableAccounts)
+      context.metadata.requiresAccountSelection === true || Array.isArray(context.metadata.availableAccounts)
         ? "accountId is required for this Cloudflare Worker action because the OAuth credential can access multiple accounts"
         : "accountId is required in the connected credential",
     );
@@ -592,24 +592,7 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareWor
   if (context.authType === "custom_credential" && inputAccountId && inputAccountId !== accountId) {
     throw new ProviderRequestError(400, "accountId must match the connected credential");
   }
-  ensureAccountIsAvailable(accountId, context.metadata);
   return accountId;
-}
-
-function ensureAccountIsAvailable(accountId: string, metadata: Record<string, unknown>): void {
-  if (!Array.isArray(metadata.availableAccounts)) {
-    return;
-  }
-  const matched = metadata.availableAccounts.some((item) => {
-    const account = optionalRecord(item);
-    return optionalString(account?.id) === accountId;
-  });
-  if (!matched) {
-    throw new ProviderRequestError(
-      400,
-      "accountId must be one of the Cloudflare accounts accessible by this OAuth credential",
-    );
-  }
 }
 
 function buildWorkerMutationBody(input: Record<string, unknown>): Record<string, unknown> {

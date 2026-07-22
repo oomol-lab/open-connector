@@ -1,11 +1,24 @@
+import type { ResolvedCredential } from "../../core/types.ts";
 import type { CloudflareWorkerContext } from "./runtime.ts";
 
 import { describe, expect, it } from "vitest";
 import { optionalRecord } from "../../core/cast.ts";
 import { cloudflareWorkerActions } from "./actions.ts";
+import { credentialValidators } from "./executors.ts";
 import { cloudflareWorkerActionHandlers } from "./runtime.ts";
 
 const getWorkerScriptSettings = cloudflareWorkerActionHandlers.get_worker_script_settings;
+const oauthCredential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+  authType: "oauth2",
+  accessToken: "test-token",
+  tokenType: "Bearer",
+  profile: {
+    accountId: "cloudflare-worker-oauth",
+    displayName: "Cloudflare Worker",
+    grantedScopes: ["workers-scripts.read"],
+  },
+  metadata: {},
+};
 
 describe("Cloudflare Worker account resolution", () => {
   it("reuses the account ID from a custom-credential connection", async () => {
@@ -37,9 +50,7 @@ describe("Cloudflare Worker account resolution", () => {
   it("requires an explicit accessible account ID for multi-account OAuth", async () => {
     const { context, requestedUrls } = testContext({
       authType: "oauth2",
-      metadata: {
-        availableAccounts: [{ id: "first-account" }, { id: "second-account" }],
-      },
+      metadata: { requiresAccountSelection: true },
     });
 
     await expect(getWorkerScriptSettings({ scriptName: "example-worker" }, context)).rejects.toMatchObject({
@@ -52,6 +63,36 @@ describe("Cloudflare Worker account resolution", () => {
     expect(requestedUrls).toEqual([
       "https://api.cloudflare.com/client/v4/accounts/second-account/workers/scripts/example-worker/settings",
     ]);
+  });
+
+  it("allows an account ID discovered after the OAuth validation page", async () => {
+    const validation = await credentialValidators.oauth2?.(oauthCredential, {
+      fetcher: accountsFetcher(
+        Array.from({ length: 50 }, (_, index) => ({ id: `account-${index + 1}` })),
+        { page: 1, per_page: 50, count: 50, total_count: 51, total_pages: 2 },
+      ),
+    });
+    const metadata = validation?.metadata ?? {};
+    const { context, requestedUrls } = testContext({ authType: "oauth2", metadata });
+
+    await getWorkerScriptSettings({ accountId: "page-two-account", scriptName: "example-worker" }, context);
+
+    expect(metadata).toMatchObject({ requiresAccountSelection: true });
+    expect(metadata).not.toHaveProperty("availableAccounts");
+    expect(requestedUrls).toEqual([
+      "https://api.cloudflare.com/client/v4/accounts/page-two-account/workers/scripts/example-worker/settings",
+    ]);
+  });
+
+  it("rejects OAuth credentials that cannot access any accounts", async () => {
+    await expect(
+      credentialValidators.oauth2?.(oauthCredential, {
+        fetcher: accountsFetcher([], { page: 1, per_page: 50, count: 0, total_count: 0, total_pages: 0 }),
+      }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Cloudflare OAuth credential cannot access any accounts",
+    });
   });
 
   it("documents the conditional account ID requirement in the action catalog", () => {
@@ -84,4 +125,8 @@ function testContext(overrides: Pick<CloudflareWorkerContext, "authType"> & Part
     },
     requestedUrls,
   };
+}
+
+function accountsFetcher(accounts: Array<{ id: string }>, resultInfo: Record<string, number>): typeof fetch {
+  return async () => Response.json({ success: true, result: accounts, result_info: resultInfo });
 }

@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { CloudflareWorkerContext } from "./runtime.ts";
 
-import { optionalString, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 import {
   cloudflareWorkerActionHandlers,
@@ -59,7 +59,11 @@ export const credentialValidators: CredentialValidators = {
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const result = await requestCloudflareWorkerAccounts(input.accessToken, fetcher, signal, { page: 1, perPage: 50 });
-    if (result.accounts.length === 1) {
+    if (result.accounts.length === 0) {
+      throw new ProviderRequestError(400, "Cloudflare OAuth credential cannot access any accounts");
+    }
+    const totalCount = optionalInteger(result.resultInfo?.totalCount);
+    if (result.accounts.length === 1 && (totalCount === undefined || totalCount === 1)) {
       const account = result.accounts[0]!;
       return {
         profile: {
@@ -82,7 +86,7 @@ export const credentialValidators: CredentialValidators = {
       },
       grantedScopes: input.profile.grantedScopes,
       metadata: {
-        availableAccounts: result.accounts,
+        requiresAccountSelection: true,
         validationEndpoint: "/accounts?page=1&per_page=50",
       },
     };
