@@ -95,6 +95,20 @@ describe("Cloudflare Worker account resolution", () => {
     });
   });
 
+  it("requires account selection when the OAuth account total is unknown", async () => {
+    const validation = await credentialValidators.oauth2?.(oauthCredential, {
+      fetcher: accountsFetcher([{ id: "only-returned-account" }], {
+        page: 1,
+        per_page: 50,
+        count: 1,
+        total_pages: 1,
+      }),
+    });
+
+    expect(validation?.metadata).toMatchObject({ requiresAccountSelection: true });
+    expect(validation?.metadata).not.toHaveProperty("accountId");
+  });
+
   it("documents the conditional account ID requirement in the action catalog", () => {
     const action = cloudflareWorkerActions.find(({ name }) => name === "get_worker_script_settings");
     const properties = optionalRecord(action?.inputSchema.properties);

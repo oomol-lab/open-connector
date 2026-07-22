@@ -63,7 +63,7 @@ export const credentialValidators: CredentialValidators = {
       throw new ProviderRequestError(400, "Cloudflare OAuth credential cannot access any accounts");
     }
     const totalCount = optionalInteger(result.resultInfo?.totalCount);
-    if (result.accounts.length === 1 && (totalCount === undefined || totalCount === 1)) {
+    if (result.accounts.length === 1 && totalCount === 1) {
       const account = result.accounts[0]!;
       return {
         profile: {
