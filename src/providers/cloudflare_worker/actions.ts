@@ -11,7 +11,7 @@ const workersReadPermission = "Workers Scripts Read";
 const workersWritePermission = "Workers Scripts Write";
 
 const accountIdSchema = s.nonEmptyString(
-  "The Cloudflare account ID. Custom-credential connections reuse the connected account ID when this is omitted.",
+  "The Cloudflare account ID. Omit this when the connection can uniquely determine the account. This field is required for multi-account OAuth connections; use list_accounts to find an accessible account ID.",
 );
 const workerIdSchema = s.nonEmptyString("The Cloudflare Worker ID.");
 const workerNameSchema = s.nonEmptyString("The Worker name.");
