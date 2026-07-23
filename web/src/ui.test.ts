@@ -234,4 +234,3 @@ describe("loadRuntimeData", () => {
     expect(result.data.providers).toEqual([]);
   });
 });
-

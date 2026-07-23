@@ -144,9 +144,7 @@ export async function loadRuntimeData(
   }
 
   const catalogRequest =
-    cachedProviders !== undefined
-      ? Promise.resolve(cachedProviders)
-      : apiGet<ProviderDefinition[]>("/api/providers");
+    cachedProviders !== undefined ? Promise.resolve(cachedProviders) : apiGet<ProviderDefinition[]>("/api/providers");
 
   const [providers, connections, oauthConfigs, runtimeTokens, runtimePolicy, runPage] = await Promise.all([
     catalogRequest,
