@@ -8,8 +8,8 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Cloudflare Docs",
   categories: ["Developer Tools", "AI"],
-  authTypes: ["no_auth"],
-  auth: [{ type: "no_auth" }],
+  authTypes: ["custom_credential"],
+  auth: [{ type: "custom_credential", fields: [] }],
   homepageUrl: "https://developers.cloudflare.com",
   actions: cloudflareDocsActions,
 };
