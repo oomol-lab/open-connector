@@ -144,7 +144,7 @@ export async function loadRuntimeData(
   }
 
   const catalogRequest =
-    cachedProviders && cachedProviders.length > 0
+    cachedProviders !== undefined
       ? Promise.resolve(cachedProviders)
       : apiGet<ProviderDefinition[]>("/api/providers");
 
@@ -182,7 +182,7 @@ export function App(): ReactNode {
   const pendingUnlockToken = useRef("");
   // Catalog is immutable while the server runs, so it is fetched once and
   // reused across refreshes instead of being re-downloaded on every action.
-  const cachedProviders = useRef<ProviderDefinition[]>([]);
+  const cachedProviders = useRef<ProviderDefinition[] | undefined>(undefined);
   const [locked, setLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [runtimeChecked, setRuntimeChecked] = useState(false);
@@ -226,7 +226,7 @@ export function App(): ReactNode {
         }
         if (caught instanceof ApiError && caught.status === 401) {
           pendingUnlockToken.current = "";
-          cachedProviders.current = [];
+          cachedProviders.current = undefined;
           setData(emptyData);
           setAuthSession({ adminAuthConfigured: true, authenticated: false });
           setLocked(true);

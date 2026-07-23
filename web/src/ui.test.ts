@@ -207,4 +207,31 @@ describe("loadRuntimeData", () => {
       expect(call.headers.get("authorization")).toBeNull();
     }
   });
+
+  it("skips fetching /api/providers when cachedProviders is an empty array", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (path: RequestInfo | URL) => {
+        calls.push(String(path));
+        if (path === "/api/auth/session") {
+          return Response.json({ adminAuthConfigured: true, authenticated: true });
+        }
+        if (path === "/api/runs") {
+          return Response.json({ items: [], nextCursor: null });
+        }
+        if (path === "/api/runtime-policy") {
+          const rules = { allowedActions: [], blockedActions: [], allowedProxies: [], blockedProxies: [] };
+          return Response.json({ deployment: rules, runtime: rules });
+        }
+        return Response.json([]);
+      }),
+    );
+
+    const result = await loadRuntimeData("", []);
+
+    expect(calls).not.toContain("/api/providers");
+    expect(result.data.providers).toEqual([]);
+  });
 });
+
