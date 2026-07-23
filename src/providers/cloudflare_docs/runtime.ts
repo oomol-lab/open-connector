@@ -63,6 +63,11 @@ async function callCloudflareDocsTool(
         name: toolName,
         arguments: args,
       });
+      if (result.isError) {
+        const content = result.content as Array<{ type?: string; text?: string }> | undefined;
+        const text = content?.find((c) => c.type === "text")?.text;
+        throw new ProviderRequestError(502, text ?? "Cloudflare Docs MCP tool returned an unknown error.");
+      }
       return result as Record<string, unknown>;
     } finally {
       await client.close().catch(() => {});
