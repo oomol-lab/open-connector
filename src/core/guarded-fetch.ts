@@ -297,6 +297,9 @@ async function assertResolvedAddressesAllowed(
   if (!Array.isArray(results)) {
     throw policy.createError(`${fieldName} could not be resolved for validation`);
   }
+  if (results.length === 0) {
+    throw policy.createError(`${fieldName} could not be resolved for validation`);
+  }
   for (const entry of results) {
     if (entry && typeof entry.address === "string" && isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
       throw policy.createError(`${fieldName} must not resolve to private or reserved IP addresses`);

@@ -3,7 +3,7 @@ import type { TwitterActionName } from "./actions.ts";
 
 import { base64Bytes } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerFetch, ProviderRequestError } from "../provider-runtime.ts";
 
 export const twitterApiBaseUrl: string = "https://api.x.com/2";
 const twitterMediaUploadUrl = "https://api.x.com/2/media/upload";
@@ -342,13 +342,14 @@ export const twitterActionHandlers: Record<TwitterActionName, TwitterActionHandl
     });
 
     const data = asObject(payload.data);
-    return {
-      id: String(data.id ?? ""),
-      mediaKey: String(data.media_key ?? ""),
-      expiresAfterSecs: Number(data.expires_after_secs ?? 0),
-      size: Number(data.size ?? 0),
+    const result: Record<string, unknown> = {
+      id: requireTwitterResponseString(data.id, "data.id"),
       raw: payload,
     };
+    assignString(result, "mediaKey", data.media_key);
+    assignNumber(result, "expiresAfterSecs", data.expires_after_secs);
+    assignNumber(result, "size", data.size);
+    return result;
   },
 
   async upload_large_media(input, context) {
@@ -382,7 +383,9 @@ export const twitterActionHandlers: Record<TwitterActionName, TwitterActionHandl
     const initialized = normalizeTwitterMediaUploadResult(initializePayload, "pending");
     const mediaId = requireNonEmptyString(initialized.mediaId, "mediaId");
 
-    const mediaResponse = await context.fetcher(mediaUrl);
+    // mediaUrl is user-controlled, so it must keep DNS validation even though
+    // the fixed X API hosts use the optimized provider fetcher from the context.
+    const mediaResponse = await providerFetch(mediaUrl, { signal: context.signal });
     if (!mediaResponse.ok) {
       throw twitterError(
         "provider_error",
@@ -400,6 +403,7 @@ export const twitterActionHandlers: Record<TwitterActionName, TwitterActionHandl
       fetcher: context.fetcher,
       mediaId,
       stream: mediaResponse.body,
+      totalBytes,
     });
     if (uploadedBytes !== totalBytes) {
       throw twitterError(
@@ -1690,6 +1694,14 @@ function requireNonEmptyString(value: unknown, fieldName: string) {
   return value.trim();
 }
 
+function requireTwitterResponseString(value: unknown, fieldName: string) {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw twitterError("provider_error", `twitter response is missing ${fieldName}`, 502);
+  }
+
+  return value.trim();
+}
+
 function requirePositiveInteger(value: unknown, fieldName: string) {
   if (!Number.isInteger(value) || typeof value !== "number" || value <= 0) {
     throw twitterError("invalid_input", `${fieldName} must be a positive integer`, 400);
@@ -1737,6 +1749,7 @@ async function appendTwitterMediaUploadChunks(input: {
   fetcher: ProviderFetch;
   mediaId: string;
   stream: ReadableStream<Uint8Array>;
+  totalBytes: number;
 }) {
   const reader = input.stream.getReader();
   let pending: TwitterMediaChunk = new Uint8Array(0);
@@ -1750,6 +1763,15 @@ async function appendTwitterMediaUploadChunks(input: {
     }
     if (!value || value.byteLength === 0) {
       continue;
+    }
+
+    if (uploadedBytes + pending.byteLength + value.byteLength > input.totalBytes) {
+      await reader.cancel();
+      throw twitterError(
+        "invalid_input",
+        `mediaUrl yielded more than the declared totalBytes ${input.totalBytes}`,
+        400,
+      );
     }
 
     pending = concatUint8Arrays(pending, normalizeTwitterMediaChunk(value));
@@ -1837,7 +1859,7 @@ function normalizeTwitterMediaUploadResult(
   const data = asObject(payload.data ?? payload);
   const processingInfo = asObject(data.processing_info);
   const result: Record<string, unknown> = {
-    mediaId: String(data.id ?? data.media_id ?? fallbacks.fallbackMediaId ?? ""),
+    mediaId: requireTwitterResponseString(data.id ?? data.media_id ?? fallbacks.fallbackMediaId, "media id"),
     state: normalizeTwitterMediaProcessingState(processingInfo.state, fallbackState),
     raw: payload,
   };

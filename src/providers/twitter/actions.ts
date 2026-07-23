@@ -1,4 +1,4 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -8,20 +8,39 @@ const genericTwitterInputSchema = s.looseObject(
   "X API action input. See the action description for provider semantics.",
 );
 const genericTwitterOutputSchema = s.looseObject("Normalized X API response payload.");
+const twitterMediaUploadResultSchema = s.object(
+  "The normalized result of a chunked X media upload request.",
+  {
+    mediaId: s.nonEmptyString("The X media identifier."),
+    state: s.stringEnum("The current media processing state.", ["pending", "in_progress", "succeeded", "failed"]),
+    expiresAfterSecs: s.number("The number of seconds before the uploaded media expires."),
+    size: s.number("The uploaded media size in bytes."),
+    progressPercent: s.number("The media processing progress percentage."),
+    checkAfterSecs: s.number("The suggested delay before checking the processing status again."),
+    mediaKey: s.nonEmptyString("The X media key when returned by the API."),
+    processingInfo: s.looseObject("The processing details returned by X."),
+    raw: s.looseObject("The raw X API response."),
+  },
+  {
+    optional: ["expiresAfterSecs", "size", "progressPercent", "checkAfterSecs", "mediaKey", "processingInfo"],
+  },
+);
 
 function action(
   name: TwitterActionName,
   description: string,
   requiredScopes: string[],
   providerPermissions: string[],
+  inputSchema: JsonSchema = genericTwitterInputSchema,
+  outputSchema: JsonSchema = genericTwitterOutputSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
     description,
     requiredScopes,
     providerPermissions,
-    inputSchema: genericTwitterInputSchema,
-    outputSchema: genericTwitterOutputSchema,
+    inputSchema,
+    outputSchema,
   });
 }
 
@@ -212,18 +231,58 @@ export const twitterActions: ActionDefinition[] = [
     "Upload a single image to X and return the created media identifiers.",
     ["twitter.media.write"],
     ["media.write"],
+    s.object(
+      "The image bytes and metadata to upload to X.",
+      {
+        mediaBase64: s.nonEmptyString("The Base64-encoded image bytes."),
+        mimeType: s.nonEmptyString("The image MIME type."),
+        fileName: s.nonEmptyString("The filename sent to X."),
+        mediaCategory: s.nonEmptyString("The X media category when required for the upload."),
+      },
+      { optional: ["fileName", "mediaCategory"] },
+    ),
+    s.object(
+      "The result of uploading one image to X.",
+      {
+        id: s.nonEmptyString("The X media identifier."),
+        mediaKey: s.nonEmptyString("The X media key when returned by the API."),
+        expiresAfterSecs: s.number("The number of seconds before the uploaded media expires."),
+        size: s.number("The uploaded image size in bytes."),
+        raw: s.looseObject("The raw X API response."),
+      },
+      { optional: ["mediaKey", "expiresAfterSecs", "size"] },
+    ),
   ),
   action(
     "upload_large_media",
     "Upload a video or other large media file to X from a temporary HTTP URL using chunked media upload.",
     ["twitter.media.write"],
     ["media.write"],
+    s.object(
+      "The remote media source and chunked upload metadata.",
+      {
+        mediaUrl: s.url("The public HTTP or HTTPS URL to download the media from."),
+        mimeType: s.nonEmptyString("The media MIME type."),
+        totalBytes: s.integer("The exact number of media bytes available at mediaUrl.", { minimum: 1 }),
+        mediaCategory: s.nonEmptyString("The X media category for the upload."),
+        chunkSizeBytes: s.integer("The number of bytes uploaded in each chunk.", {
+          minimum: 1,
+          maximum: 5 * 1024 * 1024,
+        }),
+      },
+      { optional: ["chunkSizeBytes"] },
+    ),
+    twitterMediaUploadResultSchema,
   ),
   action(
     "get_media_upload_status",
     "Get the processing status for a chunked X media upload.",
     ["twitter.media.write"],
     ["media.write"],
+    s.requiredObject("The media upload to inspect.", {
+      mediaId: s.nonEmptyString("The X media identifier returned by upload_large_media."),
+    }),
+    twitterMediaUploadResultSchema,
   ),
   action(
     "followers_by_user_id",

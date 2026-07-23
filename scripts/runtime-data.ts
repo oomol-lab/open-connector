@@ -1,78 +1,58 @@
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { parseArgs } from "node:util";
 import { createSecretCodec } from "../src/server/secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "../src/server/storage/sqlite-runtime-store.ts";
 
-const command = process.argv[2];
-const options = parseOptions(process.argv.slice(3));
-const dataDir = resolve(options.dataDir ?? process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data"));
-const databasePath = join(dataDir, "connect.sqlite");
-const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
+const { positionals, values: options } = parseArgs({
+  args: process.argv.slice(2),
+  allowPositionals: true,
+  options: {
+    "data-dir": { type: "string" },
+    plain: { type: "boolean" },
+    yes: { type: "boolean" },
+  },
+  strict: true,
+});
+const [command] = positionals;
 
-if (!command || !["reset", "rotate-key"].includes(command)) {
+if (positionals.length !== 1 || (command !== "reset" && command !== "rotate-key")) {
   printUsageAndExit();
 }
 
-await mkdir(dataDir, { recursive: true });
-
+const nextEncryptionKey = process.env.OOMOL_CONNECT_NEW_ENCRYPTION_KEY;
 if (command === "rotate-key") {
-  const nextEncryptionKey = process.env.OOMOL_CONNECT_NEW_ENCRYPTION_KEY;
-  if (!nextEncryptionKey && options.plain !== "true") {
+  if (options.yes) {
+    throw new Error("--yes is only valid with reset.");
+  }
+  if (!nextEncryptionKey && !options.plain) {
     throw new Error("rotate-key requires OOMOL_CONNECT_NEW_ENCRYPTION_KEY unless --plain is set.");
   }
-  const database = new SqliteRuntimeDatabase(databasePath, { secretCodec });
-  try {
-    await database.rotateSecretCodec(createSecretCodec(options.plain === "true" ? undefined : nextEncryptionKey));
-    console.log(`Rotated runtime secret encryption in ${databasePath}.`);
-  } finally {
-    database.close();
-  }
 } else {
-  const database = new SqliteRuntimeDatabase(databasePath, { secretCodec });
-  try {
-    if (options.yes !== "true") {
-      throw new Error("reset requires --yes.");
-    }
-    database.resetRuntimeData();
-    console.log(`Reset runtime data in ${databasePath}.`);
-  } finally {
-    database.close();
+  if (options.plain) {
+    throw new Error("--plain is only valid with rotate-key.");
+  }
+  if (!options.yes) {
+    throw new Error("reset requires --yes.");
   }
 }
 
-type RuntimeDataCommandOptions = {
-  dataDir?: string;
-  plain?: string;
-  yes?: string;
-};
+const dataDir = resolve(options["data-dir"] ?? process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data"));
+const databasePath = join(dataDir, "connect.sqlite");
+const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
+await mkdir(dataDir, { recursive: true });
 
-function parseOptions(args: string[]): RuntimeDataCommandOptions {
-  const options: RuntimeDataCommandOptions = {};
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (arg === "--yes") {
-      options.yes = "true";
-      continue;
-    }
-    if (arg === "--plain") {
-      options.plain = "true";
-      continue;
-    }
-
-    const value = args[index + 1];
-    if (!value) {
-      throw new Error(`${arg} requires a value.`);
-    }
-
-    if (arg === "--data-dir") {
-      options.dataDir = value;
-    } else {
-      throw new Error(`Unknown option: ${arg}.`);
-    }
-    index += 1;
+const database = new SqliteRuntimeDatabase(databasePath, { secretCodec });
+try {
+  if (command === "rotate-key") {
+    await database.rotateSecretCodec(createSecretCodec(options.plain ? undefined : nextEncryptionKey));
+    console.log(`Rotated runtime secret encryption in ${databasePath}.`);
+  } else {
+    database.resetRuntimeData();
+    console.log(`Reset runtime data in ${databasePath}.`);
   }
-
-  return options;
+} finally {
+  database.close();
 }
 
 function printUsageAndExit(): never {

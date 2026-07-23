@@ -202,7 +202,11 @@ async function listConnections(options: IMcpServerOptions, service: string | und
 
 async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<unknown> {
   const normalized = query?.trim().toLowerCase();
-  const providers = options.catalog.providers
+  const connections = await options.connections.listConnections();
+  const defaultConnections = new Map(
+    connections.filter((connection) => connection.default).map((connection) => [connection.service, connection]),
+  );
+  return options.catalog.providers
     .filter((provider) => {
       if (!normalized) {
         return true;
@@ -213,20 +217,15 @@ async function listApps(options: IMcpServerOptions, query: string | undefined): 
         .toLowerCase()
         .includes(normalized);
     })
-    .map(async (provider) => {
-      const connection = await options.connections.getConnectionSummary(provider.service);
-      return {
-        service: provider.service,
-        displayName: provider.displayName,
-        categories: provider.categories,
-        authTypes: provider.authTypes,
-        actionCount: provider.actions.length,
-        executableActionCount: provider.actions.filter((action) => action.execution.locallyExecutable).length,
-        connection,
-      };
-    });
-
-  return Promise.all(providers);
+    .map((provider) => ({
+      service: provider.service,
+      displayName: provider.displayName,
+      categories: provider.categories,
+      authTypes: provider.authTypes,
+      actionCount: provider.actions.length,
+      executableActionCount: provider.actions.filter((action) => action.execution.locallyExecutable).length,
+      connection: defaultConnections.get(provider.service),
+    }));
 }
 
 async function searchActions(

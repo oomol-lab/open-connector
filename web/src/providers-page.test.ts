@@ -224,6 +224,7 @@ describe("ProvidersPage route shell", () => {
     expect(markup).toContain("Configured");
     expect(markup).toContain("Saved connections: 1. Select one to manage or add another.");
     expect(markup).not.toContain("OAuth client required");
+    expect(markup).not.toContain('class="form-grid connection-form"');
   });
 
   it("shows every named connection and only safe account profile fields", () => {

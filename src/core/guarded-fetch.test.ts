@@ -407,6 +407,14 @@ describe("createGuardedFetch resolved-address validation", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("fails closed when an enabled lookup returns no addresses", async () => {
+    const { transport, calls } = createTransport([]);
+    const guarded = createGuardedFetch({ fetch: transport, lookup: async () => [] });
+
+    await expect(guarded("https://unresolved.example.com/")).rejects.toThrow(/could not be resolved/u);
+    expect(calls).toHaveLength(0);
+  });
+
   it("re-validates resolved addresses for every redirect hop", async () => {
     const { transport, calls } = createTransport([redirectTo("https://metadata.attacker.com/creds")]);
     const guarded = createGuardedFetch({

@@ -11,10 +11,9 @@ function bearerHeaders(token: string | undefined, headers: HeadersInit): Headers
     return headers;
   }
 
-  return {
-    ...headers,
-    authorization: `Bearer ${token}`,
-  };
+  const authenticatedHeaders = new Headers(headers);
+  authenticatedHeaders.set("authorization", `Bearer ${token}`);
+  return authenticatedHeaders;
 }
 
 export async function fetchJson<T>(url: string, init: RequestInit = {}): Promise<T> {

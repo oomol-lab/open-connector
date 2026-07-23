@@ -107,6 +107,7 @@ interface PreviousCredentialRuntimeData {
 }
 
 type CredentialValidatorCall = () => Promise<CredentialValidationResult | void> | undefined;
+type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 /**
  * Coordinates local provider connection state.
@@ -116,6 +117,7 @@ type CredentialValidatorCall = () => Promise<CredentialValidationResult | void> 
  */
 export class ConnectionService {
   private readonly catalog: CatalogStore;
+  private readonly oauthCredentialRefreshes = new Map<string, Promise<OAuthCredential>>();
   private readonly oauthCredentials?: IOAuthCredentialRefresher;
   private readonly providerLoader: IProviderLoader;
   private readonly store: IConnectionStore;
@@ -492,9 +494,9 @@ export class ConnectionService {
 
   private async resolveOAuthCredential(
     connection: StoredConnection,
-    credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
-  ): Promise<Extract<ResolvedCredential, { authType: "oauth2" }>> {
-    const { id, service, connectionName } = connection;
+    credential: OAuthCredential,
+  ): Promise<OAuthCredential> {
+    const service = connection.service;
     if (!isOAuthCredentialExpired(credential)) {
       return credential;
     }
@@ -513,7 +515,29 @@ export class ConnectionService {
       );
     }
 
-    const nextCredential = await this.oauthCredentials.refresh(service, credential);
+    const currentRefresh = this.oauthCredentialRefreshes.get(connection.id);
+    if (currentRefresh) {
+      return currentRefresh;
+    }
+
+    const refresh = this.refreshOAuthCredential(connection, credential, this.oauthCredentials);
+    this.oauthCredentialRefreshes.set(connection.id, refresh);
+    try {
+      return await refresh;
+    } finally {
+      if (this.oauthCredentialRefreshes.get(connection.id) === refresh) {
+        this.oauthCredentialRefreshes.delete(connection.id);
+      }
+    }
+  }
+
+  private async refreshOAuthCredential(
+    connection: StoredConnection,
+    credential: OAuthCredential,
+    refresher: IOAuthCredentialRefresher,
+  ): Promise<OAuthCredential> {
+    const { id, service, connectionName } = connection;
+    const nextCredential = await refresher.refresh(service, credential);
     const updated = await this.store.updateCredential({ id, service, connectionName, credential: nextCredential });
     if (!updated) {
       throw new ConnectionError(

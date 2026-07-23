@@ -490,6 +490,46 @@ describe("ConnectionService", () => {
     );
   });
 
+  it("shares an in-flight OAuth refresh across concurrent requests", async () => {
+    const store = new MemoryConnectionStore();
+    const oauthClientConfigs = createOAuthClientConfigs([oauthProvider]);
+    const service = createService([oauthProvider], {
+      oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs),
+      store,
+    });
+    await oauthClientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    await store.set("example", "default", {
+      authType: "oauth2",
+      accessToken: "expired-token",
+      tokenType: "Bearer",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00.000Z",
+      profile: testProfile,
+      metadata: {},
+    });
+
+    const fetcher = vi.fn(async () =>
+      Response.json({
+        access_token: "fresh-token",
+        expires_in: 3600,
+        token_type: "Bearer",
+      }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const credentials = await Promise.all([service.getCredential("example"), service.getCredential("example")]);
+
+    expect(credentials).toEqual([
+      expect.objectContaining({ accessToken: "fresh-token" }),
+      expect.objectContaining({ accessToken: "fresh-token" }),
+    ]);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
   it("does not overwrite a connection recreated during OAuth refresh", async () => {
     const store = new MemoryConnectionStore();
     const oauthClientConfigs = createOAuthClientConfigs([oauthProvider]);

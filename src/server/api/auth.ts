@@ -141,7 +141,10 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
     if (scope === "admin") {
       return true;
     }
-    if (!(await (options.hasRuntimeTokens?.() ?? false)) && !options.verifyRuntimeJwt) {
+    const hasRuntimeTokens = options.hasRuntimeTokens
+      ? await options.hasRuntimeTokens()
+      : options.resolveRuntimeToken !== undefined;
+    if (!hasRuntimeTokens && !options.verifyRuntimeJwt) {
       return true;
     }
     return hasValidRuntimeToken(context, options);
@@ -219,7 +222,7 @@ function normalizeToken(token: string | undefined): string | undefined {
 }
 
 function readAuthScope(path: string): AuthScope {
-  return path.startsWith("/mcp") || path.startsWith("/v1/") ? "runtime" : "admin";
+  return path === "/mcp" || path.startsWith("/mcp/") || path === "/v1" || path.startsWith("/v1/") ? "runtime" : "admin";
 }
 
 function canUseAdminAuth(path: string, method: string): boolean {
