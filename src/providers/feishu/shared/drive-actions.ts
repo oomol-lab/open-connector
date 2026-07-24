@@ -6,7 +6,7 @@ export const feishuDriveProviderScopes = {
   metadataRead: "drive:drive.metadata:readonly",
   search: "search:docs:read",
   folderCreate: "space:folder:create",
-  copy: "space:document:copy",
+  copy: "docs:document:copy",
   move: "space:document:move",
   delete: "space:document:delete",
   commentRead: "docs:document.comment:read",
