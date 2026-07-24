@@ -233,4 +233,54 @@ describe("loadRuntimeData", () => {
     expect(calls).not.toContain("/api/providers");
     expect(result.data.providers).toEqual([]);
   });
+
+  it("does not cache catalog when initial session is unauthenticated and fetches catalog on unlock", async () => {
+    const calls: string[] = [];
+    let sessionAuthenticated = false;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (path: RequestInfo | URL) => {
+        calls.push(String(path));
+        if (path === "/api/auth/session") {
+          return Response.json({ adminAuthConfigured: true, authenticated: sessionAuthenticated });
+        }
+        if (path === "/api/providers") {
+          return Response.json([{ service: "example", displayName: "Example" }]);
+        }
+        if (path === "/api/runs") {
+          return Response.json({ items: [], nextCursor: null });
+        }
+        if (path === "/api/runtime-policy") {
+          const rules = { allowedActions: [], blockedActions: [], allowedProxies: [], blockedProxies: [] };
+          return Response.json({ deployment: rules, runtime: rules });
+        }
+        return Response.json([]);
+      }),
+    );
+
+    // Initial unauthenticated load (simulating useEffect in App)
+    let cachedProviders: ProviderDefinition[] | undefined = undefined;
+    const initialResult = await loadRuntimeData("", cachedProviders);
+    if (initialResult.authSession.authenticated) {
+      cachedProviders = initialResult.data.providers;
+    } else {
+      cachedProviders = undefined;
+    }
+
+    expect(initialResult.authSession.authenticated).toBe(false);
+    expect(initialResult.data.providers).toEqual([]);
+    expect(cachedProviders).toBeUndefined();
+
+    // User unlocks with valid token
+    sessionAuthenticated = true;
+    const unlockResult = await loadRuntimeData("valid-token", cachedProviders);
+    if (unlockResult.authSession.authenticated) {
+      cachedProviders = unlockResult.data.providers;
+    }
+
+    expect(calls).toContain("/api/providers");
+    expect(unlockResult.data.providers).toEqual([{ service: "example", displayName: "Example" }]);
+    expect(cachedProviders).toEqual([{ service: "example", displayName: "Example" }]);
+  });
 });

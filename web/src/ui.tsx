@@ -202,7 +202,7 @@ export function App(): ReactNode {
     loadRuntimeData(requestUnlockToken, cachedProviders.current)
       .then(({ authSession: session, data: nextData }) => {
         if (!cancelled) {
-          cachedProviders.current = nextData.providers;
+          cachedProviders.current = session.authenticated ? nextData.providers : undefined;
           const nextAuth = nextAuthLoadState(
             {
               pendingUnlockToken: pendingUnlockToken.current,
