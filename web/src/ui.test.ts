@@ -1,3 +1,5 @@
+import type { ProviderDefinition } from "./model";
+
 import { I18nProvider } from "@embra/i18n/react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
