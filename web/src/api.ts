@@ -65,11 +65,30 @@ function headersFor(options: RequestOptions, json = false): Headers {
 }
 
 async function readJson<T>(response: Response): Promise<T> {
-  const payload = (await response.json().catch(() => null)) as unknown;
+  const payload = parseJson(await response.text());
   if (!response.ok) {
     throw new ApiError(response.status, errorMessage(payload) ?? `Request failed with ${response.status}`);
   }
+  // A successful response whose body is not JSON means something rewrote it in
+  // transit. Returning the failed parse as T would hand the caller a null typed
+  // as the payload, and the first property read off it crashes far from the
+  // cause; a compressing proxy did exactly that to the whole dashboard once.
+  if (payload === undefined) {
+    throw new ApiError(response.status, `Request succeeded with ${response.status} but the response body was not JSON`);
+  }
   return payload as T;
+}
+
+/** Returns `undefined` for a body that is not JSON. `JSON.parse` never does. */
+function parseJson(body: string): unknown {
+  if (body === "") {
+    return null;
+  }
+  try {
+    return JSON.parse(body) as unknown;
+  } catch {
+    return undefined;
+  }
 }
 
 function errorMessage(payload: unknown): string | undefined {
