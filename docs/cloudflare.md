@@ -162,8 +162,10 @@ header; a body the application had already compressed would be encoded a second 
 undecodable. Node deployments have no edge in front of them and keep compressing in the application.
 
 [Cloudflare's default compressible content types][cf-compression] include `application/json`, so
-`/api` and `/v1` metadata responses are compressed for clients that advertise support. The list has
-`text/x-markdown` but not `text/markdown`, which is what `/api/actions/:actionId/agent.md` returns,
+eligible `/api` and `/v1` metadata responses are compressed for clients that advertise support.
+Eligibility also requires a `200` status and a body of at least 48 bytes for gzip or 50 bytes for
+Brotli and Zstandard, so the smallest responses stay uncompressed whatever their content type. The
+list has `text/x-markdown` but not `text/markdown`, which `/api/actions/:actionId/agent.md` returns,
 so agent guides are served uncompressed. They are small — around 1.5 KiB for a typical action and
 20 KiB for the largest one in the catalog — so this is usually not worth acting on. Add a
 Compression Rule matching `text/markdown` if your deployment serves agent guides heavily.
