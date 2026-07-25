@@ -55,6 +55,16 @@ const listMessagesInput = s.object(
     optional: ["q", "dir", "limit", "cursor", "before", "after", "is_read", "is_unread", "has_attachments"],
   },
 );
+listMessagesInput.not = s.object(
+  {
+    is_read: s.literal(true),
+    is_unread: s.literal(true),
+  },
+  {
+    required: ["is_read", "is_unread"],
+    additionalProperties: true,
+  },
+);
 
 const listMessagesOutput = s.object(
   {
@@ -177,7 +187,7 @@ export const agentQQActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_message",
-    description: "Move a message to trash (soft delete).",
+    description: "Move a message to trash (soft delete), automatically completing the provider confirmation flow.",
     requiredScopes: [],
     inputSchema: deleteMessageInput,
     outputSchema: deleteMessageOutput,

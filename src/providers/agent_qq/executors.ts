@@ -56,9 +56,8 @@ const agentQQActionHandlers: Record<string, AgentQQActionHandler> = {
     }
 
     const initial = await agentQQRequest<unknown>(context, { path, method: "POST", body, mode: "execute" });
-    const data = optionalRecord(optionalRecord(initial as Record<string, unknown>)?.data);
-    const firstToken = optionalString(data?.confirmation_token);
-    if (optionalBoolean(data?.confirmation_required) && firstToken) {
+    const firstToken = readConfirmationToken(initial);
+    if (firstToken) {
       return agentQQRequest(context, {
         path,
         method: "POST",
@@ -73,13 +72,25 @@ const agentQQActionHandlers: Record<string, AgentQQActionHandler> = {
   async delete_message(input, context) {
     const aliasId = requireFieldString(input, "alias_id");
     const messageId = requireFieldString(input, "message_id");
-    const response = await agentQQRequest<unknown>(context, {
-      path: `/v1/aliases/${encodeURIComponent(aliasId)}/messages/${encodeURIComponent(messageId)}`,
+    const path = `/v1/aliases/${encodeURIComponent(aliasId)}/messages/${encodeURIComponent(messageId)}`;
+    let response = await agentQQRequest<unknown>(context, {
+      path,
       method: "DELETE",
       mode: "execute",
     });
-    if (optionalRecord(response as Record<string, unknown>)) {
-      return response;
+    const firstToken = readConfirmationToken(response);
+    if (firstToken) {
+      response = await agentQQRequest(context, {
+        path,
+        method: "DELETE",
+        body: { confirmation_token: firstToken },
+        mode: "execute",
+      });
+    }
+
+    const result = optionalRecord(response);
+    if (optionalBoolean(result?.ok) === true && optionalBoolean(result?.deleted) === true) {
+      return result;
     }
     return { ok: true, deleted: true, alias_id: aliasId, message_id: messageId };
   },
@@ -91,7 +102,7 @@ export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const context: ApiKeyProviderContext = { apiKey: input.apiKey, fetcher, signal };
     const payload = await agentQQRequest<unknown>(context, { path: "/v1/me", mode: "validate" });
-    const data = optionalRecord(payload as Record<string, unknown>);
+    const data = optionalRecord(payload);
     const inner = optionalRecord(data?.data);
     const aliases = optionalObjectArray(inner?.aliases);
     const primary = aliases[0];
@@ -127,8 +138,16 @@ async function agentQQRequest<T>(context: ApiKeyProviderContext, request: AgentQ
     signal: context.signal,
   });
 
-  await assertAgentQQResponse(response, request.mode);
   const text = await response.text().catch(() => "");
+  if (!response.ok) {
+    if (request.mode === "execute" && response.status === 428) {
+      const confirmation = parseAgentQQConfirmation(text);
+      if (confirmation) {
+        return confirmation as T;
+      }
+    }
+    assertAgentQQResponse(response, request.mode, text);
+  }
   if (!text) {
     return {} as T;
   }
@@ -150,12 +169,15 @@ function buildAgentQQUrl(path: string, query?: Record<string, string>): string {
 }
 
 function agentQQHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
-  return {
+  const headers: Record<string, string> = {
     authorization: `Bearer ${apiKey}`,
     accept: "application/json",
-    ...(hasJsonBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };
+  if (hasJsonBody) {
+    headers["content-type"] = "application/json";
+  }
+  return headers;
 }
 
 function requireFieldString(input: Record<string, unknown>, key: string): string {
@@ -164,6 +186,36 @@ function requireFieldString(input: Record<string, unknown>, key: string): string
     throw new ProviderRequestError(400, `${key} is required`);
   }
   return value;
+}
+
+function readConfirmationToken(response: unknown): string | undefined {
+  const data = optionalRecord(optionalRecord(response)?.data);
+  if (optionalBoolean(data?.confirmation_required) !== true) {
+    return undefined;
+  }
+  return optionalString(data?.confirmation_token);
+}
+
+function parseAgentQQConfirmation(raw: string): Record<string, unknown> | undefined {
+  try {
+    const payload = optionalRecord(JSON.parse(raw));
+    const error = optionalRecord(payload?.error);
+    const details = optionalRecord(error?.details) ?? optionalRecord(payload?.data);
+    const token = optionalString(details?.confirmation_token);
+    if (!details || !token) {
+      return undefined;
+    }
+    return {
+      ok: true,
+      data: {
+        ...details,
+        confirmation_required: true,
+        confirmation_token: token,
+      },
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function buildListMessagesQuery(input: Record<string, unknown>): Record<string, string> {
@@ -250,12 +302,12 @@ function normalizeBodyFormat(value: string | undefined): string | undefined {
   return value.toUpperCase();
 }
 
-async function assertAgentQQResponse(response: Response, mode: "validate" | "execute"): Promise<void> {
+function assertAgentQQResponse(response: Response, mode: "validate" | "execute", raw: string): void {
   if (response.ok) {
     return;
   }
 
-  const { message, type } = await readAgentQQError(response);
+  const { message, type } = readAgentQQError(raw, response.status);
   const status = response.status;
   if (status === 429) {
     throw new ProviderRequestError(429, message, { type });
@@ -269,8 +321,7 @@ async function assertAgentQQResponse(response: Response, mode: "validate" | "exe
   throw new ProviderRequestError(status || 500, message, { type });
 }
 
-async function readAgentQQError(response: Response): Promise<{ message: string; type: string }> {
-  const raw = await response.text().catch(() => "");
+function readAgentQQError(raw: string, status: number): { message: string; type: string } {
   try {
     const payload = optionalRecord(JSON.parse(raw));
     const nested = optionalRecord(payload?.error);
@@ -281,12 +332,12 @@ async function readAgentQQError(response: Response): Promise<{ message: string; 
           optionalString(payload?.message) ??
           optionalString(payload?.error) ??
           raw) ||
-        `AgentMail (QQ) request failed with ${response.status}`,
+        `AgentMail (QQ) request failed with ${status}`,
     };
   } catch {
     return {
       type: "provider_error",
-      message: raw || `AgentMail (QQ) request failed with ${response.status}`,
+      message: raw || `AgentMail (QQ) request failed with ${status}`,
     };
   }
 }
