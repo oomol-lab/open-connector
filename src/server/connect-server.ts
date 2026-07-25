@@ -75,6 +75,7 @@ export interface IConnectServerOptions {
   actionSearch?: ActionSearchIndexProvider;
   registerStaticRoutes?: (app: Hono) => void;
   logger?: Logger;
+  compressApiResponses?: boolean;
 }
 
 /**
@@ -119,11 +120,13 @@ export class ConnectServer {
       }
     });
     app.get("/health", (context) => context.json({ ok: true }));
-    // Compress dashboard JSON responses. Scoped to /api/* so the streaming
-    // /mcp transport and /v1/proxy pass-through are never buffered/re-encoded.
-    // The middleware's content-type filter already skips non-text bodies
-    // (e.g. transit file downloads).
-    app.use("/api/*", compress());
+    if (this.options.compressApiResponses !== false) {
+      // Compress dashboard JSON responses. Scoped to /api/* so the streaming
+      // /mcp transport and /v1/proxy pass-through are never buffered/re-encoded.
+      // The middleware's content-type filter already skips non-text bodies
+      // (e.g. transit file downloads).
+      app.use("/api/*", compress());
+    }
     app.use("*", createLocalAuthMiddleware(auth));
     app.get("/v1/health", (context) => writeRuntimeSuccess(context, { ok: true, runtime: "oomol-connect" }));
     app.get("/v1/providers", (context) => this.listRuntimeProviders(context));

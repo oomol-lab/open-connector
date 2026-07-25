@@ -30,6 +30,7 @@ export interface ConnectAppOptions {
   registerStaticRoutes?: (app: Hono) => void;
   logger?: Logger;
   computeRuntimeAuthConfigured?: boolean;
+  compressApiResponses?: boolean;
 }
 
 export interface ConnectApp {
@@ -88,6 +89,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       },
       actionPolicy: options.actionPolicy,
       logger: options.logger,
+      compressApiResponses: options.compressApiResponses,
     }).createApp(),
     runtimeAuthConfigured:
       Boolean(options.runtimeToken) ||

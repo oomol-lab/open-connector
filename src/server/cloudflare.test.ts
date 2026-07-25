@@ -63,6 +63,23 @@ describe("cloudflare worker", () => {
     expect(JSON.stringify(info.mock.calls)).not.toContain("unused-secret");
   });
 
+  it("leaves dashboard JSON uncompressed for edge compression", async () => {
+    const response = await worker.fetch(
+      new Request("https://compression.example.com/api/auth/session", {
+        headers: { "accept-encoding": "gzip" },
+      }),
+      createEnv(),
+      createExecutionContext(),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-encoding")).toBeNull();
+    await expect(response.json()).resolves.toEqual({
+      adminAuthConfigured: false,
+      authenticated: true,
+    });
+  });
+
   it("selects the KV backend and round-trips a file when TRANSIT_FILES_BACKEND is kv", async () => {
     const namespace = new MemoryKVNamespace();
     // A distinct host keeps this out of the R2 test's cached app instance.

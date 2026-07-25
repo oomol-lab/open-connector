@@ -88,6 +88,10 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
     }),
     logger: workerLogger,
     computeRuntimeAuthConfigured: false,
+    // Cloudflare negotiates and applies response compression at the edge. Using
+    // Hono's CompressionStream middleware here can serve gzip bytes without a
+    // matching Content-Encoding header, which makes dashboard JSON unreadable.
+    compressApiResponses: false,
   });
 }
 
