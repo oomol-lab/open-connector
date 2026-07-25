@@ -6,6 +6,8 @@ import { providerFetch } from "../providers/provider-runtime.ts";
 
 const oauthTokenRequestTimeoutMs = 30_000;
 const oauthTokenResponseMaxBytes = 1024 * 1024;
+/** Longest `expires_in` we accept; anything larger overflows the ECMAScript `Date` range. */
+const maxExpiresInSeconds = 100 * 365 * 24 * 60 * 60;
 
 export interface OAuthTokenRequestOptions {
   clientId: string;
@@ -119,8 +121,7 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
     accessToken,
     tokenType,
     refreshToken: optionalString(payload.refresh_token),
-    expiresAt:
-      expiresIn === undefined ? undefined : new Date(Date.now() + expiresIn * 1000).toISOString(),
+    expiresAt: expiresIn === undefined ? undefined : new Date(Date.now() + expiresIn * 1000).toISOString(),
     profile: {
       accountId: "oauth2",
       displayName: "OAuth Credential",
@@ -167,17 +168,20 @@ function createTokenMetadata(payload: Record<string, unknown>): Record<string, u
 
 /**
  * Parse OAuth `expires_in` lifetimes. Providers commonly return a JSON number,
- * but some return a decimal string. Zero is a valid (already-expired) lifetime.
+ * but some return the same value as a string, which used to be dropped so the
+ * credential never carried an `expiresAt` and was never proactively refreshed.
+ *
+ * Non-positive and absurd lifetimes are reported as missing instead. A provider
+ * that answers `0` almost always means "no expiry known", not "this token is
+ * already dead": honouring it literally would make every request refresh (or,
+ * without a refresh token, fail) right after a successful connect. Values past
+ * `maxExpiresInSeconds` would overflow `new Date(...).toISOString()` into a
+ * `RangeError` that escapes the OAuth error wrapper.
  */
 function readExpiresInSeconds(value: unknown): number | undefined {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : undefined;
-  }
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }
-  return undefined;
+  const parsed =
+    typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 && parsed <= maxExpiresInSeconds ? parsed : undefined;
 }
 
 function isSensitiveTokenResponseField(key: string): boolean {

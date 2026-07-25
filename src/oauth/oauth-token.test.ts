@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requestAuthorizationCodeToken } from "./oauth-token.ts";
+import { requestAuthorizationCodeToken, requestRefreshToken } from "./oauth-token.ts";
 
 const authorizationCodeRequest = {
   clientId: "client-id",
@@ -11,9 +11,24 @@ const authorizationCodeRequest = {
   tokenUrl: "https://provider.example.com/oauth/token",
 };
 
+function stubTokenResponse(expiresIn: unknown): void {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        access_token: "access-token",
+        refresh_token: "refresh-token",
+        token_type: "Bearer",
+        expires_in: expiresIn,
+      }),
+    ),
+  );
+}
+
 describe("OAuth token requests", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("exchanges an authorization code as a form POST that never follows redirects", async () => {
@@ -66,44 +81,55 @@ describe("OAuth token requests", () => {
     );
   });
 
-  it("stores expiresAt for numeric, string, and zero expires_in values", async () => {
+  it("stores expiresAt for numeric and numeric-string expires_in values", async () => {
     const now = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(now);
 
     for (const [expiresIn, expectedMs] of [
       [3600, 3600_000],
       ["3600", 3600_000],
-      [0, 0],
-      ["0", 0],
+      ["  3600  ", 3600_000],
+      ["1.5", 1500],
     ] as const) {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async () =>
-          Response.json({
-            access_token: "access-token",
-            token_type: "Bearer",
-            expires_in: expiresIn,
-          }),
-        ),
-      );
+      stubTokenResponse(expiresIn);
 
       await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).resolves.toMatchObject({
         accessToken: "access-token",
         expiresAt: new Date(now + expectedMs).toISOString(),
       });
     }
+  });
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        Response.json({
-          access_token: "access-token",
-          token_type: "Bearer",
-          expires_in: "not-a-number",
-        }),
-      ),
-    );
-    await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).resolves.toMatchObject({
+  it("reports unusable expires_in lifetimes as missing instead of expired or out of range", async () => {
+    // A provider that answers 0 or a negative lifetime means "no expiry known".
+    // Trusting it literally would expire the credential the moment it is stored,
+    // and an out-of-range lifetime would overflow `new Date(...).toISOString()`.
+    for (const expiresIn of [0, "0", -3600, "-3600", 1e300, "1e20", "not-a-number", "", null, true]) {
+      stubTokenResponse(expiresIn);
+
+      await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).resolves.toMatchObject({
+        accessToken: "access-token",
+        expiresAt: undefined,
+      });
+    }
+  });
+
+  it("applies the same expires_in parsing when refreshing a token", async () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    const refreshRequest = {
+      ...authorizationCodeRequest,
+      refreshToken: "stored-refresh-token",
+    };
+
+    stubTokenResponse("3600");
+    await expect(requestRefreshToken(refreshRequest)).resolves.toMatchObject({
+      accessToken: "access-token",
+      expiresAt: new Date(now + 3600_000).toISOString(),
+    });
+
+    stubTokenResponse(0);
+    await expect(requestRefreshToken(refreshRequest)).resolves.toMatchObject({
       accessToken: "access-token",
       expiresAt: undefined,
     });
