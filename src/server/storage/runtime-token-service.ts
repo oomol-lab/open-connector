@@ -1,4 +1,5 @@
 import type { TokenPolicy } from "../../core/action-policy.ts";
+import type { RuntimeLogger } from "../../core/types.ts";
 
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 
@@ -45,9 +46,11 @@ export interface RuntimeGrant extends TokenPolicy {
 
 export class RuntimeTokenService {
   private readonly store: IRuntimeTokenStore;
+  private readonly logger?: RuntimeLogger;
 
-  constructor(store: IRuntimeTokenStore) {
+  constructor(store: IRuntimeTokenStore, logger?: RuntimeLogger) {
     this.store = store;
+    this.logger = logger;
   }
 
   async createToken(
@@ -92,7 +95,7 @@ export class RuntimeTokenService {
       return undefined;
     }
 
-    await this.store.markUsed(matched.id, new Date().toISOString());
+    await this.recordLastUsed(matched.id);
     return {
       tokenId: matched.id,
       allowedActions: matched.allowedActions,
@@ -103,6 +106,18 @@ export class RuntimeTokenService {
 
   async verifyToken(token: string): Promise<boolean> {
     return Boolean(await this.resolveToken(token));
+  }
+
+  /**
+   * `last_used_at` is best-effort audit metadata, so a failed write is logged
+   * instead of turning an authenticated caller into a failed request.
+   */
+  private async recordLastUsed(tokenId: string): Promise<void> {
+    try {
+      await this.store.markUsed(tokenId, new Date().toISOString());
+    } catch (error) {
+      this.logger?.warn({ tokenId, err: error }, "runtime token last use update failed");
+    }
   }
 }
 

@@ -38,7 +38,7 @@ export interface ConnectApp {
 }
 
 export async function createConnectApp(options: ConnectAppOptions): Promise<ConnectApp> {
-  const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore);
+  const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore, options.logger);
   const hasStoredRuntimeTokens = async (): Promise<boolean> => (await runtimeTokens.listTokens()).length > 0;
   const oauthClientConfigs = new OAuthClientConfigService({
     catalog: options.catalog,
