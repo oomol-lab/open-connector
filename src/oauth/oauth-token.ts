@@ -113,13 +113,14 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
 
   const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
   const tokenType = optionalString(payload.token_type) ?? "Bearer";
-  const expiresIn = typeof payload.expires_in === "number" ? payload.expires_in : undefined;
+  const expiresIn = readExpiresInSeconds(payload.expires_in);
   return {
     authType: "oauth2",
     accessToken,
     tokenType,
     refreshToken: optionalString(payload.refresh_token),
-    expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : undefined,
+    expiresAt:
+      expiresIn === undefined ? undefined : new Date(Date.now() + expiresIn * 1000).toISOString(),
     profile: {
       accountId: "oauth2",
       displayName: "OAuth Credential",
@@ -162,6 +163,21 @@ function createTokenMetadata(payload: Record<string, unknown>): Record<string, u
   metadata.rawTokenType = payload.token_type;
   metadata.scope = payload.scope;
   return metadata;
+}
+
+/**
+ * Parse OAuth `expires_in` lifetimes. Providers commonly return a JSON number,
+ * but some return a decimal string. Zero is a valid (already-expired) lifetime.
+ */
+function readExpiresInSeconds(value: unknown): number | undefined {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
 }
 
 function isSensitiveTokenResponseField(key: string): boolean {

@@ -65,4 +65,47 @@ describe("OAuth token requests", () => {
       "OAuth token request timed out.",
     );
   });
+
+  it("stores expiresAt for numeric, string, and zero expires_in values", async () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+
+    for (const [expiresIn, expectedMs] of [
+      [3600, 3600_000],
+      ["3600", 3600_000],
+      [0, 0],
+      ["0", 0],
+    ] as const) {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () =>
+          Response.json({
+            access_token: "access-token",
+            token_type: "Bearer",
+            expires_in: expiresIn,
+          }),
+        ),
+      );
+
+      await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).resolves.toMatchObject({
+        accessToken: "access-token",
+        expiresAt: new Date(now + expectedMs).toISOString(),
+      });
+    }
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          access_token: "access-token",
+          token_type: "Bearer",
+          expires_in: "not-a-number",
+        }),
+      ),
+    );
+    await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).resolves.toMatchObject({
+      accessToken: "access-token",
+      expiresAt: undefined,
+    });
+  });
 });
