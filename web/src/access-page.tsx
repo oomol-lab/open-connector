@@ -138,6 +138,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
         name,
         allowedActions: rules.allowedActions,
         blockedActions: rules.blockedActions,
+        allowedProxies: rules.allowedProxies,
       });
       setCreated(result);
       setName("");
@@ -188,6 +189,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
       await apiPut(`/api/runtime-tokens/${editingToken.id}`, {
         allowedActions: rules.allowedActions,
         blockedActions: rules.blockedActions,
+        allowedProxies: rules.allowedProxies,
       });
       setEditingToken(null);
       setTokenStatus(t("access.policy.saved"));
@@ -230,7 +232,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
       createPolicyEditorDraft({
         allowedActions: token.allowedActions,
         blockedActions: token.blockedActions,
-        allowedProxies: [],
+        allowedProxies: token.allowedProxies,
         blockedProxies: [],
       }),
     );
@@ -475,8 +477,8 @@ function PolicyTester(props: {
     () => (input.trim() ? filterPolicyRuleCandidates(candidates, input, 6) : []),
     [candidates, input],
   );
-  const token = resource === "action" ? props.tokens.find((item) => item.id === tokenId) : undefined;
-  const layers = policyLayers(props.policy, token).filter((layer) => resource === "action" || layer.source !== "token");
+  const token = props.tokens.find((item) => item.id === tokenId);
+  const layers = policyLayers(props.policy, token);
   const result = testedValue ? evaluatePolicy(testedValue, resource, layers) : null;
   const listId = `policy-tester-${props.compact ? "compact" : "default"}-${resource}`;
 
@@ -520,7 +522,7 @@ function PolicyTester(props: {
             {t("access.policy.tester.proxy")}
           </ToggleGroupItem>
         </ToggleGroup>
-        {resource === "action" && props.tokens.length > 0 ? (
+        {props.tokens.length > 0 ? (
           <Select value={tokenId} onValueChange={setTokenId}>
             <SelectTrigger className="policy-token-select-trigger" aria-label={t("access.policy.tester.tokenLabel")}>
               <SelectValue />
@@ -720,7 +722,7 @@ function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
   const t = useTranslate();
   const mode = createTokenDialogMode(props.created);
   const created = mode === "created" ? props.created : null;
-  const issues = validatePolicyEditorDraft(props.draft, false);
+  const issues = validatePolicyEditorDraft(props.draft, true);
 
   return (
     <Dialog open onOpenChange={(open) => (!open ? props.onClose() : undefined)}>
@@ -778,7 +780,8 @@ function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
               <PolicyEditor
                 draft={props.draft}
                 providers={props.providers}
-                includeProxies={false}
+                includeProxies
+                proxyAccess="grant"
                 onChange={props.onDraftChange}
               />
               <div className="button-row">
@@ -811,7 +814,7 @@ interface EditTokenPolicyDialogProps {
 
 function EditTokenPolicyDialog(props: EditTokenPolicyDialogProps): ReactNode {
   const t = useTranslate();
-  const issues = validatePolicyEditorDraft(props.draft, false);
+  const issues = validatePolicyEditorDraft(props.draft, true);
   return (
     <Dialog open onOpenChange={(open) => (!open ? props.onClose() : undefined)}>
       <DialogContent className="policy-token-dialog max-h-[calc(100svh-2rem)] max-w-[min(760px,calc(100vw-2rem))] overflow-y-auto sm:max-w-[min(760px,calc(100vw-2rem))]">
@@ -824,7 +827,8 @@ function EditTokenPolicyDialog(props: EditTokenPolicyDialogProps): ReactNode {
           <PolicyEditor
             draft={props.draft}
             providers={props.providers}
-            includeProxies={false}
+            includeProxies
+            proxyAccess="grant"
             onChange={props.onDraftChange}
           />
           <div className="button-row">
@@ -865,6 +869,7 @@ function tokenPolicySummary(token: RuntimeTokenSummary, t: NonNullable<ReturnTyp
   return t("access.policy.tokenSummary", {
     allowed: token.allowedActions.length,
     blocked: token.blockedActions.length,
+    proxies: token.allowedProxies.length,
   });
 }
 

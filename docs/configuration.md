@@ -36,8 +36,12 @@ npm run dev
 ```
 
 Create persistent runtime tokens from the web console Access tab or `POST /api/runtime-tokens`.
-Only token hashes are stored in SQLite. `OOMOL_CONNECT_RUNTIME_TOKEN` remains available for
-bootstrap scripts and backward compatibility.
+Only token hashes are stored in SQLite. Persistent tokens have independent Action rules and provider
+proxy grants. A new token has no proxy access until its `allowedProxies` includes a provider service
+or `*`; those grants can only narrow the deployment and runtime proxy policy.
+`OOMOL_CONNECT_RUNTIME_TOKEN` remains available for bootstrap scripts and backward compatibility.
+Because the bootstrap token has no stored policy, its proxy access is controlled only by the
+deployment and runtime proxy rules.
 
 ## JWT access tokens
 

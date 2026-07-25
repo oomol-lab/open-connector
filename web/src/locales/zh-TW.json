@@ -389,7 +389,7 @@
         "withBlocked": "{{allow}} · 始終阻止 {{count}} 條"
       },
       "layerSummary": "操作：{{action}} · 提供商代理請求：{{proxy}}",
-      "tokenSummary": "允許規則 {{allowed}} 條 · 阻止規則 {{blocked}} 條 · 仍受執行階段基準限制",
+      "tokenSummary": "操作允許規則 {{allowed}} 條 · 操作阻止規則 {{blocked}} 條 · Proxy 授權 {{proxies}} 條 · 仍受執行階段基準限制",
       "editor": {
         "title": "編輯執行階段策略",
         "description": "儲存前會結合部署約束預覽修改影響。",
@@ -433,7 +433,7 @@
         "noRules": "這個清單中暫無規則。",
         "actionAllowRequired": "請至少新增一條操作允許規則，或選擇不額外限制。",
         "proxyAllowRequired": "請至少新增一條提供商允許規則，或選擇不額外限制。",
-        "tokenHint": "權杖規則只能進一步縮小部署和執行階段策略允許的操作，不影響提供商代理請求。",
+        "tokenHint": "操作規則與 Proxy 授權彼此獨立。Proxy 授權清單為空時，權杖不能傳送提供商代理請求。",
         "discard": "放棄修改",
         "preview": "預覽影響"
       },

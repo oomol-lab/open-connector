@@ -99,7 +99,7 @@ describe("ProxyRunner", () => {
         allowedProxies: [],
         blockedProxies: ["example"],
       },
-      { allowedActions: [], blockedActions: ["example.*"] },
+      { allowedActions: [], blockedActions: ["example.*"], allowedProxies: ["example"] },
     );
 
     await expect(
@@ -107,6 +107,36 @@ describe("ProxyRunner", () => {
     ).resolves.toMatchObject({
       ok: false,
       errorCode: "proxy_blocked",
+    });
+    expect(loadProxyExecutor).not.toHaveBeenCalled();
+  });
+
+  it("does not load a proxy executor without a runtime token proxy grant", async () => {
+    const loadProxyExecutor = vi.fn();
+    const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
+    const runner = createRunner({
+      actionPolicy,
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+        loadProxyExecutor,
+      },
+    });
+    const policy = actionPolicy.createSnapshot(
+      {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: ["example"],
+        blockedProxies: [],
+      },
+      { allowedActions: ["*"], blockedActions: [], allowedProxies: [] },
+    );
+
+    await expect(
+      runner.run({ service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
+    ).resolves.toMatchObject({
+      ok: false,
+      errorCode: "proxy_not_allowed",
     });
     expect(loadProxyExecutor).not.toHaveBeenCalled();
   });

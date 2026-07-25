@@ -9,7 +9,9 @@ describe("createLocalAuthMiddleware", () => {
       "*",
       createLocalAuthMiddleware({
         resolveRuntimeToken: async (token) =>
-          token === "runtime-token" ? { tokenId: "token-1", allowedActions: [], blockedActions: [] } : undefined,
+          token === "runtime-token"
+            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            : undefined,
       }),
     );
     app.get("/v1", (context) => context.json({ ok: true }));

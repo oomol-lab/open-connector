@@ -91,6 +91,7 @@ export interface RuntimeTokenSummary {
   name: string;
   allowedActions: string[];
   blockedActions: string[];
+  allowedProxies: string[];
   createdAt: string;
   lastUsedAt?: string;
 }

@@ -91,6 +91,9 @@ describe("action execution OpenAPI", () => {
       required: string[];
       properties: Record<string, unknown>;
     };
+    const tokenPolicy = document.components.schemas.TokenPolicy as {
+      required: string[];
+    };
 
     expect(runtimePolicyPath.get.responses["200"]).toBeDefined();
     expect(runtimePolicyPath.put.responses["413"]).toBeDefined();
@@ -100,7 +103,10 @@ describe("action execution OpenAPI", () => {
       maxItems: 128,
       items: { maxLength: 256, description: expect.stringContaining("256-byte UTF-8 limit") },
     });
-    expect(tokenSummary.required).toEqual(expect.arrayContaining(["allowedActions", "blockedActions"]));
+    expect(tokenSummary.required).toEqual(
+      expect.arrayContaining(["allowedActions", "blockedActions", "allowedProxies"]),
+    );
+    expect(tokenPolicy.required).toEqual(["allowedActions", "blockedActions", "allowedProxies"]);
     expect(runLog.properties).toHaveProperty("policy");
     expect(runLog.properties).toHaveProperty("runtimeTokenId");
   });

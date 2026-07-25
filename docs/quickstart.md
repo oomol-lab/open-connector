@@ -177,7 +177,9 @@ curl -s http://localhost:3000/api/actions \
 
 Use the admin token for `/api`, `/docs`, and the web console. Create persistent runtime tokens for
 `/v1` and `/mcp` from the web console Access tab or `POST /api/runtime-tokens`; only token hashes are
-stored in SQLite. `OOMOL_CONNECT_RUNTIME_TOKEN` remains available for bootstrap scripts.
+stored in SQLite. Persistent tokens have no provider proxy access unless their independent
+`allowedProxies` grant includes the provider service or `*`. `OOMOL_CONNECT_RUNTIME_TOKEN` remains
+available for bootstrap scripts.
 
 The server binds to `127.0.0.1` by default. Set `HOST=0.0.0.0` only when the runtime must be
 reachable from outside the local machine or container.
@@ -188,6 +190,6 @@ Constrain executable actions with comma-separated action ids or provider wildcar
 OOMOL_CONNECT_ALLOWED_ACTIONS="hackernews.*,github.get_current_user" npm run dev
 ```
 
-Provider proxies are controlled separately and are not affected by action policy. Every proxy is
-allowed until you restrict it with `OOMOL_CONNECT_ALLOWED_PROXIES="github"`, or turn them all off
-with `OOMOL_CONNECT_BLOCKED_PROXIES="*"`.
+Provider proxies are controlled separately and are not affected by Action policy. Deployment and
+runtime rules use `OOMOL_CONNECT_ALLOWED_PROXIES` and `OOMOL_CONNECT_BLOCKED_PROXIES`; persistent
+runtime tokens must additionally grant each provider through `allowedProxies`.

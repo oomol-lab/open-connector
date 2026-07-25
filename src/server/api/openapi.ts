@@ -354,11 +354,14 @@ export function createOpenApiDocument(
             name: jsonSchema.string({ description: "User-facing token label." }),
             allowedActions: policyRuleArraySchema("Action allow rules applied to this stored runtime token."),
             blockedActions: policyRuleArraySchema("Action block rules applied to this stored runtime token."),
+            allowedProxies: policyRuleArraySchema(
+              "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
+            ),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
           },
           {
-            required: ["id", "name", "allowedActions", "blockedActions", "createdAt"],
+            required: ["id", "name", "allowedActions", "blockedActions", "allowedProxies", "createdAt"],
             description: "Runtime API token summary. Plaintext tokens and token hashes are not returned.",
           },
         ),
@@ -367,20 +370,26 @@ export function createOpenApiDocument(
             name: jsonSchema.string({ description: "User-facing token label." }),
             allowedActions: policyRuleArraySchema("Optional action allow rules for the new token."),
             blockedActions: policyRuleArraySchema("Optional action block rules for the new token."),
+            allowedProxies: policyRuleArraySchema(
+              "Optional provider proxy grants for the new token. Omit or leave empty to deny proxy access.",
+            ),
           },
           {
             required: ["name"],
             description: "Runtime token creation request.",
           },
         ),
-        TokenActionPolicy: jsonSchema.object(
+        TokenPolicy: jsonSchema.object(
           {
             allowedActions: policyRuleArraySchema("Action allow rules for this token."),
             blockedActions: policyRuleArraySchema("Action block rules for this token."),
+            allowedProxies: policyRuleArraySchema(
+              "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
+            ),
           },
           {
-            required: ["allowedActions", "blockedActions"],
-            description: "Complete replacement of one stored runtime token's action policy.",
+            required: ["allowedActions", "blockedActions", "allowedProxies"],
+            description: "Complete replacement of one stored runtime token's action and proxy permissions.",
           },
         ),
         PolicyRules: policyRulesSchema(),
@@ -625,13 +634,13 @@ function createRuntimeTokenPath(): Record<string, unknown> {
   return {
     put: {
       tags: ["Access"],
-      summary: "Replace one stored runtime token's action policy.",
+      summary: "Replace one stored runtime token's permissions.",
       description: `Policy request bodies must not exceed ${policyRequestMaxBytes} bytes.`,
       requestBody: {
         required: true,
         content: {
           "application/json": {
-            schema: { $ref: "#/components/schemas/TokenActionPolicy" },
+            schema: { $ref: "#/components/schemas/TokenPolicy" },
           },
         },
       },

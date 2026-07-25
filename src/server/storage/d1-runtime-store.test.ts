@@ -123,6 +123,7 @@ describe("D1RuntimeDatabase", () => {
     const created = await tokens.createToken("Claude Desktop", {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
+      allowedProxies: ["github"],
     });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.tokenHash).not.toBe(created.token);
@@ -134,6 +135,7 @@ describe("D1RuntimeDatabase", () => {
       name: "Claude Desktop",
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
+      allowedProxies: ["github"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
 
@@ -141,10 +143,12 @@ describe("D1RuntimeDatabase", () => {
       tokens.updateTokenPolicy(created.record.id, {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
+        allowedProxies: ["slack"],
       }),
     ).resolves.toMatchObject({
       allowedActions: ["github.get_current_user"],
       blockedActions: [],
+      allowedProxies: ["slack"],
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
@@ -444,6 +448,9 @@ class SqliteD1Database implements D1DatabaseBinding {
     this.database.exec(readFileSync(new URL("../../../migrations/0007_runtime_policy.sql", import.meta.url), "utf8"));
     this.database.exec(
       readFileSync(new URL("../../../migrations/0008_runtime_token_policy.sql", import.meta.url), "utf8"),
+    );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0009_runtime_token_proxy.sql", import.meta.url), "utf8"),
     );
   }
 

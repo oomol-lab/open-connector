@@ -26,9 +26,10 @@ export interface PolicyRules {
   blockedProxies: string[];
 }
 
-export interface TokenActionPolicy {
+export interface TokenPolicy {
   allowedActions: string[];
   blockedActions: string[];
+  allowedProxies: string[];
 }
 
 export interface RuntimePolicyState {
@@ -64,8 +65,9 @@ export class ActionPolicySnapshot {
   readonly state: RuntimePolicyState;
   private readonly layers: CompiledLayer[];
   private readonly proxyLayers: CompiledLayer[];
+  private readonly tokenProxyRules?: CompiledRule[];
 
-  constructor(deployment: PolicyRules, runtime: PolicyRules, token?: TokenActionPolicy, updatedAt?: string) {
+  constructor(deployment: PolicyRules, runtime: PolicyRules, token?: TokenPolicy, updatedAt?: string) {
     const deploymentRules = immutablePolicyRules(deployment);
     const runtimeRules = immutablePolicyRules(runtime);
     this.state = Object.freeze({ deployment: deploymentRules, runtime: runtimeRules, updatedAt });
@@ -75,10 +77,12 @@ export class ActionPolicySnapshot {
       const tokenRules = immutablePolicyRules({
         allowedActions: token.allowedActions,
         blockedActions: token.blockedActions,
-        allowedProxies: [],
+        allowedProxies: token.allowedProxies,
         blockedProxies: [],
       });
-      this.layers.push(compileLayer("token", tokenRules));
+      const tokenLayer = compileLayer("token", tokenRules);
+      this.layers.push(tokenLayer);
+      this.tokenProxyRules = tokenLayer.allowedProxies;
     }
   }
 
@@ -145,6 +149,19 @@ export class ActionPolicySnapshot {
       checks.push({ source: layer.source, outcome: "allow_match", rule: allowed.pattern });
     }
 
+    if (this.tokenProxyRules) {
+      const allowed = this.tokenProxyRules.find((rule) => rule.matches(service));
+      if (!allowed) {
+        return {
+          allowed: false,
+          code: "proxy_not_allowed",
+          message: `${service} proxy is not granted to this runtime token.`,
+          checks: [...checks, { source: "token", outcome: "allow_miss" }],
+        };
+      }
+      checks.push({ source: "token", outcome: "allow_match", rule: allowed.pattern });
+    }
+
     return { allowed: true, checks };
   }
 }
@@ -161,7 +178,7 @@ export class ActionPolicyService {
 
   createSnapshot(
     runtime: PolicyRules = emptyPolicyRules(),
-    token?: TokenActionPolicy,
+    token?: TokenPolicy,
     updatedAt?: string,
   ): ActionPolicySnapshot {
     return new ActionPolicySnapshot(this.rules, runtime, token, updatedAt);

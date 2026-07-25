@@ -24,6 +24,7 @@ interface PolicyEditorProps {
   draft: PolicyEditorDraft;
   providers: ProviderDefinition[];
   includeProxies: boolean;
+  proxyAccess?: "constraint" | "grant";
   onChange(draft: PolicyEditorDraft): void;
 }
 
@@ -48,6 +49,7 @@ export function PolicyEditor(props: PolicyEditorProps): ReactNode {
               resource="proxy"
               draft={props.draft}
               providers={props.providers}
+              proxyAccess={props.proxyAccess}
               onChange={props.onChange}
             />
           </TabsContent>
@@ -69,6 +71,7 @@ interface PolicyResourceEditorProps {
   resource: PolicyResource;
   draft: PolicyEditorDraft;
   providers: ProviderDefinition[];
+  proxyAccess?: "constraint" | "grant";
   onChange(draft: PolicyEditorDraft): void;
 }
 
@@ -76,6 +79,7 @@ function PolicyResourceEditor(props: PolicyResourceEditorProps): ReactNode {
   const t = useTranslate();
   const fields = resourceFields(props.resource);
   const allowMode = props.draft[fields.allowMode];
+  const grantsProxy = props.resource === "proxy" && props.proxyAccess === "grant";
 
   function setAllowMode(mode: AllowMode): void {
     props.onChange({
@@ -86,42 +90,50 @@ function PolicyResourceEditor(props: PolicyResourceEditorProps): ReactNode {
   }
 
   function setRules(field: keyof PolicyRules, values: string[]): void {
-    props.onChange({ ...props.draft, rules: { ...props.draft.rules, [field]: values } });
+    props.onChange({
+      ...props.draft,
+      ...(grantsProxy && field === fields.allowed
+        ? { [fields.allowMode]: values.length > 0 ? "restricted" : "unrestricted" }
+        : {}),
+      rules: { ...props.draft.rules, [field]: values },
+    });
   }
 
   return (
     <div className="policy-resource-editor">
-      <fieldset className="policy-allow-mode">
-        <legend>{t("access.policy.editor.allowMode")}</legend>
-        <label>
-          <input
-            type="radio"
-            name={`${props.resource}-allow-mode`}
-            value="unrestricted"
-            checked={allowMode === "unrestricted"}
-            onChange={() => setAllowMode("unrestricted")}
-          />
-          <span>
-            <strong>{t("access.policy.editor.unrestricted")}</strong>
-            <small>{t(`access.policy.editor.${props.resource}UnrestrictedHint`)}</small>
-          </span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name={`${props.resource}-allow-mode`}
-            value="restricted"
-            checked={allowMode === "restricted"}
-            onChange={() => setAllowMode("restricted")}
-          />
-          <span>
-            <strong>{t("access.policy.editor.restricted")}</strong>
-            <small>{t(`access.policy.editor.${props.resource}RestrictedHint`)}</small>
-          </span>
-        </label>
-      </fieldset>
+      {!grantsProxy ? (
+        <fieldset className="policy-allow-mode">
+          <legend>{t("access.policy.editor.allowMode")}</legend>
+          <label>
+            <input
+              type="radio"
+              name={`${props.resource}-allow-mode`}
+              value="unrestricted"
+              checked={allowMode === "unrestricted"}
+              onChange={() => setAllowMode("unrestricted")}
+            />
+            <span>
+              <strong>{t("access.policy.editor.unrestricted")}</strong>
+              <small>{t(`access.policy.editor.${props.resource}UnrestrictedHint`)}</small>
+            </span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name={`${props.resource}-allow-mode`}
+              value="restricted"
+              checked={allowMode === "restricted"}
+              onChange={() => setAllowMode("restricted")}
+            />
+            <span>
+              <strong>{t("access.policy.editor.restricted")}</strong>
+              <small>{t(`access.policy.editor.${props.resource}RestrictedHint`)}</small>
+            </span>
+          </label>
+        </fieldset>
+      ) : null}
 
-      {allowMode === "restricted" ? (
+      {grantsProxy || allowMode === "restricted" ? (
         <RuleListEditor
           resource={props.resource}
           effect="allow"
@@ -131,13 +143,15 @@ function PolicyResourceEditor(props: PolicyResourceEditorProps): ReactNode {
         />
       ) : null}
 
-      <RuleListEditor
-        resource={props.resource}
-        effect="block"
-        values={props.draft.rules[fields.blocked]}
-        providers={props.providers}
-        onChange={(values) => setRules(fields.blocked, values)}
-      />
+      {!grantsProxy ? (
+        <RuleListEditor
+          resource={props.resource}
+          effect="block"
+          values={props.draft.rules[fields.blocked]}
+          providers={props.providers}
+          onChange={(values) => setRules(fields.blocked, values)}
+        />
+      ) : null}
 
       <details className="policy-advanced-editor">
         <summary>{t("access.policy.editor.advanced")}</summary>
@@ -146,7 +160,7 @@ function PolicyResourceEditor(props: PolicyResourceEditorProps): ReactNode {
           <Label className="field">
             <span>{t("access.policy.editor.allowedRaw")}</span>
             <Textarea
-              value={allowMode === "restricted" ? props.draft.rules[fields.allowed].join("\n") : ""}
+              value={grantsProxy || allowMode === "restricted" ? props.draft.rules[fields.allowed].join("\n") : ""}
               placeholder={props.resource === "action" ? "github.*" : "github"}
               onChange={(event) => {
                 const values = parsePolicyLines(event.target.value);
@@ -158,14 +172,16 @@ function PolicyResourceEditor(props: PolicyResourceEditorProps): ReactNode {
               }}
             />
           </Label>
-          <Label className="field">
-            <span>{t("access.policy.editor.blockedRaw")}</span>
-            <Textarea
-              value={props.draft.rules[fields.blocked].join("\n")}
-              placeholder={props.resource === "action" ? "github.delete_repository" : "*"}
-              onChange={(event) => setRules(fields.blocked, parsePolicyLines(event.target.value))}
-            />
-          </Label>
+          {!grantsProxy ? (
+            <Label className="field">
+              <span>{t("access.policy.editor.blockedRaw")}</span>
+              <Textarea
+                value={props.draft.rules[fields.blocked].join("\n")}
+                placeholder={props.resource === "action" ? "github.delete_repository" : "*"}
+                onChange={(event) => setRules(fields.blocked, parsePolicyLines(event.target.value))}
+              />
+            </Label>
+          ) : null}
         </div>
       </details>
     </div>

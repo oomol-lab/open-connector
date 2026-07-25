@@ -1,6 +1,6 @@
 import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
-import type { TokenActionPolicy } from "../core/action-policy.ts";
+import type { TokenPolicy } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
 import type {
   ActionDefinition,
@@ -1148,6 +1148,7 @@ describe("ConnectServer", () => {
         name: "Claude Desktop",
         allowedActions: [" example.* ", "example.*"],
         blockedActions: ["example.delete"],
+        allowedProxies: [" example ", "example"],
       }),
     });
     expect(created.status).toBe(200);
@@ -1178,6 +1179,7 @@ describe("ConnectServer", () => {
         name: "Claude Desktop",
         allowedActions: [" example.* ", "example.*"],
         blockedActions: ["example.delete"],
+        allowedProxies: [" example ", "example"],
       }),
     });
     expect(created.status).toBe(200);
@@ -1187,6 +1189,7 @@ describe("ConnectServer", () => {
       name: "Claude Desktop",
       allowedActions: ["example.*"],
       blockedActions: ["example.delete"],
+      allowedProxies: ["example"],
     });
     expect(JSON.stringify(createdBody.record)).not.toContain(createdBody.token);
 
@@ -1198,18 +1201,20 @@ describe("ConnectServer", () => {
         name: "Claude Desktop",
         allowedActions: ["example.*"],
         blockedActions: ["example.delete"],
+        allowedProxies: ["example"],
       },
     ]);
 
     const updated = await app.request(`/api/runtime-tokens/${createdBody.record.id}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ allowedActions: ["example.echo"], blockedActions: [] }),
+      body: JSON.stringify({ allowedActions: ["example.echo"], blockedActions: [], allowedProxies: [] }),
     });
     expect(updated.status).toBe(200);
     await expect(updated.json()).resolves.toMatchObject({
       allowedActions: ["example.echo"],
       blockedActions: [],
+      allowedProxies: [],
     });
 
     const unauthorized = await app.request("/v1/actions");
@@ -1384,6 +1389,7 @@ describe("ConnectServer", () => {
       }),
     });
     const token = (await created.json()) as { token: string; record: RuntimeTokenRecord };
+    expect(token.record.allowedProxies).toEqual([]);
 
     const denied = await app.request("/v1/actions/example.echo", {
       method: "POST",
@@ -2625,6 +2631,54 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("applies stored runtime token proxy grants independently of action rules", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const app = createTestServer([apiKeyProvider], {
+      runtimeTokens,
+      providerLoader: new ProxyProviderLoader(),
+    }).createApp();
+
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+    const deniedCreation = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Actions only",
+        allowedActions: ["*"],
+        blockedActions: [],
+        allowedProxies: [],
+      }),
+    });
+    const deniedToken = (await deniedCreation.json()) as { token: string };
+    const grantedCreation = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Example proxy",
+        allowedActions: ["example.echo"],
+        blockedActions: ["example.delete"],
+        allowedProxies: ["example"],
+      }),
+    });
+    const grantedToken = (await grantedCreation.json()) as { token: string };
+    const request = (token: string) => ({
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    });
+
+    const denied = await app.request("/v1/proxy/example", request(deniedToken.token));
+    expect(denied.status).toBe(403);
+    await expect(denied.json()).resolves.toMatchObject({ errorCode: "proxy_not_allowed" });
+
+    const granted = await app.request("/v1/proxy/example", request(grantedToken.token));
+    expect(granted.status).toBe(200);
+  });
+
   it("rejects invalid provider proxy endpoints", async () => {
     const app = createTestServer([apiKeyProvider], {
       providerLoader: new ProxyProviderLoader(),
@@ -3182,7 +3236,7 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
     return [...this.tokens.values()].find((token) => token.tokenHash === tokenHash);
   }
 
-  async updatePolicy(id: string, policy: TokenActionPolicy): Promise<RuntimeTokenRecord | undefined> {
+  async updatePolicy(id: string, policy: TokenPolicy): Promise<RuntimeTokenRecord | undefined> {
     const token = this.tokens.get(id);
     if (!token) {
       return undefined;

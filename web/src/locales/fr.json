@@ -389,7 +389,7 @@
         "withBlocked": "{{allow}} · Toujours bloquer : {{count}}"
       },
       "layerSummary": "Actions : {{action}} · Proxy fournisseur : {{proxy}}",
-      "tokenSummary": "Règles d’autorisation {{allowed}} · Blocage {{blocked}} · Encore limité par la référence runtime",
+      "tokenSummary": "Actions autorisées {{allowed}} · Actions bloquées {{blocked}} · Accès proxy {{proxies}} · Encore limité par la référence runtime",
       "editor": {
         "title": "Modifier la politique runtime",
         "description": "L’impact des modifications est prévisualisé avec les contraintes de déploiement.",
@@ -433,7 +433,7 @@
         "noRules": "Aucune règle dans cette liste.",
         "actionAllowRequired": "Ajoutez une règle d’action ou choisissez aucune restriction supplémentaire.",
         "proxyAllowRequired": "Ajoutez une règle de fournisseur ou choisissez aucune restriction supplémentaire.",
-        "tokenHint": "Les règles du token peuvent seulement restreindre davantage les actions autorisées. Elles n’affectent pas les requêtes proxy.",
+        "tokenHint": "Les règles d’action et les autorisations proxy sont indépendantes. Une liste proxy vide interdit les requêtes proxy du token.",
         "discard": "Abandonner les modifications",
         "preview": "Prévisualiser l’impact"
       },

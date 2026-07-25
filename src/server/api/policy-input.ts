@@ -1,4 +1,4 @@
-import type { PolicyRules, TokenActionPolicy } from "../../core/action-policy.ts";
+import type { PolicyRules, TokenPolicy } from "../../core/action-policy.ts";
 import type { JsonRequestBody } from "./http-utils.ts";
 
 import { Buffer } from "node:buffer";
@@ -18,13 +18,14 @@ export function readRuntimePolicyRules(body: JsonRequestBody): PolicyRules {
   };
 }
 
-export function readTokenActionPolicy(body: JsonRequestBody, allowOmitted = false): TokenActionPolicy {
-  if (body.allowedProxies !== undefined || body.blockedProxies !== undefined) {
-    throw invalidInput("Token policy does not support proxy rules.");
+export function readTokenPolicy(body: JsonRequestBody, allowOmitted = false): TokenPolicy {
+  if (body.blockedProxies !== undefined) {
+    throw invalidInput("Token policy does not support proxy block rules.");
   }
   return {
     allowedActions: readRules(body.allowedActions, "allowedActions", "action", allowOmitted),
     blockedActions: readRules(body.blockedActions, "blockedActions", "action", allowOmitted),
+    allowedProxies: readRules(body.allowedProxies, "allowedProxies", "proxy", allowOmitted),
   };
 }
 

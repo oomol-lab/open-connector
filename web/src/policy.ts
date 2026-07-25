@@ -108,7 +108,7 @@ export function policyLayers(policy: RuntimePolicyState, token?: RuntimeTokenSum
       rules: {
         allowedActions: token.allowedActions,
         blockedActions: token.blockedActions,
-        allowedProxies: [],
+        allowedProxies: token.allowedProxies,
         blockedProxies: [],
       },
     });
@@ -126,7 +126,9 @@ export function evaluatePolicy(value: string, resource: PolicyResource, layers: 
       return { source: layer.source, outcome: "block_match", rule: blocked };
     }
     if (layer.rules[allowedField].length === 0) {
-      return { source: layer.source, outcome: "unrestricted" };
+      return resource === "proxy" && layer.source === "token"
+        ? { source: layer.source, outcome: "allow_miss" }
+        : { source: layer.source, outcome: "unrestricted" };
     }
     const allowed = layer.rules[allowedField].find((rule) => matches(rule, value));
     return allowed

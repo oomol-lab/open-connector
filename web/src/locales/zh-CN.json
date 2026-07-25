@@ -389,7 +389,7 @@
         "withBlocked": "{{allow}} · 始终阻止 {{count}} 条"
       },
       "layerSummary": "操作：{{action}} · 提供商代理请求：{{proxy}}",
-      "tokenSummary": "允许规则 {{allowed}} 条 · 阻止规则 {{blocked}} 条 · 仍受运行时基线限制",
+      "tokenSummary": "操作允许规则 {{allowed}} 条 · 操作阻止规则 {{blocked}} 条 · Proxy 授权 {{proxies}} 条 · 仍受运行时基线限制",
       "editor": {
         "title": "编辑运行时策略",
         "description": "保存前会结合部署约束预览修改影响。",
@@ -433,7 +433,7 @@
         "noRules": "这个列表中暂无规则。",
         "actionAllowRequired": "请至少添加一条操作允许规则，或选择不额外限制。",
         "proxyAllowRequired": "请至少添加一条提供商允许规则，或选择不额外限制。",
-        "tokenHint": "Token 规则只能进一步收窄部署和运行时策略允许的操作，不影响提供商代理请求。",
+        "tokenHint": "操作规则与 Proxy 授权相互独立。Proxy 授权列表为空时，Token 不能发送提供商代理请求。",
         "discard": "放弃修改",
         "preview": "预览影响"
       },

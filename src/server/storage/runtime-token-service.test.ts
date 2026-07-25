@@ -28,6 +28,7 @@ describe("RuntimeTokenService", () => {
       tokenHash: hashRuntimeToken(token),
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
+      allowedProxies: ["github"],
       createdAt: "2026-07-20T00:00:00.000Z",
     };
     const store: IRuntimeTokenStore = {
@@ -43,6 +44,7 @@ describe("RuntimeTokenService", () => {
       tokenId: "token-1",
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
+      allowedProxies: ["github"],
     });
     expect(store.findByHash).toHaveBeenCalledWith(record.tokenHash);
     expect(store.list).not.toHaveBeenCalled();

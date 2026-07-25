@@ -38,7 +38,7 @@ import { getResponseCachePolicy } from "./api/cache-policy.ts";
 import { HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { renderOAuthCompletionPage } from "./api/oauth-completion-page.ts";
 import { createOpenApiDocument } from "./api/openapi.ts";
-import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenActionPolicy } from "./api/policy-input.ts";
+import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenPolicy } from "./api/policy-input.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeAction,
@@ -850,7 +850,7 @@ export class ConnectServer {
       return jsonError(context, 400, "invalid_input", "name is required.");
     }
 
-    const created = await this.options.runtimeTokens.createToken(name, readTokenActionPolicy(body, true));
+    const created = await this.options.runtimeTokens.createToken(name, readTokenPolicy(body, true));
     return context.json({
       token: created.token,
       record: {
@@ -858,6 +858,7 @@ export class ConnectServer {
         name: created.record.name,
         allowedActions: created.record.allowedActions,
         blockedActions: created.record.blockedActions,
+        allowedProxies: created.record.allowedProxies,
         createdAt: created.record.createdAt,
       },
     });
@@ -865,7 +866,7 @@ export class ConnectServer {
 
   private async updateRuntimeToken(context: Context, id: string): Promise<Response> {
     const body = await readJsonBody(context, policyRequestMaxBytes);
-    const token = await this.options.runtimeTokens.updateTokenPolicy(id, readTokenActionPolicy(body));
+    const token = await this.options.runtimeTokens.updateTokenPolicy(id, readTokenPolicy(body));
     return token
       ? context.json(token)
       : jsonError(context, 404, "runtime_token_not_found", `Runtime token not found: ${id}.`);

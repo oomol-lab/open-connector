@@ -56,6 +56,29 @@ describe("web policy evaluation", () => {
     expect(countAllowedActions([githubProvider()], policyLayers(policy))).toEqual({ allowed: 1, total: 2 });
   });
 
+  it("treats runtime token proxy grants as explicit permissions", () => {
+    const policy: RuntimePolicyState = {
+      deployment: { ...emptyRules, allowedProxies: ["github"] },
+      runtime: emptyRules,
+    };
+    const token = {
+      id: "token-1",
+      name: "Issue bot",
+      allowedActions: ["*"],
+      blockedActions: [],
+      allowedProxies: [],
+      createdAt: "2026-07-20T00:00:00.000Z",
+    };
+
+    expect(evaluatePolicy("github", "proxy", policyLayers(policy, token))).toMatchObject({
+      allowed: false,
+      code: "proxy_not_allowed",
+    });
+    expect(
+      evaluatePolicy("github", "proxy", policyLayers(policy, { ...token, allowedProxies: ["github"] })),
+    ).toMatchObject({ allowed: true });
+  });
+
   it("requires a rule when the structured editor selects a restricted allow mode", () => {
     const draft = createPolicyEditorDraft(emptyRules);
     draft.actionAllowMode = "restricted";

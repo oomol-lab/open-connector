@@ -137,7 +137,7 @@ describe("ActionPolicyService", () => {
         allowedProxies: [],
         blockedProxies: [],
       },
-      { allowedActions: ["github.*"], blockedActions: [] },
+      { allowedActions: ["github.*"], blockedActions: [], allowedProxies: [] },
     );
 
     expect(snapshot.evaluate(action)).toEqual({
@@ -189,7 +189,7 @@ describe("ActionPolicyService", () => {
         allowedProxies: [],
         blockedProxies: [],
       },
-      { allowedActions: ["github.*"], blockedActions: ["github.create_issue"] },
+      { allowedActions: ["github.*"], blockedActions: ["github.create_issue"], allowedProxies: [] },
     );
     expect(tokenBlocked.evaluate(action)).toMatchObject({
       allowed: false,
@@ -212,6 +212,49 @@ describe("ActionPolicyService", () => {
       checks: [
         { source: "deployment", outcome: "allow_match", rule: "github.*" },
         { source: "runtime", outcome: "allow_match", rule: "github.create_issue" },
+      ],
+    });
+  });
+
+  it("requires runtime tokens to grant proxies independently of action rules", () => {
+    const service = new ActionPolicyService({ allowedProxies: ["github"] });
+    const runtime = {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      blockedProxies: [],
+    };
+
+    expect(
+      service
+        .createSnapshot(runtime, {
+          allowedActions: ["*"],
+          blockedActions: [],
+          allowedProxies: [],
+        })
+        .evaluateProxy("github"),
+    ).toMatchObject({
+      allowed: false,
+      code: "proxy_not_allowed",
+      checks: [
+        { source: "deployment", outcome: "allow_match", rule: "github" },
+        { source: "token", outcome: "allow_miss" },
+      ],
+    });
+
+    expect(
+      service
+        .createSnapshot(runtime, {
+          allowedActions: ["gmail.send_email"],
+          blockedActions: ["github.create_issue"],
+          allowedProxies: ["github"],
+        })
+        .evaluateProxy("github"),
+    ).toEqual({
+      allowed: true,
+      checks: [
+        { source: "deployment", outcome: "allow_match", rule: "github" },
+        { source: "token", outcome: "allow_match", rule: "github" },
       ],
     });
   });

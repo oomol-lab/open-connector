@@ -389,7 +389,7 @@
         "withBlocked": "{{allow}} · Always block: {{count}}"
       },
       "layerSummary": "Actions: {{action}} · Provider proxy: {{proxy}}",
-      "tokenSummary": "Allow rules {{allowed}} · Block rules {{blocked}} · Further limited by the runtime baseline",
+      "tokenSummary": "Action allow rules {{allowed}} · Action block rules {{blocked}} · Proxy grants {{proxies}} · Further limited by the runtime baseline",
       "editor": {
         "title": "Edit runtime policy",
         "description": "Changes are previewed against deployment constraints before you save.",
@@ -433,7 +433,7 @@
         "noRules": "No rules in this list.",
         "actionAllowRequired": "Add at least one action allow rule, or choose no additional restriction.",
         "proxyAllowRequired": "Add at least one provider allow rule, or choose no additional restriction.",
-        "tokenHint": "Token rules can only further restrict actions allowed by deployment and runtime policy. They do not affect provider proxy requests.",
+        "tokenHint": "Action rules and proxy grants are independent. An empty proxy grant list denies provider proxy requests.",
         "discard": "Discard changes",
         "preview": "Preview impact"
       },

@@ -63,6 +63,7 @@ describe("AccessPage", () => {
             name: "Issue bot",
             allowedActions: ["github.*"],
             blockedActions: ["github.delete_repository"],
+            allowedProxies: ["github"],
             createdAt: "2026-07-20T00:00:00.000Z",
           },
         ],

@@ -47,6 +47,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0006_connection_identity.sql",
       "0007_runtime_policy.sql",
       "0008_runtime_token_policy.sql",
+      "0009_runtime_token_proxy.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -427,6 +428,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0006_connection_identity.sql",
       "0007_runtime_policy.sql",
       "0008_runtime_token_policy.sql",
+      "0009_runtime_token_proxy.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
@@ -497,7 +499,7 @@ describe("SqliteRuntimeDatabase", () => {
       connectionId: migratedConnection?.id,
     });
     await expect(migrated.runtimeTokenStore.list()).resolves.toMatchObject([
-      { id: "legacy-token", allowedActions: [], blockedActions: [] },
+      { id: "legacy-token", allowedActions: [], blockedActions: [], allowedProxies: [] },
     ]);
     await expect(migrated.runtimePolicyStore.get()).resolves.toBeUndefined();
     await expect(
@@ -527,6 +529,9 @@ describe("SqliteRuntimeDatabase", () => {
     ).toBeDefined();
     expect(
       inspected.prepare("select name from runtime_migrations where name = ?").get("0008_runtime_token_policy.sql"),
+    ).toBeDefined();
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0009_runtime_token_proxy.sql"),
     ).toBeDefined();
     expect(inspected.prepare("pragma table_info(connections)").all()).toContainEqual(
       expect.objectContaining({ name: "id", notnull: 1 }),
@@ -596,6 +601,7 @@ describe("SqliteRuntimeDatabase", () => {
     const created = await tokens.createToken("Claude Desktop", {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
+      allowedProxies: ["github"],
     });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.name).toBe("Claude Desktop");
@@ -609,6 +615,7 @@ describe("SqliteRuntimeDatabase", () => {
       name: "Claude Desktop",
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
+      allowedProxies: ["github"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
     expect(JSON.stringify(listed)).not.toContain(created.token);
@@ -617,10 +624,12 @@ describe("SqliteRuntimeDatabase", () => {
       tokens.updateTokenPolicy(created.record.id, {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
+        allowedProxies: ["slack"],
       }),
     ).resolves.toMatchObject({
       allowedActions: ["github.get_current_user"],
       blockedActions: [],
+      allowedProxies: ["slack"],
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);

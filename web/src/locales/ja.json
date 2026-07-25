@@ -389,7 +389,7 @@
         "withBlocked": "{{allow}} · 常に block: {{count}}"
       },
       "layerSummary": "Actions: {{action}} · Provider proxy: {{proxy}}",
-      "tokenSummary": "Allow rules {{allowed}} · Block rules {{blocked}} · Runtime ベースラインでさらに制限",
+      "tokenSummary": "Action allow rules {{allowed}} · Action block rules {{blocked}} · Proxy grants {{proxies}} · Runtime ベースラインでさらに制限",
       "editor": {
         "title": "Runtime policy を編集",
         "description": "保存前に deployment 制約と組み合わせて影響を確認します。",
@@ -433,7 +433,7 @@
         "noRules": "このリストに rules はありません。",
         "actionAllowRequired": "Action allow rule を追加するか、追加制限なしを選択してください。",
         "proxyAllowRequired": "Provider allow rule を追加するか、追加制限なしを選択してください。",
-        "tokenHint": "Token rules は deployment と runtime が許可する actions をさらに制限するだけで、proxy requests には影響しません。",
+        "tokenHint": "Action rules と proxy grants は独立しています。Proxy grant が空の場合、token は provider proxy requests を送信できません。",
         "discard": "変更を破棄",
         "preview": "影響をプレビュー"
       },

@@ -264,7 +264,10 @@ Authorization: Bearer replace-with-an-admin-token
 
 Create runtime tokens for `/v1` and `/mcp` callers from the web console Access tab or
 `POST /api/runtime-tokens`. The token is shown once when created; only a hash is stored in SQLite.
-Runtime clients should send `Authorization: Bearer oct_...`.
+Runtime clients should send `Authorization: Bearer oct_...`. Persistent tokens configure Action
+rules and provider proxy grants independently. Their `allowedProxies` list is empty by default,
+which denies `/v1/proxy/:service`; add a provider service or `*` only when that client needs proxy
+access.
 
 `OOMOL_CONNECT_RUNTIME_TOKEN` is still accepted for bootstrap scripts and backward compatibility.
 
@@ -291,11 +294,15 @@ npm run dev
 Provider proxy requests use separate service-level policy variables because `/v1/proxy/:service`
 can reach provider API endpoints beyond the curated action catalog. Action policy and proxy policy
 are independent: the action variables never restrict proxies, and the proxy variables never restrict
-actions. Every provider proxy is allowed until you restrict it:
+actions. At the deployment and runtime layers, every provider proxy is allowed until you restrict it:
 
 ```bash
 OOMOL_CONNECT_ALLOWED_PROXIES="github" npm run dev
 ```
+
+Persistent runtime tokens must also grant the requested provider through their independent
+`allowedProxies` list. Token grants intersect with the deployment and runtime proxy policy and
+cannot widen it. An empty token proxy grant denies every provider proxy.
 
 Set `OOMOL_CONNECT_BLOCKED_PROXIES="*"` to disable `/v1/proxy/:service` entirely. Restrict both
 surfaces when you want both restricted:

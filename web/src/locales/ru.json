@@ -389,7 +389,7 @@
         "withBlocked": "{{allow}} · Всегда блокировать: {{count}}"
       },
       "layerSummary": "Actions: {{action}} · Provider proxy: {{proxy}}",
-      "tokenSummary": "Allow rules: {{allowed}} · Block rules: {{blocked}} · Дополнительно ограничено runtime-базой",
+      "tokenSummary": "Action allow rules: {{allowed}} · Action block rules: {{blocked}} · Proxy grants: {{proxies}} · Дополнительно ограничено runtime-базой",
       "editor": {
         "title": "Изменить runtime policy",
         "description": "Перед сохранением изменения проверяются вместе с ограничениями deployment.",
@@ -433,7 +433,7 @@
         "noRules": "В этом списке нет rules.",
         "actionAllowRequired": "Добавьте action allow rule или выберите отсутствие дополнительных ограничений.",
         "proxyAllowRequired": "Добавьте provider allow rule или выберите отсутствие дополнительных ограничений.",
-        "tokenHint": "Token rules могут только дополнительно ограничивать actions и не влияют на provider proxy requests.",
+        "tokenHint": "Action rules и proxy grants независимы. Пустой список proxy grants запрещает token отправлять provider proxy requests.",
         "discard": "Отменить изменения",
         "preview": "Предпросмотр влияния"
       },

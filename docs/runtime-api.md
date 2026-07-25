@@ -22,6 +22,10 @@ persistent runtime token, or JWT access token as:
 Authorization: Bearer <runtime-token-or-jwt>
 ```
 
+Persistent runtime tokens carry independent Action rules and provider proxy grants. Their
+`allowedProxies` list is empty by default, so a persistent token cannot call `/v1/proxy/:service`
+until a provider service or `*` is explicitly granted.
+
 The Node server accepts JWT access tokens when `OOMOL_CONNECT_JWKS_URI`,
 `OOMOL_CONNECT_JWT_ISSUER`, and `OOMOL_CONNECT_JWT_AUDIENCE` are configured together. JWT
 authentication coexists with existing runtime tokens and does not apply to admin endpoints. See
@@ -229,10 +233,13 @@ stored credentials local and lets the provider proxy executor apply provider-spe
 Successful responses use the standard `/v1` success envelope with `data.status`, `data.headers`, and
 `data.data`.
 
-Proxy requests are controlled by `OOMOL_CONNECT_ALLOWED_PROXIES` and
-`OOMOL_CONNECT_BLOCKED_PROXIES`, and by nothing else: action policy does not affect them. Every
-provider proxy is allowed until one of those variables restricts it, and
-`OOMOL_CONNECT_BLOCKED_PROXIES="*"` disables provider proxies entirely.
+Deployment and runtime proxy access is controlled by `OOMOL_CONNECT_ALLOWED_PROXIES` and
+`OOMOL_CONNECT_BLOCKED_PROXIES`; Action policy does not affect it. Persistent runtime tokens add an
+independent `allowedProxies` grant that can only narrow those rules. The requested provider must be
+allowed by every configured proxy policy layer and explicitly granted to the persistent token.
+An empty token grant denies proxy access, and `OOMOL_CONNECT_BLOCKED_PROXIES="*"` disables provider
+proxies entirely. Bootstrap runtime tokens and JWTs have no stored token grant, so only the
+deployment and runtime proxy policy applies to them.
 
 ## Local Admin Endpoints
 
