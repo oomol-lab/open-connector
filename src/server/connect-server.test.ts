@@ -1790,6 +1790,31 @@ describe("ConnectServer", () => {
     expect(markdown).toContain("`messages:read`");
   });
 
+  it("returns connection errors for action agent.md instead of 500", async () => {
+    const app = createTestServer([
+      {
+        ...apiKeyProvider,
+        actions: [echoAction],
+      },
+    ]).createApp();
+
+    const missing = await app.request("/api/actions/example.echo/agent.md?connectionName=work");
+    expect(missing.status).toBe(404);
+    await expect(missing.json()).resolves.toMatchObject({
+      error: {
+        code: "connection_not_found",
+      },
+    });
+
+    const invalid = await app.request("/api/actions/example.echo/agent.md?connectionName=bad name");
+    expect(invalid.status).toBe(400);
+    await expect(invalid.json()).resolves.toMatchObject({
+      error: {
+        code: "invalid_connection_name",
+      },
+    });
+  });
+
   it("renders markdown descriptions and escapes union type separators in parameter tables", async () => {
     const app = createTestServer([
       {

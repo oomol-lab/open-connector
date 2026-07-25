@@ -334,18 +334,31 @@ export class ConnectServer {
       return notFound(context);
     }
 
-    const policy = (await this.getPolicySnapshot(context)).evaluate(action);
-    return context.text(
-      renderActionMarkdown(action, {
-        connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
-        providerPermissions: action.providerPermissions,
-        policy,
-      }),
-      200,
-      {
-        "content-type": "text/markdown; charset=utf-8",
-      },
-    );
+    try {
+      const policy = (await this.getPolicySnapshot(context)).evaluate(action);
+      return context.text(
+        renderActionMarkdown(action, {
+          connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
+          providerPermissions: action.providerPermissions,
+          policy,
+        }),
+        200,
+        {
+          "content-type": "text/markdown; charset=utf-8",
+        },
+      );
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        const status = mapConnectionErrorStatus(error);
+        // agent.md uses the admin JSON error envelope; mapConnectionErrorStatus may
+        // return 409 for OAuth refresh failures, which jsonError does not accept.
+        if (status === 409) {
+          return context.json({ error: { code: error.code, message: error.message } }, 409);
+        }
+        return jsonError(context, status, error.code, error.message);
+      }
+      throw error;
+    }
   }
 
   private listRuntimeProviders(context: Context): Response {
