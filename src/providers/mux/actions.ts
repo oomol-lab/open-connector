@@ -59,7 +59,7 @@ export const muxActions: ActionDefinition[] = [
         videoQuality: s.stringEnum(["basic", "plus", "premium"], {
           description: "The cost and encoding-quality tier. Mux uses the environment default when omitted.",
         }),
-        maxResolutionTier: s.stringEnum(["720p", "1080p", "1440p", "2160p"], {
+        maxResolutionTier: s.stringEnum(["1080p", "1440p", "2160p"], {
           description: "The maximum resolution tier Mux should produce.",
         }),
         passthrough: s.string({

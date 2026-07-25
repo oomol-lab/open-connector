@@ -28,21 +28,11 @@ export interface MuxContext {
 type MuxActionHandler = (input: Record<string, unknown>, context: MuxContext) => Promise<unknown>;
 
 export const muxActionHandlers: Record<string, MuxActionHandler> = {
-  create_asset(input, context) {
-    return createAsset(input, context);
-  },
-  list_assets(input, context) {
-    return listAssets(input, context);
-  },
-  get_asset(input, context) {
-    return getAsset(input, context);
-  },
-  delete_asset(input, context) {
-    return deleteAsset(input, context);
-  },
-  create_playback_id(input, context) {
-    return createPlaybackId(input, context);
-  },
+  create_asset: createAsset,
+  list_assets: listAssets,
+  get_asset: getAsset,
+  delete_asset: deleteAsset,
+  create_playback_id: createPlaybackId,
 };
 
 export async function validateMuxCredential(context: MuxContext): Promise<CredentialValidationResult> {
@@ -118,9 +108,9 @@ async function listAssets(input: Record<string, unknown>, context: MuxContext): 
   }
 
   const payload = await requestMuxJson({ path: "/video/v1/assets", query, context, phase: "execute" });
-  const response = requiredRecord(payload, "Mux list assets response", inputError);
+  const response = requiredRecord(payload, "Mux list assets response", muxResponseError);
   return {
-    assets: objectArray(response.data, "Mux asset", inputError),
+    assets: objectArray(response.data, "Mux asset", muxResponseError),
     nextCursor: optionalString(response.next_cursor) ?? null,
   };
 }
@@ -212,22 +202,39 @@ async function requestMuxJson(options: MuxRequestOptions): Promise<unknown> {
     return payload;
   }
 
-  const status = options.phase === "validate" ? 401 : response.status >= 500 ? 502 : response.status;
+  const status =
+    options.phase === "validate" && (response.status === 401 || response.status === 403)
+      ? 401
+      : response.status >= 500
+        ? 502
+        : response.status;
   throw new ProviderRequestError(status, muxErrorMessage(payload, response.status), payload);
 }
 
 function muxDataRecord(payload: unknown, source: string): Record<string, unknown> {
-  const envelope = requiredRecord(payload, source, () => new ProviderRequestError(502, `${source} was invalid`));
-  return requiredRecord(envelope.data, `${source} data`, () => new ProviderRequestError(502, `${source} was invalid`));
+  const envelope = requiredRecord(payload, source, muxResponseError);
+  return requiredRecord(envelope.data, `${source} data`, muxResponseError);
 }
 
 function muxErrorMessage(payload: unknown, status: number): string {
   const envelope = optionalRecord(payload);
   const error = optionalRecord(envelope?.error);
-  const messages = Array.isArray(error?.messages)
+  const errorMessages = Array.isArray(error?.messages)
     ? error.messages.filter((message): message is string => typeof message === "string" && message.length > 0)
     : [];
-  return messages.join("; ") || optionalString(error?.type) || `Mux request failed with HTTP ${status}`;
+  const responseMessages = Array.isArray(envelope?.errors)
+    ? envelope.errors.filter((message): message is string => typeof message === "string" && message.length > 0)
+    : [];
+  return (
+    errorMessages.join("; ") ||
+    optionalString(error?.type) ||
+    responseMessages.join("; ") ||
+    `Mux request failed with HTTP ${status}`
+  );
+}
+
+function muxResponseError(message: string): ProviderRequestError {
+  return new ProviderRequestError(502, message);
 }
 
 function createMuxAuthorization(context: Pick<MuxContext, "tokenId" | "tokenSecret">): string {
