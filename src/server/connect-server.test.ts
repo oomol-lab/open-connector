@@ -223,6 +223,26 @@ describe("ConnectServer", () => {
     expect(stale.status).toBe(200);
   });
 
+  // Runtimes that compress on egress themselves opt out via compressApiResponses
+  // (see src/server/cloudflare.ts); everyone else must keep getting gzip here.
+  it("compresses /api/* JSON by default for clients that advertise gzip", async () => {
+    const app = createTestServer([apiKeyProvider]).createApp();
+
+    const compressed = await app.request("/api/providers", {
+      headers: { "accept-encoding": "gzip" },
+    });
+    expect(compressed.status).toBe(200);
+    expect(compressed.headers.get("content-encoding")).toBe("gzip");
+
+    const bytes = await compressed.arrayBuffer();
+    expect([...new Uint8Array(bytes.slice(0, 2))]).toEqual([0x1f, 0x8b]);
+    const decoded = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).json();
+
+    const plain = await app.request("/api/providers");
+    expect(plain.headers.get("content-encoding")).toBeNull();
+    await expect(plain.json()).resolves.toEqual(decoded);
+  });
+
   it("serves catalog and standard connection errors without opening a port", async () => {
     const app = createTestServer([apiKeyProvider]).createApp();
 

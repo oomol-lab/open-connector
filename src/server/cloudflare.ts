@@ -88,9 +88,14 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
     }),
     logger: workerLogger,
     computeRuntimeAuthConfigured: false,
-    // Cloudflare negotiates and applies response compression at the edge. Using
-    // Hono's CompressionStream middleware here can serve gzip bytes without a
-    // matching Content-Encoding header, which makes dashboard JSON unreadable.
+    // Cloudflare compresses on egress itself: Response defaults to
+    // `encodeBody: "automatic"`, so the runtime re-encodes a body that Hono's
+    // compress() already gzipped. Depending on what the client negotiates, the
+    // wire then carries gzip-in-gzip or gzip bytes with no Content-Encoding at
+    // all, and dashboard JSON stops parsing either way. Hono's middleware
+    // rebuilds the Response from the previous one and cannot pass
+    // `encodeBody: "manual"`, so application-level compression stays off here.
+    // https://developers.cloudflare.com/workers/runtime-apis/response/
     compressApiResponses: false,
   });
 }
