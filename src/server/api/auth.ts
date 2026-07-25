@@ -65,7 +65,14 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       return;
     }
 
-    if (canUseAdminAuth(context.req.path, context.req.method) && (await hasValidToken(context, options, "admin"))) {
+    // Admin elevation for action runs is only available when an admin token is
+    // configured. Without that, a missing admin token must not open POST
+    // /v1/actions/* while runtime tokens/JWT are otherwise enforcing auth.
+    if (
+      canUseAdminAuth(context.req.path, context.req.method) &&
+      normalizeToken(options.adminToken) &&
+      (await hasValidToken(context, options, "admin"))
+    ) {
       await installAdminCookieForBearer(context, options);
       await next();
       return;

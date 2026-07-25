@@ -1215,6 +1215,13 @@ describe("ConnectServer", () => {
     const unauthorized = await app.request("/v1/actions");
     expect(unauthorized.status).toBe(401);
 
+    const unauthorizedActionRun = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ input: {} }),
+    });
+    expect(unauthorizedActionRun.status).toBe(401);
+
     const authorized = await app.request("/v1/actions", {
       headers: { authorization: `Bearer ${createdBody.token}` },
     });
