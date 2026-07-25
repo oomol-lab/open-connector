@@ -137,7 +137,7 @@ export function clearLocalAuthCookie(context: Context): void {
 
 async function installAdminCookieForBearer(context: Context, options: LocalAuthOptions): Promise<void> {
   const token = normalizeToken(options.adminToken);
-  if (token && context.req.header("authorization") === `Bearer ${token}`) {
+  if (token && matchesConfiguredToken(context, token)) {
     await installLocalAuthCookie(context, options);
   }
 }
@@ -165,8 +165,7 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
 }
 
 async function hasRequestToken(context: Context, token: string): Promise<boolean> {
-  const authorization = context.req.header("authorization") ?? "";
-  return authorization === `Bearer ${token}` || (await hasValidAuthCookie(context, token));
+  return matchesConfiguredToken(context, token) || (await hasValidAuthCookie(context, token));
 }
 
 async function hasValidAuthCookie(context: Context, token: string): Promise<boolean> {
@@ -209,6 +208,14 @@ function base64Url(value: ArrayBuffer | ArrayBufferView): string {
       ? new Uint8Array(value)
       : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
   return Buffer.from(bytes).toString("base64url");
+}
+
+// Deployment secrets (`OOMOL_CONNECT_ADMIN_TOKEN` / `OOMOL_CONNECT_RUNTIME_TOKEN`) are long-lived,
+// so the credential is compared in constant time instead of with `===`, which short-circuits on the
+// first differing character and leaks how much of the token an attacker already guessed. Stored
+// runtime tokens already get the same treatment through `timingSafeEqual` on their hashes.
+function matchesConfiguredToken(context: Context, token: string): boolean {
+  return constantTimeEqual(readBearerCredential(context), token);
 }
 
 function constantTimeEqual(left: string, right: string): boolean {
@@ -256,7 +263,12 @@ async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions)
 }
 
 function readBearerToken(context: Context): string | undefined {
+  return normalizeToken(readBearerCredential(context));
+}
+
+/** Bearer credential exactly as sent, so configured tokens still require a byte-for-byte match. */
+function readBearerCredential(context: Context): string {
   const authorization = context.req.header("authorization") ?? "";
   const prefix = "Bearer ";
-  return authorization.startsWith(prefix) ? normalizeToken(authorization.slice(prefix.length)) : undefined;
+  return authorization.startsWith(prefix) ? authorization.slice(prefix.length) : "";
 }

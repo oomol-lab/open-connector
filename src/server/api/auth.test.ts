@@ -103,4 +103,30 @@ describe("createLocalAuthMiddleware", () => {
       ).status,
     ).toBe(200);
   });
+
+  it("matches configured tokens byte-for-byte after the bearer scheme", async () => {
+    const app = new Hono();
+    app.use("*", createLocalAuthMiddleware({ adminToken: "admin-secret", runtimeToken: "runtime-secret" }));
+    app.get("/api/connections", (context) => context.json({ ok: true }));
+    app.get("/v1/actions", (context) => context.json({ ok: true }));
+
+    const adminStatus = async (authorization: string): Promise<number> =>
+      (await app.request("/api/connections", { headers: { authorization } })).status;
+
+    expect(await adminStatus("Bearer admin-secret")).toBe(200);
+    // Same length as the configured token, so a length check alone cannot reject it.
+    expect(await adminStatus("Bearer admin-secreT")).toBe(401);
+    expect(await adminStatus("Bearer admin-secre")).toBe(401);
+    expect(await adminStatus("Bearer admin-secret-extra")).toBe(401);
+    expect(await adminStatus("Bearer  admin-secret")).toBe(401);
+    expect(await adminStatus("admin-secret")).toBe(401);
+    // The runtime bootstrap token must not unlock the admin surface, and vice versa.
+    expect(await adminStatus("Bearer runtime-secret")).toBe(401);
+    expect((await app.request("/v1/actions", { headers: { authorization: "Bearer runtime-secret" } })).status).toBe(
+      200,
+    );
+    expect((await app.request("/v1/actions", { headers: { authorization: "Bearer runtime-secreT" } })).status).toBe(
+      401,
+    );
+  });
 });
