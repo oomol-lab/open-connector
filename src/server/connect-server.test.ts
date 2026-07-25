@@ -1102,6 +1102,17 @@ describe("ConnectServer", () => {
       authenticated: true,
     });
 
+    const lowercaseBearer = await app.request("/api/auth/session", {
+      headers: { authorization: "bearer local-token" },
+    });
+    expect(lowercaseBearer.status).toBe(200);
+    expect(lowercaseBearer.headers.get("set-cookie")).toContain("oomol_connect_admin_session=");
+    expect(lowercaseBearer.headers.get("set-cookie")).not.toContain("local-token");
+    await expect(lowercaseBearer.json()).resolves.toEqual({
+      adminAuthConfigured: true,
+      authenticated: true,
+    });
+
     const authorized = await app.request("/api/providers", {
       headers: { authorization: "Bearer local-token" },
     });
@@ -1183,6 +1194,17 @@ describe("ConnectServer", () => {
       headers: { authorization: `Bearer ${createdBody.token}` },
     });
     expect(runtimeTokenCall.status).toBe(200);
+
+    // A case-insensitive scheme widens the scheme only, never the auth scope.
+    const lowercaseRuntimeTokenCall = await app.request("/v1/actions", {
+      headers: { authorization: `bearer ${createdBody.token}` },
+    });
+    expect(lowercaseRuntimeTokenCall.status).toBe(200);
+
+    const lowercaseAdminTokenRuntimeCall = await app.request("/v1/actions", {
+      headers: { authorization: "bearer local-token" },
+    });
+    expect(lowercaseAdminTokenRuntimeCall.status).toBe(401);
   });
 
   it("manages runtime tokens and gates runtime API calls after one is created", async () => {

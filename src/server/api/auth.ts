@@ -6,6 +6,7 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { isConsoleShellRequest } from "./console-paths.ts";
 import { jsonError } from "./http-utils.ts";
 
+const bearerScheme = "bearer";
 const authCookieName = "oomol_connect_admin_session";
 const authCookieVersion = "v1";
 const authCookieMaxAgeSeconds = 2_592_000;
@@ -266,9 +267,18 @@ function readBearerToken(context: Context): string | undefined {
   return normalizeToken(readBearerCredential(context));
 }
 
-/** Bearer credential exactly as sent, so configured tokens still require a byte-for-byte match. */
+/**
+ * Bearer credential exactly as sent, so configured tokens still require a byte-for-byte match.
+ *
+ * Authentication schemes are case-insensitive (RFC 9110), so `bearer` and `BEARER` are accepted;
+ * only the credentials stay case-sensitive.
+ */
 function readBearerCredential(context: Context): string {
   const authorization = context.req.header("authorization") ?? "";
-  const prefix = "Bearer ";
-  return authorization.startsWith(prefix) ? authorization.slice(prefix.length) : "";
+  const separator = authorization.indexOf(" ");
+  if (separator < 0 || authorization.slice(0, separator).toLowerCase() !== bearerScheme) {
+    return "";
+  }
+
+  return authorization.slice(separator + 1);
 }
