@@ -80,6 +80,7 @@ export class D1ConnectionStore implements IConnectionStore {
         insert into connections (id, service, connection_name, value, updated_at)
         values (?, ?, ?, ?, ?)
         on conflict(service, connection_name) do update set
+          id = excluded.id,
           value = excluded.value,
           updated_at = excluded.updated_at
         returning id

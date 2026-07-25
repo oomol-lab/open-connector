@@ -155,7 +155,7 @@ describe("SqliteRuntimeDatabase", () => {
     second.close();
   });
 
-  it("preserves connection identity on update and replaces it after deletion", async () => {
+  it("rotates connection identity on set so stale refresh cannot overwrite credentials", async () => {
     const database = new SqliteRuntimeDatabase(await createDatabasePath());
     const credential = {
       authType: "api_key" as const,
@@ -170,7 +170,15 @@ describe("SqliteRuntimeDatabase", () => {
       ...credential,
       apiKey: "updated-token",
     });
-    expect(updated.id).toBe(created.id);
+    // Replacing credentials via set() must rotate id so an in-flight OAuth refresh
+    // that still holds the previous id fails OCC and cannot clobber the new secret.
+    expect(updated.id).not.toBe(created.id);
+    await expect(
+      database.connectionStore.updateCredential({
+        ...created,
+        credential: { ...credential, apiKey: "stale-refreshed-token" },
+      }),
+    ).resolves.toBe(false);
     await expect(
       database.connectionStore.updateCredential({
         ...updated,
@@ -180,10 +188,10 @@ describe("SqliteRuntimeDatabase", () => {
 
     await database.connectionStore.delete("github", "default");
     const recreated = await database.connectionStore.set("github", "default", credential);
-    expect(recreated.id).not.toBe(created.id);
+    expect(recreated.id).not.toBe(updated.id);
     await expect(
       database.connectionStore.updateCredential({
-        ...created,
+        ...updated,
         credential: { ...credential, apiKey: "stale-refreshed-token" },
       }),
     ).resolves.toBe(false);

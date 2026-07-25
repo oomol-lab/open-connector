@@ -595,6 +595,71 @@ describe("ConnectionService", () => {
     });
   });
 
+  it("does not overwrite a connection replaced in place during OAuth refresh", async () => {
+    const store = new MemoryConnectionStore();
+    const oauthClientConfigs = createOAuthClientConfigs([oauthProvider]);
+    const service = createService([oauthProvider], {
+      oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs),
+      store,
+    });
+    await oauthClientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    const original = await store.set("example", "default", {
+      authType: "oauth2",
+      accessToken: "expired-token",
+      tokenType: "Bearer",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00.000Z",
+      profile: testProfile,
+      metadata: {},
+    });
+    let markRefreshStarted!: () => void;
+    const refreshStarted = new Promise<void>((resolve) => {
+      markRefreshStarted = resolve;
+    });
+    let completeRefresh!: (response: Response) => void;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => {
+        const response = new Promise<Response>((resolve) => {
+          completeRefresh = resolve;
+        });
+        markRefreshStarted();
+        return response;
+      }),
+    );
+
+    const execution = service.resolveForExecution("example");
+    await refreshStarted;
+    // In-place reconnect (upsert) without delete must also rotate identity.
+    const replaced = await store.set("example", "default", {
+      authType: "oauth2",
+      accessToken: "replacement-token",
+      tokenType: "Bearer",
+      refreshToken: "replacement-refresh-token",
+      expiresAt: "2099-01-01T00:00:00.000Z",
+      profile: testProfile,
+      metadata: {},
+    });
+    completeRefresh(
+      Response.json({
+        access_token: "stale-refreshed-token",
+        expires_in: 3600,
+        token_type: "Bearer",
+      }),
+    );
+
+    await expect(execution).rejects.toMatchObject({ code: "connection_not_found" });
+    expect(replaced.id).not.toBe(original.id);
+    await expect(store.get("example", "default")).resolves.toMatchObject({
+      id: replaced.id,
+      credential: { accessToken: "replacement-token" },
+    });
+  });
+
   it("uses provider refresh token URLs when refreshing expired OAuth credentials", async () => {
     const store = new MemoryConnectionStore();
     const oauthClientConfigs = createOAuthClientConfigs([oauthRefreshProvider]);
@@ -750,7 +815,9 @@ class MemoryConnectionStore implements IConnectionStore {
 
   async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
     const key = createConnectionKey(service, connectionName);
-    const connection = { id: this.store.get(key)?.id ?? crypto.randomUUID(), service, connectionName, credential };
+    // Always mint a new id on set (including in-place replace) so stale OAuth
+    // refresh holders of the previous id fail updateCredential OCC.
+    const connection = { id: crypto.randomUUID(), service, connectionName, credential };
     this.store.set(key, connection);
     return connection;
   }
