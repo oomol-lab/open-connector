@@ -81,7 +81,7 @@ describe("ProxyRunner", () => {
     expect(connections.getConnectionSummary).not.toHaveBeenCalled();
   });
 
-  it("combines deployment and Runtime proxy policy while ignoring token action rules", async () => {
+  it("combines deployment and Runtime proxy policy", async () => {
     const loadProxyExecutor = vi.fn();
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
@@ -99,6 +99,7 @@ describe("ProxyRunner", () => {
         allowedProxies: [],
         blockedProxies: ["example"],
       },
+      // Token with no action allowlist still uses deployment/runtime proxy rules.
       { allowedActions: [], blockedActions: ["example.*"] },
     );
 
@@ -107,6 +108,36 @@ describe("ProxyRunner", () => {
     ).resolves.toMatchObject({
       ok: false,
       errorCode: "proxy_blocked",
+    });
+    expect(loadProxyExecutor).not.toHaveBeenCalled();
+  });
+
+  it("denies proxy for tokens that carry an action allowlist", async () => {
+    const loadProxyExecutor = vi.fn();
+    const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
+    const runner = createRunner({
+      actionPolicy,
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+        loadProxyExecutor,
+      },
+    });
+    const policy = actionPolicy.createSnapshot(
+      {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: ["example"],
+        blockedProxies: [],
+      },
+      { allowedActions: ["example.echo"], blockedActions: [] },
+    );
+
+    await expect(
+      runner.run({ service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
+    ).resolves.toMatchObject({
+      ok: false,
+      errorCode: "proxy_not_allowed",
     });
     expect(loadProxyExecutor).not.toHaveBeenCalled();
   });

@@ -1,7 +1,7 @@
 import type { ActionDefinition } from "./types.ts";
 
 import { describe, expect, it } from "vitest";
-import { ActionPolicyService, parseActionPolicyList } from "./action-policy.ts";
+import { ActionPolicyService, emptyPolicyRules, parseActionPolicyList } from "./action-policy.ts";
 
 const action: ActionDefinition = {
   id: "github.create_issue",
@@ -61,7 +61,9 @@ describe("ActionPolicyService", () => {
     expect(new ActionPolicyService().evaluateProxy("github")).toEqual({ allowed: true, checks: [] });
   });
 
-  it("ignores action policy when evaluating proxies", () => {
+  it("ignores deployment action policy when evaluating proxies", () => {
+    // Deployment action allow/block lists do not apply to proxy; only dedicated
+    // proxy rules and (separately) token action allowlists do.
     expect(new ActionPolicyService({ allowedActions: ["github.get_current_user"] }).evaluateProxy("github")).toEqual({
       allowed: true,
       checks: [],
@@ -78,6 +80,30 @@ describe("ActionPolicyService", () => {
       allowed: true,
       checks: [],
     });
+  });
+
+  it("denies proxy for runtime tokens with a concrete action allowlist", () => {
+    const restricted = new ActionPolicyService().createSnapshot(emptyPolicyRules(), {
+      allowedActions: ["hackernews.get_item"],
+      blockedActions: [],
+    });
+    expect(restricted.evaluateProxy("github")).toMatchObject({
+      allowed: false,
+      code: "proxy_not_allowed",
+      checks: [{ source: "token", outcome: "allow_miss" }],
+    });
+
+    const unrestricted = new ActionPolicyService().createSnapshot(emptyPolicyRules(), {
+      allowedActions: [],
+      blockedActions: ["github.delete_repository"],
+    });
+    expect(unrestricted.evaluateProxy("github")).toEqual({ allowed: true, checks: [] });
+
+    const wildcardToken = new ActionPolicyService().createSnapshot(emptyPolicyRules(), {
+      allowedActions: ["*"],
+      blockedActions: [],
+    });
+    expect(wildcardToken.evaluateProxy("github")).toEqual({ allowed: true, checks: [] });
   });
 
   it("ignores proxy policy when evaluating actions", () => {

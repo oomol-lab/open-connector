@@ -64,6 +64,13 @@ export class ActionPolicySnapshot {
   readonly state: RuntimePolicyState;
   private readonly layers: CompiledLayer[];
   private readonly proxyLayers: CompiledLayer[];
+  /**
+   * When a runtime token carries a non-wildcard action allowlist, proxy is
+   * denied so least-privilege tokens cannot bypass action policy via /v1/proxy.
+   * Unrestricted tokens (empty allowlist, or allowlist containing `*`) still
+   * use deployment/runtime proxy rules only.
+   */
+  private readonly tokenRestrictsProxy: boolean;
 
   constructor(deployment: PolicyRules, runtime: PolicyRules, token?: TokenActionPolicy, updatedAt?: string) {
     const deploymentRules = immutablePolicyRules(deployment);
@@ -71,6 +78,7 @@ export class ActionPolicySnapshot {
     this.state = Object.freeze({ deployment: deploymentRules, runtime: runtimeRules, updatedAt });
     this.proxyLayers = [compileLayer("deployment", deploymentRules), compileLayer("runtime", runtimeRules)];
     this.layers = [...this.proxyLayers];
+    this.tokenRestrictsProxy = tokenRestrictsProxy(token);
     if (token) {
       const tokenRules = immutablePolicyRules({
         allowedActions: token.allowedActions,
@@ -116,6 +124,15 @@ export class ActionPolicySnapshot {
   }
 
   evaluateProxy(service: string): ActionPolicyDecision {
+    if (this.tokenRestrictsProxy) {
+      return {
+        allowed: false,
+        code: "proxy_not_allowed",
+        message: `${service} proxy is not available for runtime tokens with an action allowlist.`,
+        checks: [{ source: "token", outcome: "allow_miss" }],
+      };
+    }
+
     for (const layer of this.proxyLayers) {
       const blocked = layer.blockedProxies.find((rule) => rule.matches(service));
       if (blocked) {
@@ -147,6 +164,18 @@ export class ActionPolicySnapshot {
 
     return { allowed: true, checks };
   }
+}
+
+/**
+ * Tokens with a concrete action allowlist are least-privilege credentials and
+ * must not use open proxy. An empty allowlist (no restriction) or an allowlist
+ * that includes `*` remains eligible for deployment/runtime proxy rules.
+ */
+function tokenRestrictsProxy(token: TokenActionPolicy | undefined): boolean {
+  if (!token || token.allowedActions.length === 0) {
+    return false;
+  }
+  return !token.allowedActions.includes("*");
 }
 
 /**
