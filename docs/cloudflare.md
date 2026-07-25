@@ -153,6 +153,23 @@ cleaned up automatically. Workers KV applies the configured TTL when each file i
 deletes it automatically. KV clamps `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` to a minimum of 60
 seconds and `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES` to a maximum of 25 MiB.
 
+## Response Compression
+
+Cloudflare negotiates and applies response compression on egress, so the Worker leaves compression
+to the edge instead of running it in the application. Workers build responses with `encodeBody` set
+to `"automatic"`, which means the runtime encodes the body itself to satisfy the `Content-Encoding`
+header; a body the application had already compressed would be encoded a second time and arrive
+undecodable. Node deployments have no edge in front of them and keep compressing in the application.
+
+[Cloudflare's default compressible content types][cf-compression] include `application/json`, so
+`/api` and `/v1` metadata responses are compressed for clients that advertise support. The list has
+`text/x-markdown` but not `text/markdown`, which is what `/api/actions/:actionId/agent.md` returns,
+so agent guides are served uncompressed. They are small — around 1.5 KiB for a typical action and
+20 KiB for the largest one in the catalog — so this is usually not worth acting on. Add a
+Compression Rule matching `text/markdown` if your deployment serves agent guides heavily.
+
+[cf-compression]: https://developers.cloudflare.com/speed/optimization/content/compression/
+
 ## Configuration
 
 Cloudflare uses the same environment variable names for origin, auth tokens, action policy, transit
