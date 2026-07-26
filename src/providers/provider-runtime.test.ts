@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../core/request.ts";
+import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
@@ -135,6 +135,68 @@ describe("provider egress SSRF guard", () => {
 
     expect(response.status).toBe(302);
     expect(calls).toHaveLength(1);
+  });
+
+  it("blocks private targets for executors that do not opt in", async () => {
+    const calls = stubFetchSequence([new Response("{}", { status: 200 })]);
+    const executors = defineProviderExecutors<{ fetcher: typeof fetch }>({
+      service: "test_service",
+      handlers: {
+        async probe(_input, context) {
+          return { status: (await context.fetcher("http://10.0.0.5:8123/api/")).status };
+        },
+      },
+      createContext: (_context, fetcher) => ({ fetcher }),
+    });
+    setPrivateNetworkAccessAllowed(true);
+
+    const result = await executors["test_service.probe"]!({}, executionContext);
+
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toContain("must not target private or reserved IP addresses");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("reaches private targets for opted-in executors once the deployment enables the flag", async () => {
+    const calls = stubFetchSequence([new Response("{}", { status: 200 })]);
+    const executors = defineProviderExecutors<{ fetcher: typeof fetch }>({
+      service: "test_service",
+      handlers: {
+        async probe(_input, context) {
+          return { status: (await context.fetcher("http://10.0.0.5:8123/api/")).status };
+        },
+      },
+      createContext: (_context, fetcher) => ({ fetcher }),
+      allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+    });
+    setPrivateNetworkAccessAllowed(true);
+
+    const result = await executors["test_service.probe"]!({}, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(calls.map((call) => call.url)).toEqual(["http://10.0.0.5:8123/api/"]);
+  });
+
+  it("keeps the opt-in gated on the deployment flag and never unblocks loopback", async () => {
+    const executors = defineProviderExecutors<{ fetcher: typeof fetch }>({
+      service: "test_service",
+      handlers: {
+        async probe(_input, context) {
+          return { status: (await context.fetcher(_input.url as string)).status };
+        },
+      },
+      createContext: (_context, fetcher) => ({ fetcher }),
+      allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+    });
+
+    const calls = stubFetchSequence([]);
+    const disabled = await executors["test_service.probe"]!({ url: "http://10.0.0.5:8123/api/" }, executionContext);
+    setPrivateNetworkAccessAllowed(true);
+    const loopback = await executors["test_service.probe"]!({ url: "http://127.0.0.1:8123/api/" }, executionContext);
+
+    expect(disabled.ok).toBe(false);
+    expect(loopback.ok).toBe(false);
+    expect(calls).toHaveLength(0);
   });
 });
 

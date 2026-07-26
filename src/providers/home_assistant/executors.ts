@@ -1,6 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { HomeAssistantActionContext } from "./runtime.ts";
 
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import {
   homeAssistantActionHandlers,
@@ -13,6 +14,7 @@ const service = "home_assistant";
 export const executors: ProviderExecutors = defineProviderExecutors<HomeAssistantActionContext>({
   service,
   handlers: homeAssistantActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<HomeAssistantActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
