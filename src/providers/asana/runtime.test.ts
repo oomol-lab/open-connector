@@ -3,7 +3,9 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { asanaProjectSectionActions } from "./actions-projects.ts";
+import { asanaTaskActions } from "./actions-tasks.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
+import { taskActionHandlers } from "./runtime-tasks.ts";
 import { workspaceUserTeamActionHandlers } from "./runtime-workspaces-users-teams.ts";
 import {
   deleteAsanaResource,
@@ -55,6 +57,7 @@ interface HandlerCase {
   method: string;
   path: string;
   response: Record<string, unknown>;
+  status?: number;
   query?: Record<string, string>;
   body?: Record<string, unknown>;
   expectedOutput?: unknown;
@@ -110,10 +113,32 @@ const projectFields = [
   "permalink_url",
 ].join(",");
 const jobFields = "resource_subtype,status,new_project,new_project.name";
+const taskJobFields = "resource_subtype,status,new_task,new_task.name,new_task.resource_subtype,new_task.created_by";
 const customFieldSettingFields = "custom_field,custom_field.name,is_important,parent,parent.name,project,project.name";
 const taskCountFields =
   "num_tasks,num_incomplete_tasks,num_completed_tasks,num_milestones,num_incomplete_milestones,num_completed_milestones";
 const sectionFields = "name,created_at,project,project.name";
+const taskFields = [
+  "name",
+  "resource_subtype",
+  "completed",
+  "completed_at",
+  "created_at",
+  "modified_at",
+  "notes",
+  "due_on",
+  "due_at",
+  "start_on",
+  "start_at",
+  "approval_status",
+  "assignee",
+  "assignee.name",
+  "workspace",
+  "workspace.name",
+  "projects",
+  "projects.name",
+  "permalink_url",
+].join(",");
 const event = {
   user: null,
   resource: {
@@ -845,7 +870,680 @@ const projectSectionHandlerCases: HandlerCase[] = [
   },
 ];
 
+const taskHandlerCases: HandlerCase[] = [
+  {
+    name: "list_tasks",
+    input: {
+      assignee: "me",
+      workspaceId: "workspace / 1",
+      sectionId: "s1",
+      completedSince: "2026-07-01T00:00:00Z",
+      modifiedSince: "2026-07-02T00:00:00Z",
+      limit: 25,
+      cursor: "task-cursor",
+      includeFields: ["followers"],
+    },
+    method: "GET",
+    path: "/tasks",
+    response: { data: [{ gid: "t1" }], next_page: { offset: "next-task" } },
+    query: {
+      assignee: "me",
+      section: "s1",
+      workspace: "workspace / 1",
+      completed_since: "2026-07-01T00:00:00Z",
+      modified_since: "2026-07-02T00:00:00Z",
+      limit: "25",
+      offset: "task-cursor",
+      opt_fields: `${taskFields},followers`,
+    },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: "next-task" },
+  },
+  {
+    name: "list_tasks",
+    input: { projectId: "p1" },
+    method: "GET",
+    path: "/tasks",
+    response: { data: [{ gid: "t1" }] },
+    query: { project: "p1", opt_fields: taskFields },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
+  },
+  {
+    name: "list_tasks",
+    input: { tagId: "tag1" },
+    method: "GET",
+    path: "/tasks",
+    response: { data: [{ gid: "t1" }] },
+    query: { tag: "tag1", opt_fields: taskFields },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
+  },
+  {
+    name: "list_project_tasks",
+    input: { projectId: "project / 1", completedSince: "now", limit: 10, cursor: "p-task-cursor" },
+    method: "GET",
+    path: "/projects/project%20%2F%201/tasks",
+    response: { data: [{ gid: "t1" }] },
+    query: {
+      completed_since: "now",
+      limit: "10",
+      offset: "p-task-cursor",
+      opt_fields: taskFields,
+    },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
+  },
+  {
+    name: "get_task",
+    input: { taskId: "task / 1", includeFields: ["followers"] },
+    method: "GET",
+    path: "/tasks/task%20%2F%201",
+    response: { data: { gid: "t1" } },
+    query: { opt_fields: `${taskFields},followers` },
+    expectedOutput: { task: { gid: "t1" } },
+  },
+  {
+    name: "create_task",
+    input: {
+      projectId: "p0",
+      projectIds: ["p1", "p0"],
+      workspaceId: "w1",
+      parentId: "parent1",
+      followerIds: ["me", "u1"],
+      tagIds: ["tag1"],
+      name: "Ship",
+      htmlNotes: "<body>Ship</body>",
+      assigneeSectionId: "as1",
+      includeFields: ["followers"],
+    },
+    method: "POST",
+    path: "/tasks",
+    response: { data: { gid: "t1", name: "Ship" } },
+    query: { opt_fields: `${taskFields},followers` },
+    body: {
+      projects: ["p0", "p1"],
+      workspace: "w1",
+      parent: "parent1",
+      followers: ["me", "u1"],
+      tags: ["tag1"],
+      name: "Ship",
+      html_notes: "<body>Ship</body>",
+      assignee_section: "as1",
+    },
+    expectedOutput: { task: { gid: "t1", name: "Ship" } },
+  },
+  {
+    name: "update_task",
+    input: {
+      taskId: "t1",
+      name: "Updated",
+      assignee: null,
+      dueOn: null,
+      startOn: null,
+      customTypeId: null,
+      customTypeStatusOptionId: null,
+      liked: false,
+    },
+    method: "PUT",
+    path: "/tasks/t1",
+    response: { data: { gid: "t1", name: "Updated" } },
+    query: { opt_fields: taskFields },
+    body: {
+      name: "Updated",
+      assignee: null,
+      due_on: null,
+      start_on: null,
+      custom_type: null,
+      custom_type_status_option: null,
+      liked: false,
+    },
+    expectedOutput: { task: { gid: "t1", name: "Updated" } },
+  },
+  {
+    name: "delete_task",
+    input: { taskId: "t1" },
+    method: "DELETE",
+    path: "/tasks/t1",
+    response: { data: {} },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "duplicate_task",
+    input: { taskId: "t1", name: "Copy", include: ["notes", "followers"], includeFields: ["gid"] },
+    method: "POST",
+    path: "/tasks/t1/duplicate",
+    response: {
+      data: {
+        gid: "job1",
+        resource_type: "job",
+        resource_subtype: "duplicate_task",
+        status: "not_started",
+        new_task: null,
+      },
+    },
+    status: 201,
+    query: { opt_fields: `${taskJobFields},gid` },
+    body: { name: "Copy", include: "notes,followers" },
+    expectedOutput: {
+      job: {
+        gid: "job1",
+        resource_type: "job",
+        resource_subtype: "duplicate_task",
+        status: "not_started",
+        new_task: null,
+      },
+    },
+  },
+  {
+    name: "list_section_tasks",
+    input: { sectionId: "s1", completedSince: "now", limit: 11, cursor: "section-task-cursor" },
+    method: "GET",
+    path: "/sections/s1/tasks",
+    response: { data: [{ gid: "t1" }] },
+    query: {
+      completed_since: "now",
+      limit: "11",
+      offset: "section-task-cursor",
+      opt_fields: taskFields,
+    },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
+  },
+  {
+    name: "list_tag_tasks",
+    input: { tagId: "tag / 1", limit: 12, cursor: "tag-task-cursor" },
+    method: "GET",
+    path: "/tags/tag%20%2F%201/tasks",
+    response: { data: [{ gid: "t1" }] },
+    query: { limit: "12", offset: "tag-task-cursor", opt_fields: taskFields },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
+  },
+  {
+    name: "list_user_task_list_tasks",
+    input: { userTaskListId: "list / 1", completedSince: "now", limit: 13, cursor: "list-task-cursor" },
+    method: "GET",
+    path: "/user_task_lists/list%20%2F%201/tasks",
+    response: { data: [{ gid: "t1" }] },
+    query: {
+      completed_since: "now",
+      limit: "13",
+      offset: "list-task-cursor",
+      opt_fields: taskFields,
+    },
+    expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
+  },
+  {
+    name: "list_subtasks",
+    input: { taskId: "t1", limit: 14, cursor: "subtask-cursor" },
+    method: "GET",
+    path: "/tasks/t1/subtasks",
+    response: { data: [{ gid: "sub1" }] },
+    query: { limit: "14", offset: "subtask-cursor", opt_fields: taskFields },
+    expectedOutput: { tasks: [{ gid: "sub1" }], nextCursor: null },
+  },
+  {
+    name: "create_subtask",
+    input: { taskId: "t1", name: "Subtask", followerIds: ["u1"], tagIds: ["tag1"] },
+    method: "POST",
+    path: "/tasks/t1/subtasks",
+    response: { data: { gid: "sub1" } },
+    query: { opt_fields: taskFields },
+    body: { name: "Subtask", followers: ["u1"], tags: ["tag1"] },
+    expectedOutput: { task: { gid: "sub1" } },
+  },
+  {
+    name: "set_task_parent",
+    input: { taskId: "t1", parentId: "parent1", insertAfter: "sub0" },
+    method: "POST",
+    path: "/tasks/t1/setParent",
+    response: { data: { gid: "t1", parent: { gid: "parent1" } } },
+    query: { opt_fields: taskFields },
+    body: { parent: "parent1", insert_after: "sub0" },
+    expectedOutput: { task: { gid: "t1", parent: { gid: "parent1" } } },
+  },
+  {
+    name: "list_task_dependencies",
+    input: { taskId: "t1", limit: 15, cursor: "dependency-cursor" },
+    method: "GET",
+    path: "/tasks/t1/dependencies",
+    response: { data: [{ gid: "dep1" }] },
+    query: { limit: "15", offset: "dependency-cursor", opt_fields: taskFields },
+    expectedOutput: { tasks: [{ gid: "dep1" }], nextCursor: null },
+  },
+  {
+    name: "add_task_dependencies",
+    input: { taskId: "t1", dependencyIds: ["dep1", "dep2"] },
+    method: "POST",
+    path: "/tasks/t1/addDependencies",
+    response: { data: {} },
+    body: { dependencies: ["dep1", "dep2"] },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "remove_task_dependencies",
+    input: { taskId: "t1", dependencyIds: ["dep1"] },
+    method: "POST",
+    path: "/tasks/t1/removeDependencies",
+    response: { data: {} },
+    body: { dependencies: ["dep1"] },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "list_task_dependents",
+    input: { taskId: "t1", limit: 16, cursor: "dependent-cursor" },
+    method: "GET",
+    path: "/tasks/t1/dependents",
+    response: { data: [{ gid: "dependent1" }] },
+    query: { limit: "16", offset: "dependent-cursor", opt_fields: taskFields },
+    expectedOutput: { tasks: [{ gid: "dependent1" }], nextCursor: null },
+  },
+  {
+    name: "add_task_dependents",
+    input: { taskId: "t1", dependentIds: ["dependent1", "dependent2"] },
+    method: "POST",
+    path: "/tasks/t1/addDependents",
+    response: { data: {} },
+    body: { dependents: ["dependent1", "dependent2"] },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "remove_task_dependents",
+    input: { taskId: "t1", dependentIds: ["dependent1"] },
+    method: "POST",
+    path: "/tasks/t1/removeDependents",
+    response: { data: {} },
+    body: { dependents: ["dependent1"] },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "add_task_project",
+    input: { taskId: "t1", projectId: "p1", sectionId: "s1", insertBefore: null },
+    method: "POST",
+    path: "/tasks/t1/addProject",
+    response: { data: {} },
+    body: { project: "p1", section: "s1", insert_before: null },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "remove_task_project",
+    input: { taskId: "t1", projectId: "p1" },
+    method: "POST",
+    path: "/tasks/t1/removeProject",
+    response: { data: {} },
+    body: { project: "p1" },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "add_task_tag",
+    input: { taskId: "t1", tagId: "tag1" },
+    method: "POST",
+    path: "/tasks/t1/addTag",
+    response: { data: {} },
+    body: { tag: "tag1" },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "remove_task_tag",
+    input: { taskId: "t1", tagId: "tag1" },
+    method: "POST",
+    path: "/tasks/t1/removeTag",
+    response: { data: {} },
+    body: { tag: "tag1" },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "add_task_followers",
+    input: { taskId: "t1", followerIds: ["me", "u1"], includeFields: ["followers"] },
+    method: "POST",
+    path: "/tasks/t1/addFollowers",
+    response: { data: { gid: "t1", followers: [{ gid: "u1" }] } },
+    query: { opt_fields: `${taskFields},followers` },
+    body: { followers: ["me", "u1"] },
+    expectedOutput: { task: { gid: "t1", followers: [{ gid: "u1" }] } },
+  },
+  {
+    name: "remove_task_followers",
+    input: { taskId: "t1", followerIds: ["u1"] },
+    method: "POST",
+    path: "/tasks/t1/removeFollowers",
+    response: { data: { gid: "t1", followers: [] } },
+    query: { opt_fields: taskFields },
+    body: { followers: ["u1"] },
+    expectedOutput: { task: { gid: "t1", followers: [] } },
+  },
+  {
+    name: "get_task_by_custom_id",
+    input: { workspaceId: "workspace / 1", customId: "TASK / 42" },
+    method: "GET",
+    path: "/workspaces/workspace%20%2F%201/tasks/custom_id/TASK%20%2F%2042",
+    response: { data: { gid: "t1" } },
+    expectedOutput: { task: { gid: "t1" } },
+  },
+  {
+    name: "search_workspace_tasks",
+    input: {
+      workspaceId: "w1",
+      limit: 100,
+      text: "launch",
+      resourceSubtype: "custom",
+      assigneeIds: ["u1", "u2"],
+      excludedAssigneeIds: ["u3"],
+      portfolioIds: ["portfolio1"],
+      projectIds: ["p1"],
+      excludedProjectIds: ["p2"],
+      allProjectIds: ["p3", "p4"],
+      sectionIds: ["s1"],
+      excludedSectionIds: ["s2"],
+      allSectionIds: ["s3"],
+      tagIds: ["tag1"],
+      excludedTagIds: ["tag2"],
+      allTagIds: ["tag3"],
+      teamIds: ["team1"],
+      followerIds: ["u4"],
+      excludedFollowerIds: ["u5"],
+      creatorIds: ["u6"],
+      excludedCreatorIds: ["u7"],
+      assignedByIds: ["u8"],
+      excludedAssignedByIds: ["u9"],
+      excludedLikerIds: ["u10"],
+      excludedCommenterIds: ["u11"],
+      dueOn: null,
+      dueOnBefore: "2026-08-31",
+      dueOnAfter: "2026-08-01",
+      dueAtBefore: "2026-08-31T12:00:00Z",
+      dueAtAfter: "2026-08-01T12:00:00Z",
+      startOn: null,
+      startOnBefore: "2026-08-31",
+      startOnAfter: "2026-08-01",
+      createdOn: null,
+      createdOnBefore: "2026-07-31",
+      createdOnAfter: "2026-07-01",
+      createdAtBefore: "2026-07-31T12:00:00Z",
+      createdAtAfter: "2026-07-01T12:00:00Z",
+      completedOn: null,
+      completedOnBefore: "2026-06-30",
+      completedOnAfter: "2026-06-01",
+      completedAtBefore: "2026-06-30T12:00:00Z",
+      completedAtAfter: "2026-06-01T12:00:00Z",
+      modifiedOn: null,
+      modifiedOnBefore: "2026-07-28",
+      modifiedOnAfter: "2026-07-20",
+      modifiedAtBefore: "2026-07-28T12:00:00Z",
+      modifiedAtAfter: "2026-07-20T12:00:00Z",
+      isBlocking: false,
+      isBlocked: true,
+      hasAttachment: false,
+      completed: false,
+      isSubtask: true,
+      sortBy: "relevance",
+      sortAscending: true,
+      customFieldFilters: [
+        {
+          customFieldId: "cf1",
+          isSet: true,
+          value: "Approved",
+          startsWith: "App",
+          endsWith: "ved",
+          contains: "prov",
+          lessThan: 10,
+          greaterThan: 1,
+          before: "2026-08-01",
+          after: "2026-07-01",
+        },
+      ],
+      customTypeFilter: { customTypeId: "ct1", statusOptionId: "status1" },
+      includeFields: ["followers"],
+    },
+    method: "GET",
+    path: "/workspaces/w1/tasks/search",
+    response: { data: [{ gid: "t1" }] },
+    query: {
+      limit: "100",
+      text: "launch",
+      resource_subtype: "custom",
+      "assignee.any": "u1,u2",
+      "assignee.not": "u3",
+      "portfolios.any": "portfolio1",
+      "projects.any": "p1",
+      "projects.not": "p2",
+      "projects.all": "p3,p4",
+      "sections.any": "s1",
+      "sections.not": "s2",
+      "sections.all": "s3",
+      "tags.any": "tag1",
+      "tags.not": "tag2",
+      "tags.all": "tag3",
+      "teams.any": "team1",
+      "followers.any": "u4",
+      "followers.not": "u5",
+      "created_by.any": "u6",
+      "created_by.not": "u7",
+      "assigned_by.any": "u8",
+      "assigned_by.not": "u9",
+      "liked_by.not": "u10",
+      "commented_on_by.not": "u11",
+      due_on: "null",
+      "due_on.before": "2026-08-31",
+      "due_on.after": "2026-08-01",
+      "due_at.before": "2026-08-31T12:00:00Z",
+      "due_at.after": "2026-08-01T12:00:00Z",
+      start_on: "null",
+      "start_on.before": "2026-08-31",
+      "start_on.after": "2026-08-01",
+      created_on: "null",
+      "created_on.before": "2026-07-31",
+      "created_on.after": "2026-07-01",
+      "created_at.before": "2026-07-31T12:00:00Z",
+      "created_at.after": "2026-07-01T12:00:00Z",
+      completed_on: "null",
+      "completed_on.before": "2026-06-30",
+      "completed_on.after": "2026-06-01",
+      "completed_at.before": "2026-06-30T12:00:00Z",
+      "completed_at.after": "2026-06-01T12:00:00Z",
+      modified_on: "null",
+      "modified_on.before": "2026-07-28",
+      "modified_on.after": "2026-07-20",
+      "modified_at.before": "2026-07-28T12:00:00Z",
+      "modified_at.after": "2026-07-20T12:00:00Z",
+      is_blocking: "false",
+      is_blocked: "true",
+      has_attachment: "false",
+      completed: "false",
+      is_subtask: "true",
+      sort_by: "relevance",
+      sort_ascending: "true",
+      "custom_fields.cf1.is_set": "true",
+      "custom_fields.cf1.value": "Approved",
+      "custom_fields.cf1.starts_with": "App",
+      "custom_fields.cf1.ends_with": "ved",
+      "custom_fields.cf1.contains": "prov",
+      "custom_fields.cf1.less_than": "10",
+      "custom_fields.cf1.greater_than": "1",
+      "custom_fields.cf1.before": "2026-08-01",
+      "custom_fields.cf1.after": "2026-07-01",
+      "custom_types.ct1.custom_type_status_option.gid": "status1",
+      opt_fields: `${taskFields},followers`,
+    },
+    expectedOutput: { tasks: [{ gid: "t1" }] },
+  },
+];
+
 describe("Asana runtime", () => {
+  it("defines all 27 task actions with official scope metadata and matching handlers", () => {
+    expect(asanaTaskActions).toHaveLength(27);
+    expect(Object.keys(taskActionHandlers).sort()).toEqual(asanaTaskActions.map((action) => action.name).sort());
+    expect(Object.fromEntries(asanaTaskActions.map((action) => [action.name, action.requiredScopes]))).toEqual({
+      list_tasks: ["tasks:read"],
+      list_project_tasks: ["tasks:read"],
+      get_task: ["tasks:read"],
+      create_task: ["tasks:write"],
+      update_task: ["tasks:write"],
+      delete_task: ["tasks:delete"],
+      duplicate_task: ["tasks:write"],
+      list_section_tasks: ["tasks:read"],
+      list_tag_tasks: ["tasks:read"],
+      list_user_task_list_tasks: ["tasks:read"],
+      list_subtasks: ["tasks:read"],
+      create_subtask: ["tasks:write"],
+      set_task_parent: ["tasks:write"],
+      list_task_dependencies: ["tasks:read"],
+      add_task_dependencies: ["tasks:write"],
+      remove_task_dependencies: ["tasks:write"],
+      list_task_dependents: ["tasks:read"],
+      add_task_dependents: ["tasks:write"],
+      remove_task_dependents: ["tasks:write"],
+      add_task_project: ["tasks:write"],
+      remove_task_project: ["tasks:write"],
+      add_task_tag: ["tasks:write"],
+      remove_task_tag: ["tasks:write"],
+      add_task_followers: ["tasks:write"],
+      remove_task_followers: ["tasks:write"],
+      get_task_by_custom_id: ["tasks:read"],
+      search_workspace_tasks: ["tasks:read"],
+    });
+  });
+
+  it.each(taskHandlerCases)(
+    "maps $name to the official Asana task method, path, complete query, body, and result",
+    async ({ name, input, method, path, response, status, query, body, expectedOutput }) => {
+      const context = recordingContext(jsonResponse(response, status));
+      const handler = taskActionHandlers[name];
+
+      expect(handler).toBeTypeOf("function");
+      await expect(handler!(input, context)).resolves.toEqual(expectedOutput);
+      expect(context.requests).toHaveLength(1);
+      const request = context.requests[0]!;
+      expect(request.init.method).toBe(method);
+      expect(request.url.pathname).toBe(`/api/1.0${path}`);
+      expect(Object.fromEntries(request.url.searchParams.entries())).toEqual(query ?? {});
+      if (body) {
+        expect(JSON.parse(request.init.body as string)).toEqual({ data: body });
+      } else {
+        expect(request.init.body).toBeUndefined();
+      }
+    },
+  );
+
+  it.each([{}, { assignee: "me" }, { workspaceId: "w1" }, { sectionId: "s1" }])(
+    "rejects invalid generic task list filters",
+    async (input) => {
+      const context = recordingContext();
+
+      await expect(Promise.resolve().then(() => taskActionHandlers.list_tasks!(input, context))).rejects.toMatchObject({
+        status: 400,
+      });
+      expect(context.requests).toHaveLength(0);
+    },
+  );
+
+  it.each([{ name: "No location" }, { name: "Empty projects", projectIds: [] }])(
+    "rejects invalid task creation locations",
+    async (input) => {
+      const context = recordingContext();
+
+      await expect(Promise.resolve().then(() => taskActionHandlers.create_task!(input, context))).rejects.toMatchObject(
+        { status: 400 },
+      );
+      expect(context.requests).toHaveLength(0);
+    },
+  );
+
+  it.each([
+    ["create_task", { projectId: "p1" }],
+    ["create_subtask", { taskId: "t1" }],
+  ])("requires a task name when creating through %s", async (name, input) => {
+    const context = recordingContext();
+
+    await expect(Promise.resolve().then(() => taskActionHandlers[name]!(input, context))).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    ["create_task", { projectId: "p1", name: "Task", notes: "plain", htmlNotes: "<body>rich</body>" }],
+    ["update_task", { taskId: "t1", notes: "plain", htmlNotes: "<body>rich</body>" }],
+    ["create_task", { projectId: "p1", name: "Task", dueOn: "2026-08-01", dueAt: "2026-08-01T12:00:00Z" }],
+    ["update_task", { taskId: "t1", startOn: "2026-08-01", startAt: "2026-08-01T12:00:00Z" }],
+    ["create_task", { projectId: "p1", name: "Task", startOn: "2026-08-01" }],
+    ["update_task", { taskId: "t1", startAt: "2026-08-01T12:00:00Z", dueOn: "2026-08-01" }],
+    ["update_task", { taskId: "t1", startAt: null }],
+    ["update_task", { taskId: "t1", startOn: null }],
+    ["update_task", { taskId: "t1", startAt: "2026-08-01T09:00:00Z", dueAt: null }],
+    ["update_task", { taskId: "t1", startOn: "2026-08-01", dueOn: null }],
+    ["update_task", { taskId: "t1", startOn: "2026-08-01", dueAt: null }],
+  ])("rejects invalid task mutation field combinations for %s", async (name, input) => {
+    const context = recordingContext();
+
+    await expect(Promise.resolve().then(() => taskActionHandlers[name]!(input, context))).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    {
+      input: { taskId: "t1", startAt: null, dueAt: null },
+      body: { start_at: null, due_at: null },
+    },
+    {
+      input: {
+        taskId: "t1",
+        startAt: "2026-08-01T09:00:00Z",
+        dueAt: "2026-08-01T12:00:00Z",
+      },
+      body: {
+        start_at: "2026-08-01T09:00:00Z",
+        due_at: "2026-08-01T12:00:00Z",
+      },
+    },
+    {
+      input: { taskId: "t1", startOn: null, dueOn: null },
+      body: { start_on: null, due_on: null },
+    },
+  ])("accepts paired task start and due field updates", async ({ input, body }) => {
+    const context = recordingContext(jsonResponse({ data: { gid: "t1" } }));
+
+    await expect(taskActionHandlers.update_task!(input, context)).resolves.toEqual({ task: { gid: "t1" } });
+    expect(JSON.parse(context.requests[0]?.init.body as string)).toEqual({ data: body });
+  });
+
+  it("rejects an empty task update without making a request", async () => {
+    const context = recordingContext();
+
+    await expect(
+      Promise.resolve().then(() => taskActionHandlers.update_task!({ taskId: "t1" }, context)),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    ["set_task_parent", { taskId: "t1" }],
+    ["set_task_parent", { taskId: "t1", parentId: "p1", insertBefore: "a", insertAfter: "b" }],
+    ["set_task_parent", { taskId: "t1", parentId: null, insertBefore: "a" }],
+    ["set_task_parent", { taskId: "t1", parentId: null, insertAfter: "b" }],
+    ["add_task_project", { taskId: "t1", projectId: "p1", insertBefore: "a", insertAfter: "b" }],
+  ])("rejects invalid task placement input for %s", async (name, input) => {
+    const context = recordingContext();
+
+    await expect(Promise.resolve().then(() => taskActionHandlers[name]!(input, context))).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    {
+      workspaceId: "w1",
+      resourceSubtype: "default_task",
+      customTypeFilter: { customTypeId: "ct1", statusOptionId: "s1" },
+    },
+    { workspaceId: "w1", resourceSubtype: "custom", customTypeFilter: { customTypeId: "ct1" } },
+  ])("rejects invalid custom task type search filters", async (input) => {
+    const context = recordingContext();
+
+    await expect(
+      Promise.resolve().then(() => taskActionHandlers.search_workspace_tasks!(input, context)),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(context.requests).toHaveLength(0);
+  });
+
   it("defines all 26 project and section actions with official scope metadata", () => {
     expect(asanaProjectSectionActions).toHaveLength(26);
     expect(

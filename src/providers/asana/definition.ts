@@ -1,10 +1,10 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { asanaProjectSectionActions } from "./actions-projects.ts";
+import { asanaTaskActions } from "./actions-tasks.ts";
 import { asanaTeamActions } from "./actions-teams.ts";
 import { asanaUserActions } from "./actions-users.ts";
 import { asanaWorkspaceActions } from "./actions-workspaces.ts";
-import { asanaActions } from "./actions.ts";
 
 const service = "asana";
 
@@ -29,6 +29,6 @@ export const provider: ProviderDefinition = {
     ...asanaUserActions,
     ...asanaTeamActions,
     ...asanaProjectSectionActions,
-    ...asanaActions,
+    ...asanaTaskActions,
   ],
 };

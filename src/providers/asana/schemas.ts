@@ -48,6 +48,15 @@ export const taskCompactSchema: JsonSchema = s.looseObject("A compact Asana task
   resource_subtype: s.stringEnum("The task subtype.", ["default_task", "milestone", "approval", "custom"]),
 });
 
+export const jobSchema: JsonSchema = s.looseObject("An asynchronous Asana job.", {
+  gid: s.string("The job gid."),
+  resource_type: s.string("The resource type."),
+  resource_subtype: s.string("The job subtype."),
+  status: s.stringEnum("The current job status.", ["not_started", "in_progress", "succeeded", "failed"]),
+  new_project: s.nullable(projectCompactSchema),
+  new_task: s.nullable(taskCompactSchema),
+});
+
 export const workspaceSchema: JsonSchema = s.looseObject("An Asana workspace.", {
   gid: s.string("The workspace gid."),
   resource_type: s.string("The resource type."),

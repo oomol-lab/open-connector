@@ -6,9 +6,9 @@ import {
   customFieldSettingSchema,
   gidField,
   includeFieldsSchema,
+  jobSchema,
   nextCursorSchema,
   paginationFields,
-  projectCompactSchema,
   projectSchema,
   sectionSchema,
   successOutputSchema,
@@ -185,14 +185,6 @@ const taskCountsSchema = s.object("Documented task and milestone counts for a pr
   num_milestones: s.nonNegativeInteger("The number of milestones in the project."),
   num_incomplete_milestones: s.nonNegativeInteger("The number of incomplete milestones in the project."),
   num_completed_milestones: s.nonNegativeInteger("The number of completed milestones in the project."),
-});
-
-const jobSchema = s.looseObject("An asynchronous Asana job.", {
-  gid: s.string("The job gid."),
-  resource_type: s.string("The resource type."),
-  resource_subtype: s.string("The job subtype."),
-  status: s.stringEnum("The current job status.", ["not_started", "in_progress", "succeeded", "failed"]),
-  new_project: s.nullable(projectCompactSchema),
 });
 
 function rejectPlainAndHtmlNotes(schema: JsonSchema): JsonSchema {
