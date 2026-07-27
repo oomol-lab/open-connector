@@ -1,39 +1,21 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { AsanaContext } from "./runtime.ts";
 
 import {
   compactObject,
-  objectArray,
   optionalBoolean,
   optionalRecord,
   optionalString,
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  ProviderRequestError,
-  providerUserAgent,
-  requireApiKeyCredential,
-  setSearchParams,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import { asanaApiBaseUrl, getAsanaResource, listAsanaResources, requestAsana, writeAsanaResource } from "./runtime.ts";
 
 const service = "asana";
-const asanaApiBaseUrl = "https://app.asana.com/api/1.0";
 const asanaValidationPath = "/users/me";
 
-type AsanaRequestPhase = "validate" | "execute";
-type AsanaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
-
-interface AsanaRequestOptions {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-  path: string;
-  phase: AsanaRequestPhase;
-  method?: "GET" | "POST" | "PUT";
-  query?: Record<string, string | undefined>;
-  body?: Record<string, unknown>;
-  notFoundAsInvalidInput?: boolean;
-}
+type AsanaActionHandler = (input: Record<string, unknown>, context: AsanaContext) => Promise<unknown>;
 
 const defaultWorkspaceFields = ["name", "email_domains", "is_organization"];
 const defaultProjectFields = [
@@ -79,11 +61,16 @@ const defaultTaskFields = [
 
 export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
   list_workspaces(input, context) {
-    return listEntities("/workspaces", buildPaginationQuery(input, defaultWorkspaceFields), "workspaces", context);
+    return listAsanaResources(
+      "/workspaces",
+      buildPaginationQuery(input, defaultWorkspaceFields),
+      "workspaces",
+      context,
+    );
   },
 
   get_workspace(input, context) {
-    return getEntity(
+    return getAsanaResource(
       `/workspaces/${encodeURIComponent(requiredString(input.workspaceId, "workspaceId", invalidInputError))}`,
       {
         opt_fields: joinOptFields(mergeFields(defaultWorkspaceFields, readStringArray(input.includeFields))),
@@ -94,7 +81,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
   },
 
   list_projects(input, context) {
-    return listEntities(
+    return listAsanaResources(
       "/projects",
       compactStringObject({
         workspace: requiredString(input.workspaceId, "workspaceId", invalidInputError),
@@ -107,7 +94,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
   },
 
   get_project(input, context) {
-    return getEntity(
+    return getAsanaResource(
       `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInputError))}`,
       {
         opt_fields: joinOptFields(mergeFields(defaultProjectFields, readStringArray(input.includeFields))),
@@ -118,22 +105,21 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
   },
 
   create_project(input, context) {
-    return writeEntity("/projects", buildCreateProjectBody(input), "project", context, "POST");
+    return writeAsanaResource("/projects", buildCreateProjectBody(input), "project", context, { method: "POST" });
   },
 
   update_project(input, context) {
-    return writeEntity(
+    return writeAsanaResource(
       `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInputError))}`,
       buildUpdateProjectBody(input),
       "project",
       context,
-      "PUT",
-      true,
+      { method: "PUT", notFoundAsInvalidInput: true },
     );
   },
 
   list_project_tasks(input, context) {
-    return listEntities(
+    return listAsanaResources(
       `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInputError))}/tasks`,
       compactStringObject({
         completed_since: optionalString(input.completedSince),
@@ -145,7 +131,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
   },
 
   get_task(input, context) {
-    return getEntity(
+    return getAsanaResource(
       `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInputError))}`,
       {
         opt_fields: joinOptFields(mergeFields(defaultTaskFields, readStringArray(input.includeFields))),
@@ -156,25 +142,24 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
   },
 
   create_task(input, context) {
-    return writeEntity("/tasks", buildCreateTaskBody(input), "task", context, "POST");
+    return writeAsanaResource("/tasks", buildCreateTaskBody(input), "task", context, { method: "POST" });
   },
 
   update_task(input, context) {
-    return writeEntity(
+    return writeAsanaResource(
       `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInputError))}`,
       buildUpdateTaskBody(input),
       "task",
       context,
-      "PUT",
-      true,
+      { method: "PUT", notFoundAsInvalidInput: true },
     );
   },
 };
 
-export const executors: ProviderExecutors = defineProviderExecutors<ApiKeyProviderContext>({
+export const executors: ProviderExecutors = defineProviderExecutors<AsanaContext>({
   service,
   handlers: asanaActionHandlers,
-  async createContext(context, fetcher): Promise<ApiKeyProviderContext> {
+  async createContext(context, fetcher): Promise<AsanaContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
@@ -187,7 +172,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<ApiKeyProvid
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const payload = await requestAsanaJson({
+    const payload = await requestAsana({
       path: asanaValidationPath,
       context: {
         apiKey: input.apiKey,
@@ -200,7 +185,11 @@ export const credentialValidators: CredentialValidators = {
       },
     });
 
-    const user = readDataObject(payload, "user");
+    const user = requiredRecord(
+      payload.data,
+      "asana user response",
+      (message) => new ProviderRequestError(502, message),
+    );
     const userId = optionalString(user.gid);
     const name = optionalString(user.name);
     const email = optionalString(user.email);
@@ -229,164 +218,6 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
-
-async function listEntities(
-  path: string,
-  query: Record<string, string | undefined>,
-  outputKey: string,
-  context: ApiKeyProviderContext,
-): Promise<Record<string, unknown>> {
-  const payload = await requestAsanaJson({
-    path,
-    context,
-    phase: "execute",
-    query,
-  });
-
-  return {
-    [outputKey]: readDataArray(payload),
-    nextCursor: readNextCursor(payload),
-  };
-}
-
-async function getEntity(
-  path: string,
-  query: Record<string, string | undefined>,
-  outputKey: string,
-  context: ApiKeyProviderContext,
-): Promise<Record<string, unknown>> {
-  const payload = await requestAsanaJson({
-    path,
-    context,
-    phase: "execute",
-    query,
-    notFoundAsInvalidInput: true,
-  });
-
-  return {
-    [outputKey]: readDataObject(payload, outputKey),
-  };
-}
-
-async function writeEntity(
-  path: string,
-  body: Record<string, unknown>,
-  outputKey: string,
-  context: ApiKeyProviderContext,
-  method: "POST" | "PUT",
-  notFoundAsInvalidInput = false,
-): Promise<Record<string, unknown>> {
-  const payload = await requestAsanaJson({
-    path,
-    context,
-    phase: "execute",
-    method,
-    body,
-    notFoundAsInvalidInput,
-  });
-
-  return {
-    [outputKey]: readDataObject(payload, outputKey),
-  };
-}
-
-async function requestAsanaJson(input: AsanaRequestOptions): Promise<Record<string, unknown>> {
-  const url = new URL(`${asanaApiBaseUrl}${input.path}`);
-  setSearchParams(url, input.query ?? {});
-
-  let response: Response;
-  try {
-    response = await input.context.fetcher(url, {
-      method: input.method ?? "GET",
-      headers: compactHeaders({
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
-        "content-type": input.body ? "application/json" : undefined,
-        "user-agent": providerUserAgent,
-      }),
-      body: input.body ? JSON.stringify({ data: input.body }) : undefined,
-      signal: input.context.signal,
-    });
-  } catch (error) {
-    throw new ProviderRequestError(
-      isAbortError(error) ? 504 : 502,
-      error instanceof Error ? `Asana request failed: ${error.message}` : "Asana request failed",
-    );
-  }
-
-  const payload = await readAsanaPayload(response);
-  if (!response.ok) {
-    throw createAsanaError(response, payload, input.phase, input.notFoundAsInvalidInput ?? false);
-  }
-
-  return payload;
-}
-
-async function readAsanaPayload(response: Response): Promise<Record<string, unknown>> {
-  if (response.status === 204) {
-    return {};
-  }
-
-  const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    const text = await response.text().catch(() => "");
-    throw new ProviderRequestError(502, text || "Asana response is not JSON");
-  }
-
-  return requiredRecord(await response.json(), "asana response", (message) => new ProviderRequestError(502, message));
-}
-
-function createAsanaError(
-  response: Response,
-  payload: Record<string, unknown>,
-  phase: AsanaRequestPhase,
-  notFoundAsInvalidInput: boolean,
-): ProviderRequestError {
-  const message = readErrorMessage(payload) ?? `Asana request failed with status ${response.status}`;
-
-  if (response.status === 400) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (response.status === 401) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 401, message, payload);
-  }
-  if (response.status === 404 && notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (response.status === 429) {
-    return new ProviderRequestError(429, message, payload);
-  }
-
-  return new ProviderRequestError(response.status || 500, message, payload);
-}
-
-function readErrorMessage(payload: Record<string, unknown>): string | undefined {
-  const errors = payload.errors;
-  if (!Array.isArray(errors)) {
-    return undefined;
-  }
-
-  for (const error of errors) {
-    const message = optionalString(optionalRecord(error)?.message);
-    if (message) {
-      return message;
-    }
-  }
-
-  return undefined;
-}
-
-function readDataArray(payload: Record<string, unknown>): Array<Record<string, unknown>> {
-  return objectArray(payload.data, "asana response data", (message) => new ProviderRequestError(502, message));
-}
-
-function readDataObject(payload: Record<string, unknown>, label: string): Record<string, unknown> {
-  return requiredRecord(payload.data, `asana ${label} response`, (message) => new ProviderRequestError(502, message));
-}
-
-function readNextCursor(payload: Record<string, unknown>): string | null {
-  return optionalString(optionalRecord(payload.next_page)?.offset) ?? null;
-}
 
 function buildPaginationQuery(input: Record<string, unknown>, defaultFields: string[]): Record<string, string> {
   return compactStringObject({
@@ -529,14 +360,6 @@ function compactStringObject(input: Record<string, string | undefined>): Record<
   return compactObject(input) as Record<string, string>;
 }
 
-function compactHeaders(input: Record<string, string | undefined>): Headers {
-  return new Headers(compactObject(input) as Record<string, string>);
-}
-
 function invalidInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }
