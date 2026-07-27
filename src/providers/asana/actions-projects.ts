@@ -165,6 +165,10 @@ const projectsOutputSchema = s.object("The output payload for this action.", {
   nextCursor: nextCursorSchema,
 });
 
+const searchProjectsOutputSchema = s.object("The output payload for this action.", {
+  projects: s.array("The matching Asana projects.", projectSchema),
+});
+
 const projectOutputSchema = s.object("The output payload for this action.", {
   project: projectSchema,
 });
@@ -428,7 +432,8 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_workspace_projects",
-    description: "Search projects in a workspace using Asana's documented project filters.",
+    description:
+      "Search projects in a workspace using Asana's documented project filters. Asana does not paginate search results; use limit to cap the page size.",
     requiredScopes: ["projects:read"],
     inputSchema: s.object(
       "The input payload for this action.",
@@ -475,7 +480,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
       },
       { required: ["workspaceId"] },
     ),
-    outputSchema: projectsOutputSchema,
+    outputSchema: searchProjectsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "add_project_custom_field",

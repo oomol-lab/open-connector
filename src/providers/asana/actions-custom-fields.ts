@@ -269,6 +269,10 @@ const customFieldSettingsOutputSchema = s.object("The output payload for this ac
   nextCursor: nextCursorSchema,
 });
 
+const teamCustomFieldSettingsOutputSchema = s.object("The output payload for this action.", {
+  customFieldSettings: s.array("The Asana custom field settings.", customFieldSettingSchema),
+});
+
 function resourceInput(idField: string, description: string): JsonSchema {
   return s.object(
     "The input payload for this action.",
@@ -362,9 +366,9 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_custom_field_settings",
-    description: "List the custom field settings on an Asana team.",
+    description: "List the custom field settings on an Asana team. Asana returns this collection without pagination.",
     requiredScopes: ["teams:read"],
     inputSchema: resourceInput("teamId", "The team gid."),
-    outputSchema: customFieldSettingsOutputSchema,
+    outputSchema: teamCustomFieldSettingsOutputSchema,
   }),
 ];

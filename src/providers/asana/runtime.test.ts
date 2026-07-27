@@ -20,6 +20,7 @@ import {
   deleteAsanaResource,
   getAsanaResource,
   listAsanaResources,
+  listAsanaUnpaginatedResources,
   requestAsana,
   writeAsanaResource,
 } from "./runtime.ts";
@@ -719,7 +720,7 @@ const projectSectionHandlerCases: HandlerCase[] = [
       "custom_fields.cf1.greater_than": "1",
       opt_fields: `${projectFields},resource_type`,
     },
-    expectedOutput: { projects: [{ gid: "p1" }], nextCursor: null },
+    expectedOutput: { projects: [{ gid: "p1" }] },
   },
   {
     name: "add_project_custom_field",
@@ -2118,7 +2119,7 @@ describe("Asana runtime", () => {
       method: "GET",
       path: "/teams/team%20%2F%201/custom_field_settings",
       response: { data: [{ gid: "setting1" }] },
-      output: { customFieldSettings: [{ gid: "setting1" }], nextCursor: null },
+      output: { customFieldSettings: [{ gid: "setting1" }] },
     },
   ])(
     "maps $name to the official Asana custom-field route",
@@ -2214,7 +2215,7 @@ describe("Asana runtime", () => {
     },
   );
 
-  it("creates an external attachment without downloading the external URL", async () => {
+  it("creates an external attachment as multipart without downloading the external URL", async () => {
     const context = recordingContext(jsonResponse({ data: { gid: "a1", resource_subtype: "external" } }, 201));
 
     await expect(
@@ -2229,15 +2230,19 @@ describe("Asana runtime", () => {
     ).resolves.toEqual({ attachment: { gid: "a1", resource_subtype: "external" } });
 
     expect(context.requests).toHaveLength(1);
-    expect(context.requests[0]?.url.pathname).toBe("/api/1.0/attachments");
-    expect(JSON.parse(context.requests[0]?.init.body as string)).toEqual({
-      data: {
-        parent: "task-1",
-        url: "https://files.example/report.pdf",
-        name: "report.pdf",
-        resource_subtype: "external",
-      },
+    const request = context.requests[0]!;
+    expect(request.init.method).toBe("POST");
+    expect(request.url.pathname).toBe("/api/1.0/attachments");
+    expect(request.init.body).toBeInstanceOf(FormData);
+    const formData = request.init.body as FormData;
+    expect(Object.fromEntries(formData.entries())).toEqual({
+      parent: "task-1",
+      resource_subtype: "external",
+      url: "https://files.example/report.pdf",
+      name: "report.pdf",
     });
+    expect(formData.get("file")).toBeNull();
+    expect(new Headers(request.init.headers).has("content-type")).toBe(false);
   });
 
   it("uploads a transit file as multipart without setting content-type", async () => {
@@ -3042,6 +3047,34 @@ describe("Asana runtime", () => {
     });
 
     expect(context.requests[0]?.url.searchParams.get("opt_fields")).toBe("name,notes");
+  });
+
+  it("omits the cursor for Asana endpoints that return no next_page envelope", async () => {
+    const context = recordingContext(jsonResponse({ data: [{ gid: "project-1" }] }));
+
+    await expect(
+      listAsanaUnpaginatedResources("/workspaces/w1/projects/search", { limit: "5" }, "projects", context),
+    ).resolves.toEqual({ projects: [{ gid: "project-1" }] });
+
+    expect(context.requests[0]?.url.searchParams.get("limit")).toBe("5");
+  });
+
+  it("keeps every non-paginated action free of cursor inputs and nextCursor outputs", () => {
+    const unpaginated = ["search_workspace_projects", "search_workspace_tasks", "list_team_custom_field_settings"];
+
+    for (const name of unpaginated) {
+      const action = provider.actions.find((candidate) => candidate.name === name);
+      expect(action, name).toBeDefined();
+      expect((action!.inputSchema.properties as Record<string, unknown>).cursor, name).toBeUndefined();
+      expect((action!.outputSchema.properties as Record<string, unknown>).nextCursor, name).toBeUndefined();
+    }
+
+    for (const action of provider.actions) {
+      const hasCursor = (action.inputSchema.properties as Record<string, unknown> | undefined)?.cursor !== undefined;
+      const hasNextCursor =
+        (action.outputSchema.properties as Record<string, unknown> | undefined)?.nextCursor !== undefined;
+      expect(hasNextCursor, action.name).toBe(hasCursor);
+    }
   });
 
   it("forwards BodyInit request bodies without applying the JSON envelope", async () => {

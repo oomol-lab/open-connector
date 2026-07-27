@@ -21,6 +21,7 @@ import {
   deleteAsanaResource,
   getAsanaResource,
   listAsanaResources,
+  listAsanaUnpaginatedResources,
   requestAsana,
   requireNonEmptyAsanaBody,
   writeAsanaResource,
@@ -306,9 +307,9 @@ export const taskActionHandlers: Record<string, AsanaActionHandler> = {
     );
   },
 
-  async search_workspace_tasks(input, context) {
+  search_workspace_tasks(input, context) {
     const customTypeQuery = buildCustomTaskTypeSearchQuery(input);
-    const result = await listAsanaResources(
+    return listAsanaUnpaginatedResources(
       `/workspaces/${asanaPathGid(input.workspaceId, "workspaceId")}/tasks/search`,
       compactAsanaQuery({
         limit: typeof input.limit === "number" ? String(input.limit) : undefined,
@@ -372,7 +373,6 @@ export const taskActionHandlers: Record<string, AsanaActionHandler> = {
       "tasks",
       context,
     );
-    return { tasks: result.tasks };
   },
 };
 

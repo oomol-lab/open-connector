@@ -144,6 +144,20 @@ export async function listAsanaResources(
   };
 }
 
+/**
+ * List resources from an Asana endpoint that returns no `next_page` envelope,
+ * such as the search endpoints and team custom field settings.
+ */
+export async function listAsanaUnpaginatedResources(
+  path: string,
+  query: Record<string, string | undefined>,
+  outputKey: string,
+  context: AsanaContext,
+): Promise<Record<string, unknown>> {
+  const payload = await requestAsana({ path, context, query });
+  return { [outputKey]: readDataArray(payload) };
+}
+
 /** Get one Asana resource and map a missing resource to invalid input. */
 export async function getAsanaResource(
   path: string,

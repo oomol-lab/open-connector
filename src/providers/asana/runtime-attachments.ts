@@ -1,14 +1,7 @@
 import type { TransitFileRead } from "../../core/types.ts";
 import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
-import {
-  compactObject,
-  optionalInteger,
-  optionalRecord,
-  optionalString,
-  requiredRecord,
-  requiredString,
-} from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import {
@@ -20,7 +13,6 @@ import {
   getAsanaResource,
   listAsanaResources,
   requestAsana,
-  writeAsanaResource,
 } from "./runtime.ts";
 
 const maxAttachmentBytes = 100 * 1024 * 1024;
@@ -89,21 +81,13 @@ async function createExternalAttachment(
   if (url.username || url.password) {
     throw asanaInvalidInputError("externalUrl must not include credentials.");
   }
-  return writeAsanaResource(
-    "/attachments",
-    compactObject({
-      parent: requiredString(input.parentId, "parentId", asanaInvalidInputError),
-      url: url.toString(),
-      name: requiredString(input.name, "name", asanaInvalidInputError),
-      resource_subtype: "external",
-    }),
-    "attachment",
-    context,
-    {
-      method: "POST",
-      query: buildAsanaFieldsQuery(input, defaultAttachmentFields),
-    },
-  );
+
+  const formData = new FormData();
+  formData.set("parent", requiredString(input.parentId, "parentId", asanaInvalidInputError));
+  formData.set("resource_subtype", "external");
+  formData.set("url", url.toString());
+  formData.set("name", requiredString(input.name, "name", asanaInvalidInputError));
+  return uploadAsanaAttachment(formData, input, context);
 }
 
 async function createTransitFileAttachment(
@@ -128,7 +112,19 @@ async function createTransitFileAttachment(
   const formData = new FormData();
   formData.set("parent", requiredString(input.parentId, "parentId", asanaInvalidInputError));
   formData.set("file", await normalizedTransitFile(stored), encodeURIComponent(stored.name));
+  return uploadAsanaAttachment(formData, input, context);
+}
 
+/**
+ * Send one attachment create request. Asana documents `multipart/form-data` as
+ * the only accepted encoding for `POST /attachments`, for both uploaded files
+ * and external resource URLs, so this never uses the JSON data envelope.
+ */
+async function uploadAsanaAttachment(
+  formData: FormData,
+  input: Record<string, unknown>,
+  context: AsanaContext,
+): Promise<Record<string, unknown>> {
   const payload = await requestAsana({
     path: "/attachments",
     context,

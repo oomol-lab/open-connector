@@ -25,6 +25,7 @@ import {
   deleteAsanaResource,
   getAsanaResource,
   listAsanaResources,
+  listAsanaUnpaginatedResources,
   requireNonEmptyAsanaBody,
   writeAsanaResource,
 } from "./runtime.ts";
@@ -174,7 +175,7 @@ export const customFieldActionHandlers: Record<string, AsanaActionHandler> = {
   },
 
   list_team_custom_field_settings(input, context) {
-    return listAsanaResources(
+    return listAsanaUnpaginatedResources(
       `/teams/${asanaPathGid(input.teamId, "teamId")}/custom_field_settings`,
       buildAsanaFieldsQuery(input, defaultCustomFieldSettingFields),
       "customFieldSettings",

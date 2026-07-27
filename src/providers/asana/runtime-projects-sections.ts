@@ -21,6 +21,7 @@ import {
   deleteAsanaResource,
   getAsanaResource,
   listAsanaResources,
+  listAsanaUnpaginatedResources,
   requestAsana,
   requireNonEmptyAsanaBody,
   writeAsanaResource,
@@ -216,7 +217,7 @@ export const projectSectionActionHandlers: Record<string, AsanaActionHandler> = 
   },
 
   search_workspace_projects(input, context) {
-    return listAsanaResources(
+    return listAsanaUnpaginatedResources(
       `/workspaces/${asanaPathGid(input.workspaceId, "workspaceId")}/projects/search`,
       compactAsanaQuery({
         limit: typeof input.limit === "number" ? String(input.limit) : undefined,
