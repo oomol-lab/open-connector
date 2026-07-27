@@ -65,7 +65,6 @@ export const taskActionHandlers: Record<string, AsanaActionHandler> = {
         assignee: optionalString(input.assignee),
         project: optionalString(input.projectId),
         section: optionalString(input.sectionId),
-        tag: optionalString(input.tagId),
         workspace: optionalString(input.workspaceId),
         completed_since: optionalString(input.completedSince),
         modified_since: optionalString(input.modifiedSince),
@@ -471,13 +470,16 @@ function assertTaskMutationConstraints(input: Record<string, unknown>): void {
 }
 
 function assertGeneralTaskListFilters(input: Record<string, unknown>): void {
+  if (input.tagId !== undefined) {
+    throw asanaInvalidInputError("tagId is not supported by list_tasks; use list_tag_tasks instead.");
+  }
   const assignee = optionalString(input.assignee);
   const workspace = optionalString(input.workspaceId);
   if (!!assignee !== !!workspace) {
     throw asanaInvalidInputError("assignee and workspaceId must be provided together.");
   }
-  if (!optionalString(input.projectId) && !optionalString(input.tagId) && !(assignee && workspace)) {
-    throw asanaInvalidInputError("projectId, tagId, or both assignee and workspaceId are required.");
+  if (!optionalString(input.projectId) && !optionalString(input.sectionId) && !(assignee && workspace)) {
+    throw asanaInvalidInputError("projectId, sectionId, or both assignee and workspaceId are required.");
   }
 }
 

@@ -307,7 +307,6 @@ const genericListInputSchema = s.object("The input payload for this action.", {
   assignee: s.nonEmptyString('The assignee gid, email, "me", or the literal "null".'),
   projectId: gidField("The project gid to filter by."),
   sectionId: gidField("The section gid to filter by."),
-  tagId: gidField("The tag gid to filter by."),
   workspaceId: gidField("The workspace gid required when assignee is used."),
   completedSince: s.dateTime("Only include tasks incomplete or completed since this timestamp."),
   modifiedSince: s.dateTime("Only include tasks modified since this timestamp."),
@@ -316,7 +315,7 @@ const genericListInputSchema = s.object("The input payload for this action.", {
 });
 genericListInputSchema.anyOf = [
   { required: ["projectId"] },
-  { required: ["tagId"] },
+  { required: ["sectionId"] },
   { required: ["assignee", "workspaceId"] },
 ];
 

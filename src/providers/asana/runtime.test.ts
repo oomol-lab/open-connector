@@ -918,11 +918,11 @@ const taskHandlerCases: HandlerCase[] = [
   },
   {
     name: "list_tasks",
-    input: { tagId: "tag1" },
+    input: { sectionId: "s1" },
     method: "GET",
     path: "/tasks",
     response: { data: [{ gid: "t1" }] },
-    query: { tag: "tag1", opt_fields: taskFields },
+    query: { section: "s1", opt_fields: taskFields },
     expectedOutput: { tasks: [{ gid: "t1" }], nextCursor: null },
   },
   {
@@ -2557,7 +2557,15 @@ describe("Asana runtime", () => {
     },
   );
 
-  it.each([{}, { assignee: "me" }, { workspaceId: "w1" }, { sectionId: "s1" }])(
+  it("declares only official generic task selectors in the strict action schema", () => {
+    const action = asanaTaskActions.find((candidate) => candidate.name === "list_tasks");
+
+    expect(action?.inputSchema.properties).toHaveProperty("sectionId");
+    expect(action?.inputSchema.properties).not.toHaveProperty("tagId");
+    expect(action?.inputSchema.anyOf).toContainEqual({ required: ["sectionId"] });
+  });
+
+  it.each([{}, { assignee: "me" }, { workspaceId: "w1" }, { tagId: "tag1" }])(
     "rejects invalid generic task list filters",
     async (input) => {
       const context = recordingContext();
