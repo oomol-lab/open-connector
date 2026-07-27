@@ -3,6 +3,8 @@ import type { AsanaContext } from "./runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import { attachmentActionHandlers } from "./runtime-attachments.ts";
+import { customFieldActionHandlers } from "./runtime-custom-fields.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
 import { storyTagActionHandlers } from "./runtime-stories-tags.ts";
 import { taskActionHandlers } from "./runtime-tasks.ts";
@@ -20,6 +22,8 @@ export const executors: ProviderExecutors = defineProviderExecutors<AsanaContext
     projectSectionActionHandlers,
     taskActionHandlers,
     storyTagActionHandlers,
+    customFieldActionHandlers,
+    attachmentActionHandlers,
   ),
   async createContext(context, fetcher): Promise<AsanaContext> {
     const credential = await requireApiKeyCredential(context, service);

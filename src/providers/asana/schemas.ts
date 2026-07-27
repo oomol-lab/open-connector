@@ -1,6 +1,13 @@
 import type { JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
+import {
+  asanaCustomFieldFormats,
+  asanaCustomFieldInputRestrictions,
+  asanaCustomFieldSubtypes,
+  asanaCustomLabelPositions,
+  asanaEnumOptionColors,
+} from "./custom-field-metadata.ts";
 
 export const gidField = (description: string): JsonSchema => s.nonEmptyString(description);
 
@@ -70,22 +77,14 @@ export const enumOptionSchema: JsonSchema = s.looseObject("An Asana custom field
   resource_type: s.string("The resource type."),
   name: s.string("The enum option name."),
   enabled: s.boolean("Whether the enum option is enabled."),
-  color: s.string("The enum option color."),
+  color: s.stringEnum("The enum option color.", asanaEnumOptionColors),
 });
 
 const customFieldValueFields: Record<string, JsonSchema> = {
   gid: s.string("The custom field gid."),
   resource_type: s.string("The resource type."),
   name: s.string("The custom field name."),
-  type: s.stringEnum("The legacy custom field type.", [
-    "text",
-    "enum",
-    "multi_enum",
-    "number",
-    "date",
-    "people",
-    "reference",
-  ]),
+  type: s.stringEnum("The legacy custom field type.", asanaCustomFieldSubtypes),
   enum_options: s.array("The custom field enum options.", enumOptionSchema),
   enabled: s.boolean("Whether this custom field value is enabled."),
   representation_type: s.stringEnum("The custom field representation type.", [
@@ -102,7 +101,7 @@ const customFieldValueFields: Record<string, JsonSchema> = {
   id_prefix: s.nullable(s.string("The prefix used by custom ID fields.")),
   input_restrictions: s.array(
     "The resource types accepted by a reference custom field.",
-    s.stringEnum("A permitted resource type.", ["task", "project", "portfolio", "goal"]),
+    s.stringEnum("A permitted resource type.", asanaCustomFieldInputRestrictions),
   ),
   is_formula_field: s.boolean("Whether this is a formula custom field."),
   date_value: s.nullable(
@@ -313,17 +312,10 @@ export const customFieldSchema: JsonSchema = s.looseObject("An Asana custom fiel
   ...customFieldValueFields,
   description: s.string("The custom field description."),
   precision: s.integer("The number field precision."),
-  format: s.stringEnum("The custom field display format.", [
-    "currency",
-    "identifier",
-    "percentage",
-    "custom",
-    "duration",
-    "none",
-  ]),
+  format: s.stringEnum("The custom field display format.", asanaCustomFieldFormats),
   currency_code: s.nullable(s.string("The ISO currency code for currency fields.")),
   custom_label: s.nullable(s.string("The label displayed beside the custom field value.")),
-  custom_label_position: s.nullable(s.stringEnum("Where the custom label is displayed.", ["prefix", "suffix"])),
+  custom_label_position: s.nullable(s.stringEnum("Where the custom label is displayed.", asanaCustomLabelPositions)),
   is_global_to_workspace: s.boolean("Whether the custom field is available to every workspace container."),
   has_notifications_enabled: s.boolean("Whether changes to the field notify task followers."),
   asana_created_field: s.nullable(s.string("The Asana template source identifier for this field.")),
@@ -338,15 +330,7 @@ export const customFieldSchema: JsonSchema = s.looseObject("An Asana custom fiel
     "editor",
     "user",
   ]),
-  resource_subtype: s.stringEnum("The custom field subtype.", [
-    "text",
-    "enum",
-    "multi_enum",
-    "number",
-    "date",
-    "people",
-    "reference",
-  ]),
+  resource_subtype: s.stringEnum("The custom field subtype.", asanaCustomFieldSubtypes),
 });
 
 export const customFieldSettingSchema: JsonSchema = s.looseObject("An Asana custom field setting.", {

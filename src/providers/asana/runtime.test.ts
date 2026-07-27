@@ -1,11 +1,17 @@
+import type { TransitFileStore } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { asanaAttachmentActions } from "./actions-attachments.ts";
+import { asanaCustomFieldActions } from "./actions-custom-fields.ts";
 import { asanaProjectSectionActions } from "./actions-projects.ts";
 import { asanaStoryTagActions } from "./actions-stories-tags.ts";
 import { asanaTaskActions } from "./actions-tasks.ts";
 import { provider } from "./definition.ts";
+import { attachmentActionHandlers } from "./runtime-attachments.ts";
+import { customFieldActionHandlers } from "./runtime-custom-fields.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
 import { storyTagActionHandlers } from "./runtime-stories-tags.ts";
 import { taskActionHandlers } from "./runtime-tasks.ts";
@@ -1592,7 +1598,792 @@ const storyTagHandlerCases: HandlerCase[] = [
   },
 ];
 
+function transitFileStore(
+  file: File,
+  options: { sizeBytes?: number; name?: string; mimeType?: string; readError?: unknown } = {},
+): TransitFileStore {
+  return {
+    maxBytes: 200 * 1024 * 1024,
+    async create() {
+      throw new Error("unexpected transit file create");
+    },
+    async read() {
+      if (options.readError) {
+        throw options.readError;
+      }
+      return {
+        file,
+        sizeBytes: options.sizeBytes ?? file.size,
+        name: options.name ?? file.name,
+        mimeType: options.mimeType ?? file.type,
+      };
+    },
+    async delete() {
+      return false;
+    },
+  };
+}
+
 describe("Asana runtime", () => {
+  it("defines ten custom-field/settings actions and four attachment actions with matching handlers and scopes", () => {
+    expect(asanaCustomFieldActions).toHaveLength(10);
+    expect(asanaAttachmentActions).toHaveLength(4);
+    expect(Object.keys(customFieldActionHandlers).sort()).toEqual(
+      asanaCustomFieldActions.map((action) => action.name).sort(),
+    );
+    expect(Object.keys(attachmentActionHandlers).sort()).toEqual(
+      asanaAttachmentActions.map((action) => action.name).sort(),
+    );
+    expect(Object.fromEntries(asanaCustomFieldActions.map((action) => [action.name, action.requiredScopes]))).toEqual({
+      create_custom_field: ["custom_fields:write"],
+      get_custom_field: ["custom_fields:read"],
+      update_custom_field: ["custom_fields:write"],
+      delete_custom_field: [],
+      list_workspace_custom_fields: ["custom_fields:read"],
+      create_custom_field_enum_option: ["custom_fields:write"],
+      insert_custom_field_enum_option: ["custom_fields:write"],
+      update_custom_field_enum_option: ["custom_fields:write"],
+      list_project_custom_field_settings: ["projects:read"],
+      list_team_custom_field_settings: ["teams:read"],
+    });
+    expect(Object.fromEntries(asanaAttachmentActions.map((action) => [action.name, action.requiredScopes]))).toEqual({
+      get_attachment: ["attachments:read"],
+      delete_attachment: ["attachments:delete"],
+      list_attachments: ["attachments:read"],
+      create_attachment: ["attachments:write"],
+    });
+    expect(
+      asanaCustomFieldActions.find((action) => action.name === "create_custom_field_enum_option")?.inputSchema.allOf,
+    ).toEqual([{ not: { required: ["insertBeforeId", "insertAfterId"] } }]);
+    expect(
+      asanaCustomFieldActions.find((action) => action.name === "insert_custom_field_enum_option")?.inputSchema.oneOf,
+    ).toEqual([
+      { required: ["beforeEnumOptionId"], not: { required: ["afterEnumOptionId"] } },
+      { required: ["afterEnumOptionId"], not: { required: ["beforeEnumOptionId"] } },
+    ]);
+    expect(asanaAttachmentActions.find((action) => action.name === "create_attachment")?.inputSchema.oneOf).toEqual([
+      {
+        required: ["fileId"],
+        not: { anyOf: [{ required: ["externalUrl"] }, { required: ["name"] }] },
+      },
+      {
+        required: ["externalUrl", "name"],
+        not: { required: ["fileId"] },
+      },
+    ]);
+    const createAttachmentAction = asanaAttachmentActions.find((action) => action.name === "create_attachment");
+    expect(createAttachmentAction).toBeDefined();
+    expect((createAttachmentAction!.inputSchema.properties as Record<string, unknown>).connectToApp).toBeUndefined();
+    expect(provider.actions).toHaveLength(101);
+  });
+
+  it.each([
+    {
+      label: "text",
+      input: {
+        workspaceId: "workspace / 1",
+        name: "Summary",
+        resourceSubtype: "text",
+        description: "Delivery summary",
+        hasNotificationsEnabled: true,
+        ownedByApp: false,
+      },
+      body: {
+        workspace: "workspace / 1",
+        name: "Summary",
+        resource_subtype: "text",
+        description: "Delivery summary",
+        has_notifications_enabled: true,
+        owned_by_app: false,
+      },
+    },
+    {
+      label: "enum",
+      input: {
+        workspaceId: "workspace / 1",
+        name: "Priority",
+        resourceSubtype: "enum",
+        enumOptions: [{ name: "High", color: "red", enabled: true }],
+      },
+      body: {
+        workspace: "workspace / 1",
+        name: "Priority",
+        resource_subtype: "enum",
+        enum_options: [{ name: "High", color: "red", enabled: true }],
+      },
+    },
+    {
+      label: "multi-enum",
+      input: {
+        workspaceId: "workspace / 1",
+        name: "Regions",
+        resourceSubtype: "multi_enum",
+        enumOptions: [{ name: "EMEA", color: "blue", enabled: true }],
+      },
+      body: {
+        workspace: "workspace / 1",
+        name: "Regions",
+        resource_subtype: "multi_enum",
+        enum_options: [{ name: "EMEA", color: "blue", enabled: true }],
+      },
+    },
+    {
+      label: "currency number",
+      input: {
+        workspaceId: "workspace / 1",
+        name: "Budget",
+        resourceSubtype: "number",
+        precision: 2,
+        format: "currency",
+        currencyCode: "EUR",
+        customLabel: null,
+        customLabelPosition: null,
+      },
+      body: {
+        workspace: "workspace / 1",
+        name: "Budget",
+        resource_subtype: "number",
+        precision: 2,
+        format: "currency",
+        currency_code: "EUR",
+        custom_label: null,
+        custom_label_position: null,
+      },
+    },
+    {
+      label: "custom-label number",
+      input: {
+        workspaceId: "workspace / 1",
+        name: "Estimate",
+        resourceSubtype: "number",
+        format: "custom",
+        currencyCode: null,
+        customLabel: "points",
+        customLabelPosition: "suffix",
+      },
+      body: {
+        workspace: "workspace / 1",
+        name: "Estimate",
+        resource_subtype: "number",
+        format: "custom",
+        currency_code: null,
+        custom_label: "points",
+        custom_label_position: "suffix",
+      },
+    },
+    {
+      label: "date",
+      input: { workspaceId: "workspace / 1", name: "Launch", resourceSubtype: "date" },
+      body: { workspace: "workspace / 1", name: "Launch", resource_subtype: "date" },
+    },
+    {
+      label: "people",
+      input: { workspaceId: "workspace / 1", name: "Reviewers", resourceSubtype: "people" },
+      body: { workspace: "workspace / 1", name: "Reviewers", resource_subtype: "people" },
+    },
+    {
+      label: "reference",
+      input: {
+        workspaceId: "workspace / 1",
+        name: "Related work",
+        resourceSubtype: "reference",
+        inputRestrictions: ["task", "project"],
+      },
+      body: {
+        workspace: "workspace / 1",
+        name: "Related work",
+        resource_subtype: "reference",
+        input_restrictions: ["task", "project"],
+      },
+    },
+  ])("maps valid $label custom-field creation fields", async ({ input, body }) => {
+    const context = recordingContext(
+      jsonResponse({ data: { gid: "cf1", resource_subtype: body.resource_subtype } }, 201),
+    );
+    const action = asanaCustomFieldActions.find((candidate) => candidate.name === "create_custom_field")!;
+
+    expect(validateActionInput(action, input).valid).toBe(true);
+    await expect(customFieldActionHandlers.create_custom_field!(input, context)).resolves.toEqual({
+      customField: { gid: "cf1", resource_subtype: body.resource_subtype },
+    });
+
+    const request = context.requests[0]!;
+    expect(request.init.method).toBe("POST");
+    expect(request.url.pathname).toBe("/api/1.0/custom_fields");
+    expect(JSON.parse(request.init.body as string)).toEqual({ data: body });
+  });
+
+  it.each([
+    {
+      label: "enum without options",
+      input: { workspaceId: "w1", name: "Priority", resourceSubtype: "enum" },
+    },
+    {
+      label: "multi-enum without options",
+      input: { workspaceId: "w1", name: "Regions", resourceSubtype: "multi_enum" },
+    },
+    {
+      label: "text with enum options",
+      input: {
+        workspaceId: "w1",
+        name: "Summary",
+        resourceSubtype: "text",
+        enumOptions: [{ name: "Wrong" }],
+      },
+    },
+    {
+      label: "enum with a number field",
+      input: {
+        workspaceId: "w1",
+        name: "Priority",
+        resourceSubtype: "enum",
+        enumOptions: [{ name: "High" }],
+        precision: 2,
+      },
+    },
+    {
+      label: "enum with a disabled new option",
+      input: {
+        workspaceId: "w1",
+        name: "Priority",
+        resourceSubtype: "enum",
+        enumOptions: [{ name: "High", enabled: false }],
+      },
+    },
+    {
+      label: "number with enum options",
+      input: {
+        workspaceId: "w1",
+        name: "Estimate",
+        resourceSubtype: "number",
+        enumOptions: [{ name: "Wrong" }],
+      },
+    },
+    {
+      label: "date with a number format",
+      input: { workspaceId: "w1", name: "Launch", resourceSubtype: "date", format: "none" },
+    },
+    {
+      label: "text with reference restrictions",
+      input: {
+        workspaceId: "w1",
+        name: "Summary",
+        resourceSubtype: "text",
+        inputRestrictions: ["task"],
+      },
+    },
+    {
+      label: "reference with number precision",
+      input: {
+        workspaceId: "w1",
+        name: "Related",
+        resourceSubtype: "reference",
+        inputRestrictions: ["task"],
+        precision: 0,
+      },
+    },
+    {
+      label: "currency code without a format",
+      input: {
+        workspaceId: "w1",
+        name: "Budget",
+        resourceSubtype: "number",
+        currencyCode: "USD",
+      },
+    },
+    {
+      label: "currency code with a non-currency format",
+      input: {
+        workspaceId: "w1",
+        name: "Budget",
+        resourceSubtype: "number",
+        format: "percentage",
+        currencyCode: "USD",
+      },
+    },
+    {
+      label: "custom label without a format",
+      input: {
+        workspaceId: "w1",
+        name: "Estimate",
+        resourceSubtype: "number",
+        customLabel: "points",
+      },
+    },
+    {
+      label: "custom label with a non-custom format",
+      input: {
+        workspaceId: "w1",
+        name: "Estimate",
+        resourceSubtype: "number",
+        format: "currency",
+        customLabel: "points",
+      },
+    },
+    {
+      label: "custom label position with a non-custom format",
+      input: {
+        workspaceId: "w1",
+        name: "Estimate",
+        resourceSubtype: "number",
+        format: "duration",
+        customLabelPosition: "suffix",
+      },
+    },
+  ])("rejects invalid $label custom-field creation in schema and runtime", async ({ input }) => {
+    const action = asanaCustomFieldActions.find((candidate) => candidate.name === "create_custom_field")!;
+    const context = recordingContext();
+
+    expect(validateActionInput(action, input).valid).toBe(false);
+    await expect(
+      Promise.resolve().then(() => customFieldActionHandlers.create_custom_field!(input, context)),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    { customFieldId: "cf1", format: "percentage", currencyCode: "USD" },
+    { customFieldId: "cf1", format: "currency", customLabel: "points" },
+    { customFieldId: "cf1", format: "none", customLabelPosition: "suffix" },
+    { customFieldId: "cf1", inputRestrictions: ["task"], precision: 2 },
+    { customFieldId: "cf1", inputRestrictions: ["task"], customLabel: null },
+    { customFieldId: "cf1", currencyCode: "USD", customLabel: "points" },
+    { customFieldId: "cf1", currencyCode: "USD", customLabelPosition: "suffix" },
+  ])("rejects contradictory custom-field update fields", async (input) => {
+    const context = recordingContext();
+    const action = asanaCustomFieldActions.find((candidate) => candidate.name === "update_custom_field")!;
+
+    expect(validateActionInput(action, input).valid).toBe(false);
+    await expect(
+      Promise.resolve().then(() => customFieldActionHandlers.update_custom_field!(input, context)),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    {
+      input: {
+        customFieldId: "cf1",
+        format: "custom",
+        currencyCode: null,
+        customLabel: "points",
+        customLabelPosition: "suffix",
+      },
+      body: {
+        format: "custom",
+        currency_code: null,
+        custom_label: "points",
+        custom_label_position: "suffix",
+      },
+    },
+    {
+      input: {
+        customFieldId: "cf1",
+        format: "currency",
+        currencyCode: "USD",
+        customLabel: null,
+        customLabelPosition: null,
+      },
+      body: {
+        format: "currency",
+        currency_code: "USD",
+        custom_label: null,
+        custom_label_position: null,
+      },
+    },
+    {
+      input: { customFieldId: "cf1", currencyCode: null, customLabel: null, customLabelPosition: null },
+      body: { currency_code: null, custom_label: null, custom_label_position: null },
+    },
+    {
+      input: { customFieldId: "cf1", currencyCode: "EUR" },
+      body: { currency_code: "EUR" },
+    },
+    {
+      input: { customFieldId: "cf1", customLabel: "points" },
+      body: { custom_label: "points" },
+    },
+    {
+      input: { customFieldId: "cf1", customLabelPosition: "prefix" },
+      body: { custom_label_position: "prefix" },
+    },
+    {
+      input: { customFieldId: "cf1", inputRestrictions: ["goal"] },
+      body: { input_restrictions: ["goal"] },
+    },
+  ])("allows compatible, clear, and subtype-unknown partial custom-field updates", async ({ input, body }) => {
+    const context = recordingContext(jsonResponse({ data: { gid: "cf1" } }));
+    const action = asanaCustomFieldActions.find((candidate) => candidate.name === "update_custom_field")!;
+
+    expect(validateActionInput(action, input).valid).toBe(true);
+    await customFieldActionHandlers.update_custom_field!(input, context);
+    expect(JSON.parse(context.requests[0]?.init.body as string)).toEqual({ data: body });
+  });
+
+  it.each([
+    {
+      name: "get_custom_field",
+      input: { customFieldId: "custom / 1" },
+      method: "GET",
+      path: "/custom_fields/custom%20%2F%201",
+      response: { data: { gid: "cf1" } },
+      output: { customField: { gid: "cf1" } },
+    },
+    {
+      name: "update_custom_field",
+      input: {
+        customFieldId: "custom / 1",
+        name: "Impact",
+        description: "Updated",
+        precision: 3,
+        format: "currency",
+        currencyCode: "USD",
+        hasNotificationsEnabled: false,
+      },
+      method: "PUT",
+      path: "/custom_fields/custom%20%2F%201",
+      body: {
+        name: "Impact",
+        description: "Updated",
+        precision: 3,
+        format: "currency",
+        currency_code: "USD",
+        has_notifications_enabled: false,
+      },
+      response: { data: { gid: "cf1", name: "Impact" } },
+      output: { customField: { gid: "cf1", name: "Impact" } },
+    },
+    {
+      name: "delete_custom_field",
+      input: { customFieldId: "custom / 1" },
+      method: "DELETE",
+      path: "/custom_fields/custom%20%2F%201",
+      response: { data: {} },
+      output: { success: true },
+    },
+    {
+      name: "list_workspace_custom_fields",
+      input: { workspaceId: "workspace / 1", limit: 25, cursor: "next fields" },
+      method: "GET",
+      path: "/workspaces/workspace%20%2F%201/custom_fields",
+      query: { limit: "25", offset: "next fields" },
+      response: { data: [{ gid: "cf1" }], next_page: { offset: "next-cf" } },
+      output: { customFields: [{ gid: "cf1" }], nextCursor: "next-cf" },
+    },
+    {
+      name: "create_custom_field_enum_option",
+      input: {
+        customFieldId: "custom / 1",
+        name: "High",
+        color: "red",
+        enabled: true,
+        insertBeforeId: "option-before",
+      },
+      method: "POST",
+      path: "/custom_fields/custom%20%2F%201/enum_options",
+      body: { name: "High", color: "red", enabled: true, insert_before: "option-before" },
+      response: { data: { gid: "option1", name: "High" } },
+      output: { enumOption: { gid: "option1", name: "High" } },
+    },
+    {
+      name: "insert_custom_field_enum_option",
+      input: { customFieldId: "custom / 1", enumOptionId: "option / 1", afterEnumOptionId: "option-after" },
+      method: "POST",
+      path: "/custom_fields/custom%20%2F%201/enum_options/insert",
+      body: { enum_option: "option / 1", after_enum_option: "option-after" },
+      response: { data: { gid: "option1" } },
+      output: { enumOption: { gid: "option1" } },
+    },
+    {
+      name: "update_custom_field_enum_option",
+      input: { enumOptionId: "option / 1", name: "Urgent", color: "hot-pink", enabled: false },
+      method: "PUT",
+      path: "/enum_options/option%20%2F%201",
+      body: { name: "Urgent", color: "hot-pink", enabled: false },
+      response: { data: { gid: "option1", enabled: false } },
+      output: { enumOption: { gid: "option1", enabled: false } },
+    },
+    {
+      name: "list_project_custom_field_settings",
+      input: { projectId: "project / 1", limit: 20, cursor: "next settings" },
+      method: "GET",
+      path: "/projects/project%20%2F%201/custom_field_settings",
+      query: { limit: "20", offset: "next settings" },
+      response: { data: [{ gid: "setting1" }], next_page: { offset: "next-setting" } },
+      output: { customFieldSettings: [{ gid: "setting1" }], nextCursor: "next-setting" },
+    },
+    {
+      name: "list_team_custom_field_settings",
+      input: { teamId: "team / 1" },
+      method: "GET",
+      path: "/teams/team%20%2F%201/custom_field_settings",
+      response: { data: [{ gid: "setting1" }] },
+      output: { customFieldSettings: [{ gid: "setting1" }], nextCursor: null },
+    },
+  ])(
+    "maps $name to the official Asana custom-field route",
+    async ({ name, input, method, path, query, body, response, output }) => {
+      const context = recordingContext(jsonResponse(response));
+
+      await expect(customFieldActionHandlers[name]!(input, context)).resolves.toEqual(output);
+      const request = context.requests[0]!;
+      expect(request.init.method).toBe(method);
+      expect(request.url.pathname).toBe(`/api/1.0${path}`);
+      for (const [key, value] of Object.entries(query ?? {})) {
+        expect(request.url.searchParams.get(key)).toBe(value);
+      }
+      if (body) {
+        expect(JSON.parse(request.init.body as string)).toEqual({ data: body });
+      } else {
+        expect(request.init.body).toBeUndefined();
+      }
+    },
+  );
+
+  it.each([
+    [
+      "create_custom_field_enum_option",
+      { customFieldId: "cf1", name: "High", insertBeforeId: "a", insertAfterId: "b" },
+    ],
+    [
+      "insert_custom_field_enum_option",
+      { customFieldId: "cf1", enumOptionId: "o1", beforeEnumOptionId: "a", afterEnumOptionId: "b" },
+    ],
+    ["insert_custom_field_enum_option", { customFieldId: "cf1", enumOptionId: "o1" }],
+    ["update_custom_field", { customFieldId: "cf1" }],
+    ["update_custom_field_enum_option", { enumOptionId: "o1" }],
+  ])("rejects invalid custom-field mutation input for %s without a request", async (name, input) => {
+    const context = recordingContext();
+
+    await expect(Promise.resolve().then(() => customFieldActionHandlers[name]!(input, context))).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it("rejects enabled false when creating a top-level enum option in schema and runtime", async () => {
+    const input = { customFieldId: "cf1", name: "Disabled", enabled: false };
+    const context = recordingContext();
+    const action = asanaCustomFieldActions.find((candidate) => candidate.name === "create_custom_field_enum_option")!;
+
+    expect(validateActionInput(action, input).valid).toBe(false);
+    await expect(
+      Promise.resolve().then(() => customFieldActionHandlers.create_custom_field_enum_option!(input, context)),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    {
+      name: "get_attachment",
+      input: { attachmentId: "attachment / 1" },
+      method: "GET",
+      path: "/attachments/attachment%20%2F%201",
+      response: { data: { gid: "a1", resource_subtype: "asana" } },
+      output: { attachment: { gid: "a1", resource_subtype: "asana" } },
+    },
+    {
+      name: "delete_attachment",
+      input: { attachmentId: "attachment / 1" },
+      method: "DELETE",
+      path: "/attachments/attachment%20%2F%201",
+      response: { data: {} },
+      output: { success: true },
+    },
+    {
+      name: "list_attachments",
+      input: { parentId: "parent / 1", limit: 40, cursor: "next attachments" },
+      method: "GET",
+      path: "/attachments",
+      query: { parent: "parent / 1", limit: "40", offset: "next attachments" },
+      response: { data: [{ gid: "a1" }], next_page: { offset: "next-attachment" } },
+      output: { attachments: [{ gid: "a1" }], nextCursor: "next-attachment" },
+    },
+  ])(
+    "maps $name to the official Asana attachment route",
+    async ({ name, input, method, path, query, response, output }) => {
+      const context = recordingContext(jsonResponse(response));
+
+      await expect(attachmentActionHandlers[name]!(input, context)).resolves.toEqual(output);
+      const request = context.requests[0]!;
+      expect(request.init.method).toBe(method);
+      expect(request.url.pathname).toBe(`/api/1.0${path}`);
+      for (const [key, value] of Object.entries(query ?? {})) {
+        expect(request.url.searchParams.get(key)).toBe(value);
+      }
+    },
+  );
+
+  it("creates an external attachment without downloading the external URL", async () => {
+    const context = recordingContext(jsonResponse({ data: { gid: "a1", resource_subtype: "external" } }, 201));
+
+    await expect(
+      attachmentActionHandlers.create_attachment!(
+        {
+          parentId: "task-1",
+          externalUrl: "https://files.example/report.pdf",
+          name: "report.pdf",
+        },
+        context,
+      ),
+    ).resolves.toEqual({ attachment: { gid: "a1", resource_subtype: "external" } });
+
+    expect(context.requests).toHaveLength(1);
+    expect(context.requests[0]?.url.pathname).toBe("/api/1.0/attachments");
+    expect(JSON.parse(context.requests[0]?.init.body as string)).toEqual({
+      data: {
+        parent: "task-1",
+        url: "https://files.example/report.pdf",
+        name: "report.pdf",
+        resource_subtype: "external",
+      },
+    });
+  });
+
+  it("uploads a transit file as multipart without setting content-type", async () => {
+    const context = recordingContext(jsonResponse({ data: { gid: "a1", resource_subtype: "asana" } }, 201));
+    context.transitFiles = transitFileStore(
+      new File([Uint8Array.from([1, 2, 3])], "report.txt", { type: "text/plain" }),
+    );
+
+    await expect(
+      attachmentActionHandlers.create_attachment!({ parentId: "task-1", fileId: "transit-1" }, context),
+    ).resolves.toEqual({ attachment: { gid: "a1", resource_subtype: "asana" } });
+
+    const request = context.requests[0]!;
+    expect(request.init.method).toBe("POST");
+    expect(request.url.pathname).toBe("/api/1.0/attachments");
+    expect(request.init.body).toBeInstanceOf(FormData);
+    const formData = request.init.body as FormData;
+    expect(formData.get("parent")).toBe("task-1");
+    expect(formData.get("connect_to_app")).toBeNull();
+    expect(formData.get("file")).toBeInstanceOf(File);
+    expect(formData.get("file")).toMatchObject({ name: "report.txt", type: "text/plain", size: 3 });
+    expect(new Headers(request.init.headers).has("content-type")).toBe(false);
+  });
+
+  it("URL-encodes a non-ASCII transit filename and preserves its MIME type", async () => {
+    const context = recordingContext(jsonResponse({ data: { gid: "a1", resource_subtype: "asana" } }, 201));
+    context.transitFiles = transitFileStore(
+      new File([Uint8Array.from([1, 2, 3])], "stored.bin", { type: "application/octet-stream" }),
+      {
+        name: "报告 2026.pdf",
+        mimeType: "application/pdf",
+      },
+    );
+
+    await attachmentActionHandlers.create_attachment!({ parentId: "task-1", fileId: "transit-1" }, context);
+
+    const uploaded = (context.requests[0]!.init.body as FormData).get("file");
+    expect(uploaded).toBeInstanceOf(File);
+    expect(uploaded).toMatchObject({
+      name: "%E6%8A%A5%E5%91%8A%202026.pdf",
+      type: "application/pdf",
+      size: 3,
+    });
+  });
+
+  it("accepts a transit attachment at the exact 100 MiB metadata boundary", async () => {
+    const context = recordingContext(jsonResponse({ data: { gid: "a1", resource_subtype: "asana" } }, 201));
+    context.transitFiles = transitFileStore(new File([], "boundary.bin"), {
+      sizeBytes: 100 * 1024 * 1024,
+    });
+
+    await expect(
+      attachmentActionHandlers.create_attachment!({ parentId: "task-1", fileId: "boundary" }, context),
+    ).resolves.toEqual({ attachment: { gid: "a1", resource_subtype: "asana" } });
+    expect(context.requests).toHaveLength(1);
+  });
+
+  it("rejects an oversized stored File when transit metadata understates its size", async () => {
+    const context = recordingContext();
+    const storedFile = new File([], "oversized.bin");
+    Object.defineProperty(storedFile, "size", { value: 100 * 1024 * 1024 + 1 });
+    context.transitFiles = transitFileStore(storedFile, { sizeBytes: 1 });
+
+    await expect(
+      attachmentActionHandlers.create_attachment!({ parentId: "task-1", fileId: "mismatch" }, context),
+    ).rejects.toMatchObject({ status: 413 });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    { input: { parentId: "task-1" }, status: 400 },
+    {
+      input: { parentId: "task-1", fileId: "f1", externalUrl: "https://files.example/a.txt", name: "a.txt" },
+      status: 400,
+    },
+    { input: { parentId: "task-1", externalUrl: "https://files.example/a.txt" }, status: 400 },
+    { input: { parentId: "task-1", fileId: "f1" }, transitMode: "missing-store", status: 400 },
+    { input: { parentId: "task-1", fileId: "f1" }, transitMode: "missing-file", status: 400 },
+    { input: { parentId: "task-1", fileId: "f1" }, transitMode: "missing-code", status: 400 },
+    { input: { parentId: "task-1", fileId: "f1" }, transitMode: "storage-oversize", status: 413 },
+    {
+      input: { parentId: "task-1", fileId: "f1" },
+      transitMode: "storage-failure",
+      status: 502,
+      message: "Transit file storage read failed.",
+    },
+    { input: { parentId: "task-1", fileId: "f1" }, transitMode: "oversize", status: 413 },
+  ])("rejects invalid attachment create input %#", async ({ input, transitMode, status, message }) => {
+    const context = recordingContext();
+    if (transitMode === "missing-file") {
+      context.transitFiles = transitFileStore(new File([], "missing"), {
+        readError: new ProviderRequestError(404, "missing"),
+      });
+    } else if (transitMode === "missing-code") {
+      context.transitFiles = transitFileStore(new File([], "missing"), {
+        readError: Object.assign(new Error("missing"), { code: "file_not_found" }),
+      });
+    } else if (transitMode === "storage-oversize") {
+      context.transitFiles = transitFileStore(new File([], "large.bin"), {
+        readError: new ProviderRequestError(413, "storage rejected file"),
+      });
+    } else if (transitMode === "storage-failure") {
+      context.transitFiles = transitFileStore(new File([], "broken"), {
+        readError: new Error("disk path and secret details"),
+      });
+    } else if (transitMode === "oversize") {
+      context.transitFiles = transitFileStore(new File([], "large.bin"), {
+        sizeBytes: 100 * 1024 * 1024 + 1,
+      });
+    }
+    const expectedError: { status: number; message?: string } = { status };
+    if (message) {
+      expectedError.message = message;
+    }
+
+    await expect(
+      Promise.resolve().then(() => attachmentActionHandlers.create_attachment!(input, context)),
+    ).rejects.toMatchObject(expectedError);
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    "https://user:password@files.example/report.pdf",
+    "http://localhost/report.pdf",
+    "http://127.0.0.1/report.pdf",
+    "http://[::1]/report.pdf",
+    "http://10.0.0.1/report.pdf",
+    "http://172.16.0.1/report.pdf",
+    "http://192.168.1.1/report.pdf",
+    "http://169.254.1.1/report.pdf",
+    "http://169.254.169.254/latest/meta-data",
+    "http://100.100.100.200/latest/meta-data",
+    "http://metadata.google.internal/computeMetadata/v1",
+    "file:///etc/passwd",
+    "ftp://files.example/report.pdf",
+  ])("rejects unsafe external attachment URL %s", async (externalUrl) => {
+    const context = recordingContext();
+
+    await expect(
+      Promise.resolve().then(() =>
+        attachmentActionHandlers.create_attachment!({ parentId: "task-1", externalUrl, name: "report.pdf" }, context),
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(context.requests).toHaveLength(0);
+  });
+
   it("defines all 13 story/comment and tag actions with official scope metadata and matching handlers", () => {
     expect(asanaStoryTagActions).toHaveLength(13);
     expect(Object.keys(storyTagActionHandlers).sort()).toEqual(
@@ -1624,7 +2415,7 @@ describe("Asana runtime", () => {
       type: "string",
       enum: storyStickerNames,
     });
-    expect(provider.actions).toHaveLength(87);
+    expect(provider.actions).toHaveLength(101);
   });
 
   it.each(storyTagHandlerCases)(

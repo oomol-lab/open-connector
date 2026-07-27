@@ -1,5 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
+import { asanaAttachmentActions } from "./actions-attachments.ts";
+import { asanaCustomFieldActions } from "./actions-custom-fields.ts";
 import { asanaProjectSectionActions } from "./actions-projects.ts";
 import { asanaStoryTagActions } from "./actions-stories-tags.ts";
 import { asanaTaskActions } from "./actions-tasks.ts";
@@ -32,5 +34,7 @@ export const provider: ProviderDefinition = {
     ...asanaProjectSectionActions,
     ...asanaTaskActions,
     ...asanaStoryTagActions,
+    ...asanaCustomFieldActions,
+    ...asanaAttachmentActions,
   ],
 };
