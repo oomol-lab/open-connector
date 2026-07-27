@@ -1,0 +1,118 @@
+name: PR Maintainer Edits
+
+# Asks fork-PR authors to enable "Allow edits by maintainers" so maintainers can
+# push small fixes (rebases, lint tweaks, follow-ups) directly to the PR branch
+# instead of a review round-trip. Non-blocking: it only leaves one comment and
+# keeps it in sync with the current setting; it never fails the PR.
+#
+# Why `pull_request_target` instead of `pull_request`: on fork PRs the
+# `pull_request` GITHUB_TOKEN is read-only, so the workflow could not comment on
+# exactly the PRs it targets. `pull_request_target` is safe here because this
+# workflow never checks out or executes PR code — it only reads PR metadata and
+# writes an issue comment.
+#
+# Toggling the checkbox emits no webhook event, so the comment is refreshed on
+# the next push (`synchronize`) or a manual re-run of this workflow.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+# One run per PR; a newer push supersedes an in-flight check.
+concurrency:
+  group: maintainer-edits-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Least privilege: read PR metadata + write one comment. No contents access.
+permissions:
+  pull-requests: write
+
+jobs:
+  check:
+    name: Check "Allow edits by maintainers"
+    runs-on: ubuntu-latest
+    # Only fork PRs — on same-repo branches maintainers already have push access.
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Comment when maintainer edits are disabled
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- maintainer-edits-check -->';
+            const docsUrl =
+              'https://docs.github.com/en/pull-requests/how-tos/work-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork';
+
+            // Re-fetch instead of trusting the event payload so re-runs and
+            // later pushes observe the author toggling the setting.
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            if (!pr.head.repo) {
+              core.info('Head repository was deleted; nothing to request.');
+              return;
+            }
+            // GitHub does not support maintainer edits on PRs from
+            // organization-owned forks (the checkbox does not exist there),
+            // so there is nothing to ask the author for.
+            if (pr.head.repo.owner.type === 'Organization') {
+              core.info(`Fork ${pr.head.repo.full_name} is organization-owned; maintainer edits cannot be enabled.`);
+              return;
+            }
+
+            const warningBody = [
+              marker,
+              `👋 @${pr.user.login} — thanks for the pull request!`,
+              '',
+              'It looks like **"Allow edits by maintainers"** is not enabled on this PR. Enabling it lets maintainers push small fixes (rebases, lint tweaks, follow-ups) directly to your branch, which usually gets your PR merged faster.',
+              '',
+              'Only the PR author can enable it:',
+              '',
+              '1. Open this PR page.',
+              '2. In the right sidebar, check **"Allow edits by maintainers"** (at the bottom).',
+              '',
+              `See the GitHub docs: [Allowing changes to a pull request branch created from a fork](${docsUrl})`,
+              '',
+              '_This is appreciated but not required — it does not block review. This comment updates automatically on the next push once the setting is enabled._',
+            ].join('\n');
+
+            const resolvedBody = [
+              marker,
+              '✅ **"Allow edits by maintainers" is enabled — thank you!** Maintainers can now push small fixes directly to this branch when needed.',
+            ].join('\n');
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+
+            // Keep a single comment in sync with the current setting: create it
+            // only when the setting is off, update it in place on state changes
+            // (including the author later turning the setting back off).
+            const desired = pr.maintainer_can_modify ? resolvedBody : warningBody;
+            if (existing) {
+              if (existing.body !== desired) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body: desired,
+                });
+              }
+            } else if (!pr.maintainer_can_modify) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: warningBody,
+              });
+            }
+            core.info(
+              pr.maintainer_can_modify
+                ? 'Maintainer edits are enabled.'
+                : 'Maintainer edits are disabled; requested via comment.'
+            );
