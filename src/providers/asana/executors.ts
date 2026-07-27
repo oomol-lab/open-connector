@@ -10,6 +10,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
 import { workspaceUserTeamActionHandlers } from "./runtime-workspaces-users-teams.ts";
 import {
   asanaApiBaseUrl,
@@ -28,25 +29,6 @@ import {
 const service = "asana";
 const asanaValidationPath = "/users/me";
 
-const defaultProjectFields = [
-  "name",
-  "archived",
-  "color",
-  "icon",
-  "notes",
-  "due_on",
-  "start_on",
-  "default_view",
-  "privacy_setting",
-  "default_access_level",
-  "created_at",
-  "modified_at",
-  "owner",
-  "owner.name",
-  "workspace",
-  "workspace.name",
-  "permalink_url",
-];
 const defaultTaskFields = [
   "name",
   "resource_subtype",
@@ -70,42 +52,6 @@ const defaultTaskFields = [
 ];
 
 export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
-  list_projects(input, context) {
-    return listAsanaResources(
-      "/projects",
-      compactAsanaQuery({
-        workspace: requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError),
-        archived: booleanToString(input.archived),
-        ...buildAsanaPaginationQuery(input, defaultProjectFields),
-      }),
-      "projects",
-      context,
-    );
-  },
-
-  get_project(input, context) {
-    return getAsanaResource(
-      `/projects/${asanaPathGid(input.projectId, "projectId")}`,
-      buildAsanaFieldsQuery(input, defaultProjectFields),
-      "project",
-      context,
-    );
-  },
-
-  create_project(input, context) {
-    return writeAsanaResource("/projects", buildCreateProjectBody(input), "project", context, { method: "POST" });
-  },
-
-  update_project(input, context) {
-    return writeAsanaResource(
-      `/projects/${asanaPathGid(input.projectId, "projectId")}`,
-      buildUpdateProjectBody(input),
-      "project",
-      context,
-      { method: "PUT", notFoundAsInvalidInput: true },
-    );
-  },
-
   list_project_tasks(input, context) {
     return listAsanaResources(
       `/projects/${asanaPathGid(input.projectId, "projectId")}/tasks`,
@@ -144,7 +90,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
 export const executors: ProviderExecutors = defineProviderExecutors<AsanaContext>({
   service,
-  handlers: Object.assign({}, workspaceUserTeamActionHandlers, asanaActionHandlers),
+  handlers: Object.assign({}, workspaceUserTeamActionHandlers, projectSectionActionHandlers, asanaActionHandlers),
   async createContext(context, fetcher): Promise<AsanaContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -205,45 +151,6 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function buildCreateProjectBody(input: Record<string, unknown>): Record<string, unknown> {
-  assertProjectDateRange(input);
-  return compactObject({
-    workspace: requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError),
-    name: requiredString(input.name, "name", asanaInvalidInputError),
-    notes: optionalString(input.notes),
-    owner: optionalString(input.owner),
-    due_on: optionalString(input.dueOn),
-    start_on: optionalString(input.startOn),
-    privacy_setting: optionalString(input.privacySetting),
-    default_view: optionalString(input.defaultView),
-    default_access_level: optionalString(input.defaultAccessLevel),
-    color: optionalString(input.color),
-    icon: optionalString(input.icon),
-    custom_fields: optionalRecord(input.customFields),
-    archived: optionalBoolean(input.archived),
-  });
-}
-
-function buildUpdateProjectBody(input: Record<string, unknown>): Record<string, unknown> {
-  assertProjectDateRange(input);
-  const body = compactObject({
-    name: optionalString(input.name),
-    notes: optionalString(input.notes),
-    owner: optionalString(input.owner),
-    due_on: optionalString(input.dueOn),
-    start_on: optionalString(input.startOn),
-    privacy_setting: optionalString(input.privacySetting),
-    default_view: optionalString(input.defaultView),
-    default_access_level: optionalString(input.defaultAccessLevel),
-    color: optionalString(input.color),
-    icon: optionalString(input.icon),
-    custom_fields: optionalRecord(input.customFields),
-    archived: optionalBoolean(input.archived),
-  });
-  requireNonEmptyAsanaBody(body, "At least one project field must be provided.");
-  return body;
-}
-
 function buildCreateTaskBody(input: Record<string, unknown>): Record<string, unknown> {
   assertTaskDateRange(input);
   return compactObject({
@@ -281,12 +188,6 @@ function buildUpdateTaskBody(input: Record<string, unknown>): Record<string, unk
   return body;
 }
 
-function assertProjectDateRange(input: Record<string, unknown>): void {
-  if (optionalString(input.startOn) && !optionalString(input.dueOn)) {
-    throw new ProviderRequestError(400, "startOn requires dueOn.");
-  }
-}
-
 function assertTaskDateRange(input: Record<string, unknown>): void {
   const dueOn = optionalString(input.dueOn);
   const dueAt = optionalString(input.dueAt);
@@ -302,8 +203,4 @@ function assertTaskDateRange(input: Record<string, unknown>): void {
   if ((startOn || startAt) && !dueOn && !dueAt) {
     throw new ProviderRequestError(400, "A task start date requires dueOn or dueAt.");
   }
-}
-
-function booleanToString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
