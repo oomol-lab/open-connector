@@ -318,3 +318,10 @@ Merci à toutes les personnes qui ont contribué à OpenConnector. Vous souhaite
 Consultez le [guide de contribution](../CONTRIBUTING.md).
 
 [![Contributeurs OpenConnector](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)
+
+## Historique des Stars
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/star-history/star-history-dark.svg">
+  <img alt="Historique des Stars" src="../assets/star-history/star-history-light.svg">
+</picture>

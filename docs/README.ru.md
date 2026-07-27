@@ -312,3 +312,10 @@ files в этот repository.
 [руководством по участию](../CONTRIBUTING.md).
 
 [![Участники OpenConnector](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)
+
+## История звёзд
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/star-history/star-history-dark.svg">
+  <img alt="История звёзд" src="../assets/star-history/star-history-light.svg">
+</picture>

@@ -296,3 +296,10 @@ OpenConnector の開発にご協力いただいたすべての皆さまに感謝
 [コントリビューションガイド](../CONTRIBUTING.md) をご覧ください。
 
 [![OpenConnector コントリビューター](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)
+
+## Star 履歴
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/star-history/star-history-dark.svg">
+  <img alt="Star 履歴" src="../assets/star-history/star-history-light.svg">
+</picture>

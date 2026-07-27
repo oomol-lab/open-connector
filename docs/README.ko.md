@@ -305,3 +305,10 @@ OpenConnector를 함께 만들어 주신 모든 기여자께 감사드립니다.
 [기여 안내](../CONTRIBUTING.md)를 확인하고 함께해 주세요.
 
 [![OpenConnector 기여자](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)
+
+## Star 히스토리
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/star-history/star-history-dark.svg">
+  <img alt="Star 히스토리" src="../assets/star-history/star-history-light.svg">
+</picture>

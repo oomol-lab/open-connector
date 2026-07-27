@@ -280,3 +280,10 @@ Provider 和 app 名称、metadata、链接、scope、permission 以及可选 lo
 感谢每一位参与建设 OpenConnector 的贡献者。欢迎查看 [贡献指南](../CONTRIBUTING.md)，加入我们。
 
 [![OpenConnector 贡献者](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)
+
+## Star 历史
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/star-history/star-history-dark.svg">
+  <img alt="Star 历史" src="../assets/star-history/star-history-light.svg">
+</picture>
