@@ -2,91 +2,16 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import {
+  gidField,
+  includeFieldsSchema,
+  nextCursorSchema,
+  paginationFields,
+  projectSchema,
+  taskSchema,
+} from "./schemas.ts";
 
 const service = "asana";
-
-const gidField = (description: string) => s.nonEmptyString(description);
-const includeFieldsSchema = s.stringArray("Additional Asana fields to request via opt_fields.", {
-  minItems: 1,
-  itemDescription: "An Asana field name.",
-});
-const paginationFields = {
-  limit: s.integer("Maximum number of items to return in one Asana page.", { minimum: 1, maximum: 100 }),
-  cursor: s.nonEmptyString("Opaque pagination cursor returned by a previous Asana response."),
-};
-
-const resourceRefSchema = s.looseObject("A compact Asana resource reference.", {
-  gid: s.string("The resource gid."),
-  resource_type: s.string("The resource type."),
-  name: s.string("The resource name."),
-});
-
-const workspaceSchema = s.looseObject("An Asana workspace.", {
-  gid: s.string("The workspace gid."),
-  resource_type: s.string("The resource type."),
-  name: s.string("The workspace name."),
-  email_domains: s.array("The workspace email domains.", s.string("A workspace email domain.")),
-  is_organization: s.boolean("Whether the workspace is an organization."),
-});
-
-const projectSchema = s.looseObject("An Asana project.", {
-  gid: s.string("The project gid."),
-  resource_type: s.string("The resource type."),
-  name: s.string("The project name."),
-  archived: s.boolean("Whether the project is archived."),
-  color: s.nullable(s.string("The project color.")),
-  icon: s.nullable(s.string("The project icon.")),
-  notes: s.string("The project notes."),
-  due_on: s.nullable(s.string("The project due date.")),
-  start_on: s.nullable(s.string("The project start date.")),
-  default_view: s.string("The project default view."),
-  privacy_setting: s.string("The project privacy setting."),
-  default_access_level: s.string("The project default access level."),
-  created_at: s.string("The project creation timestamp."),
-  modified_at: s.string("The project update timestamp."),
-  permalink_url: s.string("The project permalink URL."),
-  owner: s.nullable(resourceRefSchema),
-  workspace: resourceRefSchema,
-  team: resourceRefSchema,
-  custom_fields: s.array(
-    "Custom fields returned by Asana.",
-    s.record("A custom field response object.", s.unknown("A custom field value.")),
-  ),
-});
-
-const taskSchema = s.looseObject("An Asana task.", {
-  gid: s.string("The task gid."),
-  resource_type: s.string("The resource type."),
-  name: s.string("The task name."),
-  resource_subtype: s.string("The task subtype."),
-  completed: s.boolean("Whether the task is completed."),
-  notes: s.string("The task notes."),
-  due_on: s.nullable(s.string("The task due date.")),
-  due_at: s.nullable(s.string("The task due date-time.")),
-  start_on: s.nullable(s.string("The task start date.")),
-  start_at: s.nullable(s.string("The task start date-time.")),
-  created_at: s.string("The task creation timestamp."),
-  modified_at: s.string("The task update timestamp."),
-  completed_at: s.nullable(s.string("The task completion timestamp.")),
-  permalink_url: s.string("The task permalink URL."),
-  approval_status: s.string("The task approval status."),
-  assignee: s.nullable(resourceRefSchema),
-  workspace: resourceRefSchema,
-  parent: s.nullable(resourceRefSchema),
-  projects: s.array("Projects linked to the task.", resourceRefSchema),
-  memberships: s.array(
-    "Memberships returned by Asana.",
-    s.record("A task membership object.", s.unknown("A membership value.")),
-  ),
-  custom_fields: s.array(
-    "Custom fields returned by Asana.",
-    s.record("A custom field response object.", s.unknown("A custom field value.")),
-  ),
-});
-
-const nextCursorSchema = s.nullable(
-  s.string("Opaque pagination cursor for the next Asana page, or null when there is no next page."),
-);
 
 const customFieldsSchema = s.record(
   "Arbitrary object keyed by Asana custom field gid.",
@@ -161,37 +86,6 @@ const updateTaskInputSchema = s.object(
 updateTaskInputSchema.anyOf = Object.keys(taskMutationFields).map((field) => ({ required: [field] }));
 
 export const asanaActions: ActionDefinition[] = [
-  defineProviderAction(service, {
-    name: "list_workspaces",
-    description: "List the Asana workspaces visible to the connected personal access token.",
-    inputSchema: s.object(
-      "The input payload for this action.",
-      {
-        ...paginationFields,
-        includeFields: includeFieldsSchema,
-      },
-      { optional: ["limit", "cursor", "includeFields"] },
-    ),
-    outputSchema: s.object("The output payload for this action.", {
-      workspaces: s.array("The Asana workspaces.", workspaceSchema),
-      nextCursor: nextCursorSchema,
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "get_workspace",
-    description: "Get a single Asana workspace by gid.",
-    inputSchema: s.object(
-      "The input payload for this action.",
-      {
-        workspaceId: gidField("The Asana workspace gid."),
-        includeFields: includeFieldsSchema,
-      },
-      { required: ["workspaceId"] },
-    ),
-    outputSchema: s.object("The output payload for this action.", {
-      workspace: workspaceSchema,
-    }),
-  }),
   defineProviderAction(service, {
     name: "list_projects",
     description: "List Asana projects for a workspace, with optional archived filtering and pagination.",

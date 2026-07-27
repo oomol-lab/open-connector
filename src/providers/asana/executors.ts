@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { AsanaContext } from "./runtime.ts";
+import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
 import {
   compactObject,
@@ -10,14 +10,24 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
-import { asanaApiBaseUrl, getAsanaResource, listAsanaResources, requestAsana, writeAsanaResource } from "./runtime.ts";
+import { workspaceUserTeamActionHandlers } from "./runtime-workspaces-users-teams.ts";
+import {
+  asanaApiBaseUrl,
+  asanaInvalidInputError,
+  asanaPathGid,
+  buildAsanaFieldsQuery,
+  buildAsanaPaginationQuery,
+  compactAsanaQuery,
+  getAsanaResource,
+  listAsanaResources,
+  requestAsana,
+  requireNonEmptyAsanaBody,
+  writeAsanaResource,
+} from "./runtime.ts";
 
 const service = "asana";
 const asanaValidationPath = "/users/me";
 
-type AsanaActionHandler = (input: Record<string, unknown>, context: AsanaContext) => Promise<unknown>;
-
-const defaultWorkspaceFields = ["name", "email_domains", "is_organization"];
 const defaultProjectFields = [
   "name",
   "archived",
@@ -60,33 +70,13 @@ const defaultTaskFields = [
 ];
 
 export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
-  list_workspaces(input, context) {
-    return listAsanaResources(
-      "/workspaces",
-      buildPaginationQuery(input, defaultWorkspaceFields),
-      "workspaces",
-      context,
-    );
-  },
-
-  get_workspace(input, context) {
-    return getAsanaResource(
-      `/workspaces/${encodeURIComponent(requiredString(input.workspaceId, "workspaceId", invalidInputError))}`,
-      {
-        opt_fields: joinOptFields(mergeFields(defaultWorkspaceFields, readStringArray(input.includeFields))),
-      },
-      "workspace",
-      context,
-    );
-  },
-
   list_projects(input, context) {
     return listAsanaResources(
       "/projects",
-      compactStringObject({
-        workspace: requiredString(input.workspaceId, "workspaceId", invalidInputError),
+      compactAsanaQuery({
+        workspace: requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError),
         archived: booleanToString(input.archived),
-        ...buildPaginationQuery(input, defaultProjectFields),
+        ...buildAsanaPaginationQuery(input, defaultProjectFields),
       }),
       "projects",
       context,
@@ -95,10 +85,8 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
   get_project(input, context) {
     return getAsanaResource(
-      `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInputError))}`,
-      {
-        opt_fields: joinOptFields(mergeFields(defaultProjectFields, readStringArray(input.includeFields))),
-      },
+      `/projects/${asanaPathGid(input.projectId, "projectId")}`,
+      buildAsanaFieldsQuery(input, defaultProjectFields),
       "project",
       context,
     );
@@ -110,7 +98,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
   update_project(input, context) {
     return writeAsanaResource(
-      `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInputError))}`,
+      `/projects/${asanaPathGid(input.projectId, "projectId")}`,
       buildUpdateProjectBody(input),
       "project",
       context,
@@ -120,10 +108,10 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
   list_project_tasks(input, context) {
     return listAsanaResources(
-      `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInputError))}/tasks`,
-      compactStringObject({
+      `/projects/${asanaPathGid(input.projectId, "projectId")}/tasks`,
+      compactAsanaQuery({
         completed_since: optionalString(input.completedSince),
-        ...buildPaginationQuery(input, defaultTaskFields),
+        ...buildAsanaPaginationQuery(input, defaultTaskFields),
       }),
       "tasks",
       context,
@@ -132,10 +120,8 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
   get_task(input, context) {
     return getAsanaResource(
-      `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInputError))}`,
-      {
-        opt_fields: joinOptFields(mergeFields(defaultTaskFields, readStringArray(input.includeFields))),
-      },
+      `/tasks/${asanaPathGid(input.taskId, "taskId")}`,
+      buildAsanaFieldsQuery(input, defaultTaskFields),
       "task",
       context,
     );
@@ -147,7 +133,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
   update_task(input, context) {
     return writeAsanaResource(
-      `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInputError))}`,
+      `/tasks/${asanaPathGid(input.taskId, "taskId")}`,
       buildUpdateTaskBody(input),
       "task",
       context,
@@ -158,7 +144,7 @@ export const asanaActionHandlers: Record<string, AsanaActionHandler> = {
 
 export const executors: ProviderExecutors = defineProviderExecutors<AsanaContext>({
   service,
-  handlers: asanaActionHandlers,
+  handlers: Object.assign({}, workspaceUserTeamActionHandlers, asanaActionHandlers),
   async createContext(context, fetcher): Promise<AsanaContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -181,7 +167,7 @@ export const credentialValidators: CredentialValidators = {
       },
       phase: "validate",
       query: {
-        opt_fields: joinOptFields(["name", "email", "workspaces", "workspaces.name"]),
+        opt_fields: ["name", "email", "workspaces", "workspaces.name"].join(","),
       },
     });
 
@@ -219,19 +205,11 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function buildPaginationQuery(input: Record<string, unknown>, defaultFields: string[]): Record<string, string> {
-  return compactStringObject({
-    limit: numberToString(input.limit),
-    offset: optionalString(input.cursor),
-    opt_fields: joinOptFields(mergeFields(defaultFields, readStringArray(input.includeFields))),
-  });
-}
-
 function buildCreateProjectBody(input: Record<string, unknown>): Record<string, unknown> {
   assertProjectDateRange(input);
   return compactObject({
-    workspace: requiredString(input.workspaceId, "workspaceId", invalidInputError),
-    name: requiredString(input.name, "name", invalidInputError),
+    workspace: requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError),
+    name: requiredString(input.name, "name", asanaInvalidInputError),
     notes: optionalString(input.notes),
     owner: optionalString(input.owner),
     due_on: optionalString(input.dueOn),
@@ -262,14 +240,14 @@ function buildUpdateProjectBody(input: Record<string, unknown>): Record<string, 
     custom_fields: optionalRecord(input.customFields),
     archived: optionalBoolean(input.archived),
   });
-  requireNonEmptyBody(body, "At least one project field must be provided.");
+  requireNonEmptyAsanaBody(body, "At least one project field must be provided.");
   return body;
 }
 
 function buildCreateTaskBody(input: Record<string, unknown>): Record<string, unknown> {
   assertTaskDateRange(input);
   return compactObject({
-    name: requiredString(input.name, "name", invalidInputError),
+    name: requiredString(input.name, "name", asanaInvalidInputError),
     notes: optionalString(input.notes),
     assignee: optionalString(input.assignee),
     completed: optionalBoolean(input.completed),
@@ -280,7 +258,7 @@ function buildCreateTaskBody(input: Record<string, unknown>): Record<string, unk
     approval_status: optionalString(input.approvalStatus),
     resource_subtype: optionalString(input.resourceSubtype),
     custom_fields: optionalRecord(input.customFields),
-    projects: [requiredString(input.projectId, "projectId", invalidInputError)],
+    projects: [requiredString(input.projectId, "projectId", asanaInvalidInputError)],
   });
 }
 
@@ -299,7 +277,7 @@ function buildUpdateTaskBody(input: Record<string, unknown>): Record<string, unk
     resource_subtype: optionalString(input.resourceSubtype),
     custom_fields: optionalRecord(input.customFields),
   });
-  requireNonEmptyBody(body, "At least one task field must be provided.");
+  requireNonEmptyAsanaBody(body, "At least one task field must be provided.");
   return body;
 }
 
@@ -326,40 +304,6 @@ function assertTaskDateRange(input: Record<string, unknown>): void {
   }
 }
 
-function requireNonEmptyBody(body: Record<string, unknown>, message: string): void {
-  if (Object.keys(body).length === 0) {
-    throw new ProviderRequestError(400, message);
-  }
-}
-
-function numberToString(value: unknown): string | undefined {
-  return typeof value === "number" ? String(value) : undefined;
-}
-
 function booleanToString(value: unknown): string | undefined {
   return typeof value === "boolean" ? String(value) : undefined;
-}
-
-function readStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.map((item) => optionalString(item)).filter((item): item is string => !!item);
-}
-
-function mergeFields(defaultFields: string[], includeFields: string[]): string[] {
-  return [...new Set([...defaultFields, ...includeFields])];
-}
-
-function joinOptFields(fields: string[]): string {
-  return fields.join(",");
-}
-
-function compactStringObject(input: Record<string, string | undefined>): Record<string, string> {
-  return compactObject(input) as Record<string, string>;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

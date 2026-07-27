@@ -1,5 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
+import { asanaTeamActions } from "./actions-teams.ts";
+import { asanaUserActions } from "./actions-users.ts";
+import { asanaWorkspaceActions } from "./actions-workspaces.ts";
 import { asanaActions } from "./actions.ts";
 
 const service = "asana";
@@ -20,5 +23,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://asana.com",
-  actions: asanaActions,
+  actions: [...asanaWorkspaceActions, ...asanaUserActions, ...asanaTeamActions, ...asanaActions],
 };

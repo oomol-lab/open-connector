@@ -1,6 +1,13 @@
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { objectArray, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import {
+  compactObject,
+  objectArray,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+  requiredString,
+} from "../../core/cast.ts";
 import { isAbortLikeError, ProviderRequestError, providerUserAgent, setSearchParams } from "../provider-runtime.ts";
 
 export const asanaApiBaseUrl = "https://app.asana.com/api/1.0";
@@ -10,6 +17,9 @@ type AsanaRequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 /** The authenticated transport shared by Asana API helpers. */
 export interface AsanaContext extends ApiKeyProviderContext {}
+
+/** One Asana action handler backed by an authenticated Asana context. */
+export type AsanaActionHandler = (input: Record<string, unknown>, context: AsanaContext) => Promise<unknown>;
 
 /** Options for one request to the Asana REST API. */
 export interface AsanaRequestOptions {
@@ -28,6 +38,67 @@ export interface AsanaWriteResourceOptions {
   method: "POST" | "PUT";
   query?: Record<string, string | undefined>;
   notFoundAsInvalidInput?: boolean;
+}
+
+/** Build an invalid-input error for Asana action fields. */
+export function asanaInvalidInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
+}
+
+/** Encode a required Asana gid for use in a request path. */
+export function asanaPathGid(value: unknown, fieldName: string): string {
+  return encodeURIComponent(requiredString(value, fieldName, asanaInvalidInputError));
+}
+
+/** Remove undefined values from an Asana query parameter map. */
+export function compactAsanaQuery(input: Record<string, string | undefined>): Record<string, string> {
+  return compactObject(input) as Record<string, string>;
+}
+
+/** Read optional action include fields as non-empty strings. */
+export function readAsanaStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((item) => optionalString(item)).filter((item): item is string => !!item);
+}
+
+/** Merge provider defaults with caller-requested Asana opt_fields without duplicates. */
+export function mergeAsanaFields(defaultFields: string[], includeFields: string[]): string[] {
+  return [...new Set([...defaultFields, ...includeFields])];
+}
+
+/** Build the shared Asana opt_fields query for one action input. */
+export function buildAsanaFieldsQuery(input: Record<string, unknown>, defaultFields: string[]): Record<string, string> {
+  return {
+    opt_fields: mergeAsanaFields(defaultFields, readAsanaStringArray(input.includeFields)).join(","),
+  };
+}
+
+/** Build Asana offset cursor and opt_fields query parameters. */
+export function buildAsanaCursorQuery(input: Record<string, unknown>, defaultFields: string[]): Record<string, string> {
+  return compactAsanaQuery({
+    offset: optionalString(input.cursor),
+    ...buildAsanaFieldsQuery(input, defaultFields),
+  });
+}
+
+/** Build Asana limit, offset cursor, and opt_fields query parameters. */
+export function buildAsanaPaginationQuery(
+  input: Record<string, unknown>,
+  defaultFields: string[],
+): Record<string, string> {
+  return compactAsanaQuery({
+    limit: typeof input.limit === "number" ? String(input.limit) : undefined,
+    ...buildAsanaCursorQuery(input, defaultFields),
+  });
+}
+
+/** Reject an update body that contains no mutable Asana fields. */
+export function requireNonEmptyAsanaBody(body: Record<string, unknown>, message: string): void {
+  if (Object.keys(body).length === 0) {
+    throw asanaInvalidInputError(message);
+  }
 }
 
 /** Send a request to Asana and return its JSON response envelope. */
