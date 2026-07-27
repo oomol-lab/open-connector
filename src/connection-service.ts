@@ -54,6 +54,7 @@ export interface ConnectionServiceOptions {
 
 export interface StoredConnection {
   id: string;
+  revision: string;
   service: string;
   connectionName: string;
   credential: ResolvedCredential;
@@ -515,18 +516,19 @@ export class ConnectionService {
       );
     }
 
-    const currentRefresh = this.oauthCredentialRefreshes.get(connection.id);
+    const refreshKey = `${connection.id}:${connection.revision}`;
+    const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
     if (currentRefresh) {
       return currentRefresh;
     }
 
     const refresh = this.refreshOAuthCredential(connection, credential, this.oauthCredentials);
-    this.oauthCredentialRefreshes.set(connection.id, refresh);
+    this.oauthCredentialRefreshes.set(refreshKey, refresh);
     try {
       return await refresh;
     } finally {
-      if (this.oauthCredentialRefreshes.get(connection.id) === refresh) {
-        this.oauthCredentialRefreshes.delete(connection.id);
+      if (this.oauthCredentialRefreshes.get(refreshKey) === refresh) {
+        this.oauthCredentialRefreshes.delete(refreshKey);
       }
     }
   }
@@ -536,9 +538,15 @@ export class ConnectionService {
     credential: OAuthCredential,
     refresher: IOAuthCredentialRefresher,
   ): Promise<OAuthCredential> {
-    const { id, service, connectionName } = connection;
+    const { id, revision, service, connectionName } = connection;
     const nextCredential = await refresher.refresh(service, credential);
-    const updated = await this.store.updateCredential({ id, service, connectionName, credential: nextCredential });
+    const updated = await this.store.updateCredential({
+      id,
+      revision,
+      service,
+      connectionName,
+      credential: nextCredential,
+    });
     if (!updated) {
       throw new ConnectionError(
         "connection_not_found",

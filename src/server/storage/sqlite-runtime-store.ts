@@ -135,11 +135,12 @@ export class SqliteConnectionStore implements IConnectionStore {
 
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     const row = this.database
-      .prepare("select id, value from connections where service = ? and connection_name = ?")
+      .prepare("select id, revision, value from connections where service = ? and connection_name = ?")
       .get(service, connectionName);
     return row
       ? {
           id: readString(row, "id"),
+          revision: readString(row, "revision"),
           service,
           connectionName,
           credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -151,23 +152,30 @@ export class SqliteConnectionStore implements IConnectionStore {
     const row = this.database
       .prepare(
         `
-        insert into connections (id, service, connection_name, value, updated_at)
-        values (?, ?, ?, ?, ?)
+        insert into connections (id, revision, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?, ?)
         on conflict(service, connection_name) do update set
-          id = excluded.id,
+          revision = excluded.revision,
           value = excluded.value,
           updated_at = excluded.updated_at
-        returning id
+        returning id, revision
       `,
       )
       .get(
+        crypto.randomUUID(),
         crypto.randomUUID(),
         service,
         connectionName,
         await this.secretCodec.encode(JSON.stringify(credential)),
         new Date().toISOString(),
       );
-    return { id: readString(row, "id"), service, connectionName, credential };
+    return {
+      id: readString(row, "id"),
+      revision: readString(row, "revision"),
+      service,
+      connectionName,
+      credential,
+    };
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
@@ -175,17 +183,19 @@ export class SqliteConnectionStore implements IConnectionStore {
       .prepare(
         `
         update connections
-        set value = ?, updated_at = ?
-        where service = ? and connection_name = ? and id = ?
+        set revision = ?, value = ?, updated_at = ?
+        where service = ? and connection_name = ? and id = ? and revision = ?
         returning id
       `,
       )
       .get(
+        crypto.randomUUID(),
         await this.secretCodec.encode(JSON.stringify(input.credential)),
         new Date().toISOString(),
         input.service,
         input.connectionName,
         input.id,
+        input.revision,
       );
     return row !== undefined;
   }
@@ -198,11 +208,14 @@ export class SqliteConnectionStore implements IConnectionStore {
 
   async list(): Promise<StoredConnection[]> {
     const rows = this.database
-      .prepare("select id, service, connection_name, value from connections order by service, connection_name")
+      .prepare(
+        "select id, revision, service, connection_name, value from connections order by service, connection_name",
+      )
       .all();
     return await Promise.all(
       rows.map(async (row) => ({
         id: readString(row, "id"),
+        revision: readString(row, "revision"),
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),

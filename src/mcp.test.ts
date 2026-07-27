@@ -530,12 +530,14 @@ async function withAuthenticatedMcpClient(
     store: new MemoryConnectionStore([
       {
         id: "connection-default",
+        revision: "revision-default",
         service: "example_auth",
         connectionName: "default",
         credential: defaultCredential,
       },
       {
         id: "connection-secondary",
+        revision: "revision-secondary",
         service: "example_auth",
         connectionName: "secondary",
         credential: secondaryCredential,
@@ -596,6 +598,7 @@ class MemoryConnectionStore implements IConnectionStore {
     const key = this.key(service, connectionName);
     const connection = {
       id: this.connections.get(key)?.id ?? crypto.randomUUID(),
+      revision: crypto.randomUUID(),
       service,
       connectionName,
       credential,
@@ -606,8 +609,9 @@ class MemoryConnectionStore implements IConnectionStore {
 
   async updateCredential(connection: StoredConnection): Promise<boolean> {
     const key = this.key(connection.service, connection.connectionName);
-    if (this.connections.get(key)?.id !== connection.id) return false;
-    this.connections.set(key, connection);
+    const current = this.connections.get(key);
+    if (current?.id !== connection.id || current.revision !== connection.revision) return false;
+    this.connections.set(key, { ...connection, revision: crypto.randomUUID() });
     return true;
   }
 

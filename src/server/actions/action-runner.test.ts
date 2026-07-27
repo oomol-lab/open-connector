@@ -195,7 +195,7 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    return { id: crypto.randomUUID(), service, connectionName, credential };
+    return { id: crypto.randomUUID(), revision: crypto.randomUUID(), service, connectionName, credential };
   }
 
   async updateCredential(): Promise<boolean> {

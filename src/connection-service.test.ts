@@ -595,7 +595,7 @@ describe("ConnectionService", () => {
     });
   });
 
-  it("does not overwrite a connection replaced in place during OAuth refresh", async () => {
+  it("refreshes a replaced connection independently without accepting the stale result", async () => {
     const store = new MemoryConnectionStore();
     const oauthClientConfigs = createOAuthClientConfigs([oauthProvider]);
     const service = createService([oauthProvider], {
@@ -616,35 +616,58 @@ describe("ConnectionService", () => {
       profile: testProfile,
       metadata: {},
     });
-    let markRefreshStarted!: () => void;
-    const refreshStarted = new Promise<void>((resolve) => {
-      markRefreshStarted = resolve;
+    let markOriginalRefreshStarted!: () => void;
+    const originalRefreshStarted = new Promise<void>((resolve) => {
+      markOriginalRefreshStarted = resolve;
     });
-    let completeRefresh!: (response: Response) => void;
+    let markReplacementRefreshStarted!: () => void;
+    const replacementRefreshStarted = new Promise<void>((resolve) => {
+      markReplacementRefreshStarted = resolve;
+    });
+    const completeRefreshes: Array<(response: Response) => void> = [];
+    let refreshCount = 0;
     vi.stubGlobal(
       "fetch",
       vi.fn(() => {
+        const refreshIndex = refreshCount++;
         const response = new Promise<Response>((resolve) => {
-          completeRefresh = resolve;
+          completeRefreshes[refreshIndex] = resolve;
         });
-        markRefreshStarted();
+        if (refreshIndex === 0) {
+          markOriginalRefreshStarted();
+        } else {
+          markReplacementRefreshStarted();
+        }
         return response;
       }),
     );
 
-    const execution = service.resolveForExecution("example");
-    await refreshStarted;
-    // In-place reconnect (upsert) without delete must also rotate identity.
+    const originalExecution = service.resolveForExecution("example");
+    await originalRefreshStarted;
     const replaced = await store.set("example", "default", {
       authType: "oauth2",
       accessToken: "replacement-token",
       tokenType: "Bearer",
       refreshToken: "replacement-refresh-token",
-      expiresAt: "2099-01-01T00:00:00.000Z",
+      expiresAt: "2026-01-01T00:00:00.000Z",
       profile: testProfile,
       metadata: {},
     });
-    completeRefresh(
+    const replacementExecution = service.resolveForExecution("example");
+    await replacementRefreshStarted;
+    expect(fetch).toHaveBeenCalledTimes(2);
+    completeRefreshes[1]!(
+      Response.json({
+        access_token: "replacement-refreshed-token",
+        expires_in: 3600,
+        token_type: "Bearer",
+      }),
+    );
+    const current = await replacementExecution;
+    await expect(current.getCredential("example")).resolves.toMatchObject({
+      accessToken: "replacement-refreshed-token",
+    });
+    completeRefreshes[0]!(
       Response.json({
         access_token: "stale-refreshed-token",
         expires_in: 3600,
@@ -652,11 +675,12 @@ describe("ConnectionService", () => {
       }),
     );
 
-    await expect(execution).rejects.toMatchObject({ code: "connection_not_found" });
-    expect(replaced.id).not.toBe(original.id);
+    await expect(originalExecution).rejects.toMatchObject({ code: "connection_not_found" });
+    expect(replaced.id).toBe(original.id);
+    expect(replaced.revision).not.toBe(original.revision);
     await expect(store.get("example", "default")).resolves.toMatchObject({
       id: replaced.id,
-      credential: { accessToken: "replacement-token" },
+      credential: { accessToken: "replacement-refreshed-token" },
     });
   });
 
@@ -815,17 +839,22 @@ class MemoryConnectionStore implements IConnectionStore {
 
   async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
     const key = createConnectionKey(service, connectionName);
-    // Always mint a new id on set (including in-place replace) so stale OAuth
-    // refresh holders of the previous id fail updateCredential OCC.
-    const connection = { id: crypto.randomUUID(), service, connectionName, credential };
+    const connection = {
+      id: this.store.get(key)?.id ?? crypto.randomUUID(),
+      revision: crypto.randomUUID(),
+      service,
+      connectionName,
+      credential,
+    };
     this.store.set(key, connection);
     return connection;
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
     const key = createConnectionKey(input.service, input.connectionName);
-    if (this.store.get(key)?.id !== input.id) return false;
-    this.store.set(key, input);
+    const current = this.store.get(key);
+    if (current?.id !== input.id || current.revision !== input.revision) return false;
+    this.store.set(key, { ...input, revision: crypto.randomUUID() });
     return true;
   }
 

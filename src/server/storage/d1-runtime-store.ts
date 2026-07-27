@@ -60,12 +60,13 @@ export class D1ConnectionStore implements IConnectionStore {
 
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     const row = await this.database
-      .prepare("select id, value from connections where service = ? and connection_name = ?")
+      .prepare("select id, revision, value from connections where service = ? and connection_name = ?")
       .bind(service, connectionName)
       .first<RuntimeRow>();
     return row
       ? {
           id: readString(row, "id"),
+          revision: readString(row, "revision"),
           service,
           connectionName,
           credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -77,16 +78,17 @@ export class D1ConnectionStore implements IConnectionStore {
     const row = await this.database
       .prepare(
         `
-        insert into connections (id, service, connection_name, value, updated_at)
-        values (?, ?, ?, ?, ?)
+        insert into connections (id, revision, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?, ?)
         on conflict(service, connection_name) do update set
-          id = excluded.id,
+          revision = excluded.revision,
           value = excluded.value,
           updated_at = excluded.updated_at
-        returning id
+        returning id, revision
       `,
       )
       .bind(
+        crypto.randomUUID(),
         crypto.randomUUID(),
         service,
         connectionName,
@@ -94,7 +96,13 @@ export class D1ConnectionStore implements IConnectionStore {
         new Date().toISOString(),
       )
       .first<RuntimeRow>();
-    return { id: readString(row!, "id"), service, connectionName, credential };
+    return {
+      id: readString(row!, "id"),
+      revision: readString(row!, "revision"),
+      service,
+      connectionName,
+      credential,
+    };
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
@@ -102,17 +110,19 @@ export class D1ConnectionStore implements IConnectionStore {
       .prepare(
         `
         update connections
-        set value = ?, updated_at = ?
-        where service = ? and connection_name = ? and id = ?
+        set revision = ?, value = ?, updated_at = ?
+        where service = ? and connection_name = ? and id = ? and revision = ?
         returning id
       `,
       )
       .bind(
+        crypto.randomUUID(),
         await this.secretCodec.encode(JSON.stringify(input.credential)),
         new Date().toISOString(),
         input.service,
         input.connectionName,
         input.id,
+        input.revision,
       )
       .first<RuntimeRow>();
     return row !== null;
@@ -127,11 +137,14 @@ export class D1ConnectionStore implements IConnectionStore {
 
   async list(): Promise<StoredConnection[]> {
     const { results } = await this.database
-      .prepare("select id, service, connection_name, value from connections order by service, connection_name")
+      .prepare(
+        "select id, revision, service, connection_name, value from connections order by service, connection_name",
+      )
       .all<RuntimeRow>();
     return await Promise.all(
       results.map(async (row) => ({
         id: readString(row, "id"),
+        revision: readString(row, "revision"),
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),

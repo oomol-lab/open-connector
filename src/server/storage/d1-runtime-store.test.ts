@@ -62,7 +62,7 @@ describe("D1RuntimeDatabase", () => {
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toBeUndefined();
   });
 
-  it("rotates connection identity on set so stale refresh cannot overwrite credentials", async () => {
+  it("preserves connection identity and rejects stale credential revisions", async () => {
     const database = new D1RuntimeDatabase(new SqliteD1Database());
     const credential = {
       authType: "api_key" as const,
@@ -77,9 +77,8 @@ describe("D1RuntimeDatabase", () => {
       ...credential,
       apiKey: "updated-token",
     });
-    // Replacing credentials via set() must rotate id so an in-flight OAuth refresh
-    // that still holds the previous id fails OCC and cannot clobber the new secret.
-    expect(updated.id).not.toBe(created.id);
+    expect(updated.id).toBe(created.id);
+    expect(updated.revision).not.toBe(created.revision);
     await expect(
       database.connectionStore.updateCredential({
         ...created,
@@ -92,6 +91,16 @@ describe("D1RuntimeDatabase", () => {
         credential: { ...credential, apiKey: "refreshed-token" },
       }),
     ).resolves.toBe(true);
+    await expect(
+      database.connectionStore.updateCredential({
+        ...updated,
+        credential: { ...credential, apiKey: "second-refreshed-token" },
+      }),
+    ).resolves.toBe(false);
+    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+      id: updated.id,
+      credential: { apiKey: "refreshed-token" },
+    });
 
     await database.connectionStore.delete("github", "default");
     const recreated = await database.connectionStore.set("github", "default", credential);
@@ -459,6 +468,9 @@ class SqliteD1Database implements D1DatabaseBinding {
     );
     this.database.exec(
       readFileSync(new URL("../../../migrations/0009_runtime_token_proxy.sql", import.meta.url), "utf8"),
+    );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0010_connection_revision.sql", import.meta.url), "utf8"),
     );
   }
 
