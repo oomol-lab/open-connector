@@ -147,9 +147,7 @@ export interface AsanaRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export async function requestAsana(
-  options: AsanaRequestOptions,
-): Promise<Record<string, unknown>>;
+export async function requestAsana(options: AsanaRequestOptions): Promise<Record<string, unknown>>;
 
 export async function listAsanaResources(
   path: string,
@@ -174,10 +172,7 @@ export async function writeAsanaResource(
   query?: Record<string, string | undefined>,
 ): Promise<Record<string, unknown>>;
 
-export async function deleteAsanaResource(
-  path: string,
-  context: AsanaContext,
-): Promise<{ success: true }>;
+export async function deleteAsanaResource(path: string, context: AsanaContext): Promise<{ success: true }>;
 ```
 
 `requestAsana` must use `context.fetcher`, preserve the bearer token and user agent, wrap JSON as
@@ -537,10 +532,7 @@ Also assert insert before/after exclusivity and supported subtype-specific field
 Cover get/list/delete and both create modes:
 
 ```ts
-await handler(
-  { parentId: "task-1", externalUrl: "https://files.example/report.pdf", name: "report.pdf" },
-  context,
-);
+await handler({ parentId: "task-1", externalUrl: "https://files.example/report.pdf", name: "report.pdf" }, context);
 expect(JSON.parse(recorded.body as string)).toEqual({
   data: {
     parent: "task-1",

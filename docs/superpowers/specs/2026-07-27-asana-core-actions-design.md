@@ -39,19 +39,19 @@ paths, methods, request fields, scopes, pagination, and response envelopes.
 The implementation will cover the following official resource groups. Counts refer to official
 REST operations, not source files.
 
-| Resource group | Coverage |
-| --- | --- |
-| Workspaces | All 6 operations |
-| Users | All 8 operations |
-| Teams | All 7 operations |
-| Projects | 19 of 20 operations; exclude `saveAsTemplate` with template APIs |
-| Sections | All 7 operations |
-| Tasks | All 27 operations |
-| Stories/comments | 5 task/general operations; exclude the 2 goal-story operations |
-| Tags | All 8 operations |
-| Attachments | All 4 operations |
-| Custom fields | All 8 operations |
-| Custom field settings | Project and team settings; exclude portfolio and goal settings |
+| Resource group        | Coverage                                                         |
+| --------------------- | ---------------------------------------------------------------- |
+| Workspaces            | All 6 operations                                                 |
+| Users                 | All 8 operations                                                 |
+| Teams                 | All 7 operations                                                 |
+| Projects              | 19 of 20 operations; exclude `saveAsTemplate` with template APIs |
+| Sections              | All 7 operations                                                 |
+| Tasks                 | All 27 operations                                                |
+| Stories/comments      | 5 task/general operations; exclude the 2 goal-story operations   |
+| Tags                  | All 8 operations                                                 |
+| Attachments           | All 4 operations                                                 |
+| Custom fields         | All 8 operations                                                 |
+| Custom field settings | Project and team settings; exclude portfolio and goal settings   |
 
 This produces 101 covered operations, ten of which already exist, for 91 new actions. These counts
 use the official OpenAPI specification reviewed on July 27, 2026.
