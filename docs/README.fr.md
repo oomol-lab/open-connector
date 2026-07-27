@@ -304,6 +304,16 @@ copier des fichiers de marque dans ce repository.
 Gardez les issues et pull requests ciblées, respectueuses et actionnables. La participation à ce
 projet est régie par [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md).
 
+## Soutenir OpenConnector
+
+Si OpenConnector vous est utile, attribuez-lui une ⭐ pour aider davantage de développeurs à découvrir le projet.
+
+<div align="center">
+
+<img src="../assets/star-open-connector.gif" alt="Comment attribuer une Star à OpenConnector sur GitHub" width="760" />
+
+</div>
+
 ## Contributeurs
 
 Merci à toutes les personnes qui ont contribué à OpenConnector. Vous souhaitez les rejoindre ?

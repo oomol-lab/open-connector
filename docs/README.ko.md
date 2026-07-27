@@ -290,6 +290,16 @@ Provider metadata나 asset을 기여할 때는 제출할 권리가 있는 자료
 Issue와 pull request는 주제에 집중하고 서로 존중하며 실행 가능하게 작성해 주세요. 이 프로젝트 참여에는
 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)가 적용됩니다.
 
+## OpenConnector 지원하기
+
+OpenConnector가 유용했다면 ⭐를 눌러 주세요. 더 많은 개발자가 이 프로젝트를 발견하는 데 도움이 됩니다.
+
+<div align="center">
+
+<img src="../assets/star-open-connector.gif" alt="GitHub에서 OpenConnector에 Star를 추가하는 방법" width="760" />
+
+</div>
+
 ## 기여자
 
 OpenConnector를 함께 만들어 주신 모든 기여자께 감사드립니다.

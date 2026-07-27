@@ -298,6 +298,16 @@ files в этот repository.
 Пожалуйста, делайте issues и pull requests сфокусированными, уважительными и пригодными к
 исполнению. Участие в проекте регулируется [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md).
 
+## Поддержать OpenConnector
+
+Если OpenConnector оказался полезен, поставьте ⭐ — это поможет большему числу разработчиков узнать о проекте.
+
+<div align="center">
+
+<img src="../assets/star-open-connector.gif" alt="Как поставить Star проекту OpenConnector на GitHub" width="760" />
+
+</div>
+
 ## Участники
 
 Спасибо всем, кто помогает развивать OpenConnector. Хотите присоединиться? Ознакомьтесь с

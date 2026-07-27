@@ -265,6 +265,16 @@ npm test
 請確保 Issue 與 Pull Request 主題明確、尊重他人且可採取行動。參與本專案須遵守
 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)。
 
+## 支持 OpenConnector
+
+如果 OpenConnector 對你有幫助，給個 ⭐ 能幫助更多開發者發現這個專案。
+
+<div align="center">
+
+<img src="../assets/star-open-connector.gif" alt="在 GitHub 上為 OpenConnector 點 Star 的操作示範" width="760" />
+
+</div>
+
 ## 貢獻者
 
 感謝每一位參與建設 OpenConnector 的貢獻者。歡迎參閱 [貢獻指南](../CONTRIBUTING.md)，加入我們。

@@ -299,6 +299,16 @@ Prefer linking to official public assets instead of copying brand files into thi
 Please keep issues and pull requests focused, respectful, and actionable. Participation in this
 project is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
+## Support OpenConnector
+
+If OpenConnector is useful to you, giving it a ⭐ helps more developers discover the project.
+
+<div align="center">
+
+<img src="assets/star-open-connector.gif" alt="How to star OpenConnector on GitHub" width="760" />
+
+</div>
+
 ## Contributors
 
 Thanks to everyone who has helped build OpenConnector. Want to join them? See

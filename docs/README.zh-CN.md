@@ -268,6 +268,16 @@ Provider 和 app 名称、metadata、链接、scope、permission 以及可选 lo
 
 请让 issue 和 pull request 保持聚焦、尊重且可执行。参与本项目需遵守 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)。
 
+## 支持 OpenConnector
+
+如果 OpenConnector 对你有帮助，点个 ⭐ 可以帮助更多开发者发现这个项目。
+
+<div align="center">
+
+<img src="../assets/star-open-connector.gif" alt="在 GitHub 上为 OpenConnector 点 Star 的操作演示" width="760" />
+
+</div>
+
 ## 贡献者
 
 感谢每一位参与建设 OpenConnector 的贡献者。欢迎查看 [贡献指南](../CONTRIBUTING.md)，加入我们。
