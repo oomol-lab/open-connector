@@ -267,3 +267,9 @@ Provider 和 app 名称、metadata、链接、scope、permission 以及可选 lo
 ## 社区
 
 请让 issue 和 pull request 保持聚焦、尊重且可执行。参与本项目需遵守 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)。
+
+## 贡献者
+
+感谢每一位参与建设 OpenConnector 的贡献者。欢迎查看 [贡献指南](../CONTRIBUTING.md)，加入我们。
+
+[![OpenConnector 贡献者](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)

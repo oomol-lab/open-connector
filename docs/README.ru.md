@@ -297,3 +297,10 @@ files в этот repository.
 
 Пожалуйста, делайте issues и pull requests сфокусированными, уважительными и пригодными к
 исполнению. Участие в проекте регулируется [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md).
+
+## Участники
+
+Спасибо всем, кто помогает развивать OpenConnector. Хотите присоединиться? Ознакомьтесь с
+[руководством по участию](../CONTRIBUTING.md).
+
+[![Участники OpenConnector](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)

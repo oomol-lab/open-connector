@@ -264,3 +264,9 @@ npm test
 
 請確保 Issue 與 Pull Request 主題明確、尊重他人且可採取行動。參與本專案須遵守
 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)。
+
+## 貢獻者
+
+感謝每一位參與建設 OpenConnector 的貢獻者。歡迎參閱 [貢獻指南](../CONTRIBUTING.md)，加入我們。
+
+[![OpenConnector 貢獻者](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)

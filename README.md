@@ -298,3 +298,10 @@ Prefer linking to official public assets instead of copying brand files into thi
 
 Please keep issues and pull requests focused, respectful, and actionable. Participation in this
 project is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## Contributors
+
+Thanks to everyone who has helped build OpenConnector. Want to join them? See
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+[![OpenConnector contributors](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)

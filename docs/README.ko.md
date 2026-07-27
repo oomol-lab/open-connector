@@ -289,3 +289,10 @@ Provider metadata나 asset을 기여할 때는 제출할 권리가 있는 자료
 
 Issue와 pull request는 주제에 집중하고 서로 존중하며 실행 가능하게 작성해 주세요. 이 프로젝트 참여에는
 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)가 적용됩니다.
+
+## 기여자
+
+OpenConnector를 함께 만들어 주신 모든 기여자께 감사드립니다.
+[기여 안내](../CONTRIBUTING.md)를 확인하고 함께해 주세요.
+
+[![OpenConnector 기여자](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)

@@ -280,3 +280,10 @@ provider metadata や asset を提供する場合は、提出できる権利を�
 
 issue と pull request は、焦点が合い、敬意があり、実行可能な内容にしてください。この project への参加には
 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) が適用されます。
+
+## コントリビューター
+
+OpenConnector の開発にご協力いただいたすべての皆さまに感謝します。参加方法については
+[コントリビューションガイド](../CONTRIBUTING.md) をご覧ください。
+
+[![OpenConnector コントリビューター](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)

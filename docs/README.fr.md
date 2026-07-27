@@ -303,3 +303,10 @@ copier des fichiers de marque dans ce repository.
 
 Gardez les issues et pull requests ciblées, respectueuses et actionnables. La participation à ce
 projet est régie par [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md).
+
+## Contributeurs
+
+Merci à toutes les personnes qui ont contribué à OpenConnector. Vous souhaitez les rejoindre ?
+Consultez le [guide de contribution](../CONTRIBUTING.md).
+
+[![Contributeurs OpenConnector](https://contrib.rocks/image?repo=oomol-lab/open-connector)](https://github.com/oomol-lab/open-connector/graphs/contributors)
