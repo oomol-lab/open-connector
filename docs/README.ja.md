@@ -2,7 +2,7 @@
 
 <img src="../assets/openconnector-readme-banner.png" alt="OpenConnector - Connect Once. Use Everywhere." width="100%" />
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [Français](README.fr.md)
+[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
@@ -18,6 +18,12 @@
 OpenConnector は AI Agent 向けのオープンソース connector gateway であり、Composio の代替です。
 ユーザーのアプリアカウントを一度接続すれば、1,000+ の provider と 10,000+ の事前定義済み Action を含む共有
 catalog を Agent とアプリケーションに公開できます。
+
+> [!IMPORTANT]
+> **OAuth をすぐに使いたい場合は？** [OOMOL hosted connectors](https://oomol.com/apps) には、対応
+> provider 向けに設定済みの OAuth app と、利用量に応じて約 15,000～20,000 回の無料呼び出しに相当する
+> 毎月の Connect credits が含まれます。Self-hosted OpenConnector も OAuth に対応していますが、
+> OAuth app は自身で登録、設定する必要があります。
 
 アプリコードには [Connector SDK](https://github.com/oomol-lab/connector-sdk)、ローカル
 Agent の relay には [oo CLI](https://github.com/oomol-lab/oo-cli)、Agent host には
@@ -118,6 +124,11 @@ OpenConnector を Cloudflare の Workers、D1、R2、Web Console で起動する
 を設定して `npm run deploy:cloudflare` を実行します。
 
 ## クイックスタート
+
+> [!NOTE]
+> 以下では self-hosted runtime を起動します。OAuth provider を使うには、各 provider で登録した
+> OAuth client credential が必要です。独自の OAuth app を設定せずに、対応 provider をユーザーが
+> 直接認可できるようにするには、[OOMOL hosted connectors](https://oomol.com/apps) を利用してください。
 
 公開イメージから Docker Compose で runtime を起動します。
 

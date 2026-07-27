@@ -2,7 +2,7 @@
 
 <img src="../assets/openconnector-readme-banner.png" alt="OpenConnector - Connect Once. Use Everywhere." width="100%" />
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [Français](README.fr.md)
+[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
@@ -18,6 +18,13 @@
 OpenConnector est un connector gateway open source pour AI agents, et une alternative à Composio.
 Connectez les comptes d'apps utilisateur une fois, puis exposez un catalog partagé de 1,000+
 providers et 10 000+ Actions prêtes à l'emploi aux agents et applications.
+
+> [!IMPORTANT]
+> **Besoin d'un OAuth prêt à l'emploi ?** Les
+> [connectors hébergés par OOMOL](https://oomol.com/apps) incluent des apps OAuth configurées pour
+> les providers pris en charge et des Connect credits mensuels représentant environ 15 000 à 20 000
+> appels gratuits selon l'utilisation. OpenConnector self-hosted prend également en charge OAuth,
+> mais vous devez enregistrer et configurer vos propres apps OAuth.
 
 Utilisez le [Connector SDK](https://github.com/oomol-lab/connector-sdk) dans le code applicatif,
 [oo CLI](https://github.com/oomol-lab/oo-cli) comme relais pour les agents locaux, MCP pour les
@@ -130,6 +137,12 @@ suit le même flux que [cloudflare.md](cloudflare.md) : créer les ressources Cl
 secrets requis et exécuter `npm run deploy:cloudflare`.
 
 ## Démarrage Rapide
+
+> [!NOTE]
+> Ces étapes démarrent un runtime self-hosted. Les providers OAuth nécessitent les OAuth client
+> credentials des apps que vous enregistrez auprès de ces providers. Pour permettre aux
+> utilisateurs d'autoriser les providers pris en charge sans configurer vos propres apps OAuth,
+> utilisez les [connectors hébergés par OOMOL](https://oomol.com/apps).
 
 Démarrez le runtime depuis l'image publiée avec Docker Compose :
 

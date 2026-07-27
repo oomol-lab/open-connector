@@ -2,7 +2,7 @@
 
 <img src="../assets/openconnector-readme-banner.png" alt="OpenConnector - Connect Once. Use Everywhere." width="100%" />
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [Français](README.fr.md)
+[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
@@ -17,6 +17,11 @@
 
 OpenConnector 是一套供 AI Agent 使用的開放原始碼連接器閘道，也是 Composio 的替代方案。
 只要連線一次使用者的應用程式帳號，就能向 Agent 與應用程式提供共用目錄，其中包含 1,000 多個服務提供者及 10,000 多個預先建置的 Action。
+
+> [!IMPORTANT]
+> **希望 OAuth 開箱即用？** [OOMOL 官方代管 Connector](https://oomol.com/apps) 已為支援的服務提供者
+> 設定好 OAuth 應用程式，使用者可直接授權；每月贈送的 Connect 點數約可支援 15,000–20,000 次免費呼叫，
+> 實際次數取決於用量。自行代管的 OpenConnector 同樣支援 OAuth，但需要自行申請並設定 OAuth 應用程式。
 
 在應用程式程式碼中使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，以
 [oo CLI](https://github.com/oomol-lab/oo-cli) 作為本機 Agent 的轉接工具；Agent 主機可使用 MCP，
@@ -109,6 +114,11 @@ flowchart LR
 `npm run deploy:cloudflare`。
 
 ## 快速開始
+
+> [!NOTE]
+> 以下步驟會啟動自行代管的執行階段。使用 OAuth 服務提供者時，你必須提供自行向對應平台申請的
+> OAuth 用戶端憑證。若希望使用者無須設定 OAuth 應用程式即可直接授權支援的服務提供者，請使用
+> [OOMOL 官方代管 Connector](https://oomol.com/apps)。
 
 使用 Docker Compose 從已發布的映像檔啟動執行階段：
 

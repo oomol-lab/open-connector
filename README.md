@@ -2,7 +2,7 @@
 
 <img src="assets/openconnector-readme-banner.png" alt="OpenConnector - Connect Once. Use Everywhere." width="100%" />
 
-[English](README.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [日本語](docs/README.ja.md) | [Русский](docs/README.ru.md) | [Français](docs/README.fr.md)
+[English](README.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [日本語](docs/README.ja.md) | [한국어](docs/README.ko.md) | [Русский](docs/README.ru.md) | [Français](docs/README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
@@ -18,6 +18,12 @@
 OpenConnector is an open-source connector gateway for AI agents and an alternative to Composio.
 Connect user app accounts once, then expose a shared catalog of 1,000+ providers and 10,000+
 prebuilt Actions to agents and applications.
+
+> [!IMPORTANT]
+> **Need OAuth ready to use?** [OOMOL-hosted connectors](https://oomol.com/apps) include managed OAuth
+> apps for supported providers and monthly Connect credits for roughly 15,000–20,000 calls,
+> depending on usage. Self-hosted OpenConnector includes the OAuth flow, credential storage, and
+> token refresh, but you provide your own OAuth apps.
 
 Use the [Connector SDK](https://github.com/oomol-lab/connector-sdk) from app code,
 [oo CLI](https://github.com/oomol-lab/oo-cli) as the local-agent relay, MCP from agent hosts,
@@ -108,12 +114,12 @@ safe account labels, and execution results needed for the run.
 
 ## Usage Paths
 
-| Path                         | Best for                                            | Includes                                                                                                                                                                  |
-| ---------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Open-source self-host        | Developers and teams that want full control         | Local Docker or Node runtime, SQLite storage, MCP, HTTP, OpenAPI, and Web Console                                                                                         |
-| Fly.io self-host             | Teams that want a hosted Docker runtime             | Node Docker runtime, SQLite storage on a Fly volume, TLS, health checks, MCP, HTTP, OpenAPI, and Web Console                                                              |
-| Cloudflare-compatible deploy | Teams that want a lightweight hosted runtime        | Workers runtime, D1 state, R2 transit files, and Static Assets for the console                                                                                            |
-| [OOMOL](https://oomol.com/)  | Teams blocked by OAuth approval or launch deadlines | Hosted auth and runtime infrastructure with the same provider and Action contracts; compatible with the open-source interface for later private or self-hosted deployment |
+| Path                            | Best for                                                | Includes                                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open-source self-host           | Developers and teams that want full control             | Local Docker or Node runtime, SQLite storage, MCP, HTTP, OpenAPI, and Web Console                                                                                                                  |
+| Fly.io self-host                | Teams that want a hosted Docker runtime                 | Node Docker runtime, SQLite storage on a Fly volume, TLS, health checks, MCP, HTTP, OpenAPI, and Web Console                                                                                       |
+| Cloudflare-compatible deploy    | Teams that want a lightweight hosted runtime            | Workers runtime, D1 state, R2 transit files, and Static Assets for the console                                                                                                                     |
+| [OOMOL](https://oomol.com/apps) | Teams that want users to authorize accounts immediately | OOMOL-provided OAuth apps, monthly included Connect credits, and hosted runtime infrastructure; the same provider and Action contracts keep a path open to later private or self-hosted deployment |
 
 ## Cloudflare Quick Start Video
 
@@ -127,6 +133,11 @@ the same flow as [docs/cloudflare.md](docs/cloudflare.md): create Cloudflare res
 run `npm run deploy:cloudflare`.
 
 ## Quick Start
+
+> [!NOTE]
+> This starts a self-hosted runtime. OAuth providers require OAuth client credentials from apps you
+> register with those providers. To let users authorize supported providers without setting up your
+> own OAuth apps, use [OOMOL-hosted connectors](https://oomol.com/apps).
 
 Start the runtime from the published image with Docker Compose:
 

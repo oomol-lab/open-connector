@@ -2,7 +2,7 @@
 
 <img src="../assets/openconnector-readme-banner.png" alt="OpenConnector - Connect Once. Use Everywhere." width="100%" />
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [Français](README.fr.md)
+[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
@@ -18,6 +18,11 @@
 OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Composio 的开源替代方案。
 连接一次用户应用账号，就可以把包含 1,000+ 个 provider 和 10,000+ 个预置 Action 的共享 catalog 暴露给
 Agent 和应用。
+
+> [!IMPORTANT]
+> **希望 OAuth 开箱即用？** [OOMOL 官方托管 Connector](https://oomol.com/apps) 已为支持的 provider
+> 配置好 OAuth 应用，用户可以直接授权；每月赠送的 Connect 点数约可支持 15,000–20,000 次免费调用，实际次数
+> 取决于具体用量。自托管 OpenConnector 同样支持 OAuth，但需要自行申请和配置 OAuth 应用。
 
 应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
 [oo CLI](https://github.com/oomol-lab/oo-cli) 中继，Agent host 使用 MCP，自定义客户端使用
@@ -95,12 +100,12 @@ secret 保留在运行时边界内；Agent 拿到本次运行所需的 metadata�
 
 ## 使用路径
 
-| 路径                        | 适合谁                                | 提供什么                                                                                                       |
-| --------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| 开源自托管                  | 希望完全掌控基础设施的开发者和团队    | 本地 Docker 或 Node runtime、SQLite 存储、MCP、HTTP、OpenAPI 和 Web 控制台                                     |
-| Fly.io 自托管               | 希望使用托管 Docker runtime 的团队    | Node Docker runtime、Fly volume 上的 SQLite 存储、TLS、健康检查、MCP、HTTP、OpenAPI 和 Web 控制台              |
-| Cloudflare 兼容部署         | 希望快速获得轻量托管运行时的团队      | Workers runtime、D1 状态存储、R2 文件中转和控制台 Static Assets                                                |
-| [OOMOL](https://oomol.com/) | 被 OAuth 申请周期或上线时间卡住的团队 | 托管鉴权和运行时基础设施，使用同一套 provider 和 Action 契约；接口与开源版兼容，后续可迁移到私有化或自托管部署 |
+| 路径                            | 适合谁                             | 提供什么                                                                                                                                                 |
+| ------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 开源自托管                      | 希望完全掌控基础设施的开发者和团队 | 本地 Docker 或 Node runtime、SQLite 存储、MCP、HTTP、OpenAPI 和 Web 控制台                                                                               |
+| Fly.io 自托管                   | 希望使用托管 Docker runtime 的团队 | Node Docker runtime、Fly volume 上的 SQLite 存储、TLS、健康检查、MCP、HTTP、OpenAPI 和 Web 控制台                                                        |
+| Cloudflare 兼容部署             | 希望快速获得轻量托管运行时的团队   | Workers runtime、D1 状态存储、R2 文件中转和控制台 Static Assets                                                                                          |
+| [OOMOL](https://oomol.com/apps) | 希望用户立即授权账号的团队         | OOMOL 为支持的 provider 提供 OAuth 应用、每月赠送的 Connect 点数和托管 runtime；继续使用同一套 provider 和 Action 契约，后续仍可迁移到私有化或自托管部署 |
 
 ## Cloudflare 快速启动视频
 
@@ -113,6 +118,11 @@ OpenConnector 跑到 Cloudflare 的 Workers、D1、R2 和 Web 控制台上。视
 secret，然后运行 `npm run deploy:cloudflare`。
 
 ## 快速开始
+
+> [!NOTE]
+> 以下步骤启动的是自托管 runtime。使用 OAuth provider 时，你需要提供自行向对应平台申请的 OAuth
+> client 凭据。如果希望用户无需配置 OAuth 应用就能直接授权支持的 provider，请使用
+> [OOMOL 官方托管 Connector](https://oomol.com/apps)。
 
 使用 Docker Compose 从发布的镜像启动运行时：
 

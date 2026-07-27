@@ -2,7 +2,7 @@
 
 <img src="../assets/openconnector-readme-banner.png" alt="OpenConnector - Connect Once. Use Everywhere." width="100%" />
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [Français](README.fr.md)
+[English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
@@ -18,6 +18,12 @@
 OpenConnector — open-source connector gateway для AI agents и альтернатива Composio. Подключите
 пользовательские аккаунты приложений один раз, а затем откройте общий catalog из 1,000+ providers и
 10 000+ готовых Actions для агентов и приложений.
+
+> [!IMPORTANT]
+> **Нужен готовый OAuth?** [OOMOL-hosted connectors](https://oomol.com/apps) включают настроенные
+> OAuth apps для поддерживаемых providers и ежемесячные Connect credits примерно на 15 000–20 000
+> бесплатных вызовов в зависимости от использования. Self-hosted OpenConnector также поддерживает
+> OAuth, но OAuth apps потребуется зарегистрировать и настроить самостоятельно.
 
 В application code используйте [Connector SDK](https://github.com/oomol-lab/connector-sdk), для
 local-agent relay — [oo CLI](https://github.com/oomol-lab/oo-cli), для agent hosts — MCP, для
@@ -127,6 +133,12 @@ flowchart LR
 обязательные secrets и выполнить `npm run deploy:cloudflare`.
 
 ## Быстрый Старт
+
+> [!NOTE]
+> Эти шаги запускают self-hosted runtime. Для OAuth providers нужны OAuth client credentials из
+> приложений, которые вы самостоятельно регистрируете у соответствующих providers. Чтобы
+> пользователи могли авторизовать поддерживаемые providers без настройки собственных OAuth apps,
+> используйте [OOMOL-hosted connectors](https://oomol.com/apps).
 
 Запустите runtime из опубликованного образа через Docker Compose:
 
