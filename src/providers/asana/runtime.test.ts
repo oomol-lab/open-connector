@@ -3,8 +3,11 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { asanaProjectSectionActions } from "./actions-projects.ts";
+import { asanaStoryTagActions } from "./actions-stories-tags.ts";
 import { asanaTaskActions } from "./actions-tasks.ts";
+import { provider } from "./definition.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
+import { storyTagActionHandlers } from "./runtime-stories-tags.ts";
 import { taskActionHandlers } from "./runtime-tasks.ts";
 import { workspaceUserTeamActionHandlers } from "./runtime-workspaces-users-teams.ts";
 import {
@@ -1364,7 +1367,350 @@ const taskHandlerCases: HandlerCase[] = [
   },
 ];
 
+const storyFields = [
+  "created_at",
+  "created_by",
+  "created_by.name",
+  "resource_subtype",
+  "text",
+  "html_text",
+  "is_pinned",
+  "sticker_name",
+  "type",
+  "is_editable",
+  "is_edited",
+  "liked",
+  "likes",
+  "likes.user",
+  "likes.user.name",
+  "num_likes",
+  "reaction_summary",
+  "target",
+  "target.name",
+].join(",");
+const storyStickerNames = [
+  "green_checkmark",
+  "people_dancing",
+  "dancing_unicorn",
+  "heart",
+  "party_popper",
+  "people_waving_flags",
+  "splashing_narwhal",
+  "trophy",
+  "yeti_riding_unicorn",
+  "celebrating_people",
+  "determined_climbers",
+  "phoenix_spreading_love",
+];
+const tagFields = [
+  "name",
+  "color",
+  "notes",
+  "created_at",
+  "followers",
+  "followers.name",
+  "workspace",
+  "workspace.name",
+  "permalink_url",
+].join(",");
+
+const storyTagHandlerCases: HandlerCase[] = [
+  {
+    name: "get_story",
+    input: { storyId: "story / 1", includeFields: ["resource_type"] },
+    method: "GET",
+    path: "/stories/story%20%2F%201",
+    response: { data: { gid: "story1", resource_subtype: "comment_added", text: "Hello" } },
+    query: { opt_fields: `${storyFields},resource_type` },
+    expectedOutput: { story: { gid: "story1", resource_subtype: "comment_added", text: "Hello" } },
+  },
+  {
+    name: "list_task_stories",
+    input: { taskId: "task / 1", limit: 25, cursor: "story-cursor", includeFields: ["resource_type"] },
+    method: "GET",
+    path: "/tasks/task%20%2F%201/stories",
+    response: {
+      data: [{ gid: "story1", resource_subtype: "comment_added", text: "Hello" }],
+      next_page: { offset: "next-story" },
+    },
+    query: {
+      limit: "25",
+      offset: "story-cursor",
+      opt_fields: `${storyFields},resource_type`,
+    },
+    expectedOutput: {
+      stories: [{ gid: "story1", resource_subtype: "comment_added", text: "Hello" }],
+      nextCursor: "next-story",
+    },
+  },
+  {
+    name: "create_task_story",
+    input: {
+      taskId: "task1",
+      htmlText: "<body>Hello</body>",
+      isPinned: true,
+      includeFields: ["resource_type"],
+    },
+    method: "POST",
+    path: "/tasks/task1/stories",
+    response: { data: { gid: "story1", html_text: "<body>Hello</body>", is_pinned: true } },
+    status: 201,
+    query: { opt_fields: `${storyFields},resource_type` },
+    body: { html_text: "<body>Hello</body>", is_pinned: true },
+    expectedOutput: { story: { gid: "story1", html_text: "<body>Hello</body>", is_pinned: true } },
+  },
+  {
+    name: "update_story",
+    input: { storyId: "story1", text: "", isPinned: false },
+    method: "PUT",
+    path: "/stories/story1",
+    response: { data: { gid: "story1", text: "", is_pinned: false } },
+    query: { opt_fields: storyFields },
+    body: { text: "", is_pinned: false },
+    expectedOutput: { story: { gid: "story1", text: "", is_pinned: false } },
+  },
+  {
+    name: "delete_story",
+    input: { storyId: "story1" },
+    method: "DELETE",
+    path: "/stories/story1",
+    response: { data: {} },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "list_tags",
+    input: { workspaceId: "w1", limit: 30, cursor: "tag-cursor", includeFields: ["resource_type"] },
+    method: "GET",
+    path: "/tags",
+    response: { data: [{ gid: "tag1", name: "Urgent" }], next_page: { offset: "next-tag" } },
+    query: {
+      workspace: "w1",
+      limit: "30",
+      offset: "tag-cursor",
+      opt_fields: `${tagFields},resource_type`,
+    },
+    expectedOutput: { tags: [{ gid: "tag1", name: "Urgent" }], nextCursor: "next-tag" },
+  },
+  {
+    name: "create_tag",
+    input: {
+      workspaceId: "w1",
+      name: "Urgent",
+      color: "dark-red",
+      notes: "Prioritize",
+      followerIds: ["me", "u1"],
+      includeFields: ["resource_type"],
+    },
+    method: "POST",
+    path: "/tags",
+    response: { data: { gid: "tag1", name: "Urgent", color: "dark-red" } },
+    status: 201,
+    query: { opt_fields: `${tagFields},resource_type` },
+    body: {
+      workspace: "w1",
+      name: "Urgent",
+      color: "dark-red",
+      notes: "Prioritize",
+      followers: ["me", "u1"],
+    },
+    expectedOutput: { tag: { gid: "tag1", name: "Urgent", color: "dark-red" } },
+  },
+  {
+    name: "get_tag",
+    input: { tagId: "tag / 1", includeFields: ["resource_type"] },
+    method: "GET",
+    path: "/tags/tag%20%2F%201",
+    response: { data: { gid: "tag1", name: "Urgent" } },
+    query: { opt_fields: `${tagFields},resource_type` },
+    expectedOutput: { tag: { gid: "tag1", name: "Urgent" } },
+  },
+  {
+    name: "update_tag",
+    input: { tagId: "tag1", name: "Critical", color: null, notes: "" },
+    method: "PUT",
+    path: "/tags/tag1",
+    response: { data: { gid: "tag1", name: "Critical", color: null, notes: "" } },
+    query: { opt_fields: tagFields },
+    body: { name: "Critical", color: null, notes: "" },
+    expectedOutput: { tag: { gid: "tag1", name: "Critical", color: null, notes: "" } },
+  },
+  {
+    name: "delete_tag",
+    input: { tagId: "tag1" },
+    method: "DELETE",
+    path: "/tags/tag1",
+    response: { data: {} },
+    expectedOutput: { success: true },
+  },
+  {
+    name: "list_workspace_tags",
+    input: { workspaceId: "workspace / 1", limit: 31, cursor: "workspace-tag-cursor" },
+    method: "GET",
+    path: "/workspaces/workspace%20%2F%201/tags",
+    response: { data: [{ gid: "tag1" }] },
+    query: {
+      limit: "31",
+      offset: "workspace-tag-cursor",
+      opt_fields: tagFields,
+    },
+    expectedOutput: { tags: [{ gid: "tag1" }], nextCursor: null },
+  },
+  {
+    name: "create_workspace_tag",
+    input: {
+      workspaceId: "workspace / 1",
+      name: "Review",
+      color: "light-blue",
+      notes: "Needs review",
+      followerIds: ["u1"],
+    },
+    method: "POST",
+    path: "/workspaces/workspace%20%2F%201/tags",
+    response: { data: { gid: "tag2", name: "Review" } },
+    status: 201,
+    query: { opt_fields: tagFields },
+    body: {
+      name: "Review",
+      color: "light-blue",
+      notes: "Needs review",
+      followers: ["u1"],
+    },
+    expectedOutput: { tag: { gid: "tag2", name: "Review" } },
+  },
+  {
+    name: "list_task_tags",
+    input: { taskId: "task / 1", limit: 32, cursor: "task-tag-cursor" },
+    method: "GET",
+    path: "/tasks/task%20%2F%201/tags",
+    response: { data: [{ gid: "tag1" }] },
+    query: {
+      limit: "32",
+      offset: "task-tag-cursor",
+      opt_fields: tagFields,
+    },
+    expectedOutput: { tags: [{ gid: "tag1" }], nextCursor: null },
+  },
+];
+
 describe("Asana runtime", () => {
+  it("defines all 13 story/comment and tag actions with official scope metadata and matching handlers", () => {
+    expect(asanaStoryTagActions).toHaveLength(13);
+    expect(Object.keys(storyTagActionHandlers).sort()).toEqual(
+      asanaStoryTagActions.map((action) => action.name).sort(),
+    );
+    expect(Object.fromEntries(asanaStoryTagActions.map((action) => [action.name, action.requiredScopes]))).toEqual({
+      get_story: ["stories:read"],
+      list_task_stories: ["stories:read"],
+      create_task_story: ["stories:write"],
+      update_story: ["stories:write"],
+      delete_story: ["stories:delete"],
+      list_tags: ["tags:read"],
+      create_tag: ["tags:write"],
+      get_tag: ["tags:read"],
+      update_tag: ["tags:write"],
+      delete_tag: [],
+      list_workspace_tags: ["tags:read"],
+      create_workspace_tag: ["tags:write"],
+      list_task_tags: ["tags:read"],
+    });
+    for (const action of asanaStoryTagActions.slice(0, 5)) {
+      expect(action.description.toLowerCase()).toContain("story");
+      expect(action.description.toLowerCase()).toContain("comment");
+    }
+    const createStoryAction = asanaStoryTagActions.find((action) => action.name === "create_task_story");
+    expect(
+      (createStoryAction?.inputSchema.properties as Record<string, unknown> | undefined)?.stickerName,
+    ).toMatchObject({
+      type: "string",
+      enum: storyStickerNames,
+    });
+    expect(provider.actions).toHaveLength(87);
+  });
+
+  it.each(storyTagHandlerCases)(
+    "maps $name to the official Asana story/comment or tag method, path, query, body, and result",
+    async ({ name, input, method, path, response, status, query, body, expectedOutput }) => {
+      const context = recordingContext(jsonResponse(response, status));
+      const handler = storyTagActionHandlers[name];
+
+      expect(handler).toBeTypeOf("function");
+      await expect(handler!(input, context)).resolves.toEqual(expectedOutput);
+      expect(context.requests).toHaveLength(1);
+      const request = context.requests[0]!;
+      expect(request.init.method).toBe(method);
+      expect(request.url.pathname).toBe(`/api/1.0${path}`);
+      expect(Object.fromEntries(request.url.searchParams.entries())).toEqual(query ?? {});
+      if (body) {
+        expect(JSON.parse(request.init.body as string)).toEqual({ data: body });
+      } else {
+        expect(request.init.body).toBeUndefined();
+      }
+    },
+  );
+
+  it.each([
+    ["create_task_story", { taskId: "task1" }],
+    ["create_task_story", { taskId: "task1", text: "plain", htmlText: "<body>rich</body>" }],
+    ["update_story", { storyId: "story1" }],
+    ["update_story", { storyId: "story1", text: "plain", htmlText: "<body>rich</body>" }],
+    ["update_story", { storyId: "story1", stickerName: "party_popper" }],
+  ])("rejects invalid story/comment mutation input for %s without making a request", async (name, input) => {
+    const context = recordingContext();
+
+    await expect(Promise.resolve().then(() => storyTagActionHandlers[name]!(input, context))).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(context.requests).toHaveLength(0);
+  });
+
+  it.each([
+    ["update_story", { storyId: "story1", isPinned: false }],
+    ["update_story", { storyId: "story1", text: "" }],
+    ["update_story", { storyId: "story1", htmlText: "" }],
+  ])("accepts each supported story/comment update field for %s", async (name, input) => {
+    const context = recordingContext(jsonResponse({ data: { gid: "story1" } }));
+
+    await expect(storyTagActionHandlers[name]!(input, context)).resolves.toEqual({ story: { gid: "story1" } });
+    expect(context.requests).toHaveLength(1);
+  });
+
+  it("creates a comment story with an official sticker name", async () => {
+    const context = recordingContext(jsonResponse({ data: { gid: "story1", sticker_name: "party_popper" } }, 201));
+
+    await expect(
+      storyTagActionHandlers.create_task_story!(
+        { taskId: "task1", text: "Shipped!", stickerName: "party_popper" },
+        context,
+      ),
+    ).resolves.toEqual({ story: { gid: "story1", sticker_name: "party_popper" } });
+    expect(JSON.parse(context.requests[0]?.init.body as string)).toEqual({
+      data: { text: "Shipped!", sticker_name: "party_popper" },
+    });
+  });
+
+  it("lists tags without an optional workspace filter", async () => {
+    const context = recordingContext(jsonResponse({ data: [{ gid: "tag1" }] }));
+
+    await expect(storyTagActionHandlers.list_tags!({}, context)).resolves.toEqual({
+      tags: [{ gid: "tag1" }],
+      nextCursor: null,
+    });
+    expect(Object.fromEntries(context.requests[0]!.url.searchParams.entries())).toEqual({
+      opt_fields: tagFields,
+    });
+  });
+
+  it("rejects an empty tag update without making a request", async () => {
+    const context = recordingContext();
+
+    await expect(
+      Promise.resolve().then(() => storyTagActionHandlers.update_tag!({ tagId: "tag1" }, context)),
+    ).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(context.requests).toHaveLength(0);
+  });
+
   it("defines all 27 task actions with official scope metadata and matching handlers", () => {
     expect(asanaTaskActions).toHaveLength(27);
     expect(Object.keys(taskActionHandlers).sort()).toEqual(asanaTaskActions.map((action) => action.name).sort());

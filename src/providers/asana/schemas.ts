@@ -252,6 +252,21 @@ export const taskSchema: JsonSchema = s.looseObject("An Asana task.", {
   ),
 });
 
+export const storyStickerNames: readonly string[] = [
+  "green_checkmark",
+  "people_dancing",
+  "dancing_unicorn",
+  "heart",
+  "party_popper",
+  "people_waving_flags",
+  "splashing_narwhal",
+  "trophy",
+  "yeti_riding_unicorn",
+  "celebrating_people",
+  "determined_climbers",
+  "phoenix_spreading_love",
+];
+
 export const storySchema: JsonSchema = s.looseObject("An Asana story or task comment.", {
   gid: s.string("The story gid."),
   resource_type: s.string("The resource type."),
@@ -263,7 +278,7 @@ export const storySchema: JsonSchema = s.looseObject("An Asana story or task com
   created_by: userCompactSchema,
   is_edited: s.boolean("Whether the story has been edited."),
   is_pinned: s.boolean("Whether the story is pinned."),
-  sticker_name: s.nullable(s.string("The story sticker name.")),
+  sticker_name: s.nullable(s.stringEnum("The story sticker name.", storyStickerNames)),
   target: taskCompactSchema,
 });
 

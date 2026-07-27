@@ -4,6 +4,7 @@ import type { AsanaContext } from "./runtime.ts";
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
+import { storyTagActionHandlers } from "./runtime-stories-tags.ts";
 import { taskActionHandlers } from "./runtime-tasks.ts";
 import { workspaceUserTeamActionHandlers } from "./runtime-workspaces-users-teams.ts";
 import { asanaApiBaseUrl, requestAsana } from "./runtime.ts";
@@ -13,7 +14,13 @@ const asanaValidationPath = "/users/me";
 
 export const executors: ProviderExecutors = defineProviderExecutors<AsanaContext>({
   service,
-  handlers: Object.assign({}, workspaceUserTeamActionHandlers, projectSectionActionHandlers, taskActionHandlers),
+  handlers: Object.assign(
+    {},
+    workspaceUserTeamActionHandlers,
+    projectSectionActionHandlers,
+    taskActionHandlers,
+    storyTagActionHandlers,
+  ),
   async createContext(context, fetcher): Promise<AsanaContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
