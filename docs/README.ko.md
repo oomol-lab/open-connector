@@ -214,20 +214,19 @@ version, 최신 `main` build에는 `tip`을 사용하세요.
 
 Image tag, 가져오기, 실행 방법은 [docker-ghcr.md](docker-ghcr.md)를 참조하세요.
 
-## 바로 사용하고 싶으신가요?
+## Wanta로 데스크톱 Agent 만들기
 
-위의 경로는 connector를 자체 제품, runtime 또는 인프라에 통합하려는 팀을 위한 것입니다. SaaS 연결
-환경을 먼저 체험하거나 일상 업무에서 바로 사용하려면 OpenConnector를 배포하거나 SDK, CLI, MCP,
-HTTP API를 먼저 통합할 필요가 없습니다.
+OpenConnector와 [Wanta](https://github.com/oomol-lab/wanta)는 OOMOL 오픈 소스 생태계에서 AI Agent를
+지원하는 두 프로젝트입니다. OpenConnector는 Gmail, Slack, Notion 같은 외부 서비스를 Agent에 연결합니다.
+Wanta는 OpenCode로 실행되는 완전한 데스크톱 Agent 애플리케이션이며, OpenConnector를 통해 연결된 SaaS
+서비스를 사용합니다.
 
-[Wanta](https://wanta.ai/)는 동일한 1,000개 이상의 SaaS/provider 범위를 사용하는 데스크톱 제품입니다.
-계정을 한 번 연결한 뒤 자연어로 연결된 도구 전반에서 검색, 정리, 생성, 동기화할 수 있습니다.
+- **로컬 실행:** Wanta 계정 없이 자신의 OpenAI 호환 모델을 사용할 수 있습니다.
+- **직접 개발:** Wanta를 fork하여 prompt, 도구, 인터페이스, 모델, branding을 맞춤 설정할 수 있습니다.
+- **호스팅 서비스:** 선택 사항인 [호스팅 환경](https://wanta.ai/)은 managed model, OAuth 연결, 팀
+  workspace를 제공합니다.
 
-| 원하는 작업                          | Wanta가 제공하는 기능                                                                                                         |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1,000개 이상의 SaaS 연결을 바로 체험 | Runtime 배포나 SDK/CLI 통합 없이 동일한 SaaS/provider 범위를 사용합니다.                                                      |
-| 일상 업무에서 Agent 사용             | 이메일, 채팅, 문서, 데이터, 프로젝트, 지원, 개발 도구, 마케팅 도구를 자연어로 다룹니다.                                       |
-| 팀과 연결 기능 공유                  | Connection과 access scope를 한 번 구성하면 팀원이 별도 설정 없이 사용할 수 있으며 key, token, credential은 노출되지 않습니다. |
+Issue와 pull request를 통한 기여를 환영합니다.
 
 ## 문서
 

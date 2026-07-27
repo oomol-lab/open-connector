@@ -197,20 +197,17 @@ release 用 `latest`，生产环境固定版本号（如 `v1.0.0`），想用最
 
 镜像标签、拉取和运行的说明见 [docker-ghcr.zh-CN.md](docker-ghcr.zh-CN.md)。
 
-## 不想先接入？可以直接使用 Wanta
+## 用 Wanta 构建你的桌面 Agent
 
-上面的路径更适合把 connector 接入自己的产品、runtime 或企业基础设施。如果你只是想先体验连接各种
-SaaS 的效果，或者想直接在业务中使用这些能力，不一定要先部署 OpenConnector，也不一定要接入 SDK、CLI、MCP 或
-HTTP API。
+OpenConnector 与 [Wanta](https://github.com/oomol-lab/wanta) 是 OOMOL 开源生态中面向 AI Agent
+的两个项目。OpenConnector 负责把 Gmail、Slack、Notion 等外部服务接入 Agent；Wanta 则提供一套基于 OpenCode
+运行的完整桌面 Agent 应用，并通过 OpenConnector 使用已连接的 SaaS 服务。
 
-[Wanta](https://wanta.ai/) 是使用同一套 1,000+ SaaS/provider 覆盖的桌面端产品入口。用户连接账号后，就可以用自然语言让 AI
-跨已连接工具查询、整理、生成和同步。
+- **本地运行：** 使用自己的 OpenAI 兼容模型，无需注册 Wanta 账号。
+- **二次开发：** Fork Wanta，自定义提示词、工具、界面、模型和品牌，构建自己的桌面 Agent。
+- **托管服务：** 可选的[托管服务](https://wanta.ai/)提供托管模型、OAuth 连接和团队工作区。
 
-| 如果你想要             | Wanta 提供                                                                               |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| 直接体验 SaaS 连接能力 | 使用同一套 1,000+ SaaS/provider 覆盖，不需要先部署 runtime 或接入 SDK/CLI。              |
-| 直接在业务中使用       | 用自然语言跨邮件、沟通、文档、数据、项目、客服、开发和营销等工具查询、整理、生成和同步。 |
-| 团队一起使用           | 一人配置连接和授权范围，成员免配置使用；Key、Token 和账号凭据不外露。                    |
+欢迎通过 Issue 和 Pull Request 参与贡献。
 
 ## 文档
 

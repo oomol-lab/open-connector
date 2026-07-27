@@ -218,22 +218,20 @@ Fly volume.
 
 О тегах образа, pull и запуске см. [docker-ghcr.md (на английском)](docker-ghcr.md).
 
-## Хотите Использовать Напрямую?
+## Создайте desktop Agent с Wanta
 
-Пути выше предназначены для команд, которые интегрируют connector в свои продукты, runtimes или
-enterprise infrastructure. Если вы хотите сначала попробовать SaaS connection experience или сразу
-использовать это в работе, вам не обязательно сначала deploy OpenConnector или интегрировать SDK,
-CLI, MCP либо HTTP API.
+OpenConnector и [Wanta](https://github.com/oomol-lab/wanta) — два open-source проекта для AI Agents
+в экосистеме OOMOL. OpenConnector подключает Agents к внешним сервисам, таким как Gmail, Slack и
+Notion. Wanta предоставляет полноценное desktop Agent приложение на базе OpenCode и использует
+OpenConnector для работы с подключенными SaaS сервисами.
 
-[Wanta](https://wanta.ai/) — desktop product entry point с тем же 1,000+ SaaS/provider coverage.
-После подключения accounts можно через natural language искать, организовывать, создавать и
-синхронизировать данные между connected tools.
+- **Локальный запуск:** используйте свою OpenAI-compatible model без учетной записи Wanta.
+- **Собственная разработка:** сделайте fork Wanta и настройте prompts, tools, interface, models и
+  branding.
+- **Hosted-сервисы:** необязательный [hosted-сервис](https://wanta.ai/) предоставляет managed models,
+  OAuth connections и team workspaces.
 
-| Если Вы Хотите                          | Что Дает Wanta                                                                                                          |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Попробовать 1,000+ SaaS connections     | Использовать то же SaaS/provider coverage без runtime deploy или предварительной SDK/CLI integration.                   |
-| Использовать Agents в ежедневной работе | Работать через natural language с email, chat, docs, data, projects, support, developer tools и marketing tools.        |
-| Делиться подключенными capabilities     | Один раз настроить connections и access scopes; teammates используют их без setup, а keys, tokens и credentials скрыты. |
+Issues и pull requests приветствуются.
 
 ## Документация
 

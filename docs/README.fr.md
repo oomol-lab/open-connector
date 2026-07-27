@@ -222,22 +222,20 @@ Exécutez OpenConnector depuis une image préconstruite sur GitHub Packages (GHC
 
 Consultez [docker-ghcr.md (anglais)](docker-ghcr.md) pour les tags d'image, le pull et l'exécution.
 
-## Vous voulez l'utiliser directement ?
+## Construire un Agent desktop avec Wanta
 
-Les parcours ci-dessus s'adressent aux équipes qui intègrent le connector dans leurs produits,
-runtimes ou infrastructures d'entreprise. Si vous voulez d'abord essayer l'expérience de connexion
-SaaS, ou l'utiliser directement dans le travail quotidien, vous n'avez pas besoin de déployer
-OpenConnector ni d'intégrer d'abord le SDK, la CLI, MCP ou l'API HTTP.
+OpenConnector et [Wanta](https://github.com/oomol-lab/wanta) sont deux projets open source pour les
+Agents IA dans l'écosystème OOMOL. OpenConnector connecte les Agents à des services externes comme
+Gmail, Slack et Notion. Wanta fournit une application Agent desktop complète propulsée par OpenCode
+et utilise OpenConnector pour accéder aux services SaaS connectés.
 
-[Wanta](https://wanta.ai/) est le point d'entrée desktop product qui utilise la même couverture
-1,000+ SaaS/providers. Après avoir connecté des comptes, vous pouvez chercher, organiser, créer et
-synchroniser dans les outils connectés en natural language.
+- **Exécution locale :** utilisez votre propre modèle compatible OpenAI sans créer de compte Wanta.
+- **Développement personnalisé :** forkez Wanta et adaptez prompts, outils, interface, modèles et
+  identité.
+- **Services hébergés :** l'expérience [hébergée](https://wanta.ai/), facultative, fournit modèles
+  gérés, connexions OAuth et espaces d'équipe.
 
-| Si Vous Voulez                                       | Wanta Fournit                                                                                                                       |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Essayer directement les connexions 1,000+ SaaS       | Utiliser la même couverture SaaS/provider sans déployer un runtime ni intégrer d'abord le SDK/la CLI.                               |
-| Utiliser des Agents dans le travail quotidien        | Travailler en natural language à travers email, chat, docs, data, projets, support, developer tools et marketing tools.             |
-| Partager des capabilities connectées avec une équipe | Configurer connections et access scopes une fois ; les teammates les utilisent sans setup, avec keys, tokens et credentials cachés. |
+Issues et pull requests sont les bienvenues.
 
 ## Documentation
 

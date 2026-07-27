@@ -220,22 +220,19 @@ latest `main` build.
 
 See [docs/docker-ghcr.md](docs/docker-ghcr.md) for tags, pulling, and running.
 
-## Want to Use It Directly?
+## Build a Desktop Agent with Wanta
 
-The paths above are for teams integrating connectors into their own products, runtimes, or
-infrastructure. If you want to try the SaaS connection experience first, or use it directly in
-day-to-day work, you do not need to deploy OpenConnector or integrate the SDK, CLI, MCP, or HTTP API
-first.
+OpenConnector and [Wanta](https://github.com/oomol-lab/wanta) are two open-source projects for AI
+Agents in the OOMOL ecosystem. OpenConnector connects Agents to external services such as Gmail,
+Slack, and Notion. Wanta provides a complete desktop Agent application powered by OpenCode and uses
+OpenConnector to work with connected SaaS services.
 
-[Wanta](https://wanta.ai/) is the desktop product entry point using the same shared 1,000+
-SaaS/provider coverage. Connect accounts once, then use natural language to search, organize,
-create, and sync across connected tools.
+- **Run locally:** Use your own OpenAI-compatible model without creating a Wanta account.
+- **Build your own:** Fork Wanta and customize its prompts, tools, interface, models, and branding.
+- **Use hosted services:** The optional [hosted experience](https://wanta.ai/) provides managed
+  models, OAuth connections, and team workspaces.
 
-| If You Want to                           | Wanta Provides                                                                                                                  |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Try 1,000+ SaaS connections directly     | Use the same SaaS/provider coverage without deploying a runtime or integrating SDK/CLI first.                                   |
-| Use Agents in daily work                 | Work across email, chat, docs, data, projects, support, developer tools, and marketing tools in natural language.               |
-| Share connected capabilities with a team | Configure connections and access scopes once; teammates use them without setup while keys, tokens, and credentials stay hidden. |
+Issues and pull requests are welcome.
 
 ## Documentation
 
