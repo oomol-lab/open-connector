@@ -14,7 +14,7 @@ import {
 import { compactJson, encodePathSegment, jsonObject } from "../../core/request.ts";
 import {
   createProviderTimeout,
-  isAbortLikeError,
+  isAbortSignalError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -91,7 +91,8 @@ export async function validateVultrCredential(
   const account = await getAccount({ apiKey, fetcher, signal }, "validate");
   const email = requiredString(account.email, "account.email", providerResponseError);
   const name = optionalString(account.name);
-  const acls = readOptionalStringArray(account.acls) ?? [];
+  const acls =
+    account.acls === undefined ? [] : requiredStringArray(account.acls, "account.acls", providerResponseError);
 
   return {
     profile: {
@@ -287,8 +288,11 @@ async function vultrFetch(input: VultrRequestInput): Promise<Response> {
       signal: timeout.signal,
     });
   } catch (error) {
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
+    if (timeout.didTimeout()) {
       throw new ProviderRequestError(504, "Vultr request timed out", error);
+    }
+    if (isAbortSignalError(input.signal, error)) {
+      throw new ProviderRequestError(499, "Vultr request was cancelled", error);
     }
     throw new ProviderRequestError(
       502,

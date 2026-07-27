@@ -188,12 +188,14 @@ const updateInstanceFields = {
   ddosProtection: s.boolean("Whether to enable paid DDoS protection."),
   tags: s.stringArray("Replacement tags for the instance.", { itemDescription: "An instance tag." }),
 };
-const updateInstanceInputSchema = s.object(
-  "Fields to update on an existing Vultr instance.",
-  { instanceId: instanceIdSchema, ...updateInstanceFields },
-  { required: ["instanceId"], optional: Object.keys(updateInstanceFields) },
-) as JsonSchema;
-updateInstanceInputSchema.anyOf = Object.keys(updateInstanceFields).map((field) => ({ required: [field] }));
+const updateInstanceInputSchema: JsonSchema = {
+  ...s.object(
+    "Fields to update on an existing Vultr instance.",
+    { instanceId: instanceIdSchema, ...updateInstanceFields },
+    { required: ["instanceId"], optional: Object.keys(updateInstanceFields) },
+  ),
+  anyOf: Object.keys(updateInstanceFields).map((field) => ({ required: [field] })),
+};
 
 export const vultrActions: ActionDefinition[] = [
   defineProviderAction(service, {
