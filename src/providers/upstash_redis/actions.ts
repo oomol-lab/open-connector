@@ -15,7 +15,11 @@ export const upstashRedisActions: ActionDefinition[] = [
     description: "Get the string value stored for one Redis key.",
     inputSchema: s.actionInput({ key: keySchema }, ["key"], "The Redis key to retrieve."),
     outputSchema: s.actionOutput(
-      { value: s.nullableString("The stored string value, or null when the key does not exist.") },
+      {
+        value: s.nullableString(
+          "The stored string value, or null when the key does not exist. Upstash replaces bytes that are not valid UTF-8 with U+FFFD, so only text values round-trip exactly.",
+        ),
+      },
       "The value returned for the Redis key.",
     ),
     followUpActions: ["upstash_redis.set", "upstash_redis.delete", "upstash_redis.expire", "upstash_redis.ttl"],

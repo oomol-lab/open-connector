@@ -35,7 +35,7 @@ export const provider: ProviderDefinition = {
           secret: true,
           placeholder: "Your Upstash REST token",
           description:
-            "The Upstash Redis REST token sent as a Bearer token. A read-only token can run read actions but cannot write keys.",
+            "The Upstash Redis REST token sent as a Bearer token. A read-only token can run get, exists, and ttl, but Upstash also blocks scan for read-only tokens, so the standard token is required for scan and for every write action.",
         },
       ],
     },

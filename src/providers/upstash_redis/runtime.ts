@@ -1,7 +1,13 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalIntegerLike, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  optionalIntegerLike,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
@@ -32,11 +38,7 @@ export const upstashRedisActionHandlers: Record<string, ProviderRuntimeHandler<U
     return { value: readStringOrNullResult(result, "GET") };
   },
   async set(input, context) {
-    const command: UpstashCommandArgument[] = [
-      "SET",
-      readKey(input),
-      requiredString(input.value, "value", providerInputError),
-    ];
+    const command: UpstashCommandArgument[] = ["SET", readKey(input), readValue(input)];
     const expirationSeconds = readOptionalPositiveInteger(input.expirationSeconds, "expirationSeconds");
     if (expirationSeconds !== undefined) {
       command.push("EX", expirationSeconds);
@@ -198,7 +200,7 @@ function normalizeUpstashRestUrl(value: string | undefined): URL {
   if (restUrl.pathname !== "/" || restUrl.search || restUrl.hash) {
     throw providerInputError("restUrl must not include a path, query, or fragment");
   }
-  if (!restUrl.hostname.endsWith(upstashHostnameSuffix) || restUrl.hostname === "upstash.io") {
+  if (!restUrl.hostname.endsWith(upstashHostnameSuffix)) {
     throw providerInputError("restUrl must use an official upstash.io endpoint");
   }
   return restUrl;
@@ -222,20 +224,38 @@ function createUpstashError(status: number, payload: unknown, phase: UpstashRequ
     optionalString(record?.error) ??
     optionalString(record?.message) ??
     `Upstash Redis request failed with status ${status}`;
-  if (status === 400) {
-    return new ProviderRequestError(400, message, payload);
-  }
   if ((status === 401 || status === 403) && phase === "validate") {
     return new ProviderRequestError(400, message, payload);
   }
-  if (status === 401 || status === 403 || status === 429) {
-    return new ProviderRequestError(status, message, payload);
+  if (isUpstashQuotaMessage(message)) {
+    return new ProviderRequestError(429, message, payload);
   }
-  return new ProviderRequestError(status >= 500 ? 502 : status || 502, message, payload);
+  return new ProviderRequestError(status >= 500 ? 502 : status, message, payload);
+}
+
+/**
+ * Upstash reports quota and throttling as Redis errors inside a 400 response,
+ * so the message is the only signal that the request should be retried later.
+ */
+function isUpstashQuotaMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes("limit exceeded") || normalized.includes("connections exceeded");
 }
 
 function readKey(input: Record<string, unknown>): string {
   return requiredString(input.key, "key", providerInputError);
+}
+
+/**
+ * Read the SET payload verbatim. Redis strings are opaque, so surrounding
+ * whitespace must reach the database and match what GET reads back.
+ */
+function readValue(input: Record<string, unknown>): string {
+  const value = optionalRawString(input.value);
+  if (value === undefined) {
+    throw providerInputError("value is required");
+  }
+  return value;
 }
 
 function readRequiredPositiveInteger(value: unknown, fieldName: string): number {
