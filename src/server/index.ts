@@ -27,6 +27,24 @@ const transitFileMaxBytes = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_M
 const runLimit = readPositiveIntegerEnv("OOMOL_CONNECT_RUN_LIMIT", DEFAULT_RUN_LIMIT);
 const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
 const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
+// Hands provider secrets back to admin callers — the opposite of this runtime's usual
+// contract, so it is opt-in and additionally refuses unless an admin token is set.
+const credentialReadEnabled = process.env.OOMOL_CONNECT_ENABLE_CREDENTIAL_READ === "true";
+// Both a URL and a secret are required: an unsigned webhook lets anyone who can reach the
+// receiver forge a connection event, so there is no unsigned mode.
+const webhookUrl = process.env.OOMOL_CONNECT_WEBHOOK_URL;
+const webhookSecret = process.env.OOMOL_CONNECT_WEBHOOK_SECRET;
+const webhook =
+  webhookUrl && webhookSecret
+    ? {
+        url: webhookUrl,
+        secret: webhookSecret,
+        signatureHeader: process.env.OOMOL_CONNECT_WEBHOOK_SIGNATURE_HEADER,
+      }
+    : undefined;
+if (webhookUrl && !webhookSecret) {
+  logger.warn("OOMOL_CONNECT_WEBHOOK_URL is set without OOMOL_CONNECT_WEBHOOK_SECRET; webhooks are disabled");
+}
 const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
 const verifyRuntimeJwt = createRuntimeJwtVerifier({
   jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
@@ -82,16 +100,18 @@ const { app, runtimeAuthConfigured } = await createConnectApp({
   actionPolicy,
   registerStaticRoutes: (app) => registerStaticRoutes(app, staticRoot),
   logger,
+  credentialReadEnabled,
+  webhook,
 });
 
-process.once("SIGINT", () => {
-  runtimeDatabase.close();
+// SQLite closes synchronously; the Postgres pool returns a promise. Awaiting covers both,
+// so a shutdown does not exit while connections are still draining.
+const shutdown = async (): Promise<void> => {
+  await runtimeDatabase.close();
   process.exit(0);
-});
-process.once("SIGTERM", () => {
-  runtimeDatabase.close();
-  process.exit(0);
-});
+};
+process.once("SIGINT", () => void shutdown());
+process.once("SIGTERM", () => void shutdown());
 
 serve(
   {

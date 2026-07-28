@@ -15,6 +15,7 @@ import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
+import { ConnectionWebhookNotifier } from "./webhooks/connection-webhook.ts";
 
 export interface ConnectAppOptions {
   catalog: CatalogStore;
@@ -31,6 +32,9 @@ export interface ConnectAppOptions {
   logger?: Logger;
   computeRuntimeAuthConfigured?: boolean;
   compressApiResponses?: boolean;
+  credentialReadEnabled?: boolean;
+  /** Deliver `connection.created` to this endpoint. Omitted means no webhooks. */
+  webhook?: { url: string; secret: string; signatureHeader?: string };
 }
 
 export interface ConnectApp {
@@ -46,12 +50,16 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     origin: options.publicOrigin,
     store: options.runtimeDatabase.oauthClientConfigStore,
   });
+  const connectionWebhook = options.webhook
+    ? new ConnectionWebhookNotifier({ ...options.webhook, logger: options.logger })
+    : undefined;
   const connections = new ConnectionService({
     catalog: options.catalog,
     oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs),
     providerLoader: options.providerLoader,
     store: options.runtimeDatabase.connectionStore,
     logger: options.logger,
+    onConnectionCreated: connectionWebhook ? (event) => connectionWebhook.notify(event) : undefined,
   });
   const actions = new ActionRunner({
     catalog: options.catalog,
@@ -90,6 +98,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       actionPolicy: options.actionPolicy,
       logger: options.logger,
       compressApiResponses: options.compressApiResponses,
+      credentialReadEnabled: options.credentialReadEnabled,
     }).createApp(),
     runtimeAuthConfigured:
       Boolean(options.runtimeToken) ||

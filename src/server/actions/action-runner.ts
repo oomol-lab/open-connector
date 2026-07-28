@@ -158,6 +158,28 @@ export class ActionRunner {
     return { executionId, auditPersisted, result, connection: connection?.summary };
   }
 
+  /**
+   * Record a non-action event in the run log.
+   *
+   * Credential read-out is not an action run, but it is exactly the kind of event an
+   * operator goes to the run log to find, so it is written to the same place rather than
+   * to a separate audit sink they would have to know about. A failure to persist is
+   * swallowed: the audit trail must never be the reason a request fails, and the caller
+   * already logs through `logger`.
+   */
+  async recordAuditEvent(entry: Omit<RunLog, "durationMs">): Promise<boolean> {
+    try {
+      await this.options.runs.add({
+        ...entry,
+        durationMs: Math.max(0, Date.parse(entry.completedAt) - Date.parse(entry.startedAt)),
+      });
+      return true;
+    } catch (error) {
+      this.options.logger?.warn({ id: entry.id, actionId: entry.actionId, err: error }, "audit event not persisted");
+      return false;
+    }
+  }
+
   listRuns(input?: RunLogListInput): Promise<RunLogPage> {
     return this.options.runs.list(input);
   }

@@ -69,6 +69,25 @@ export interface ConnectionServiceOptions {
   providerLoader: IProviderLoader;
   store: IConnectionStore;
   logger?: RuntimeLogger;
+  /**
+   * Called after an OAuth credential is stored.
+   *
+   * A callback rather than a webhook client so this service stays free of HTTP and
+   * delivery concerns; the server layer decides what "notify" means. Implementations
+   * must not throw and must not block — the credential is already persisted, and the
+   * caller is in the middle of an OAuth redirect.
+   */
+  onConnectionCreated?: (event: ConnectionCreatedEvent) => void;
+}
+
+/** Emitted once an OAuth connection has been stored. Carries no secret. */
+export interface ConnectionCreatedEvent {
+  connectionId: string;
+  tenant: Tenant;
+  service: string;
+  connectionName: string;
+  authType: AuthType;
+  createdAt: string;
 }
 
 export interface StoredConnection {
@@ -154,6 +173,7 @@ export class ConnectionService {
   private readonly providerLoader: IProviderLoader;
   private readonly store: IConnectionStore;
   private readonly logger?: RuntimeLogger;
+  private readonly onConnectionCreated?: (event: ConnectionCreatedEvent) => void;
 
   constructor(input: ConnectionServiceOptions) {
     this.catalog = input.catalog;
@@ -161,6 +181,7 @@ export class ConnectionService {
     this.providerLoader = input.providerLoader;
     this.store = input.store;
     this.logger = input.logger;
+    this.onConnectionCreated = input.onConnectionCreated;
   }
 
   async listConnections(tenant: Tenant): Promise<ConnectionSummary[]> {
@@ -413,6 +434,21 @@ export class ConnectionService {
       ...this.mergeCredentialRuntimeData(provider, "oauth2", credential, validation),
     };
     const stored = await this.store.set(tenant, service, connectionName, storedCredential);
+    // Notified only after a successful write, so a receiver is never told about a
+    // connection that does not exist. Errors are contained here because a listener must
+    // not be able to fail an OAuth callback that has already succeeded.
+    try {
+      this.onConnectionCreated?.({
+        connectionId: stored.id,
+        tenant,
+        service,
+        connectionName,
+        authType: "oauth2",
+        createdAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      this.logger?.warn({ service, tenant, err: error }, "connection created listener failed");
+    }
     return this.createStoredConnectionSummary(provider, stored.id, tenant, connectionName, storedCredential);
   }
 

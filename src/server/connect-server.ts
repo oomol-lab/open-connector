@@ -76,6 +76,8 @@ export interface IConnectServerOptions {
   registerStaticRoutes?: (app: Hono) => void;
   logger?: Logger;
   compressApiResponses?: boolean;
+  /** Expose GET /api/connections/:service/credential. Off unless explicitly enabled. */
+  credentialReadEnabled?: boolean;
 }
 
 /**
@@ -185,6 +187,10 @@ export class ConnectServer {
     });
 
     app.get("/api/connections", (context) => this.listConnections(context));
+    // Registered before /:service so "credential" can never be routed as a service name.
+    app.get("/api/connections/:service/credential", (context) =>
+      this.readConnectionCredential(context, context.req.param("service")),
+    );
     app.put("/api/connections/:service", (context) => this.upsertConnection(context, context.req.param("service")));
     app.delete("/api/connections/:service", (context) => this.disconnect(context, context.req.param("service")));
 
@@ -738,6 +744,93 @@ export class ConnectServer {
 
   private async listConnections(context: Context): Promise<Response> {
     return context.json(await this.options.connections.listConnections(readTenant(context)));
+  }
+
+  /**
+   * Return a connection's decrypted credential.
+   *
+   * This is the one endpoint that hands a provider secret back to a caller, which is
+   * exactly what the rest of this runtime is designed not to do. It exists only to let
+   * an existing integration that already holds provider tokens migrate onto the gateway
+   * incrementally, and is expected to be removed once callers execute Actions instead.
+   *
+   * Three independent conditions must all hold, so no single misconfiguration exposes it:
+   *
+   *   1. `credentialReadEnabled` — opt in explicitly; otherwise the route 404s and is
+   *      indistinguishable from a build without it.
+   *   2. An admin token must be configured. `createLocalAuthMiddleware` treats admin
+   *      endpoints as open when no admin token is set (convenient for a local console,
+   *      unacceptable here), so this refuses rather than inheriting that default.
+   *   3. Admin scope. `/api/*` is never satisfied by a runtime token or JWT, so the
+   *      credentials agents hold cannot reach this route.
+   *
+   * Every call is audited, including refusals — an attempt to read a credential is worth
+   * seeing even when it failed.
+   */
+  private async readConnectionCredential(context: Context, service: string): Promise<Response> {
+    if (!this.options.credentialReadEnabled) {
+      return notFound(context);
+    }
+
+    const startedAt = new Date().toISOString();
+    const tenant = readTenant(context);
+    const connectionName = readConnectionName(context) ?? defaultConnectionName;
+
+    const audit = async (ok: boolean, errorCode?: string): Promise<void> => {
+      await this.options.actions.recordAuditEvent({
+        id: crypto.randomUUID(),
+        service,
+        actionId: "connection.read_credential",
+        caller: "http",
+        startedAt,
+        completedAt: new Date().toISOString(),
+        ok,
+        ...(errorCode ? { errorCode } : {}),
+      });
+    };
+
+    if (!this.options.auth?.adminToken) {
+      this.options.logger?.error(
+        { service, tenant, path: context.req.path },
+        "credential read refused: no admin token configured",
+      );
+      await audit(false, "admin_token_required");
+      // jsonError's status union has no 403; the admin envelope is emitted directly, as
+      // the agent.md handler already does for 409.
+      return context.json(
+        {
+          error: {
+            code: "admin_token_required",
+            message: "Credential read requires OOMOL_CONNECT_ADMIN_TOKEN to be configured.",
+          },
+        },
+        403,
+      );
+    }
+
+    try {
+      const credential = await this.options.connections.getCredential(tenant, service, connectionName);
+      if (!credential || credential.authType === "no_auth") {
+        await audit(false, "connection_not_found");
+        return jsonError(context, 404, "connection_not_found", `${service} connection not found: ${connectionName}.`);
+      }
+
+      this.options.logger?.warn({ service, tenant, connectionName }, "credential read");
+      await audit(true);
+      return context.json({ service, tenant, connectionName, credential });
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        await audit(false, error.code);
+        const status = mapConnectionErrorStatus(error);
+        if (status === 409) {
+          return context.json({ error: { code: error.code, message: error.message } }, 409);
+        }
+        return jsonError(context, status, error.code, error.message);
+      }
+
+      await audit(false, "internal_error");
+      throw error;
+    }
   }
 
   private async upsertConnection(context: Context, service: string): Promise<Response> {

@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection, Tenant } from "../connection-service.ts";
+import type { ConnectionCreatedEvent, IConnectionStore, StoredConnection, Tenant } from "../connection-service.ts";
 import type { ActionExecutor, CredentialValidators, ProviderDefinition, ResolvedCredential } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "./oauth-client-config-service.ts";
@@ -243,6 +243,72 @@ describe("OAuthFlowService", () => {
     expect(authorizationUrl.searchParams.get("redirect_uri")).toBe("http://localhost:3000/oauth/callback");
     expect(authorizationUrl.searchParams.get("state")).toBe(started.state);
     expect(authorizationUrl.searchParams.get("code_challenge")).not.toBe("static-code-challenge");
+  });
+
+  it("emits connection.created only after the credential is stored", async () => {
+    const events: ConnectionCreatedEvent[] = [];
+    const services = createServices([oauthProvider], { onConnectionCreated: (event) => events.push(event) });
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const started = await services.flow.startAuthorization({
+      tenant: testTenant,
+      service: "example",
+      connectionName: "work",
+    });
+    expect(events).toHaveLength(0);
+
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      tenant: testTenant,
+      service: "example",
+      connectionName: "work",
+      authType: "oauth2",
+    });
+    // The event must reference a connection that actually exists.
+    await expect(services.connections.getCredential(testTenant, "example", "work")).resolves.toMatchObject({
+      authType: "oauth2",
+    });
+    expect(JSON.stringify(events[0])).not.toContain("access-token");
+  });
+
+  it("does not fail the OAuth callback when the connection.created listener throws", async () => {
+    const services = createServices([oauthProvider], {
+      onConnectionCreated: () => {
+        throw new Error("listener exploded");
+      },
+    });
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const started = await services.flow.startAuthorization({ tenant: testTenant, service: "example" });
+
+    // The user has already authorized and the credential is stored; a broken listener
+    // must not turn that into a failed callback.
+    await expect(services.flow.completeAuthorization({ state: started.state, code: "code" })).resolves.toMatchObject({
+      connected: true,
+    });
+    await expect(services.connections.getCredential(testTenant, "example")).resolves.toMatchObject({
+      authType: "oauth2",
+    });
   });
 
   it("stores completed OAuth credentials under the requested connection name", async () => {
@@ -542,6 +608,7 @@ function createServices(
   providers: ProviderDefinition[],
   options: {
     stateMaxAgeMs?: number;
+    onConnectionCreated?: (event: ConnectionCreatedEvent) => void;
   } = {},
 ): {
   clientConfigs: OAuthClientConfigService;
@@ -554,6 +621,7 @@ function createServices(
     catalog,
     providerLoader: new EmptyProviderLoader(),
     store: new MemoryConnectionStore(),
+    onConnectionCreated: options.onConnectionCreated,
   });
   const clientConfigs = new OAuthClientConfigService({
     catalog,

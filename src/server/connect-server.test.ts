@@ -1207,6 +1207,131 @@ describe("ConnectServer", () => {
     expect(lowercaseAdminTokenRuntimeCall.status).toBe(401);
   });
 
+  it("hides the credential read-out endpoint unless it is explicitly enabled", async () => {
+    const app = createTestServer([apiKeyProvider], { auth: { adminToken: "admin-token" } }).createApp();
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token" },
+    });
+
+    // 404, not 403: a runtime without the feature should be indistinguishable from one
+    // that never had the route.
+    expect(response.status).toBe(404);
+  });
+
+  it("refuses credential read-out when no admin token is configured", async () => {
+    // createLocalAuthMiddleware leaves admin endpoints open when no admin token is set.
+    // Inheriting that default here would publish every credential to anyone who can
+    // reach the port, so the endpoint refuses instead.
+    const app = createTestServer([apiKeyProvider], { credentialReadEnabled: true }).createApp();
+
+    const response = await app.request("/api/connections/example/credential");
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "admin_token_required" } });
+  });
+
+  it("does not accept a runtime token for credential read-out", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      runtimeTokens,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    const created = await runtimeTokens.createToken("agent", {
+      allowedActions: ["*"],
+      blockedActions: [],
+      allowedProxies: ["*"],
+    });
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: `Bearer ${created.token}` },
+    });
+
+    // A runtime token is what an agent holds. /api/* is admin scope, so it must not pass.
+    expect(response.status).toBe(401);
+  });
+
+  it("returns the credential to an admin caller and audits the read", async () => {
+    const connectionStore = new MemoryConnectionStore();
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      connectionStore,
+      runs,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    await connectionStore.set("tenant-a", "example", "default", {
+      authType: "api_key",
+      apiKey: "secret-value",
+      values: { apiKey: "secret-value" },
+      profile: { accountId: "acct", displayName: "acct", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token", "x-oo-connector-tenant": "tenant-a" },
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      service: "example",
+      tenant: "tenant-a",
+      credential: { apiKey: "secret-value" },
+    });
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [{ actionId: "connection.read_credential", service: "example", ok: true }],
+    });
+  });
+
+  it("audits a refused credential read as well as a successful one", async () => {
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      runs,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    // No connection stored for this tenant.
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token", "x-oo-connector-tenant": "empty-tenant" },
+    });
+
+    expect(response.status).toBe(404);
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [{ actionId: "connection.read_credential", ok: false }],
+    });
+  });
+
+  it("scopes credential read-out to the requested tenant", async () => {
+    const connectionStore = new MemoryConnectionStore();
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      connectionStore,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    await connectionStore.set("tenant-a", "example", "default", {
+      authType: "api_key",
+      apiKey: "value-a",
+      values: { apiKey: "value-a" },
+      profile: { accountId: "a", displayName: "a", grantedScopes: [] },
+      metadata: {},
+    });
+    await connectionStore.set("tenant-b", "example", "default", {
+      authType: "api_key",
+      apiKey: "value-b",
+      values: { apiKey: "value-b" },
+      profile: { accountId: "b", displayName: "b", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token", "x-oo-connector-tenant": "tenant-b" },
+    });
+
+    await expect(response.json()).resolves.toMatchObject({ credential: { apiKey: "value-b" } });
+  });
+
   it("pins a runtime token to its tenant and ignores a spoofed tenant header", async () => {
     const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
     const connectionStore = new MemoryConnectionStore();
@@ -3014,6 +3139,7 @@ interface CreateTestServerOptions {
   runtimePolicyStore?: IRuntimePolicyStore;
   runs?: MemoryRunLogStore;
   connectionStore?: MemoryConnectionStore;
+  credentialReadEnabled?: boolean;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
 }
@@ -3080,6 +3206,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     },
     actionPolicy: options.actionPolicy,
     actionSearch: options.actionSearch,
+    credentialReadEnabled: options.credentialReadEnabled,
     logger: options.logger,
   });
 }
