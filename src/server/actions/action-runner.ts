@@ -1,5 +1,5 @@
 import type { CatalogStore } from "../../catalog-store.ts";
-import type { ConnectionService, ConnectionSummary, ExecutionConnection } from "../../connection-service.ts";
+import type { ConnectionService, ConnectionSummary, ExecutionConnection, Tenant } from "../../connection-service.ts";
 import type { ActionPolicyDecision, ActionPolicyService, ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
@@ -24,6 +24,8 @@ export interface RunActionInput {
   actionId: string;
   input: unknown;
   caller: RunLogCaller;
+  /** Tenant whose connections this run may reach. Required: an action always runs as someone. */
+  tenant: Tenant;
   connectionName?: string;
   policy?: ActionPolicySnapshot;
   runtimeTokenId?: string;
@@ -79,7 +81,11 @@ export class ActionRunner {
       result = { ok: false, error: { code: policy.code, message: policy.message } };
     } else {
       try {
-        connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
+        connection = await this.options.connections.resolveForExecution(
+          input.tenant,
+          action.service,
+          input.connectionName,
+        );
         const executor = action.execution.locallyExecutable
           ? await this.options.providerLoader.loadActionExecutor(
               action.service,

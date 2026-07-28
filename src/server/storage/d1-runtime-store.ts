@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "../../connection-service.ts";
 import type { TokenPolicy } from "../../core/action-policy.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
@@ -58,15 +58,16 @@ export class D1ConnectionStore implements IConnectionStore {
     this.secretCodec = secretCodec;
   }
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
+  async get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined> {
     const row = await this.database
-      .prepare("select id, revision, value from connections where service = ? and connection_name = ?")
-      .bind(service, connectionName)
+      .prepare("select id, revision, value from connections where tenant = ? and service = ? and connection_name = ?")
+      .bind(tenant, service, connectionName)
       .first<RuntimeRow>();
     return row
       ? {
           id: readString(row, "id"),
           revision: readString(row, "revision"),
+          tenant,
           service,
           connectionName,
           credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -74,13 +75,18 @@ export class D1ConnectionStore implements IConnectionStore {
       : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
     const row = await this.database
       .prepare(
         `
-        insert into connections (id, revision, service, connection_name, value, updated_at)
-        values (?, ?, ?, ?, ?, ?)
-        on conflict(service, connection_name) do update set
+        insert into connections (id, revision, tenant, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?, ?, ?)
+        on conflict(tenant, service, connection_name) do update set
           revision = excluded.revision,
           value = excluded.value,
           updated_at = excluded.updated_at
@@ -90,6 +96,7 @@ export class D1ConnectionStore implements IConnectionStore {
       .bind(
         crypto.randomUUID(),
         crypto.randomUUID(),
+        tenant,
         service,
         connectionName,
         await this.secretCodec.encode(JSON.stringify(credential)),
@@ -99,6 +106,7 @@ export class D1ConnectionStore implements IConnectionStore {
     return {
       id: readString(row!, "id"),
       revision: readString(row!, "revision"),
+      tenant,
       service,
       connectionName,
       credential,
@@ -111,7 +119,7 @@ export class D1ConnectionStore implements IConnectionStore {
         `
         update connections
         set revision = ?, value = ?, updated_at = ?
-        where service = ? and connection_name = ? and id = ? and revision = ?
+        where tenant = ? and service = ? and connection_name = ? and id = ? and revision = ?
         returning id
       `,
       )
@@ -119,6 +127,7 @@ export class D1ConnectionStore implements IConnectionStore {
         crypto.randomUUID(),
         await this.secretCodec.encode(JSON.stringify(input.credential)),
         new Date().toISOString(),
+        input.tenant,
         input.service,
         input.connectionName,
         input.id,
@@ -128,23 +137,26 @@ export class D1ConnectionStore implements IConnectionStore {
     return row !== null;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
+  async delete(tenant: Tenant, service: string, connectionName: string): Promise<void> {
     await this.database
-      .prepare("delete from connections where service = ? and connection_name = ?")
-      .bind(service, connectionName)
+      .prepare("delete from connections where tenant = ? and service = ? and connection_name = ?")
+      .bind(tenant, service, connectionName)
       .run();
   }
 
-  async list(): Promise<StoredConnection[]> {
+  async list(tenant: Tenant): Promise<StoredConnection[]> {
     const { results } = await this.database
       .prepare(
-        "select id, revision, service, connection_name, value from connections order by service, connection_name",
+        `select id, revision, service, connection_name, value from connections
+         where tenant = ? order by service, connection_name`,
       )
+      .bind(tenant)
       .all<RuntimeRow>();
     return await Promise.all(
       results.map(async (row) => ({
         id: readString(row, "id"),
         revision: readString(row, "revision"),
+        tenant,
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -234,15 +246,16 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         insert into runtime_tokens (
-          id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+          id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
         record.id,
         record.name,
         record.tokenHash,
+        record.tenant,
         JSON.stringify(record.allowedActions),
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
@@ -256,7 +269,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const { results } = await this.database
       .prepare(
         `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         from runtime_tokens
         where revoked_at is null
         order by created_at desc, id desc
@@ -270,7 +283,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const row = await this.database
       .prepare(
         `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         from runtime_tokens
         where token_hash = ? and revoked_at is null
       `,
@@ -287,7 +300,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?
         where id = ? and revoked_at is null
-        returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        returning id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
       `,
       )
       .bind(
@@ -318,6 +331,7 @@ function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
     id: readString(row, "id"),
     name: readString(row, "name"),
     tokenHash: readString(row, "token_hash"),
+    tenant: readString(row, "tenant"),
     allowedActions: parseJson(readString(row, "allowed_actions")),
     blockedActions: parseJson(readString(row, "blocked_actions")),
     allowedProxies: parseJson(readString(row, "allowed_proxies")),

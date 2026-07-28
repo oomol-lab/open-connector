@@ -33,6 +33,7 @@
     "@hono/node-server": "^2.0.10",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@scalar/hono-api-reference": "^0.11.7",
+    "@types/pg": "^8.20.0",
     "ali-oss": "^6.23.0",
     "fast-xml-parser": "^5.10.1",
     "hono": "^4.12.27",
@@ -45,6 +46,7 @@
     "micromark-extension-gfm": "^3.0.0",
     "minisearch": "^7.2.0",
     "nodemailer": "^9.0.3",
+    "pg": "^8.22.0",
     "pino": "^10.3.1",
     "rss-parser": "^3.13.0",
     "zod": "^4.4.3"

@@ -1,5 +1,5 @@
 import type { CatalogStore, RuntimeActionDefinition } from "../catalog-store.ts";
-import type { ConnectionService } from "../connection-service.ts";
+import type { ConnectionService, Tenant } from "../connection-service.ts";
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
@@ -17,7 +17,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
-import { ConnectionError, defaultConnectionName } from "../connection-service.ts";
+import { ConnectionError, defaultConnectionName, defaultTenant } from "../connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
@@ -323,6 +323,7 @@ export class ConnectServer {
     const index = await this.actionSearch.get();
     return context.json(
       await this.serializeSearchResults(
+        readTenant(context),
         searchActions(index, query.q, {
           service: query.service,
           limit: query.limit,
@@ -341,7 +342,11 @@ export class ConnectServer {
       const policy = (await this.getPolicySnapshot(context)).evaluate(action);
       return context.text(
         renderActionMarkdown(action, {
-          connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
+          connection: await this.options.connections.getConnectionSummary(
+            readTenant(context),
+            action.service,
+            readConnectionName(context),
+          ),
           providerPermissions: action.providerPermissions,
           policy,
         }),
@@ -410,12 +415,17 @@ export class ConnectServer {
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, await this.serializeSearchResults(results));
+    return writeRuntimeSuccess(context, await this.serializeSearchResults(readTenant(context), results));
   }
 
-  private async serializeSearchResults(results: ActionSearchResult[]): Promise<RuntimeActionSearchResult[]> {
+  private async serializeSearchResults(
+    tenant: Tenant,
+    results: ActionSearchResult[],
+  ): Promise<RuntimeActionSearchResult[]> {
     const authenticated = new Set(
-      await this.options.connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
+      await this.options.connections.listAuthenticatedServices(tenant, [
+        ...new Set(results.map((result) => result.service)),
+      ]),
     );
     return results.flatMap((result) => {
       const action = this.options.catalog.actionsById.get(result.id);
@@ -453,6 +463,7 @@ export class ConnectServer {
 
     const body = await readJsonBody(context);
     const input = body.input ?? {};
+    const tenant = readTenant(context, body);
     const connectionName = readConnectionName(context, body);
     const runtimeGrant = readRuntimeGrant(context);
     let policy: ActionPolicySnapshot;
@@ -469,7 +480,7 @@ export class ConnectServer {
     if (!policy.evaluate(action).allowed) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
+        await this.executeRuntimeAction(actionId, input, tenant, connectionName, policy, runtimeGrant),
       );
     }
     const idempotencyKey = readIdempotencyKey(context.req.header("idempotency-key"));
@@ -485,7 +496,7 @@ export class ConnectServer {
     if (!idempotencyKey.key) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
+        await this.executeRuntimeAction(actionId, input, tenant, connectionName, policy, runtimeGrant),
       );
     }
 
@@ -539,7 +550,7 @@ export class ConnectServer {
       return writeRuntimeActionHttpResult(context, claim.response);
     }
 
-    const result = await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant);
+    const result = await this.executeRuntimeAction(actionId, input, tenant, connectionName, policy, runtimeGrant);
     const completed = await this.options.idempotency.complete({
       keyHash,
       requestHash,
@@ -557,6 +568,7 @@ export class ConnectServer {
   private async executeRuntimeAction(
     actionId: string,
     input: unknown,
+    tenant: Tenant,
     connectionName: string | undefined,
     policy: ActionPolicySnapshot,
     runtimeGrant: RuntimeGrant | undefined,
@@ -566,6 +578,7 @@ export class ConnectServer {
         actionId,
         input,
         caller: "http",
+        tenant,
         connectionName,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
@@ -630,6 +643,7 @@ export class ConnectServer {
     const result = await this.proxyRunner.run({
       service,
       input: body,
+      tenant: readTenant(context, body),
       connectionName: readConnectionName(context, body),
       policy,
     });
@@ -649,7 +663,7 @@ export class ConnectServer {
   private async listRuntimeApps(context: Context): Promise<Response> {
     return writeRuntimeSuccess(
       context,
-      (await this.options.connections.listConnections()).map(serializeRuntimeConnectedApp),
+      (await this.options.connections.listConnections(readTenant(context))).map(serializeRuntimeConnectedApp),
     );
   }
 
@@ -657,7 +671,9 @@ export class ConnectServer {
     try {
       return writeRuntimeSuccess(
         context,
-        (await this.options.connections.listConnectionsByService(service)).map(serializeRuntimeConnectedApp),
+        (await this.options.connections.listConnectionsByService(readTenant(context), service)).map(
+          serializeRuntimeConnectedApp,
+        ),
       );
     } catch (error) {
       if (error instanceof ConnectionError) {
@@ -675,7 +691,10 @@ export class ConnectServer {
 
   private async listAuthenticatedRuntimeApps(context: Context): Promise<Response> {
     const services = context.req.queries("service") ?? [];
-    return writeRuntimeSuccess(context, await this.options.connections.listAuthenticatedServices(services));
+    return writeRuntimeSuccess(
+      context,
+      await this.options.connections.listAuthenticatedServices(readTenant(context), services),
+    );
   }
 
   private async handleMcp(context: Context): Promise<Response> {
@@ -687,6 +706,7 @@ export class ConnectServer {
       catalog: this.options.catalog,
       providerLoader: this.options.providerLoader,
       connections: this.options.connections,
+      tenant: readTenant(context),
       actions: this.options.actions,
       actionPolicy: this.actionPolicy,
       actionSearch: this.actionSearch,
@@ -717,7 +737,7 @@ export class ConnectServer {
   }
 
   private async listConnections(context: Context): Promise<Response> {
-    return context.json(await this.options.connections.listConnections());
+    return context.json(await this.options.connections.listConnections(readTenant(context)));
   }
 
   private async upsertConnection(context: Context, service: string): Promise<Response> {
@@ -736,6 +756,7 @@ export class ConnectServer {
     }
 
     const values = body.values ?? body;
+    const tenant = readTenant(context, body);
     const connectionName = readConnectionName(context, body);
     const logContext: ConnectionLogContext = {
       operation: "connect",
@@ -748,7 +769,7 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithoutAuth(service, { connectionName }),
+        this.options.connections.connectWithoutAuth(tenant, service, { connectionName }),
         logContext,
       );
     }
@@ -756,7 +777,7 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithApiKey(service, { values, connectionName }),
+        this.options.connections.connectWithApiKey(tenant, service, { values, connectionName }),
         logContext,
       );
     }
@@ -764,7 +785,7 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithCustomCredential(service, { values, connectionName }),
+        this.options.connections.connectWithCustomCredential(tenant, service, { values, connectionName }),
         logContext,
       );
     }
@@ -791,7 +812,7 @@ export class ConnectServer {
     this.options.logger?.info(logContext, "connection disconnect started");
     return this.writeConnectionResult(
       context,
-      this.options.connections.disconnect(service, connectionName),
+      this.options.connections.disconnect(readTenant(context), service, connectionName),
       logContext,
     );
   }
@@ -813,7 +834,11 @@ export class ConnectServer {
       };
       this.options.logger?.info(logContext, "oauth authorization started");
 
-      const authorization = await this.options.oauthFlow.startAuthorization({ service, connectionName });
+      const authorization = await this.options.oauthFlow.startAuthorization({
+        tenant: readTenant(context, body),
+        service,
+        connectionName,
+      });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(
         {
@@ -853,12 +878,20 @@ export class ConnectServer {
       return jsonError(context, 400, "invalid_input", "name is required.");
     }
 
-    const created = await this.options.runtimeTokens.createToken(name, readTokenPolicy(body, true));
+    // Token creation is an admin operation, so the tenant is read from the request here —
+    // this is the one place a tenant is chosen rather than derived. Everything the token
+    // later does is pinned to whatever is recorded now.
+    const created = await this.options.runtimeTokens.createToken(
+      name,
+      readTokenPolicy(body, true),
+      readTenant(context, body),
+    );
     return context.json({
       token: created.token,
       record: {
         id: created.record.id,
         name: created.record.name,
+        tenant: created.record.tenant,
         allowedActions: created.record.allowedActions,
         blockedActions: created.record.blockedActions,
         allowedProxies: created.record.allowedProxies,
@@ -1101,6 +1134,38 @@ function readConnectionName(context: Context, body?: Record<string, unknown>): s
     optionalString(context.req.header("x-oo-connector-alias")) ??
     optionalString(context.req.query("connectionName")) ??
     optionalString(context.req.query("alias"))
+  );
+}
+
+/**
+ * Resolve the tenant a request operates within.
+ *
+ * Note the asymmetry with `readConnectionName`: a connection name is a caller's free
+ * choice among connections it already owns, but a tenant is an identity claim. Hence the
+ * precedence:
+ *
+ *   1. The authenticated runtime grant. **Authoritative** — a token carries the tenant it
+ *      was issued for, and request-supplied values are ignored entirely. This is what
+ *      stops an agent from reaching another tenant by setting a header or passing a
+ *      `connectionName` from somewhere else.
+ *   2. An explicit header/query. Reachable only when there is no runtime grant, i.e. by
+ *      admin callers, who are already trusted with every tenant's data.
+ *   3. `defaultTenant`, which keeps single-tenant deployments working unchanged.
+ *
+ * The early return in step 1 is the security control; do not "fall through" to the header
+ * when a grant is present, even if the header names the same tenant.
+ */
+function readTenant(context: Context, body?: Record<string, unknown>): Tenant {
+  const grant = readRuntimeGrant(context);
+  if (grant) {
+    return grant.tenant;
+  }
+
+  return (
+    optionalString(body?.tenant) ??
+    optionalString(context.req.header("x-oo-connector-tenant")) ??
+    optionalString(context.req.query("tenant")) ??
+    defaultTenant
   );
 }
 

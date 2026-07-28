@@ -19,10 +19,29 @@ import { providerFetch } from "./providers/provider-runtime.ts";
 export const defaultConnectionName = "default";
 
 /**
+ * Tenant used when a caller does not identify one.
+ *
+ * Single-tenant deployments never set a tenant and operate entirely within this one, so
+ * they behave exactly as they did before connections were partitioned.
+ */
+export const defaultTenant = "default";
+
+/**
+ * Owner of a connection.
+ *
+ * A tenant is the isolation boundary: connections are partitioned by it, and a caller
+ * must never be able to reach another tenant's connections by naming them. Callers
+ * therefore do not pass this themselves — the server derives it from the authenticated
+ * principal (see `readRequestTenant`).
+ */
+export type Tenant = string;
+
+/**
  * Connection summary returned to the local console.
  */
 export interface ConnectionSummary {
   id: string;
+  tenant: Tenant;
   service: string;
   connectionName: string;
   authType: AuthType;
@@ -55,12 +74,14 @@ export interface ConnectionServiceOptions {
 export interface StoredConnection {
   id: string;
   revision: string;
+  tenant: Tenant;
   service: string;
   connectionName: string;
   credential: ResolvedCredential;
 }
 
 export interface DisconnectedConnectionSummary {
+  tenant: Tenant;
   service: string;
   connectionName: string;
   configured: false;
@@ -73,13 +94,23 @@ export interface ExecutionConnection {
 
 /**
  * Storage contract for local provider connections.
+ *
+ * `tenant` leads every signature because it is the isolation boundary: a store
+ * implementation must scope by it before any other predicate, and `list` must never
+ * return rows across tenants. Making it a required leading argument means a caller
+ * cannot omit it by accident and silently read the whole table.
  */
 export interface IConnectionStore {
-  get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
-  set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection>;
+  get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined>;
+  set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection>;
   updateCredential(input: StoredConnection): Promise<boolean>;
-  delete(service: string, connectionName: string): Promise<void>;
-  list(): Promise<StoredConnection[]>;
+  delete(tenant: Tenant, service: string, connectionName: string): Promise<void>;
+  list(tenant: Tenant): Promise<StoredConnection[]>;
 }
 
 interface ServiceConnection {
@@ -132,8 +163,8 @@ export class ConnectionService {
     this.logger = input.logger;
   }
 
-  async listConnections(): Promise<ConnectionSummary[]> {
-    const configured = await this.store.list();
+  async listConnections(tenant: Tenant): Promise<ConnectionSummary[]> {
+    const configured = await this.store.list(tenant);
     const configuredByService = new Map<string, ServiceConnection[]>();
     for (const connection of configured) {
       const serviceConnections = configuredByService.get(connection.service) ?? [];
@@ -152,6 +183,7 @@ export class ConnectionService {
           this.createConfiguredConnectionSummary(
             provider,
             connection.id,
+            tenant,
             connection.connectionName,
             connection.credential,
           ),
@@ -159,19 +191,20 @@ export class ConnectionService {
       }
 
       return this.supportsAuth(provider, "no_auth")
-        ? [this.createNoAuthConnectionSummary(provider, defaultConnectionName)]
+        ? [this.createNoAuthConnectionSummary(provider, tenant, defaultConnectionName)]
         : [];
     });
   }
 
-  async listConnectionsByService(service: string): Promise<ConnectionSummary[]> {
+  async listConnectionsByService(tenant: Tenant, service: string): Promise<ConnectionSummary[]> {
     const provider = this.getProvider(service);
-    const connections = (await this.store.list()).filter((connection) => connection.service === service);
+    const connections = (await this.store.list(tenant)).filter((connection) => connection.service === service);
     if (connections.length > 0) {
       return connections.map((connection) =>
         this.createConfiguredConnectionSummary(
           provider,
           connection.id,
+          tenant,
           connection.connectionName,
           connection.credential,
         ),
@@ -179,12 +212,12 @@ export class ConnectionService {
     }
 
     return this.supportsAuth(provider, "no_auth")
-      ? [this.createNoAuthConnectionSummary(provider, defaultConnectionName)]
+      ? [this.createNoAuthConnectionSummary(provider, tenant, defaultConnectionName)]
       : [];
   }
 
-  async listAuthenticatedServices(services: string[]): Promise<string[]> {
-    const configured = await this.store.list();
+  async listAuthenticatedServices(tenant: Tenant, services: string[]): Promise<string[]> {
+    const configured = await this.store.list(tenant);
     const authenticated = new Set(
       configured
         .filter((connection) => connection.credential.authType !== "no_auth")
@@ -193,25 +226,29 @@ export class ConnectionService {
     return services.filter((service) => authenticated.has(service));
   }
 
-  async getConnectionSummary(service: string, connectionName?: string): Promise<ConnectionSummary | undefined> {
+  async getConnectionSummary(
+    tenant: Tenant,
+    service: string,
+    connectionName?: string,
+  ): Promise<ConnectionSummary | undefined> {
     const provider = this.getProvider(service);
     const name = normalizeConnectionName(connectionName);
-    const stored = await this.store.get(service, name);
+    const stored = await this.store.get(tenant, service, name);
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
     }
 
     return stored
-      ? this.createConfiguredConnectionSummary(provider, stored.id, name, stored.credential)
+      ? this.createConfiguredConnectionSummary(provider, stored.id, tenant, name, stored.credential)
       : this.supportsAuth(provider, "no_auth")
-        ? this.createNoAuthConnectionSummary(provider, name)
+        ? this.createNoAuthConnectionSummary(provider, tenant, name)
         : undefined;
   }
 
-  async resolveForExecution(service: string, connectionName?: string): Promise<ExecutionConnection> {
+  async resolveForExecution(tenant: Tenant, service: string, connectionName?: string): Promise<ExecutionConnection> {
     const provider = this.getProvider(service);
     const name = normalizeConnectionName(connectionName);
-    const stored = await this.store.get(service, name);
+    const stored = await this.store.get(tenant, service, name);
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
     }
@@ -222,9 +259,9 @@ export class ConnectionService {
     }
     credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
     const summary = stored
-      ? this.createConfiguredConnectionSummary(provider, stored.id, name, credential!)
+      ? this.createConfiguredConnectionSummary(provider, stored.id, tenant, name, credential!)
       : credential
-        ? this.createNoAuthConnectionSummary(provider, name)
+        ? this.createNoAuthConnectionSummary(provider, tenant, name)
         : undefined;
 
     return {
@@ -233,10 +270,14 @@ export class ConnectionService {
     };
   }
 
-  async getCredential(service: string, connectionName?: string): Promise<ResolvedCredential | undefined> {
+  async getCredential(
+    tenant: Tenant,
+    service: string,
+    connectionName?: string,
+  ): Promise<ResolvedCredential | undefined> {
     const provider = this.getProvider(service);
     const name = normalizeConnectionName(connectionName);
-    const stored = await this.store.get(service, name);
+    const stored = await this.store.get(tenant, service, name);
     if (stored) {
       return stored.credential.authType === "oauth2"
         ? await this.resolveOAuthCredential(stored, stored.credential)
@@ -250,22 +291,39 @@ export class ConnectionService {
     return this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
   }
 
-  forConnection(connectionName?: string): Pick<ConnectionService, "getCredential"> {
+  /**
+   * Bind a tenant and connection, yielding the `(service) => credential` shape that
+   * provider executors consume.
+   *
+   * The return type is deliberately `ExecutionConnection`'s accessor rather than
+   * `Pick<ConnectionService, "getCredential">`: the service method takes a tenant, but
+   * an executor must never be able to name one. Binding here is what stops a provider
+   * from reaching outside the tenant it was invoked for.
+   */
+  forConnection(tenant: Tenant, connectionName?: string): Pick<ExecutionConnection, "getCredential"> {
     return {
-      getCredential: (service: string) => this.getCredential(service, connectionName),
+      getCredential: (service: string) => this.getCredential(tenant, service, connectionName),
     };
   }
 
-  async connectWithoutAuth(service: string, input: ConnectWithoutAuthInput = {}): Promise<ConnectionSummary> {
+  async connectWithoutAuth(
+    tenant: Tenant,
+    service: string,
+    input: ConnectWithoutAuthInput = {},
+  ): Promise<ConnectionSummary> {
     const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support no_auth.`);
     }
 
-    return this.createNoAuthConnectionSummary(provider, normalizeConnectionName(input.connectionName));
+    return this.createNoAuthConnectionSummary(provider, tenant, normalizeConnectionName(input.connectionName));
   }
 
-  async connectWithApiKey(service: string, input: ConnectWithCredentialInput): Promise<ConnectionSummary> {
+  async connectWithApiKey(
+    tenant: Tenant,
+    service: string,
+    input: ConnectWithCredentialInput,
+  ): Promise<ConnectionSummary> {
     const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "api_key")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support api_key.`);
@@ -292,12 +350,16 @@ export class ConnectionService {
       ),
     };
     const connectionName = normalizeConnectionName(input.connectionName);
-    const stored = await this.store.set(service, connectionName, credential);
+    const stored = await this.store.set(tenant, service, connectionName, credential);
 
-    return this.createStoredConnectionSummary(provider, stored.id, connectionName, credential);
+    return this.createStoredConnectionSummary(provider, stored.id, tenant, connectionName, credential);
   }
 
-  async connectWithCustomCredential(service: string, input: ConnectWithCredentialInput): Promise<ConnectionSummary> {
+  async connectWithCustomCredential(
+    tenant: Tenant,
+    service: string,
+    input: ConnectWithCredentialInput,
+  ): Promise<ConnectionSummary> {
     const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "custom_credential")) {
       throw new ConnectionError("unsupported_auth_type", `${service} does not support custom_credential.`);
@@ -321,12 +383,13 @@ export class ConnectionService {
       ),
     };
     const connectionName = normalizeConnectionName(input.connectionName);
-    const stored = await this.store.set(service, connectionName, credential);
+    const stored = await this.store.set(tenant, service, connectionName, credential);
 
-    return this.createStoredConnectionSummary(provider, stored.id, connectionName, credential);
+    return this.createStoredConnectionSummary(provider, stored.id, tenant, connectionName, credential);
   }
 
   async setOAuthCredential(
+    tenant: Tenant,
     service: string,
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
     connectionNameInput?: string,
@@ -349,49 +412,53 @@ export class ConnectionService {
       ...credential,
       ...this.mergeCredentialRuntimeData(provider, "oauth2", credential, validation),
     };
-    const stored = await this.store.set(service, connectionName, storedCredential);
-    return this.createStoredConnectionSummary(provider, stored.id, connectionName, storedCredential);
+    const stored = await this.store.set(tenant, service, connectionName, storedCredential);
+    return this.createStoredConnectionSummary(provider, stored.id, tenant, connectionName, storedCredential);
   }
 
   async disconnect(
+    tenant: Tenant,
     service: string,
     connectionNameInput?: string,
   ): Promise<ConnectionSummary | DisconnectedConnectionSummary> {
     const connectionName = normalizeConnectionName(connectionNameInput);
-    await this.store.delete(service, connectionName);
+    await this.store.delete(tenant, service, connectionName);
     const provider = this.catalog.providers.find((provider) => provider.service === service);
     if (provider && this.supportsAuth(provider, "no_auth")) {
-      return this.connectWithoutAuth(service, { connectionName });
+      return this.connectWithoutAuth(tenant, service, { connectionName });
     }
 
-    return { service, connectionName, configured: false };
+    return { tenant, service, connectionName, configured: false };
   }
 
   private createConfiguredConnectionSummary(
     provider: ProviderDefinition,
     id: string,
+    tenant: Tenant,
     connectionName: string,
     credential: ResolvedCredential,
   ): ConnectionSummary {
     if (credential.authType === "no_auth") {
       return {
-        ...this.createNoAuthConnectionSummary(provider, connectionName),
+        ...this.createNoAuthConnectionSummary(provider, tenant, connectionName),
         id,
         virtual: false,
       };
     }
 
-    return this.createStoredConnectionSummary(provider, id, connectionName, credential);
+    return this.createStoredConnectionSummary(provider, id, tenant, connectionName, credential);
   }
 
   private createStoredConnectionSummary(
     provider: ProviderDefinition,
     id: string,
+    tenant: Tenant,
     connectionName: string,
     credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
   ): ConnectionSummary {
     return {
       id,
+      tenant,
       service: provider.service,
       connectionName,
       authType: credential.authType,
@@ -402,9 +469,14 @@ export class ConnectionService {
     };
   }
 
-  private createNoAuthConnectionSummary(provider: ProviderDefinition, connectionName: string): ConnectionSummary {
+  private createNoAuthConnectionSummary(
+    provider: ProviderDefinition,
+    tenant: Tenant,
+    connectionName: string,
+  ): ConnectionSummary {
     return {
       id: createConnectionId(provider.service, connectionName),
+      tenant,
       service: provider.service,
       connectionName,
       authType: "no_auth",
@@ -538,11 +610,12 @@ export class ConnectionService {
     credential: OAuthCredential,
     refresher: IOAuthCredentialRefresher,
   ): Promise<OAuthCredential> {
-    const { id, revision, service, connectionName } = connection;
+    const { id, revision, tenant, service, connectionName } = connection;
     const nextCredential = await refresher.refresh(service, credential);
     const updated = await this.store.updateCredential({
       id,
       revision,
+      tenant,
       service,
       connectionName,
       credential: nextCredential,

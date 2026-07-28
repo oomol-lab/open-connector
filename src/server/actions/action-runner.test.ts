@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "../../connection-service.ts";
 import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
@@ -10,6 +10,8 @@ import { ConnectionService } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { ActionRunner } from "./action-runner.ts";
 import * as runLogSummary from "./run-log-summary.ts";
+
+const testTenant = "tenant-under-test";
 
 const echoAction: ActionDefinition = {
   id: "example.echo",
@@ -45,6 +47,7 @@ describe("ActionRunner", () => {
       actionId: "example.echo",
       input: { message: "hello", token: "secret" },
       caller: "http",
+      tenant: testTenant,
     });
 
     expect(run).toMatchObject({ auditPersisted: true, result: { ok: true } });
@@ -72,7 +75,7 @@ describe("ActionRunner", () => {
     const { entries, logger } = createTestLogger();
     const runner = createRunner({ runs, logger });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "mcp" });
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "mcp", tenant: testTenant });
 
     expect(run).toMatchObject({
       auditPersisted: false,
@@ -89,7 +92,7 @@ describe("ActionRunner", () => {
     const { entries, logger } = createTestLogger();
     const runner = createRunner({ runs, logger });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "web" });
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "web", tenant: testTenant });
 
     expect(run?.result).toEqual({ ok: true, output: { message: "ok" } });
     expect(runs.items[0]).toMatchObject({ inputSummary: "[unavailable]" });
@@ -107,7 +110,7 @@ describe("ActionRunner", () => {
       }),
     });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "http" });
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "http", tenant: testTenant });
 
     expect(run?.result).toEqual({
       ok: false,
@@ -130,6 +133,7 @@ describe("ActionRunner", () => {
       actionId: "example.echo",
       input: {},
       caller: "http",
+      tenant: testTenant,
       policy: actionPolicy.createSnapshot(),
       runtimeTokenId: "token-1",
     });
@@ -194,8 +198,13 @@ class MemoryConnectionStore implements IConnectionStore {
     return undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    return { id: crypto.randomUUID(), revision: crypto.randomUUID(), service, connectionName, credential };
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
+    return { id: crypto.randomUUID(), revision: crypto.randomUUID(), tenant, service, connectionName, credential };
   }
 
   async updateCredential(): Promise<boolean> {

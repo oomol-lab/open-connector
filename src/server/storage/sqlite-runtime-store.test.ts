@@ -1,3 +1,4 @@
+import type { ResolvedCredential } from "../../core/types.ts";
 import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 
 import { readFileSync } from "node:fs";
@@ -6,9 +7,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
+import { defaultTenant } from "../../connection-service.ts";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
 import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
+
+const testTenant = "tenant-under-test";
 
 const tempDirs: string[] = [];
 const githubProfile = {
@@ -19,6 +23,111 @@ const githubProfile = {
 
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((path) => rm(path, { recursive: true, force: true })));
+});
+
+describe("SqliteConnectionStore tenancy", () => {
+  it("isolates identically-named connections between tenants", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    const store = database.connectionStore;
+    const credential = (apiKey: string): ResolvedCredential => ({
+      authType: "api_key",
+      apiKey,
+      values: { apiKey },
+      profile: { accountId: "acct", displayName: "acct", grantedScopes: [] },
+      metadata: {},
+    });
+
+    // Same service AND same connection name in two tenants — the exact collision the
+    // pre-tenancy primary key could not represent.
+    await store.set("tenant-a", "github", "default", credential("token-a"));
+    await store.set("tenant-b", "github", "default", credential("token-b"));
+
+    await expect(store.get("tenant-a", "github", "default")).resolves.toMatchObject({
+      credential: { apiKey: "token-a" },
+    });
+    await expect(store.get("tenant-b", "github", "default")).resolves.toMatchObject({
+      credential: { apiKey: "token-b" },
+    });
+
+    // Writing tenant-b must not have overwritten tenant-a, and listing is scoped.
+    await expect(store.list("tenant-a")).resolves.toHaveLength(1);
+    await expect(store.list("tenant-b")).resolves.toHaveLength(1);
+    database.close();
+  });
+
+  it("does not let one tenant delete another tenant's connection", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    const store = database.connectionStore;
+    const credential: ResolvedCredential = {
+      authType: "api_key",
+      apiKey: "token",
+      values: { apiKey: "token" },
+      profile: { accountId: "acct", displayName: "acct", grantedScopes: [] },
+      metadata: {},
+    };
+
+    await store.set("tenant-a", "github", "default", credential);
+    await store.delete("tenant-b", "github", "default");
+
+    await expect(store.get("tenant-a", "github", "default")).resolves.toBeDefined();
+    database.close();
+  });
+
+  it("rejects a cross-tenant credential update even with a valid id and revision", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    const store = database.connectionStore;
+    const credential = (apiKey: string): ResolvedCredential => ({
+      authType: "api_key",
+      apiKey,
+      values: { apiKey },
+      profile: { accountId: "acct", displayName: "acct", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const a = await store.set("tenant-a", "github", "default", credential("token-a"));
+    await store.set("tenant-b", "github", "default", credential("token-b"));
+
+    // A stolen id+revision from tenant-a, replayed under tenant-b, must not write.
+    const updated = await store.updateCredential({ ...a, tenant: "tenant-b", credential: credential("stolen") });
+
+    expect(updated).toBe(false);
+    await expect(store.get("tenant-b", "github", "default")).resolves.toMatchObject({
+      credential: { apiKey: "token-b" },
+    });
+    database.close();
+  });
+
+  it("re-encrypts every tenant independently on key rotation", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath, {
+      secretCodec: new AesGcmSecretCodec("first-key"),
+    });
+    const credential = (apiKey: string): ResolvedCredential => ({
+      authType: "api_key",
+      apiKey,
+      values: { apiKey },
+      profile: { accountId: "acct", displayName: "acct", grantedScopes: [] },
+      metadata: {},
+    });
+
+    await database.connectionStore.set("tenant-a", "github", "default", credential("token-a"));
+    await database.connectionStore.set("tenant-b", "github", "default", credential("token-b"));
+    await database.rotateSecretCodec(new AesGcmSecretCodec("second-key"));
+    database.close();
+
+    // Rotation walks all tenants, so a write-back keyed only on (service, connection_name)
+    // would collapse both rows onto one tenant's ciphertext.
+    const rotated = new SqliteRuntimeDatabase(databasePath, {
+      secretCodec: new AesGcmSecretCodec("second-key"),
+    });
+    await expect(rotated.connectionStore.get("tenant-a", "github", "default")).resolves.toMatchObject({
+      credential: { apiKey: "token-a" },
+    });
+    await expect(rotated.connectionStore.get("tenant-b", "github", "default")).resolves.toMatchObject({
+      credential: { apiKey: "token-b" },
+    });
+    rotated.close();
+  });
 });
 
 describe("SqliteRuntimeDatabase", () => {
@@ -49,6 +158,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0008_runtime_token_policy.sql",
       "0009_runtime_token_proxy.sql",
       "0010_connection_revision.sql",
+      "0011_connection_tenant.sql",
+      "0012_runtime_token_tenant.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -89,7 +200,7 @@ describe("SqliteRuntimeDatabase", () => {
     const databasePath = await createDatabasePath();
     const first = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
 
-    const connection = await first.connectionStore.set("github", "default", {
+    const connection = await first.connectionStore.set(testTenant, "github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -104,6 +215,7 @@ describe("SqliteRuntimeDatabase", () => {
       secretExtra: {},
     });
     await first.oauthStateStore.set({
+      tenant: testTenant,
       service: "gmail",
       state: "state-1",
       createdAt: "2026-06-30T00:00:00.000Z",
@@ -121,7 +233,7 @@ describe("SqliteRuntimeDatabase", () => {
     first.close();
 
     const second = new SqliteRuntimeDatabase(databasePath, { runLimit: 2 });
-    await expect(second.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(second.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       id: connection.id,
       credential: {
         authType: "api_key",
@@ -135,6 +247,7 @@ describe("SqliteRuntimeDatabase", () => {
       extra: { tenant: "default" },
     });
     await expect(second.oauthStateStore.take("state-1")).resolves.toMatchObject({
+      tenant: testTenant,
       service: "gmail",
       state: "state-1",
     });
@@ -166,8 +279,8 @@ describe("SqliteRuntimeDatabase", () => {
       metadata: {},
     };
 
-    const created = await database.connectionStore.set("github", "default", credential);
-    const updated = await database.connectionStore.set("github", "default", {
+    const created = await database.connectionStore.set(testTenant, "github", "default", credential);
+    const updated = await database.connectionStore.set(testTenant, "github", "default", {
       ...credential,
       apiKey: "updated-token",
     });
@@ -191,13 +304,13 @@ describe("SqliteRuntimeDatabase", () => {
         credential: { ...credential, apiKey: "second-refreshed-token" },
       }),
     ).resolves.toBe(false);
-    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       id: updated.id,
       credential: { apiKey: "refreshed-token" },
     });
 
-    await database.connectionStore.delete("github", "default");
-    const recreated = await database.connectionStore.set("github", "default", credential);
+    await database.connectionStore.delete(testTenant, "github", "default");
+    const recreated = await database.connectionStore.set(testTenant, "github", "default", credential);
     expect(recreated.id).not.toBe(updated.id);
     await expect(
       database.connectionStore.updateCredential({
@@ -205,7 +318,7 @@ describe("SqliteRuntimeDatabase", () => {
         credential: { ...credential, apiKey: "stale-refreshed-token" },
       }),
     ).resolves.toBe(false);
-    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       id: recreated.id,
       credential: { apiKey: "github-token" },
     });
@@ -511,7 +624,11 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(migrated.runLogStore.list({ service: "github" })).resolves.toMatchObject({
       items: [{ id: "legacy-github", service: "github" }],
     });
-    const migratedConnection = await migrated.connectionStore.get("github", "default");
+    // Pre-tenancy rows are adopted by `defaultTenant` (0011_connection_tenant.sql), NOT by
+    // whichever tenant happens to ask — that backfill is what keeps existing single-tenant
+    // deployments working across the upgrade.
+    await expect(migrated.connectionStore.get(testTenant, "github", "default")).resolves.toBeUndefined();
+    const migratedConnection = await migrated.connectionStore.get(defaultTenant, "github", "default");
     expect(migratedConnection).toMatchObject({ credential: { apiKey: "legacy-token" } });
     expect(migratedConnection?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     await expect(migrated.runLogStore.get("legacy-github")).resolves.toMatchObject({
@@ -575,7 +692,7 @@ describe("SqliteRuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
     });
 
-    await first.connectionStore.set("github", "default", {
+    await first.connectionStore.set(testTenant, "github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -605,7 +722,7 @@ describe("SqliteRuntimeDatabase", () => {
     const second = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
     });
-    await expect(second.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(second.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       credential: {
         authType: "api_key",
         apiKey: "github-token",
@@ -689,7 +806,7 @@ describe("SqliteRuntimeDatabase", () => {
   it("resets runtime data", async () => {
     const databasePath = await createDatabasePath();
     const database = new SqliteRuntimeDatabase(databasePath);
-    await database.connectionStore.set("github", "default", {
+    await database.connectionStore.set(testTenant, "github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -716,7 +833,7 @@ describe("SqliteRuntimeDatabase", () => {
 
     database.resetRuntimeData();
 
-    await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toBeUndefined();
     await expect(database.runLogStore.list()).resolves.toEqual({ items: [] });
     await expect(database.runtimePolicyStore.get()).resolves.toBeUndefined();
     await expect(
@@ -738,7 +855,7 @@ describe("SqliteRuntimeDatabase", () => {
     });
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
     const token = await tokens.createToken("Claude Desktop");
-    await database.connectionStore.set("github", "default", {
+    await database.connectionStore.set(testTenant, "github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -774,14 +891,14 @@ describe("SqliteRuntimeDatabase", () => {
     const withOldKey = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("old-key"),
     });
-    await expect(withOldKey.connectionStore.get("github", "default")).rejects.toThrow();
+    await expect(withOldKey.connectionStore.get(testTenant, "github", "default")).rejects.toThrow();
     await expect(withOldKey.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).rejects.toThrow();
     withOldKey.close();
 
     const withNewKey = new SqliteRuntimeDatabase(databasePath, {
       secretCodec: new AesGcmSecretCodec("new-key"),
     });
-    await expect(withNewKey.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(withNewKey.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       credential: {
         authType: "api_key",
         apiKey: "github-token",

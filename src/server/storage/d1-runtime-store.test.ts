@@ -8,6 +8,8 @@ import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { D1RuntimeDatabase } from "./d1-runtime-store.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
 
+const testTenant = "tenant-under-test";
+
 const githubProfile = {
   accountId: "github:octocat",
   displayName: "octocat",
@@ -21,7 +23,7 @@ describe("D1RuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
     });
 
-    await database.connectionStore.set("github", "default", {
+    await database.connectionStore.set(testTenant, "github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -38,7 +40,7 @@ describe("D1RuntimeDatabase", () => {
 
     expect(d1.value("connections", "service", "github")).not.toContain("github-token");
     expect(d1.value("oauth_client_configs", "service", "gmail")).not.toContain("client-secret");
-    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       id: expect.any(String),
       credential: {
         authType: "api_key",
@@ -51,14 +53,14 @@ describe("D1RuntimeDatabase", () => {
       clientSecret: "client-secret",
       extra: { tenant: "default" },
     });
-    await expect(database.connectionStore.list()).resolves.toMatchObject([
+    await expect(database.connectionStore.list(testTenant)).resolves.toMatchObject([
       { service: "github", connectionName: "default" },
     ]);
     await expect(database.oauthClientConfigStore.list()).resolves.toMatchObject([{ service: "gmail" }]);
 
-    await database.connectionStore.delete("github", "default");
+    await database.connectionStore.delete(testTenant, "github", "default");
     await database.oauthClientConfigStore.delete("gmail");
-    await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toBeUndefined();
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toBeUndefined();
   });
 
@@ -72,8 +74,8 @@ describe("D1RuntimeDatabase", () => {
       metadata: {},
     };
 
-    const created = await database.connectionStore.set("github", "default", credential);
-    const updated = await database.connectionStore.set("github", "default", {
+    const created = await database.connectionStore.set(testTenant, "github", "default", credential);
+    const updated = await database.connectionStore.set(testTenant, "github", "default", {
       ...credential,
       apiKey: "updated-token",
     });
@@ -97,13 +99,13 @@ describe("D1RuntimeDatabase", () => {
         credential: { ...credential, apiKey: "second-refreshed-token" },
       }),
     ).resolves.toBe(false);
-    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       id: updated.id,
       credential: { apiKey: "refreshed-token" },
     });
 
-    await database.connectionStore.delete("github", "default");
-    const recreated = await database.connectionStore.set("github", "default", credential);
+    await database.connectionStore.delete(testTenant, "github", "default");
+    const recreated = await database.connectionStore.set(testTenant, "github", "default", credential);
     expect(recreated.id).not.toBe(updated.id);
     await expect(
       database.connectionStore.updateCredential({
@@ -111,7 +113,7 @@ describe("D1RuntimeDatabase", () => {
         credential: { ...credential, apiKey: "stale-refreshed-token" },
       }),
     ).resolves.toBe(false);
-    await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
+    await expect(database.connectionStore.get(testTenant, "github", "default")).resolves.toMatchObject({
       id: recreated.id,
       credential: { apiKey: "github-token" },
     });
@@ -121,12 +123,14 @@ describe("D1RuntimeDatabase", () => {
     const database = new D1RuntimeDatabase(new SqliteD1Database());
 
     await database.oauthStateStore.set({
+      tenant: testTenant,
       service: "gmail",
       state: "state-1",
       createdAt: "2026-06-30T00:00:00.000Z",
     });
 
     await expect(database.oauthStateStore.take("state-1")).resolves.toMatchObject({
+      tenant: testTenant,
       service: "gmail",
       state: "state-1",
     });
@@ -471,6 +475,12 @@ class SqliteD1Database implements D1DatabaseBinding {
     );
     this.database.exec(
       readFileSync(new URL("../../../migrations/0010_connection_revision.sql", import.meta.url), "utf8"),
+    );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0011_connection_tenant.sql", import.meta.url), "utf8"),
+    );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0012_runtime_token_tenant.sql", import.meta.url), "utf8"),
     );
   }
 

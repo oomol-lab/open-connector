@@ -1,4 +1,4 @@
-import type { ConnectionService } from "../connection-service.ts";
+import type { ConnectionService, Tenant } from "../connection-service.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 
 import { createHash, randomBytes } from "node:crypto";
@@ -13,6 +13,7 @@ export type OAuthAuthorizationStart = {
 };
 
 export interface OAuthAuthorizationStartInput {
+  tenant: Tenant;
   service: string;
   connectionName?: string;
 }
@@ -24,8 +25,14 @@ export interface OAuthAuthorizationCompleteInput {
 
 /**
  * Short-lived OAuth state stored while the browser completes authorization.
+ *
+ * The tenant is captured at START and read back at COMPLETE. It is deliberately not
+ * accepted on the callback: the callback's only caller-controlled input is the opaque
+ * `state`, so binding the tenant to that record is what stops a completed authorization
+ * from being redirected into someone else's tenant.
  */
 export type OAuthAuthorizationState = {
+  tenant: Tenant;
   service: string;
   connectionName?: string;
   state: string;
@@ -63,7 +70,7 @@ export class OAuthFlowService {
   }
 
   async startAuthorization(input: OAuthAuthorizationStartInput): Promise<OAuthAuthorizationStart> {
-    const { service, connectionName } = input;
+    const { tenant, service, connectionName } = input;
     this.connections.assertProviderAvailable(service);
     const auth = this.clientConfigs.getOAuthDefinition(service);
     const config = await this.clientConfigs.getConfig(service);
@@ -74,6 +81,7 @@ export class OAuthFlowService {
     const state = crypto.randomUUID();
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
     await this.states.set({
+      tenant,
       service,
       connectionName,
       state,
@@ -152,7 +160,7 @@ export class OAuthFlowService {
       },
     };
 
-    await this.connections.setOAuthCredential(pending.service, oauthCredential, pending.connectionName);
+    await this.connections.setOAuthCredential(pending.tenant, pending.service, oauthCredential, pending.connectionName);
     return {
       service: pending.service,
       connected: true,

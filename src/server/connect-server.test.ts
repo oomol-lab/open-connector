@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { TokenPolicy } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
@@ -1205,6 +1205,48 @@ describe("ConnectServer", () => {
       headers: { authorization: "bearer local-token" },
     });
     expect(lowercaseAdminTokenRuntimeCall.status).toBe(401);
+  });
+
+  it("pins a runtime token to its tenant and ignores a spoofed tenant header", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const connectionStore = new MemoryConnectionStore();
+    const app = createTestServer([apiKeyProvider], { runtimeTokens, connectionStore }).createApp();
+
+    // Two tenants hold a connection for the SAME service under the SAME name.
+    await connectionStore.set("tenant-a", "example", "default", {
+      authType: "api_key",
+      apiKey: "key-a",
+      values: { apiKey: "key-a" },
+      profile: { accountId: "acct-a", displayName: "acct-a", grantedScopes: [] },
+      metadata: {},
+    });
+    await connectionStore.set("tenant-b", "example", "default", {
+      authType: "api_key",
+      apiKey: "key-b",
+      values: { apiKey: "key-b" },
+      profile: { accountId: "acct-b", displayName: "acct-b", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Agent A", tenant: "tenant-a", allowedActions: ["example.*"] }),
+    });
+    const { token } = (await created.json()) as { token: string; record: RuntimeTokenRecord };
+
+    // The token sees only tenant-a's account...
+    const own = await app.request("/v1/apps/services/example", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    await expect(own.json()).resolves.toMatchObject({ data: [{ accountLabel: "acct-a" }] });
+
+    // ...and a spoofed header does NOT move it to tenant-b. This is the whole point of
+    // P2: with only P1, this header would have been honoured.
+    const spoofed = await app.request("/v1/apps/services/example", {
+      headers: { authorization: `Bearer ${token}`, "x-oo-connector-tenant": "tenant-b" },
+    });
+    await expect(spoofed.json()).resolves.toMatchObject({ data: [{ accountLabel: "acct-a" }] });
   });
 
   it("manages runtime tokens and gates runtime API calls after one is created", async () => {
@@ -2971,6 +3013,7 @@ interface CreateTestServerOptions {
   runtimeTokens?: RuntimeTokenService;
   runtimePolicyStore?: IRuntimePolicyStore;
   runs?: MemoryRunLogStore;
+  connectionStore?: MemoryConnectionStore;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
 }
@@ -2986,7 +3029,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const connections = new ConnectionService({
     catalog,
     providerLoader,
-    store: new MemoryConnectionStore(),
+    store: options.connectionStore ?? new MemoryConnectionStore(),
   });
   const clientConfigs = new OAuthClientConfigService({
     catalog,
@@ -3194,15 +3237,21 @@ class TransitEchoProviderLoader extends EchoProviderLoader {
 class MemoryConnectionStore implements IConnectionStore {
   private readonly store = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    return this.store.get(createConnectionKey(service, connectionName));
+  async get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    return this.store.get(createConnectionKey(tenant, service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const key = createConnectionKey(service, connectionName);
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
+    const key = createConnectionKey(tenant, service, connectionName);
     const connection = {
       id: this.store.get(key)?.id ?? crypto.randomUUID(),
       revision: crypto.randomUUID(),
+      tenant,
       service,
       connectionName,
       credential,
@@ -3212,24 +3261,24 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
-    const key = createConnectionKey(input.service, input.connectionName);
+    const key = createConnectionKey(input.tenant, input.service, input.connectionName);
     const current = this.store.get(key);
     if (current?.id !== input.id || current.revision !== input.revision) return false;
     this.store.set(key, { ...input, revision: crypto.randomUUID() });
     return true;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
-    this.store.delete(createConnectionKey(service, connectionName));
+  async delete(tenant: Tenant, service: string, connectionName: string): Promise<void> {
+    this.store.delete(createConnectionKey(tenant, service, connectionName));
   }
 
-  async list(): Promise<StoredConnection[]> {
-    return [...this.store.values()];
+  async list(tenant: Tenant): Promise<StoredConnection[]> {
+    return [...this.store.values()].filter((connection) => connection.tenant === tenant);
   }
 }
 
-function createConnectionKey(service: string, connectionName: string): string {
-  return `${service}:${connectionName}`;
+function createConnectionKey(tenant: Tenant, service: string, connectionName: string): string {
+  return `${tenant}:${service}:${connectionName}`;
 }
 
 class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {

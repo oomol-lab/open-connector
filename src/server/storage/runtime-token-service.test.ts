@@ -1,6 +1,7 @@
 import type { IRuntimeTokenStore } from "./runtime-token-service.ts";
 
 import { describe, expect, it, vi } from "vitest";
+import { defaultTenant } from "../../connection-service.ts";
 import { hashRuntimeToken, RuntimeTokenService } from "./runtime-token-service.ts";
 
 describe("RuntimeTokenService", () => {
@@ -26,6 +27,7 @@ describe("RuntimeTokenService", () => {
       id: "token-1",
       name: "Issue bot",
       tokenHash: hashRuntimeToken(token),
+      tenant: defaultTenant,
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
@@ -42,6 +44,7 @@ describe("RuntimeTokenService", () => {
 
     await expect(new RuntimeTokenService(store).resolveToken(token)).resolves.toEqual({
       tokenId: "token-1",
+      tenant: defaultTenant,
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
@@ -57,6 +60,7 @@ describe("RuntimeTokenService", () => {
       id: "token-1",
       name: "Issue bot",
       tokenHash: hashRuntimeToken(token),
+      tenant: defaultTenant,
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
@@ -76,6 +80,7 @@ describe("RuntimeTokenService", () => {
 
     await expect(new RuntimeTokenService(store, logger).resolveToken(token)).resolves.toEqual({
       tokenId: "token-1",
+      tenant: defaultTenant,
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],

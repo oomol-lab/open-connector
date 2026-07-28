@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "../../connection-service.ts";
 import type { TokenPolicy } from "../../core/action-policy.ts";
 import type { ResolvedCredential, RuntimeLogger } from "../../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
@@ -43,6 +43,11 @@ interface SetServiceJsonInput extends SecretJsonInput {
 }
 
 interface RotatedConnectionSecret {
+  // Key rotation re-encrypts every tenant's rows, so it does not filter by tenant —
+  // but it must still WRITE BACK by the full primary key. Without `tenant` here, the
+  // update would match same-named connections across all tenants and overwrite them
+  // with one tenant's ciphertext.
+  tenant: Tenant;
   service: string;
   connectionName: string;
   value: string;
@@ -133,14 +138,15 @@ export class SqliteConnectionStore implements IConnectionStore {
     this.secretCodec = secretCodec;
   }
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
+  async get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined> {
     const row = this.database
-      .prepare("select id, revision, value from connections where service = ? and connection_name = ?")
-      .get(service, connectionName);
+      .prepare("select id, revision, value from connections where tenant = ? and service = ? and connection_name = ?")
+      .get(tenant, service, connectionName);
     return row
       ? {
           id: readString(row, "id"),
           revision: readString(row, "revision"),
+          tenant,
           service,
           connectionName,
           credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -148,13 +154,18 @@ export class SqliteConnectionStore implements IConnectionStore {
       : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
     const row = this.database
       .prepare(
         `
-        insert into connections (id, revision, service, connection_name, value, updated_at)
-        values (?, ?, ?, ?, ?, ?)
-        on conflict(service, connection_name) do update set
+        insert into connections (id, revision, tenant, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?, ?, ?)
+        on conflict(tenant, service, connection_name) do update set
           revision = excluded.revision,
           value = excluded.value,
           updated_at = excluded.updated_at
@@ -164,6 +175,7 @@ export class SqliteConnectionStore implements IConnectionStore {
       .get(
         crypto.randomUUID(),
         crypto.randomUUID(),
+        tenant,
         service,
         connectionName,
         await this.secretCodec.encode(JSON.stringify(credential)),
@@ -172,6 +184,7 @@ export class SqliteConnectionStore implements IConnectionStore {
     return {
       id: readString(row, "id"),
       revision: readString(row, "revision"),
+      tenant,
       service,
       connectionName,
       credential,
@@ -184,7 +197,7 @@ export class SqliteConnectionStore implements IConnectionStore {
         `
         update connections
         set revision = ?, value = ?, updated_at = ?
-        where service = ? and connection_name = ? and id = ? and revision = ?
+        where tenant = ? and service = ? and connection_name = ? and id = ? and revision = ?
         returning id
       `,
       )
@@ -192,6 +205,7 @@ export class SqliteConnectionStore implements IConnectionStore {
         crypto.randomUUID(),
         await this.secretCodec.encode(JSON.stringify(input.credential)),
         new Date().toISOString(),
+        input.tenant,
         input.service,
         input.connectionName,
         input.id,
@@ -200,22 +214,24 @@ export class SqliteConnectionStore implements IConnectionStore {
     return row !== undefined;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
+  async delete(tenant: Tenant, service: string, connectionName: string): Promise<void> {
     this.database
-      .prepare("delete from connections where service = ? and connection_name = ?")
-      .run(service, connectionName);
+      .prepare("delete from connections where tenant = ? and service = ? and connection_name = ?")
+      .run(tenant, service, connectionName);
   }
 
-  async list(): Promise<StoredConnection[]> {
+  async list(tenant: Tenant): Promise<StoredConnection[]> {
     const rows = this.database
       .prepare(
-        "select id, revision, service, connection_name, value from connections order by service, connection_name",
+        `select id, revision, service, connection_name, value from connections
+         where tenant = ? order by service, connection_name`,
       )
-      .all();
+      .all(tenant);
     return await Promise.all(
       rows.map(async (row) => ({
         id: readString(row, "id"),
         revision: readString(row, "revision"),
+        tenant,
         service: readString(row, "service"),
         connectionName: readString(row, "connection_name"),
         credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
@@ -302,15 +318,16 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         insert into runtime_tokens (
-          id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+          id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
         record.id,
         record.name,
         record.tokenHash,
+        record.tenant,
         JSON.stringify(record.allowedActions),
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
@@ -323,7 +340,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     return this.database
       .prepare(
         `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         from runtime_tokens
         where revoked_at is null
         order by created_at desc, id desc
@@ -337,7 +354,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     const row = this.database
       .prepare(
         `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         from runtime_tokens
         where token_hash = ? and revoked_at is null
       `,
@@ -353,7 +370,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?
         where id = ? and revoked_at is null
-        returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        returning id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
       `,
       )
       .get(
@@ -382,6 +399,7 @@ function readRuntimeTokenRow(row: unknown): RuntimeTokenRecord {
     id: readString(row, "id"),
     name: readString(row, "name"),
     tokenHash: readString(row, "token_hash"),
+    tenant: readString(row, "tenant"),
     allowedActions: parseJson(readString(row, "allowed_actions")),
     blockedActions: parseJson(readString(row, "blocked_actions")),
     allowedProxies: parseJson(readString(row, "allowed_proxies")),
@@ -666,9 +684,10 @@ async function readRotatedConnectionSecrets(
   currentCodec: ISecretCodec,
   nextCodec: ISecretCodec,
 ): Promise<RotatedConnectionSecret[]> {
-  const rows = database.prepare("select service, connection_name, value from connections").all();
+  const rows = database.prepare("select tenant, service, connection_name, value from connections").all();
   return await Promise.all(
     rows.map(async (row) => ({
+      tenant: readString(row, "tenant"),
       service: readString(row, "service"),
       connectionName: readString(row, "connection_name"),
       value: await nextCodec.encode(await currentCodec.decode(readString(row, "value"))),
@@ -677,9 +696,11 @@ async function readRotatedConnectionSecrets(
 }
 
 function writeRotatedConnectionSecrets(database: DatabaseSync, connections: RotatedConnectionSecret[]): void {
-  const statement = database.prepare("update connections set value = ? where service = ? and connection_name = ?");
+  const statement = database.prepare(
+    "update connections set value = ? where tenant = ? and service = ? and connection_name = ?",
+  );
   for (const connection of connections) {
-    statement.run(connection.value, connection.service, connection.connectionName);
+    statement.run(connection.value, connection.tenant, connection.service, connection.connectionName);
   }
 }
 

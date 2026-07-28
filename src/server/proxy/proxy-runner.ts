@@ -1,5 +1,5 @@
 import type { CatalogStore } from "../../catalog-store.ts";
-import type { ConnectionService } from "../../connection-service.ts";
+import type { ConnectionService, Tenant } from "../../connection-service.ts";
 import type { ActionPolicyService, ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ProviderProxyExecutor, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
@@ -22,6 +22,8 @@ export interface ProxyRunnerOptions {
 export interface RunProxyInput {
   service: string;
   input: unknown;
+  /** Tenant whose credential the proxy may use. Required: a proxy call always runs as someone. */
+  tenant: Tenant;
   connectionName?: string;
   policy?: ActionPolicySnapshot;
 }
@@ -115,9 +117,9 @@ export class ProxyRunner {
     const startedAtMs = Date.now();
     try {
       this.options.logger?.info(logContext, "proxy request started");
-      await this.options.connections.getConnectionSummary(provider.service, input.connectionName);
+      await this.options.connections.getConnectionSummary(input.tenant, provider.service, input.connectionName);
       const result = await executor(request.input, {
-        ...this.options.connections.forConnection(input.connectionName),
+        ...this.options.connections.forConnection(input.tenant, input.connectionName),
       });
       const durationMs = Date.now() - startedAtMs;
       if (result.ok) {
