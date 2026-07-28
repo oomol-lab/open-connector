@@ -1,6 +1,8 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { qdrantActions } from "./actions.ts";
 import { createQdrantContext, qdrantActionHandlers, validateQdrantCredential } from "./runtime.ts";
 
 const clusterUrl = "https://test-cluster.cloud.qdrant.io:6333";
@@ -86,6 +88,51 @@ describe("Qdrant runtime", () => {
     expect(requestOf(point.fetcher).url).toBe(`${clusterUrl}/collections/my%20collection/points/42`);
   });
 
+  it("keeps the public point ID schema aligned with Qdrant UUID forms and safe numeric IDs", async () => {
+    const action = qdrantActions.find((candidate) => candidate.name === "get_point")!;
+    const ids = [
+      "936DA01F9ABD4d9d80C702AF85C822A8",
+      "01890f3e-9c4a-7cc2-b3e4-8fef7d7c9b3a",
+      "urn:uuid:F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4",
+      Number.MAX_SAFE_INTEGER,
+    ];
+
+    for (const id of ids) {
+      expect(validateActionInput(action, { collectionName: "documents", id }).valid).toBe(true);
+      const request = setup(jsonResponse({ id }));
+      await expect(
+        qdrantActionHandlers.get_point({ collectionName: "documents", id }, request.context),
+      ).resolves.toEqual({ point: { id } });
+      expect(requestOf(request.fetcher).url).toBe(
+        `${clusterUrl}/collections/documents/points/${encodeURIComponent(String(id))}`,
+      );
+    }
+
+    const unsafeId = Number.MAX_SAFE_INTEGER + 1;
+    expect(validateActionInput(action, { collectionName: "documents", id: unsafeId }).valid).toBe(false);
+    const invalid = setup();
+    await expect(
+      qdrantActionHandlers.get_point({ collectionName: "documents", id: unsafeId }, invalid.context),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(invalid.fetcher).not.toHaveBeenCalled();
+  });
+
+  it("preserves collection name whitespace and rejects dot-segment names", async () => {
+    const spaced = setup(jsonResponse({ status: "green" }));
+    await qdrantActionHandlers.get_collection({ collectionName: " documents " }, spaced.context);
+    expect(requestOf(spaced.fetcher).url).toBe(`${clusterUrl}/collections/%20documents%20`);
+
+    const action = qdrantActions.find((candidate) => candidate.name === "get_collection")!;
+    for (const collectionName of [".", ".."]) {
+      expect(validateActionInput(action, { collectionName }).valid).toBe(false);
+      const invalid = setup();
+      await expect(qdrantActionHandlers.get_collection({ collectionName }, invalid.context)).rejects.toMatchObject({
+        status: 400,
+      });
+      expect(invalid.fetcher).not.toHaveBeenCalled();
+    }
+  });
+
   it("normalizes a null operation ID and rejects excluded point fields", async () => {
     const upsert = setup(jsonResponse({ operation_id: null, status: "wait_timeout" }));
     await expect(
@@ -103,6 +150,35 @@ describe("Qdrant runtime", () => {
       ),
     ).rejects.toMatchObject({ status: 400 });
     expect(invalid.fetcher).not.toHaveBeenCalled();
+  });
+
+  it("rejects point and operation IDs that cannot be represented without precision loss", async () => {
+    const point = setup(jsonResponse({ id: Number.MAX_SAFE_INTEGER + 1 }));
+    await expect(
+      qdrantActionHandlers.get_point({ collectionName: "documents", id: 1 }, point.context),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "Qdrant returned an invalid point ID",
+    });
+
+    const query = setup(jsonResponse({ points: [{ id: Number.MAX_SAFE_INTEGER + 1 }] }));
+    await expect(
+      qdrantActionHandlers.query_points({ collectionName: "documents", vector: [0.1] }, query.context),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "Qdrant returned an invalid query point ID",
+    });
+
+    const operation = setup(jsonResponse({ operation_id: Number.MAX_SAFE_INTEGER + 1, status: "completed" }));
+    await expect(
+      qdrantActionHandlers.upsert_points(
+        { collectionName: "documents", points: [{ id: 1, vector: [0.1] }] },
+        operation.context,
+      ),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "Qdrant returned an invalid operation_id",
+    });
   });
 
   it("maps query and scroll inputs and normalizes the next page offset", async () => {
@@ -148,6 +224,15 @@ describe("Qdrant runtime", () => {
     });
   });
 
+  it("maps invalid response pagination offsets to provider errors", async () => {
+    const { context } = setup(jsonResponse({ points: [], next_page_offset: "not-a-point-id" }));
+
+    await expect(qdrantActionHandlers.scroll_points({ collectionName: "documents" }, context)).rejects.toMatchObject({
+      status: 502,
+      message: "Qdrant returned an invalid next_page_offset",
+    });
+  });
+
   it("preserves execute-phase permission errors and maps validation permission errors", async () => {
     const execute = setup(errorResponse("forbidden", 403));
     await expect(
@@ -165,10 +250,18 @@ describe("Qdrant runtime", () => {
   });
 
   it("rejects unsafe or non-Qdrant Cloud cluster URLs", () => {
+    for (const validUrl of [
+      "https://test-cluster.cloud.qdrant.io",
+      "https://test-cluster.cloud.qdrant.io:443",
+      clusterUrl,
+    ]) {
+      expect(() => createQdrantContext({ clusterUrl: validUrl, apiKey }, vi.fn() as ProviderFetch)).not.toThrow();
+    }
+
     for (const invalidUrl of [
       "http://test-cluster.cloud.qdrant.io:6333",
       "https://test-cluster.example.com:6333",
-      "https://test-cluster.cloud.qdrant.io:443",
+      "https://test-cluster.cloud.qdrant.io:6334",
       "https://test-cluster.cloud.qdrant.io:6333/path",
       "https://test-cluster.cloud.qdrant.io:6333?secret=1",
       "https://user:pass@test-cluster.cloud.qdrant.io:6333",

@@ -23,9 +23,9 @@ export const provider: ProviderDefinition = {
           inputType: "text",
           required: true,
           secret: false,
-          placeholder: "https://your-cluster.cloud.qdrant.io:6333",
+          placeholder: "https://your-cluster.cloud.qdrant.io",
           description:
-            "The HTTPS REST URL for a Qdrant Cloud cluster. Only official cloud.qdrant.io endpoints on port 6333 are supported.",
+            "The HTTPS REST URL for a Qdrant Cloud cluster. Only official cloud.qdrant.io endpoints on port 443 or 6333 are supported.",
         },
         {
           key: "apiKey",

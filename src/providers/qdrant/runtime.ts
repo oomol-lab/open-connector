@@ -1,8 +1,15 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
+import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortSignalError,
@@ -11,11 +18,11 @@ import {
   providerUserAgent,
   readProviderTextBody,
 } from "../provider-runtime.ts";
+import { qdrantUuidPattern } from "./actions.ts";
 
 const service = "qdrant";
 const requestTimeoutMs = 30_000;
 const qdrantHostnameSuffix = ".cloud.qdrant.io";
-const qdrantPort = "6333";
 
 type QdrantRequestPhase = "validate" | "execute";
 type QdrantHttpMethod = "GET" | "POST" | "PUT";
@@ -39,7 +46,7 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     const collectionName = readCollectionName(input);
     const payload = await requestQdrantJson(
       context,
-      `/collections/${encodeURIComponent(collectionName)}`,
+      `/collections/${encodePathSegment(collectionName)}`,
       "GET",
       undefined,
       "execute",
@@ -56,7 +63,7 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     }
     const payload = await requestQdrantJson(
       context,
-      `/collections/${encodeURIComponent(collectionName)}`,
+      `/collections/${encodePathSegment(collectionName)}`,
       "PUT",
       { vectors: { size: vectorSize, distance } },
       "execute",
@@ -69,7 +76,7 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     const points = readPoints(input.points);
     const payload = await requestQdrantJson(
       context,
-      `/collections/${encodeURIComponent(collectionName)}/points?wait=true`,
+      `/collections/${encodePathSegment(collectionName)}/points?wait=true`,
       "PUT",
       { points },
       "execute",
@@ -86,12 +93,16 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     const id = readPointId(input.id);
     const payload = await requestQdrantJson(
       context,
-      `/collections/${encodeURIComponent(collectionName)}/points/${encodeURIComponent(String(id))}`,
+      `/collections/${encodePathSegment(collectionName)}/points/${encodePathSegment(id)}`,
       "GET",
       undefined,
       "execute",
     );
-    return { point: requireObjectResult(payload, "Qdrant point response") };
+    const point = requireObjectResult(payload, "Qdrant point response");
+    if (!isPointId(point.id)) {
+      throw providerResponseError("Qdrant returned an invalid point ID");
+    }
+    return { point };
   },
 
   async query_points(input, context) {
@@ -107,13 +118,13 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     };
     const payload = await requestQdrantJson(
       context,
-      `/collections/${encodeURIComponent(collectionName)}/points/query`,
+      `/collections/${encodePathSegment(collectionName)}/points/query`,
       "POST",
       compactObject(body),
       "execute",
     );
     const result = requireObjectResult(payload, "Qdrant query response");
-    return { points: Array.isArray(result.points) ? result.points : [] };
+    return { points: readPointRecords(result.points, "query") };
   },
 
   async scroll_points(input, context) {
@@ -128,7 +139,7 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     };
     const payload = await requestQdrantJson(
       context,
-      `/collections/${encodeURIComponent(collectionName)}/points/scroll`,
+      `/collections/${encodePathSegment(collectionName)}/points/scroll`,
       "POST",
       compactObject(body),
       "execute",
@@ -136,7 +147,7 @@ export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantC
     const result = requireObjectResult(payload, "Qdrant scroll response");
     const nextOffset = readNullablePointId(result.next_page_offset);
     return {
-      points: Array.isArray(result.points) ? result.points : [],
+      points: readPointRecords(result.points, "scroll"),
       nextOffset,
       complete: nextOffset === null,
     };
@@ -241,8 +252,8 @@ function normalizeQdrantClusterUrl(value: string | undefined): URL {
   if (url.username || url.password) {
     throw providerInputError("clusterUrl must not include credentials");
   }
-  if (url.port !== qdrantPort) {
-    throw providerInputError("clusterUrl must use port 6333");
+  if (url.port !== "" && url.port !== "6333") {
+    throw providerInputError("clusterUrl must use port 443 or 6333");
   }
   if (url.pathname !== "/" || url.search || url.hash) {
     throw providerInputError("clusterUrl must not include a path, query, or fragment");
@@ -284,7 +295,14 @@ function createQdrantError(status: number, payload: unknown, phase: QdrantReques
 }
 
 function readCollectionName(input: Record<string, unknown>): string {
-  return requiredString(input.collectionName, "collectionName", providerInputError);
+  const collectionName = optionalRawString(input.collectionName);
+  if (collectionName === undefined || collectionName.length === 0) {
+    throw providerInputError("collectionName is required");
+  }
+  if (collectionName === "." || collectionName === "..") {
+    throw providerInputError("collectionName must not be . or ..");
+  }
+  return collectionName;
 }
 
 function readPoints(value: unknown): Record<string, unknown>[] {
@@ -315,17 +333,35 @@ function readPoints(value: unknown): Record<string, unknown>[] {
 }
 
 function readPointId(value: unknown): number | string {
-  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) {
+  if (isPointId(value)) {
     return value;
   }
-  if (typeof value === "string" && uuidPattern.test(value)) {
-    return value;
-  }
-  throw providerInputError("id must be a non-negative integer or UUID");
+  throw providerInputError("id must be a non-negative safe integer or UUID");
 }
 
 function readNullablePointId(value: unknown): number | string | null {
-  return value === null || value === undefined ? null : readPointId(value);
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (isPointId(value)) {
+    return value;
+  }
+  throw providerResponseError("Qdrant returned an invalid next_page_offset");
+}
+
+function isPointId(value: unknown): value is number | string {
+  return (
+    (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) ||
+    (typeof value === "string" && uuidPattern.test(value))
+  );
+}
+
+function readPointRecords(value: unknown, operation: string): unknown[] {
+  const points = Array.isArray(value) ? value : [];
+  if (points.some((point) => !isPointId(optionalRecord(point)?.id))) {
+    throw providerResponseError(`Qdrant returned an invalid ${operation} point ID`);
+  }
+  return points;
 }
 
 function readVector(value: unknown, fieldName: string): number[] {
@@ -370,7 +406,9 @@ function readOptionalNumber(value: unknown, fieldName: string): number | undefin
 function readNullableInteger(value: unknown, fieldName: string): number | null {
   if (value === null || value === undefined) return null;
   const integer = optionalInteger(value);
-  if (integer === undefined || integer < 0) throw providerResponseError(`Qdrant returned an invalid ${fieldName}`);
+  if (integer === undefined || !Number.isSafeInteger(integer) || integer < 0) {
+    throw providerResponseError(`Qdrant returned an invalid ${fieldName}`);
+  }
   return integer;
 }
 
@@ -394,7 +432,7 @@ function isDistance(value: string): value is "Cosine" | "Euclid" | "Dot" | "Manh
   return value === "Cosine" || value === "Euclid" || value === "Dot" || value === "Manhattan";
 }
 
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const uuidPattern = new RegExp(qdrantUuidPattern);
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);

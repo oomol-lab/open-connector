@@ -5,15 +5,33 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "qdrant";
 
-const collectionNameSchema = s.nonEmptyString("The Qdrant collection name.");
-const pointIdSchema = s.union([s.nonNegativeInteger("A non-negative numeric point ID."), s.uuid("A UUID point ID.")]);
+const collectionNameSchema = {
+  ...s.nonEmptyString("The Qdrant collection name. The names `.` and `..` are not supported."),
+  not: { enum: [".", ".."] },
+};
+export const qdrantUuidPattern =
+  "^(?:[0-9A-Fa-f]{32}|[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}|[uU][rR][nN]:[uU][uU][iI][dD]:[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})$";
+const pointIdSchema = s.union(
+  [
+    s.nonNegativeInteger("A numeric point ID within the JavaScript safe-integer range.", {
+      maximum: Number.MAX_SAFE_INTEGER,
+    }),
+    s.stringPattern(qdrantUuidPattern, {
+      description: "A Qdrant UUID point ID in simple, hyphenated, or URN form.",
+    }),
+  ],
+  { description: "A Qdrant numeric or UUID point ID." },
+);
 const vectorSchema = s.array("A dense unnamed vector.", s.number("One vector component."), { minItems: 1 });
 const payloadSchema = s.looseObject("A JSON object stored with the point.");
 const filterSchema = s.looseObject("A Qdrant filter. Nested conditions are validated by Qdrant.", {
   must: s.unknown("Conditions that must match."),
   must_not: s.unknown("Conditions that must not match."),
   should: s.unknown("Conditions where at least one should match."),
-  min_should: s.unknown("Minimum number of should conditions that must match."),
+  min_should: s.requiredObject("Conditions where at least `min_count` entries must match.", {
+    conditions: s.array("The Qdrant filter conditions to evaluate.", s.unknown("One Qdrant filter condition.")),
+    min_count: s.nonNegativeInteger("The minimum number of conditions that must match."),
+  }),
 });
 
 const pointSchema = s.object(
@@ -134,7 +152,11 @@ export const qdrantActions: ProviderActionDefinition[] = [
     ),
     outputSchema: s.actionOutput(
       {
-        operationId: s.nullable(s.nonNegativeInteger("The Qdrant operation ID when returned.")),
+        operationId: s.nullable(
+          s.nonNegativeInteger("The Qdrant operation ID when returned, within the JavaScript safe-integer range.", {
+            maximum: Number.MAX_SAFE_INTEGER,
+          }),
+        ),
         status: s.stringEnum("The Qdrant write status.", ["acknowledged", "completed", "wait_timeout"]),
       },
       "The Qdrant upsert operation result.",
