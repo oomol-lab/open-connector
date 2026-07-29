@@ -1,4 +1,4 @@
-import type { HomeAssistantActionName } from "./actions.ts";
+import type { HomeAssistantRestActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -17,12 +17,12 @@ export interface HomeAssistantActionContext {
   signal?: AbortSignal;
 }
 
-type HomeAssistantActionHandler = (
+export type HomeAssistantActionHandler = (
   input: Record<string, unknown>,
   context: HomeAssistantActionContext,
 ) => Promise<unknown>;
 
-export const homeAssistantActionHandlers: Record<HomeAssistantActionName, HomeAssistantActionHandler> = {
+export const homeAssistantActionHandlers: Record<HomeAssistantRestActionName, HomeAssistantActionHandler> = {
   async get_config(_input, context) {
     return {
       config: await requestHomeAssistantJson({
@@ -296,6 +296,7 @@ function normalizeBaseUrl(value: unknown): string {
   return url.pathname === "/" ? url.origin : `${url.origin}${url.pathname}`;
 }
 
-function readInputString(value: unknown, fieldName: string): string {
+/** Read a required string action input, reported as a 400 like the other input guards. */
+export function readInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

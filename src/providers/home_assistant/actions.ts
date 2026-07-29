@@ -1,4 +1,4 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -32,6 +32,42 @@ const entityInputSchema = s.actionInput(
   ["entityId"],
   "Input parameters for selecting one Home Assistant entity.",
 );
+
+/** Output field for one registry that only the Home Assistant WebSocket API serves. */
+export type HomeAssistantRegistryName = "entities" | "devices" | "areas" | "floors" | "labels";
+
+/** Every registry `get_registries` can fetch, in output-field order. */
+export const homeAssistantRegistryNames: HomeAssistantRegistryName[] = [
+  "entities",
+  "devices",
+  "areas",
+  "floors",
+  "labels",
+];
+
+const registryNames: string[] = homeAssistantRegistryNames;
+
+// Home Assistant's search ItemType enum; the values it accepts as a search origin.
+const searchItemTypes: string[] = [
+  "area",
+  "automation",
+  "automation_blueprint",
+  "config_entry",
+  "device",
+  "entity",
+  "floor",
+  "group",
+  "integration",
+  "label",
+  "person",
+  "scene",
+  "script",
+  "script_blueprint",
+];
+
+function registryListSchema(description: string): JsonSchema {
+  return s.nullable(s.array(description, s.looseObject("One Home Assistant registry entry.")));
+}
 
 export const homeAssistantActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -141,9 +177,125 @@ export const homeAssistantActions: ActionDefinition[] = [
       "The rendered Home Assistant template response.",
     ),
   }),
+  defineProviderAction(service, {
+    name: "get_registries",
+    description:
+      "List the Home Assistant entity, device, area, floor, and label registries in one call. These registries expose the device and room structure behind entity ids, which the REST API does not serve.",
+    inputSchema: s.actionInput(
+      {
+        include: s.array(
+          "The registries to fetch. Defaults to all five when omitted or empty.",
+          s.stringEnum("One Home Assistant registry name.", registryNames),
+        ),
+      },
+      [],
+      "Input parameters for selecting which Home Assistant registries to fetch.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        entities: registryListSchema(
+          "The entity registry entries, including the device and area each entity belongs to.",
+        ),
+        devices: registryListSchema("The device registry entries, including manufacturer, model, and area."),
+        areas: registryListSchema("The area registry entries."),
+        floors: registryListSchema("The floor registry entries."),
+        labels: registryListSchema("The label registry entries."),
+      },
+      "The requested Home Assistant registries. Registries excluded from the request are null.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "search_related",
+    description:
+      "Find the Home Assistant items related to one entity, device, area, automation, or config entry, such as the automations that reference a given light.",
+    inputSchema: s.actionInput(
+      {
+        itemType: s.stringEnum("The Home Assistant item type to search from.", searchItemTypes),
+        itemId: s.nonEmptyString(
+          "The identifier of the item to search from, for example light.living_room for an entity.",
+        ),
+      },
+      ["itemType", "itemId"],
+      "Input parameters for one Home Assistant related-items search.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        related: s.looseObject("The related Home Assistant item identifiers, keyed by item type."),
+      },
+      "The Home Assistant items related to the requested item.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_device_automations",
+    description:
+      "List the triggers, conditions, and actions one Home Assistant device supports, for building automations against that device.",
+    inputSchema: s.actionInput(
+      {
+        deviceId: s.nonEmptyString("The Home Assistant device registry identifier."),
+      },
+      ["deviceId"],
+      "Input parameters for listing one Home Assistant device's automation capabilities.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        triggers: s.array("The device triggers.", s.looseObject("One Home Assistant device trigger.")),
+        conditions: s.array("The device conditions.", s.looseObject("One Home Assistant device condition.")),
+        actions: s.array("The device actions.", s.looseObject("One Home Assistant device action.")),
+      },
+      "The automation capabilities for the requested Home Assistant device.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "execute_script",
+    description:
+      "Run a Home Assistant script sequence, which can chain several service calls, delays, and conditions in one request instead of one service call at a time.",
+    inputSchema: s.actionInput(
+      {
+        sequence: s.array(
+          "The Home Assistant script steps to run, in the same format as a script's sequence.",
+          s.looseObject("One Home Assistant script step."),
+        ),
+        variables: s.looseObject("Optional variables made available to the script sequence."),
+      },
+      ["sequence"],
+      "Input parameters for running one Home Assistant script sequence.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        context: s.nullable(s.looseObject("The Home Assistant context for the script run.")),
+        response: s.nullable(s.looseObject("The optional script response variable returned by Home Assistant.")),
+      },
+      "The Home Assistant script execution result.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "validate_config",
+    description:
+      "Validate Home Assistant trigger, condition, and action configurations before storing them in an automation.",
+    inputSchema: s.actionInput(
+      {
+        triggers: s.array("The trigger configurations to validate.", s.looseObject("One Home Assistant trigger.")),
+        conditions: s.array(
+          "The condition configurations to validate.",
+          s.looseObject("One Home Assistant condition."),
+        ),
+        actions: s.array("The action configurations to validate.", s.looseObject("One Home Assistant action.")),
+      },
+      [],
+      "Input parameters for validating Home Assistant automation configuration. At least one list is required.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        validation: s.looseObject(
+          "The validation result keyed by triggers, conditions, and actions, each with valid and error fields.",
+        ),
+      },
+      "The Home Assistant configuration validation result.",
+    ),
+  }),
 ];
 
-export type HomeAssistantActionName =
+export type HomeAssistantRestActionName =
   | "get_config"
   | "list_states"
   | "get_state"
@@ -152,3 +304,10 @@ export type HomeAssistantActionName =
   | "list_events"
   | "fire_event"
   | "render_template";
+
+export type HomeAssistantWebSocketActionName =
+  | "get_registries"
+  | "search_related"
+  | "list_device_automations"
+  | "execute_script"
+  | "validate_config";
