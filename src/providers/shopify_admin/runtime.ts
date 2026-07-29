@@ -1,3 +1,4 @@
+import type { TransitFileWriter } from "../../core/types.ts";
 import type { ShopifyAdminActionName } from "./actions.ts";
 
 import {
@@ -9,6 +10,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const shopifyAdminApiVersion = "2026-04";
@@ -65,6 +67,9 @@ const listProductVariantsQuery = `query ShopifyAdminListProductVariants($first: 
         sku
         price
         inventoryQuantity
+        inventoryItem {
+          id
+        }
         product {
           id
           title
@@ -79,6 +84,84 @@ const listProductVariantsQuery = `query ShopifyAdminListProductVariants($first: 
     }
   }
 }`;
+const fulfillmentOrderFieldsFragment = `fragment ShopifyAdminFulfillmentOrderFields on FulfillmentOrder {
+  id
+  orderId
+  orderName
+  status
+  requestStatus
+  assignedLocation {
+    name
+    location {
+      id
+    }
+  }
+  supportedActions {
+    action
+    externalUrl
+  }
+  lineItems(first: $lineItemsFirst, after: $lineItemsAfter) {
+    edges {
+      node {
+        id
+        totalQuantity
+        remainingQuantity
+        inventoryItemId
+        sku
+        productTitle
+        variantTitle
+        requiresShipping
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+  updatedAt
+}`;
+const listOrderFulfillmentOrdersQuery = `query ShopifyAdminListOrderFulfillmentOrders(
+  $orderId: ID!,
+  $first: Int,
+  $after: String,
+  $displayable: Boolean,
+  $lineItemsFirst: Int!,
+  $lineItemsAfter: String
+) {
+  order(id: $orderId) {
+    id
+    name
+    fulfillmentOrders(first: $first, after: $after, displayable: $displayable) {
+      edges {
+        cursor
+        node {
+          ...ShopifyAdminFulfillmentOrderFields
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+${fulfillmentOrderFieldsFragment}`;
+const getFulfillmentOrderQuery = `query ShopifyAdminGetFulfillmentOrder(
+  $id: ID!,
+  $lineItemsFirst: Int!,
+  $lineItemsAfter: String
+) {
+  fulfillmentOrder(id: $id) {
+    ...ShopifyAdminFulfillmentOrderFields
+  }
+}
+
+${fulfillmentOrderFieldsFragment}`;
 const listOrdersQuery = `query ShopifyAdminListOrders($first: Int, $after: String, $query: String) {
   orders(first: $first, after: $after, query: $query) {
     edges {
@@ -228,6 +311,31 @@ const getInventoryItemQuery = `query ShopifyAdminGetInventoryItem($id: ID!) {
     updatedAt
   }
 }`;
+const getInventoryQuantitiesQuery = `query ShopifyAdminGetInventoryQuantities(
+  $inventoryItemId: ID!,
+  $locationId: ID!,
+  $names: [String!]!,
+  $includeInactive: Boolean
+) {
+  inventoryItem(id: $inventoryItemId) {
+    inventoryLevel(locationId: $locationId, includeInactive: $includeInactive) {
+      id
+      isActive
+      item {
+        id
+        sku
+      }
+      location {
+        id
+        name
+      }
+      quantities(names: $names) {
+        name
+        quantity
+      }
+    }
+  }
+}`;
 const listLocationsQuery = `query ShopifyAdminListLocations(
   $first: Int,
   $after: String,
@@ -318,6 +426,167 @@ const getCollectionQuery = `query ShopifyAdminGetCollection($id: ID!) {
     }
   }
 }`;
+const createProductMutation = `mutation ShopifyAdminCreateProduct(
+  $product: ProductCreateInput!,
+  $media: [CreateMediaInput!]
+) {
+  productCreate(product: $product, media: $media) {
+    product {
+      id
+      title
+      handle
+      status
+      vendor
+      productType
+      descriptionHtml
+      createdAt
+      updatedAt
+      onlineStoreUrl
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}`;
+const updateProductMutation = `mutation ShopifyAdminUpdateProduct(
+  $product: ProductUpdateInput!,
+  $media: [CreateMediaInput!]
+) {
+  productUpdate(product: $product, media: $media) {
+    product {
+      id
+      title
+      handle
+      status
+      vendor
+      productType
+      descriptionHtml
+      createdAt
+      updatedAt
+      onlineStoreUrl
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}`;
+const adjustInventoryQuantitiesMutation = `mutation ShopifyAdminAdjustInventoryQuantities(
+  $input: InventoryAdjustQuantitiesInput!,
+  $idempotencyKey: String!
+) {
+  inventoryAdjustQuantities(input: $input) @idempotent(key: $idempotencyKey) {
+    inventoryAdjustmentGroup {
+      id
+      createdAt
+      reason
+      referenceDocumentUri
+      changes {
+        name
+        delta
+        quantityAfterChange
+      }
+    }
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}`;
+const setInventoryQuantitiesMutation = `mutation ShopifyAdminSetInventoryQuantities(
+  $input: InventorySetQuantitiesInput!,
+  $idempotencyKey: String!
+) {
+  inventorySetQuantities(input: $input) @idempotent(key: $idempotencyKey) {
+    inventoryAdjustmentGroup {
+      id
+      createdAt
+      reason
+      referenceDocumentUri
+      changes {
+        name
+        delta
+        quantityAfterChange
+      }
+    }
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}`;
+const createFulfillmentMutation = `mutation ShopifyAdminCreateFulfillment(
+  $fulfillment: FulfillmentInput!,
+  $message: String
+) {
+  fulfillmentCreate(fulfillment: $fulfillment, message: $message) {
+    fulfillment {
+      id
+      name
+      status
+      totalQuantity
+      createdAt
+      order {
+        id
+        name
+      }
+      trackingInfo {
+        company
+        number
+        url
+      }
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}`;
+const submitBulkQueryMutation = `mutation ShopifyAdminSubmitBulkQuery(
+  $query: String!,
+  $groupObjects: Boolean!
+) {
+  bulkOperationRunQuery(query: $query, groupObjects: $groupObjects) {
+    bulkOperation {
+      id
+      status
+      type
+      createdAt
+      completedAt
+      errorCode
+      objectCount
+      rootObjectCount
+      fileSize
+      url
+      partialDataUrl
+      query
+    }
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}`;
+const getBulkOperationQuery = `query ShopifyAdminGetBulkOperation($id: ID!) {
+  bulkOperation(id: $id) {
+    id
+    status
+    type
+    createdAt
+    completedAt
+    errorCode
+    objectCount
+    rootObjectCount
+    fileSize
+    url
+    partialDataUrl
+    query
+  }
+}`;
 
 type ShopifyAdminActionHandler = (
   input: Record<string, unknown>,
@@ -328,6 +597,7 @@ interface ShopifyAdminActionContext {
   apiKey: string;
   shopDomain: string;
   fetcher: typeof fetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 }
 
@@ -384,6 +654,34 @@ export const shopifyAdminActionHandlers: Record<ShopifyAdminActionName, ShopifyA
     return {
       variants: readEdges(variants).map((edge) => normalizeVariant(edge)),
       pageInfo: normalizePageInfo(readObject(variants.pageInfo, "pageInfo")),
+    };
+  },
+  async list_order_fulfillment_orders(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: listOrderFulfillmentOrdersQuery,
+      variables: compactObject({
+        orderId: input.orderId,
+        lineItemsFirst: 250,
+        first: optionalInteger(input.first) ?? 50,
+        after: optionalString(input.after),
+        displayable: optionalBoolean(input.displayable),
+      }),
+    });
+    const order = readNullableObject(readObject(payload.data, "data").order, "order");
+    return { order: order ? normalizeOrderFulfillmentOrders(order) : null };
+  },
+  async get_fulfillment_order(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: getFulfillmentOrderQuery,
+      variables: compactObject({
+        id: input.id,
+        lineItemsFirst: optionalInteger(input.lineItemsFirst) ?? 50,
+        lineItemsAfter: optionalString(input.lineItemsAfter),
+      }),
+    });
+    const fulfillmentOrder = readNullableObject(readObject(payload.data, "data").fulfillmentOrder, "fulfillmentOrder");
+    return {
+      fulfillmentOrder: fulfillmentOrder ? normalizeFulfillmentOrder({ node: fulfillmentOrder }) : null,
     };
   },
   async list_orders(input, context) {
@@ -443,6 +741,22 @@ export const shopifyAdminActionHandlers: Record<ShopifyAdminActionName, ShopifyA
     const inventoryItem = readNullableObject(readObject(payload.data, "data").inventoryItem, "inventoryItem");
     return { inventoryItem: inventoryItem ? normalizeInventoryItemDetail(inventoryItem) : null };
   },
+  async get_inventory_quantities(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: getInventoryQuantitiesQuery,
+      variables: compactObject({
+        inventoryItemId: input.inventoryItemId,
+        locationId: input.locationId,
+        names: readNonEmptyStringArray(input.names) ?? ["available", "on_hand"],
+        includeInactive: optionalBoolean(input.includeInactive),
+      }),
+    });
+    const inventoryItem = readNullableObject(readObject(payload.data, "data").inventoryItem, "inventoryItem");
+    const inventoryLevel = inventoryItem ? readNullableObject(inventoryItem.inventoryLevel, "inventoryLevel") : null;
+    return {
+      inventoryLevel: inventoryLevel ? normalizeInventoryLevel(inventoryLevel) : null,
+    };
+  },
   async list_locations(input, context) {
     const payload = await requestShopifyAdminGraphQL(context, {
       query: listLocationsQuery,
@@ -480,6 +794,113 @@ export const shopifyAdminActionHandlers: Record<ShopifyAdminActionName, ShopifyA
     });
     const collection = readNullableObject(readObject(payload.data, "data").collection, "collection");
     return { collection: collection ? normalizeCollectionDetail(collection) : null };
+  },
+  async create_product(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: createProductMutation,
+      variables: compactObject({
+        product: readObject(input.product, "product"),
+        media: Array.isArray(input.media) ? input.media : undefined,
+      }),
+    });
+    const result = readMutationResult(payload, "productCreate");
+    return {
+      product: normalizeProductDetail(readObject(result.product, "product")),
+    };
+  },
+  async update_product(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: updateProductMutation,
+      variables: compactObject({
+        product: readObject(input.product, "product"),
+        media: Array.isArray(input.media) ? input.media : undefined,
+      }),
+    });
+    const result = readMutationResult(payload, "productUpdate");
+    return {
+      product: normalizeProductDetail(readObject(result.product, "product")),
+    };
+  },
+  async adjust_inventory_quantities(input, context) {
+    const { idempotencyKey, name, reason, referenceDocumentUri, changes } = input;
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: adjustInventoryQuantitiesMutation,
+      variables: {
+        idempotencyKey,
+        input: compactObject({
+          name,
+          reason,
+          referenceDocumentUri: typeof referenceDocumentUri === "string" ? referenceDocumentUri : undefined,
+          changes,
+        }),
+      },
+    });
+    const result = readMutationResult(payload, "inventoryAdjustQuantities");
+    return {
+      inventoryAdjustmentGroup: normalizeInventoryAdjustmentGroup(
+        readObject(result.inventoryAdjustmentGroup, "inventoryAdjustmentGroup"),
+      ),
+    };
+  },
+  async set_inventory_quantities(input, context) {
+    const { idempotencyKey, name, reason, referenceDocumentUri, quantities } = input;
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: setInventoryQuantitiesMutation,
+      variables: {
+        idempotencyKey,
+        input: compactObject({
+          name,
+          reason,
+          referenceDocumentUri: typeof referenceDocumentUri === "string" ? referenceDocumentUri : undefined,
+          quantities,
+        }),
+      },
+    });
+    const result = readMutationResult(payload, "inventorySetQuantities");
+    return {
+      inventoryAdjustmentGroup: normalizeInventoryAdjustmentGroup(
+        readObject(result.inventoryAdjustmentGroup, "inventoryAdjustmentGroup"),
+      ),
+    };
+  },
+  async create_fulfillment(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: createFulfillmentMutation,
+      variables: compactObject({
+        fulfillment: readObject(input.fulfillment, "fulfillment"),
+        message: optionalString(input.message),
+      }),
+    });
+    const result = readMutationResult(payload, "fulfillmentCreate");
+    return {
+      fulfillment: normalizeFulfillment(readObject(result.fulfillment, "fulfillment")),
+    };
+  },
+  async submit_bulk_query(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: submitBulkQueryMutation,
+      variables: {
+        query: input.query,
+        groupObjects: optionalBoolean(input.groupObjects) ?? false,
+      },
+    });
+    const result = readMutationResult(payload, "bulkOperationRunQuery");
+    return {
+      operation: normalizeBulkOperation(readObject(result.bulkOperation, "bulkOperation")),
+    };
+  },
+  async get_bulk_operation(input, context) {
+    const payload = await requestShopifyAdminGraphQL(context, {
+      query: getBulkOperationQuery,
+      variables: { id: input.id },
+    });
+    const operation = readNullableObject(readObject(payload.data, "data").bulkOperation, "bulkOperation");
+    return {
+      operation: operation ? normalizeBulkOperation(operation) : null,
+    };
+  },
+  async download_bulk_result(input, context) {
+    return downloadShopifyAdminBulkResult(input, context);
   },
   async execute_graphql(input, context) {
     const payload = await requestShopifyAdminGraphQL(context, {
@@ -620,6 +1041,103 @@ function readGraphQLErrors(value: unknown): string[] {
   return value.map((item) => optionalString(optionalRecord(item)?.message) ?? "unknown GraphQL error");
 }
 
+function readMutationResult(payload: ShopifyAdminGraphQLResponse, fieldName: string): Record<string, unknown> {
+  const result = readObject(readObject(payload.data, "data")[fieldName], fieldName);
+  const errors = readMutationUserErrors(result.userErrors);
+  if (errors.length > 0) {
+    throw new ProviderRequestError(
+      422,
+      `shopify_admin ${fieldName} user error: ${errors.join("; ")}`,
+      result.userErrors,
+    );
+  }
+  return result;
+}
+
+function readMutationUserErrors(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((item) => {
+    const error = optionalRecord(item);
+    const message = optionalString(error?.message) ?? "unknown mutation error";
+    const code = optionalString(error?.code);
+    const field = Array.isArray(error?.field)
+      ? error.field.filter((part): part is string => typeof part === "string").join(".")
+      : undefined;
+    return [field ? `${field}:` : undefined, code ? `[${code}]` : undefined, message]
+      .filter((part): part is string => typeof part === "string")
+      .join(" ");
+  });
+}
+
+async function downloadShopifyAdminBulkResult(
+  input: Record<string, unknown>,
+  context: ShopifyAdminActionContext,
+): Promise<Record<string, unknown>> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(500, "shopify_admin download_bulk_result requires transit file storage");
+  }
+
+  const url = requiredString(input.url, "url", providerInputError);
+  const response = await context.fetcher(url, {
+    headers: {
+      accept: "application/jsonl, application/x-ndjson, application/json, text/plain",
+      "user-agent": providerUserAgent,
+    },
+    signal: context.signal,
+  });
+  if (!response.ok) {
+    await cancelUnreadResponseBody(response);
+    throw new ProviderRequestError(
+      response.status,
+      `shopify_admin bulk result download failed with HTTP ${response.status}`,
+    );
+  }
+
+  const name = optionalString(input.fileName) ?? "shopify-bulk-operation-result.jsonl";
+  const mimeType =
+    optionalString(response.headers.get("content-type"))?.split(";")[0]?.trim() || "application/x-ndjson";
+
+  try {
+    const bytes = await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "Shopify bulk result",
+      createError: (message) => new ProviderRequestError(413, message),
+    });
+    const stored = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+    return {
+      file: {
+        fileId: stored.fileId,
+        downloadUrl: stored.downloadUrl,
+        sizeBytes: stored.sizeBytes,
+        name: stored.name,
+        mimeType: stored.mimeType,
+      },
+    };
+  } catch (error) {
+    await cancelUnreadResponseBody(response);
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    throw new ProviderRequestError(
+      502,
+      error instanceof Error ? error.message : "shopify_admin bulk result transit upload failed",
+    );
+  }
+}
+
+async function cancelUnreadResponseBody(response: Response): Promise<void> {
+  if (!response.body || response.body.locked) {
+    return;
+  }
+  try {
+    await response.body.cancel();
+  } catch {
+    // 清理是 best-effort，不能覆盖原始下载或存储错误。
+  }
+}
+
 function connectionVariables(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
     first: optionalInteger(input.first),
@@ -681,8 +1199,77 @@ function normalizeProductDetail(raw: Record<string, unknown>): Record<string, un
   };
 }
 
+function normalizeInventoryAdjustmentGroup(raw: Record<string, unknown>): Record<string, unknown> {
+  const changes = raw.changes;
+  if (!Array.isArray(changes)) {
+    throw new ProviderRequestError(502, "shopify_admin response is missing inventory adjustment changes");
+  }
+  return {
+    id: readRequiredString(raw, "id"),
+    createdAt: readRequiredString(raw, "createdAt"),
+    reason: readRequiredString(raw, "reason"),
+    referenceDocumentUri: optionalString(raw.referenceDocumentUri) ?? null,
+    changes: changes.map((item) => {
+      const change = readObject(item, "inventory change");
+      return {
+        name: readRequiredString(change, "name"),
+        delta: readRequiredInteger(change, "delta"),
+        quantityAfterChange: optionalInteger(change.quantityAfterChange) ?? null,
+        raw: change,
+      };
+    }),
+    raw,
+  };
+}
+
+function normalizeFulfillment(raw: Record<string, unknown>): Record<string, unknown> {
+  const order = readObject(raw.order, "order");
+  const trackingInfo = raw.trackingInfo;
+  if (!Array.isArray(trackingInfo)) {
+    throw new ProviderRequestError(502, "shopify_admin response is missing fulfillment trackingInfo");
+  }
+  return {
+    id: readRequiredString(raw, "id"),
+    name: readRequiredString(raw, "name"),
+    status: readRequiredString(raw, "status"),
+    totalQuantity: readRequiredInteger(raw, "totalQuantity"),
+    createdAt: readRequiredString(raw, "createdAt"),
+    orderId: readRequiredString(order, "id"),
+    orderName: readRequiredString(order, "name"),
+    trackingInfo: trackingInfo.map((item) => {
+      const tracking = readObject(item, "trackingInfo");
+      return {
+        company: optionalString(tracking.company) ?? null,
+        number: optionalString(tracking.number) ?? null,
+        url: optionalString(tracking.url) ?? null,
+        raw: tracking,
+      };
+    }),
+    raw,
+  };
+}
+
+function normalizeBulkOperation(raw: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: readRequiredString(raw, "id"),
+    status: readRequiredString(raw, "status"),
+    type: readRequiredString(raw, "type"),
+    createdAt: readRequiredString(raw, "createdAt"),
+    completedAt: optionalString(raw.completedAt) ?? null,
+    errorCode: optionalString(raw.errorCode) ?? null,
+    objectCount: readUnsignedInt64(raw, "objectCount"),
+    rootObjectCount: readUnsignedInt64(raw, "rootObjectCount"),
+    fileSize: readOptionalUnsignedInt64(raw.fileSize),
+    url: optionalString(raw.url) ?? null,
+    partialDataUrl: optionalString(raw.partialDataUrl) ?? null,
+    query: readRequiredString(raw, "query"),
+    raw,
+  };
+}
+
 function normalizeVariant(edge: Record<string, unknown>): Record<string, unknown> {
   const variant = readObject(edge.node, "node");
+  const inventoryItem = optionalRecord(variant.inventoryItem);
   const product = optionalRecord(variant.product);
   return {
     id: readRequiredString(variant, "id"),
@@ -690,10 +1277,67 @@ function normalizeVariant(edge: Record<string, unknown>): Record<string, unknown
     sku: optionalString(variant.sku) ?? null,
     price: optionalString(variant.price) ?? null,
     inventoryQuantity: optionalInteger(variant.inventoryQuantity) ?? null,
+    inventoryItemId: optionalString(inventoryItem?.id) ?? null,
     productId: optionalString(product?.id) ?? null,
     productTitle: optionalString(product?.title) ?? null,
     cursor: optionalString(edge.cursor) ?? null,
     raw: variant,
+  };
+}
+
+function normalizeOrderFulfillmentOrders(raw: Record<string, unknown>): Record<string, unknown> {
+  const connection = readObject(raw.fulfillmentOrders, "fulfillmentOrders");
+  return {
+    id: readRequiredString(raw, "id"),
+    name: readRequiredString(raw, "name"),
+    fulfillmentOrders: readEdges(connection).map((edge) => normalizeFulfillmentOrder(edge)),
+    pageInfo: normalizePageInfo(readObject(connection.pageInfo, "pageInfo")),
+    raw,
+  };
+}
+
+function normalizeFulfillmentOrder(edge: Record<string, unknown>): Record<string, unknown> {
+  const fulfillmentOrder = readObject(edge.node, "node");
+  const assignedLocation = readObject(fulfillmentOrder.assignedLocation, "assignedLocation");
+  const location = optionalRecord(assignedLocation.location);
+  const lineItems = readObject(fulfillmentOrder.lineItems, "lineItems");
+  const supportedActions = fulfillmentOrder.supportedActions;
+  if (!Array.isArray(supportedActions)) {
+    throw new ProviderRequestError(502, "shopify_admin response is missing supportedActions");
+  }
+  return {
+    id: readRequiredString(fulfillmentOrder, "id"),
+    orderId: readRequiredString(fulfillmentOrder, "orderId"),
+    orderName: readRequiredString(fulfillmentOrder, "orderName"),
+    status: readRequiredString(fulfillmentOrder, "status"),
+    requestStatus: readRequiredString(fulfillmentOrder, "requestStatus"),
+    assignedLocationId: optionalString(location?.id) ?? null,
+    assignedLocationName: readRequiredString(assignedLocation, "name"),
+    supportedActions: supportedActions.map((item) => {
+      const supportedAction = readObject(item, "supportedAction");
+      return {
+        action: readRequiredString(supportedAction, "action"),
+        externalUrl: optionalString(supportedAction.externalUrl) ?? null,
+      };
+    }),
+    lineItems: readEdges(lineItems).map((lineItemEdge) => {
+      const lineItem = readObject(lineItemEdge.node, "node");
+      return {
+        id: readRequiredString(lineItem, "id"),
+        totalQuantity: readRequiredInteger(lineItem, "totalQuantity"),
+        remainingQuantity: readRequiredInteger(lineItem, "remainingQuantity"),
+        inventoryItemId: optionalString(lineItem.inventoryItemId) ?? null,
+        sku: optionalString(lineItem.sku) ?? null,
+        productTitle: readRequiredString(lineItem, "productTitle"),
+        variantTitle: optionalString(lineItem.variantTitle) ?? null,
+        requiresShipping: readRequiredBoolean(lineItem, "requiresShipping"),
+        raw: lineItem,
+      };
+    }),
+    lineItemsPageInfo: normalizePageInfo(readObject(lineItems.pageInfo, "pageInfo")),
+    updatedAt: readRequiredString(fulfillmentOrder, "updatedAt"),
+    cursor: optionalString(edge.cursor) ?? null,
+    raw: fulfillmentOrder,
   };
 }
 
@@ -774,6 +1418,31 @@ function normalizeInventoryItemDetail(raw: Record<string, unknown>): Record<stri
     harmonizedSystemCode: optionalString(raw.harmonizedSystemCode) ?? null,
     createdAt: optionalString(raw.createdAt) ?? null,
     updatedAt: optionalString(raw.updatedAt) ?? null,
+    raw,
+  };
+}
+
+function normalizeInventoryLevel(raw: Record<string, unknown>): Record<string, unknown> {
+  const inventoryItem = readObject(raw.item, "item");
+  const location = readObject(raw.location, "location");
+  const quantities = raw.quantities;
+  if (!Array.isArray(quantities)) {
+    throw new ProviderRequestError(502, "shopify_admin response is missing inventory quantities");
+  }
+  return {
+    id: readRequiredString(raw, "id"),
+    isActive: readRequiredBoolean(raw, "isActive"),
+    inventoryItemId: readRequiredString(inventoryItem, "id"),
+    inventoryItemSku: optionalString(inventoryItem.sku) ?? null,
+    locationId: readRequiredString(location, "id"),
+    locationName: readRequiredString(location, "name"),
+    quantities: quantities.map((item) => {
+      const quantity = readObject(item, "inventory quantity");
+      return {
+        name: readRequiredString(quantity, "name"),
+        quantity: readRequiredInteger(quantity, "quantity"),
+      };
+    }),
     raw,
   };
 }
@@ -871,6 +1540,40 @@ function readRequiredString(input: Record<string, unknown>, key: string): string
 
 function readStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function readNonEmptyStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const strings = value.filter((item): item is string => typeof item === "string" && item.length > 0);
+  return strings.length > 0 ? strings : undefined;
+}
+
+function readRequiredInteger(input: Record<string, unknown>, key: string): number {
+  const value = input[key];
+  if (!Number.isInteger(value)) {
+    throw new ProviderRequestError(502, `shopify_admin response is missing ${key}`);
+  }
+  return value as number;
+}
+
+function readUnsignedInt64(input: Record<string, unknown>, key: string): string {
+  const value = readOptionalUnsignedInt64(input[key]);
+  if (value === null) {
+    throw new ProviderRequestError(502, `shopify_admin response is missing ${key}`);
+  }
+  return value;
+}
+
+function readOptionalUnsignedInt64(value: unknown): string | null {
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+  if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
+    return String(value);
+  }
+  return null;
 }
 
 function readRequiredBoolean(input: Record<string, unknown>, key: string): boolean {

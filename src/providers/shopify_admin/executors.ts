@@ -31,6 +31,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       apiKey: credential.apiKey,
       shopDomain,
       fetcher,
+      transitFiles: context.transitFiles,
       signal: context.signal,
     };
   },
