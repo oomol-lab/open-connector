@@ -482,6 +482,9 @@ class SqliteD1Database implements D1DatabaseBinding {
     this.database.exec(
       readFileSync(new URL("../../../migrations/0012_runtime_token_tenant.sql", import.meta.url), "utf8"),
     );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0013_runtime_token_connections.sql", import.meta.url), "utf8"),
+    );
   }
 
   prepare(query: string): D1PreparedStatementBinding {

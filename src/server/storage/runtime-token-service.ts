@@ -18,6 +18,19 @@ export interface RuntimeTokenRecord {
    * tenants.
    */
   tenant: Tenant;
+  /**
+   * Connection names (aliases) this token may act against, within its own tenant.
+   *
+   * Deliberately NOT part of `TokenPolicy`, same reasoning as `tenant`: policy answers
+   * "which actions", tenant answers "whose data", this answers "which of that tenant's
+   * OWN named connections" — e.g. a token meant for one GitHub account should not be
+   * able to name a different GitHub account under the same tenant just because both
+   * exist. `undefined` means unrestricted (every connection the tenant owns) — the
+   * backward-compatible default for tokens minted before this field existed. `[]` means
+   * no connections at all, matching the existing "empty allowlist authorizes nothing"
+   * convention used by connect-session's `allowedServices`.
+   */
+  allowedConnections?: string[];
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
@@ -29,6 +42,7 @@ export interface RuntimeTokenSummary {
   id: string;
   name: string;
   tenant: Tenant;
+  allowedConnections?: string[];
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
@@ -55,6 +69,7 @@ const tokenPrefix = "oct_";
 export interface RuntimeGrant extends TokenPolicy {
   tokenId: string;
   tenant: Tenant;
+  allowedConnections?: string[];
 }
 
 export class RuntimeTokenService {
@@ -70,6 +85,7 @@ export class RuntimeTokenService {
     name: string,
     policy: TokenPolicy = { allowedActions: [], blockedActions: [], allowedProxies: [] },
     tenant: Tenant = defaultTenant,
+    allowedConnections?: string[],
   ): Promise<RuntimeTokenCreation> {
     const token = `${tokenPrefix}${randomBytes(32).toString("base64url")}`;
     const now = new Date().toISOString();
@@ -78,6 +94,7 @@ export class RuntimeTokenService {
       name: name.trim(),
       tokenHash: hashRuntimeToken(token),
       tenant,
+      allowedConnections,
       allowedActions: policy.allowedActions,
       blockedActions: policy.blockedActions,
       allowedProxies: policy.allowedProxies,
@@ -114,6 +131,7 @@ export class RuntimeTokenService {
     return {
       tokenId: matched.id,
       tenant: matched.tenant,
+      allowedConnections: matched.allowedConnections,
       allowedActions: matched.allowedActions,
       blockedActions: matched.blockedActions,
       allowedProxies: matched.allowedProxies,
@@ -146,6 +164,7 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
     id: record.id,
     name: record.name,
     tenant: record.tenant,
+    allowedConnections: record.allowedConnections,
     allowedActions: record.allowedActions,
     blockedActions: record.blockedActions,
     allowedProxies: record.allowedProxies,

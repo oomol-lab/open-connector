@@ -69,6 +69,68 @@ describe("ActionRunner", () => {
     );
   });
 
+  it("allows a run when connectionName is within allowedConnections", async () => {
+    const runs = new MemoryRunLogStore();
+    const { logger } = createTestLogger();
+    const runner = createRunner({ runs, logger });
+
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "mcp",
+      tenant: testTenant,
+      connectionName: "default",
+      allowedConnections: ["default"],
+    });
+
+    expect(run).toMatchObject({ result: { ok: true } });
+  });
+
+  it("rejects a run naming a connection outside allowedConnections (Layer-4 gap fix)", async () => {
+    const runs = new MemoryRunLogStore();
+    const { entries, logger } = createTestLogger();
+    const runner = createRunner({ runs, logger });
+
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "mcp",
+      tenant: testTenant,
+      connectionName: "work",
+      allowedConnections: ["default"],
+    });
+
+    expect(run).toMatchObject({
+      result: {
+        ok: false,
+        error: { code: "connection_not_allowed" },
+      },
+    });
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fields: expect.objectContaining({ errorCode: "connection_not_allowed" }),
+        }),
+      ]),
+    );
+  });
+
+  it("is unrestricted when allowedConnections is undefined (backward compatible)", async () => {
+    const runs = new MemoryRunLogStore();
+    const { logger } = createTestLogger();
+    const runner = createRunner({ runs, logger });
+
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "mcp",
+      tenant: testTenant,
+      connectionName: "any-alias-at-all",
+    });
+
+    expect(run).toMatchObject({ result: { ok: true } });
+  });
+
   it("does not replace a successful action result when audit storage fails", async () => {
     const runs = new MemoryRunLogStore();
     runs.addError = new Error("secret-in-storage");

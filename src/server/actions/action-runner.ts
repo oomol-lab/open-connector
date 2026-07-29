@@ -6,7 +6,7 @@ import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
 import type { IRunLogStore, RunLog, RunLogCaller, RunLogListInput, RunLogPage } from "../storage/runtime-store.ts";
 
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError, normalizeConnectionName } from "../../connection-service.ts";
 import { executeAction as executeProviderAction } from "../../core/execution.ts";
 import { safeRunLogError, summarizeForRunLog } from "./run-log-summary.ts";
 
@@ -29,6 +29,10 @@ export interface RunActionInput {
   connectionName?: string;
   policy?: ActionPolicySnapshot;
   runtimeTokenId?: string;
+  /** Connection names the calling runtime token may act against, within its own tenant.
+   * `undefined` (admin/HTTP callers with no runtime token, or a token minted before this
+   * field existed) means unrestricted. See RuntimeGrant.allowedConnections. */
+  allowedConnections?: string[];
 }
 
 export interface ActionRunResult {
@@ -81,6 +85,16 @@ export class ActionRunner {
       result = { ok: false, error: { code: policy.code, message: policy.message } };
     } else {
       try {
+        // Checked here, inside the try block, so an invalid connectionName is reported
+        // the same way resolveForExecution's own normalization would (via the catch
+        // below) rather than throwing before we even get there.
+        const requestedConnectionName = normalizeConnectionName(input.connectionName);
+        if (input.allowedConnections !== undefined && !input.allowedConnections.includes(requestedConnectionName)) {
+          throw new ConnectionError(
+            "connection_not_allowed",
+            `This runtime token is not allowed to use connection "${requestedConnectionName}".`,
+          );
+        }
         connection = await this.options.connections.resolveForExecution(
           input.tenant,
           action.service,

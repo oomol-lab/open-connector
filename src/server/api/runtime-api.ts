@@ -242,7 +242,7 @@ function mapExecutionErrorStatus(code: string | undefined): RuntimeStatus {
   if (code === "connection_not_found" || code === "unknown_service") {
     return 404;
   }
-  if (code === "authorization_failed") {
+  if (code === "authorization_failed" || code === "connection_not_allowed") {
     return 403;
   }
   if (code === "rate_limited") {

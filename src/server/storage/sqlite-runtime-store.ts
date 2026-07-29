@@ -318,9 +318,9 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         insert into runtime_tokens (
-          id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+          id, name, token_hash, tenant, allowed_connections, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -328,6 +328,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         record.name,
         record.tokenHash,
         record.tenant,
+        record.allowedConnections === undefined ? null : JSON.stringify(record.allowedConnections),
         JSON.stringify(record.allowedActions),
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
@@ -340,7 +341,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     return this.database
       .prepare(
         `
-        select id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, tenant, allowed_connections, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         from runtime_tokens
         where revoked_at is null
         order by created_at desc, id desc
@@ -354,7 +355,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     const row = this.database
       .prepare(
         `
-        select id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, tenant, allowed_connections, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
         from runtime_tokens
         where token_hash = ? and revoked_at is null
       `,
@@ -370,7 +371,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?
         where id = ? and revoked_at is null
-        returning id, name, token_hash, tenant, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        returning id, name, token_hash, tenant, allowed_connections, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
       `,
       )
       .get(
@@ -400,12 +401,17 @@ function readRuntimeTokenRow(row: unknown): RuntimeTokenRecord {
     name: readString(row, "name"),
     tokenHash: readString(row, "token_hash"),
     tenant: readString(row, "tenant"),
+    allowedConnections: readOptionalJson(readOptionalString(row, "allowed_connections")),
     allowedActions: parseJson(readString(row, "allowed_actions")),
     blockedActions: parseJson(readString(row, "blocked_actions")),
     allowedProxies: parseJson(readString(row, "allowed_proxies")),
     createdAt: readString(row, "created_at"),
     lastUsedAt: readOptionalString(row, "last_used_at"),
   };
+}
+
+function readOptionalJson<T>(value: string | undefined): T | undefined {
+  return value === undefined ? undefined : (JSON.parse(value) as T);
 }
 
 export class SqliteRuntimePolicyStore implements IRuntimePolicyStore {

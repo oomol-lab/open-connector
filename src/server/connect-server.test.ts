@@ -1767,6 +1767,47 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("rejects a stored token naming a connection outside allowedConnections (Layer-4 gap fix)", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimeTokens,
+      runs,
+      providerLoader: new EchoProviderLoader(),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Default connection only",
+        allowedActions: ["example.*"],
+        allowedConnections: ["default"],
+      }),
+    });
+    const token = (await created.json()) as { token: string; record: RuntimeTokenRecord };
+    expect(token.record.allowedConnections).toEqual(["default"]);
+
+    const allowed = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, connectionName: "default" }),
+    });
+    expect(allowed.status).toBe(200);
+
+    const denied = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, connectionName: "work" }),
+    });
+    expect(denied.status).toBe(403);
+    await expect(denied.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
+  });
+
   it("returns an idempotency conflict when different stored tokens reuse one key", async () => {
     let executions = 0;
     const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());

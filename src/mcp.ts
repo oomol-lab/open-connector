@@ -328,6 +328,7 @@ async function executeAction(
     connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    allowedConnections: options.runtimeGrant?.allowedConnections,
   });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);

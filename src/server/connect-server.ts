@@ -40,7 +40,12 @@ import { connectSessionAllowsService, ConnectSessionService } from "./api/connec
 import { HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { renderOAuthCompletionPage } from "./api/oauth-completion-page.ts";
 import { createOpenApiDocument } from "./api/openapi.ts";
-import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenPolicy } from "./api/policy-input.ts";
+import {
+  policyRequestMaxBytes,
+  readAllowedConnections,
+  readRuntimePolicyRules,
+  readTokenPolicy,
+} from "./api/policy-input.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeAction,
@@ -607,6 +612,7 @@ export class ConnectServer {
         connectionName,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
+        allowedConnections: runtimeGrant?.allowedConnections,
       });
       if (!run) {
         return serializeRuntimeFailure({
@@ -1111,6 +1117,7 @@ export class ConnectServer {
       name,
       readTokenPolicy(body, true),
       readTenant(context, body),
+      readAllowedConnections(body),
     );
     return context.json({
       token: created.token,
@@ -1118,6 +1125,7 @@ export class ConnectServer {
         id: created.record.id,
         name: created.record.name,
         tenant: created.record.tenant,
+        allowedConnections: created.record.allowedConnections,
         allowedActions: created.record.allowedActions,
         blockedActions: created.record.blockedActions,
         allowedProxies: created.record.allowedProxies,
