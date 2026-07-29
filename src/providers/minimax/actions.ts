@@ -5,7 +5,15 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "minimax";
 
-export type MinimaxActionName = "list_models" | "retrieve_model" | "create_response" | "estimate_input_tokens";
+export type MinimaxActionName =
+  | "list_models"
+  | "retrieve_model"
+  | "create_response"
+  | "estimate_input_tokens"
+  | "text_to_video"
+  | "image_to_video"
+  | "query_video_generation"
+  | "download_video";
 
 const trimmedNonEmptyString = (description: string) => s.string({ description, minLength: 1, pattern: "\\S" });
 
@@ -207,6 +215,136 @@ const createResponseOutputSchema = s.looseRequiredObject(
   },
 );
 
+const videoModels = [
+  "MiniMax-Hailuo-2.3",
+  "MiniMax-Hailuo-2.3-Fast",
+  "MiniMax-Hailuo-02",
+  "T2V-01-Director",
+  "T2V-01",
+  "I2V-01-Director",
+  "I2V-01-live",
+  "I2V-01",
+];
+
+const videoRegionSchema = s.stringEnum(["global", "china"], {
+  description:
+    "MiniMax service region. Use global for the https://api.minimax.io host or china for the https://api.minimaxi.com host. Defaults to global.",
+  default: "global",
+});
+
+const videoModelSchema = s.stringEnum(videoModels, {
+  description: "MiniMax video model to invoke, for example MiniMax-Hailuo-2.3.",
+  default: "MiniMax-Hailuo-2.3",
+});
+
+const videoDurationSchema = s.integer("Length of the generated video in seconds.", { minimum: 1 });
+const videoResolutionSchema = trimmedNonEmptyString(
+  "Resolution of the generated video, for example 512P, 768P, or 1080P.",
+);
+const videoPromptOptimizerSchema = s.boolean("Whether MiniMax may rewrite the prompt to improve the result.");
+const videoFastPretreatmentSchema = s.boolean("Whether MiniMax applies fast pre-processing to speed up generation.");
+const videoCallbackUrlSchema = s.url("URL MiniMax calls with asynchronous task status updates.");
+
+const textToVideoInputSchema = s.object(
+  "Request body for creating a MiniMax text-to-video generation task.",
+  {
+    model: videoModelSchema,
+    prompt: trimmedNonEmptyString("Text description of the video to generate."),
+    prompt_optimizer: videoPromptOptimizerSchema,
+    fast_pretreatment: videoFastPretreatmentSchema,
+    duration: videoDurationSchema,
+    resolution: videoResolutionSchema,
+    callback_url: videoCallbackUrlSchema,
+    region: videoRegionSchema,
+  },
+  { optional: ["prompt_optimizer", "fast_pretreatment", "duration", "resolution", "callback_url", "region"] },
+);
+
+const imageToVideoInputSchema = s.object(
+  "Request body for creating a MiniMax image-to-video generation task from a first frame image.",
+  {
+    model: videoModelSchema,
+    first_frame_image: trimmedNonEmptyString("First frame image as a public HTTPS URL or a data URI base64 string."),
+    prompt: optionalTrimmedString("Text description that guides the generated video."),
+    prompt_optimizer: videoPromptOptimizerSchema,
+    fast_pretreatment: videoFastPretreatmentSchema,
+    duration: videoDurationSchema,
+    resolution: videoResolutionSchema,
+    callback_url: videoCallbackUrlSchema,
+    region: videoRegionSchema,
+  },
+  {
+    optional: ["prompt", "prompt_optimizer", "fast_pretreatment", "duration", "resolution", "callback_url", "region"],
+  },
+);
+
+const queryVideoGenerationInputSchema = s.object(
+  "Input parameters for querying a MiniMax video generation task.",
+  {
+    task_id: trimmedNonEmptyString("Identifier of the MiniMax video generation task to query."),
+    region: videoRegionSchema,
+  },
+  { optional: ["region"] },
+);
+
+const downloadVideoInputSchema = s.object(
+  "Input parameters for retrieving a generated MiniMax video file.",
+  {
+    file_id: trimmedNonEmptyString("Identifier of the generated video file to retrieve."),
+    region: videoRegionSchema,
+  },
+  { optional: ["region"] },
+);
+
+const minimaxBaseRespSchema = s.looseRequiredObject(
+  "MiniMax base response wrapper.",
+  {
+    status_code: s.integer("MiniMax status code where 0 indicates success."),
+    status_msg: s.string("Human-readable MiniMax status message."),
+  },
+  { optional: ["status_code", "status_msg"] },
+);
+
+const videoTaskCreatedOutputSchema = s.looseRequiredObject(
+  "MiniMax asynchronous video generation task creation response.",
+  {
+    task_id: s.string("Identifier of the asynchronous MiniMax video generation task."),
+    base_resp: minimaxBaseRespSchema,
+  },
+  { optional: ["task_id", "base_resp"] },
+);
+
+const videoTaskStatusOutputSchema = s.looseRequiredObject(
+  "MiniMax video generation task status response.",
+  {
+    task_id: s.string("Identifier of the queried MiniMax video generation task."),
+    status: s.string("Current task status, for example Preparing, Queueing, Processing, Success, or Fail."),
+    file_id: s.string("Identifier of the generated video file, present once the task succeeds."),
+    base_resp: minimaxBaseRespSchema,
+  },
+  { optional: ["task_id", "status", "file_id", "base_resp"] },
+);
+
+const videoFileOutputSchema = s.looseRequiredObject(
+  "MiniMax file retrieval response for a generated video.",
+  {
+    file: s.looseRequiredObject(
+      "MiniMax file object with download metadata.",
+      {
+        file_id: s.integer("MiniMax file identifier."),
+        bytes: s.integer("Size of the file in bytes."),
+        created_at: s.integer("File creation time as Unix seconds."),
+        filename: s.string("File name assigned by MiniMax."),
+        purpose: s.string("Purpose associated with the file."),
+        download_url: s.string("Temporary URL to download the generated video."),
+      },
+      { optional: ["file_id", "bytes", "created_at", "filename", "purpose", "download_url"] },
+    ),
+    base_resp: minimaxBaseRespSchema,
+  },
+  { optional: ["file", "base_resp"] },
+);
+
 export const minimaxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
@@ -237,5 +375,29 @@ export const minimaxActions: ActionDefinition[] = [
       object: s.string("Object type returned by MiniMax, usually response.input_tokens."),
       input_tokens: s.integer("Estimated input token count."),
     }),
+  }),
+  defineProviderAction(service, {
+    name: "text_to_video",
+    description: "Create a MiniMax asynchronous text-to-video generation task.",
+    inputSchema: textToVideoInputSchema,
+    outputSchema: videoTaskCreatedOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "image_to_video",
+    description: "Create a MiniMax asynchronous image-to-video generation task from a first frame image.",
+    inputSchema: imageToVideoInputSchema,
+    outputSchema: videoTaskCreatedOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "query_video_generation",
+    description: "Query the status of a MiniMax video generation task and read its file id when it completes.",
+    inputSchema: queryVideoGenerationInputSchema,
+    outputSchema: videoTaskStatusOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "download_video",
+    description: "Retrieve the download URL and metadata for a generated MiniMax video file.",
+    inputSchema: downloadVideoInputSchema,
+    outputSchema: videoFileOutputSchema,
   }),
 ];

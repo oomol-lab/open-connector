@@ -8,6 +8,7 @@ import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError 
 
 const service = "minimax";
 const minimaxApiBaseUrl = "https://api.minimax.io";
+const minimaxChinaApiBaseUrl = "https://api.minimaxi.com";
 
 type MinimaxActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type MinimaxActionHandler = (input: Record<string, unknown>, context: MinimaxActionContext) => Promise<unknown>;
@@ -26,6 +27,38 @@ export const minimaxActionHandlers: Record<MinimaxActionName, MinimaxActionHandl
   },
   estimate_input_tokens(input, context) {
     return minimaxPostJson("/v1/responses/input_tokens", normalizeMinimaxBody(input), context);
+  },
+  text_to_video(input, context) {
+    return minimaxPostJson(
+      "/v1/video_generation",
+      normalizeMinimaxVideoBody(input),
+      context,
+      minimaxBaseUrlForRegion(input.region),
+    );
+  },
+  image_to_video(input, context) {
+    return minimaxPostJson(
+      "/v1/video_generation",
+      normalizeMinimaxVideoBody(input),
+      context,
+      minimaxBaseUrlForRegion(input.region),
+    );
+  },
+  query_video_generation(input, context) {
+    const taskId = readInputString(input.task_id, "task_id");
+    return minimaxGetJson(
+      `/v1/query/video_generation?task_id=${encodeURIComponent(taskId)}`,
+      context,
+      minimaxBaseUrlForRegion(input.region),
+    );
+  },
+  download_video(input, context) {
+    const fileId = readInputString(input.file_id, "file_id");
+    return minimaxGetJson(
+      `/v1/files/retrieve?file_id=${encodeURIComponent(fileId)}`,
+      context,
+      minimaxBaseUrlForRegion(input.region),
+    );
   },
 };
 
@@ -53,7 +86,11 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function minimaxGetJson(path: string, context: MinimaxActionContext): Promise<Record<string, unknown>> {
+async function minimaxGetJson(
+  path: string,
+  context: MinimaxActionContext,
+  baseUrl: string = minimaxApiBaseUrl,
+): Promise<Record<string, unknown>> {
   return minimaxRequestJson(
     path,
     {
@@ -62,6 +99,7 @@ async function minimaxGetJson(path: string, context: MinimaxActionContext): Prom
       signal: context.signal,
     },
     context.fetcher,
+    baseUrl,
   );
 }
 
@@ -69,6 +107,7 @@ async function minimaxPostJson(
   path: string,
   body: Record<string, unknown>,
   context: MinimaxActionContext,
+  baseUrl: string = minimaxApiBaseUrl,
 ): Promise<Record<string, unknown>> {
   return minimaxRequestJson(
     path,
@@ -82,6 +121,7 @@ async function minimaxPostJson(
       signal: context.signal,
     },
     context.fetcher,
+    baseUrl,
   );
 }
 
@@ -89,8 +129,9 @@ async function minimaxRequestJson(
   path: string,
   init: RequestInit,
   fetcher: ProviderFetch,
+  baseUrl: string = minimaxApiBaseUrl,
 ): Promise<Record<string, unknown>> {
-  const url = new URL(path, minimaxApiBaseUrl);
+  const url = new URL(path, baseUrl);
   let response: Response;
   try {
     response = await fetcher(url.toString(), init);
@@ -124,6 +165,23 @@ function normalizeMinimaxBody(input: Record<string, unknown>): Record<string, un
     instructions: trimString(input.instructions),
     prompt_cache_key: trimString(input.prompt_cache_key),
   });
+}
+
+function minimaxBaseUrlForRegion(region: unknown): string {
+  return optionalString(region) === "china" ? minimaxChinaApiBaseUrl : minimaxApiBaseUrl;
+}
+
+function normalizeMinimaxVideoBody(input: Record<string, unknown>): Record<string, unknown> {
+  const body: Record<string, unknown> = compactObject({
+    ...input,
+    model: trimString(input.model),
+    prompt: trimString(input.prompt),
+    first_frame_image: trimString(input.first_frame_image),
+    resolution: trimString(input.resolution),
+    callback_url: trimString(input.callback_url),
+  });
+  delete body.region;
+  return body;
 }
 
 async function readMinimaxPayload(response: Response): Promise<Record<string, unknown>> {
