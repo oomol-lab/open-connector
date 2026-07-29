@@ -1091,11 +1091,9 @@ async function downloadShopifyAdminBulkResult(
       signal: timeout.signal,
     });
     if (!response.ok) {
-      throw new ProviderRequestError(
-        502,
-        `shopify_admin bulk result download failed with HTTP ${response.status}`,
-        { providerStatus: response.status },
-      );
+      throw new ProviderRequestError(502, `shopify_admin bulk result download failed with HTTP ${response.status}`, {
+        providerStatus: response.status,
+      });
     }
 
     const name = optionalString(input.fileName) ?? "shopify-bulk-operation-result.jsonl";
