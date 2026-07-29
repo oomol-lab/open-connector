@@ -110,7 +110,9 @@ export type ShopifyActionName =
   | "list_articles"
   | "get_article"
   | "count_articles"
-  | "list_article_tags";
+  | "list_article_tags"
+  | "list_blog_article_tags"
+  | "list_article_authors";
 
 export const shopifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -217,17 +219,13 @@ export const shopifyActions: ActionDefinition[] = [
       "The input payload for counting Shopify REST pages.",
       {
         title: nonEmptyStringSchema("Count pages with this exact Shopify page title."),
-        handle: nonEmptyStringSchema("Count pages with this Shopify page handle."),
         published_status: publishedStatusSchema,
-        since_id: sinceIdSchema,
         ...dateFilterInput,
       },
       {
         optional: [
           "title",
-          "handle",
           "published_status",
-          "since_id",
           "created_at_min",
           "created_at_max",
           "updated_at_min",
@@ -334,6 +332,32 @@ export const shopifyActions: ActionDefinition[] = [
     ),
     outputSchema: s.object("The Shopify REST article tags response.", {
       tags: s.array("Article tags returned by Shopify.", s.string("One article tag.")),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_blog_article_tags",
+    description: "List Shopify REST article tags for one blog.",
+    requiredScopes: [contentScope],
+    inputSchema: s.object(
+      "The input payload for listing Shopify REST article tags in one blog.",
+      {
+        blog_id: shopifyIdSchema("The Shopify blog ID."),
+        limit: limitSchema,
+        popular: s.boolean("Whether Shopify should order tags by popularity."),
+      },
+      { optional: ["limit", "popular"] },
+    ),
+    outputSchema: s.object("The Shopify REST blog article tags response.", {
+      tags: s.array("Article tags returned by Shopify.", s.string("One article tag.")),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_article_authors",
+    description: "List Shopify REST article authors across the connected shop.",
+    requiredScopes: [contentScope],
+    inputSchema: s.object("No input is required to list Shopify REST article authors.", {}),
+    outputSchema: s.object("The Shopify REST article authors response.", {
+      authors: s.array("Article authors returned by Shopify.", s.string("One article author.")),
     }),
   }),
 ];

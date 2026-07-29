@@ -6,7 +6,7 @@ const service = "shopify";
 
 export const provider: ProviderDefinition = {
   service,
-  displayName: "Shopify REST Admin",
+  displayName: "Shopify REST Admin (Legacy)",
   categories: ["Marketing", "Data"],
   authTypes: ["api_key"],
   auth: [

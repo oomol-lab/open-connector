@@ -84,9 +84,7 @@ export const shopifyActionHandlers: Record<ShopifyActionName, ShopifyActionHandl
       path: "/pages/count.json",
       queryKeys: [
         "title",
-        "handle",
         "published_status",
-        "since_id",
         "created_at_min",
         "created_at_max",
         "updated_at_min",
@@ -141,23 +139,38 @@ export const shopifyActionHandlers: Record<ShopifyActionName, ShopifyActionHandl
     });
   },
   async list_article_tags(input, context) {
-    const query: Record<string, string> = {};
-    const limit = readQueryValue(input.limit);
-    if (limit !== undefined) {
-      query.limit = limit;
-    }
-    if (input.popular === true) {
-      query.popular = "1";
-    }
     const { payload } = await requestShopifyRest({
       context,
       path: "/articles/tags.json",
-      query,
+      query: buildArticleTagQuery(input),
       phase: "execute",
     });
     const record = requireRecord(payload, "Shopify article tags response");
     return {
       tags: requireStringArray(record.tags, "tags"),
+    };
+  },
+  async list_blog_article_tags(input, context) {
+    const { payload } = await requestShopifyRest({
+      context,
+      path: `/blogs/${readId(input, "blog_id")}/articles/tags.json`,
+      query: buildArticleTagQuery(input),
+      phase: "execute",
+    });
+    const record = requireRecord(payload, "Shopify blog article tags response");
+    return {
+      tags: requireStringArray(record.tags, "tags"),
+    };
+  },
+  async list_article_authors(_input, context) {
+    const { payload } = await requestShopifyRest({
+      context,
+      path: "/articles/authors.json",
+      phase: "execute",
+    });
+    const record = requireRecord(payload, "Shopify article authors response");
+    return {
+      authors: requireStringArray(record.authors, "authors"),
     };
   },
 };
@@ -449,6 +462,18 @@ function readQueryValue(value: unknown): string | undefined {
     return String(value);
   }
   return undefined;
+}
+
+function buildArticleTagQuery(input: Record<string, unknown>): Record<string, string> {
+  const query: Record<string, string> = {};
+  const limit = readQueryValue(input.limit);
+  if (limit !== undefined) {
+    query.limit = limit;
+  }
+  if (input.popular === true) {
+    query.popular = "1";
+  }
+  return query;
 }
 
 function assertPageInfoFilterBoundary(input: Record<string, unknown>): void {
