@@ -32,6 +32,11 @@ const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
 const credentialReadEnabled = process.env.OOMOL_CONNECT_ENABLE_CREDENTIAL_READ === "true";
 // Both a URL and a secret are required: an unsigned webhook lets anyone who can reach the
 // receiver forge a connection event, so there is no unsigned mode.
+// Falls back to the encryption key so connect sessions work without a second secret to
+// manage; a dedicated value is still preferred so rotating one does not invalidate the other.
+const connectSessionSecret =
+  process.env.OOMOL_CONNECT_SESSION_SECRET ?? process.env.OOMOL_CONNECT_ENCRYPTION_KEY ?? undefined;
+const connectSessionTtlSeconds = readPositiveIntegerEnv("OOMOL_CONNECT_SESSION_TTL_SECONDS", 1800);
 const webhookUrl = process.env.OOMOL_CONNECT_WEBHOOK_URL;
 const webhookSecret = process.env.OOMOL_CONNECT_WEBHOOK_SECRET;
 const webhook =
@@ -102,6 +107,8 @@ const { app, runtimeAuthConfigured } = await createConnectApp({
   logger,
   credentialReadEnabled,
   webhook,
+  connectSessionSecret,
+  connectSessionTtlSeconds,
 });
 
 // SQLite closes synchronously; the Postgres pool returns a promise. Awaiting covers both,

@@ -23,6 +23,15 @@ export interface OAuthAuthorizationCompleteInput {
   code: string;
 }
 
+/** Result of a completed authorization, identifying the connection it produced. */
+export interface OAuthAuthorizationComplete {
+  service: string;
+  connected: true;
+  connectionId: string;
+  tenant: Tenant;
+  connectionName: string;
+}
+
 /**
  * Short-lived OAuth state stored while the browser completes authorization.
  *
@@ -119,7 +128,7 @@ export class OAuthFlowService {
     };
   }
 
-  async completeAuthorization(input: OAuthAuthorizationCompleteInput): Promise<{ service: string; connected: true }> {
+  async completeAuthorization(input: OAuthAuthorizationCompleteInput): Promise<OAuthAuthorizationComplete> {
     const pending = await this.states.take(input.state);
     if (!pending) {
       throw new OAuthFlowError("invalid_oauth_state", "OAuth state is missing or expired.");
@@ -160,10 +169,18 @@ export class OAuthFlowService {
       },
     };
 
-    await this.connections.setOAuthCredential(pending.tenant, pending.service, oauthCredential, pending.connectionName);
+    const summary = await this.connections.setOAuthCredential(
+      pending.tenant,
+      pending.service,
+      oauthCredential,
+      pending.connectionName,
+    );
     return {
       service: pending.service,
       connected: true,
+      connectionId: summary.id,
+      tenant: pending.tenant,
+      connectionName: summary.connectionName,
     };
   }
 }

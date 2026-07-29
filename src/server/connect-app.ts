@@ -13,6 +13,7 @@ import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.t
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
+import { ConnectSessionService } from "./api/connect-session.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 import { ConnectionWebhookNotifier } from "./webhooks/connection-webhook.ts";
@@ -35,6 +36,9 @@ export interface ConnectAppOptions {
   credentialReadEnabled?: boolean;
   /** Deliver `connection.created` to this endpoint. Omitted means no webhooks. */
   webhook?: { url: string; secret: string; signatureHeader?: string };
+  /** Signs browser-facing connect sessions. Omitted disables them entirely. */
+  connectSessionSecret?: string;
+  connectSessionTtlSeconds?: number;
 }
 
 export interface ConnectApp {
@@ -99,6 +103,10 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       logger: options.logger,
       compressApiResponses: options.compressApiResponses,
       credentialReadEnabled: options.credentialReadEnabled,
+      connectSessions: options.connectSessionSecret
+        ? new ConnectSessionService(options.connectSessionSecret, options.connectSessionTtlSeconds)
+        : undefined,
+      publicOrigin: options.publicOrigin,
     }).createApp(),
     runtimeAuthConfigured:
       Boolean(options.runtimeToken) ||

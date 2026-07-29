@@ -1,6 +1,13 @@
 import { escapeHtml } from "./http-utils.ts";
 
 const oauthCompletionChannelName = "oomol-connect-oauth";
+
+/** Identifies the connection an OAuth flow produced, for the page that opened it. */
+export interface OAuthCompletionConnection {
+  connectionId: string;
+  tenant?: string;
+  connectionName?: string;
+}
 const oauthCompletedType = "oauth.completed";
 
 // Client-side translations. English is also the server-rendered default in the
@@ -46,10 +53,16 @@ const oauthCompletionStrings = {
   },
 };
 
-export function renderOAuthCompletionPage(service: string): string {
+export function renderOAuthCompletionPage(service: string, connection?: OAuthCompletionConnection): string {
+  // `connectionId` lets the opener finish its own bookkeeping without a follow-up admin
+  // call to work out which connection was just created. Optional so the console, which
+  // only needs to know the flow finished, is unaffected.
   const payload = scriptJson({
     type: oauthCompletedType,
     service,
+    ...(connection ? { connectionId: connection.connectionId } : {}),
+    ...(connection?.tenant ? { tenant: connection.tenant } : {}),
+    ...(connection?.connectionName ? { connectionName: connection.connectionName } : {}),
   });
   const escapedService = escapeHtml(service);
   return `<!doctype html>

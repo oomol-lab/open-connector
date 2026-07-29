@@ -37,6 +37,7 @@ import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.t
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { actionInputMaxDepth, hashActionRequest, hashIdempotencyKey } from "./actions/action-idempotency.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
+import { ConnectSessionService } from "./api/connect-session.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { TransitFileService } from "./files/transit-files.ts";
@@ -1205,6 +1206,109 @@ describe("ConnectServer", () => {
       headers: { authorization: "bearer local-token" },
     });
     expect(lowercaseAdminTokenRuntimeCall.status).toBe(401);
+  });
+
+  it("mints a connect session and starts authorization for its bound tenant", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret" }),
+    });
+
+    const created = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: ["oauth_example"] }),
+    });
+    expect(created.status).toBe(200);
+    const session = (await created.json()) as { token: string; connectUrl: string; expiresAt: string };
+    expect(session.token).toMatch(/^ocs_/);
+
+    // The browser opens /connect with only the token — no admin credential.
+    const started = await app.request(`/connect?token=${encodeURIComponent(session.token)}`);
+    expect(started.status).toBe(302);
+    expect(started.headers.get("location")).toContain("client_id=client-id");
+  });
+
+  it("does not require an admin token to open /connect", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    // Without a token the route is reachable but refuses; the point is that it is not a
+    // 401 from the admin middleware, which would make it unusable from a browser.
+    const response = await app.request("/connect");
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+  });
+
+  it("rejects a connect session for a service it was not scoped to", async () => {
+    const app = createTestServer([oauthProvider, apiKeyProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    const created = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: ["oauth_example"] }),
+    });
+    const session = (await created.json()) as { token: string };
+
+    const response = await app.request(`/connect?token=${encodeURIComponent(session.token)}&service=example`);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "service_not_allowed" } });
+  });
+
+  it("rejects an invalid or expired connect session", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    const foreign = new ConnectSessionService("a-different-secret").create({
+      tenant: "tenant-a",
+      allowedServices: ["oauth_example"],
+    });
+
+    const response = await app.request(`/connect?token=${encodeURIComponent(foreign.token)}`);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_session_token" } });
+  });
+
+  it("refuses to mint a connect session with no services", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    const response = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: [] }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("hides connect sessions entirely when no signing secret is configured", async () => {
+    const app = createTestServer([oauthProvider], { auth: { adminToken: "admin-token" } }).createApp();
+
+    const created = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: ["oauth_example"] }),
+    });
+
+    expect(created.status).toBe(404);
+    expect((await app.request("/connect?token=anything")).status).toBe(404);
   });
 
   it("hides the credential read-out endpoint unless it is explicitly enabled", async () => {
@@ -3140,6 +3244,7 @@ interface CreateTestServerOptions {
   runs?: MemoryRunLogStore;
   connectionStore?: MemoryConnectionStore;
   credentialReadEnabled?: boolean;
+  connectSessionSecret?: string;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
 }
@@ -3207,6 +3312,8 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     actionPolicy: options.actionPolicy,
     actionSearch: options.actionSearch,
     credentialReadEnabled: options.credentialReadEnabled,
+    connectSessions: options.connectSessionSecret ? new ConnectSessionService(options.connectSessionSecret) : undefined,
+    publicOrigin: "http://localhost:3000",
     logger: options.logger,
   });
 }

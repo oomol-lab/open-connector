@@ -331,7 +331,7 @@ describe("OAuthFlowService", () => {
       service: "example",
       connectionName: "work",
     });
-    await expect(services.flow.completeAuthorization({ state: started.state, code: "code" })).resolves.toEqual({
+    await expect(services.flow.completeAuthorization({ state: started.state, code: "code" })).resolves.toMatchObject({
       service: "example",
       connected: true,
     });
@@ -484,7 +484,7 @@ describe("OAuthFlowService", () => {
       service: "example",
       connectionName: "work",
     });
-    await expect(services.flow.completeAuthorization({ state: started.state, code: "code" })).resolves.toEqual({
+    await expect(services.flow.completeAuthorization({ state: started.state, code: "code" })).resolves.toMatchObject({
       service: "example",
       connected: true,
     });
