@@ -2,9 +2,9 @@ import type { RuntimeLogger } from "../../core/types.ts";
 import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../cloudflare/cloudflare-bindings.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
-import type { Pool } from "pg";
 
 import { readFileSync, readdirSync } from "node:fs";
+import { Pool } from "pg";
 import {
   D1ConnectionStore,
   D1IdempotencyStore,
@@ -19,10 +19,53 @@ import { DEFAULT_RUN_LIMIT } from "./runtime-store.ts";
 
 const migrationDirectory = new URL("../../../migrations/postgres/", import.meta.url);
 
+/**
+ * Schema the connector's tables live in.
+ *
+ * Self-namespacing by default so the runtime can share a database with an application
+ * without its tables landing among theirs.
+ */
+export const defaultSchema = "open_connector";
+
+/**
+ * Schema names are interpolated into DDL and into the connection startup parameter, where
+ * neither can be parameterized — so the value is constrained rather than escaped.
+ */
+const schemaNamePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export function assertValidSchemaName(schema: string): string {
+  if (!schemaNamePattern.test(schema)) {
+    throw new Error(`Invalid schema name: ${JSON.stringify(schema)}. Expected [A-Za-z_][A-Za-z0-9_]*.`);
+  }
+  return schema;
+}
+
+/**
+ * Build a pool whose every connection resolves unqualified names in `schema`.
+ *
+ * `search_path` is set as a connection **startup parameter** rather than a `SET` issued
+ * after connecting: the server applies it while establishing the connection, so there is
+ * no window in which a query could run against the wrong path, and it survives pooling in
+ * a way a session-level `SET` does not.
+ *
+ * The path deliberately contains the schema alone, with no `public` fallback. A fallback
+ * would let a missing connector table silently resolve to a same-named table belonging to
+ * whatever else shares the database.
+ */
+export function createConnectorPool(input: { connectionString: string; schema?: string }): Pool {
+  const schema = assertValidSchemaName(input.schema ?? defaultSchema);
+  return new Pool({
+    connectionString: input.connectionString,
+    options: `-c search_path="${schema}"`,
+  });
+}
+
 export interface PostgresRuntimeDatabaseOptions {
   logger?: RuntimeLogger;
   runLimit?: number;
   secretCodec?: ISecretCodec;
+  /** Defaults to `open_connector`. Must match the pool's `search_path`. */
+  schema?: string;
 }
 
 /**
@@ -69,7 +112,9 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
    * database, which can migrate synchronously in its constructor.
    */
   static async create(pool: Pool, options: PostgresRuntimeDatabaseOptions = {}): Promise<PostgresRuntimeDatabase> {
-    await runPostgresMigrations(pool, options.logger);
+    const schema = assertValidSchemaName(options.schema ?? defaultSchema);
+    await assertSearchPath(pool, schema);
+    await runPostgresMigrations(pool, schema, options.logger);
     return new PostgresRuntimeDatabase(pool, options);
   }
 
@@ -137,6 +182,25 @@ class PostgresD1Statement implements D1PreparedStatementBinding {
 }
 
 /**
+ * Fail fast when a pool resolves names somewhere other than the configured schema.
+ *
+ * Without this, a pool built without `createConnectorPool` would quietly create and read
+ * the runtime's tables in whatever `search_path` it happened to inherit — most likely
+ * `public`, alongside an unrelated application's data.
+ */
+async function assertSearchPath(pool: Pool, schema: string): Promise<void> {
+  const { rows } = await pool.query<{ search_path: string }>("show search_path");
+  const actual = (rows[0]?.search_path ?? "").replaceAll('"', "").trim();
+  if (actual !== schema) {
+    throw new Error(
+      `Connector pool resolves to search_path ${JSON.stringify(actual)} but is configured for schema ` +
+        `${JSON.stringify(schema)}. Build the pool with createConnectorPool() so the schema is applied ` +
+        `as a connection startup parameter.`,
+    );
+  }
+}
+
+/**
  * Rewrite SQLite/D1 `?` placeholders as Postgres `$1`, `$2`, …
  *
  * Quoted text is skipped so a literal question mark inside a string is never mistaken for
@@ -188,8 +252,15 @@ export function toPostgresPlaceholders(query: string): string {
  * Mirrors the SQLite runner: filename-ordered, applied once, each inside a transaction so
  * a failure cannot leave the schema half-built.
  */
-export async function runPostgresMigrations(pool: Pool, logger?: RuntimeLogger): Promise<void> {
+export async function runPostgresMigrations(
+  pool: Pool,
+  schema: string = defaultSchema,
+  logger?: RuntimeLogger,
+): Promise<void> {
   const startedAt = Date.now();
+  // Explicitly qualified: `search_path` cannot resolve a schema that does not exist yet,
+  // and every statement after this one relies on it existing.
+  await pool.query(`create schema if not exists "${assertValidSchemaName(schema)}";`);
   await pool.query(`
     create table if not exists runtime_migrations (
       name text primary key,

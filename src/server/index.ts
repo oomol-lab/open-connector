@@ -1,7 +1,6 @@
 import { serve } from "@hono/node-server";
 import { access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { Pool } from "pg";
 import { loadCatalog } from "../catalog-store.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import { parsePrivateNetworkAccessFlag, setPrivateNetworkAccessAllowed } from "../core/request.ts";
@@ -13,7 +12,7 @@ import { createConnectApp } from "./connect-app.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
-import { PostgresRuntimeDatabase } from "./storage/postgres-runtime-store.ts";
+import { createConnectorPool, defaultSchema, PostgresRuntimeDatabase } from "./storage/postgres-runtime-store.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
 
@@ -22,6 +21,9 @@ const hostname = process.env.HOST ?? "127.0.0.1";
 const publicOrigin = process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${port}`;
 const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data");
 const databaseUrl = process.env.OOMOL_CONNECT_DATABASE_URL;
+// Tables live in their own schema so the runtime can share a database with an application
+// rather than requiring one of its own.
+const databaseSchema = process.env.OOMOL_CONNECT_DATABASE_SCHEMA ?? defaultSchema;
 const transitFileTtlSeconds = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS", 86_400);
 const transitFileMaxBytes = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES", 100 * 1024 * 1024);
 const runLimit = readPositiveIntegerEnv("OOMOL_CONNECT_RUN_LIMIT", DEFAULT_RUN_LIMIT);
@@ -75,11 +77,15 @@ const providerLoader = new ProviderLoader(executorModules);
 // durable local disk, or more than one runtime process sharing state — a SQLite file in
 // an ephemeral container silently loses every credential on redeploy.
 const runtimeDatabase = databaseUrl
-  ? await PostgresRuntimeDatabase.create(new Pool({ connectionString: databaseUrl }), {
-      logger,
-      secretCodec,
-      runLimit,
-    })
+  ? await PostgresRuntimeDatabase.create(
+      createConnectorPool({ connectionString: databaseUrl, schema: databaseSchema }),
+      {
+        logger,
+        secretCodec,
+        runLimit,
+        schema: databaseSchema,
+      },
+    )
   : new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"), {
       logger,
       secretCodec,
@@ -128,7 +134,10 @@ serve(
   },
   (info) => {
     logger.info({ url: `http://${hostname}:${info.port}` }, "connect server listening");
-    logger.info({ dataDir, store: databaseUrl ? "postgres" : "sqlite" }, "runtime data directory");
+    logger.info(
+      { dataDir, store: databaseUrl ? "postgres" : "sqlite", ...(databaseUrl ? { schema: databaseSchema } : {}) },
+      "runtime data directory",
+    );
     if (!adminToken) {
       logger.warn("local admin authentication is disabled; set OOMOL_CONNECT_ADMIN_TOKEN to require bearer tokens");
     }

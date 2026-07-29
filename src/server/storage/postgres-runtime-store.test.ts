@@ -8,7 +8,13 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { defaultTenant } from "../../connection-service.ts";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
-import { PostgresRuntimeDatabase, toPostgresPlaceholders } from "./postgres-runtime-store.ts";
+import {
+  assertValidSchemaName,
+  createConnectorPool,
+  defaultSchema,
+  PostgresRuntimeDatabase,
+  toPostgresPlaceholders,
+} from "./postgres-runtime-store.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
 import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
 
@@ -32,6 +38,15 @@ function credential(apiKey: string): ResolvedCredential {
     metadata: {},
   };
 }
+
+describe("assertValidSchemaName", () => {
+  it("accepts ordinary identifiers and rejects anything that could break out of the quoting", () => {
+    expect(assertValidSchemaName("open_connector")).toBe("open_connector");
+    for (const bad of ['a"b', "a;b", "a b", "1abc", "", "public--"]) {
+      expect(() => assertValidSchemaName(bad)).toThrow(/Invalid schema name/);
+    }
+  });
+});
 
 describe("toPostgresPlaceholders", () => {
   it("numbers placeholders in order", () => {
@@ -59,8 +74,7 @@ describePostgres("PostgresRuntimeDatabase", () => {
   let database: PostgresRuntimeDatabase;
 
   beforeAll(async () => {
-    const pool = new Pool({ connectionString: databaseUrl });
-    database = await PostgresRuntimeDatabase.create(pool, {
+    database = await PostgresRuntimeDatabase.create(createConnectorPool({ connectionString: databaseUrl! }), {
       secretCodec: new AesGcmSecretCodec("postgres-test-key"),
     });
     await database.resetRuntimeData();
@@ -96,7 +110,8 @@ describePostgres("PostgresRuntimeDatabase", () => {
     const postgresShape = new Map<string, string[]>();
     const { rows } = await pool.query<{ table_name: string; column_name: string }>(
       `select table_name, column_name from information_schema.columns
-       where table_schema = 'public' order by table_name, column_name`,
+       where table_schema = $1 order by table_name, column_name`,
+      [defaultSchema],
     );
     for (const row of rows) {
       postgresShape.set(row.table_name, [...(postgresShape.get(row.table_name) ?? []), row.column_name]);
@@ -107,6 +122,29 @@ describePostgres("PostgresRuntimeDatabase", () => {
     for (const [table, columns] of sqliteShape) {
       expect({ table, columns: postgresShape.get(table) }).toEqual({ table, columns });
     }
+  });
+
+  it("creates its tables in its own schema and leaves public alone", async () => {
+    const pool = new Pool({ connectionString: databaseUrl });
+    const { rows } = await pool.query<{ table_name: string }>(
+      `select table_name from information_schema.tables
+       where table_schema = 'public' and table_name in
+         ('connections','runs','runtime_tokens','runtime_policy','oauth_states',
+          'oauth_client_configs','idempotency_records','runtime_migrations')`,
+    );
+    await pool.end();
+
+    // Sharing a database with an application means never writing into its schema.
+    expect(rows).toEqual([]);
+  });
+
+  it("refuses a pool that resolves to the wrong schema", async () => {
+    // A pool built without createConnectorPool inherits whatever search_path the server
+    // defaults to, which would put the runtime's tables in public.
+    const pool = new Pool({ connectionString: databaseUrl });
+
+    await expect(PostgresRuntimeDatabase.create(pool)).rejects.toThrow(/search_path/);
+    await pool.end();
   });
 
   it("stores and reads a connection through the secret codec", async () => {
