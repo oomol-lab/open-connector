@@ -13,11 +13,15 @@ import {
 const defaultNamespace = "default";
 const grafanaDefaultRequestTimeoutMs = 30_000;
 const folderParentAnnotation = "grafana.app/folder";
+const grafanaDefaultApiVersion = "v1";
+const grafanaApiVersionCacheMaxEntries = 256;
 
-const grafanaAppApiGroups = {
+type GrafanaAppResource = "folders" | "dashboards";
+
+const grafanaAppApiGroups: Record<GrafanaAppResource, string> = {
   folders: "folder.grafana.app",
   dashboards: "dashboard.grafana.app",
-} as const;
+};
 
 // Grafana's App Platform API groups are versioned and the set of served versions
 // differs per Grafana release, e.g.
@@ -28,7 +32,7 @@ const grafanaAppApiGroups = {
 // ("the server could not find the requested resource"), so the version has to be
 // discovered instead of hardcoded. Only versions from the v1 lineage are listed:
 // the v2 lineage uses a different resource schema and is not interchangeable here.
-const grafanaApiVersionPreference = ["v1", "v1beta1", "v0alpha1"] as const;
+const grafanaApiVersionPreference: readonly string[] = [grafanaDefaultApiVersion, "v1beta1", "v0alpha1"];
 
 const grafanaApiVersionCache = new Map<string, string>();
 const grafanaApiMetadataUrl = "https://grafana.com/docs/grafana/latest/developers/http_api/auth/#service-account-token";
@@ -455,7 +459,6 @@ async function resolveGrafanaApiVersion(
     return cached;
   }
 
-  let resolved: string = grafanaApiVersionPreference[0];
   try {
     const payload = await grafanaRequestJson(`/apis/${group}`, { method: "GET" }, context);
     const record = optionalRecord(payload) ?? {};
@@ -466,20 +469,31 @@ async function resolveGrafanaApiVersion(
     );
     const match = grafanaApiVersionPreference.find((version) => served.has(version));
     if (match !== undefined) {
-      resolved = match;
+      cacheGrafanaApiVersion(cacheKey, match);
+      return match;
     }
   } catch {
     // Discovery is best-effort. Falling back to the newest known version keeps the
     // previous behaviour for servers that do not expose the discovery endpoint.
   }
 
-  grafanaApiVersionCache.set(cacheKey, resolved);
-  return resolved;
+  return grafanaDefaultApiVersion;
+}
+
+function cacheGrafanaApiVersion(cacheKey: string, version: string): void {
+  grafanaApiVersionCache.delete(cacheKey);
+  if (grafanaApiVersionCache.size >= grafanaApiVersionCacheMaxEntries) {
+    const oldestKey = grafanaApiVersionCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      grafanaApiVersionCache.delete(oldestKey);
+    }
+  }
+  grafanaApiVersionCache.set(cacheKey, version);
 }
 
 async function apiPath(
   input: Record<string, unknown>,
-  resource: "folders" | "dashboards",
+  resource: GrafanaAppResource,
   context: GrafanaContext & { phase: GrafanaRequestPhase },
 ): Promise<string> {
   const namespace = optionalString(input.namespace) ?? defaultNamespace;
