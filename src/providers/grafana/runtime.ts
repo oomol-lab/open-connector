@@ -13,6 +13,24 @@ import {
 const defaultNamespace = "default";
 const grafanaDefaultRequestTimeoutMs = 30_000;
 const folderParentAnnotation = "grafana.app/folder";
+
+const grafanaAppApiGroups = {
+  folders: "folder.grafana.app",
+  dashboards: "dashboard.grafana.app",
+} as const;
+
+// Grafana's App Platform API groups are versioned and the set of served versions
+// differs per Grafana release, e.g.
+//   Grafana 12.1  dashboard.grafana.app -> v1beta1, v0alpha1, v2alpha1
+//   Grafana 12.4  dashboard.grafana.app -> v1beta1, v0alpha1, v2beta1, v2alpha1
+//   Grafana 13.0  dashboard.grafana.app -> v1, ...
+// Requesting a version the server does not serve returns a Kubernetes-style 404
+// ("the server could not find the requested resource"), so the version has to be
+// discovered instead of hardcoded. Only versions from the v1 lineage are listed:
+// the v2 lineage uses a different resource schema and is not interchangeable here.
+const grafanaApiVersionPreference = ["v1", "v1beta1", "v0alpha1"] as const;
+
+const grafanaApiVersionCache = new Map<string, string>();
 const grafanaApiMetadataUrl = "https://grafana.com/docs/grafana/latest/developers/http_api/auth/#service-account-token";
 
 type GrafanaRequestPhase = "validate" | "execute";
@@ -134,7 +152,7 @@ async function executeListFolders(input: Record<string, unknown>, context: Grafa
   });
 
   const payload = await grafanaRequestJson(
-    apiPath(input, "folders"),
+    await apiPath(input, "folders", { ...context, phase: "execute" }),
     { method: "GET", query },
     {
       ...context,
@@ -153,7 +171,7 @@ async function executeListFolders(input: Record<string, unknown>, context: Grafa
 
 async function executeGetFolder(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const payload = await grafanaRequestJson(
-    `${apiPath(input, "folders")}/${encodePathSegment(requireString(input.uid, "uid"))}`,
+    `${await apiPath(input, "folders", { ...context, phase: "execute" })}/${encodePathSegment(requireString(input.uid, "uid"))}`,
     { method: "GET" },
     { ...context, phase: "execute" },
   );
@@ -162,7 +180,7 @@ async function executeGetFolder(input: Record<string, unknown>, context: Grafana
 
 async function executeCreateFolder(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const payload = await grafanaRequestJson(
-    apiPath(input, "folders"),
+    await apiPath(input, "folders", { ...context, phase: "execute" }),
     { method: "POST", body: folderRequestBody(input) },
     { ...context, phase: "execute" },
   );
@@ -172,7 +190,7 @@ async function executeCreateFolder(input: Record<string, unknown>, context: Graf
 async function executeUpdateFolder(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const uid = requireString(input.uid, "uid");
   const payload = await grafanaRequestJson(
-    `${apiPath(input, "folders")}/${encodePathSegment(uid)}`,
+    `${await apiPath(input, "folders", { ...context, phase: "execute" })}/${encodePathSegment(uid)}`,
     { method: "PUT", body: folderRequestBody(input, uid) },
     { ...context, phase: "execute" },
   );
@@ -181,7 +199,7 @@ async function executeUpdateFolder(input: Record<string, unknown>, context: Graf
 
 async function executeDeleteFolder(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const payload = await grafanaRequestJson(
-    `${apiPath(input, "folders")}/${encodePathSegment(requireString(input.uid, "uid"))}`,
+    `${await apiPath(input, "folders", { ...context, phase: "execute" })}/${encodePathSegment(requireString(input.uid, "uid"))}`,
     { method: "DELETE" },
     { ...context, phase: "execute" },
   );
@@ -222,7 +240,7 @@ async function executeSearchDashboards(input: Record<string, unknown>, context: 
 
 async function executeGetDashboard(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const payload = await grafanaRequestJson(
-    `${apiPath(input, "dashboards")}/${encodePathSegment(requireString(input.uid, "uid"))}`,
+    `${await apiPath(input, "dashboards", { ...context, phase: "execute" })}/${encodePathSegment(requireString(input.uid, "uid"))}`,
     { method: "GET" },
     { ...context, phase: "execute" },
   );
@@ -231,7 +249,7 @@ async function executeGetDashboard(input: Record<string, unknown>, context: Graf
 
 async function executeCreateDashboard(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const payload = await grafanaRequestJson(
-    apiPath(input, "dashboards"),
+    await apiPath(input, "dashboards", { ...context, phase: "execute" }),
     { method: "POST", body: dashboardRequestBody(input) },
     { ...context, phase: "execute" },
   );
@@ -241,7 +259,7 @@ async function executeCreateDashboard(input: Record<string, unknown>, context: G
 async function executeUpdateDashboard(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const uid = requireString(input.uid, "uid");
   const payload = await grafanaRequestJson(
-    `${apiPath(input, "dashboards")}/${encodePathSegment(uid)}`,
+    `${await apiPath(input, "dashboards", { ...context, phase: "execute" })}/${encodePathSegment(uid)}`,
     { method: "PUT", body: dashboardRequestBody(input, uid) },
     { ...context, phase: "execute" },
   );
@@ -250,7 +268,7 @@ async function executeUpdateDashboard(input: Record<string, unknown>, context: G
 
 async function executeDeleteDashboard(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
   const payload = await grafanaRequestJson(
-    `${apiPath(input, "dashboards")}/${encodePathSegment(requireString(input.uid, "uid"))}`,
+    `${await apiPath(input, "dashboards", { ...context, phase: "execute" })}/${encodePathSegment(requireString(input.uid, "uid"))}`,
     { method: "DELETE" },
     { ...context, phase: "execute" },
   );
@@ -427,10 +445,47 @@ function extractGrafanaErrorMessage(payload: unknown): string | undefined {
   );
 }
 
-function apiPath(input: Record<string, unknown>, resource: "folders" | "dashboards"): string {
+async function resolveGrafanaApiVersion(
+  group: string,
+  context: GrafanaContext & { phase: GrafanaRequestPhase },
+): Promise<string> {
+  const cacheKey = `${context.baseUrl}|${group}`;
+  const cached = grafanaApiVersionCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let resolved: string = grafanaApiVersionPreference[0];
+  try {
+    const payload = await grafanaRequestJson(`/apis/${group}`, { method: "GET" }, context);
+    const record = optionalRecord(payload) ?? {};
+    const served = new Set(
+      objectArrayOrEmpty(record.versions)
+        .map((entry) => optionalString(entry.version))
+        .filter((version): version is string => version !== undefined),
+    );
+    const match = grafanaApiVersionPreference.find((version) => served.has(version));
+    if (match !== undefined) {
+      resolved = match;
+    }
+  } catch {
+    // Discovery is best-effort. Falling back to the newest known version keeps the
+    // previous behaviour for servers that do not expose the discovery endpoint.
+  }
+
+  grafanaApiVersionCache.set(cacheKey, resolved);
+  return resolved;
+}
+
+async function apiPath(
+  input: Record<string, unknown>,
+  resource: "folders" | "dashboards",
+  context: GrafanaContext & { phase: GrafanaRequestPhase },
+): Promise<string> {
   const namespace = optionalString(input.namespace) ?? defaultNamespace;
-  const group = resource === "folders" ? "folder.grafana.app/v1" : "dashboard.grafana.app/v1";
-  return `/apis/${group}/namespaces/${encodePathSegment(namespace)}/${resource}`;
+  const group = grafanaAppApiGroups[resource];
+  const version = await resolveGrafanaApiVersion(group, context);
+  return `/apis/${group}/${version}/namespaces/${encodePathSegment(namespace)}/${resource}`;
 }
 
 function folderRequestBody(input: Record<string, unknown>, fallbackUid?: string): Record<string, unknown> {
