@@ -39,6 +39,8 @@ export interface ConnectAppOptions {
   /** Signs browser-facing connect sessions. Omitted disables them entirely. */
   connectSessionSecret?: string;
   connectSessionTtlSeconds?: number;
+  /** See IConnectServerOptions.completionRedirectUrl. */
+  completionRedirectUrl?: string;
 }
 
 export interface ConnectApp {
@@ -107,6 +109,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         ? new ConnectSessionService(options.connectSessionSecret, options.connectSessionTtlSeconds)
         : undefined,
       publicOrigin: options.publicOrigin,
+      completionRedirectUrl: options.completionRedirectUrl,
     }).createApp(),
     runtimeAuthConfigured:
       Boolean(options.runtimeToken) ||

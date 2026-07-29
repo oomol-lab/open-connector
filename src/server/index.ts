@@ -19,6 +19,10 @@ import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
 const port = Number(process.env.PORT ?? 3000);
 const hostname = process.env.HOST ?? "127.0.0.1";
 const publicOrigin = process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${port}`;
+// Lets an embedding app's own same-origin page receive the BroadcastChannel completion
+// message — see IConnectServerOptions.completionRedirectUrl. Omitted keeps the built-in
+// completion page.
+const completionRedirectUrl = process.env.OOMOL_CONNECT_COMPLETION_REDIRECT_URL;
 const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data");
 const databaseUrl = process.env.OOMOL_CONNECT_DATABASE_URL;
 // Tables live in their own schema so the runtime can share a database with an application
@@ -115,6 +119,7 @@ const { app, runtimeAuthConfigured } = await createConnectApp({
   webhook,
   connectSessionSecret,
   connectSessionTtlSeconds,
+  completionRedirectUrl,
 });
 
 // SQLite closes synchronously; the Postgres pool returns a promise. Awaiting covers both,

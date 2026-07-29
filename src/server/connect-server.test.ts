@@ -1047,6 +1047,49 @@ describe("ConnectServer", () => {
     ]);
   });
 
+  it("redirects to completionRedirectUrl instead of the inline page when configured", async () => {
+    const app = createTestServer([oauthProvider], {
+      completionRedirectUrl: "http://localhost:3100/connect/complete",
+    }).createApp();
+    const config = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        secretExtra: {
+          appBearerToken: "app-token",
+        },
+      }),
+    });
+    expect(config.status).toBe(200);
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example" }),
+    });
+    expect(authorization.status).toBe(200);
+    const { state } = (await authorization.json()) as { state: string };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const callback = await app.request(`/oauth/callback?state=${state}&code=example-code`, {
+      redirect: "manual",
+    });
+
+    expect(callback.status).toBe(302);
+    const location = callback.headers.get("location");
+    expect(location).not.toBeNull();
+    const redirectUrl = new URL(location!);
+    expect(`${redirectUrl.origin}${redirectUrl.pathname}`).toBe("http://localhost:3100/connect/complete");
+    expect(redirectUrl.searchParams.get("service")).toBe("oauth_example");
+    expect(redirectUrl.searchParams.get("connectionId")).toBeTruthy();
+    expect(redirectUrl.searchParams.get("tenant")).toBeTruthy();
+    expect(redirectUrl.searchParams.get("connectionName")).toBeTruthy();
+  });
+
   it("keeps the console shell public while protecting admin APIs", async () => {
     const staticRoot = await createTestStaticRoot();
     try {
@@ -3247,6 +3290,7 @@ interface CreateTestServerOptions {
   connectSessionSecret?: string;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
+  completionRedirectUrl?: string;
 }
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
@@ -3314,6 +3358,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     credentialReadEnabled: options.credentialReadEnabled,
     connectSessions: options.connectSessionSecret ? new ConnectSessionService(options.connectSessionSecret) : undefined,
     publicOrigin: "http://localhost:3000",
+    completionRedirectUrl: options.completionRedirectUrl,
     logger: options.logger,
   });
 }

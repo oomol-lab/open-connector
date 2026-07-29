@@ -84,6 +84,15 @@ export interface IConnectServerOptions {
   connectSessions?: ConnectSessionService;
   /** Public origin used to build the connect URL handed to a browser. */
   publicOrigin?: string;
+  /**
+   * When set, a successful OAuth callback redirects the browser here (with
+   * service/connectionId/tenant/connectionName as query params) instead of rendering
+   * the built-in completion page. Lets the embedding app serve its own same-origin
+   * completion page — BroadcastChannel only delivers same-origin, so a caller whose
+   * console runs on a different origin than this server needs this to receive the
+   * completion message at all. Omitted keeps the existing inline page.
+   */
+  completionRedirectUrl?: string;
 }
 
 /**
@@ -1236,6 +1245,15 @@ export class ConnectServer {
         return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
       }
       throw error;
+    }
+
+    if (this.options.completionRedirectUrl) {
+      const redirectUrl = new URL(this.options.completionRedirectUrl);
+      redirectUrl.searchParams.set("service", service);
+      redirectUrl.searchParams.set("connectionId", completion.connectionId);
+      redirectUrl.searchParams.set("tenant", completion.tenant);
+      redirectUrl.searchParams.set("connectionName", completion.connectionName);
+      return context.redirect(redirectUrl.toString());
     }
 
     return context.html(renderOAuthCompletionPage(service, completion));
