@@ -9,7 +9,7 @@ import type { FeishuActionRuntimeContext } from "../feishu/shared/client.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import { createFeishuApplicationActionHandlers } from "../feishu/shared/application-runtime.ts";
 import { createFeishuBaseAdvancedActionHandlers } from "../feishu/shared/base-advanced-runtime.ts";
 import { createFeishuBaseActionHandlers } from "../feishu/shared/base-runtime.ts";
@@ -1142,8 +1142,13 @@ async function uploadFeishuMediaTransitFile(input: {
 
     const mimeType = normalizeMimeType(response.headers.get("content-type")) ?? "application/octet-stream";
     const fileName = input.preferredFileName ?? buildFeishuTransitFileName(input.idValue, mimeType);
+    const bytes = await readBoundedResponseBytes(response, {
+      maxBytes: input.context.transitFiles.maxBytes,
+      fieldName: `Feishu ${input.actionName} output`,
+      createError: (message) => new ProviderRequestError(413, message),
+    });
     const upload = await input.context.transitFiles.create(
-      new File([await response.arrayBuffer()], fileName, { type: mimeType }),
+      new File([Uint8Array.from(bytes)], fileName, { type: mimeType }),
     );
 
     return {

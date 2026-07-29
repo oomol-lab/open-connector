@@ -3,6 +3,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import type { AgentyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const agentyApiBaseUrl = "https://api.agenty.com/v2";
@@ -581,7 +582,12 @@ async function uploadAgentyTransitFile(context: AgentyRuntimeContext, response: 
   }
 
   const mimeType = response.headers.get("content-type") ?? "application/octet-stream";
-  const upload = await context.transitFiles.create(new File([await response.arrayBuffer()], name, { type: mimeType }));
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Agenty file output",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const upload = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
   return {
     name,
     mimetype: mimeType,

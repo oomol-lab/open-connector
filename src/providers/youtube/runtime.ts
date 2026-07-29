@@ -466,9 +466,12 @@ async function downloadCaption(input: Record<string, unknown>, context: YoutubeA
   const mimeType = optionalString(input.mimeType) ?? inferMimeType(response.headers.get("content-type"));
   const fileName =
     optionalString(input.fileName) ?? resolveCaptionFileName(captionId, optionalString(input.tfmt), mimeType);
-  const upload = await context.transitFiles.create(
-    new File([await response.arrayBuffer()], fileName, { type: mimeType }),
-  );
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "YouTube caption download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const upload = await context.transitFiles.create(new File([Uint8Array.from(bytes)], fileName, { type: mimeType }));
   return {
     file: {
       id: captionId,

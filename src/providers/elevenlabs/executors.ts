@@ -16,6 +16,7 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -341,7 +342,16 @@ async function elevenlabsTextToSpeech(input: Record<string, unknown>, context: E
     throw await createElevenlabsError(response, "execute");
   }
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(500, "text_to_speech requires transit file storage");
+  }
+  const bytes = Buffer.from(
+    await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "ElevenLabs text-to-speech audio",
+      createError: (message) => new ProviderRequestError(413, message),
+    }),
+  );
   const contentType = response.headers.get("content-type") ?? "application/octet-stream";
   const extension = inferElevenlabsAudioExtension(contentType, outputFormat);
   const name = `elevenlabs-tts-${String(input.voiceId)}.${extension}`;
@@ -356,6 +366,10 @@ async function elevenlabsTextToSpeech(input: Record<string, unknown>, context: E
 }
 
 async function elevenlabsTextToSpeechWithTimestamps(input: Record<string, unknown>, context: ElevenlabsRuntimeContext) {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(500, "text_to_speech_with_timestamps requires transit file storage");
+  }
+
   const requestPayload = buildTextToSpeechBody(input);
   const outputFormat = optionalString(input.outputFormat) ?? "mp3_44100_128";
   const modelId = optionalString(input.modelId);
@@ -369,6 +383,7 @@ async function elevenlabsTextToSpeechWithTimestamps(input: Record<string, unknow
         optimize_streaming_latency: numberQueryValue(input.optimizeStreamingLatency),
       }),
       body: requestPayload,
+      maxResponseBytes: Math.ceil((context.transitFiles.maxBytes * 4) / 3) + 4 * 1024 * 1024,
     },
     context.apiKey,
     context.fetcher,
@@ -378,15 +393,16 @@ async function elevenlabsTextToSpeechWithTimestamps(input: Record<string, unknow
   const contentType = inferElevenlabsContentType(outputFormat);
   const extension = inferElevenlabsAudioExtension(contentType, outputFormat);
   const name = `elevenlabs-tts-timestamps-${String(input.voiceId)}.${extension}`;
+  const audioBytes = decodeRequiredBase64(payload.audio_base64, "audio_base64");
+  if (audioBytes.byteLength > context.transitFiles.maxBytes) {
+    throw new ProviderRequestError(
+      413,
+      `ElevenLabs text-to-speech audio exceeds ${context.transitFiles.maxBytes} bytes`,
+    );
+  }
 
   return compactObject({
-    file: await storeElevenlabsFile(
-      context,
-      name,
-      contentType,
-      decodeRequiredBase64(payload.audio_base64, "audio_base64"),
-      "text_to_speech_with_timestamps",
-    ),
+    file: await storeElevenlabsFile(context, name, contentType, audioBytes, "text_to_speech_with_timestamps"),
     alignment: normalizeCharacterAlignment(payload.alignment),
     normalizedAlignment: normalizeCharacterAlignment(payload.normalized_alignment),
     voiceId: String(input.voiceId),
@@ -414,7 +430,16 @@ async function createElevenlabsSoundEffect(input: Record<string, unknown>, conte
     throw await createElevenlabsError(response, "execute");
   }
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(500, "create_sound_effect requires transit file storage");
+  }
+  const bytes = Buffer.from(
+    await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "ElevenLabs sound effect audio",
+      createError: (message) => new ProviderRequestError(413, message),
+    }),
+  );
   const contentType = response.headers.get("content-type") ?? inferElevenlabsContentType(outputFormat);
   const extension = inferElevenlabsAudioExtension(contentType, outputFormat);
   const name = `elevenlabs-sound-effect.${extension}`;
@@ -438,7 +463,16 @@ async function getElevenlabsAudioFromHistoryItem(input: Record<string, unknown>,
     throw await createElevenlabsError(response, "execute");
   }
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(500, "get_audio_from_history_item requires transit file storage");
+  }
+  const bytes = Buffer.from(
+    await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "ElevenLabs history audio",
+      createError: (message) => new ProviderRequestError(413, message),
+    }),
+  );
   const contentType = response.headers.get("content-type") ?? "audio/mpeg";
   const extension = inferElevenlabsAudioExtension(contentType, "mp3_44100_128");
   const name = `elevenlabs-history-${historyItemId}.${extension}`;
@@ -514,6 +548,7 @@ type ElevenlabsRequestInput = {
   query?: Record<string, string | string[] | undefined>;
   body?: Record<string, unknown>;
   mode?: "validate" | "execute";
+  maxResponseBytes?: number;
 };
 
 async function requestElevenlabsJson<T>(
@@ -533,7 +568,7 @@ async function requestElevenlabsJson<T>(
     throw await createElevenlabsError(response, input.mode ?? "execute");
   }
 
-  return readElevenlabsJson<T>(response);
+  return readElevenlabsJson<T>(response, input.maxResponseBytes);
 }
 
 function buildElevenlabsUrl(
@@ -586,10 +621,21 @@ function elevenlabsBinaryJsonHeaders(apiKey: string) {
   };
 }
 
-async function readElevenlabsJson<T>(response: Response) {
+async function readElevenlabsJson<T>(response: Response, maxBytes?: number) {
   try {
-    return (await response.json()) as T;
-  } catch {
+    if (maxBytes === undefined) {
+      return (await response.json()) as T;
+    }
+    const bytes = await readBoundedResponseBytes(response, {
+      maxBytes,
+      fieldName: "ElevenLabs JSON response",
+      createError: (message) => new ProviderRequestError(413, message),
+    });
+    return JSON.parse(new TextDecoder().decode(bytes)) as T;
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
     throw new ProviderRequestError(502, "elevenlabs returned invalid JSON");
   }
 }

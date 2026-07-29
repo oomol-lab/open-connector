@@ -1,7 +1,7 @@
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { jsonObject } from "../../core/request.ts";
+import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const geminiApiBaseUrl = "https://generativelanguage.googleapis.com/v1beta";
@@ -642,8 +642,12 @@ async function fetchGemini(
 
 async function downloadMediaBytes(
   url: string,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal" | "transitFiles">,
 ): Promise<GeminiDownloadedMedia> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(502, "gemini media actions require server-side file transit");
+  }
+
   const headers: Record<string, string> = {
     "user-agent": providerUserAgent,
   };
@@ -667,7 +671,11 @@ async function downloadMediaBytes(
   }
 
   return {
-    bytes: new Uint8Array(await response.arrayBuffer()),
+    bytes: await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "Gemini media download",
+      createError: (message) => new ProviderRequestError(413, message),
+    }),
     mimeType: response.headers.get("content-type") ?? undefined,
   };
 }

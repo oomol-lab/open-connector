@@ -20,7 +20,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineProviderExecutors,
   normalizeProviderProxyEndpoint,
@@ -354,13 +354,19 @@ async function fuxinDownloadFile(input: Record<string, unknown>, context: FuxinA
     signal: context.signal,
   });
 
-  const bytes = await response.arrayBuffer();
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Foxit file download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
   const mimeType = normalizeMimeType(response.headers.get("content-type")) ?? fuxinBinaryMimeTypeFallback;
   const resolvedFileName =
     fileName ??
     readDispositionFileName(response.headers.get("content-disposition")) ??
     buildDefaultFileName("foxit-download", mimeType);
-  const upload = await context.transitFiles.create(new File([bytes], resolvedFileName, { type: mimeType }));
+  const upload = await context.transitFiles.create(
+    new File([Uint8Array.from(bytes)], resolvedFileName, { type: mimeType }),
+  );
 
   return {
     file: {

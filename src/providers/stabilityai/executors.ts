@@ -4,6 +4,7 @@ import type { StabilityAiActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -90,7 +91,13 @@ async function stabilityAiTextToAudio(input: Record<string, unknown>, context: A
     accept: "audio/*",
   });
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  const bytes = Buffer.from(
+    await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "Stability AI audio output",
+      createError: (message) => new ProviderRequestError(413, message),
+    }),
+  );
   const contentType = response.headers.get("content-type") ?? inferContentType(outputFormat);
   const extension = inferStabilityAiAudioExtension(contentType, outputFormat);
   const name = `stabilityai-text-to-audio.${extension}`;

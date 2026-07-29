@@ -177,8 +177,12 @@ async function downloadTranscriptionAudio(
     optionalString(input.fileName) ??
     readContentDispositionFileName(response.headers.get("content-disposition")) ??
     `gladia-${id}${extensionFromMimeType(mimeType)}`;
-  const body = await response.arrayBuffer();
-  const upload = await context.transitFiles.create(new File([body], name, { type: mimeType }));
+  const body = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Gladia transcription audio",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const upload = await context.transitFiles.create(new File([Uint8Array.from(body)], name, { type: mimeType }));
 
   return {
     id,

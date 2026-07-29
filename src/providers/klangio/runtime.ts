@@ -219,14 +219,20 @@ async function downloadKlangioFile(input: {
     throw createKlangioError(response, payload);
   }
 
-  const bytes = await response.arrayBuffer();
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: input.context.transitFiles.maxBytes,
+    fieldName: `Klangio ${input.actionName} file`,
+    createError: (message) => new ProviderRequestError(413, message),
+  });
   if (bytes.byteLength === 0) {
     throw new ProviderRequestError(502, `Klangio ${input.actionName} response did not include file bytes`);
   }
 
   const contentType = normalizeMimeType(response.headers.get("content-type")) ?? input.fallbackMimeType;
   const name = appendExtensionIfMissing(input.fileName, extensionForMimeType(contentType));
-  const upload = await input.context.transitFiles.create(new File([bytes], name, { type: contentType }));
+  const upload = await input.context.transitFiles.create(
+    new File([Uint8Array.from(bytes)], name, { type: contentType }),
+  );
 
   return {
     file: {

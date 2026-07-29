@@ -8,7 +8,7 @@ import type { Docsend2PdfActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
@@ -53,7 +53,8 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
 async function convert(input: Record<string, unknown>, context: Docsend2PdfContext): Promise<unknown> {
   const returnPdfBase64 = optionalBoolean(input.returnPdfBase64) ?? false;
-  if (!returnPdfBase64 && !context.transitFiles) {
+  const transitFiles = context.transitFiles;
+  if (!returnPdfBase64 && !transitFiles) {
     throw new ProviderRequestError(
       400,
       "Transit file storage is not enabled; set returnPdfBase64=true to return PDF bytes inline.",
@@ -77,7 +78,21 @@ async function convert(input: Record<string, unknown>, context: Docsend2PdfConte
     throw new ProviderRequestError(502, `Docsend2pdf convert returned unexpected content type ${contentType}`);
   }
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  let bytes: Buffer;
+  if (returnPdfBase64) {
+    bytes = Buffer.from(await response.arrayBuffer());
+  } else {
+    if (!transitFiles) {
+      throw new ProviderRequestError(400, "Transit file storage is not enabled.");
+    }
+    bytes = Buffer.from(
+      await readBoundedResponseBytes(response, {
+        maxBytes: transitFiles.maxBytes,
+        fieldName: "Docsend2pdf converted PDF",
+        createError: (message) => new ProviderRequestError(413, message),
+      }),
+    );
+  }
   const outputName = normalizePdfName(optionalString(input.outputName) ?? readFilename(response));
   const pdf = returnPdfBase64
     ? {

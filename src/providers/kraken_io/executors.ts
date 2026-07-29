@@ -16,6 +16,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineProviderExecutors,
   providerUserAgent,
@@ -143,7 +144,7 @@ async function optimizeKrakenImage(input: Record<string, unknown>, context: Krak
   const fileName = resolveKrakenFileName(payload, krakedUrl);
   const download = await downloadKrakenFile(krakedUrl, fileName, context);
   const upload = await context.transitFiles.create(
-    new File([download.bytes], fileName, { type: download.contentType }),
+    new File([Uint8Array.from(download.bytes)], fileName, { type: download.contentType }),
   );
 
   return compactObject({
@@ -351,8 +352,12 @@ function extractKrakenMessage(payload: unknown): string | undefined {
 async function downloadKrakenFile(
   krakedUrl: string,
   fileName: string,
-  context: Pick<KrakenIoActionContext, "fetcher" | "signal">,
-): Promise<{ bytes: ArrayBuffer; contentType: string }> {
+  context: Pick<KrakenIoActionContext, "fetcher" | "signal" | "transitFiles">,
+): Promise<{ bytes: Uint8Array; contentType: string }> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(400, "Transit file storage is not enabled.");
+  }
+
   let response: Response;
   try {
     response = await context.fetcher(krakedUrl, {
@@ -378,7 +383,11 @@ async function downloadKrakenFile(
     );
   }
 
-  const bytes = await response.arrayBuffer();
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Kraken.io optimized file download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
   if (bytes.byteLength === 0) {
     throw new ProviderRequestError(502, "Kraken.io optimized file download was empty");
   }

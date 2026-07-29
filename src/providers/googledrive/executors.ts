@@ -2,6 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 import {
   createComment,
@@ -507,7 +508,12 @@ async function exportFile(input: Record<string, unknown>, context: ActionContext
   const mimeType = response.headers.get("content-type") ?? requestedMimeType;
   const extension = extensionForExportMimeType(mimeType);
   const name = `${fileId}${extension}`;
-  const upload = await context.transitFiles.create(new File([await response.arrayBuffer()], name, { type: mimeType }));
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Google Drive export",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const upload = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
 
   return {
     fileId,
