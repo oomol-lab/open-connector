@@ -42,6 +42,8 @@
 - User-supplied content/download URLs (e.g. `fileUrl`, `sourceUrl`, `imageUrl`) must ALWAYS be validated public-only — call `assertPublicHttpUrl` without `allowPrivateNetwork` and download them with the public-only `providerFetch`, never a private-aware `context.fetcher`. The private-network opt-in covers only the trusted instance host.
 - Prefer the shared `assertPublicHttpUrl` / `isBlockedIpAddress` over a bespoke per-provider hostname guard; bespoke guards have missed the cloud-metadata blocklist and bracketed-IPv6 forms.
 - Gotcha: a provider that branches on `fetcher === fetch` (e.g. to gate rate limiting to production) must compare against `providerFetch`, since that is the fetcher the runtime now injects — not the global `fetch`.
+- Non-fetch egress is held to the same policy. A provider that opens a WebSocket must use `openGuardedWebSocket` from `src/core/guarded-websocket.ts`, never `new WebSocket(...)` directly: it validates the target with the same `assertGuardedEgressUrl` hop check the guarded fetch uses (URL literal plus DNS resolved addresses), accepts the same `allowPrivateNetwork` / `skipDnsValidation` options, and maps `ws`/`wss` onto the `http`/`https` form the guard understands. It works on Node and on workerd, which both expose a client `WebSocket` constructor. Any future non-HTTP transport should reuse `assertGuardedEgressUrl` rather than growing a second, drifting host check.
+- The private-network opt-in only means the guard permits the target — it does not make it reachable. Cloudflare Workers cannot route to private addresses at all, so a self-hosted provider pointed at a LAN instance works on Node/Docker/Fly deployments only, regardless of `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`.
 
 ## TypeScript And Tooling
 
