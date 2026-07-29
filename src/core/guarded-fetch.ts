@@ -183,11 +183,8 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
       : options.lookup === undefined
         ? await resolveDefaultLookup()
         : options.lookup;
-    const guardHop = async (value: string, fieldName: string): Promise<URL> => {
-      const url = assertPublicHttpUrl(value, { fieldName, createError, allowPrivateNetwork });
-      await assertResolvedAddressesAllowed(url.hostname, fieldName, { allowPrivateNetwork, createError, lookup });
-      return url;
-    };
+    const guardHop = (value: string, fieldName: string): Promise<URL> =>
+      assertGuardedEgressUrl(value, { fieldName, createError, allowPrivateNetwork, lookup });
 
     const request = input instanceof Request ? input : undefined;
     let url = await guardHop(request?.url ?? (input instanceof URL ? input.href : String(input)), "request URL");
@@ -263,6 +260,47 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
 
   guardedFetchBases.set(guardedFetch, baseFetch);
   return guardedFetch;
+}
+
+export interface GuardedEgressUrlOptions {
+  /** Field name used in guard violation messages, e.g. `"request URL"`. */
+  fieldName: string;
+  /** Error factory for guard violations. */
+  createError: (message: string) => Error;
+  /** Allow RFC 1918 and other private targets while retaining reserved-target guards. */
+  allowPrivateNetwork?: boolean;
+  /**
+   * DNS lookup used to validate resolved addresses: `null` disables the check,
+   * `undefined` uses the module default (`node:dns` where available).
+   */
+  lookup?: GuardedFetchDnsLookup | null;
+}
+
+/**
+ * Apply the shared SSRF egress policy to one URL: validate the literal with
+ * {@link assertPublicHttpUrl}, then validate the addresses its hostname
+ * resolves to, and return the normalized URL.
+ *
+ * This is the single hop check behind {@link createGuardedFetch} (which applies
+ * it to the request URL and every redirect `Location`). It is exported so
+ * non-fetch egress transports that cannot reuse the fetch wrapper — currently
+ * {@link ../core/guarded-websocket.ts openGuardedWebSocket} — enforce exactly
+ * the same policy instead of growing a second, drifting implementation.
+ */
+export async function assertGuardedEgressUrl(value: string, options: GuardedEgressUrlOptions): Promise<URL> {
+  const allowPrivateNetwork = options.allowPrivateNetwork === true;
+  const lookup = options.lookup === undefined ? await resolveDefaultLookup() : options.lookup;
+  const url = assertPublicHttpUrl(value, {
+    fieldName: options.fieldName,
+    createError: options.createError,
+    allowPrivateNetwork,
+  });
+  await assertResolvedAddressesAllowed(url.hostname, options.fieldName, {
+    allowPrivateNetwork,
+    createError: options.createError,
+    lookup,
+  });
+  return url;
 }
 
 interface ResolvedAddressPolicy {
