@@ -1,4 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -56,6 +57,50 @@ const dataForSeoResultOutput = (description: string) =>
     },
   );
 
+const dataForSeoAsyncTaskSchema = s.requiredObject(
+  "Normalized metadata and lifecycle state for one DataForSEO asynchronous task.",
+  {
+    id: s.nullableString("DataForSEO task identifier when the task was accepted."),
+    state: s.stringEnum("Connector lifecycle state derived from the DataForSEO task status.", [
+      "running",
+      "succeeded",
+      "failed",
+    ]),
+    status_code: s.nullableInteger("DataForSEO task status code."),
+    status_message: s.nullableString("DataForSEO task status message."),
+    time: s.nullableString("Task execution time reported by DataForSEO."),
+    cost: s.nullableNumber("Task cost in USD reported by DataForSEO."),
+    result_count: s.nullableInteger("Number of result objects returned by the task."),
+    path: s.array("Request path components returned for the task.", s.string("One path component.")),
+    data: s.looseObject("Original task input metadata returned by DataForSEO."),
+    raw: s.looseObject("Complete task object returned by DataForSEO."),
+  },
+);
+
+const dataForSeoAsyncErrorSchema = s.requiredObject(
+  "A DataForSEO task error retained in a non-throwing asynchronous result.",
+  {
+    status_code: s.nullableInteger("DataForSEO task error status code."),
+    status_message: s.nullableString("DataForSEO task error status message."),
+    raw: s.looseObject("Complete failed task object returned by DataForSEO."),
+  },
+);
+
+const dataForSeoAsyncOutput = (description: string) =>
+  s.requiredObject(description, {
+    task: dataForSeoAsyncTaskSchema,
+    results: s.array(
+      "Result objects returned by DataForSEO for the task.",
+      s.looseObject("One result object returned by DataForSEO."),
+    ),
+    errors: s.array(
+      "Task errors returned by DataForSEO without discarding task status or cost.",
+      dataForSeoAsyncErrorSchema,
+    ),
+    cost: s.nullableNumber("Total response cost in USD reported by DataForSEO."),
+    raw: s.looseObject("Complete DataForSEO response envelope."),
+  });
+
 const getUserDataOutputSchema = s.object(
   "Normalized account details returned by the DataForSEO User Data endpoint.",
   {
@@ -80,6 +125,161 @@ const googleLocationInput = {
 } as const;
 
 const googleLocationOptionalKeys = ["locationName", "locationCode", "languageName", "languageCode"] as const;
+
+const amazonPrioritySchema: JsonSchema = {
+  type: "integer",
+  enum: [1, 2],
+  description: "Task priority: 1 for normal execution or 2 for faster execution at an additional cost.",
+};
+
+const amazonTargetingInput = {
+  priority: amazonPrioritySchema,
+  locationName: nonEmptyString("Full name of the Amazon location to target."),
+  locationCode: s.integer("Numeric DataForSEO Amazon location code to target."),
+  locationCoordinate: nonEmptyString("GPS coordinates and radius in the `latitude,longitude,radius` format."),
+  languageName: nonEmptyString("Full name of the Amazon language to target."),
+  languageCode: nonEmptyString("DataForSEO Amazon language code to target."),
+  seDomain: nonEmptyString("Amazon search engine domain, such as `amazon.com`."),
+  tag: s.nonEmptyString("User-defined task tag passed through to DataForSEO.", {
+    maxLength: 255,
+  }),
+} as const;
+
+const amazonTargetingOptionalKeys = [
+  "priority",
+  "locationName",
+  "locationCode",
+  "locationCoordinate",
+  "languageName",
+  "languageCode",
+  "seDomain",
+  "tag",
+] as const;
+
+const requireAmazonTargeting = (schema: JsonSchema): JsonSchema => ({
+  ...schema,
+  allOf: [
+    {
+      anyOf: [{ required: ["locationName"] }, { required: ["locationCode"] }, { required: ["locationCoordinate"] }],
+    },
+    {
+      anyOf: [{ required: ["languageName"] }, { required: ["languageCode"] }],
+    },
+  ],
+});
+
+const amazonProductsInputSchema = requireAmazonTargeting(
+  s.object(
+    "Input for submitting one DataForSEO Amazon Products Standard task.",
+    {
+      keyword: s.nonEmptyString("Product keyword to search on Amazon.", {
+        maxLength: 700,
+      }),
+      url: s.url("Direct Amazon search URL to parse in addition to the required keyword."),
+      ...amazonTargetingInput,
+      depth: s.integer("Maximum number of Amazon product results to retrieve.", {
+        minimum: 1,
+        maximum: 700,
+      }),
+      maxCrawlPages: s.integer("Maximum number of Amazon search result pages to crawl.", {
+        minimum: 1,
+        maximum: 7,
+      }),
+      department: s.stringEnum("Amazon product department used to narrow the search.", [
+        "Arts & Crafts",
+        "Automotive",
+        "Baby",
+        "Beauty & Personal Care",
+        "Books",
+        "Computers",
+        "Digital Music",
+        "Electronics",
+        "Kindle Store",
+        "Prime Video",
+        "Women's Fashion",
+        "Men's Fashion",
+        "Girls' Fashion",
+        "Boys' Fashion",
+        "Deals",
+        "Health & Household",
+        "Home & Kitchen",
+        "Industrial & Scientific",
+        "Luggage",
+        "Movies & TV",
+        "Music, CDs & Vinyl",
+        "Pet Supplies",
+        "Software",
+        "Sports & Outdoors",
+        "Tools & Home Improvement",
+        "Toys & Games",
+        "Video Games",
+      ]),
+      searchParam: nonEmptyString("Additional Amazon search URL parameters."),
+      priceMin: s.integer("Minimum product price used to filter Amazon results."),
+      priceMax: s.integer("Maximum product price used to filter Amazon results."),
+      sortBy: s.stringEnum("Amazon product result sorting rule.", [
+        "relevance",
+        "price_low_to_high",
+        "price_high_to_low",
+        "featured",
+        "avg_customer_review",
+        "newest_arrival",
+      ]),
+    },
+    {
+      optional: [
+        "url",
+        ...amazonTargetingOptionalKeys,
+        "depth",
+        "maxCrawlPages",
+        "department",
+        "searchParam",
+        "priceMin",
+        "priceMax",
+        "sortBy",
+      ],
+    },
+  ),
+);
+
+const amazonAsinInputSchema = requireAmazonTargeting(
+  s.object(
+    "Input for submitting one DataForSEO Amazon ASIN Standard task.",
+    {
+      asin: nonEmptyString("Amazon Standard Identification Number for the product."),
+      ...amazonTargetingInput,
+    },
+    {
+      optional: amazonTargetingOptionalKeys,
+    },
+  ),
+);
+
+const amazonSellersInputSchema = requireAmazonTargeting(
+  s.object(
+    "Input for submitting one DataForSEO Amazon Sellers Standard task.",
+    {
+      asin: nonEmptyString("Amazon Standard Identification Number for the product."),
+      ...amazonTargetingInput,
+    },
+    {
+      optional: amazonTargetingOptionalKeys,
+    },
+  ),
+);
+
+const amazonTaskResultInputSchema = s.actionInput(
+  {
+    id: s.uuid("Task identifier returned by the matching Amazon Merchant submit action."),
+  },
+  ["id"],
+  "Input identifying one DataForSEO Amazon Merchant task.",
+);
+
+const amazonLifecycle = (submitAction: string, resultAction: string) => ({
+  startActionId: `dataforseo.${submitAction}`,
+  statusActionId: `dataforseo.${resultAction}`,
+});
 
 const requireGoogleLocation = (schema: Record<string, unknown>) => schema;
 
@@ -388,6 +588,59 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving DataForSEO user data.", {}),
     outputSchema: getUserDataOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "submit_amazon_products_task",
+    description: "Submit one Standard DataForSEO Amazon Products task for asynchronous product listing research.",
+    followUpActions: ["dataforseo.get_amazon_products_task"],
+    asyncLifecycle: amazonLifecycle("submit_amazon_products_task", "get_amazon_products_task"),
+    inputSchema: amazonProductsInputSchema,
+    outputSchema: dataForSeoAsyncOutput("The accepted or failed DataForSEO Amazon Products task submission."),
+  }),
+  defineProviderAction(service, {
+    name: "get_amazon_products_task",
+    description: "Retrieve the status and Advanced results of one DataForSEO Amazon Products task.",
+    asyncLifecycle: amazonLifecycle("submit_amazon_products_task", "get_amazon_products_task"),
+    inputSchema: amazonTaskResultInputSchema,
+    outputSchema: dataForSeoAsyncOutput("The current DataForSEO Amazon Products task status and results."),
+  }),
+  defineProviderAction(service, {
+    name: "submit_amazon_asins_task",
+    description: "Submit one Standard DataForSEO Amazon ASIN task for asynchronous product variant research.",
+    followUpActions: ["dataforseo.get_amazon_asins_task"],
+    asyncLifecycle: amazonLifecycle("submit_amazon_asins_task", "get_amazon_asins_task"),
+    inputSchema: amazonAsinInputSchema,
+    outputSchema: dataForSeoAsyncOutput("The accepted or failed DataForSEO Amazon ASIN task submission."),
+  }),
+  defineProviderAction(service, {
+    name: "get_amazon_asins_task",
+    description: "Retrieve the status and Advanced results of one DataForSEO Amazon ASIN task.",
+    asyncLifecycle: amazonLifecycle("submit_amazon_asins_task", "get_amazon_asins_task"),
+    inputSchema: amazonTaskResultInputSchema,
+    outputSchema: dataForSeoAsyncOutput("The current DataForSEO Amazon ASIN task status and results."),
+  }),
+  defineProviderAction(service, {
+    name: "submit_amazon_sellers_task",
+    description: "Submit one Standard DataForSEO Amazon Sellers task for asynchronous offer and seller research.",
+    followUpActions: ["dataforseo.get_amazon_sellers_task"],
+    asyncLifecycle: amazonLifecycle("submit_amazon_sellers_task", "get_amazon_sellers_task"),
+    inputSchema: amazonSellersInputSchema,
+    outputSchema: dataForSeoAsyncOutput("The accepted or failed DataForSEO Amazon Sellers task submission."),
+  }),
+  defineProviderAction(service, {
+    name: "get_amazon_sellers_task",
+    description: "Retrieve the status and Advanced results of one DataForSEO Amazon Sellers task.",
+    asyncLifecycle: amazonLifecycle("submit_amazon_sellers_task", "get_amazon_sellers_task"),
+    inputSchema: amazonTaskResultInputSchema,
+    outputSchema: dataForSeoAsyncOutput("The current DataForSEO Amazon Sellers task status and results."),
+  }),
+  defineProviderAction(service, {
+    name: "list_amazon_tasks_ready",
+    description: "List uncollected completed Amazon Products, ASIN, and Sellers tasks from DataForSEO Merchant API.",
+    inputSchema: s.actionInput({}, [], "The input payload for listing ready Amazon Merchant tasks."),
+    outputSchema: dataForSeoAsyncOutput(
+      "The DataForSEO Merchant tasks-ready response filtered to supported Amazon task families.",
+    ),
   }),
   defineProviderAction(service, {
     name: "google_organic_live_advanced",

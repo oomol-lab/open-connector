@@ -27,6 +27,7 @@ type DataForSeoRequestInput = {
   fetcher: typeof fetch;
   phase: DataForSeoPhase;
   body?: Record<string, unknown>[];
+  preserveTaskStatus?: boolean;
 };
 
 export const dataForSeoApiBaseUrl: string = "https://api.dataforseo.com/v3";
@@ -35,6 +36,68 @@ const dataForSeoApiBase = new URL(`${dataForSeoApiBaseUrl}/`);
 export const dataForSeoActionHandlers: Record<string, DataForSeoActionHandler> = {
   async get_user_data(_input, context) {
     return requestDataForSeoUserData(context, "execute");
+  },
+  async submit_amazon_products_task(input, context) {
+    return requestDataForSeoAsyncTaskResults({
+      path: "/merchant/amazon/products/task_post",
+      credential: context,
+      fetcher: context.fetcher,
+      phase: "execute",
+      body: [buildAmazonProductsTaskBody(input)],
+    });
+  },
+  async get_amazon_products_task(input, context) {
+    return requestDataForSeoAsyncTaskResults({
+      path: `/merchant/amazon/products/task_get/advanced/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      credential: context,
+      fetcher: context.fetcher,
+      phase: "execute",
+    });
+  },
+  async submit_amazon_asins_task(input, context) {
+    return requestDataForSeoAsyncTaskResults({
+      path: "/merchant/amazon/asin/task_post",
+      credential: context,
+      fetcher: context.fetcher,
+      phase: "execute",
+      body: [buildAmazonIdentifierTaskBody(input)],
+    });
+  },
+  async get_amazon_asins_task(input, context) {
+    return requestDataForSeoAsyncTaskResults({
+      path: `/merchant/amazon/asin/task_get/advanced/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      credential: context,
+      fetcher: context.fetcher,
+      phase: "execute",
+    });
+  },
+  async submit_amazon_sellers_task(input, context) {
+    return requestDataForSeoAsyncTaskResults({
+      path: "/merchant/amazon/sellers/task_post",
+      credential: context,
+      fetcher: context.fetcher,
+      phase: "execute",
+      body: [buildAmazonIdentifierTaskBody(input)],
+    });
+  },
+  async get_amazon_sellers_task(input, context) {
+    return requestDataForSeoAsyncTaskResults({
+      path: `/merchant/amazon/sellers/task_get/advanced/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      credential: context,
+      fetcher: context.fetcher,
+      phase: "execute",
+    });
+  },
+  async list_amazon_tasks_ready(_input, context) {
+    return requestDataForSeoAsyncTaskResults(
+      {
+        path: "/merchant/tasks_ready",
+        credential: context,
+        fetcher: context.fetcher,
+        phase: "execute",
+      },
+      isSupportedAmazonReadyTask,
+    );
   },
   async google_organic_live_advanced(input, context) {
     return requestDataForSeoTaskResults({
@@ -284,6 +347,39 @@ async function requestDataForSeoTaskResults(input: DataForSeoRequestInput) {
   });
 }
 
+async function requestDataForSeoAsyncTaskResults(
+  input: DataForSeoRequestInput,
+  resultFilter?: (result: Record<string, unknown>) => boolean,
+) {
+  const payload = await requestDataForSeoJson({
+    ...input,
+    preserveTaskStatus: true,
+  });
+  const task = getFirstDataForSeoTask(payload);
+  if (!task) {
+    throw new ProviderRequestError(502, "DataForSEO returned an asynchronous response without a task");
+  }
+
+  const results = readResultArray(task.result).filter(resultFilter ?? (() => true));
+  const state = normalizeDataForSeoAsyncState(task.status_code);
+  return {
+    task: normalizeDataForSeoAsyncTask(task, state),
+    results,
+    errors:
+      state === "failed"
+        ? [
+            {
+              status_code: readOptionalNumber(task.status_code) ?? null,
+              status_message: optionalString(task.status_message) ?? null,
+              raw: task,
+            },
+          ]
+        : [],
+    cost: readOptionalNumber(payload.cost) ?? readOptionalNumber(task.cost) ?? null,
+    raw: payload,
+  };
+}
+
 async function requestDataForSeoJson(input: DataForSeoRequestInput) {
   const response = await fetchDataForSeo(input);
   const payload = await readJsonPayload(response);
@@ -293,7 +389,7 @@ async function requestDataForSeoJson(input: DataForSeoRequestInput) {
   }
 
   const task = getFirstDataForSeoTask(envelope);
-  if (task && !isSuccessfulStatus(task.status_code)) {
+  if (task && !input.preserveTaskStatus && !isSuccessfulStatus(task.status_code)) {
     throw createDataForSeoTaskError(task, input.phase);
   }
 
@@ -384,6 +480,38 @@ function normalizeDataForSeoTask(task: DataForSeoTask) {
     cost: readOptionalNumber(task.cost),
     result_count: readOptionalNumber(task.result_count),
   });
+}
+
+function normalizeDataForSeoAsyncTask(task: DataForSeoTask, state: "running" | "succeeded" | "failed") {
+  return {
+    id: optionalString(task.id) ?? null,
+    state,
+    status_code: readOptionalNumber(task.status_code) ?? null,
+    status_message: optionalString(task.status_message) ?? null,
+    time: optionalString(task.time) ?? null,
+    cost: readOptionalNumber(task.cost) ?? null,
+    result_count: readOptionalNumber(task.result_count) ?? null,
+    path: Array.isArray(task.path) ? task.path.filter((part): part is string => typeof part === "string") : [],
+    data: task.data && typeof task.data === "object" && !Array.isArray(task.data) ? task.data : {},
+    raw: task,
+  };
+}
+
+function normalizeDataForSeoAsyncState(statusCode: unknown): "running" | "succeeded" | "failed" {
+  const parsed = readOptionalNumber(statusCode);
+  if (parsed === 20000) {
+    return "succeeded";
+  }
+  if (parsed === 20100 || parsed === 40601 || parsed === 40602) {
+    return "running";
+  }
+  return "failed";
+}
+
+function isSupportedAmazonReadyTask(result: Record<string, unknown>) {
+  const searchEngine = optionalString(result.se);
+  const taskType = optionalString(result.se_type);
+  return searchEngine === "amazon" && (taskType === "products" || taskType === "asin" || taskType === "sellers");
 }
 
 function createDataForSeoError(httpStatus: number, envelope: DataForSeoEnvelope, phase: DataForSeoPhase) {
@@ -538,6 +666,41 @@ function buildLocationBody(input: Record<string, unknown>) {
     language_name: readOptionalString(input.languageName),
     language_code: readOptionalString(input.languageCode),
   });
+}
+
+function buildAmazonTargetingBody(input: Record<string, unknown>) {
+  return compactObject({
+    priority: readOptionalInteger(input.priority, "priority"),
+    location_name: readOptionalString(input.locationName),
+    location_code: readOptionalInteger(input.locationCode, "locationCode"),
+    location_coordinate: readOptionalString(input.locationCoordinate),
+    language_name: readOptionalString(input.languageName),
+    language_code: readOptionalString(input.languageCode),
+    se_domain: readOptionalString(input.seDomain),
+    tag: readOptionalString(input.tag),
+  });
+}
+
+function buildAmazonProductsTaskBody(input: Record<string, unknown>) {
+  return compactObject({
+    keyword: readRequiredString(input.keyword, "keyword"),
+    url: readOptionalString(input.url),
+    ...buildAmazonTargetingBody(input),
+    depth: readOptionalInteger(input.depth, "depth"),
+    max_crawl_pages: readOptionalInteger(input.maxCrawlPages, "maxCrawlPages"),
+    department: readOptionalString(input.department),
+    search_param: readOptionalString(input.searchParam),
+    price_min: readOptionalInteger(input.priceMin, "priceMin"),
+    price_max: readOptionalInteger(input.priceMax, "priceMax"),
+    sort_by: readOptionalString(input.sortBy),
+  });
+}
+
+function buildAmazonIdentifierTaskBody(input: Record<string, unknown>) {
+  return {
+    asin: readRequiredString(input.asin, "asin"),
+    ...buildAmazonTargetingBody(input),
+  };
 }
 
 function buildLocationFieldBody(input: Record<string, unknown>) {
