@@ -11,10 +11,11 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const shopifyAdminApiVersion = "2026-04";
 
+const bulkResultDownloadTimeoutMs = 300_000;
 const credentialHelpUrl = "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens";
 const currentShopQuery =
   "query ShopifyAdminCurrentShop { shop { id name myshopifyDomain primaryDomain { url host } } }";
@@ -868,7 +869,7 @@ export const shopifyAdminActionHandlers: Record<ShopifyAdminActionName, ShopifyA
       query: createFulfillmentMutation,
       variables: compactObject({
         fulfillment: readObject(input.fulfillment, "fulfillment"),
-        message: optionalString(input.message),
+        message: typeof input.message === "string" ? input.message : undefined,
       }),
     });
     const result = readMutationResult(payload, "fulfillmentCreate");
@@ -1045,11 +1046,10 @@ function readMutationResult(payload: ShopifyAdminGraphQLResponse, fieldName: str
   const result = readObject(readObject(payload.data, "data")[fieldName], fieldName);
   const errors = readMutationUserErrors(result.userErrors);
   if (errors.length > 0) {
-    throw new ProviderRequestError(
-      422,
-      `shopify_admin ${fieldName} user error: ${errors.join("; ")}`,
-      result.userErrors,
-    );
+    throw new ProviderRequestError(502, `shopify_admin ${fieldName} user error: ${errors.join("; ")}`, {
+      providerStatus: 422,
+      userErrors: result.userErrors,
+    });
   }
   return result;
 }
@@ -1080,26 +1080,27 @@ async function downloadShopifyAdminBulkResult(
   }
 
   const url = requiredString(input.url, "url", providerInputError);
-  const response = await context.fetcher(url, {
-    headers: {
-      accept: "application/jsonl, application/x-ndjson, application/json, text/plain",
-      "user-agent": providerUserAgent,
-    },
-    signal: context.signal,
-  });
-  if (!response.ok) {
-    await cancelUnreadResponseBody(response);
-    throw new ProviderRequestError(
-      response.status,
-      `shopify_admin bulk result download failed with HTTP ${response.status}`,
-    );
-  }
-
-  const name = optionalString(input.fileName) ?? "shopify-bulk-operation-result.jsonl";
-  const mimeType =
-    optionalString(response.headers.get("content-type"))?.split(";")[0]?.trim() || "application/x-ndjson";
-
+  const timeout = createProviderTimeout(context.signal, bulkResultDownloadTimeoutMs);
+  let response: Response | undefined;
   try {
+    response = await context.fetcher(url, {
+      headers: {
+        accept: "application/jsonl, application/x-ndjson, application/json, text/plain",
+        "user-agent": providerUserAgent,
+      },
+      signal: timeout.signal,
+    });
+    if (!response.ok) {
+      throw new ProviderRequestError(
+        502,
+        `shopify_admin bulk result download failed with HTTP ${response.status}`,
+        { providerStatus: response.status },
+      );
+    }
+
+    const name = optionalString(input.fileName) ?? "shopify-bulk-operation-result.jsonl";
+    const mimeType =
+      optionalString(response.headers.get("content-type"))?.split(";")[0]?.trim() || "application/x-ndjson";
     const bytes = await readBoundedResponseBytes(response, {
       maxBytes: context.transitFiles.maxBytes,
       fieldName: "Shopify bulk result",
@@ -1116,7 +1117,12 @@ async function downloadShopifyAdminBulkResult(
       },
     };
   } catch (error) {
-    await cancelUnreadResponseBody(response);
+    if (response) {
+      await cancelUnreadResponseBody(response);
+    }
+    if (timeout.didTimeout()) {
+      throw new ProviderRequestError(504, "shopify_admin bulk result download timed out");
+    }
     if (error instanceof ProviderRequestError) {
       throw error;
     }
@@ -1124,6 +1130,8 @@ async function downloadShopifyAdminBulkResult(
       502,
       error instanceof Error ? error.message : "shopify_admin bulk result transit upload failed",
     );
+  } finally {
+    timeout.cleanup();
   }
 }
 
