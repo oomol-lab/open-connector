@@ -273,6 +273,7 @@ export const issueActionHandlers: Record<string, GitHubActionHandler> = {
 };
 
 async function listRepositoryIssues(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const perPage = optionalInteger(input.perPage) ?? 30;
   const issues = await githubRequestJson<Record<string, unknown>[]>({
     path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/issues`,
     query: compactObject({
@@ -281,7 +282,7 @@ async function listRepositoryIssues(input: Record<string, unknown>, accessToken:
       sort: optionalString(input.sort),
       direction: optionalString(input.direction),
       since: optionalString(input.since),
-      per_page: optionalInteger(input.perPage),
+      per_page: perPage,
       page: optionalInteger(input.page),
     }),
     accessToken,
@@ -292,8 +293,8 @@ async function listRepositoryIssues(input: Record<string, unknown>, accessToken:
     // The raw GitHub page mixes issues and pull requests; filtering PRs out
     // destroys the only pagination signal page-number callers have (the raw
     // page length). `pageInfo.fetched` preserves it: a caller must continue
-    // paginating while `fetched` equals the requested page size, even when
-    // `issues` comes back short or empty.
+    // paginating while `fetched` equals `perPage`, even when `issues` comes
+    // back short or empty.
     issues: issues.filter((issue) => issue.pull_request == null),
     pageInfo: { fetched: issues.length },
   };
