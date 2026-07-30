@@ -8,7 +8,7 @@ import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import { parsePrivateNetworkAccessFlag, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executableActionIds, executorModules } from "../providers/registry.cloudflare.generated.ts";
+import { executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
 import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
@@ -120,7 +120,7 @@ function writeWorkerLog(level: "error" | "info" | "warn"): (fields: unknown, mes
 
 function loadCatalogOnce(assets: AssetsBinding): Promise<CatalogStore> {
   catalogPromise ??= loadCatalogFromAssets(assets, {
-    executableActionIds: Object.values(executableActionIds).flat(),
+    executableServices: Object.keys(executorModules),
   });
   return catalogPromise;
 }

@@ -29,12 +29,6 @@ function propertyName(service: string): string {
 
 async function writeRegistry(filename: string, sources: ProviderSource[]): Promise<void> {
   const services = sources.map((source) => source.service);
-  const executableActionIds = new Map<string, string[]>(
-    sources.map((source) => [
-      source.service,
-      source.definition.actions.map((action) => action.id).sort((a, b) => a.localeCompare(b)),
-    ]),
-  );
   const lines = [
     'import type { ExecutorModule } from "./provider-loader.ts";',
     "",
@@ -43,15 +37,6 @@ async function writeRegistry(filename: string, sources: ProviderSource[]): Promi
     ...services.map(
       (service) => `  ${propertyName(service)}: (): Promise<ExecutorModule> => import("./${service}/executors.ts"),`,
     ),
-    "};",
-    "",
-    "/** Generated local executable action ids by provider. Do not hand-edit. */",
-    "export const executableActionIds: Record<string, string[]> = {",
-    ...services.flatMap((service) => [
-      `  ${propertyName(service)}: [`,
-      ...(executableActionIds.get(service) ?? []).map((actionId) => `    ${JSON.stringify(actionId)},`),
-      "  ],",
-    ]),
     "};",
   ];
 

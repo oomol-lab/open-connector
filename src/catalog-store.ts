@@ -69,11 +69,19 @@ export type CatalogStore = {
   executableActionIds: Set<string>;
 };
 
-export interface LoadCatalogOptions {
+export interface CreateCatalogStoreOptions {
   executableActionIds?: Iterable<string>;
 }
 
-export function createCatalogStore(providers: ProviderDefinition[], options: LoadCatalogOptions = {}): CatalogStore {
+export interface LoadCatalogOptions extends CreateCatalogStoreOptions {
+  /** Mark every catalog action owned by these locally loaded provider services as executable. */
+  executableServices?: Iterable<string>;
+}
+
+export function createCatalogStore(
+  providers: ProviderDefinition[],
+  options: CreateCatalogStoreOptions = {},
+): CatalogStore {
   const sortedProviders = sortProviders(providers);
   const executableActions = new Set(options.executableActionIds ?? []);
   const runtimeProviders = sortedProviders.map((provider): RuntimeProviderDefinition => {
@@ -148,7 +156,26 @@ export async function loadCatalog(
         return JSON.parse(content) as ProviderDefinition;
       }),
   );
-  return createCatalogStore(providers, options);
+  return createCatalogStore(providers, {
+    executableActionIds: resolveExecutableActionIds(providers, options),
+  });
+}
+
+/** Resolve provider-level executable services into the exact action ids present in a loaded catalog. */
+export function resolveExecutableActionIds(
+  providers: ProviderDefinition[],
+  options: LoadCatalogOptions = {},
+): Set<string> {
+  const actionIds = new Set(options.executableActionIds ?? []);
+  const services = new Set(options.executableServices ?? []);
+  for (const provider of providers) {
+    if (services.has(provider.service)) {
+      for (const action of provider.actions) {
+        actionIds.add(action.id);
+      }
+    }
+  }
+  return actionIds;
 }
 
 function createActionExecutionStatus(

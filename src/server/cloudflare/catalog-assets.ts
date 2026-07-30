@@ -2,7 +2,7 @@ import type { CatalogStore, LoadCatalogOptions } from "../../catalog-store.ts";
 import type { ProviderDefinition } from "../../core/types.ts";
 import type { AssetsBinding } from "./cloudflare-bindings.ts";
 
-import { createCatalogStore } from "../../catalog-store.ts";
+import { createCatalogStore, resolveExecutableActionIds } from "../../catalog-store.ts";
 
 const catalogAssetPath = "/catalog/apps.json";
 
@@ -11,7 +11,9 @@ export async function loadCatalogFromAssets(
   options: LoadCatalogOptions = {},
 ): Promise<CatalogStore> {
   const providers = (await readJsonAsset(assets, catalogAssetPath)) as ProviderDefinition[];
-  return createCatalogStore(providers, options);
+  return createCatalogStore(providers, {
+    executableActionIds: resolveExecutableActionIds(providers, options),
+  });
 }
 
 async function readJsonAsset(assets: AssetsBinding, path: string): Promise<unknown> {

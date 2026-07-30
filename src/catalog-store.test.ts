@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "./core/types.ts";
 
 import { describe, expect, it } from "vitest";
-import { createCatalogStore } from "./catalog-store.ts";
+import { createCatalogStore, resolveExecutableActionIds } from "./catalog-store.ts";
 
 describe("catalog store", () => {
   it("preserves optional provider descriptions without defaulting missing ones", () => {
@@ -72,4 +72,38 @@ describe("catalog store", () => {
       properties: { message: { type: "string" } },
     });
   });
+
+  it("resolves every action from executable services alongside explicit action ids", () => {
+    const providers = [providerFixture("example", ["ping", "pong"]), providerFixture("remote", ["ping"])];
+
+    const catalog = createCatalogStore(providers, {
+      executableActionIds: resolveExecutableActionIds(providers, {
+        executableServices: ["example"],
+        executableActionIds: ["remote.ping"],
+      }),
+    });
+
+    expect(catalog.executableActionIds).toEqual(new Set(["example.ping", "example.pong", "remote.ping"]));
+    expect(catalog.actionsById.get("example.pong")?.execution.locallyExecutable).toBe(true);
+  });
 });
+
+function providerFixture(service: string, actionNames: string[]): ProviderDefinition {
+  return {
+    service,
+    displayName: service,
+    categories: ["Developer Tools"],
+    authTypes: ["no_auth"],
+    auth: [{ type: "no_auth" }],
+    actions: actionNames.map((name) => ({
+      id: `${service}.${name}`,
+      service,
+      name,
+      description: `${name} action.`,
+      requiredScopes: [],
+      providerPermissions: [],
+      inputSchema: {},
+      outputSchema: {},
+    })),
+  };
+}
