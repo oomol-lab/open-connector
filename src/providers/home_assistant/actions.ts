@@ -69,6 +69,37 @@ function registryListSchema(description: string): JsonSchema {
   return s.nullable(s.array(description, s.looseObject("One Home Assistant registry entry.")));
 }
 
+// The editable config store reached through /api/config/<component>/config/<key>.
+// Every domain there takes an admin token and only covers entries Home Assistant
+// itself manages (automations.yaml, scripts.yaml, scenes.yaml); entries defined
+// in other YAML files are not visible to it.
+const configAdminNote =
+  "Requires an admin access token, and only covers entries stored in the Home Assistant UI-editable config; entries defined in other YAML files return not found.";
+
+const configWriteResultSchema = s.actionOutput(
+  { result: s.string("The Home Assistant result status, normally ok.") },
+  "The Home Assistant config write result.",
+);
+
+function configKeyInput(field: string, description: string): JsonSchema {
+  return s.actionInput({ [field]: s.nonEmptyString(description) }, [field], "Input parameters for one config entry.");
+}
+
+function configSaveInput(field: string, description: string, configDescription: string): JsonSchema {
+  return s.actionInput(
+    {
+      [field]: s.nonEmptyString(description),
+      config: s.looseObject(configDescription),
+    },
+    [field, "config"],
+    "Input parameters for saving one config entry.",
+  );
+}
+
+function configReadOutput(description: string): JsonSchema {
+  return s.actionOutput({ config: s.looseObject(description) }, "The stored Home Assistant configuration entry.");
+}
+
 export const homeAssistantActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_config",
@@ -348,6 +379,7 @@ export const homeAssistantActions: ActionDefinition[] = [
     name: "list_device_automations",
     description:
       "List the triggers, conditions, and actions one Home Assistant device supports, for building automations against that device.",
+    followUpActions: ["home_assistant.validate_config"],
     inputSchema: s.actionInput(
       {
         deviceId: s.nonEmptyString("The Home Assistant device registry identifier."),
@@ -391,6 +423,7 @@ export const homeAssistantActions: ActionDefinition[] = [
     name: "validate_config",
     description:
       "Validate Home Assistant trigger, condition, and action configurations before storing them in an automation.",
+    followUpActions: ["home_assistant.save_automation_config", "home_assistant.save_script_config"],
     inputSchema: s.actionInput(
       {
         triggers: s.array("The trigger configurations to validate.", s.looseObject("One Home Assistant trigger.")),
@@ -410,6 +443,92 @@ export const homeAssistantActions: ActionDefinition[] = [
         ),
       },
       "The Home Assistant configuration validation result.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "get_automation_config",
+    description: `Fetch the stored configuration for one Home Assistant automation. ${configAdminNote}`,
+    followUpActions: ["home_assistant.save_automation_config"],
+    inputSchema: configKeyInput("automationId", "The automation id, which is the id field inside the automation."),
+    outputSchema: configReadOutput("The stored automation configuration."),
+  }),
+  defineProviderAction(service, {
+    name: "save_automation_config",
+    description: `Create or replace one Home Assistant automation. Posting to an unused id creates the automation. ${configAdminNote}`,
+    followUpActions: ["home_assistant.get_automation_config", "home_assistant.get_logbook"],
+    inputSchema: configSaveInput(
+      "automationId",
+      "The automation id to create or replace.",
+      "The automation configuration, with the same keys as an automations.yaml entry such as alias, triggers, conditions, actions, and mode.",
+    ),
+    outputSchema: configWriteResultSchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_automation_config",
+    description: `Delete one Home Assistant automation. ${configAdminNote}`,
+    inputSchema: configKeyInput("automationId", "The automation id to delete."),
+    outputSchema: configWriteResultSchema,
+  }),
+  defineProviderAction(service, {
+    name: "get_script_config",
+    description: `Fetch the stored configuration for one Home Assistant script. ${configAdminNote}`,
+    followUpActions: ["home_assistant.save_script_config"],
+    inputSchema: configKeyInput("scriptKey", "The script key, the slug after script. in the entity id."),
+    outputSchema: configReadOutput("The stored script configuration."),
+  }),
+  defineProviderAction(service, {
+    name: "save_script_config",
+    description: `Create or replace one Home Assistant script. Posting to an unused key creates the script. ${configAdminNote}`,
+    followUpActions: ["home_assistant.get_script_config"],
+    inputSchema: configSaveInput(
+      "scriptKey",
+      "The script key to create or replace, which must be a slug of lowercase letters, digits, and underscores.",
+      "The script configuration, with the same keys as a scripts.yaml entry such as alias, sequence, and mode.",
+    ),
+    outputSchema: configWriteResultSchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_script_config",
+    description: `Delete one Home Assistant script. ${configAdminNote}`,
+    inputSchema: configKeyInput("scriptKey", "The script key to delete."),
+    outputSchema: configWriteResultSchema,
+  }),
+  defineProviderAction(service, {
+    name: "get_scene_config",
+    description: `Fetch the stored configuration for one Home Assistant scene. ${configAdminNote}`,
+    followUpActions: ["home_assistant.save_scene_config"],
+    inputSchema: configKeyInput("sceneId", "The scene id, which is the id field inside the scene."),
+    outputSchema: configReadOutput("The stored scene configuration."),
+  }),
+  defineProviderAction(service, {
+    name: "save_scene_config",
+    description: `Create or replace one Home Assistant scene. Posting to an unused id creates the scene. ${configAdminNote}`,
+    followUpActions: ["home_assistant.get_scene_config"],
+    inputSchema: configSaveInput(
+      "sceneId",
+      "The scene id to create or replace.",
+      "The scene configuration, with the same keys as a scenes.yaml entry such as name and entities.",
+    ),
+    outputSchema: configWriteResultSchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_scene_config",
+    description: `Delete one Home Assistant scene. ${configAdminNote}`,
+    inputSchema: configKeyInput("sceneId", "The scene id to delete."),
+    outputSchema: configWriteResultSchema,
+  }),
+  defineProviderAction(service, {
+    name: "check_config",
+    description:
+      "Ask Home Assistant to validate its own configuration files and report errors and warnings. Requires an admin access token.",
+    inputSchema: emptyInputSchema,
+    outputSchema: s.actionOutput(
+      {
+        result: s.string("Either valid or invalid."),
+        errors: s.nullableString("The configuration errors, or null when there are none."),
+        warnings: s.nullableString("The configuration warnings, or null when there are none."),
+      },
+      "The Home Assistant configuration check result.",
     ),
   }),
 ];
