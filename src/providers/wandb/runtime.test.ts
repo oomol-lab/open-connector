@@ -68,6 +68,20 @@ describe("W&B MCP runtime", () => {
     });
   });
 
+  it.each([
+    [401, 401],
+    [403, 401],
+    [404, 400],
+    [429, 429],
+    [500, 502],
+  ])("maps MCP HTTP status %i to provider status %i", async (upstreamStatus, providerStatus) => {
+    const fetcher = vi.fn(async () => new Response("request failed", { status: upstreamStatus })) as typeof fetch;
+
+    await expect(validateWandbMcpCredential("secret-key", {}, fetcher)).rejects.toMatchObject({
+      status: providerStatus,
+    });
+  });
+
   it("maps local actions to the official W&B MCP tool names", () => {
     expect(wandbMcpTools).toMatchObject({
       query_wandb: "query_wandb_tool",

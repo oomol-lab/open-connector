@@ -9,26 +9,24 @@ const service = "wandb";
 const entityName = s.nonWhitespaceString("The W&B entity or team name.");
 const projectName = s.nonWhitespaceString("The W&B project name.");
 const filterObject = s.looseObject("Optional provider-native filters.");
-const jsonObject = (description: string, properties: Record<string, JsonSchema> = {}): JsonSchema =>
-  s.looseObject(description, properties);
 const jsonItems = (description: string): JsonSchema => s.array(description, s.looseObject("One returned item."));
 
-const traceQueryOutput = jsonObject("Matching Weave traces and query metadata.", {
-  metadata: jsonObject("Trace query counts, distributions, time range, and truncation metadata."),
+const traceQueryOutput = s.looseObject("Matching Weave traces and query metadata.", {
+  metadata: s.looseObject("Trace query counts, distributions, time range, and truncation metadata."),
   traces: jsonItems("Matching Weave traces."),
 });
 
-const artifactDiffOutput = jsonObject("A comparison of two W&B artifact versions.", {
-  artifact_a: jsonObject("Details for the first artifact version."),
-  artifact_b: jsonObject("Details for the second artifact version."),
-  metadata_diff: jsonObject("Artifact metadata differences."),
-  tags_diff: jsonObject("Artifact tag differences."),
-  aliases_diff: jsonObject("Artifact alias differences."),
-  size_diff: jsonObject("Artifact size differences."),
-  file_count_diff: jsonObject("Artifact file-count differences."),
-  lineage_diff: jsonObject("Artifact lineage differences."),
+const artifactDiffOutput = s.looseObject("A comparison of two W&B artifact versions.", {
+  artifact_a: s.looseObject("Details for the first artifact version."),
+  artifact_b: s.looseObject("Details for the second artifact version."),
+  metadata_diff: s.looseObject("Artifact metadata differences."),
+  tags_diff: s.looseObject("Artifact tag differences."),
+  aliases_diff: s.looseObject("Artifact alias differences."),
+  size_diff: s.looseObject("Artifact size differences."),
+  file_count_diff: s.looseObject("Artifact file-count differences."),
+  lineage_diff: s.looseObject("Artifact lineage differences."),
   digest_match: s.boolean("Whether both artifact versions have the same digest."),
-  file_diff: jsonObject("Optional file-level differences."),
+  file_diff: s.looseObject("Optional file-level differences."),
 });
 
 export const wandbActions: ProviderActionDefinition[] = [
@@ -85,7 +83,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       project_name: projectName,
       trace_ids: s.stringArray("Child trace IDs to resolve.", { minItems: 1 }),
     }),
-    outputSchema: jsonObject("Resolved Weave trace roots.", {
+    outputSchema: s.looseObject("Resolved Weave trace roots.", {
       roots: s.record("Root span details keyed by requested trace ID.", s.looseObject("One resolved root span.")),
       resolved: s.nonNegativeInteger("The number of resolved trace IDs."),
       total_requested: s.nonNegativeInteger("The number of requested trace IDs."),
@@ -142,7 +140,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name", "analysis_name", "data"] },
     ),
-    outputSchema: jsonObject("The W&B run created for the analysis.", {
+    outputSchema: s.looseObject("The W&B run created for the analysis.", {
       run_id: s.string("The created W&B run ID."),
       run_url: s.url("The created W&B run URL."),
       logged_keys: s.stringArray("The logged metric and data keys."),
@@ -154,7 +152,7 @@ export const wandbActions: ProviderActionDefinition[] = [
     name: "list_entities",
     description: "List W&B user and team entities accessible with the configured API key.",
     inputSchema: s.actionInput({}, [], "No input is required."),
-    outputSchema: jsonObject("Accessible W&B entities.", {
+    outputSchema: s.looseObject("Accessible W&B entities.", {
       entities: s.array(
         "Accessible W&B entities.",
         s.looseObject("One W&B entity.", {
@@ -176,7 +174,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: [] },
     ),
-    outputSchema: jsonObject("W&B projects grouped by entity.", {
+    outputSchema: s.looseObject("W&B projects grouped by entity.", {
       projects: s.record("Projects keyed by W&B entity.", s.array(s.looseObject("One W&B project."))),
       truncated: s.boolean("Whether project results were truncated."),
       max_projects_per_entity: s.positiveInteger("The per-entity project limit."),
@@ -194,7 +192,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: [] },
     ),
-    outputSchema: jsonObject("Matching W&B Automations.", {
+    outputSchema: s.looseObject("Matching W&B Automations.", {
       automations: jsonItems("Matching W&B Automations."),
       count: s.nonNegativeInteger("The number of returned automations."),
       entity: s.nullableString("The filtered W&B entity."),
@@ -213,7 +211,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: [] },
     ),
-    outputSchema: jsonObject("Matching W&B integrations.", {
+    outputSchema: s.looseObject("Matching W&B integrations.", {
       integrations: jsonItems("Matching W&B integrations."),
       count: s.nonNegativeInteger("The number of returned integrations."),
       entity: s.nullableString("The filtered W&B entity."),
@@ -234,7 +232,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name"] },
     ),
-    outputSchema: jsonObject("The inferred Weave trace schema.", {
+    outputSchema: s.looseObject("The inferred Weave trace schema.", {
       fields: jsonItems("Discovered trace fields."),
       total_traces: s.nonNegativeInteger("The total matching traces."),
       root_traces: s.nonNegativeInteger("The total root traces."),
@@ -265,7 +263,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name", "run_id"] },
     ),
-    outputSchema: jsonObject("Sampled W&B run history.", {
+    outputSchema: s.looseObject("Sampled W&B run history.", {
       history: s.array("Sampled metric history rows.", s.looseObject("One sampled history row.")),
       run_id: s.string("The W&B run ID."),
       run_name: s.string("The W&B run name."),
@@ -286,7 +284,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: [] },
     ),
-    outputSchema: jsonObject("Matching W&B registries.", {
+    outputSchema: s.looseObject("Matching W&B registries.", {
       registries: jsonItems("Matching W&B registries."),
       count: s.nonNegativeInteger("The number of returned registries."),
       truncated: s.boolean("Whether results were truncated."),
@@ -305,8 +303,8 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["registry_name"] },
     ),
-    outputSchema: jsonObject("Collections in a W&B registry.", {
-      registry: jsonObject("The selected W&B registry."),
+    outputSchema: s.looseObject("Collections in a W&B registry.", {
+      registry: s.looseObject("The selected W&B registry."),
       collections: jsonItems("Collections in the registry."),
       count: s.nonNegativeInteger("The number of returned collections."),
       truncated: s.boolean("Whether results were truncated."),
@@ -329,8 +327,8 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["collection_name"] },
     ),
-    outputSchema: jsonObject("Versions in a W&B artifact collection.", {
-      collection: jsonObject("The selected artifact collection."),
+    outputSchema: s.looseObject("Versions in a W&B artifact collection.", {
+      collection: s.looseObject("The selected artifact collection."),
       source: s.string("The artifact source type."),
       versions: jsonItems("Artifact versions in the collection."),
       count: s.nonNegativeInteger("The number of returned versions."),
@@ -350,9 +348,9 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["artifact_name"] },
     ),
-    outputSchema: jsonObject("W&B artifact version details.", {
-      artifact: jsonObject("Artifact metadata."),
-      lineage: jsonObject("Artifact lineage information."),
+    outputSchema: s.looseObject("W&B artifact version details.", {
+      artifact: s.looseObject("Artifact metadata."),
+      lineage: s.looseObject("Artifact lineage information."),
       files: jsonItems("Optional artifact file entries."),
     }),
   }),
@@ -391,13 +389,13 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name", "run_id_a", "run_id_b"] },
     ),
-    outputSchema: jsonObject("A structured comparison of two W&B runs.", {
-      run_a: jsonObject("Details for the first W&B run."),
-      run_b: jsonObject("Details for the second W&B run."),
-      config_diff: jsonObject("Run configuration differences."),
-      summary_diff: jsonObject("Run summary metric differences."),
-      metadata_diff: jsonObject("Run metadata differences."),
-      history_comparison: jsonObject("Optional sampled history comparison."),
+    outputSchema: s.looseObject("A structured comparison of two W&B runs.", {
+      run_a: s.looseObject("Details for the first W&B run."),
+      run_b: s.looseObject("Details for the second W&B run."),
+      config_diff: s.looseObject("Run configuration differences."),
+      summary_diff: s.looseObject("Run summary metric differences."),
+      metadata_diff: s.looseObject("Run metadata differences."),
+      history_comparison: s.looseObject("Optional sampled history comparison."),
     }),
   }),
   defineProviderAction(service, {
@@ -414,7 +412,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name"] },
     ),
-    outputSchema: jsonObject("Aggregated Weave evaluation results.", {
+    outputSchema: s.looseObject("Aggregated Weave evaluation results.", {
       evaluations: jsonItems("Matching evaluation summaries."),
       count: s.nonNegativeInteger("The number of summarized evaluations."),
       project: s.string("The W&B project name."),
@@ -434,12 +432,12 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name", "run_id"] },
     ),
-    outputSchema: jsonObject("The W&B run health diagnosis.", {
+    outputSchema: s.looseObject("The W&B run health diagnosis.", {
       run_id: s.string("The diagnosed W&B run ID."),
       run_name: s.string("The W&B run name."),
       run_state: s.string("The W&B run state."),
       diagnosis: s.unknown("Training-health findings and recommendations."),
-      loss_stats: jsonObject("Calculated loss statistics."),
+      loss_stats: s.looseObject("Calculated loss statistics."),
     }),
   }),
   defineProviderAction(service, {
@@ -454,7 +452,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       },
       { required: ["entity_name", "project_name"] },
     ),
-    outputSchema: jsonObject("The discovered W&B project structure.", {
+    outputSchema: s.looseObject("The discovered W&B project structure.", {
       entity: s.string("The W&B entity name."),
       project: s.string("The W&B project name."),
       run_count: s.nonNegativeInteger("The project run count."),

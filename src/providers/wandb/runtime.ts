@@ -24,7 +24,7 @@ const defaultEndpoint = "https://mcp.withwandb.com/mcp";
 const requestTimeoutMs = 60_000;
 const wandbMcpJsonSchemaValidator = new CfWorkerJsonSchemaValidator();
 
-export const wandbMcpTools = {
+export const wandbMcpTools: Record<string, string> = {
   query_weave_traces: "query_weave_traces_tool",
   count_weave_traces: "count_weave_traces_tool",
   resolve_trace_roots: "resolve_trace_roots_tool",
@@ -47,19 +47,13 @@ export const wandbMcpTools = {
   summarize_evaluation: "summarize_evaluation_tool",
   diagnose_run: "diagnose_run_tool",
   probe_project: "probe_project_tool",
-} as const;
+};
 
-type WandbActionName = keyof typeof wandbMcpTools;
-
-export const wandbMcpActionHandlers: Record<
-  WandbActionName,
-  ProviderRuntimeHandler<WandbMcpContext>
-> = Object.fromEntries(
-  Object.entries(wandbMcpTools).map(([actionName, toolName]) => [
-    actionName,
-    (input: Record<string, unknown>, context: WandbMcpContext) => callWandbMcpTool(context, toolName, input),
-  ]),
-) as Record<WandbActionName, ProviderRuntimeHandler<WandbMcpContext>>;
+export const wandbMcpActionHandlers: Record<string, ProviderRuntimeHandler<WandbMcpContext>> = {};
+for (const [actionName, toolName] of Object.entries(wandbMcpTools)) {
+  wandbMcpActionHandlers[actionName] = (input: Record<string, unknown>, context: WandbMcpContext) =>
+    callWandbMcpTool(context, toolName, input);
+}
 
 export function createWandbMcpContext(
   apiKey: string,
@@ -131,7 +125,7 @@ export function normalizeWandbMcpEndpoint(
 
 export async function callWandbMcpTool(
   context: WandbMcpContext,
-  toolName: (typeof wandbMcpTools)[WandbActionName],
+  toolName: string,
   args: Record<string, unknown>,
 ): Promise<unknown> {
   return withWandbMcpClient(context, async (client) => {
@@ -231,17 +225,15 @@ function mapWandbMcpError(error: unknown): ProviderRequestError {
   }
   if (error instanceof StreamableHTTPError) {
     const status = error.code;
-    return new ProviderRequestError(
-      status === 401 || status === 403
-        ? 401
-        : status === 429
-          ? 429
-          : status && status >= 400 && status < 500
-            ? 400
-            : 502,
-      `W&B MCP request failed: ${error.message}`,
-      error,
-    );
+    let providerStatus = 502;
+    if (status === 401 || status === 403) {
+      providerStatus = 401;
+    } else if (status === 429) {
+      providerStatus = 429;
+    } else if (status && status >= 400 && status < 500) {
+      providerStatus = 400;
+    }
+    return new ProviderRequestError(providerStatus, `W&B MCP request failed: ${error.message}`, error);
   }
   if (error instanceof McpError) {
     return error.code === ErrorCode.RequestTimeout
