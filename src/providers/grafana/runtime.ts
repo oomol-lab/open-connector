@@ -93,6 +93,18 @@ export const grafanaActionHandlers: Record<GrafanaActionName, GrafanaActionHandl
   delete_data_source(input, context) {
     return executeDeleteDataSource(input, context);
   },
+  list_alert_rules(input, context) {
+    return executeListAlertRules(input, context);
+  },
+  get_alert_rule(input, context) {
+    return executeGetAlertRule(input, context);
+  },
+  list_alert_instances(input, context) {
+    return executeListAlertInstances(input, context);
+  },
+  list_contact_points(input, context) {
+    return executeListContactPoints(input, context);
+  },
 };
 
 export async function validateGrafanaCredential(
@@ -334,6 +346,49 @@ async function executeDeleteDataSource(input: Record<string, unknown>, context: 
     deleted: true,
     raw: optionalRecord(payload) ?? null,
   };
+}
+
+// Alerting actions use Grafana's legacy REST API (/api/...), which is not versioned
+// per release, so they are unaffected by App Platform version negotiation.
+async function executeListAlertRules(_input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
+  const payload = await grafanaRequestJson(
+    "/api/v1/provisioning/alert-rules",
+    { method: "GET" },
+    { ...context, phase: "execute" },
+  );
+  return { alertRules: objectArrayOrEmpty(payload) };
+}
+
+async function executeGetAlertRule(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
+  const payload = await grafanaRequestJson(
+    `/api/v1/provisioning/alert-rules/${encodePathSegment(requireString(input.uid, "uid"))}`,
+    { method: "GET" },
+    { ...context, phase: "execute" },
+  );
+  return { alertRule: optionalRecord(payload) ?? {} };
+}
+
+async function executeListAlertInstances(input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
+  const query = compactObject({
+    active: optionalBoolean(input.active),
+    silenced: optionalBoolean(input.silenced),
+    inhibited: optionalBoolean(input.inhibited),
+  });
+  const payload = await grafanaRequestJson(
+    "/api/alertmanager/grafana/api/v2/alerts",
+    { method: "GET", query },
+    { ...context, phase: "execute" },
+  );
+  return { alertInstances: objectArrayOrEmpty(payload) };
+}
+
+async function executeListContactPoints(_input: Record<string, unknown>, context: GrafanaContext): Promise<unknown> {
+  const payload = await grafanaRequestJson(
+    "/api/v1/provisioning/contact-points",
+    { method: "GET" },
+    { ...context, phase: "execute" },
+  );
+  return { contactPoints: objectArrayOrEmpty(payload) };
 }
 
 async function grafanaRequestJson(
