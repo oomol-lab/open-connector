@@ -126,7 +126,7 @@ export const homeAssistantActionHandlers: Record<string, HomeAssistantActionHand
         path: startTime ? `/api/history/period/${encodeURIComponent(startTime)}` : "/api/history/period",
         method: "GET",
         query: queryParams({
-          filter_entity_id: requiredStringArray(input.entityIds, "entityIds", badHomeAssistantRequest).join(","),
+          filter_entity_id: readHistoryEntityIds(input.entityIds),
           end_time: optionalString(input.endTime),
           minimal_response: presenceFlag(input.minimalResponse),
           no_attributes: presenceFlag(input.noAttributes),
@@ -206,6 +206,27 @@ export const homeAssistantActionHandlers: Record<string, HomeAssistantActionHand
  */
 function presenceFlag(value: unknown): string | undefined {
   return optionalBoolean(value) === true ? "1" : undefined;
+}
+
+/**
+ * Build the `filter_entity_id` value, rejecting an entity list that carries no
+ * usable id.
+ *
+ * Home Assistant treats a missing `filter_entity_id` as "every entity", and
+ * `queryParams` drops empty strings, so a list that normalizes to nothing would
+ * turn a scoped query into a whole-instance history dump. The action schema
+ * already requires at least one non-empty id, but the request must not depend on
+ * that alone, and a whitespace-only id passes the schema while still being
+ * unusable.
+ */
+function readHistoryEntityIds(value: unknown): string {
+  const entityIds = requiredStringArray(value, "entityIds", badHomeAssistantRequest)
+    .map((entityId) => entityId.trim())
+    .filter((entityId) => entityId.length > 0);
+  if (entityIds.length === 0) {
+    throw badHomeAssistantRequest("entityIds must contain at least one entity id");
+  }
+  return entityIds.join(",");
 }
 
 export function validateHomeAssistantCredential(input: { values: Record<string, string> }): {

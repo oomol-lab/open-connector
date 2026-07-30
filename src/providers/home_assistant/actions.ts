@@ -11,17 +11,27 @@ const contextSchema = s.looseObject("The Home Assistant context attached to a st
   user_id: s.nullableString("The optional Home Assistant user identifier."),
 });
 
-const stateSchema = s.looseRequiredObject(
-  "One Home Assistant entity state object.",
-  {
-    entity_id: s.string("The Home Assistant entity identifier."),
-    state: s.string("The current state value."),
-    attributes: s.looseObject("The integration-specific attributes for the entity state."),
-    last_changed: s.string("The timestamp when the state last changed."),
-    last_updated: s.string("The timestamp when the state object was last updated."),
-    context: contextSchema,
-  },
-  { optional: ["attributes", "context"] },
+const stateProperties = {
+  entity_id: s.string("The Home Assistant entity identifier."),
+  state: s.string("The current state value."),
+  attributes: s.looseObject("The integration-specific attributes for the entity state."),
+  last_changed: s.string("The timestamp when the state last changed."),
+  last_updated: s.string("The timestamp when the state object was last updated."),
+  context: contextSchema,
+};
+
+const stateSchema = s.looseRequiredObject("One Home Assistant entity state object.", stateProperties, {
+  optional: ["attributes", "context"],
+});
+
+// History rows are not full state objects. With minimal_response, Home Assistant
+// returns only state and last_changed for the entries between the first and last
+// of the period, dropping entity_id, attributes, and last_updated; no_attributes
+// drops attributes on every row. Only state and last_changed are always present.
+const historyStateSchema = s.looseRequiredObject(
+  "One recorded Home Assistant state. Fields other than state and last_changed are omitted for compacted rows.",
+  stateProperties,
+  { optional: ["entity_id", "attributes", "last_updated", "context"] },
 );
 
 const emptyInputSchema = s.actionInput({}, [], "No input is required for this action.");
@@ -238,7 +248,7 @@ export const homeAssistantActions: ActionDefinition[] = [
       {
         history: s.array(
           "One list of state objects per requested entity, in the order Home Assistant returns them.",
-          s.array("The recorded states for one entity.", stateSchema),
+          s.array("The recorded states for one entity.", historyStateSchema),
         ),
       },
       "The recorded Home Assistant state history.",
