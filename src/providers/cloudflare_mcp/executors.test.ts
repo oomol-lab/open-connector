@@ -4,7 +4,7 @@ import { cloudflareMcpActionHandlers, credentialValidators } from "./executors.t
 describe("Cloudflare MCP executors", () => {
   it("sends bearer auth and maps search to the official MCP tool", async () => {
     const calls: Array<Record<string, unknown>> = [];
-    const fetcher = createMcpFetch(calls);
+    const fetcher = createMcpFetch(calls, "cf-token");
 
     const output = await cloudflareMcpActionHandlers.search(
       { code: "async () => ['workers']" },
@@ -22,7 +22,7 @@ describe("Cloudflare MCP executors", () => {
   it("validates both API-token and OAuth bearer credentials with tools/list", async () => {
     const apiKeyResult = await credentialValidators.apiKey!(
       { apiKey: "api-token", values: {} },
-      { fetcher: createMcpFetch([]) },
+      { fetcher: createMcpFetch([], "api-token") },
     );
     const oauthResult = await credentialValidators.oauth2!(
       {
@@ -32,7 +32,7 @@ describe("Cloudflare MCP executors", () => {
         profile: { accountId: "pending", displayName: "Pending", grantedScopes: [] },
         metadata: {},
       },
-      { fetcher: createMcpFetch([]) },
+      { fetcher: createMcpFetch([], "oauth-token") },
     );
 
     expect(apiKeyResult?.metadata?.mcpTools).toEqual(["docs", "execute", "search"]);
@@ -40,14 +40,14 @@ describe("Cloudflare MCP executors", () => {
   });
 });
 
-function createMcpFetch(calls: Array<Record<string, unknown>>): typeof fetch {
+function createMcpFetch(calls: Array<Record<string, unknown>>, expectedToken: string): typeof fetch {
   return vi.fn(async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const headers = new Headers(init?.headers);
     const rawBody = typeof init?.body === "string" ? init.body : undefined;
     const request = rawBody ? (JSON.parse(rawBody) as Record<string, unknown>) : {};
     calls.push(request);
 
-    expect(headers.get("authorization")).toMatch(/^Bearer /);
+    expect(headers.get("authorization")).toBe(`Bearer ${expectedToken}`);
     if (init?.method === "DELETE") return new Response(null, { status: 200 });
     if (!("id" in request)) return new Response(null, { status: 202 });
 
