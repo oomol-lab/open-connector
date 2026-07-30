@@ -38,6 +38,20 @@ describe("Cloudflare MCP executors", () => {
     expect(apiKeyResult?.metadata?.mcpTools).toEqual(["docs", "execute", "search"]);
     expect(oauthResult?.metadata?.mcpTools).toEqual(["docs", "execute", "search"]);
   });
+
+  it("does not start MCP traffic after the execution is cancelled", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetcher = createMcpFetch([], "cf-token");
+
+    await expect(
+      cloudflareMcpActionHandlers.search(
+        { code: "async () => ['workers']" },
+        { accessToken: "cf-token", fetcher, signal: controller.signal },
+      ),
+    ).rejects.toThrow();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
 });
 
 function createMcpFetch(calls: Array<Record<string, unknown>>, expectedToken: string): typeof fetch {

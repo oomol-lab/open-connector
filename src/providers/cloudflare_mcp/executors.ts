@@ -57,7 +57,6 @@ async function validateCloudflareMcpCredential(accessToken: string, fetcher: typ
       accountId: `cloudflare:mcp:${tokenHash}`,
       displayName: `Cloudflare MCP · ${tokenHash.slice(-6)}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpEndpoint: cloudflareMcpEndpoint,
       mcpTools: toolNames,
@@ -67,7 +66,13 @@ async function validateCloudflareMcpCredential(accessToken: string, fetcher: typ
 
 async function listCloudflareMcpTools(input: { accessToken: string; fetcher: typeof fetch; signal?: AbortSignal }) {
   return withCloudflareMcpClient(input, async (client) => {
-    const result = await client.listTools({}, { timeout: cloudflareMcpRequestTimeoutMs });
+    const result = await client.listTools(
+      {},
+      {
+        timeout: cloudflareMcpRequestTimeoutMs,
+        signal: input.signal,
+      },
+    );
     return result.tools;
   });
 }
@@ -80,6 +85,7 @@ async function callCloudflareMcpTool(
   return withCloudflareMcpClient(context, async (client) => {
     const result = await client.callTool({ name: toolName, arguments: argumentsInput }, undefined, {
       timeout: cloudflareMcpRequestTimeoutMs,
+      signal: context.signal,
     });
     return normalizeCloudflareMcpToolResult(toolName, result);
   });
@@ -94,12 +100,15 @@ async function withCloudflareMcpClient<T>(
   headers.set("user-agent", providerUserAgent);
   const transport = new StreamableHTTPClientTransport(new URL(cloudflareMcpEndpoint), {
     fetch: input.fetcher,
-    requestInit: { headers, signal: input.signal },
+    requestInit: { headers },
   });
   const client = new Client({ name: "oomol-connect-cloudflare-mcp", version: "1.0.0" });
 
   try {
-    await client.connect(transport, { timeout: cloudflareMcpRequestTimeoutMs });
+    await client.connect(transport, {
+      timeout: cloudflareMcpRequestTimeoutMs,
+      signal: input.signal,
+    });
     return await run(client);
   } catch (error) {
     throw mapCloudflareMcpError(error);
