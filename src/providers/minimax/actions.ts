@@ -215,31 +215,38 @@ const createResponseOutputSchema = s.looseRequiredObject(
   },
 );
 
-const videoModels = [
+const textToVideoModels = ["MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "T2V-01-Director", "T2V-01"];
+
+const imageToVideoModels = [
   "MiniMax-Hailuo-2.3",
   "MiniMax-Hailuo-2.3-Fast",
   "MiniMax-Hailuo-02",
-  "T2V-01-Director",
-  "T2V-01",
   "I2V-01-Director",
   "I2V-01-live",
   "I2V-01",
 ];
 
-const videoRegionSchema = s.stringEnum(["global", "china"], {
-  description:
-    "MiniMax service region. Use global for the https://api.minimax.io host or china for the https://api.minimaxi.com host. Defaults to global.",
-  default: "global",
-});
-
-const videoModelSchema = s.stringEnum(videoModels, {
-  description: "MiniMax video model to invoke, for example MiniMax-Hailuo-2.3.",
+const textToVideoModelSchema = s.stringEnum(textToVideoModels, {
+  description: "MiniMax text-to-video model to invoke, for example MiniMax-Hailuo-2.3.",
   default: "MiniMax-Hailuo-2.3",
 });
 
-const videoDurationSchema = s.integer("Length of the generated video in seconds.", { minimum: 1 });
-const videoResolutionSchema = trimmedNonEmptyString(
-  "Resolution of the generated video, for example 512P, 768P, or 1080P.",
+const imageToVideoModelSchema = s.stringEnum(imageToVideoModels, {
+  description: "MiniMax image-to-video model to invoke, for example MiniMax-Hailuo-2.3.",
+  default: "MiniMax-Hailuo-2.3",
+});
+
+const videoDurationSchema = s.anyOf([s.literal(6), s.literal(10)], {
+  description: "Length of the generated video in seconds. Model and resolution determine whether 6 or 10 is valid.",
+  default: 6,
+});
+const textToVideoResolutionSchema = s.stringEnum(
+  "Resolution of the generated text-to-video result. Supported values depend on the model and duration.",
+  ["720P", "768P", "1080P"],
+);
+const imageToVideoResolutionSchema = s.stringEnum(
+  "Resolution of the generated image-to-video result. Supported values depend on the model and duration.",
+  ["512P", "720P", "768P", "1080P"],
 );
 const videoPromptOptimizerSchema = s.boolean("Whether MiniMax may rewrite the prompt to improve the result.");
 const videoFastPretreatmentSchema = s.boolean("Whether MiniMax applies fast pre-processing to speed up generation.");
@@ -248,53 +255,39 @@ const videoCallbackUrlSchema = s.url("URL MiniMax calls with asynchronous task s
 const textToVideoInputSchema = s.object(
   "Request body for creating a MiniMax text-to-video generation task.",
   {
-    model: videoModelSchema,
+    model: textToVideoModelSchema,
     prompt: trimmedNonEmptyString("Text description of the video to generate."),
     prompt_optimizer: videoPromptOptimizerSchema,
     fast_pretreatment: videoFastPretreatmentSchema,
     duration: videoDurationSchema,
-    resolution: videoResolutionSchema,
+    resolution: textToVideoResolutionSchema,
     callback_url: videoCallbackUrlSchema,
-    region: videoRegionSchema,
   },
-  { optional: ["prompt_optimizer", "fast_pretreatment", "duration", "resolution", "callback_url", "region"] },
+  { optional: ["prompt_optimizer", "fast_pretreatment", "duration", "resolution", "callback_url"] },
 );
 
 const imageToVideoInputSchema = s.object(
   "Request body for creating a MiniMax image-to-video generation task from a first frame image.",
   {
-    model: videoModelSchema,
+    model: imageToVideoModelSchema,
     first_frame_image: trimmedNonEmptyString("First frame image as a public HTTPS URL or a data URI base64 string."),
     prompt: optionalTrimmedString("Text description that guides the generated video."),
     prompt_optimizer: videoPromptOptimizerSchema,
     fast_pretreatment: videoFastPretreatmentSchema,
     duration: videoDurationSchema,
-    resolution: videoResolutionSchema,
+    resolution: imageToVideoResolutionSchema,
     callback_url: videoCallbackUrlSchema,
-    region: videoRegionSchema,
   },
-  {
-    optional: ["prompt", "prompt_optimizer", "fast_pretreatment", "duration", "resolution", "callback_url", "region"],
-  },
+  { optional: ["prompt", "prompt_optimizer", "fast_pretreatment", "duration", "resolution", "callback_url"] },
 );
 
-const queryVideoGenerationInputSchema = s.object(
-  "Input parameters for querying a MiniMax video generation task.",
-  {
-    task_id: trimmedNonEmptyString("Identifier of the MiniMax video generation task to query."),
-    region: videoRegionSchema,
-  },
-  { optional: ["region"] },
-);
+const queryVideoGenerationInputSchema = s.object("Input parameters for querying a MiniMax video generation task.", {
+  task_id: trimmedNonEmptyString("Identifier of the MiniMax video generation task to query."),
+});
 
-const downloadVideoInputSchema = s.object(
-  "Input parameters for retrieving a generated MiniMax video file.",
-  {
-    file_id: trimmedNonEmptyString("Identifier of the generated video file to retrieve."),
-    region: videoRegionSchema,
-  },
-  { optional: ["region"] },
-);
+const downloadVideoInputSchema = s.object("Input parameters for retrieving a generated MiniMax video file.", {
+  file_id: trimmedNonEmptyString("Identifier of the generated video file to retrieve."),
+});
 
 const minimaxBaseRespSchema = s.looseRequiredObject(
   "MiniMax base response wrapper.",
@@ -331,7 +324,7 @@ const videoFileOutputSchema = s.looseRequiredObject(
     file: s.looseRequiredObject(
       "MiniMax file object with download metadata.",
       {
-        file_id: s.integer("MiniMax file identifier."),
+        file_id: s.string("MiniMax file identifier."),
         bytes: s.integer("Size of the file in bytes."),
         created_at: s.integer("File creation time as Unix seconds."),
         filename: s.string("File name assigned by MiniMax."),
