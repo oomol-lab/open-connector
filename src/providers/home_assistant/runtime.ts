@@ -1,4 +1,14 @@
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  optionalStringArray,
+  requiredString,
+  requiredStringArray,
+} from "../../core/cast.ts";
+import { queryFlag, queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -7,6 +17,11 @@ import {
 } from "../provider-runtime.ts";
 
 const homeAssistantRequestTimeoutMs = 30_000;
+
+/** Input guard failures surface as 400s, matching the other Home Assistant input checks. */
+export function badHomeAssistantRequest(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
+}
 
 export interface HomeAssistantActionContext {
   apiKey: string;
@@ -103,7 +118,95 @@ export const homeAssistantActionHandlers: Record<string, HomeAssistantActionHand
       }),
     };
   },
+  async get_history(input, context) {
+    const startTime = optionalString(input.startTime);
+    return {
+      history: await requestHomeAssistantJson({
+        context,
+        path: startTime ? `/api/history/period/${encodeURIComponent(startTime)}` : "/api/history/period",
+        method: "GET",
+        query: queryParams({
+          filter_entity_id: requiredStringArray(input.entityIds, "entityIds", badHomeAssistantRequest).join(","),
+          end_time: optionalString(input.endTime),
+          minimal_response: presenceFlag(input.minimalResponse),
+          no_attributes: presenceFlag(input.noAttributes),
+          skip_initial_state: presenceFlag(input.skipInitialState),
+          significant_changes_only: queryFlag(optionalBoolean(input.significantChangesOnly)),
+        }),
+      }),
+    };
+  },
+  async get_logbook(input, context) {
+    const startTime = optionalString(input.startTime);
+    const entityIds = optionalStringArray(input.entityIds);
+    return {
+      entries: await requestHomeAssistantJson({
+        context,
+        path: startTime ? `/api/logbook/${encodeURIComponent(startTime)}` : "/api/logbook",
+        method: "GET",
+        query: queryParams({
+          entity: entityIds?.length ? entityIds.join(",") : undefined,
+          end_time: optionalString(input.endTime),
+          period: optionalInteger(input.period),
+          context_id: optionalString(input.contextId),
+        }),
+      }),
+    };
+  },
+  async list_calendars(_input, context) {
+    return {
+      calendars: await requestHomeAssistantJson({
+        context,
+        path: "/api/calendars",
+        method: "GET",
+      }),
+    };
+  },
+  async list_calendar_events(input, context) {
+    return {
+      events: await requestHomeAssistantJson({
+        context,
+        path: `/api/calendars/${encodeURIComponent(readInputString(input.entityId, "entityId"))}`,
+        method: "GET",
+        query: queryParams({
+          start: readInputString(input.start, "start"),
+          end: readInputString(input.end, "end"),
+        }),
+      }),
+    };
+  },
+  async get_error_log(_input, context) {
+    try {
+      return {
+        log: await requestHomeAssistantText({
+          context,
+          path: "/api/error_log",
+          method: "GET",
+        }),
+      };
+    } catch (error) {
+      // Home Assistant registers this view only when the instance runs with file
+      // logging, so a 404 means the log is unavailable rather than the path being
+      // wrong. Say that instead of surfacing a bare "Not Found".
+      if (error instanceof ProviderRequestError && error.status === 404) {
+        throw new ProviderRequestError(
+          404,
+          "This Home Assistant instance does not expose an error log. The endpoint exists only when Home Assistant is started with file logging enabled.",
+        );
+      }
+      throw error;
+    }
+  },
 };
+
+/**
+ * Encode a Home Assistant presence flag. These query parameters are read by
+ * presence, not by value, so `false` must omit the parameter entirely rather
+ * than send `0`.
+ */
+function presenceFlag(value: unknown): string | undefined {
+  return optionalBoolean(value) === true ? "1" : undefined;
+}
 
 export function validateHomeAssistantCredential(input: { values: Record<string, string> }): {
   profile: { accountId: string; displayName: string };

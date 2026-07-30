@@ -178,6 +178,125 @@ export const homeAssistantActions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
+    name: "get_history",
+    description:
+      "Fetch recorded state history for one or more Home Assistant entities over a time period, for answering questions about how a value changed.",
+    followUpActions: ["home_assistant.get_logbook"],
+    inputSchema: s.actionInput(
+      {
+        entityIds: s.array(
+          "The entity ids to fetch history for. Home Assistant requires at least one.",
+          s.nonEmptyString("One Home Assistant entity identifier."),
+          { minItems: 1 },
+        ),
+        startTime: s.dateTime("The start of the period. Defaults to one day before now when omitted."),
+        endTime: s.dateTime("The end of the period. Defaults to one day after the start time."),
+        minimalResponse: s.boolean(
+          "Return only state changes without full attribute payloads, which greatly reduces response size.",
+        ),
+        noAttributes: s.boolean("Omit entity attributes from the response."),
+        skipInitialState: s.boolean("Omit the state that was already active at the start of the period."),
+        significantChangesOnly: s.boolean(
+          "Return only significant state changes. Home Assistant defaults this to true.",
+        ),
+      },
+      ["entityIds"],
+      "Input parameters for one Home Assistant history query.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        history: s.array(
+          "One list of state objects per requested entity, in the order Home Assistant returns them.",
+          s.array("The recorded states for one entity.", stateSchema),
+        ),
+      },
+      "The recorded Home Assistant state history.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "get_logbook",
+    description:
+      "Fetch the Home Assistant logbook: the human-readable timeline of what happened and what triggered it, for diagnosing why something changed.",
+    inputSchema: s.actionInput(
+      {
+        startTime: s.dateTime("The start of the period. Defaults to one day before now when omitted."),
+        endTime: s.dateTime("The end of the period."),
+        entityIds: s.array(
+          "Optional entity ids to restrict the logbook to.",
+          s.nonEmptyString("One Home Assistant entity identifier."),
+        ),
+        period: s.positiveInteger("The number of days to cover, used when no end time is given."),
+        contextId: s.nonEmptyString(
+          "Optional Home Assistant context id, to list only the entries produced by one action.",
+        ),
+      },
+      [],
+      "Input parameters for one Home Assistant logbook query.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        entries: s.array("The logbook entries.", s.looseObject("One Home Assistant logbook entry.")),
+      },
+      "The Home Assistant logbook entries for the requested period.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_calendars",
+    description: "List the calendar entities exposed by Home Assistant.",
+    followUpActions: ["home_assistant.list_calendar_events"],
+    inputSchema: emptyInputSchema,
+    outputSchema: s.actionOutput(
+      {
+        calendars: s.array(
+          "The Home Assistant calendar entities.",
+          s.looseRequiredObject(
+            "One Home Assistant calendar entity.",
+            {
+              entity_id: s.string("The calendar entity identifier."),
+              name: s.string("The calendar display name."),
+            },
+            { optional: ["name"] },
+          ),
+        ),
+      },
+      "The Home Assistant calendar entities.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "list_calendar_events",
+    description: "List the events on one Home Assistant calendar between a start and end time.",
+    inputSchema: s.actionInput(
+      {
+        entityId: s.nonEmptyString("The calendar entity identifier, for example calendar.personal."),
+        start: s.dateTime("The inclusive start of the window."),
+        end: s.dateTime("The exclusive end of the window, which must be after the start."),
+      },
+      ["entityId", "start", "end"],
+      "Input parameters for one Home Assistant calendar event query.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        events: s.array(
+          "The calendar events in the requested window.",
+          s.looseObject(
+            "One Home Assistant calendar event. Start and end are objects holding either dateTime or date.",
+          ),
+        ),
+      },
+      "The Home Assistant calendar events.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "get_error_log",
+    description:
+      "Fetch the Home Assistant error log for the current session as plain text. Home Assistant serves this only when the instance runs with file logging enabled, so it can report not found on an otherwise healthy instance.",
+    inputSchema: emptyInputSchema,
+    outputSchema: s.actionOutput(
+      { log: s.string("The plain-text Home Assistant error log.") },
+      "The Home Assistant error log.",
+    ),
+  }),
+  defineProviderAction(service, {
     name: "get_registries",
     description:
       "List the Home Assistant entity, device, area, floor, and label registries in one call. These registries expose the device and room structure behind entity ids, which the REST API does not serve.",
