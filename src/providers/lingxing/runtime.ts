@@ -5,6 +5,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -14,6 +15,7 @@ const lingxingMcpHost = "openmcp.lingxing.com";
 const lingxingRequestTimeoutMs = 30_000;
 const lingxingToolIntervalMs = 1_000;
 const maximumTrackedRateLimitKeys = 1_024;
+const lingxingMcpJsonSchemaValidator = new CfWorkerJsonSchemaValidator();
 
 interface LingxingCredential {
   endpoint: URL;
@@ -254,10 +256,13 @@ async function withLingxingMcpClient<T>(context: LingxingContext, run: (client: 
       signal: context.signal,
     },
   });
-  const client = new Client({
-    name: "oomol-connect-lingxing",
-    version: "1.0.0",
-  });
+  const client = new Client(
+    {
+      name: "oomol-connect-lingxing",
+      version: "1.0.0",
+    },
+    { jsonSchemaValidator: lingxingMcpJsonSchemaValidator },
+  );
 
   try {
     await client.connect(transport, {

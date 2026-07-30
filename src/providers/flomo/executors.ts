@@ -11,6 +11,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 import { createHash } from "node:crypto";
 import { optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -30,6 +31,7 @@ const flomoWebhookPathPrefix = "/iwh/";
 const flomoMcpEndpoint = "https://flomoapp.com/mcp";
 const flomoMcpTokenField = "token";
 const flomoRequestTimeoutMs = 30_000;
+const flomoMcpJsonSchemaValidator = new CfWorkerJsonSchemaValidator();
 
 type FlomoActionHandler = (input: Record<string, unknown>, context: FlomoActionContext) => Promise<unknown>;
 type FlomoMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
@@ -441,10 +443,13 @@ async function withFlomoMcpClient<T>(
       signal: input.signal,
     },
   });
-  const client = new Client({
-    name: "oomol-connect-flomo",
-    version: "1.0.0",
-  });
+  const client = new Client(
+    {
+      name: "oomol-connect-flomo",
+      version: "1.0.0",
+    },
+    { jsonSchemaValidator: flomoMcpJsonSchemaValidator },
+  );
 
   try {
     await client.connect(transport, {

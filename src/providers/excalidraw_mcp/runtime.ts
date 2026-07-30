@@ -5,6 +5,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -30,6 +31,7 @@ type ExcalidrawMcpToolResult = {
 };
 const defaultEndpoint = "https://mcp.excalidraw.com";
 const requestTimeoutMs = 30_000;
+const excalidrawMcpJsonSchemaValidator = new CfWorkerJsonSchemaValidator();
 
 export const excalidrawMcpActionHandlers: Record<string, ExcalidrawMcpActionHandler> = {
   read_me(_input, context) {
@@ -153,7 +155,10 @@ async function withExcalidrawMcpClient<T>(
       },
     },
   });
-  const client = new Client({ name: "oomol-connect-excalidraw-mcp", version: "1.0.0" });
+  const client = new Client(
+    { name: "oomol-connect-excalidraw-mcp", version: "1.0.0" },
+    { jsonSchemaValidator: excalidrawMcpJsonSchemaValidator },
+  );
 
   try {
     await client.connect(transport, { timeout: requestTimeoutMs, signal: context.signal });

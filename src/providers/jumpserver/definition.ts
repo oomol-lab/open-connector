@@ -4,7 +4,7 @@ import { jumpServerActions } from "./actions.ts";
 
 const service = "jumpserver";
 
-/** JumpServer provider backed by the official jumpserver/mcp SSE server. */
+/** JumpServer provider backed by the official jumpserver/mcp server. */
 export const provider: ProviderDefinition = {
   service,
   displayName: "JumpServer",
@@ -18,13 +18,13 @@ export const provider: ProviderDefinition = {
       fields: [
         {
           key: "mcpEndpoint",
-          label: "MCP SSE Endpoint",
+          label: "MCP Endpoint",
           inputType: "text",
           required: true,
           secret: false,
           placeholder: "https://jumpserver-mcp.example.com/sse",
           description:
-            "The SSE endpoint of the official jumpserver/mcp server. Public HTTPS endpoints are supported by default. Private-network, Tailscale, and NetBird endpoints require OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK. Loopback endpoints remain blocked. See https://github.com/jumpserver/mcp.",
+            "The Streamable HTTP endpoint, or the legacy SSE endpoint exposed by official jumpserver/mcp deployments. Public HTTPS endpoints are supported by default. Private-network, Tailscale, and NetBird endpoints require OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK. Loopback endpoints remain blocked. See https://github.com/jumpserver/mcp.",
         },
         {
           key: "token",
