@@ -5,6 +5,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 import { createHash } from "node:crypto";
 import { defineBearerProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -12,6 +13,7 @@ const service = "cloudflare_mcp";
 const cloudflareMcpEndpoint = "https://mcp.cloudflare.com/mcp";
 const cloudflareMcpRequestTimeoutMs = 60_000;
 const expectedTools = ["docs", "execute", "search"];
+const cloudflareMcpJsonSchemaValidator = new CfWorkerJsonSchemaValidator();
 
 type CloudflareMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
@@ -102,7 +104,10 @@ async function withCloudflareMcpClient<T>(
     fetch: input.fetcher,
     requestInit: { headers },
   });
-  const client = new Client({ name: "oomol-connect-cloudflare-mcp", version: "1.0.0" });
+  const client = new Client(
+    { name: "oomol-connect-cloudflare-mcp", version: "1.0.0" },
+    { jsonSchemaValidator: cloudflareMcpJsonSchemaValidator },
+  );
 
   try {
     await client.connect(transport, {

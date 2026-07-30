@@ -1,5 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cloudflareMcpActionHandlers, credentialValidators } from "./executors.ts";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("Cloudflare MCP executors", () => {
   it("sends bearer auth and maps search to the official MCP tool", async () => {
@@ -37,6 +41,16 @@ describe("Cloudflare MCP executors", () => {
 
     expect(apiKeyResult?.metadata?.mcpTools).toEqual(["docs", "execute", "search"]);
     expect(oauthResult?.metadata?.mcpTools).toEqual(["docs", "execute", "search"]);
+  });
+
+  it("validates MCP tool schemas when string code generation is unavailable", async () => {
+    vi.stubGlobal("Function", function disabledFunctionConstructor() {
+      throw new EvalError("Code generation from strings disallowed for this context");
+    });
+
+    await expect(
+      credentialValidators.apiKey!({ apiKey: "api-token", values: {} }, { fetcher: createMcpFetch([], "api-token") }),
+    ).resolves.toMatchObject({ metadata: { mcpTools: ["docs", "execute", "search"] } });
   });
 
   it("does not start MCP traffic after the execution is cancelled", async () => {
@@ -78,6 +92,7 @@ function createMcpFetch(calls: Array<Record<string, unknown>>, expectedToken: st
               tools: ["docs", "execute", "search"].map((name) => ({
                 name,
                 inputSchema: { type: "object" },
+                outputSchema: { type: "object" },
               })),
             }
           : { content: [{ type: "text", text: '["workers"]' }] };
