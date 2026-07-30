@@ -289,7 +289,13 @@ async function listRepositoryIssues(input: Record<string, unknown>, accessToken:
   });
 
   return {
+    // The raw GitHub page mixes issues and pull requests; filtering PRs out
+    // destroys the only pagination signal page-number callers have (the raw
+    // page length). `pageInfo.fetched` preserves it: a caller must continue
+    // paginating while `fetched` equals the requested page size, even when
+    // `issues` comes back short or empty.
     issues: issues.filter((issue) => issue.pull_request == null),
+    pageInfo: { fetched: issues.length },
   };
 }
 

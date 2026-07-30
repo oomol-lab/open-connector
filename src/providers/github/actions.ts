@@ -757,7 +757,8 @@ export const githubActions: ActionDefinition[] = [
   }),
   action({
     name: "list_repository_issues",
-    description: "List issues for a GitHub repository. Pull requests are filtered out from the response.",
+    description:
+      "List issues for a GitHub repository. Pull requests are filtered out of the response; pageInfo.fetched reports the raw page length before filtering, so paginating callers must continue while fetched equals the requested page size even when the issues array comes back short or empty.",
     requiredScopes: githubRepoScopes,
     inputSchema: s.object({
       owner: nonEmptyString,
@@ -771,6 +772,16 @@ export const githubActions: ActionDefinition[] = [
     }),
     outputSchema: s.object({
       issues: s.array(githubIssueSchema),
+      pageInfo: s.requiredObject(
+        "Pagination signals from the raw GitHub page, before pull requests are filtered out.",
+        {
+          fetched: s.integer({
+            minimum: 0,
+            description:
+              "Number of items GitHub returned on this page before filtering. Continue paginating while this equals the requested page size.",
+          }),
+        },
+      ),
     }),
   }),
   action({
