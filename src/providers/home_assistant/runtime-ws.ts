@@ -114,6 +114,10 @@ async function runHomeAssistantCommands(
   context: HomeAssistantActionContext,
   commands: HomeAssistantCommand[],
 ): Promise<unknown[]> {
+  // One deadline for the whole session. The handshake may use all of it, and the
+  // command phase then gets whatever is left, so a slow instance cannot spend the
+  // budget twice.
+  const deadline = Date.now() + homeAssistantWebSocketTimeoutMs;
   const socket = await openGuardedWebSocket(buildWebSocketUrl(context.baseUrl), {
     allowPrivateNetwork: isPrivateNetworkAccessAllowed,
     createError: (message) => new ProviderRequestError(400, message),
@@ -124,13 +128,22 @@ async function runHomeAssistantCommands(
   });
 
   const inbox = createMessageInbox(socket);
-  const timer = globalThis.setTimeout(() => {
-    inbox.fail(new ProviderRequestError(504, "Home Assistant WebSocket request timed out"));
-  }, homeAssistantWebSocketTimeoutMs);
+  const timer = globalThis.setTimeout(
+    () => {
+      inbox.fail(new ProviderRequestError(504, "Home Assistant WebSocket request timed out"));
+    },
+    Math.max(0, deadline - Date.now()),
+  );
   const onAbort = (): void => {
     inbox.fail(new ProviderRequestError(504, "Home Assistant WebSocket request was aborted"));
   };
   context.signal?.addEventListener("abort", onAbort, { once: true });
+  // The signal can fire between the socket opening and this listener attaching;
+  // recheck so that abort is not missed until the deadline, matching what
+  // openGuardedWebSocket does after attaching its own handshake listeners.
+  if (context.signal?.aborted) {
+    onAbort();
+  }
 
   try {
     await authenticate(socket, inbox, context.apiKey);
