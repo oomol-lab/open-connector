@@ -131,34 +131,29 @@ export function resolveHomeAssistantBaseUrl(input: {
   return normalizeBaseUrl(input.metadata?.baseUrl ?? input.values?.baseUrl);
 }
 
-async function requestHomeAssistantJson(input: {
+/** One Home Assistant REST call, before the base URL and credential are applied. */
+export interface HomeAssistantRequest {
   context: HomeAssistantActionContext;
+  /** Path below the instance base URL, always starting with `/api`. */
   path: string;
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "DELETE";
   body?: Record<string, unknown>;
   query?: Record<string, string>;
-}): Promise<unknown> {
+}
+
+/** Issue a Home Assistant REST call and parse the JSON body. */
+export async function requestHomeAssistantJson(input: HomeAssistantRequest): Promise<unknown> {
   const response = await requestHomeAssistant(input);
   return readJsonResponse(response);
 }
 
-async function requestHomeAssistantText(input: {
-  context: HomeAssistantActionContext;
-  path: string;
-  method: "POST";
-  body?: Record<string, unknown>;
-}): Promise<string> {
+/** Issue a Home Assistant REST call and return the raw text body, for endpoints that are not JSON. */
+export async function requestHomeAssistantText(input: HomeAssistantRequest): Promise<string> {
   const response = await requestHomeAssistant(input);
   return response.text();
 }
 
-async function requestHomeAssistant(input: {
-  context: HomeAssistantActionContext;
-  path: string;
-  method: "GET" | "POST";
-  body?: Record<string, unknown>;
-  query?: Record<string, string>;
-}): Promise<Response> {
+async function requestHomeAssistant(input: HomeAssistantRequest): Promise<Response> {
   const timeout = createProviderTimeout(input.context.signal, homeAssistantRequestTimeoutMs);
   try {
     const response = await input.context.fetcher(buildHomeAssistantUrl(input), {
@@ -197,7 +192,10 @@ function buildHomeAssistantUrl(input: {
   query?: Record<string, string>;
 }): string {
   const url = new URL(input.context.baseUrl);
-  url.pathname = input.path;
+  // Append to the instance path instead of replacing it: normalizeBaseUrl keeps
+  // a base path, so an instance behind a reverse proxy at /ha must reach
+  // /ha/api/... rather than /api/....
+  url.pathname = `${url.pathname.replace(/\/+$/, "")}${input.path}`;
   for (const [key, value] of Object.entries(input.query ?? {})) {
     url.searchParams.set(key, value);
   }
