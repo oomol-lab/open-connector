@@ -17,6 +17,9 @@ export const genericImapRuntimeConfig: MailRuntimeConfig = {
   attachmentFallbackPrefix: "imap",
   connectAuthMessage:
     "Verify that IMAP access is enabled for the mailbox and use an application password rather than the account login password.",
+  // The hosts come from user input, so the save-time hostname check below is not
+  // enough on its own: the resolved addresses are screened again at connect time.
+  enforceHostNetworkPolicy: true,
   readCredential(values): MailCredential {
     const email = values.email?.trim() ?? "";
     const authorizationCode = values.password?.trim() ?? "";

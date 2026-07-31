@@ -35,6 +35,11 @@ export interface MailRuntimeConfig {
   displayName: string;
   attachmentFallbackPrefix: string;
   connectAuthMessage: string;
+  /**
+   * Screen the resolved IP addresses of the mailbox hosts before connecting.
+   * Only needed by providers whose hosts come from user input.
+   */
+  enforceHostNetworkPolicy?: boolean;
   readCredential(values: Record<string, string>): MailCredential;
 }
 
@@ -103,6 +108,7 @@ export function createMailProviderRuntime(config: MailRuntimeConfig): MailProvid
       createMailProtocol({
         displayName: config.displayName,
         attachmentFallbackPrefix: config.attachmentFallbackPrefix,
+        enforceHostNetworkPolicy: config.enforceHostNetworkPolicy,
       }),
     );
     return protocolPromise;

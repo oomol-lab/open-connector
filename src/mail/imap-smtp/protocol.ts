@@ -4,6 +4,7 @@ import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
+import { lookup as dnsLookup } from "node:dns/promises";
 import { createWriteStream } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,6 +12,7 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import nodemailer from "nodemailer";
+import { isBlockedIpAddress, isIpAddress, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { mailAttachmentDownloadByteLimit, mailConnectionTimeoutMs, mailImapPort, mailSmtpPort } from "./config.ts";
 import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";
@@ -25,6 +27,15 @@ export interface MailCredential {
 export interface MailProtocolConfig {
   displayName: string;
   attachmentFallbackPrefix: string;
+  /**
+   * Screen the resolved IP addresses of the mailbox hosts before connecting.
+   *
+   * Providers whose hosts are hardcoded do not need this: their hostnames are
+   * part of the integration. It is meant for providers whose hosts come from
+   * user input, where a save-time hostname check alone can be defeated by a DNS
+   * record that only points at an internal address once the connection is made.
+   */
+  enforceHostNetworkPolicy?: boolean;
 }
 
 export interface MailSendInput {
@@ -176,6 +187,7 @@ export interface MailProtocol {
 export interface MailProtocolDependencies {
   createSmtpTransport?: (config: Record<string, unknown>) => MailSmtpTransport;
   createImapClient?: (config: Record<string, unknown>) => MailImapClient;
+  resolveHostAddresses?: (hostname: string) => Promise<string[]>;
 }
 
 interface MailSmtpTransport {
@@ -245,7 +257,7 @@ export function createMailProtocol(config: MailProtocolConfig, deps: MailProtoco
       });
     },
     async validateSmtpCredential(credential) {
-      const transport = createSmtpTransport(deps, credential);
+      const transport = await createSmtpTransport(config, deps, credential);
       try {
         await transport.verify();
       } catch (error) {
@@ -255,7 +267,7 @@ export function createMailProtocol(config: MailProtocolConfig, deps: MailProtoco
       }
     },
     async sendMail(credential, input) {
-      const transport = createSmtpTransport(deps, credential);
+      const transport = await createSmtpTransport(config, deps, credential);
       try {
         const result = await transport.sendMail({
           from: credential.email,
@@ -462,9 +474,74 @@ async function moveMessageToFolder(client: RuntimeImapClient, uid: number, targe
   }
 }
 
-function createSmtpTransport(deps: MailProtocolDependencies, credential: MailCredential): MailSmtpTransport {
-  const config = {
-    host: credential.smtpHost,
+/**
+ * Resolve a mailbox host to an address that is safe to connect to.
+ *
+ * `assertPublicHttpUrl` screens the hostname when the credential is read, but
+ * nothing stops the DNS record from pointing at an internal address by the time
+ * the socket is opened: IMAP and SMTP connect over raw TLS, so the guarded fetch
+ * never sees them. Resolving here and handing the connection library a literal
+ * address closes that window — both `imapflow` and `nodemailer` skip their own
+ * lookup when the host is already an IP, so no second, unchecked resolution can
+ * happen. The hostname travels separately as `servername`, so SNI and
+ * certificate verification still run against the name the user typed.
+ *
+ * Every resolved address must pass: a host answering with one public and one
+ * private address would otherwise slip through, since the library is free to
+ * pick either one.
+ */
+async function pinMailHost(
+  host: string,
+  fieldName: string,
+  config: MailProtocolConfig,
+  deps: MailProtocolDependencies,
+): Promise<{ host: string; servername?: string }> {
+  if (!config.enforceHostNetworkPolicy) {
+    return { host };
+  }
+
+  const allowPrivateNetwork = isPrivateNetworkAccessAllowed();
+
+  if (isIpAddress(host)) {
+    assertConnectableAddress(host, host, fieldName, allowPrivateNetwork);
+    return { host };
+  }
+
+  const addresses = deps.resolveHostAddresses
+    ? await deps.resolveHostAddresses(host)
+    : (await dnsLookup(host, { all: true, verbatim: true })).map((entry) => entry.address);
+
+  if (!addresses.length) {
+    throw new MailProtocolError("network", `${fieldName} ${host} could not be resolved.`);
+  }
+
+  for (const address of addresses) {
+    assertConnectableAddress(address, host, fieldName, allowPrivateNetwork);
+  }
+
+  return { host: addresses[0] as string, servername: host };
+}
+
+function assertConnectableAddress(
+  address: string,
+  host: string,
+  fieldName: string,
+  allowPrivateNetwork: boolean,
+): void {
+  if (isBlockedIpAddress(address, allowPrivateNetwork)) {
+    throw new MailProtocolError("network", `${fieldName} ${host} resolves to a blocked address (${address}).`);
+  }
+}
+
+async function createSmtpTransport(
+  config: MailProtocolConfig,
+  deps: MailProtocolDependencies,
+  credential: MailCredential,
+): Promise<MailSmtpTransport> {
+  const target = await pinMailHost(credential.smtpHost, "SMTP host", config, deps);
+  const transportConfig = {
+    host: target.host,
+    ...(target.servername ? { servername: target.servername } : {}),
     port: mailSmtpPort,
     secure: true,
     auth: {
@@ -477,13 +554,19 @@ function createSmtpTransport(deps: MailProtocolDependencies, credential: MailCre
   };
 
   return deps.createSmtpTransport
-    ? deps.createSmtpTransport(config)
-    : (nodemailer.createTransport(config as never) as MailSmtpTransport);
+    ? deps.createSmtpTransport(transportConfig)
+    : (nodemailer.createTransport(transportConfig as never) as MailSmtpTransport);
 }
 
-function createImapClient(deps: MailProtocolDependencies, credential: MailCredential): MailImapClient {
-  const config = {
-    host: credential.imapHost,
+async function createImapClient(
+  config: MailProtocolConfig,
+  deps: MailProtocolDependencies,
+  credential: MailCredential,
+): Promise<MailImapClient> {
+  const target = await pinMailHost(credential.imapHost, "IMAP host", config, deps);
+  const clientConfig = {
+    host: target.host,
+    ...(target.servername ? { servername: target.servername } : {}),
     port: mailImapPort,
     secure: true,
     auth: {
@@ -496,7 +579,7 @@ function createImapClient(deps: MailProtocolDependencies, credential: MailCreden
     logger: false,
   };
 
-  return deps.createImapClient ? deps.createImapClient(config) : new ImapFlow(config as ImapFlowOptions);
+  return deps.createImapClient ? deps.createImapClient(clientConfig) : new ImapFlow(clientConfig as ImapFlowOptions);
 }
 
 async function withImapClient<T>(
@@ -505,7 +588,7 @@ async function withImapClient<T>(
   credential: MailCredential,
   callback: (client: RuntimeImapClient) => Promise<T>,
 ) {
-  const client = createImapClient(deps, credential);
+  const client = await createImapClient(config, deps, credential);
   let connected = false;
   try {
     await client.connect();
