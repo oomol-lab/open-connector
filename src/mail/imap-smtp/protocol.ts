@@ -193,6 +193,8 @@ export interface MailProtocolDependencies {
   createSmtpTransport?: (config: Record<string, unknown>) => MailSmtpTransport;
   createImapClient?: (config: Record<string, unknown>) => MailImapClient;
   resolveHostAddresses?: (hostname: string) => Promise<string[]>;
+  /** Local interface table, used to tell which address families the deployment can route. */
+  readNetworkInterfaces?: () => ReturnType<typeof networkInterfaces>;
 }
 
 interface MailSmtpTransport {
@@ -489,11 +491,18 @@ async function moveMessageToFolder(client: RuntimeImapClient, uid: number, targe
  * address closes that window — both `imapflow` and `nodemailer` skip their own
  * lookup when the host is already an IP, so no second, unchecked resolution can
  * happen. The hostname travels separately as `servername`, so SNI and
- * certificate verification still run against the name the user typed.
+ * certificate verification still run against the name the user typed. That
+ * option belongs at the top level of both client configs, not nested under
+ * `tls`: `imapflow` reads `options.servername` (imap-flow.js:282) and
+ * `nodemailer` reads it in the SMTPConnection constructor
+ * (smtp-connection/index.js:84), each falling back to the host only when it is
+ * absent. Drop it and a pinned literal address is checked against the
+ * certificate as an IP, which fails for every certificate without an IP SAN.
  *
  * Every resolved address must pass: a host answering with one public and one
  * private address would otherwise slip through, since the library is free to
- * pick either one.
+ * pick either one. An empty answer is rejected rather than allowed through:
+ * the screening loop would pass vacuously over it.
  */
 async function pinMailHost(
   host: string,
@@ -532,7 +541,7 @@ async function pinMailHost(
     }
   }
 
-  return { host: selectConnectableAddress(addresses), servername: host };
+  return { host: selectConnectableAddress(addresses, deps), servername: host };
 }
 
 /**
@@ -547,16 +556,23 @@ async function pinMailHost(
  * mailbox into ENETUNREACH, so the same preference is applied here: families the
  * host can actually route first, then IPv4 before IPv6.
  */
-function selectConnectableAddress(addresses: string[]): string {
-  const routable = addresses.filter((address) => hasInterfaceForFamily(address));
+function selectConnectableAddress(addresses: string[], deps: MailProtocolDependencies): string {
+  const interfaces = (deps.readNetworkInterfaces ?? networkInterfaces)();
+  const routable = addresses.filter((address) => hasInterfaceForFamily(address, interfaces));
   const candidates = routable.length > 0 ? routable : addresses;
   return candidates.find((address) => isIpv4Address(address)) ?? (candidates[0] as string);
 }
 
-/** Whether the host has a non-internal interface in the address's family. */
-function hasInterfaceForFamily(address: string): boolean {
+/**
+ * Whether the deployment has a non-internal interface in the address's family.
+ *
+ * A table with no external interface at all — a container on a loopback-only
+ * network — leaves every family unroutable, so the caller falls back to the
+ * resolved list rather than treating the host as unreachable.
+ */
+function hasInterfaceForFamily(address: string, interfaces: ReturnType<typeof networkInterfaces>): boolean {
   const family = isIpv4Address(address) ? "IPv4" : "IPv6";
-  return Object.values(networkInterfaces()).some((entries) =>
+  return Object.values(interfaces).some((entries) =>
     entries?.some((entry) => !entry.internal && entry.family === family),
   );
 }

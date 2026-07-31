@@ -1,4 +1,5 @@
 import type { MailCredential } from "./protocol.ts";
+import type { NetworkInterfaceInfo } from "node:os";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -24,6 +25,37 @@ const unguardedConfig = {
   displayName: "Mail Test",
   attachmentFallbackPrefix: "mail-test",
 };
+
+const ipv4Answer = "93.184.216.34";
+const ipv6Answer = "2606:2800:220:1:248:1893:25c8:1946";
+
+function networkInterface(address: string, family: "IPv4" | "IPv6", internal: boolean): NetworkInterfaceInfo {
+  const base = { address, netmask: "", mac: "00:00:00:00:00:00", internal, cidr: null };
+  return family === "IPv4" ? { ...base, family } : { ...base, family, scopeid: 0 };
+}
+
+const loopback = networkInterface("127.0.0.1", "IPv4", true);
+const routableIpv4 = networkInterface("192.0.2.10", "IPv4", false);
+const routableIpv6 = networkInterface("2001:db8::10", "IPv6", false);
+
+// Which address gets pinned has to follow the deployment, not the machine
+// running the tests: pinning IPv6 strands an IPv4-only container with
+// ENETUNREACH, and pinning IPv4 strands an IPv6-only host, because pinning
+// removes the transport's own family fallback either way.
+const addressFamilyCases: Array<{
+  deployment: string;
+  interfaces: Record<string, NetworkInterfaceInfo[]>;
+  pinned: string;
+}> = [
+  {
+    deployment: "a dual-stack deployment",
+    interfaces: { lo: [loopback], eth0: [routableIpv4, routableIpv6] },
+    pinned: ipv4Answer,
+  },
+  { deployment: "an IPv4-only container", interfaces: { lo: [loopback], eth0: [routableIpv4] }, pinned: ipv4Answer },
+  { deployment: "an IPv6-only host", interfaces: { lo: [loopback], eth0: [routableIpv6] }, pinned: ipv6Answer },
+  { deployment: "a loopback-only container", interfaces: { lo: [loopback] }, pinned: ipv4Answer },
+];
 
 const initialPrivateNetworkAccess = isPrivateNetworkAccessAllowed();
 
@@ -172,6 +204,21 @@ describe("mail host pinning", () => {
     expect(resolveHostAddresses).not.toHaveBeenCalled();
   });
 
+  it("fails closed when the host resolves to no address at all", async () => {
+    const createImapClient = imapClientFactory();
+    const protocol = createMailProtocol(guardedConfig, {
+      createImapClient,
+      // An empty answer must not be treated as "nothing to screen": the loop
+      // over the addresses would pass vacuously and pin an undefined host.
+      resolveHostAddresses: async () => [],
+    });
+
+    await expect(protocol.validateImapCredential(credential)).rejects.toThrow(
+      /imap\.example\.com could not be resolved/,
+    );
+    expect(createImapClient).not.toHaveBeenCalled();
+  });
+
   it("does not disclose the resolved address it rejected", async () => {
     const protocol = createMailProtocol(guardedConfig, {
       createImapClient: imapClientFactory(),
@@ -186,20 +233,19 @@ describe("mail host pinning", () => {
     await expect(protocol.validateImapCredential(credential)).rejects.not.toThrow(/10\.11\.12\.13/);
   });
 
-  it("pins the IPv4 answer when a host resolves to both families", async () => {
+  it.each(addressFamilyCases)("pins the address $deployment can route", async ({ interfaces, pinned }) => {
     const createImapClient = imapClientFactory();
     const protocol = createMailProtocol(guardedConfig, {
       createImapClient,
-      // AAAA first, as a dual-stack resolver commonly answers. Pinning the IPv6
-      // address would strand an IPv4-only deployment with ENETUNREACH, because
-      // pinning removes the transport's own family fallback.
-      resolveHostAddresses: async () => ["2606:2800:220:1:248:1893:25c8:1946", "93.184.216.34"],
+      // AAAA first, as a dual-stack resolver commonly answers.
+      resolveHostAddresses: async () => [ipv6Answer, ipv4Answer],
+      readNetworkInterfaces: () => interfaces,
     });
 
     await protocol.validateImapCredential(credential);
 
     const config = configPassedTo(createImapClient);
-    expect(config.host).toBe("93.184.216.34");
+    expect(config.host).toBe(pinned);
     expect(config.servername).toBe("imap.example.com");
   });
 
