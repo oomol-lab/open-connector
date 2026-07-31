@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const n8nValidationPath = "/discover";
@@ -798,6 +798,7 @@ function validatePublicN8nInstanceUrl(instanceUrl: string): void {
   const parsed = assertPublicHttpUrl(instanceUrl, {
     fieldName: "instanceUrl",
     createError: providerInputError,
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
   });
   if (parsed.protocol !== "https:") {
     throw providerInputError("instanceUrl must use https");
