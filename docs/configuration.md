@@ -8,6 +8,8 @@ OpenConnector is configured with environment variables.
 | `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                     |
 | `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                    |
 | `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Directory containing `connect.sqlite`. Docker image sets `/app/data`.          |
+| `OOMOL_CONNECT_DATABASE_URL`             | unset                     | Postgres connection string. When set, runtime state is stored in Postgres instead of SQLite; migrations apply automatically on startup. |
+| `OOMOL_CONNECT_DATABASE_SCHEMA`          | `open_connector`          | Postgres schema for the runtime's tables. Only used when `OOMOL_CONNECT_DATABASE_URL` is set. |
 | `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, and completed idempotent Action responses. |
 | `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                     |
 | `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.         |

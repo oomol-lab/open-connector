@@ -1,0 +1,162 @@
+name: Promote to Production
+
+# Cut (or reuse) a semver release for main's current tip, build that exact commit
+# as vX.Y.Z + latest, and deploy it to the Railway production service. This is
+# the only path that ships to production — see docs/joystream-deployment.md.
+#
+# Promotion is by commit, not "whatever main happens to be": the release always
+# tags main's tip at the moment this workflow runs. Before running it, confirm
+# the commit currently deployed to staging is the one you intend to ship — there
+# is no automated check for that yet.
+#
+# Every step is idempotent (reuses an existing tag/release for the resolved
+# version rather than erroring), so a partially-failed run can just be re-run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag (e.g. v1.5.0). Blank = auto-bump patch of latest v* tag."
+        type: string
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag + create release
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.ver.outputs.tag }}
+    steps:
+      - name: Checkout main (full history + tags)
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ github.token }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Resolve release tag
+        id: ver
+        run: |
+          MAIN=$(git rev-parse origin/main)
+
+          # Recovery: if a v* tag already points at main's tip, reuse it instead
+          # of cutting a duplicate — unless an explicit version was requested.
+          EXISTING=$(git tag --points-at "$MAIN" 'v*' | head -1)
+          IN="${{ inputs.version }}"
+
+          if [ -n "$IN" ]; then
+            TAG="$IN"
+          elif [ -n "$EXISTING" ]; then
+            echo "main is already tagged $EXISTING — reusing it."
+            TAG="$EXISTING"
+          else
+            LATEST=$(git tag --list 'v*' --sort=-v:refname | head -1)
+            LATEST=${LATEST:-v0.0.0}
+            BASE=${LATEST#v}; BASE=${BASE%%-*}
+            IFS='.' read -r MA MI PA <<< "$BASE"
+            TAG="v${MA:-0}.${MI:-0}.$(( ${PA:-0} + 1 ))"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$MAIN" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG ($MAIN)"
+
+      - name: Create and push tag
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "$TAG already exists — skipping tag creation."
+          else
+            git tag -a "$TAG" "${{ steps.ver.outputs.sha }}" -m "Production release $TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping."
+          else
+            gh release create "$TAG" --target "${{ steps.ver.outputs.sha }}" --title "$TAG" --generate-notes
+          fi
+
+  build:
+    name: Build & push release image
+    needs: release
+    uses: ./.github/workflows/build-image.yml
+    with:
+      tags: |
+        ghcr.io/${{ github.repository }}:${{ needs.release.outputs.tag }}
+        ghcr.io/${{ github.repository }}:latest
+
+  deploy:
+    name: Deploy to Railway production
+    needs: [release, build]
+    runs-on: ubuntu-24.04
+    env:
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+      SERVICE_ID: ${{ vars.RAILWAY_PRODUCTION_SERVICE_ID }}
+      ENVIRONMENT_ID: ${{ vars.RAILWAY_PRODUCTION_ENVIRONMENT_ID }}
+      IMAGE: ghcr.io/${{ github.repository }}:${{ needs.release.outputs.tag }}
+    steps:
+      # serviceInstanceUpdate writes config only — it does not deploy anything.
+      - name: Point production at the release image
+        run: |
+          response=$(curl -sf -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg serviceId "$SERVICE_ID" \
+              --arg environmentId "$ENVIRONMENT_ID" \
+              --arg image "$IMAGE" \
+              '{
+                query: "mutation($serviceId: String!, $environmentId: String!, $image: String!) { serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: { source: { image: $image } }) }",
+                variables: { serviceId: $serviceId, environmentId: $environmentId, image: $image }
+              }')")
+          echo "$response"
+          if echo "$response" | jq -e '.errors' >/dev/null 2>&1; then
+            echo "::error::Railway API rejected serviceInstanceUpdate: $response"
+            exit 1
+          fi
+
+      # serviceInstanceUpdate alone does not trigger a deploy; this does.
+      - name: Trigger deploy
+        run: |
+          response=$(curl -sf -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg serviceId "$SERVICE_ID" \
+              --arg environmentId "$ENVIRONMENT_ID" \
+              '{
+                query: "mutation($serviceId: String!, $environmentId: String!) { serviceInstanceDeployV2(serviceId: $serviceId, environmentId: $environmentId) }",
+                variables: { serviceId: $serviceId, environmentId: $environmentId }
+              }')")
+          echo "$response"
+          if echo "$response" | jq -e '.errors' >/dev/null 2>&1; then
+            echo "::error::Railway API rejected serviceInstanceDeployV2: $response"
+            exit 1
+          fi
+
+      - name: Summary
+        run: |
+          echo "### Promoted to production :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tag: \`${{ needs.release.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
