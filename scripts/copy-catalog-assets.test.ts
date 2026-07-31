@@ -49,9 +49,10 @@ describe("copyCatalogAssets", () => {
     const { sourceDir, targetDir } = await fixture();
     await writeFile(join(sourceDir, "broken-provider.json"), "{invalid");
 
-    await expect(copyCatalogAssets({ sourceDir, targetDir })).rejects.toThrow(
-      "Failed to parse catalog provider file: broken-provider.json",
-    );
+    await expect(copyCatalogAssets({ sourceDir, targetDir })).rejects.toMatchObject({
+      message: "Failed to parse catalog provider file: broken-provider.json",
+      cause: expect.any(SyntaxError),
+    });
   });
 
   it("writes an empty index for an empty catalog", async () => {
