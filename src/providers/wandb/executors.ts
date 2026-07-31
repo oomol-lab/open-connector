@@ -1,5 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
+import { optionalStringArray } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderFetch, defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import { createWandbMcpContext, validateWandbMcpCredential, wandbMcpActionHandlers } from "./runtime.ts";
@@ -16,6 +17,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       credential.values,
       fetcher,
       context.signal,
+      optionalStringArray(credential.metadata.availableActions),
       isPrivateNetworkAccessAllowed(),
     );
   },

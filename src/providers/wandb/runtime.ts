@@ -7,13 +7,14 @@ import { StreamableHTTPClientTransport, StreamableHTTPError } from "@modelcontex
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 import { createHash } from "node:crypto";
-import { optionalString } from "../../core/cast.ts";
+import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export interface WandbMcpContext {
   endpoint: URL;
   apiKey: string;
+  availableActions?: ReadonlySet<string>;
   fetcher: ProviderFetch;
   signal?: AbortSignal;
 }
@@ -51,8 +52,12 @@ export const wandbMcpTools: Record<string, string> = {
 
 export const wandbMcpActionHandlers: Record<string, ProviderRuntimeHandler<WandbMcpContext>> = {};
 for (const [actionName, toolName] of Object.entries(wandbMcpTools)) {
-  wandbMcpActionHandlers[actionName] = (input: Record<string, unknown>, context: WandbMcpContext) =>
-    callWandbMcpTool(context, toolName, input);
+  wandbMcpActionHandlers[actionName] = async (input: Record<string, unknown>, context: WandbMcpContext) => {
+    if (context.availableActions && !context.availableActions.has(actionName)) {
+      throw new ProviderRequestError(400, `W&B MCP action ${actionName} is not available for this connection`);
+    }
+    return callWandbMcpTool(context, toolName, input);
+  };
 }
 
 export function createWandbMcpContext(
@@ -60,11 +65,13 @@ export function createWandbMcpContext(
   values: Record<string, string>,
   fetcher: ProviderFetch,
   signal?: AbortSignal,
+  availableActions?: readonly string[],
   allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
 ): WandbMcpContext {
   return {
     endpoint: normalizeWandbMcpEndpoint(optionalString(values.mcpEndpoint), allowPrivateNetwork),
     apiKey,
+    availableActions: availableActions ? new Set(availableActions) : undefined,
     fetcher,
     signal,
   };
@@ -186,18 +193,49 @@ function normalizeWandbMcpToolResult(toolName: string, result: WandbMcpToolResul
     );
   }
   if (result.structuredContent) {
-    return result.structuredContent;
+    const structured = optionalRecord(result.structuredContent);
+    const payload =
+      structured && Object.keys(structured).length === 1 && typeof structured.result === "string"
+        ? parseWandbMcpText(structured.result)
+        : result.structuredContent;
+    return normalizeWandbMcpPayload(toolName, payload);
   }
 
   const textItems = result.content.filter((content) => content.type === "text");
   if (textItems.length === 1) {
-    try {
-      return JSON.parse(textItems[0]!.text) as unknown;
-    } catch {
-      return textItems[0]!.text;
-    }
+    return normalizeWandbMcpPayload(toolName, parseWandbMcpText(textItems[0]!.text));
   }
   return result;
+}
+
+function parseWandbMcpText(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
+}
+
+function normalizeWandbMcpPayload(toolName: string, payload: unknown): unknown {
+  const record = optionalRecord(payload);
+  const error = optionalString(record?.error);
+  if (!error) {
+    return payload;
+  }
+
+  const status =
+    error === "timeout"
+      ? 504
+      : error === "quota_exceeded"
+        ? 429
+        : ["invalid_input", "query_too_complex", "query_too_large", "read_only_violation"].includes(error)
+          ? 400
+          : 502;
+  throw new ProviderRequestError(
+    status,
+    `W&B MCP tool ${toolName} returned an error: ${optionalString(record?.message) ?? error}`,
+    payload,
+  );
 }
 
 function formatWandbMcpToolContent(result: Extract<WandbMcpToolResult, { content: unknown }>): string {

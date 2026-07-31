@@ -17,8 +17,8 @@ const traceQueryOutput = s.looseObject("Matching Weave traces and query metadata
 });
 
 const artifactDiffOutput = s.looseObject("A comparison of two W&B artifact versions.", {
-  artifact_a: s.looseObject("Details for the first artifact version."),
-  artifact_b: s.looseObject("Details for the second artifact version."),
+  artifact_a: s.string("The first artifact version name."),
+  artifact_b: s.string("The second artifact version name."),
   metadata_diff: s.looseObject("Artifact metadata differences."),
   tags_diff: s.looseObject("Artifact tag differences."),
   aliases_diff: s.looseObject("Artifact alias differences."),
@@ -304,7 +304,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       { required: ["registry_name"] },
     ),
     outputSchema: s.looseObject("Collections in a W&B registry.", {
-      registry: s.looseObject("The selected W&B registry."),
+      registry: s.string("The selected W&B registry name."),
       collections: jsonItems("Collections in the registry."),
       count: s.nonNegativeInteger("The number of returned collections."),
       truncated: s.boolean("Whether results were truncated."),
@@ -328,7 +328,7 @@ export const wandbActions: ProviderActionDefinition[] = [
       { required: ["collection_name"] },
     ),
     outputSchema: s.looseObject("Versions in a W&B artifact collection.", {
-      collection: s.looseObject("The selected artifact collection."),
+      collection: s.string("The selected artifact collection name."),
       source: s.string("The artifact source type."),
       versions: jsonItems("Artifact versions in the collection."),
       count: s.nonNegativeInteger("The number of returned versions."),

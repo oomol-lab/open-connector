@@ -28,7 +28,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://mcp.withwandb.com/mcp",
           description:
-            "Optional full W&B MCP endpoint. Leave blank to use the hosted service, or enter the /mcp URL exposed by a W&B Dedicated or self-hosted MCP deployment.",
+            "Optional full W&B MCP endpoint. Leave blank to use the hosted service for W&B Dedicated Cloud, or enter the /mcp URL of a separately deployed server for Self-Managed W&B. The hosted endpoint does not support W&B Multi-tenant Cloud.",
         },
       ],
     },

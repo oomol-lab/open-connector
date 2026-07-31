@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { executors } from "./executors.ts";
 import {
   callWandbMcpTool,
   createWandbMcpContext,
@@ -111,6 +112,24 @@ describe("W&B MCP runtime", () => {
     });
   });
 
+  it("unwraps FastMCP structured results for string-returning tools", async () => {
+    const context = createWandbMcpContext(
+      "key",
+      {},
+      createStreamableMcpFetch({
+        tools: [wandbMcpTools.list_entities],
+        callResult: {
+          content: [{ type: "text", text: '{"entities":[{"name":"team"}]}' }],
+          structuredContent: { result: '{"entities":[{"name":"team"}]}' },
+        },
+      }),
+    );
+
+    await expect(callWandbMcpTool(context, wandbMcpTools.list_entities, {})).resolves.toEqual({
+      entities: [{ name: "team" }],
+    });
+  });
+
   it("returns plain text and structured tool results", async () => {
     const plainContext = createWandbMcpContext(
       "key",
@@ -138,6 +157,58 @@ describe("W&B MCP runtime", () => {
     await expect(callWandbMcpTool(structuredContext, wandbMcpTools.query_wandb, { query: "query" })).resolves.toEqual({
       data: { project: "demo" },
     });
+  });
+
+  it.each([
+    ["invalid_input", 400],
+    ["quota_exceeded", 429],
+    ["timeout", 504],
+    ["api_error", 502],
+  ])("turns W&B %s result payloads into provider errors", async (error, status) => {
+    const context = createWandbMcpContext(
+      "key",
+      {},
+      createStreamableMcpFetch({
+        tools: [wandbMcpTools.query_wandb],
+        callResult: {
+          content: [{ type: "text", text: JSON.stringify({ error, message: "query rejected" }) }],
+          structuredContent: { result: JSON.stringify({ error, message: "query rejected" }) },
+        },
+      }),
+    );
+
+    await expect(callWandbMcpTool(context, wandbMcpTools.query_wandb, { query: "query" })).rejects.toEqual(
+      expect.objectContaining<Partial<ProviderRequestError>>({
+        status,
+        message: "W&B MCP tool query_wandb_tool returned an error: query rejected",
+      }),
+    );
+  });
+
+  it("rejects actions outside the tool subset stored by credential validation", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const result = await executors["wandb.query_wandb"]!(
+      { query: "query" },
+      {
+        getCredential: async () => ({
+          authType: "api_key",
+          apiKey: "key",
+          values: {},
+          profile: { accountId: "account", displayName: "W&B", grantedScopes: [] },
+          metadata: { availableActions: ["list_entities"] },
+        }),
+      },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "W&B MCP action query_wandb is not available for this connection",
+      },
+    });
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("turns MCP tool errors into provider errors", async () => {
