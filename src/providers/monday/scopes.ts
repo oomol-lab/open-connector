@@ -1,6 +1,5 @@
 const mondayAuthorizationScopes = [
   "me:read",
-  "account:read",
   "boards:read",
   "boards:write",
   "workspaces:read",
@@ -16,7 +15,7 @@ const mondayAuthorizationScopes = [
   "departments:write",
 ] as const;
 
-const mondayProviderScopeSurface = [...mondayAuthorizationScopes, "manage_account_security", "forms:write"] as const;
+const mondayProviderScopeSurface = [...mondayAuthorizationScopes] as const;
 const mondayKnownScopeSet = new Set<string>(mondayProviderScopeSurface);
 
 export const mondayOauthScopes: Record<string, string[]> = Object.fromEntries(

@@ -48,8 +48,7 @@ create table if not exists runtime_tokens (
   allowed_actions text not null default '[]',
   blocked_actions text not null default '[]',
   allowed_proxies text not null default '[]',
-  tenant text not null default 'default',
-  allowed_connections text
+  tenant text not null default 'default'
 );
 
 create table if not exists runtime_policy (
