@@ -76,16 +76,16 @@ this is just "a different `OOMOL_CONNECT_DATABASE_URL` per environment," no extr
 
 ## Environment variables
 
-| Variable                        | Value                                                         | Notes                                                                                        |
-| -------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `OOMOL_CONNECT_ORIGIN`           | Public URL of the service                                      | Railway-generated domain or custom domain. Used to build OAuth redirect URLs.                 |
-| `OOMOL_CONNECT_DATABASE_URL`     | This environment's Supabase Session Pooler connection string     | See [Database: Supabase](#database-supabase) above. Staging and production use different Supabase projects. |
-| `OOMOL_CONNECT_DATABASE_SCHEMA`  | Optional                                                        | Only set if sharing the database with another app and a distinct schema name is wanted.       |
-| `OOMOL_CONNECT_ENCRYPTION_KEY`   | Long random secret                                              | Encrypts stored credentials, OAuth client config, and completed idempotent action responses. If this key is lost, encrypted data cannot be recovered — keep a copy outside Railway (e.g. a password manager). |
-| `OOMOL_CONNECT_ADMIN_TOKEN`      | Bearer token                                                    | Required to authenticate the local admin API, API docs, and web console.                      |
-| `OOMOL_CONNECT_RUNTIME_TOKEN`    | Optional bootstrap bearer token                                 | For `/v1` and MCP callers. Prefer scoped persistent tokens created from the web console Access tab instead, and leave this unset once those are in place. |
-| `OOMOL_CONNECT_ALLOWED_ACTIONS`  | Optional allowlist                                              | Restricts which provider actions the runtime can execute. Recommended beyond a fully trusted internal environment. |
-| `OOMOL_CONNECT_ALLOWED_PROXIES`  | Optional allowlist                                              | Restricts which provider proxies the runtime can reach.                                       |
+| Variable                        | Value                                                        | Notes                                                                                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OOMOL_CONNECT_ORIGIN`          | Public URL of the service                                    | Railway-generated domain or custom domain. Used to build OAuth redirect URLs.                                                                                                                                 |
+| `OOMOL_CONNECT_DATABASE_URL`    | This environment's Supabase Session Pooler connection string | See [Database: Supabase](#database-supabase) above. Staging and production use different Supabase projects.                                                                                                   |
+| `OOMOL_CONNECT_DATABASE_SCHEMA` | Optional                                                     | Only set if sharing the database with another app and a distinct schema name is wanted.                                                                                                                       |
+| `OOMOL_CONNECT_ENCRYPTION_KEY`  | Long random secret                                           | Encrypts stored credentials, OAuth client config, and completed idempotent action responses. If this key is lost, encrypted data cannot be recovered — keep a copy outside Railway (e.g. a password manager). |
+| `OOMOL_CONNECT_ADMIN_TOKEN`     | Bearer token                                                 | Required to authenticate the local admin API, API docs, and web console.                                                                                                                                      |
+| `OOMOL_CONNECT_RUNTIME_TOKEN`   | Optional bootstrap bearer token                              | For `/v1` and MCP callers. Prefer scoped persistent tokens created from the web console Access tab instead, and leave this unset once those are in place.                                                     |
+| `OOMOL_CONNECT_ALLOWED_ACTIONS` | Optional allowlist                                           | Restricts which provider actions the runtime can execute. Recommended beyond a fully trusted internal environment.                                                                                            |
+| `OOMOL_CONNECT_ALLOWED_PROXIES` | Optional allowlist                                           | Restricts which provider proxies the runtime can reach.                                                                                                                                                       |
 
 Do **not** set `PORT` or `HOST` — Railway injects `PORT` automatically, and the image already
 binds `HOST=0.0.0.0`.
@@ -128,11 +128,11 @@ it's a manual judgment call, deliberately kept simple for a small team.
 
 ### Secrets and variables (GitHub repo settings)
 
-| Name                                 | Type     | Value                                                                 |
-| ------------------------------------- | -------- | ---------------------------------------------------------------------- |
-| `RAILWAY_API_TOKEN`                   | Secret   | A Railway **project token** (scoped to this Railway project only, not an account-wide token), from the Railway project's Settings → Tokens. |
-| `RAILWAY_PRODUCTION_SERVICE_ID`       | Variable | The production service's ID, from the Railway dashboard/API.           |
-| `RAILWAY_PRODUCTION_ENVIRONMENT_ID`   | Variable | The production environment's ID, from the Railway dashboard/API.       |
+| Name                                | Type     | Value                                                                                                                                       |
+| ----------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RAILWAY_API_TOKEN`                 | Secret   | A Railway **project token** (scoped to this Railway project only, not an account-wide token), from the Railway project's Settings → Tokens. |
+| `RAILWAY_PRODUCTION_SERVICE_ID`     | Variable | The production service's ID, from the Railway dashboard/API.                                                                                |
+| `RAILWAY_PRODUCTION_ENVIRONMENT_ID` | Variable | The production environment's ID, from the Railway dashboard/API.                                                                            |
 
 No GitHub secrets are needed for staging — Railway's auto-update polling is configured entirely in
 the Railway dashboard. No additional secret is needed for pushing images to GHCR either; both

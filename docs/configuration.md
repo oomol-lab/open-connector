@@ -2,29 +2,29 @@
 
 OpenConnector is configured with environment variables.
 
-| Variable                                 | Default                   | Purpose                                                                        |
-| ---------------------------------------- | ------------------------- | ------------------------------------------------------------------------------ |
-| `PORT`                                   | `3000`                    | Local HTTP server port.                                                        |
-| `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                     |
-| `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                    |
-| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Directory containing `connect.sqlite`. Docker image sets `/app/data`.          |
+| Variable                                 | Default                   | Purpose                                                                                                                                 |
+| ---------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                                   | `3000`                    | Local HTTP server port.                                                                                                                 |
+| `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                                                                              |
+| `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                                                                             |
+| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Directory containing `connect.sqlite`. Docker image sets `/app/data`.                                                                   |
 | `OOMOL_CONNECT_DATABASE_URL`             | unset                     | Postgres connection string. When set, runtime state is stored in Postgres instead of SQLite; migrations apply automatically on startup. |
-| `OOMOL_CONNECT_DATABASE_SCHEMA`          | `open_connector`          | Postgres schema for the runtime's tables. Only used when `OOMOL_CONNECT_DATABASE_URL` is set. |
-| `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, and completed idempotent Action responses. |
-| `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                     |
-| `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.         |
-| `OOMOL_CONNECT_RUNTIME_TOKEN`            | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.             |
-| `OOMOL_CONNECT_JWKS_URI`                 | unset                     | Node-only JWKS endpoint for validating runtime JWT access tokens.              |
-| `OOMOL_CONNECT_JWT_ISSUER`               | unset                     | Expected `iss` claim for runtime JWT access tokens.                            |
-| `OOMOL_CONNECT_JWT_AUDIENCE`             | unset                     | Expected API `aud` claim for runtime JWT access tokens.                        |
-| `OOMOL_CONNECT_ALLOWED_ACTIONS`          | unset                     | Comma-separated executable action allowlist. Supports `service.*` and `*`.     |
-| `OOMOL_CONNECT_BLOCKED_ACTIONS`          | unset                     | Comma-separated executable action denylist. Supports `service.*` and `*`.      |
-| `OOMOL_CONNECT_ALLOWED_PROXIES`          | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.      |
-| `OOMOL_CONNECT_BLOCKED_PROXIES`          | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.       |
-| `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`    | `false`                   | Allow self-hosted provider connections to target private networks. See below.  |
-| `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                          |
-| `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                              |
-| `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                   |
+| `OOMOL_CONNECT_DATABASE_SCHEMA`          | `open_connector`          | Postgres schema for the runtime's tables. Only used when `OOMOL_CONNECT_DATABASE_URL` is set.                                           |
+| `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, and completed idempotent Action responses.                                                          |
+| `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                                                                              |
+| `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.                                                                  |
+| `OOMOL_CONNECT_RUNTIME_TOKEN`            | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.                                                                      |
+| `OOMOL_CONNECT_JWKS_URI`                 | unset                     | Node-only JWKS endpoint for validating runtime JWT access tokens.                                                                       |
+| `OOMOL_CONNECT_JWT_ISSUER`               | unset                     | Expected `iss` claim for runtime JWT access tokens.                                                                                     |
+| `OOMOL_CONNECT_JWT_AUDIENCE`             | unset                     | Expected API `aud` claim for runtime JWT access tokens.                                                                                 |
+| `OOMOL_CONNECT_ALLOWED_ACTIONS`          | unset                     | Comma-separated executable action allowlist. Supports `service.*` and `*`.                                                              |
+| `OOMOL_CONNECT_BLOCKED_ACTIONS`          | unset                     | Comma-separated executable action denylist. Supports `service.*` and `*`.                                                               |
+| `OOMOL_CONNECT_ALLOWED_PROXIES`          | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.                                                               |
+| `OOMOL_CONNECT_BLOCKED_PROXIES`          | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.                                                                |
+| `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`    | `false`                   | Allow self-hosted provider connections to target private networks. See below.                                                           |
+| `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                                                                                   |
+| `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                                                                                       |
+| `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                                                                            |
 
 Example:
 
