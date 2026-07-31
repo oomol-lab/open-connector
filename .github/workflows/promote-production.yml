@@ -1,8 +1,15 @@
 name: Promote to Production
 
 # Cut (or reuse) a semver release for main's current tip, build that exact commit
-# as vX.Y.Z + latest, and deploy it to the Railway production service. This is
-# the only path that ships to production — see docs/joystream-deployment.md.
+# as joystream-vX.Y.Z + latest, and deploy it to the Railway production service.
+# This is the only path that ships to production — see docs/joystream-deployment.md.
+#
+# Tags are prefixed `joystream-v`, not plain `v`: this repo is a fork of
+# oomol-lab/open-connector, whose own release history already occupies the
+# plain `v*` tag namespace (v1.0.0..v1.3.3 as of this writing) and will keep
+# growing as upstream is merged in. A plain `vX.Y.Z` scheme would eventually
+# collide with — or worse, silently get "reused" as — an upstream release tag
+# that happens to share the same number but points at a different commit.
 #
 # Promotion is by commit, not "whatever main happens to be": the release always
 # tags main's tip at the moment this workflow runs. Before running it, confirm
@@ -16,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release tag (e.g. v1.5.0). Blank = auto-bump patch of latest v* tag."
+        description: "Release tag (e.g. joystream-v1.5.0). Blank = auto-bump patch of latest joystream-v* tag."
         type: string
         required: false
 
@@ -53,9 +60,10 @@ jobs:
         run: |
           MAIN=$(git rev-parse origin/main)
 
-          # Recovery: if a v* tag already points at main's tip, reuse it instead
-          # of cutting a duplicate — unless an explicit version was requested.
-          EXISTING=$(git tag --points-at "$MAIN" 'v*' | head -1)
+          # Recovery: if a joystream-v* tag already points at main's tip, reuse
+          # it instead of cutting a duplicate — unless an explicit version was
+          # requested. Prefixed to avoid colliding with upstream's own v* tags.
+          EXISTING=$(git tag --points-at "$MAIN" 'joystream-v*' | head -1)
           IN="${{ inputs.version }}"
 
           if [ -n "$IN" ]; then
@@ -64,11 +72,11 @@ jobs:
             echo "main is already tagged $EXISTING — reusing it."
             TAG="$EXISTING"
           else
-            LATEST=$(git tag --list 'v*' --sort=-v:refname | head -1)
-            LATEST=${LATEST:-v0.0.0}
-            BASE=${LATEST#v}; BASE=${BASE%%-*}
+            LATEST=$(git tag --list 'joystream-v*' --sort=-v:refname | head -1)
+            LATEST=${LATEST:-joystream-v0.0.0}
+            BASE=${LATEST#joystream-v}; BASE=${BASE%%-*}
             IFS='.' read -r MA MI PA <<< "$BASE"
-            TAG="v${MA:-0}.${MI:-0}.$(( ${PA:-0} + 1 ))"
+            TAG="joystream-v${MA:-0}.${MI:-0}.$(( ${PA:-0} + 1 ))"
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"

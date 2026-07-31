@@ -13,8 +13,11 @@ internal deployment documentation, distinct from the general [Fly.io](fly-io.md)
   workflow `build-image.yml`, called by two different triggers:
   - `publish-docker.yml` — every push to `main` (this includes merged PRs), tags `tip` and the
     commit SHA. This is what staging tracks.
-  - `promote-production.yml` — a manually triggered promotion, tags `vX.Y.Z` and `latest`. See
-    [Staging and production](#staging-and-production) below.
+  - `promote-production.yml` — a manually triggered promotion, tags `joystream-vX.Y.Z` and
+    `latest`. Prefixed `joystream-v` rather than plain `v` because this repo is a fork of
+    [oomol-lab/open-connector](https://github.com/oomol-lab/open-connector), whose own release
+    history already occupies the plain `v*` tag namespace and will keep growing as upstream is
+    merged in. See [Staging and production](#staging-and-production) below.
 - The GHCR package is **private**, scoped to the `joystream-ai` org.
 - Railway runs the published image directly; it does not build from source. This keeps a single
   build artifact — the one CI produced and tested — as the thing that actually runs in
@@ -63,7 +66,7 @@ this is just "a different `OOMOL_CONNECT_DATABASE_URL` per environment," no extr
    Session Pooler connection string per above.
 2. Create the Railway project with two environments/services: staging and production.
 3. For each service, set the source to a Docker image: `ghcr.io/joystream-ai/open-connector:<tag>`
-   — `tip` for staging, a versioned release tag (e.g. `v1.4.0`) for production. See
+   — `tip` for staging, a versioned release tag (e.g. `joystream-v1.4.0`) for production. See
    [Staging and production](#staging-and-production).
 4. Add GHCR registry credentials to each service — a bot/service-account GitHub PAT with
    `read:packages` scope, authorized against the `joystream-ai` org. Use a dedicated
@@ -111,13 +114,13 @@ production doesn't use this mechanism.
 ### Production: manual, via `promote-production.yml`
 
 Run the **Promote to Production** workflow (`workflow_dispatch` on `promote-production.yml`) from
-the Actions tab. Optionally give it a `version` input (e.g. `v1.5.0`); leave it blank to
-auto-bump the patch version of the latest `v*` tag. The workflow:
+the Actions tab. Optionally give it a `version` input (e.g. `joystream-v1.5.0`); leave it blank to
+auto-bump the patch version of the latest `joystream-v*` tag. The workflow:
 
 1. Tags main's current tip with the resolved version and creates a GitHub Release (idempotent —
    reuses an existing tag/release if one already points at that commit, so a failed run can be
    re-run safely).
-2. Builds that exact commit and pushes it to GHCR as `vX.Y.Z` and `latest`.
+2. Builds that exact commit and pushes it to GHCR as `joystream-vX.Y.Z` and `latest`.
 3. Calls the Railway API to point the production service at the new image and deploy it.
 
 **Before running it**, confirm the commit currently deployed to staging is the one you want to
