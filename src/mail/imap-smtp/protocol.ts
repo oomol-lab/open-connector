@@ -7,12 +7,12 @@ import { randomUUID } from "node:crypto";
 import { lookup as dnsLookup } from "node:dns/promises";
 import { createWriteStream } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { networkInterfaces, tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import nodemailer from "nodemailer";
-import { isBlockedIpAddress, isIpAddress, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { isBlockedIpAddress, isIpAddress, isIpv4Address, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { mailAttachmentDownloadByteLimit, mailConnectionTimeoutMs, mailImapPort, mailSmtpPort } from "./config.ts";
 import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";
@@ -22,6 +22,11 @@ export interface MailCredential {
   authorizationCode: string;
   imapHost: string;
   smtpHost: string;
+  /**
+   * Submission port, when the mailbox does not offer implicit TLS on 465.
+   * Providers with a hardcoded host leave it unset and keep 465.
+   */
+  smtpPort?: number;
 }
 
 export interface MailProtocolConfig {
@@ -503,7 +508,9 @@ async function pinMailHost(
   const allowPrivateNetwork = isPrivateNetworkAccessAllowed();
 
   if (isIpAddress(host)) {
-    assertConnectableAddress(host, host, fieldName, allowPrivateNetwork);
+    if (isBlockedIpAddress(host, allowPrivateNetwork)) {
+      throw new MailProtocolError("blocked_host", `${fieldName} ${host} is a private or reserved address.`);
+    }
     return { host };
   }
 
@@ -516,21 +523,42 @@ async function pinMailHost(
   }
 
   for (const address of addresses) {
-    assertConnectableAddress(address, host, fieldName, allowPrivateNetwork);
+    if (isBlockedIpAddress(address, allowPrivateNetwork)) {
+      // The resolved address is deliberately left out of the message: it would
+      // turn a rejected mailbox host into an internal name-to-address oracle,
+      // which is exactly what the guard exists to prevent. The shared egress
+      // guard withholds it for the same reason.
+      throw new MailProtocolError("blocked_host", `${fieldName} ${host} resolves to a private or reserved address.`);
+    }
   }
 
-  return { host: addresses[0] as string, servername: host };
+  return { host: selectConnectableAddress(addresses), servername: host };
 }
 
-function assertConnectableAddress(
-  address: string,
-  host: string,
-  fieldName: string,
-  allowPrivateNetwork: boolean,
-): void {
-  if (isBlockedIpAddress(address, allowPrivateNetwork)) {
-    throw new MailProtocolError("network", `${fieldName} ${host} resolves to a blocked address (${address}).`);
-  }
+/**
+ * Pick which screened address to connect to.
+ *
+ * Pinning takes address selection away from the transport, so it has to make the
+ * choice the transport would have made. `nodemailer` resolves A records before
+ * AAAA and skips families the host has no external interface for; `imapflow`
+ * leaves the choice to Node, whose Happy Eyeballs retries the other family after
+ * a failed attempt. Handing either one a lone AAAA address on an IPv4-only
+ * deployment — a plain Docker bridge network, typically — would turn a working
+ * mailbox into ENETUNREACH, so the same preference is applied here: families the
+ * host can actually route first, then IPv4 before IPv6.
+ */
+function selectConnectableAddress(addresses: string[]): string {
+  const routable = addresses.filter((address) => hasInterfaceForFamily(address));
+  const candidates = routable.length > 0 ? routable : addresses;
+  return candidates.find((address) => isIpv4Address(address)) ?? (candidates[0] as string);
+}
+
+/** Whether the host has a non-internal interface in the address's family. */
+function hasInterfaceForFamily(address: string): boolean {
+  const family = isIpv4Address(address) ? "IPv4" : "IPv6";
+  return Object.values(networkInterfaces()).some((entries) =>
+    entries?.some((entry) => !entry.internal && entry.family === family),
+  );
 }
 
 async function createSmtpTransport(
@@ -539,11 +567,19 @@ async function createSmtpTransport(
   credential: MailCredential,
 ): Promise<MailSmtpTransport> {
   const target = await pinMailHost(credential.smtpHost, "SMTP host", config, deps);
+  const port = credential.smtpPort ?? mailSmtpPort;
   const transportConfig = {
     host: target.host,
     ...(target.servername ? { servername: target.servername } : {}),
-    port: mailSmtpPort,
-    secure: true,
+    port,
+    // Implicit TLS is the wire convention on 465 only. Every other submission
+    // port starts in cleartext and upgrades, so STARTTLS is demanded rather than
+    // taken opportunistically: nodemailer then aborts instead of sending the
+    // password in the clear to a server that does not offer the upgrade. The
+    // flag stays off for implicit TLS, where it would only make a server whose
+    // EHLO fails unusable rather than falling back to HELO as before.
+    secure: port === mailSmtpPort,
+    requireTLS: port !== mailSmtpPort,
     auth: {
       user: credential.email,
       pass: credential.authorizationCode,

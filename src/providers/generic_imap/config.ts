@@ -50,12 +50,47 @@ export const genericImapRuntimeConfig: MailRuntimeConfig = {
       allowPrivateNetwork,
     );
 
-    return { email, authorizationCode, imapHost, smtpHost };
+    return {
+      email,
+      authorizationCode,
+      imapHost,
+      smtpHost,
+      smtpPort: readSmtpPort(values.smtpPort?.trim() ?? ""),
+    };
   },
 };
 
+/**
+ * Read the optional submission port.
+ *
+ * The mailbox host is the user's, so its submission service is too: several
+ * large mailboxes (iCloud, Outlook.com) only listen on 587 and never answer on
+ * 465, which would otherwise make them unconnectable rather than merely
+ * unsendable, since the connection test verifies SMTP as well as IMAP.
+ */
+function readSmtpPort(value: string): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const port = Number(value);
+  if (!/^\d+$/.test(value) || port < 1 || port > 65535) {
+    throw new ProviderRequestError(400, "SMTP port must be a port number between 1 and 65535, such as 465 or 587.");
+  }
+  return port;
+}
+
+/**
+ * Guess the submission host from the IMAP host.
+ *
+ * Mail hosts overwhelmingly mirror the IMAP name for submission, so a leading
+ * `imap` label prefix is swapped for `smtp`: `imap.gmail.com` pairs with
+ * `smtp.gmail.com`, `imap-mail.outlook.com` with `smtp-mail.outlook.com`. The
+ * prefix has to end the token (`.` or `-`) so that names which merely start with
+ * those letters (`imaps.example.com`) are left alone, as are single-host setups
+ * (`mail.example.com`, `ssl0.ovh.net`) where IMAP and SMTP share one name.
+ */
 function defaultSmtpHost(imapHost: string): string {
-  return imapHost.startsWith("imap.") ? `smtp.${imapHost.slice("imap.".length)}` : imapHost;
+  return /^imap[.-]/.test(imapHost) ? `smtp${imapHost.slice("imap".length)}` : imapHost;
 }
 
 /**
@@ -85,14 +120,17 @@ function assertMailHost(host: string, fieldName: string, example: string, allowP
 }
 
 /**
- * Whether the value is a bare dotted hostname: labels and dots only, with no
- * scheme, userinfo, port, or path.
+ * Whether the value is a bare hostname: labels and dots only, with no scheme,
+ * userinfo, port, or path.
  *
  * This is a syntax gate, not the SSRF decision. It runs before
  * `assertPublicHttpUrl` so the URL parser only ever receives a host, and it
  * deliberately still matches IP literals, which the shared guard then classifies
- * and rejects.
+ * and rejects. Single-label names pass the gate too — a Compose service name or
+ * a Tailscale MagicDNS short name is exactly the mailbox a deployment that opted
+ * into private networks connects — and are judged by the same shared guard,
+ * which still blocks `localhost` and anything resolving into a blocked range.
  */
 function isBareHostname(host: string): boolean {
-  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(host);
+  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i.test(host);
 }

@@ -161,7 +161,7 @@ async function validateMailCredential(
     await validateMailPhase(config, "imap", credential.imapHost, mailImapPort, logger, () =>
       protocol.validateImapCredential(credential),
     );
-    await validateMailPhase(config, "smtp", credential.smtpHost, mailSmtpPort, logger, () =>
+    await validateMailPhase(config, "smtp", credential.smtpHost, credential.smtpPort ?? mailSmtpPort, logger, () =>
       protocol.validateSmtpCredential(credential),
     );
   } catch (error) {
@@ -231,8 +231,23 @@ async function validateMailPhase(
       },
       `${config.service} mail credential validation failed`,
     );
-    throw error;
+    throw describeMailPhaseFailure(error, phase, host, port);
   }
+}
+
+/**
+ * Restate a transport failure with the endpoint that produced it.
+ *
+ * Both phases run inside one connect call, so a bare "Connection timeout" leaves
+ * the user guessing which of the two endpoints refused them. The usual cause is
+ * a mailbox whose submission service does not listen on the configured SMTP
+ * port, which is only actionable once the message names the port.
+ */
+function describeMailPhaseFailure(error: unknown, phase: "imap" | "smtp", host: string, port: number): unknown {
+  if (!(error instanceof MailProtocolError) || (error.kind !== "timeout" && error.kind !== "network")) {
+    return error;
+  }
+  return new MailProtocolError(error.kind, `${error.message} (${phase.toUpperCase()} ${host}:${port})`);
 }
 
 function describeMailValidationError(error: unknown): Record<string, unknown> {
@@ -808,6 +823,11 @@ export function mapProtocolError(
           400,
           `${config.displayName} message UID does not exist in the selected folder.`,
         );
+      case "blocked_host":
+        // The mailbox host came from the connected credential, so a host the
+        // egress policy refuses is invalid input, not an upstream failure — the
+        // same 400 the credential-time guard returns for a literal address.
+        return new ProviderRequestError(400, error.message);
       case "timeout":
         return new ProviderRequestError(504, error.message);
       case "network":

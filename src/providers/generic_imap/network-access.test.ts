@@ -88,6 +88,34 @@ describe("generic IMAP host access", () => {
     expect(credential.smtpHost).toBe("smtp.gmail.com");
   });
 
+  it("derives the SMTP host from an imap-prefixed label, and leaves other names alone", () => {
+    expect(readCredential("imap.gmail.com").smtpHost).toBe("smtp.gmail.com");
+    expect(readCredential("imap-mail.outlook.com").smtpHost).toBe("smtp-mail.outlook.com");
+    expect(readCredential("imaps.example.com").smtpHost).toBe("imaps.example.com");
+    expect(readCredential("ssl0.ovh.net").smtpHost).toBe("ssl0.ovh.net");
+  });
+
+  it("accepts a single-label host so private-network deployments can reach a LAN mailbox", () => {
+    setPrivateNetworkAccessAllowed(true);
+    expect(readCredential("mailserver").imapHost).toBe("mailserver");
+    // The shared guard still owns the decision, so loopback names stay blocked.
+    expect(() => readCredential("localhost")).toThrow();
+  });
+
+  it("reads the optional submission port and rejects values that are not ports", () => {
+    const values = {
+      email: "user@example.com",
+      password: "application-password",
+      imapHost: "imap.mail.me.com",
+    };
+
+    expect(genericImapRuntimeConfig.readCredential(values).smtpPort).toBeUndefined();
+    expect(genericImapRuntimeConfig.readCredential({ ...values, smtpPort: "587" }).smtpPort).toBe(587);
+    for (const smtpPort of ["0", "65536", "-1", "587a", "58 7", "465.0"]) {
+      expect(() => genericImapRuntimeConfig.readCredential({ ...values, smtpPort })).toThrow(/SMTP port/);
+    }
+  });
+
   it("reports the offending field in the rejection message", () => {
     expect(() => readCredential("169.254.169.254")).toThrow(/IMAP host/);
     expect(() => readCredential("imap.gmail.com", "169.254.169.254")).toThrow(/SMTP host/);

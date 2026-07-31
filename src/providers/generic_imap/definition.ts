@@ -51,7 +51,17 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "smtp.example.com",
           description:
-            "The SMTP server hostname, reached over implicit TLS on port 465. Defaults to the IMAP host with the imap prefix replaced by smtp.",
+            "The SMTP server hostname used for sending. Defaults to the IMAP host with a leading imap prefix replaced by smtp, so imap.example.com becomes smtp.example.com, and hosts without that prefix are used as they are.",
+        },
+        {
+          key: "smtpPort",
+          label: "SMTP Port",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "465",
+          description:
+            "The SMTP submission port. Defaults to 465, which uses implicit TLS. Set 587 for mailboxes that only offer submission over STARTTLS, such as iCloud and Outlook.com. The connection is always encrypted before the password is sent.",
         },
       ],
       testAction: {
@@ -60,5 +70,6 @@ export const provider: ProviderDefinition = {
       },
     },
   ],
+  homepageUrl: "https://www.rfc-editor.org/rfc/rfc3501",
   actions: genericImapActions,
 };

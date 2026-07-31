@@ -2,6 +2,7 @@ import type { MailCredential } from "./protocol.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { genericImapRuntimeConfig } from "../../providers/generic_imap/config.ts";
 import { createMailProtocol } from "./protocol.ts";
 
 const credential: MailCredential = {
@@ -11,10 +12,12 @@ const credential: MailCredential = {
   smtpHost: "smtp.example.com",
 };
 
+// Taken from the provider rather than restated, so dropping the opt-in in
+// generic_imap's config fails this suite instead of silently disarming the guard.
 const guardedConfig = {
-  displayName: "IMAP Mailbox",
-  attachmentFallbackPrefix: "imap",
-  enforceHostNetworkPolicy: true,
+  displayName: genericImapRuntimeConfig.displayName,
+  attachmentFallbackPrefix: genericImapRuntimeConfig.attachmentFallbackPrefix,
+  enforceHostNetworkPolicy: genericImapRuntimeConfig.enforceHostNetworkPolicy,
 };
 
 const unguardedConfig = {
@@ -167,5 +170,74 @@ describe("mail host pinning", () => {
       /127\.0\.0\.1/,
     );
     expect(resolveHostAddresses).not.toHaveBeenCalled();
+  });
+
+  it("does not disclose the resolved address it rejected", async () => {
+    const protocol = createMailProtocol(guardedConfig, {
+      createImapClient: imapClientFactory(),
+      resolveHostAddresses: async () => ["10.11.12.13"],
+    });
+
+    // Echoing the address back would turn a rejected host into an internal
+    // name-to-address oracle, which is what the guard exists to prevent.
+    await expect(protocol.validateImapCredential(credential)).rejects.toThrow(
+      /imap\.example\.com resolves to a private or reserved address/,
+    );
+    await expect(protocol.validateImapCredential(credential)).rejects.not.toThrow(/10\.11\.12\.13/);
+  });
+
+  it("pins the IPv4 answer when a host resolves to both families", async () => {
+    const createImapClient = imapClientFactory();
+    const protocol = createMailProtocol(guardedConfig, {
+      createImapClient,
+      // AAAA first, as a dual-stack resolver commonly answers. Pinning the IPv6
+      // address would strand an IPv4-only deployment with ENETUNREACH, because
+      // pinning removes the transport's own family fallback.
+      resolveHostAddresses: async () => ["2606:2800:220:1:248:1893:25c8:1946", "93.184.216.34"],
+    });
+
+    await protocol.validateImapCredential(credential);
+
+    const config = configPassedTo(createImapClient);
+    expect(config.host).toBe("93.184.216.34");
+    expect(config.servername).toBe("imap.example.com");
+  });
+
+  it("keeps implicit TLS on the default submission port", async () => {
+    const createSmtpTransport = smtpTransportFactory();
+    const protocol = createMailProtocol(guardedConfig, {
+      createSmtpTransport,
+      resolveHostAddresses: async () => ["93.184.216.34"],
+    });
+
+    await protocol.validateSmtpCredential(credential);
+
+    expect(configPassedTo(createSmtpTransport)).toMatchObject({ port: 465, secure: true, requireTLS: false });
+  });
+
+  it("switches to required STARTTLS on a submission port that is not 465", async () => {
+    const createSmtpTransport = smtpTransportFactory();
+    const protocol = createMailProtocol(guardedConfig, {
+      createSmtpTransport,
+      resolveHostAddresses: async () => ["93.184.216.34"],
+    });
+
+    await protocol.validateSmtpCredential({ ...credential, smtpPort: 587 });
+
+    // requireTLS keeps the upgrade mandatory, so the password is never sent in
+    // the clear to a server that does not offer STARTTLS.
+    expect(configPassedTo(createSmtpTransport)).toMatchObject({ port: 587, secure: false, requireTLS: true });
+  });
+
+  it("pins an IPv6 answer when the host has no IPv4 record", async () => {
+    const createImapClient = imapClientFactory();
+    const protocol = createMailProtocol(guardedConfig, {
+      createImapClient,
+      resolveHostAddresses: async () => ["2606:2800:220:1:248:1893:25c8:1946"],
+    });
+
+    await protocol.validateImapCredential(credential);
+
+    expect(configPassedTo(createImapClient).host).toBe("2606:2800:220:1:248:1893:25c8:1946");
   });
 });
