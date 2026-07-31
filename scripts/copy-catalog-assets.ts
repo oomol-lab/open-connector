@@ -26,10 +26,17 @@ export async function copyCatalogAssets(options: CopyCatalogAssetsOptions): Prom
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const providers = await Promise.all(
-    entries.map(async (entry) => ({
-      filename: entry.name,
-      json: JSON.stringify(JSON.parse(await readFile(join(options.sourceDir, entry.name), "utf8")) as unknown),
-    })),
+    entries.map(async (entry) => {
+      const content = await readFile(join(options.sourceDir, entry.name), "utf8");
+      try {
+        return {
+          filename: entry.name,
+          json: JSON.stringify(JSON.parse(content) as unknown),
+        };
+      } catch (cause) {
+        throw new Error(`Failed to parse catalog provider file: ${entry.name}`, { cause });
+      }
+    }),
   );
   const chunks = createChunks(providers, maxChunkBytes);
 

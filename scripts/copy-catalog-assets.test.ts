@@ -45,6 +45,15 @@ describe("copyCatalogAssets", () => {
     );
   });
 
+  it("includes the provider filename when JSON parsing fails", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    await writeFile(join(sourceDir, "broken-provider.json"), "{invalid");
+
+    await expect(copyCatalogAssets({ sourceDir, targetDir })).rejects.toThrow(
+      "Failed to parse catalog provider file: broken-provider.json",
+    );
+  });
+
   it("writes an empty index for an empty catalog", async () => {
     const { sourceDir, targetDir } = await fixture();
 
