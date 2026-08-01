@@ -315,22 +315,25 @@ const giteaContentsResponseSchema = s.union(
   },
 );
 
+const giteaCommitIdentitySchema = s.looseObject(
+  {
+    name: s.string("Name recorded on the commit."),
+    email: s.string("Email recorded on the commit."),
+    date: isoDateTimeField,
+  },
+  { description: "A git identity recorded on a commit." },
+);
+
 const giteaCommitSchema = s.looseObject(
   {
     sha: s.string("Commit SHA."),
     message: s.string("Commit message."),
     url: s.string("API URL of the commit."),
     html_url: s.string("HTML URL of the commit."),
-    author: s.looseObject("Commit author.", {
-      name: s.string("Author name."),
-      email: s.string("Author email."),
-      date: isoDateTimeField,
-    }),
-    committer: s.looseObject("Commit committer.", {
-      name: s.string("Committer name."),
-      email: s.string("Committer email."),
-      date: isoDateTimeField,
-    }),
+    created: isoDateTimeField,
+    author: giteaCommitIdentitySchema,
+    committer: giteaCommitIdentitySchema,
+    parents: s.array("Parent commits of this commit.", looseObjectSchema),
   },
   { description: "A Gitea commit created by a file operation." },
 );
@@ -367,36 +370,27 @@ const giteaBranchSchema = s.looseObject(
 const giteaCommitRecordSchema = s.looseObject(
   {
     sha: s.string("Commit SHA."),
-    message: s.string("Commit message."),
     url: s.string("API URL of the commit."),
     html_url: s.string("HTML URL of the commit."),
     created: isoDateTimeField,
-    author: giteaUserSchema,
-    committer: giteaUserSchema,
+    commit: s.looseObject(
+      {
+        url: s.string("API URL of the git commit object."),
+        message: s.string("Commit message."),
+        author: giteaCommitIdentitySchema,
+        committer: giteaCommitIdentitySchema,
+        tree: looseObjectSchema,
+        verification: looseObjectSchema,
+      },
+      { description: "Git metadata of the commit." },
+    ),
+    author: s.nullable(giteaUserSchema),
+    committer: s.nullable(giteaUserSchema),
     parents: s.array("Parent commits of this commit.", looseObjectSchema),
+    files: s.array("Files touched by the commit when requested.", looseObjectSchema),
+    stats: looseObjectSchema,
   },
   { description: "A Gitea commit record." },
-);
-
-const giteaGitCommitSchema = s.looseObject(
-  {
-    sha: s.string("Commit SHA."),
-    url: s.string("API URL of the commit."),
-    html_url: s.string("HTML URL of the commit."),
-    message: s.string("Commit message."),
-    author: s.looseObject("Commit author.", {
-      name: s.string("Author name."),
-      email: s.string("Author email."),
-      date: isoDateTimeField,
-    }),
-    committer: s.looseObject("Commit committer.", {
-      name: s.string("Committer name."),
-      email: s.string("Committer email."),
-      date: isoDateTimeField,
-    }),
-    parents: s.array("Parent commits of this commit.", looseObjectSchema),
-  },
-  { description: "A Gitea git commit." },
 );
 
 const giteaTagSchema = s.looseObject(
@@ -916,13 +910,13 @@ export const giteaActions: ActionDefinition[] = [
         state: s.stringEnum("Pull request state filter.", ["open", "closed", "all"]),
         baseBranch: s.nonEmptyString("Filter by the target base branch of the pull request."),
         sort: s.stringEnum("Sort type for the pull request list.", [
+          "oldest",
           "recentupdate",
+          "recentclose",
           "leastupdate",
           "mostcomment",
           "leastcomment",
           "priority",
-          "oldest",
-          "newest",
         ]),
         milestone: s.positiveInteger("Milestone ID used to filter pull requests."),
         labels: s.array("Label IDs used to filter pull requests.", s.positiveInteger("A label ID.")),
@@ -1431,13 +1425,12 @@ export const giteaActions: ActionDefinition[] = [
       {
         sha: s.nonEmptyString("Branch, tag or commit SHA to list commits from."),
         path: s.nonEmptyString("Only list commits affecting this file path."),
-        author: s.nonEmptyString("Only list commits authored by this username."),
         since: isoDateTimeField,
         until: isoDateTimeField,
         page: pageField,
         limit: limitField,
       },
-      ["sha", "path", "author", "since", "until", "page", "limit"],
+      ["sha", "path", "since", "until", "page", "limit"],
     ),
     outputSchema: commitsListSchema,
     followUpActions: ["gitea.get_commit", "gitea.create_commit_status"],
@@ -1449,7 +1442,7 @@ export const giteaActions: ActionDefinition[] = [
     inputSchema: repositoryInput("The input payload for this action.", {
       sha: s.nonEmptyString("Commit SHA to fetch."),
     }),
-    outputSchema: giteaGitCommitSchema,
+    outputSchema: giteaCommitRecordSchema,
     followUpActions: ["gitea.create_commit_status"],
   }),
   defineProviderAction(service, {
@@ -1474,9 +1467,15 @@ export const giteaActions: ActionDefinition[] = [
     name: "list_commit_statuses",
     description: "List commit statuses for a commit SHA or ref in a Gitea repository.",
     requiredScopes: [],
-    inputSchema: repositoryInput("The input payload for this action.", {
-      ref: s.nonEmptyString("Commit SHA or ref to list statuses for."),
-    }),
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        ref: s.nonEmptyString("Commit SHA or ref to list statuses for."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
     outputSchema: commitStatusesListSchema,
   }),
   defineProviderAction(service, {
@@ -1511,10 +1510,12 @@ export const giteaActions: ActionDefinition[] = [
       "The input payload for this action.",
       {
         tagName: s.nonEmptyString("Name of the tag to create."),
-        target: s.nonEmptyString("Commit SHA or branch name the tag points to."),
+        target: s.nonEmptyString(
+          "Commit SHA or branch name the tag points to. Defaults to the repository default branch.",
+        ),
         message: s.string("Message of the annotated tag."),
       },
-      ["message"],
+      ["target", "message"],
     ),
     outputSchema: giteaTagSchema,
     followUpActions: ["gitea.get_tag", "gitea.create_release"],
@@ -1828,14 +1829,10 @@ export const giteaActions: ActionDefinition[] = [
     name: "update_issue_comment",
     description: "Update a comment on a Gitea issue.",
     requiredScopes: [],
-    inputSchema: repositoryInput(
-      "The input payload for this action.",
-      {
-        commentId: s.positiveInteger("Numeric ID of the comment to update."),
-        body: s.nonEmptyString("New body of the comment."),
-      },
-      ["body"],
-    ),
+    inputSchema: repositoryInput("The input payload for this action.", {
+      commentId: s.positiveInteger("Numeric ID of the comment to update."),
+      body: s.nonEmptyString("New body of the comment."),
+    }),
     outputSchema: giteaCommentSchema,
     followUpActions: ["gitea.list_issue_comments"],
   }),
@@ -1897,7 +1894,7 @@ export const giteaActions: ActionDefinition[] = [
       },
       ["reviewers", "teamReviewers"],
     ),
-    outputSchema: giteaPullRequestSchema,
+    outputSchema: pullReviewsListSchema,
     followUpActions: ["gitea.get_pull_request"],
   }),
   defineProviderAction(service, {
@@ -1952,16 +1949,10 @@ export const giteaActions: ActionDefinition[] = [
     name: "list_pull_request_review_comments",
     description: "List review comments of a Gitea pull request review.",
     requiredScopes: [],
-    inputSchema: repositoryInput(
-      "The input payload for this action.",
-      {
-        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
-        reviewId: s.positiveInteger("ID of the review to list comments for."),
-        page: pageField,
-        limit: limitField,
-      },
-      ["page", "limit"],
-    ),
+    inputSchema: repositoryInput("The input payload for this action.", {
+      pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+      reviewId: s.positiveInteger("ID of the review to list comments for."),
+    }),
     outputSchema: reviewCommentsListSchema,
     followUpActions: ["gitea.create_pull_request_review"],
   }),
@@ -2029,7 +2020,7 @@ export const giteaActions: ActionDefinition[] = [
         branchFilter: s.string("Branch filter pattern of the hook."),
         authorizationHeader: s.string("Authorization header to include in hook requests."),
       },
-      ["config", "events", "active", "branchFilter", "authorizationHeader"],
+      ["events", "active", "branchFilter", "authorizationHeader"],
     ),
     outputSchema: giteaHookSchema,
     followUpActions: ["gitea.list_repository_hooks"],

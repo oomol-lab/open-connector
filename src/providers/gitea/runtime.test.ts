@@ -67,17 +67,29 @@ describe("gitea pull request handlers", () => {
     });
   });
 
-  it("merges a pull request with the merge style", async () => {
-    const fetcher = jsonFetch(200, {});
-    await giteaActionHandlers.merge_pull_request(
-      { owner: "org", repo: "repo", pullRequestNumber: 3, do: "squash" },
+  it("filters pull requests by label IDs with repeated query parameters", async () => {
+    const fetcher = jsonFetch(200, []);
+    await giteaActionHandlers.list_pull_requests(
+      { owner: "org", repo: "repo", labels: [3, 7] },
       createContext(fetcher),
     );
+
+    const { url } = lastRequest(fetcher);
+    expect(new URL(url).searchParams.getAll("labels")).toEqual(["3", "7"]);
+  });
+
+  it("merges a pull request with the merge style", async () => {
+    const fetcher = jsonFetch(200, null);
+    const result = (await giteaActionHandlers.merge_pull_request(
+      { owner: "org", repo: "repo", pullRequestNumber: 3, do: "squash" },
+      createContext(fetcher),
+    )) as Record<string, unknown>;
 
     const { url, init } = lastRequest(fetcher);
     expect(url).toContain("/repos/org/repo/pulls/3/merge");
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body as string)).toEqual({ Do: "squash" });
+    expect(JSON.parse(init.body as string)).toEqual({ do: "squash" });
+    expect(result).toEqual({ ok: true });
   });
 
   it("creates a pull request review and submits it", async () => {
@@ -232,6 +244,39 @@ describe("gitea repository management handlers", () => {
     expect(url).toContain("/repos/org/repo/topics");
     expect(result.topics).toEqual(["go", "ci"]);
   });
+
+  it("returns the stored topics when the update responds with 204", async () => {
+    const fetcher = jsonFetch(204, null);
+    const result = (await giteaActionHandlers.update_repository_topics(
+      { owner: "org", repo: "repo", topics: ["go", "ci"] },
+      createContext(fetcher),
+    )) as { topics: unknown[] };
+
+    const { url, init } = lastRequest(fetcher);
+    expect(url).toContain("/repos/org/repo/topics");
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body as string)).toEqual({ topics: ["go", "ci"] });
+    expect(result.topics).toEqual(["go", "ci"]);
+  });
+
+  it("rejects inputs that walk out of the action path", async () => {
+    const fetcher = jsonFetch(200, {});
+    await expect(
+      giteaActionHandlers.delete_file(
+        { owner: "org", repo: "repo", filePath: "../../victim-owner/victim-repo", sha: "deadbeef" },
+        createContext(fetcher),
+      ),
+    ).rejects.toThrow(/parent directory segments/u);
+    expect((fetcher as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+
+    // A lone "." is the repository root and resolves to the directory listing endpoint.
+    const rootFetcher = jsonFetch(200, []);
+    await giteaActionHandlers.get_repository_contents(
+      { owner: "org", repo: "repo", filePath: "." },
+      createContext(rootFetcher),
+    );
+    expect(lastRequest(rootFetcher).url).toBe("https://gitea.example.com/api/v1/repos/org/repo/contents/");
+  });
 });
 
 describe("gitea branch handlers", () => {
@@ -331,6 +376,19 @@ describe("gitea tag and release handlers", () => {
       body: "notes",
       draft: true,
     });
+  });
+
+  it("lists releases with the hyphenated pre-release filter", async () => {
+    const fetcher = jsonFetch(200, []);
+    await giteaActionHandlers.list_releases(
+      { owner: "org", repo: "repo", draft: false, prerelease: true },
+      createContext(fetcher),
+    );
+
+    const { url } = lastRequest(fetcher);
+    const params = new URL(url).searchParams;
+    expect(params.get("pre-release")).toBe("true");
+    expect(params.get("draft")).toBe("false");
   });
 
   it("deletes a release by id", async () => {
@@ -442,17 +500,18 @@ describe("gitea pull request extra handlers", () => {
     expect(result.merged).toBe(false);
   });
 
-  it("requests reviewers for a pull request", async () => {
-    const fetcher = jsonFetch(200, { id: 3 });
-    await giteaActionHandlers.request_pull_request_reviewers(
+  it("requests reviewers for a pull request and returns the created reviews", async () => {
+    const fetcher = jsonFetch(201, [{ id: 3, state: "REQUEST_REVIEW" }]);
+    const result = (await giteaActionHandlers.request_pull_request_reviewers(
       { owner: "org", repo: "repo", pullRequestNumber: 3, reviewers: ["alice"] },
       createContext(fetcher),
-    );
+    )) as { reviews: unknown[] };
 
     const { url, init } = lastRequest(fetcher);
     expect(url).toContain("/repos/org/repo/pulls/3/requested_reviewers");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toMatchObject({ reviewers: ["alice"] });
+    expect(result.reviews).toEqual([{ id: 3, state: "REQUEST_REVIEW" }]);
   });
 
   it("dismisses a pull request review", async () => {

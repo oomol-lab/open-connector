@@ -17,7 +17,7 @@ const giteaApiSegment = "api/v1";
 const giteaValidationPath = "/user";
 
 type GiteaRequestPhase = "validate" | "execute";
-type GiteaQueryValue = string | number | boolean | undefined;
+type GiteaQueryValue = string | number | boolean | readonly (string | number)[] | undefined;
 
 export interface GiteaActionContext {
   apiKey: string;
@@ -561,7 +561,7 @@ async function listPullRequests(input: Record<string, unknown>, context: GiteaAc
       base_branch: optionalString(input.baseBranch),
       sort: optionalString(input.sort),
       milestone: readOptionalPositiveInteger(input.milestone, "milestone"),
-      labels: joinCsv(asOptionalArray(input.labels), "labels"),
+      labels: normalizeOptionalPositiveIntegerArray(input.labels, "labels"),
       poster: optionalString(input.poster),
       page: readOptionalPositiveInteger(input.page, "page"),
       limit: readOptionalPositiveInteger(input.limit, "limit"),
@@ -663,7 +663,7 @@ async function mergePullRequest(input: Record<string, unknown>, context: GiteaAc
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/merge`,
     method: "POST",
     body: compactObject({
-      Do: mergeStyle,
+      do: mergeStyle,
       merge_title_field: optionalString(input.mergeTitle),
       merge_message_field: optionalString(input.mergeMessage),
       delete_branch_after_merge: optionalBoolean(input.deleteBranchAfterMerge),
@@ -678,7 +678,7 @@ async function mergePullRequest(input: Record<string, unknown>, context: GiteaAc
   });
   return compactObject({
     ok: true,
-    response: payload,
+    response: optionalRecord(payload),
   });
 }
 
@@ -1006,22 +1006,20 @@ async function listRepositoryTopics(input: Record<string, unknown>, context: Git
 async function updateRepositoryTopics(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
   const owner = requireInputString(input.owner, "owner");
   const repo = requireInputString(input.repo, "repo");
-  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+  const topics = normalizeOptionalStringArray(input.topics, "topics") ?? [];
+  await requestGiteaJson<unknown>({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/topics`,
     method: "PUT",
-    body: {
-      topics: normalizeOptionalStringArray(input.topics, "topics"),
-    },
+    body: { topics },
     fetcher: context.fetcher,
     signal: context.signal,
     phase: "execute",
     notFoundAsInvalidInput: true,
   });
-  return compactObject({
-    topics: normalizeStringArray(payload.topics, "gitea repository topics"),
-  });
+  // Gitea answers this endpoint with 204 No Content, so echo the topics that were just stored.
+  return compactObject({ topics });
 }
 
 async function listBranches(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
@@ -1112,7 +1110,6 @@ async function listCommits(input: Record<string, unknown>, context: GiteaActionC
     query: compactObject({
       sha: optionalString(input.sha),
       path: optionalString(input.path),
-      author: optionalString(input.author),
       since: optionalString(input.since),
       until: optionalString(input.until),
       page: readOptionalPositiveInteger(input.page, "page"),
@@ -1177,6 +1174,10 @@ async function listCommitStatuses(input: Record<string, unknown>, context: Gitea
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeFilePath(ref)}/statuses`,
+    query: compactObject({
+      page: readOptionalPositiveInteger(input.page, "page"),
+      limit: readOptionalPositiveInteger(input.limit, "limit"),
+    }),
     fetcher: context.fetcher,
     signal: context.signal,
     phase: "execute",
@@ -1277,7 +1278,7 @@ async function listReleases(input: Record<string, unknown>, context: GiteaAction
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases`,
     query: compactObject({
       draft: optionalBoolean(input.draft),
-      prerelease: optionalBoolean(input.prerelease),
+      "pre-release": optionalBoolean(input.prerelease),
       page: readOptionalPositiveInteger(input.page, "page"),
       limit: readOptionalPositiveInteger(input.limit, "limit"),
     }),
@@ -1839,7 +1840,7 @@ async function requestPullRequestReviewers(
   const owner = requireInputString(input.owner, "owner");
   const repo = requireInputString(input.repo, "repo");
   const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
-  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+  const { items, totalCount } = await requestGiteaArray({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/requested_reviewers`,
@@ -1853,7 +1854,11 @@ async function requestPullRequestReviewers(
     phase: "execute",
     notFoundAsInvalidInput: true,
   });
-  return payload;
+
+  return compactObject({
+    reviews: items,
+    total_count: totalCount,
+  });
 }
 
 async function removePullRequestReviewers(
@@ -1936,10 +1941,6 @@ async function listPullRequestReviewComments(
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/reviews/${reviewId}/comments`,
-    query: compactObject({
-      page: readOptionalPositiveInteger(input.page, "page"),
-      limit: readOptionalPositiveInteger(input.limit, "limit"),
-    }),
     fetcher: context.fetcher,
     signal: context.signal,
     phase: "execute",
@@ -2502,15 +2503,39 @@ async function giteaFetch(input: GiteaRequestInput): Promise<Response> {
 }
 
 function buildGiteaApiUrl(baseUrl: string, path: string, query?: Record<string, GiteaQueryValue>): string {
+  assertSafeGiteaPath(path);
   const apiBaseUrl = buildGiteaApiBaseUrl(baseUrl);
   const url = new URL(pathWithoutLeadingSlash(path), apiBaseUrl);
   for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined) {
-      url.searchParams.set(key, String(value));
+    if (value === undefined) {
+      continue;
     }
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        url.searchParams.append(key, String(item));
+      }
+      continue;
+    }
+
+    url.searchParams.set(key, String(value));
   }
 
   return url.toString();
+}
+
+/**
+ * Reject `..` segments before the URL parser resolves them. Owner, repository, ref and file path
+ * inputs are percent-encoded per segment, but `encodeURIComponent` leaves dots untouched, so a
+ * crafted input such as `../../other-owner/other-repo` would otherwise let one action reach a
+ * different Gitea endpoint than the one it declares. A lone `.` cannot walk up and stays allowed
+ * because Gitea reads it as the repository root.
+ */
+function assertSafeGiteaPath(path: string): void {
+  for (const segment of path.split("/")) {
+    if (segment === "..") {
+      throw new ProviderRequestError(400, "gitea request path must not contain parent directory segments");
+    }
+  }
 }
 
 function buildGiteaApiBaseUrl(baseUrl: string): URL {
