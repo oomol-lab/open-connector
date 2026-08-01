@@ -22,7 +22,7 @@ prebuilt Actions to agents and applications.
 | <img src="assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Managed OAuth apps for supported providers, hosted runtime, and monthly Connect credits. No deployment or OAuth app registration required. | Run on Workers, D1, R2, and Static Assets in your own Cloudflare account. You manage the deployment. | Run locally or on your own infrastructure with Docker or Node.js. You manage storage and OAuth apps. |
-| **[OOMOL Hosted](https://oomol.com/apps)** | **[Deploy to Cloudflare](docs/cloudflare.md)** | **[Self-host OpenConnector](#quick-start)** |
+| <a href="https://oomol.com/docs/connector-saas/"><img src="assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL Hosted</strong></a> | **[Deploy to Cloudflare](docs/cloudflare.md)** | **[Self-host OpenConnector](https://oomol.com/docs/openconnector-self-hosting/)** |
 
 Use the [Connector SDK](https://github.com/oomol-lab/connector-sdk) from app code,
 [oo CLI](https://github.com/oomol-lab/oo-cli) as the local-agent relay, MCP from agent hosts,

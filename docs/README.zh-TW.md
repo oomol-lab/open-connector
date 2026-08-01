@@ -18,10 +18,10 @@
 OpenConnector 是一套供 AI Agent 使用的開放原始碼連接器閘道，也是 Composio 的替代方案。
 只要連線一次使用者的應用程式帳號，就能向 Agent 與應用程式提供共用目錄，其中包含 1,000 多個服務提供者及 10,000 多個預先建置的 Action。
 
-> [!IMPORTANT]
-> **希望 OAuth 開箱即用？** [OOMOL 官方代管 Connector](https://oomol.com/apps) 已為支援的服務提供者
-> 設定好 OAuth 應用程式，使用者可直接授權；每月贈送的 Connect 點數約可支援 15,000–20,000 次免費呼叫，
-> 實際次數取決於用量。自行代管的 OpenConnector 同樣支援 OAuth，但需要自行申請並設定 OAuth 應用程式。
+| <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="自行代管" width="140"> |
+| --- | --- | --- |
+| OOMOL 為支援的服務提供者提供代管 OAuth 應用程式、代管執行階段與每月 Connect 點數。無須自行部署或申請 OAuth 應用程式。 | 在自己的 Cloudflare 帳號中使用 Workers、D1、R2 與 Static Assets。部署由你負責維護。 | 使用 Docker 或 Node.js 在本機或自己的基礎架構中執行。儲存空間與 OAuth 應用程式由你負責管理。 |
+| <a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL 代管</strong></a> | **[部署至 Cloudflare](cloudflare.md)** | **[自行代管 OpenConnector](https://oomol.com/docs/openconnector-self-hosting/)** |
 
 在應用程式程式碼中使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，以
 [oo CLI](https://github.com/oomol-lab/oo-cli) 作為本機 Agent 的轉接工具；Agent 主機可使用 MCP，

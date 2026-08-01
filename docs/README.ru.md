@@ -19,11 +19,10 @@ OpenConnector — open-source connector gateway для AI agents и альтер
 пользовательские аккаунты приложений один раз, а затем откройте общий catalog из 1,000+ providers и
 10 000+ готовых Actions для агентов и приложений.
 
-> [!IMPORTANT]
-> **Нужен готовый OAuth?** [OOMOL-hosted connectors](https://oomol.com/apps) включают настроенные
-> OAuth apps для поддерживаемых providers и ежемесячные Connect credits примерно на 15 000–20 000
-> бесплатных вызовов в зависимости от использования. Self-hosted OpenConnector также поддерживает
-> OAuth, но OAuth apps потребуется зарегистрировать и настроить самостоятельно.
+| <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
+| --- | --- | --- |
+| Готовые OAuth apps для поддерживаемых providers, hosted runtime и ежемесячные Connect credits. Не нужно разворачивать runtime или регистрировать OAuth apps. | Workers, D1, R2 и Static Assets в вашем аккаунте Cloudflare. Вы самостоятельно управляете deployment. | Запуск локально или в собственной инфраструктуре через Docker или Node.js. Вы управляете storage и OAuth apps. |
+| <a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL Hosted</strong></a> | **[Развернуть в Cloudflare](cloudflare.md)** | **[Развернуть OpenConnector самостоятельно](https://oomol.com/docs/openconnector-self-hosting/)** |
 
 В application code используйте [Connector SDK](https://github.com/oomol-lab/connector-sdk), для
 local-agent relay — [oo CLI](https://github.com/oomol-lab/oo-cli), для agent hosts — MCP, для
