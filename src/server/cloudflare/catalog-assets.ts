@@ -24,7 +24,13 @@ export async function loadCatalogFromAssets(
 ): Promise<CatalogStore> {
   const indexAsset = await readJsonAsset(assets, catalogIndexPath);
   if (!indexAsset.found) {
-    return createCatalog(await requireProviderArrayAsset(assets, legacyCatalogPath), options);
+    const legacyAsset = await readJsonAsset(assets, legacyCatalogPath);
+    if (!legacyAsset.found) {
+      // Naming both paths matters: current builds emit only the index, so an operator seeing just
+      // the legacy failure would chase an asset the build stopped producing.
+      throw assetRequestError(catalogIndexPath, `${indexAsset.reason}, and ${legacyCatalogPath} ${legacyAsset.reason}`);
+    }
+    return createCatalog(requireProviderArray(legacyAsset.value, legacyCatalogPath), options);
   }
 
   const index = parseCatalogIndex(indexAsset.value, catalogIndexPath);
@@ -85,11 +91,16 @@ async function requireProviderArrayAsset(assets: AssetsBinding, path: string): P
   if (!asset.found) {
     throw assetRequestError(path, asset.reason);
   }
-  if (!Array.isArray(asset.value)) {
+
+  return requireProviderArray(asset.value, path);
+}
+
+function requireProviderArray(value: unknown, path: string): ProviderDefinition[] {
+  if (!Array.isArray(value)) {
     throw new Error(`Cloudflare asset catalog must be an array: ${path}`);
   }
 
-  return asset.value as ProviderDefinition[];
+  return value as ProviderDefinition[];
 }
 
 /**

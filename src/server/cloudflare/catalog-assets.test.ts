@@ -38,17 +38,21 @@ describe("loadCatalogFromAssets", () => {
     expect(catalog.actionsById.get("example.ping")?.execution.locallyExecutable).toBe(true);
   });
 
-  it("loads chunked providers in index order", async () => {
-    const second = { ...provider, service: "aardvark", actions: [] };
+  // The store sorts providers, so chunk order is not observable; what must be pinned is that every
+  // chunk the index lists is fetched and merged, not just the first one.
+  it("merges providers from every chunk the index lists", async () => {
     const catalog = await loadCatalogFromAssets(
       memoryAssets({
-        "/catalog/index.json": { version: 1, providerCount: 2, chunks: ["apps-0000.json", "apps-0001.json"] },
+        "/catalog/index.json": { version: 1, providerCount: 3, chunks: ["apps-0000.json", "apps-0001.json"] },
         "/catalog/apps-0000.json": [provider],
-        "/catalog/apps-0001.json": [second],
+        "/catalog/apps-0001.json": [
+          { ...provider, service: "zulu", actions: [] },
+          { ...provider, service: "aardvark", actions: [] },
+        ],
       }),
     );
 
-    expect(catalog.providers.map((entry) => entry.service)).toEqual(["aardvark", "example"]);
+    expect(catalog.providers.map((entry) => entry.service)).toEqual(["aardvark", "example", "zulu"]);
   });
 
   it("falls back to the legacy catalog asset when the index is missing", async () => {
@@ -157,15 +161,15 @@ describe("loadCatalogFromAssets", () => {
     ).rejects.toThrow("Cloudflare asset catalog contains invalid JSON: /catalog/index.json");
   });
 
-  it("fails when both the index and legacy catalog are missing", async () => {
+  it("names both the index and the legacy catalog when neither is present", async () => {
     await expect(loadCatalogFromAssets(memoryAssets({}))).rejects.toThrow(
-      "Cloudflare asset catalog request failed: /catalog/apps.json returned 404",
+      "Cloudflare asset catalog request failed: /catalog/index.json returned 404, and /catalog/apps.json returned 404",
     );
   });
 
-  it("fails when both the index and legacy catalog resolve to the SPA shell", async () => {
+  it("names both the index and the legacy catalog when both resolve to the SPA shell", async () => {
     await expect(loadCatalogFromAssets(memoryAssets({}, "spa-shell"))).rejects.toThrow(
-      "Cloudflare asset catalog request failed: /catalog/apps.json returned content type text/html; charset=utf-8 instead of JSON",
+      "Cloudflare asset catalog request failed: /catalog/index.json returned content type text/html; charset=utf-8 instead of JSON, and /catalog/apps.json returned content type text/html; charset=utf-8 instead of JSON",
     );
   });
 });

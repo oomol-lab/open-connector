@@ -88,7 +88,7 @@ describe("cloudflare worker", () => {
       DB: new UnusedD1Database(),
       TRANSIT_FILES: namespace,
       TRANSIT_FILES_BACKEND: "kv",
-      ASSETS: memoryAssets({ "/catalog/apps.json": [provider] }),
+      ASSETS: memoryAssets(chunkedCatalog()),
     };
 
     const form = new FormData();
@@ -123,7 +123,7 @@ describe("cloudflare worker", () => {
       DB: new UnusedD1Database(),
       TRANSIT_FILES: bucket,
       // TRANSIT_FILES_BACKEND intentionally omitted -> must fall back to R2.
-      ASSETS: memoryAssets({ "/catalog/apps.json": [provider] }),
+      ASSETS: memoryAssets(chunkedCatalog()),
     };
 
     const form = new FormData();
@@ -155,9 +155,7 @@ function createEnv(): CloudflareEnv {
   return {
     DB: new UnusedD1Database(),
     TRANSIT_FILES: new UnusedR2Bucket(),
-    ASSETS: memoryAssets({
-      "/catalog/apps.json": [provider],
-    }),
+    ASSETS: memoryAssets(chunkedCatalog()),
   };
 }
 
@@ -165,6 +163,14 @@ function createExecutionContext(): Parameters<typeof worker.fetch>[2] {
   return {
     waitUntil() {},
     passThroughOnException() {},
+  };
+}
+
+/** The asset layout `scripts/copy-catalog-assets.ts` emits, so the worker tests boot the shipped path. */
+function chunkedCatalog(): Record<string, unknown> {
+  return {
+    "/catalog/index.json": { version: 1, providerCount: 1, chunks: ["apps-0000.json"] },
+    "/catalog/apps-0000.json": [provider],
   };
 }
 

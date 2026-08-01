@@ -1,7 +1,10 @@
+import type { AssetsBinding } from "../src/server/cloudflare/cloudflare-bindings.ts";
+
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { loadCatalogFromAssets } from "../src/server/cloudflare/catalog-assets.ts";
 import { copyCatalogAssets } from "./copy-catalog-assets.ts";
 
 const temporaryDirectories: string[] = [];
@@ -36,6 +39,36 @@ describe("copyCatalogAssets", () => {
     expect((await readdir(targetDir)).sort()).toEqual(["apps-0000.json", "apps-0001.json", "index.json"]);
   });
 
+  // Production chunks hold ~170 providers each, so the greedy fill and its separator accounting —
+  // not the one-provider-per-chunk degenerate case above — are what the byte cap actually rests on.
+  it("packs as many providers into a chunk as the byte cap allows", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    // Each provider serializes to 9 bytes, so three of them plus two commas and `[`, `]`, `\n`
+    // fill a 32-byte chunk exactly and the fourth must start the next one.
+    for (const s of ["a", "b", "c", "d"]) {
+      await writeFile(join(sourceDir, `${s}.json`), JSON.stringify({ s }));
+    }
+
+    const index = await copyCatalogAssets({ sourceDir, targetDir, maxChunkBytes: 32 });
+
+    expect(index.chunks).toEqual(["apps-0000.json", "apps-0001.json"]);
+    expect(await readFile(join(targetDir, "apps-0000.json"), "utf8")).toBe('[{"s":"a"},{"s":"b"},{"s":"c"}]\n');
+    expect(await readFile(join(targetDir, "apps-0001.json"), "utf8")).toBe('[{"s":"d"}]\n');
+    expect(Buffer.byteLength(await readFile(join(targetDir, "apps-0000.json"), "utf8"))).toBe(32);
+  });
+
+  it("replaces chunks left behind by an earlier build", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    await mkdir(targetDir, { recursive: true });
+    await writeFile(join(targetDir, "apps-0007.json"), "[]\n");
+    await writeFile(join(targetDir, "apps.json"), "[]\n");
+    await writeFile(join(sourceDir, "alpha.json"), JSON.stringify({ service: "alpha" }));
+
+    await copyCatalogAssets({ sourceDir, targetDir });
+
+    expect((await readdir(targetDir)).sort()).toEqual(["apps-0000.json", "index.json"]);
+  });
+
   it("accounts for UTF-8 bytes when rejecting an oversized provider", async () => {
     const { sourceDir, targetDir } = await fixture();
     await writeFile(join(sourceDir, "unicode.json"), JSON.stringify({ label: "中中" }));
@@ -63,7 +96,51 @@ describe("copyCatalogAssets", () => {
     expect(index).toEqual({ version: 1, providerCount: 0, chunks: [] });
     expect(await readdir(targetDir)).toEqual(["index.json"]);
   });
+
+  // The index shape and the `apps-NNNN.json` naming are declared once here and once in the worker
+  // loader, so nothing but this round trip stops the two ends of the asset contract from drifting.
+  it("produces an asset layout the Cloudflare worker loader can read back", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    for (const service of ["alpha", "zulu"]) {
+      await writeFile(join(sourceDir, `${service}.json`), JSON.stringify(providerDefinition(service)));
+    }
+
+    const index = await copyCatalogAssets({ sourceDir, targetDir, maxChunkBytes: 256 });
+    const catalog = await loadCatalogFromAssets(directoryAssets(targetDir));
+
+    expect(index.chunks.length).toBeGreaterThan(1);
+    expect(catalog.providers.map((entry) => entry.service)).toEqual(["alpha", "zulu"]);
+  });
 });
+
+/** Serve a directory the way the Cloudflare assets binding does, including its SPA miss behaviour. */
+function directoryAssets(directory: string): AssetsBinding {
+  return {
+    async fetch(request) {
+      const name = new URL(request.url).pathname.replace("/catalog/", "");
+      try {
+        return new Response(await readFile(join(directory, name), "utf8"), {
+          headers: { "content-type": "application/json" },
+        });
+      } catch {
+        return new Response("<!doctype html><html></html>", {
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
+      }
+    },
+  };
+}
+
+function providerDefinition(service: string): Record<string, unknown> {
+  return {
+    service,
+    displayName: service,
+    categories: ["Developer Tools"],
+    authTypes: ["no_auth"],
+    auth: [{ type: "no_auth" }],
+    actions: [],
+  };
+}
 
 async function fixture(): Promise<{ sourceDir: string; targetDir: string }> {
   const root = await mkdtemp(join(tmpdir(), "open-connector-catalog-"));
