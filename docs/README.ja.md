@@ -19,10 +19,23 @@ OpenConnector は AI Agent 向けのオープンソース connector gateway で�
 ユーザーのアプリアカウントを一度接続すれば、1,000+ の provider と 10,000+ の事前定義済み Action を含む共有
 catalog を Agent とアプリケーションに公開できます。
 
-| <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="セルフホスト" width="140"> |
-| --- | --- | --- |
-| マネージド OAuth と hosted runtime をすぐに利用できます。デプロイや OAuth app の設定は不要です。 | Cloudflare アカウントで Workers、D1、R2、Static Assets を使用します。デプロイと OAuth app は自身で管理します。 | Docker または Node.js を使い、ローカル環境や自分の infrastructure で実行します。storage と OAuth app は自身で管理します。 |
-| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Cloudflare にデプロイ</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>セルフホスト</strong></a></div> |
+<table>
+  <tr>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/self-hosted.svg" alt="セルフホスト" width="140"></td>
+  </tr>
+  <tr>
+    <td width="33.33%" valign="top">マネージド OAuth と hosted runtime をすぐに利用できます。デプロイや OAuth app の設定は不要です。</td>
+    <td width="33.33%" valign="top">Cloudflare アカウントで Workers、D1、R2、Static Assets を使用します。デプロイと OAuth app は自身で管理します。</td>
+    <td width="33.33%" valign="top">Docker または Node.js を使い、ローカル環境や自分の infrastructure で実行します。storage と OAuth app は自身で管理します。</td>
+  </tr>
+  <tr>
+    <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>
+    <td width="33.33%" align="center"><a href="cloudflare.md"><strong>Cloudflare にデプロイ</strong></a></td>
+    <td width="33.33%" align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>セルフホスト</strong></a></td>
+  </tr>
+</table>
 
 アプリコードには [Connector SDK](https://github.com/oomol-lab/connector-sdk)、ローカル
 Agent の relay には [oo CLI](https://github.com/oomol-lab/oo-cli)、Agent host には

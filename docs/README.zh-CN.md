@@ -19,10 +19,23 @@ OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Composio �
 连接一次用户应用账号，就可以把包含 1,000+ 个 provider 和 10,000+ 个预置 Action 的共享 catalog 暴露给
 Agent 和应用。
 
-| <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="自托管" width="140"> |
-| --- | --- | --- |
-| 托管 OAuth 和 runtime，开箱即用。无需部署或配置 OAuth 应用。 | 在你的 Cloudflare 账号中使用 Workers、D1、R2 和 Static Assets。部署和 OAuth 应用由你负责管理。 | 使用 Docker 或 Node.js 在本地或自己的基础设施中运行。存储和 OAuth 应用由你负责管理。 |
-| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL 托管</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>部署到 Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>自托管</strong></a></div> |
+<table>
+  <tr>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/self-hosted.svg" alt="自托管" width="140"></td>
+  </tr>
+  <tr>
+    <td width="33.33%" valign="top">托管 OAuth 和 runtime，开箱即用。无需部署或配置 OAuth 应用。</td>
+    <td width="33.33%" valign="top">在你的 Cloudflare 账号中使用 Workers、D1、R2 和 Static Assets。部署和 OAuth 应用由你负责管理。</td>
+    <td width="33.33%" valign="top">使用 Docker 或 Node.js 在本地或自己的基础设施中运行。存储和 OAuth 应用由你负责管理。</td>
+  </tr>
+  <tr>
+    <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL 托管</strong></a></td>
+    <td width="33.33%" align="center"><a href="cloudflare.md"><strong>部署到 Cloudflare</strong></a></td>
+    <td width="33.33%" align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>自托管</strong></a></td>
+  </tr>
+</table>
 
 应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
 [oo CLI](https://github.com/oomol-lab/oo-cli) 中继，Agent host 使用 MCP，自定义客户端使用

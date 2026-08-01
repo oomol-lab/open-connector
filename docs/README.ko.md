@@ -19,10 +19,23 @@ OpenConnector는 AI Agent를 위한 오픈 소스 connector gateway이자 Compos
 사용자의 앱 계정을 한 번 연결하면 1,000개 이상의 provider와 10,000개 이상의 사전 구축된 Action을
 Agent와 애플리케이션에 공통 catalog로 제공할 수 있습니다.
 
-| <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
-| --- | --- | --- |
-| Managed OAuth와 hosted runtime을 바로 사용할 수 있습니다. 배포하거나 OAuth app을 설정할 필요가 없습니다. | Cloudflare 계정에서 Workers, D1, R2, Static Assets를 사용합니다. 배포와 OAuth app은 직접 관리합니다. | Docker 또는 Node.js로 로컬이나 자체 인프라에서 실행합니다. Storage와 OAuth app은 직접 관리합니다. |
-| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Cloudflare에 배포</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></div> |
+<table>
+  <tr>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"></td>
+  </tr>
+  <tr>
+    <td width="33.33%" valign="top">Managed OAuth와 hosted runtime을 바로 사용할 수 있습니다. 배포하거나 OAuth app을 설정할 필요가 없습니다.</td>
+    <td width="33.33%" valign="top">Cloudflare 계정에서 Workers, D1, R2, Static Assets를 사용합니다. 배포와 OAuth app은 직접 관리합니다.</td>
+    <td width="33.33%" valign="top">Docker 또는 Node.js로 로컬이나 자체 인프라에서 실행합니다. Storage와 OAuth app은 직접 관리합니다.</td>
+  </tr>
+  <tr>
+    <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>
+    <td width="33.33%" align="center"><a href="cloudflare.md"><strong>Cloudflare에 배포</strong></a></td>
+    <td width="33.33%" align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></td>
+  </tr>
+</table>
 
 애플리케이션 코드에서는 [Connector SDK](https://github.com/oomol-lab/connector-sdk), 로컬 Agent
 relay에는 [oo CLI](https://github.com/oomol-lab/oo-cli), Agent host에는 MCP, custom client에는

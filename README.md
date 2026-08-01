@@ -19,10 +19,23 @@ OpenConnector is an open-source connector gateway for AI agents and an alternati
 Connect user app accounts once, then expose a shared catalog of 1,000+ providers and 10,000+
 prebuilt Actions to agents and applications.
 
-| <img src="assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Managed OAuth and hosted runtime, ready to use. No deployment or OAuth app setup. | Run on Workers, D1, R2, and Static Assets in your Cloudflare account. You manage deployment and OAuth apps. | Run locally or on your own infrastructure with Docker or Node.js. You manage storage and OAuth apps. |
-| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="docs/cloudflare.md"><strong>Deploy to Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></div> |
+<table>
+  <tr>
+    <td width="33.33%" align="center"><img src="assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>
+    <td width="33.33%" align="center"><img src="assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"></td>
+    <td width="33.33%" align="center"><img src="assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"></td>
+  </tr>
+  <tr>
+    <td width="33.33%" valign="top">Managed OAuth and hosted runtime, ready to use. No deployment or OAuth app setup.</td>
+    <td width="33.33%" valign="top">Run on Workers, D1, R2, and Static Assets in your Cloudflare account. You manage deployment and OAuth apps.</td>
+    <td width="33.33%" valign="top">Run locally or on your own infrastructure with Docker or Node.js. You manage storage and OAuth apps.</td>
+  </tr>
+  <tr>
+    <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>
+    <td width="33.33%" align="center"><a href="docs/cloudflare.md"><strong>Deploy to Cloudflare</strong></a></td>
+    <td width="33.33%" align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></td>
+  </tr>
+</table>
 
 Use the [Connector SDK](https://github.com/oomol-lab/connector-sdk) from app code,
 [oo CLI](https://github.com/oomol-lab/oo-cli) as the local-agent relay, MCP from agent hosts,
