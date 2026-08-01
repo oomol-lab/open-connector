@@ -4,6 +4,7 @@ import type { GitHubActionContext } from "./runtime-shared.ts";
 import { defineProviderExecutors, requireBearerCredential } from "../provider-runtime.ts";
 import { activityActionHandlers } from "./runtime-activity.ts";
 import { issueActionHandlers } from "./runtime-issue.ts";
+import { projectActionHandlers } from "./runtime-project.ts";
 import { pullRequestActionHandlers } from "./runtime-pull-request.ts";
 import { releaseActionHandlers } from "./runtime-release.ts";
 import { repositoryActionHandlers } from "./runtime-repository.ts";
@@ -22,6 +23,9 @@ export const executors: ProviderExecutors = defineProviderExecutors<GitHubAction
     pullRequestActionHandlers,
     releaseActionHandlers,
     searchActionHandlers,
+    // Projects v2 — MCP-proxied to github-mcp-server, not REST like the rest of this
+    // provider (GraphQL-only, no REST equivalent exists). See runtime-project.ts.
+    projectActionHandlers,
   ),
   async createContext(context, fetcher): Promise<GitHubActionContext> {
     const credential = await requireBearerCredential(context, service);

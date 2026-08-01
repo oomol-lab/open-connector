@@ -2,7 +2,13 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { githubDeleteRepoScopes, githubRepoScopes, githubUserReadScopes, githubWorkflowScopes } from "./scopes.ts";
+import {
+  githubDeleteRepoScopes,
+  githubProjectScopes,
+  githubRepoScopes,
+  githubUserReadScopes,
+  githubWorkflowScopes,
+} from "./scopes.ts";
 
 const service = "github";
 
@@ -26,6 +32,14 @@ const githubRequiredInputFields: Record<string, string[]> = {
   get_branch: ["owner", "repo", "branch"],
   get_repository: ["owner", "repo"],
   delete_repository: ["owner", "repo"],
+  list_projects: ["owner"],
+  list_project_fields: ["owner", "projectNumber"],
+  list_project_items: ["owner", "projectNumber"],
+  list_project_status_updates: ["owner", "projectNumber"],
+  get_project: ["owner", "projectNumber"],
+  get_project_field: ["owner", "projectNumber", "fieldId"],
+  get_project_item: ["owner", "projectNumber", "itemId"],
+  get_project_status_update: ["owner", "projectNumber", "statusUpdateId"],
   list_commits: ["owner", "repo"],
   create_ref: ["owner", "repo", "ref", "sha"],
   get_commit: ["owner", "repo", "ref"],
@@ -603,6 +617,35 @@ const githubTagSummarySchema = s.looseObject({
 const githubMutationAckSchema = s.object({
   ok: s.boolean(),
 });
+
+// Projects v2 responses are proxied verbatim from github-mcp-server's own MCP tool
+// result — a GraphQL-shaped object whose exact fields vary by method and by each
+// project's own custom field configuration. Loose by design, not yet refined against
+// a live response; see docs/features/github-projects-support/PLAN.md's Testing
+// section before tightening this.
+const githubProjectResultSchema = s.looseObject(
+  {},
+  { description: "Raw result from github-mcp-server's projects_list/projects_get MCP tool call." },
+);
+const githubOwnerTypeSchema = s.stringEnum("Owner type — user or org. Auto-detected if omitted.", ["user", "org"]);
+const githubProjectNumberSchema = s.integer("The project's number.", { minimum: 1 });
+const githubProjectPaginationFields = {
+  perPage: s.integer("Results per page (max 50)."),
+  after: s.string("Forward pagination cursor from a previous response's pageInfo.nextCursor."),
+  before: s.string("Backward pagination cursor from a previous response's pageInfo.prevCursor (rare)."),
+};
+const githubProjectItemFieldSelectionFields = {
+  fieldNames: s.array(
+    'Field names to include (e.g. ["Status", "Priority"]) — resolved server-side to field ids. ' +
+      "Mutually exclusive with 'fields'.",
+    s.string(),
+  ),
+  fields: s.array(
+    'Field ids to include (e.g. ["102589"]) — use when you already know the ids. ' +
+      "Mutually exclusive with 'fieldNames'.",
+    s.string(),
+  ),
+};
 
 const issueCommentPaginationFields = {
   perPage: s.integer(),
@@ -2595,6 +2638,108 @@ export const githubActions: ActionDefinition[] = [
       assetId: s.integer({ minimum: 1 }),
     }),
     outputSchema: githubMutationAckSchema,
+  }),
+  // Projects (v2) — proxied to github-mcp-server (runtime-project.ts), not REST like
+  // every action above. See docs/features/github-projects-support/PLAN.md.
+  action({
+    name: "list_projects",
+    description: "List GitHub Projects (v2) for a user or organization.",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      query: s.string('Filter by title text and state, e.g. "roadmap is:open".'),
+      ...githubProjectPaginationFields,
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "list_project_fields",
+    description: "List the fields defined on a GitHub Project (v2).",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+      ...githubProjectPaginationFields,
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "list_project_items",
+    description:
+      "List items on a GitHub Project (v2) board, with field values. Provide fieldNames or " +
+      "fields to get field values back — without one of them, only item titles are returned.",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+      query: s.string("Advanced filter using GitHub's project filtering syntax."),
+      ...githubProjectItemFieldSelectionFields,
+      ...githubProjectPaginationFields,
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "list_project_status_updates",
+    description: "List status updates posted on a GitHub Project (v2).",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+      ...githubProjectPaginationFields,
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "get_project",
+    description: "Get details of a single GitHub Project (v2) by owner and project number.",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "get_project_field",
+    description: "Get details of a single field on a GitHub Project (v2) by its field id.",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+      fieldId: s.integer("The field's id — from list_project_fields.", { minimum: 1 }),
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "get_project_item",
+    description: "Get details of a single item on a GitHub Project (v2) by its item id.",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+      itemId: s.integer("The item's id — from list_project_items.", { minimum: 1 }),
+      ...githubProjectItemFieldSelectionFields,
+    }),
+    outputSchema: githubProjectResultSchema,
+  }),
+  action({
+    name: "get_project_status_update",
+    description: "Get details of a single status update on a GitHub Project (v2) by its node id.",
+    requiredScopes: githubProjectScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      ownerType: githubOwnerTypeSchema,
+      projectNumber: githubProjectNumberSchema,
+      statusUpdateId: nonEmptyString,
+    }),
+    outputSchema: githubProjectResultSchema,
   }),
 ];
 
