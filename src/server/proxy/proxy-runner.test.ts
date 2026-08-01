@@ -16,6 +16,8 @@ import { ConnectionError } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { ProxyRunner } from "./proxy-runner.ts";
 
+const testTenant = "tenant-under-test";
+
 const provider: ProviderDefinition = {
   service: "example",
   displayName: "Example",
@@ -43,6 +45,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: null,
       }),
@@ -69,6 +72,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET" },
       }),
@@ -103,7 +107,7 @@ describe("ProxyRunner", () => {
     );
 
     await expect(
-      runner.run({ service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
+      runner.run({ tenant: testTenant, service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
     ).resolves.toMatchObject({
       ok: false,
       errorCode: "proxy_blocked",
@@ -133,7 +137,7 @@ describe("ProxyRunner", () => {
     );
 
     await expect(
-      runner.run({ service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
+      runner.run({ tenant: testTenant, service: "example", input: { endpoint: "/items", method: "GET" }, policy }),
     ).resolves.toMatchObject({
       ok: false,
       errorCode: "proxy_not_allowed",
@@ -158,6 +162,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET" },
       }),
@@ -177,6 +182,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "https://evil.test/a", method: "GET" },
       }),
@@ -189,7 +195,7 @@ describe("ProxyRunner", () => {
 
   it("passes proxy input and named connection context to provider proxy executors", async () => {
     const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
-      await context.getCredential("example");
+      await context.getCredential(testTenant, "example");
       return {
         ok: true,
         response: {
@@ -207,6 +213,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         connectionName: "work",
         input: { endpoint: "/items", method: "post", query: { limit: 1 } },
@@ -230,7 +237,7 @@ describe("ProxyRunner", () => {
         getCredential: expect.any(Function),
       }),
     );
-    expect(connections.forConnection).toHaveBeenCalledWith("work");
+    expect(connections.forConnection).toHaveBeenCalledWith(testTenant, "work");
   });
 
   it("passes HEAD requests through to provider proxy executors", async () => {
@@ -246,6 +253,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "HEAD" },
       }),
@@ -273,6 +281,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET", body: { ignored: true } },
       }),
@@ -296,6 +305,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "POST", [field]: "not-an-object" },
       }),
@@ -317,6 +327,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET" },
       }),
@@ -342,6 +353,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET" },
       }),
@@ -370,6 +382,7 @@ describe("ProxyRunner", () => {
     });
 
     await runner.run({
+      tenant: testTenant,
       service: "example",
       input: { endpoint: "/items?access_token=secret", method: "GET" },
     });
@@ -399,6 +412,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         connectionName: "work",
         input: { endpoint: "/items", method: "GET" },
@@ -424,6 +438,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET" },
       }),
@@ -449,6 +464,7 @@ describe("ProxyRunner", () => {
 
     await expect(
       runner.run({
+        tenant: testTenant,
         service: "example",
         input: { endpoint: "/items", method: "GET" },
       }),
@@ -483,6 +499,7 @@ function createConnections(
 ): ConnectionService {
   const summary: ConnectionSummary = {
     id: "example:default",
+    tenant: testTenant,
     service: "example",
     connectionName: "default",
     authType: "api_key",

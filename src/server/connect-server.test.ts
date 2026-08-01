@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { TokenPolicy } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
@@ -37,6 +37,7 @@ import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.t
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { actionInputMaxDepth, hashActionRequest, hashIdempotencyKey } from "./actions/action-idempotency.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
+import { ConnectSessionService } from "./api/connect-session.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { TransitFileService } from "./files/transit-files.ts";
@@ -1046,6 +1047,49 @@ describe("ConnectServer", () => {
     ]);
   });
 
+  it("redirects to completionRedirectUrl instead of the inline page when configured", async () => {
+    const app = createTestServer([oauthProvider], {
+      completionRedirectUrl: "http://localhost:3100/connect/complete",
+    }).createApp();
+    const config = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        secretExtra: {
+          appBearerToken: "app-token",
+        },
+      }),
+    });
+    expect(config.status).toBe(200);
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example" }),
+    });
+    expect(authorization.status).toBe(200);
+    const { state } = (await authorization.json()) as { state: string };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const callback = await app.request(`/oauth/callback?state=${state}&code=example-code`, {
+      redirect: "manual",
+    });
+
+    expect(callback.status).toBe(302);
+    const location = callback.headers.get("location");
+    expect(location).not.toBeNull();
+    const redirectUrl = new URL(location!);
+    expect(`${redirectUrl.origin}${redirectUrl.pathname}`).toBe("http://localhost:3100/connect/complete");
+    expect(redirectUrl.searchParams.get("service")).toBe("oauth_example");
+    expect(redirectUrl.searchParams.get("connectionId")).toBeTruthy();
+    expect(redirectUrl.searchParams.get("tenant")).toBeTruthy();
+    expect(redirectUrl.searchParams.get("connectionName")).toBeTruthy();
+  });
+
   it("keeps the console shell public while protecting admin APIs", async () => {
     const staticRoot = await createTestStaticRoot();
     try {
@@ -1205,6 +1249,276 @@ describe("ConnectServer", () => {
       headers: { authorization: "bearer local-token" },
     });
     expect(lowercaseAdminTokenRuntimeCall.status).toBe(401);
+  });
+
+  it("mints a connect session and starts authorization for its bound tenant", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret" }),
+    });
+
+    const created = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: ["oauth_example"] }),
+    });
+    expect(created.status).toBe(200);
+    const session = (await created.json()) as { token: string; connectUrl: string; expiresAt: string };
+    expect(session.token).toMatch(/^ocs_/);
+
+    // The browser opens /connect with only the token — no admin credential.
+    const started = await app.request(`/connect?token=${encodeURIComponent(session.token)}`);
+    expect(started.status).toBe(302);
+    expect(started.headers.get("location")).toContain("client_id=client-id");
+  });
+
+  it("does not require an admin token to open /connect", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    // Without a token the route is reachable but refuses; the point is that it is not a
+    // 401 from the admin middleware, which would make it unusable from a browser.
+    const response = await app.request("/connect");
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+  });
+
+  it("rejects a connect session for a service it was not scoped to", async () => {
+    const app = createTestServer([oauthProvider, apiKeyProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    const created = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: ["oauth_example"] }),
+    });
+    const session = (await created.json()) as { token: string };
+
+    const response = await app.request(`/connect?token=${encodeURIComponent(session.token)}&service=example`);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "service_not_allowed" } });
+  });
+
+  it("rejects an invalid or expired connect session", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    const foreign = new ConnectSessionService("a-different-secret").create({
+      tenant: "tenant-a",
+      allowedServices: ["oauth_example"],
+    });
+
+    const response = await app.request(`/connect?token=${encodeURIComponent(foreign.token)}`);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_session_token" } });
+  });
+
+  it("refuses to mint a connect session with no services", async () => {
+    const app = createTestServer([oauthProvider], {
+      connectSessionSecret: "session-secret",
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    const response = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: [] }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("hides connect sessions entirely when no signing secret is configured", async () => {
+    const app = createTestServer([oauthProvider], { auth: { adminToken: "admin-token" } }).createApp();
+
+    const created = await app.request("/api/connect/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
+      body: JSON.stringify({ tenant: "tenant-a", allowedServices: ["oauth_example"] }),
+    });
+
+    expect(created.status).toBe(404);
+    expect((await app.request("/connect?token=anything")).status).toBe(404);
+  });
+
+  it("hides the credential read-out endpoint unless it is explicitly enabled", async () => {
+    const app = createTestServer([apiKeyProvider], { auth: { adminToken: "admin-token" } }).createApp();
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token" },
+    });
+
+    // 404, not 403: a runtime without the feature should be indistinguishable from one
+    // that never had the route.
+    expect(response.status).toBe(404);
+  });
+
+  it("refuses credential read-out when no admin token is configured", async () => {
+    // createLocalAuthMiddleware leaves admin endpoints open when no admin token is set.
+    // Inheriting that default here would publish every credential to anyone who can
+    // reach the port, so the endpoint refuses instead.
+    const app = createTestServer([apiKeyProvider], { credentialReadEnabled: true }).createApp();
+
+    const response = await app.request("/api/connections/example/credential");
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "admin_token_required" } });
+  });
+
+  it("does not accept a runtime token for credential read-out", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      runtimeTokens,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    const created = await runtimeTokens.createToken("agent", {
+      allowedActions: ["*"],
+      blockedActions: [],
+      allowedProxies: ["*"],
+    });
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: `Bearer ${created.token}` },
+    });
+
+    // A runtime token is what an agent holds. /api/* is admin scope, so it must not pass.
+    expect(response.status).toBe(401);
+  });
+
+  it("returns the credential to an admin caller and audits the read", async () => {
+    const connectionStore = new MemoryConnectionStore();
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      connectionStore,
+      runs,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    await connectionStore.set("tenant-a", "example", "default", {
+      authType: "api_key",
+      apiKey: "secret-value",
+      values: { apiKey: "secret-value" },
+      profile: { accountId: "acct", displayName: "acct", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token", "x-oo-connector-tenant": "tenant-a" },
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      service: "example",
+      tenant: "tenant-a",
+      credential: { apiKey: "secret-value" },
+    });
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [{ actionId: "connection.read_credential", service: "example", ok: true }],
+    });
+  });
+
+  it("audits a refused credential read as well as a successful one", async () => {
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      runs,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+
+    // No connection stored for this tenant.
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token", "x-oo-connector-tenant": "empty-tenant" },
+    });
+
+    expect(response.status).toBe(404);
+    await expect(runs.list()).resolves.toMatchObject({
+      items: [{ actionId: "connection.read_credential", ok: false }],
+    });
+  });
+
+  it("scopes credential read-out to the requested tenant", async () => {
+    const connectionStore = new MemoryConnectionStore();
+    const app = createTestServer([apiKeyProvider], {
+      credentialReadEnabled: true,
+      connectionStore,
+      auth: { adminToken: "admin-token" },
+    }).createApp();
+    await connectionStore.set("tenant-a", "example", "default", {
+      authType: "api_key",
+      apiKey: "value-a",
+      values: { apiKey: "value-a" },
+      profile: { accountId: "a", displayName: "a", grantedScopes: [] },
+      metadata: {},
+    });
+    await connectionStore.set("tenant-b", "example", "default", {
+      authType: "api_key",
+      apiKey: "value-b",
+      values: { apiKey: "value-b" },
+      profile: { accountId: "b", displayName: "b", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const response = await app.request("/api/connections/example/credential", {
+      headers: { authorization: "Bearer admin-token", "x-oo-connector-tenant": "tenant-b" },
+    });
+
+    await expect(response.json()).resolves.toMatchObject({ credential: { apiKey: "value-b" } });
+  });
+
+  it("pins a runtime token to its tenant and ignores a spoofed tenant header", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const connectionStore = new MemoryConnectionStore();
+    const app = createTestServer([apiKeyProvider], { runtimeTokens, connectionStore }).createApp();
+
+    // Two tenants hold a connection for the SAME service under the SAME name.
+    await connectionStore.set("tenant-a", "example", "default", {
+      authType: "api_key",
+      apiKey: "key-a",
+      values: { apiKey: "key-a" },
+      profile: { accountId: "acct-a", displayName: "acct-a", grantedScopes: [] },
+      metadata: {},
+    });
+    await connectionStore.set("tenant-b", "example", "default", {
+      authType: "api_key",
+      apiKey: "key-b",
+      values: { apiKey: "key-b" },
+      profile: { accountId: "acct-b", displayName: "acct-b", grantedScopes: [] },
+      metadata: {},
+    });
+
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Agent A", tenant: "tenant-a", allowedActions: ["example.*"] }),
+    });
+    const { token } = (await created.json()) as { token: string; record: RuntimeTokenRecord };
+
+    // The token sees only tenant-a's account...
+    const own = await app.request("/v1/apps/services/example", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    await expect(own.json()).resolves.toMatchObject({ data: [{ accountLabel: "acct-a" }] });
+
+    // ...and a spoofed header does NOT move it to tenant-b. This is the whole point of
+    // P2: with only P1, this header would have been honoured.
+    const spoofed = await app.request("/v1/apps/services/example", {
+      headers: { authorization: `Bearer ${token}`, "x-oo-connector-tenant": "tenant-b" },
+    });
+    await expect(spoofed.json()).resolves.toMatchObject({ data: [{ accountLabel: "acct-a" }] });
   });
 
   it("manages runtime tokens and gates runtime API calls after one is created", async () => {
@@ -1451,6 +1765,47 @@ describe("ConnectServer", () => {
         },
       ],
     });
+  });
+
+  it("rejects a stored token naming a connection outside allowedConnections (Layer-4 gap fix)", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const runs = new MemoryRunLogStore();
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimeTokens,
+      runs,
+      providerLoader: new EchoProviderLoader(),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Default connection only",
+        allowedActions: ["example.*"],
+        allowedConnections: ["default"],
+      }),
+    });
+    const token = (await created.json()) as { token: string; record: RuntimeTokenRecord };
+    expect(token.record.allowedConnections).toEqual(["default"]);
+
+    const allowed = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, connectionName: "default" }),
+    });
+    expect(allowed.status).toBe(200);
+
+    const denied = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, connectionName: "work" }),
+    });
+    expect(denied.status).toBe(403);
+    await expect(denied.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
   });
 
   it("returns an idempotency conflict when different stored tokens reuse one key", async () => {
@@ -2971,8 +3326,12 @@ interface CreateTestServerOptions {
   runtimeTokens?: RuntimeTokenService;
   runtimePolicyStore?: IRuntimePolicyStore;
   runs?: MemoryRunLogStore;
+  connectionStore?: MemoryConnectionStore;
+  credentialReadEnabled?: boolean;
+  connectSessionSecret?: string;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
+  completionRedirectUrl?: string;
 }
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
@@ -2986,7 +3345,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const connections = new ConnectionService({
     catalog,
     providerLoader,
-    store: new MemoryConnectionStore(),
+    store: options.connectionStore ?? new MemoryConnectionStore(),
   });
   const clientConfigs = new OAuthClientConfigService({
     catalog,
@@ -3037,6 +3396,10 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     },
     actionPolicy: options.actionPolicy,
     actionSearch: options.actionSearch,
+    credentialReadEnabled: options.credentialReadEnabled,
+    connectSessions: options.connectSessionSecret ? new ConnectSessionService(options.connectSessionSecret) : undefined,
+    publicOrigin: "http://localhost:3000",
+    completionRedirectUrl: options.completionRedirectUrl,
     logger: options.logger,
   });
 }
@@ -3194,15 +3557,21 @@ class TransitEchoProviderLoader extends EchoProviderLoader {
 class MemoryConnectionStore implements IConnectionStore {
   private readonly store = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    return this.store.get(createConnectionKey(service, connectionName));
+  async get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    return this.store.get(createConnectionKey(tenant, service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const key = createConnectionKey(service, connectionName);
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
+    const key = createConnectionKey(tenant, service, connectionName);
     const connection = {
       id: this.store.get(key)?.id ?? crypto.randomUUID(),
       revision: crypto.randomUUID(),
+      tenant,
       service,
       connectionName,
       credential,
@@ -3212,24 +3581,24 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
-    const key = createConnectionKey(input.service, input.connectionName);
+    const key = createConnectionKey(input.tenant, input.service, input.connectionName);
     const current = this.store.get(key);
     if (current?.id !== input.id || current.revision !== input.revision) return false;
     this.store.set(key, { ...input, revision: crypto.randomUUID() });
     return true;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
-    this.store.delete(createConnectionKey(service, connectionName));
+  async delete(tenant: Tenant, service: string, connectionName: string): Promise<void> {
+    this.store.delete(createConnectionKey(tenant, service, connectionName));
   }
 
-  async list(): Promise<StoredConnection[]> {
-    return [...this.store.values()];
+  async list(tenant: Tenant): Promise<StoredConnection[]> {
+    return [...this.store.values()].filter((connection) => connection.tenant === tenant);
   }
 }
 
-function createConnectionKey(service: string, connectionName: string): string {
-  return `${service}:${connectionName}`;
+function createConnectionKey(tenant: Tenant, service: string, connectionName: string): string {
+  return `${tenant}:${service}:${connectionName}`;
 }
 
 class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {

@@ -1,5 +1,5 @@
 import type { CatalogStore, RuntimeActionDefinition } from "./catalog-store.ts";
-import type { ConnectionService, ConnectionSummary } from "./connection-service.ts";
+import type { ConnectionService, ConnectionSummary, Tenant } from "./connection-service.ts";
 import type { ActionPolicyDecision, ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
@@ -22,6 +22,14 @@ export interface IMcpServerOptions {
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
+  /**
+   * Tenant this MCP session operates within.
+   *
+   * Bound once, from the request that created the session — never from tool arguments.
+   * An agent may still choose a `connectionName`, but only among connections its own
+   * tenant owns, so naming another tenant's alias resolves to nothing.
+   */
+  tenant: Tenant;
   actions: ActionRunner;
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
@@ -192,8 +200,8 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
 async function listConnections(options: IMcpServerOptions, service: string | undefined): Promise<ToolPayload> {
   try {
     const connections = service
-      ? await options.connections.listConnectionsByService(service)
-      : await options.connections.listConnections();
+      ? await options.connections.listConnectionsByService(options.tenant, service)
+      : await options.connections.listConnections(options.tenant);
     return successPayload(connections.filter((connection) => !connection.virtual).map(serializeConnection));
   } catch (error) {
     return connectionErrorPayload(error);
@@ -202,7 +210,7 @@ async function listConnections(options: IMcpServerOptions, service: string | und
 
 async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<unknown> {
   const normalized = query?.trim().toLowerCase();
-  const connections = await options.connections.listConnections();
+  const connections = await options.connections.listConnections(options.tenant);
   const defaultConnections = new Map(
     connections.filter((connection) => connection.default).map((connection) => [connection.service, connection]),
   );
@@ -316,9 +324,11 @@ async function executeAction(
     actionId,
     input,
     caller: "mcp",
+    tenant: options.tenant,
     connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    allowedConnections: options.runtimeGrant?.allowedConnections,
   });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
@@ -407,7 +417,7 @@ async function getSelectedConnectionSummary(
   service: string,
   connectionName: string | undefined,
 ): Promise<ConnectionSummary | undefined> {
-  const connection = await options.connections.getConnectionSummary(service, connectionName);
+  const connection = await options.connections.getConnectionSummary(options.tenant, service, connectionName);
   if (connectionName && connection?.virtual && !connection.default) {
     throw new ConnectionError("connection_not_found", `${service} connection not found: ${connection.connectionName}.`);
   }

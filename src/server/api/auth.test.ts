@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
+import { defaultTenant } from "../../connection-service.ts";
 import { createLocalAuthMiddleware } from "./auth.ts";
 
 describe("createLocalAuthMiddleware", () => {
@@ -10,7 +11,7 @@ describe("createLocalAuthMiddleware", () => {
       createLocalAuthMiddleware({
         resolveRuntimeToken: async (token) =>
           token === "runtime-token"
-            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            ? { tokenId: "token-1", tenant: defaultTenant, allowedActions: [], blockedActions: [], allowedProxies: [] }
             : undefined,
       }),
     );
@@ -38,7 +39,7 @@ describe("createLocalAuthMiddleware", () => {
         hasRuntimeTokens: async () => true,
         resolveRuntimeToken: async (token) =>
           token === "oct_valid"
-            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            ? { tokenId: "token-1", tenant: defaultTenant, allowedActions: [], blockedActions: [], allowedProxies: [] }
             : undefined,
       }),
     );
@@ -111,7 +112,7 @@ describe("createLocalAuthMiddleware", () => {
   it("resolves dynamic runtime tokens for a lowercase bearer scheme", async () => {
     const resolveRuntimeToken = vi.fn(async (token: string) =>
       token === "oct_valid"
-        ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+        ? { tokenId: "token-1", tenant: defaultTenant, allowedActions: [], blockedActions: [], allowedProxies: [] }
         : undefined,
     );
     const app = new Hono();

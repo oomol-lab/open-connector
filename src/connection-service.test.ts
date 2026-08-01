@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "./connection-service.ts";
 import type { ActionExecutor, CredentialValidators, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { OAuthClientConfig } from "./oauth/oauth-client-config-service.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
@@ -8,6 +8,8 @@ import { createCatalogStore } from "./catalog-store.ts";
 import { ConnectionService } from "./connection-service.ts";
 import { OAuthClientConfigService } from "./oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "./oauth/oauth-credential-refresh-service.ts";
+
+const testTenant = "tenant-under-test";
 
 const hackernewsProvider: ProviderDefinition = {
   service: "hackernews",
@@ -135,7 +137,7 @@ describe("ConnectionService", () => {
     const service = createService([catalogOnlyProvider]);
 
     await expect(
-      service.connectWithCustomCredential("catalog_only", {
+      service.connectWithCustomCredential(testTenant, "catalog_only", {
         values: {
           host: "localhost",
           password: "secret",
@@ -146,16 +148,17 @@ describe("ConnectionService", () => {
       message: "Catalog Only is not available in this runtime.",
     });
 
-    await expect(service.listConnections()).resolves.toEqual([]);
+    await expect(service.listConnections(testTenant)).resolves.toEqual([]);
   });
 
   it("exposes no_auth providers as virtual connections", async () => {
     const service = createService([hackernewsProvider]);
 
-    await expect(service.getCredential("hackernews")).resolves.toEqual({ authType: "no_auth" });
-    await expect(service.listConnections()).resolves.toEqual([
+    await expect(service.getCredential(testTenant, "hackernews")).resolves.toEqual({ authType: "no_auth" });
+    await expect(service.listConnections(testTenant)).resolves.toEqual([
       {
         id: "hackernews:default",
+        tenant: testTenant,
         service: "hackernews",
         connectionName: "default",
         authType: "no_auth",
@@ -174,14 +177,14 @@ describe("ConnectionService", () => {
   it("stores API key credentials as resolved credentials", async () => {
     const service = createService([apiKeyProvider]);
 
-    await service.connectWithApiKey("uptimerobot", {
+    await service.connectWithApiKey(testTenant, "uptimerobot", {
       values: {
         apiKey: " test-key ",
         accountId: " account-1 ",
       },
     });
 
-    await expect(service.getCredential("uptimerobot")).resolves.toMatchObject({
+    await expect(service.getCredential(testTenant, "uptimerobot")).resolves.toMatchObject({
       authType: "api_key",
       apiKey: "test-key",
       values: {
@@ -195,7 +198,7 @@ describe("ConnectionService", () => {
     const service = createService([apiKeyProvider]);
 
     await expect(
-      service.connectWithApiKey("uptimerobot", {
+      service.connectWithApiKey(testTenant, "uptimerobot", {
         values: {
           apiKey: "test-key",
         },
@@ -210,7 +213,7 @@ describe("ConnectionService", () => {
     const service = createService([apiKeyProvider]);
 
     await expect(
-      service.connectWithApiKey("uptimerobot", {
+      service.connectWithApiKey(testTenant, "uptimerobot", {
         values: {
           apiKey: "test-key",
           accountId: "account-1",
@@ -227,7 +230,7 @@ describe("ConnectionService", () => {
     const service = createService([customCredentialProvider]);
 
     await expect(
-      service.connectWithCustomCredential("database", {
+      service.connectWithCustomCredential(testTenant, "database", {
         values: {
           host: "localhost",
         },
@@ -241,14 +244,14 @@ describe("ConnectionService", () => {
   it("stores custom credential values after trimming declared fields", async () => {
     const service = createService([customCredentialProvider]);
 
-    await service.connectWithCustomCredential("database", {
+    await service.connectWithCustomCredential(testTenant, "database", {
       values: {
         host: " localhost ",
         password: " secret ",
       },
     });
 
-    await expect(service.getCredential("database")).resolves.toMatchObject({
+    await expect(service.getCredential(testTenant, "database")).resolves.toMatchObject({
       authType: "custom_credential",
       values: {
         host: "localhost",
@@ -278,7 +281,7 @@ describe("ConnectionService", () => {
     });
 
     await expect(
-      service.connectWithApiKey("uptimerobot", {
+      service.connectWithApiKey(testTenant, "uptimerobot", {
         values: {
           apiKey: "bad-key",
           accountId: "account-1",
@@ -288,15 +291,15 @@ describe("ConnectionService", () => {
       code: "credential_verification_failed",
       message: "invalid key",
     });
-    await expect(service.getCredential("uptimerobot")).resolves.toBeUndefined();
+    await expect(service.getCredential(testTenant, "uptimerobot")).resolves.toBeUndefined();
 
-    await service.connectWithApiKey("uptimerobot", {
+    await service.connectWithApiKey(testTenant, "uptimerobot", {
       values: {
         apiKey: "valid-key",
         accountId: "account-1",
       },
     });
-    await expect(service.getCredential("uptimerobot")).resolves.toMatchObject({
+    await expect(service.getCredential(testTenant, "uptimerobot")).resolves.toMatchObject({
       authType: "api_key",
       apiKey: "valid-key",
       profile: {
@@ -320,7 +323,7 @@ describe("ConnectionService", () => {
       providerLoader: new FakeProviderLoader(validators),
     });
 
-    await service.connectWithApiKey("uptimerobot", {
+    await service.connectWithApiKey(testTenant, "uptimerobot", {
       values: {
         apiKey: "valid-key",
         accountId: "account-1",
@@ -352,7 +355,7 @@ describe("ConnectionService", () => {
     });
 
     await expect(
-      service.connectWithApiKey("uptimerobot", {
+      service.connectWithApiKey(testTenant, "uptimerobot", {
         values: {
           apiKey: "valid-key",
           accountId: "account-1",
@@ -378,7 +381,7 @@ describe("ConnectionService", () => {
     });
 
     await expect(
-      service.connectWithApiKey("uptimerobot", {
+      service.connectWithApiKey(testTenant, "uptimerobot", {
         values: {
           apiKey: "valid-key",
           accountId: "account-1",
@@ -392,7 +395,7 @@ describe("ConnectionService", () => {
         grantedScopes: ["read", "write"],
       },
     });
-    await expect(service.listConnections()).resolves.toMatchObject([
+    await expect(service.listConnections(testTenant)).resolves.toMatchObject([
       {
         service: "uptimerobot",
         profile: {
@@ -414,7 +417,7 @@ describe("ConnectionService", () => {
     });
 
     await expect(
-      service.setOAuthCredential("example", {
+      service.setOAuthCredential(testTenant, "example", {
         authType: "oauth2",
         accessToken: "access-token",
         tokenType: "Bearer",
@@ -427,7 +430,7 @@ describe("ConnectionService", () => {
       configured: true,
       profile: testProfile,
     });
-    await expect(service.getCredential("example")).resolves.toMatchObject({
+    await expect(service.getCredential(testTenant, "example")).resolves.toMatchObject({
       authType: "oauth2",
       accessToken: "access-token",
     });
@@ -445,7 +448,7 @@ describe("ConnectionService", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
     });
-    await store.set("example", "default", {
+    await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "expired-token",
       tokenType: "Bearer",
@@ -467,7 +470,7 @@ describe("ConnectionService", () => {
       ),
     );
 
-    await expect(service.getCredential("example")).resolves.toMatchObject({
+    await expect(service.getCredential(testTenant, "example")).resolves.toMatchObject({
       authType: "oauth2",
       accessToken: "fresh-token",
       refreshToken: "refresh-token",
@@ -476,7 +479,7 @@ describe("ConnectionService", () => {
         scope: "read",
       },
     });
-    await expect(store.get("example", "default")).resolves.toMatchObject({
+    await expect(store.get(testTenant, "example", "default")).resolves.toMatchObject({
       credential: {
         authType: "oauth2",
         accessToken: "fresh-token",
@@ -502,7 +505,7 @@ describe("ConnectionService", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
     });
-    await store.set("example", "default", {
+    await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "expired-token",
       tokenType: "Bearer",
@@ -521,7 +524,10 @@ describe("ConnectionService", () => {
     );
     vi.stubGlobal("fetch", fetcher);
 
-    const credentials = await Promise.all([service.getCredential("example"), service.getCredential("example")]);
+    const credentials = await Promise.all([
+      service.getCredential(testTenant, "example"),
+      service.getCredential(testTenant, "example"),
+    ]);
 
     expect(credentials).toEqual([
       expect.objectContaining({ accessToken: "fresh-token" }),
@@ -542,7 +548,7 @@ describe("ConnectionService", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
     });
-    const original = await store.set("example", "default", {
+    const original = await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "expired-token",
       tokenType: "Bearer",
@@ -567,10 +573,10 @@ describe("ConnectionService", () => {
       }),
     );
 
-    const execution = service.resolveForExecution("example");
+    const execution = service.resolveForExecution(testTenant, "example");
     await refreshStarted;
-    await store.delete("example", "default");
-    const recreated = await store.set("example", "default", {
+    await store.delete(testTenant, "example", "default");
+    const recreated = await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "replacement-token",
       tokenType: "Bearer",
@@ -589,7 +595,7 @@ describe("ConnectionService", () => {
 
     await expect(execution).rejects.toMatchObject({ code: "connection_not_found" });
     expect(recreated.id).not.toBe(original.id);
-    await expect(store.get("example", "default")).resolves.toMatchObject({
+    await expect(store.get(testTenant, "example", "default")).resolves.toMatchObject({
       id: recreated.id,
       credential: { accessToken: "replacement-token" },
     });
@@ -607,7 +613,7 @@ describe("ConnectionService", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
     });
-    const original = await store.set("example", "default", {
+    const original = await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "expired-token",
       tokenType: "Bearer",
@@ -642,9 +648,9 @@ describe("ConnectionService", () => {
       }),
     );
 
-    const originalExecution = service.resolveForExecution("example");
+    const originalExecution = service.resolveForExecution(testTenant, "example");
     await originalRefreshStarted;
-    const replaced = await store.set("example", "default", {
+    const replaced = await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "replacement-token",
       tokenType: "Bearer",
@@ -653,7 +659,7 @@ describe("ConnectionService", () => {
       profile: testProfile,
       metadata: {},
     });
-    const replacementExecution = service.resolveForExecution("example");
+    const replacementExecution = service.resolveForExecution(testTenant, "example");
     await replacementRefreshStarted;
     expect(fetch).toHaveBeenCalledTimes(2);
     completeRefreshes[1]!(
@@ -678,7 +684,7 @@ describe("ConnectionService", () => {
     await expect(originalExecution).rejects.toMatchObject({ code: "connection_not_found" });
     expect(replaced.id).toBe(original.id);
     expect(replaced.revision).not.toBe(original.revision);
-    await expect(store.get("example", "default")).resolves.toMatchObject({
+    await expect(store.get(testTenant, "example", "default")).resolves.toMatchObject({
       id: replaced.id,
       credential: { accessToken: "replacement-refreshed-token" },
     });
@@ -696,7 +702,7 @@ describe("ConnectionService", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
     });
-    await store.set("refresh_example", "default", {
+    await store.set(testTenant, "refresh_example", "default", {
       authType: "oauth2",
       accessToken: "expired-token",
       tokenType: "Bearer",
@@ -717,7 +723,7 @@ describe("ConnectionService", () => {
       ),
     );
 
-    await expect(service.getCredential("refresh_example")).resolves.toMatchObject({
+    await expect(service.getCredential(testTenant, "refresh_example")).resolves.toMatchObject({
       authType: "oauth2",
       accessToken: "fresh-token",
     });
@@ -732,7 +738,7 @@ describe("ConnectionService", () => {
   it("asks users to reconnect when an expired OAuth credential has no refresh token", async () => {
     const store = new MemoryConnectionStore();
     const service = createService([oauthProvider], { store });
-    await store.set("example", "default", {
+    await store.set(testTenant, "example", "default", {
       authType: "oauth2",
       accessToken: "expired-token",
       tokenType: "Bearer",
@@ -741,7 +747,7 @@ describe("ConnectionService", () => {
       metadata: {},
     });
 
-    await expect(service.getCredential("example")).rejects.toMatchObject({
+    await expect(service.getCredential(testTenant, "example")).rejects.toMatchObject({
       code: "oauth_token_expired",
     });
   });
@@ -749,7 +755,7 @@ describe("ConnectionService", () => {
   it("resolves the execution credential and summary from one connection snapshot", async () => {
     const store = new MemoryConnectionStore();
     const service = createService([apiKeyProvider], { store });
-    const original = await store.set("uptimerobot", "default", {
+    const original = await store.set(testTenant, "uptimerobot", "default", {
       authType: "api_key",
       apiKey: "original-key",
       values: { apiKey: "original-key", accountId: "account-1" },
@@ -757,8 +763,8 @@ describe("ConnectionService", () => {
       metadata: {},
     });
 
-    const resolved = await service.resolveForExecution("uptimerobot");
-    const updated = await store.set("uptimerobot", "default", {
+    const resolved = await service.resolveForExecution(testTenant, "uptimerobot");
+    const updated = await store.set(testTenant, "uptimerobot", "default", {
       authType: "api_key",
       apiKey: "replacement-key",
       values: { apiKey: "replacement-key", accountId: "account-2" },
@@ -833,15 +839,21 @@ class FakeProviderLoader implements IProviderLoader {
 class MemoryConnectionStore implements IConnectionStore {
   private readonly store = new Map<string, StoredConnection>();
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    return this.store.get(createConnectionKey(service, connectionName));
+  async get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    return this.store.get(createConnectionKey(tenant, service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const key = createConnectionKey(service, connectionName);
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
+    const key = createConnectionKey(tenant, service, connectionName);
     const connection = {
       id: this.store.get(key)?.id ?? crypto.randomUUID(),
       revision: crypto.randomUUID(),
+      tenant,
       service,
       connectionName,
       credential,
@@ -851,24 +863,24 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
-    const key = createConnectionKey(input.service, input.connectionName);
+    const key = createConnectionKey(input.tenant, input.service, input.connectionName);
     const current = this.store.get(key);
     if (current?.id !== input.id || current.revision !== input.revision) return false;
     this.store.set(key, { ...input, revision: crypto.randomUUID() });
     return true;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
-    this.store.delete(createConnectionKey(service, connectionName));
+  async delete(tenant: Tenant, service: string, connectionName: string): Promise<void> {
+    this.store.delete(createConnectionKey(tenant, service, connectionName));
   }
 
-  async list(): Promise<StoredConnection[]> {
-    return [...this.store.values()];
+  async list(tenant: Tenant): Promise<StoredConnection[]> {
+    return [...this.store.values()].filter((connection) => connection.tenant === tenant);
   }
 }
 
-function createConnectionKey(service: string, connectionName: string): string {
-  return `${service}:${connectionName}`;
+function createConnectionKey(tenant: Tenant, service: string, connectionName: string): string {
+  return `${tenant}:${service}:${connectionName}`;
 }
 
 class MemoryOAuthClientConfigStore {

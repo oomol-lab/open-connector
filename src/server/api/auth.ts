@@ -103,6 +103,9 @@ function isPublicPath(path: string, method: string): boolean {
     path === "/health" ||
     path === "/oauth/callback" ||
     path.startsWith("/oauth/callback/") ||
+    // The end user's browser opens this; it authenticates with a signed, short-lived
+    // session token in the query string instead of an admin credential.
+    (method === "GET" && path === "/connect") ||
     (method === "GET" && path === "/api/auth/session") ||
     (method === "POST" && path === "/api/auth/logout") ||
     (method === "GET" && path.startsWith("/api/files/")) ||

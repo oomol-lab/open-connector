@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
+import type { IConnectionStore, StoredConnection, Tenant } from "./connection-service.ts";
 import type { ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
@@ -8,10 +8,13 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "./catalog-store.ts";
+import { defaultTenant } from "./connection-service.ts";
 import { ConnectionService } from "./connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "./core/action-policy.ts";
 import { createMcpServer } from "./mcp.ts";
 import { ActionRunner } from "./server/actions/action-runner.ts";
+
+const testTenant = "tenant-under-test";
 
 const echoAction: ActionDefinition = {
   id: "example.echo",
@@ -461,6 +464,7 @@ describe("MCP server", () => {
         getPolicySnapshot: async () => policy,
         runtimeGrant: {
           tokenId: "token-1",
+          tenant: defaultTenant,
           allowedActions: ["example.*"],
           blockedActions: ["example.echo"],
           allowedProxies: [],
@@ -476,6 +480,7 @@ async function withMcpClient(
     getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
     runtimeGrant?: {
       tokenId: string;
+      tenant: Tenant;
       allowedActions: string[];
       blockedActions: string[];
       allowedProxies: string[];
@@ -501,6 +506,7 @@ async function withMcpClient(
     catalog,
     providerLoader,
     connections,
+    tenant: testTenant,
     actions,
     ...policy,
   });
@@ -531,6 +537,7 @@ async function withAuthenticatedMcpClient(
       {
         id: "connection-default",
         revision: "revision-default",
+        tenant: testTenant,
         service: "example_auth",
         connectionName: "default",
         credential: defaultCredential,
@@ -538,6 +545,7 @@ async function withAuthenticatedMcpClient(
       {
         id: "connection-secondary",
         revision: "revision-secondary",
+        tenant: testTenant,
         service: "example_auth",
         connectionName: "secondary",
         credential: secondaryCredential,
@@ -545,7 +553,7 @@ async function withAuthenticatedMcpClient(
     ]),
   });
   const actions = new ActionRunner({ catalog, providerLoader, connections, runs });
-  const server = createMcpServer({ catalog, providerLoader, connections, actions });
+  const server = createMcpServer({ catalog, providerLoader, connections, tenant: testTenant, actions });
   const client = new Client({ name: "mcp-test", version: "0.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
@@ -586,19 +594,25 @@ class MemoryConnectionStore implements IConnectionStore {
 
   constructor(connections: StoredConnection[] = []) {
     for (const connection of connections) {
-      this.connections.set(this.key(connection.service, connection.connectionName), connection);
+      this.connections.set(this.key(connection.tenant, connection.service, connection.connectionName), connection);
     }
   }
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    return this.connections.get(this.key(service, connectionName));
+  async get(tenant: Tenant, service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    return this.connections.get(this.key(tenant, service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const key = this.key(service, connectionName);
+  async set(
+    tenant: Tenant,
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+  ): Promise<StoredConnection> {
+    const key = this.key(tenant, service, connectionName);
     const connection = {
       id: this.connections.get(key)?.id ?? crypto.randomUUID(),
       revision: crypto.randomUUID(),
+      tenant,
       service,
       connectionName,
       credential,
@@ -608,23 +622,23 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async updateCredential(connection: StoredConnection): Promise<boolean> {
-    const key = this.key(connection.service, connection.connectionName);
+    const key = this.key(connection.tenant, connection.service, connection.connectionName);
     const current = this.connections.get(key);
     if (current?.id !== connection.id || current.revision !== connection.revision) return false;
     this.connections.set(key, { ...connection, revision: crypto.randomUUID() });
     return true;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
-    this.connections.delete(this.key(service, connectionName));
+  async delete(tenant: Tenant, service: string, connectionName: string): Promise<void> {
+    this.connections.delete(this.key(tenant, service, connectionName));
   }
 
-  async list(): Promise<StoredConnection[]> {
-    return [...this.connections.values()];
+  async list(tenant: Tenant): Promise<StoredConnection[]> {
+    return [...this.connections.values()].filter((connection) => connection.tenant === tenant);
   }
 
-  private key(service: string, connectionName: string): string {
-    return `${service}:${connectionName}`;
+  private key(tenant: Tenant, service: string, connectionName: string): string {
+    return `${tenant}:${service}:${connectionName}`;
   }
 }
 

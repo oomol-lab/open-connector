@@ -29,6 +29,38 @@ export function readTokenPolicy(body: JsonRequestBody, allowOmitted = false): To
   };
 }
 
+/**
+ * `allowedConnections` is deliberately NOT part of TokenPolicy or readTokenPolicy — same
+ * reasoning as tenant being separate: it's read once, at token creation, not touched by a
+ * later policy update. `undefined` (the field omitted) means unrestricted; an explicit `[]`
+ * means no connections at all, matching connect-session's `allowedServices` convention.
+ */
+export function readAllowedConnections(body: JsonRequestBody): string[] | undefined {
+  if (body.allowedConnections === undefined) {
+    return undefined;
+  }
+  const values = requiredStringArray(body.allowedConnections, "allowedConnections", invalidInput);
+  const names: string[] = [];
+  const seen = new Set<string>();
+  for (const value of values) {
+    const name = value.trim();
+    if (!name) {
+      throw invalidInput("allowedConnections must not contain empty entries.");
+    }
+    if (Buffer.byteLength(name, "utf8") > policyRuleMaxBytes) {
+      throw invalidInput(`allowedConnections entries must not exceed ${policyRuleMaxBytes} UTF-8 bytes.`);
+    }
+    if (!seen.has(name)) {
+      seen.add(name);
+      names.push(name);
+    }
+  }
+  if (names.length > policyRuleListMaxItems) {
+    throw invalidInput(`allowedConnections must not contain more than ${policyRuleListMaxItems} entries.`);
+  }
+  return names;
+}
+
 function readRules(value: unknown, fieldName: string, kind: "action" | "proxy", allowOmitted = false): string[] {
   if (value === undefined && allowOmitted) {
     return [];

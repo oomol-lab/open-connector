@@ -1,7 +1,8 @@
 import type { CatalogStore, RuntimeActionDefinition } from "../catalog-store.ts";
-import type { ConnectionService } from "../connection-service.ts";
+import type { ConnectionService, Tenant } from "../connection-service.ts";
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
+import type { OAuthAuthorizationComplete } from "../oauth/oauth-flow-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
@@ -17,7 +18,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
-import { ConnectionError, defaultConnectionName } from "../connection-service.ts";
+import { ConnectionError, defaultConnectionName, defaultTenant } from "../connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
@@ -35,10 +36,16 @@ import { ActionRunner } from "./actions/action-runner.ts";
 import { renderActionMarkdown } from "./api/action-markdown.ts";
 import { clearLocalAuthCookie, createLocalAuthMiddleware, readLocalAuthSession, readRuntimeGrant } from "./api/auth.ts";
 import { getResponseCachePolicy } from "./api/cache-policy.ts";
+import { connectSessionAllowsService, ConnectSessionService } from "./api/connect-session.ts";
 import { HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { renderOAuthCompletionPage } from "./api/oauth-completion-page.ts";
 import { createOpenApiDocument } from "./api/openapi.ts";
-import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenPolicy } from "./api/policy-input.ts";
+import {
+  policyRequestMaxBytes,
+  readAllowedConnections,
+  readRuntimePolicyRules,
+  readTokenPolicy,
+} from "./api/policy-input.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeAction,
@@ -76,6 +83,21 @@ export interface IConnectServerOptions {
   registerStaticRoutes?: (app: Hono) => void;
   logger?: Logger;
   compressApiResponses?: boolean;
+  /** Expose GET /api/connections/:service/credential. Off unless explicitly enabled. */
+  credentialReadEnabled?: boolean;
+  /** Mints browser-facing connect sessions. Omitted disables /api/connect/sessions and /connect. */
+  connectSessions?: ConnectSessionService;
+  /** Public origin used to build the connect URL handed to a browser. */
+  publicOrigin?: string;
+  /**
+   * When set, a successful OAuth callback redirects the browser here (with
+   * service/connectionId/tenant/connectionName as query params) instead of rendering
+   * the built-in completion page. Lets the embedding app serve its own same-origin
+   * completion page — BroadcastChannel only delivers same-origin, so a caller whose
+   * console runs on a different origin than this server needs this to receive the
+   * completion message at all. Omitted keeps the existing inline page.
+   */
+  completionRedirectUrl?: string;
 }
 
 /**
@@ -185,6 +207,10 @@ export class ConnectServer {
     });
 
     app.get("/api/connections", (context) => this.listConnections(context));
+    // Registered before /:service so "credential" can never be routed as a service name.
+    app.get("/api/connections/:service/credential", (context) =>
+      this.readConnectionCredential(context, context.req.param("service")),
+    );
     app.put("/api/connections/:service", (context) => this.upsertConnection(context, context.req.param("service")));
     app.delete("/api/connections/:service", (context) => this.disconnect(context, context.req.param("service")));
 
@@ -205,6 +231,10 @@ export class ConnectServer {
       this.deleteOAuthConfig(context, context.req.param("service")),
     );
     app.post("/api/oauth/authorizations", (context) => this.createOAuthAuthorization(context));
+    app.post("/api/connect/sessions", (context) => this.createConnectSession(context));
+    // Public by design: this is the URL an end user's browser opens, and it authenticates
+    // with the session token in the query string rather than an admin credential.
+    app.get("/connect", (context) => this.startConnectSession(context));
     app.get("/oauth/callback", (context) => this.completeOAuth(context));
     app.post("/mcp", (context) => this.handleMcp(context));
     app.get("/mcp", (context) => this.rejectMcpMethod(context));
@@ -323,6 +353,7 @@ export class ConnectServer {
     const index = await this.actionSearch.get();
     return context.json(
       await this.serializeSearchResults(
+        readTenant(context),
         searchActions(index, query.q, {
           service: query.service,
           limit: query.limit,
@@ -341,7 +372,11 @@ export class ConnectServer {
       const policy = (await this.getPolicySnapshot(context)).evaluate(action);
       return context.text(
         renderActionMarkdown(action, {
-          connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
+          connection: await this.options.connections.getConnectionSummary(
+            readTenant(context),
+            action.service,
+            readConnectionName(context),
+          ),
           providerPermissions: action.providerPermissions,
           policy,
         }),
@@ -410,12 +445,17 @@ export class ConnectServer {
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, await this.serializeSearchResults(results));
+    return writeRuntimeSuccess(context, await this.serializeSearchResults(readTenant(context), results));
   }
 
-  private async serializeSearchResults(results: ActionSearchResult[]): Promise<RuntimeActionSearchResult[]> {
+  private async serializeSearchResults(
+    tenant: Tenant,
+    results: ActionSearchResult[],
+  ): Promise<RuntimeActionSearchResult[]> {
     const authenticated = new Set(
-      await this.options.connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
+      await this.options.connections.listAuthenticatedServices(tenant, [
+        ...new Set(results.map((result) => result.service)),
+      ]),
     );
     return results.flatMap((result) => {
       const action = this.options.catalog.actionsById.get(result.id);
@@ -453,6 +493,7 @@ export class ConnectServer {
 
     const body = await readJsonBody(context);
     const input = body.input ?? {};
+    const tenant = readTenant(context, body);
     const connectionName = readConnectionName(context, body);
     const runtimeGrant = readRuntimeGrant(context);
     let policy: ActionPolicySnapshot;
@@ -469,7 +510,7 @@ export class ConnectServer {
     if (!policy.evaluate(action).allowed) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
+        await this.executeRuntimeAction(actionId, input, tenant, connectionName, policy, runtimeGrant),
       );
     }
     const idempotencyKey = readIdempotencyKey(context.req.header("idempotency-key"));
@@ -485,7 +526,7 @@ export class ConnectServer {
     if (!idempotencyKey.key) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
+        await this.executeRuntimeAction(actionId, input, tenant, connectionName, policy, runtimeGrant),
       );
     }
 
@@ -539,7 +580,7 @@ export class ConnectServer {
       return writeRuntimeActionHttpResult(context, claim.response);
     }
 
-    const result = await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant);
+    const result = await this.executeRuntimeAction(actionId, input, tenant, connectionName, policy, runtimeGrant);
     const completed = await this.options.idempotency.complete({
       keyHash,
       requestHash,
@@ -557,6 +598,7 @@ export class ConnectServer {
   private async executeRuntimeAction(
     actionId: string,
     input: unknown,
+    tenant: Tenant,
     connectionName: string | undefined,
     policy: ActionPolicySnapshot,
     runtimeGrant: RuntimeGrant | undefined,
@@ -566,9 +608,11 @@ export class ConnectServer {
         actionId,
         input,
         caller: "http",
+        tenant,
         connectionName,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
+        allowedConnections: runtimeGrant?.allowedConnections,
       });
       if (!run) {
         return serializeRuntimeFailure({
@@ -630,6 +674,7 @@ export class ConnectServer {
     const result = await this.proxyRunner.run({
       service,
       input: body,
+      tenant: readTenant(context, body),
       connectionName: readConnectionName(context, body),
       policy,
     });
@@ -649,7 +694,7 @@ export class ConnectServer {
   private async listRuntimeApps(context: Context): Promise<Response> {
     return writeRuntimeSuccess(
       context,
-      (await this.options.connections.listConnections()).map(serializeRuntimeConnectedApp),
+      (await this.options.connections.listConnections(readTenant(context))).map(serializeRuntimeConnectedApp),
     );
   }
 
@@ -657,7 +702,9 @@ export class ConnectServer {
     try {
       return writeRuntimeSuccess(
         context,
-        (await this.options.connections.listConnectionsByService(service)).map(serializeRuntimeConnectedApp),
+        (await this.options.connections.listConnectionsByService(readTenant(context), service)).map(
+          serializeRuntimeConnectedApp,
+        ),
       );
     } catch (error) {
       if (error instanceof ConnectionError) {
@@ -675,7 +722,10 @@ export class ConnectServer {
 
   private async listAuthenticatedRuntimeApps(context: Context): Promise<Response> {
     const services = context.req.queries("service") ?? [];
-    return writeRuntimeSuccess(context, await this.options.connections.listAuthenticatedServices(services));
+    return writeRuntimeSuccess(
+      context,
+      await this.options.connections.listAuthenticatedServices(readTenant(context), services),
+    );
   }
 
   private async handleMcp(context: Context): Promise<Response> {
@@ -687,6 +737,7 @@ export class ConnectServer {
       catalog: this.options.catalog,
       providerLoader: this.options.providerLoader,
       connections: this.options.connections,
+      tenant: readTenant(context),
       actions: this.options.actions,
       actionPolicy: this.actionPolicy,
       actionSearch: this.actionSearch,
@@ -717,7 +768,208 @@ export class ConnectServer {
   }
 
   private async listConnections(context: Context): Promise<Response> {
-    return context.json(await this.options.connections.listConnections());
+    return context.json(await this.options.connections.listConnections(readTenant(context)));
+  }
+
+  /**
+   * Mint a short-lived token that lets an end user's browser start an OAuth flow.
+   *
+   * Admin-only: deciding which tenant and which services a session may authorize is a
+   * trusted decision, and the resulting token is the thing that can safely be handed to
+   * a browser. The response mirrors the field names an existing caller already reads, so
+   * a client written against another connector needs no change.
+   */
+  private async createConnectSession(context: Context): Promise<Response> {
+    if (!this.options.connectSessions) {
+      return notFound(context);
+    }
+
+    const body = await readJsonBody(context);
+    const tenant = readTenant(context, body);
+    const connectionName = readConnectionName(context, body);
+    const allowedServices = readAllowedServices(body);
+    if (allowedServices.length === 0) {
+      // An empty allowlist would mint a token that can authorize nothing; far more
+      // likely it means the caller sent the wrong field name, so say so.
+      return jsonError(
+        context,
+        400,
+        "invalid_input",
+        "allowedServices must list at least one service this session may connect.",
+      );
+    }
+
+    for (const service of allowedServices) {
+      try {
+        this.options.connections.assertProviderAvailable(service);
+      } catch (error) {
+        if (error instanceof ConnectionError) {
+          const status = mapConnectionErrorStatus(error);
+          if (status === 409) {
+            return context.json({ error: { code: error.code, message: error.message } }, 409);
+          }
+          return jsonError(context, status, error.code, error.message);
+        }
+        throw error;
+      }
+    }
+
+    const { token, claims } = this.options.connectSessions.create({ tenant, allowedServices, connectionName });
+    const connectUrl = new URL("/connect", this.options.publicOrigin ?? "http://localhost:3000");
+    connectUrl.searchParams.set("token", token);
+    if (allowedServices.length === 1) {
+      connectUrl.searchParams.set("service", allowedServices[0]!);
+    }
+
+    this.options.logger?.info({ tenant, allowedServices }, "connect session created");
+    return context.json({
+      token,
+      connectUrl: connectUrl.toString(),
+      expiresAt: claims.expiresAt,
+      // snake_case aliases so a caller reading either convention works unmodified.
+      connect_link: connectUrl.toString(),
+      expires_at: claims.expiresAt,
+    });
+  }
+
+  /**
+   * Begin authorization on behalf of a connect session and redirect to the provider.
+   *
+   * The tenant comes from the signed token, never from the query string, so a user who
+   * edits the URL can only ever connect into the tenant the session was minted for.
+   */
+  private async startConnectSession(context: Context): Promise<Response> {
+    if (!this.options.connectSessions) {
+      return notFound(context);
+    }
+
+    const token = optionalString(context.req.query("token"));
+    if (!token) {
+      return jsonError(context, 400, "invalid_input", "token is required.");
+    }
+
+    const verified = this.options.connectSessions.verify(token);
+    if (!verified.ok) {
+      this.options.logger?.warn({ errorCode: verified.code }, "connect session rejected");
+      return jsonError(context, 401, verified.code, "Connect session is invalid or has expired.");
+    }
+
+    const service = optionalString(context.req.query("service")) ?? verified.claims.allowedServices[0];
+    if (!service || !connectSessionAllowsService(verified.claims, service)) {
+      this.options.logger?.warn(
+        { service, tenant: verified.claims.tenant },
+        "connect session rejected: service not allowed",
+      );
+      // jsonError's status union has no 403; emit the envelope directly.
+      return context.json(
+        {
+          error: { code: "service_not_allowed", message: "This connect session cannot connect that service." },
+        },
+        403,
+      );
+    }
+
+    try {
+      const authorization = await this.options.oauthFlow.startAuthorization({
+        tenant: verified.claims.tenant,
+        service,
+        connectionName: verified.claims.connectionName,
+      });
+      return context.redirect(authorization.authorizationUrl, 302);
+    } catch (error) {
+      if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
+        this.options.logger?.warn({ service, errorCode: error.code }, "connect session start failed");
+        return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Return a connection's decrypted credential.
+   *
+   * This is the one endpoint that hands a provider secret back to a caller, which is
+   * exactly what the rest of this runtime is designed not to do. It exists only to let
+   * an existing integration that already holds provider tokens migrate onto the gateway
+   * incrementally, and is expected to be removed once callers execute Actions instead.
+   *
+   * Three independent conditions must all hold, so no single misconfiguration exposes it:
+   *
+   *   1. `credentialReadEnabled` — opt in explicitly; otherwise the route 404s and is
+   *      indistinguishable from a build without it.
+   *   2. An admin token must be configured. `createLocalAuthMiddleware` treats admin
+   *      endpoints as open when no admin token is set (convenient for a local console,
+   *      unacceptable here), so this refuses rather than inheriting that default.
+   *   3. Admin scope. `/api/*` is never satisfied by a runtime token or JWT, so the
+   *      credentials agents hold cannot reach this route.
+   *
+   * Every call is audited, including refusals — an attempt to read a credential is worth
+   * seeing even when it failed.
+   */
+  private async readConnectionCredential(context: Context, service: string): Promise<Response> {
+    if (!this.options.credentialReadEnabled) {
+      return notFound(context);
+    }
+
+    const startedAt = new Date().toISOString();
+    const tenant = readTenant(context);
+    const connectionName = readConnectionName(context) ?? defaultConnectionName;
+
+    const audit = async (ok: boolean, errorCode?: string): Promise<void> => {
+      await this.options.actions.recordAuditEvent({
+        id: crypto.randomUUID(),
+        service,
+        actionId: "connection.read_credential",
+        caller: "http",
+        startedAt,
+        completedAt: new Date().toISOString(),
+        ok,
+        ...(errorCode ? { errorCode } : {}),
+      });
+    };
+
+    if (!this.options.auth?.adminToken) {
+      this.options.logger?.error(
+        { service, tenant, path: context.req.path },
+        "credential read refused: no admin token configured",
+      );
+      await audit(false, "admin_token_required");
+      // jsonError's status union has no 403; the admin envelope is emitted directly, as
+      // the agent.md handler already does for 409.
+      return context.json(
+        {
+          error: {
+            code: "admin_token_required",
+            message: "Credential read requires OOMOL_CONNECT_ADMIN_TOKEN to be configured.",
+          },
+        },
+        403,
+      );
+    }
+
+    try {
+      const credential = await this.options.connections.getCredential(tenant, service, connectionName);
+      if (!credential || credential.authType === "no_auth") {
+        await audit(false, "connection_not_found");
+        return jsonError(context, 404, "connection_not_found", `${service} connection not found: ${connectionName}.`);
+      }
+
+      this.options.logger?.warn({ service, tenant, connectionName }, "credential read");
+      await audit(true);
+      return context.json({ service, tenant, connectionName, credential });
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        await audit(false, error.code);
+        const status = mapConnectionErrorStatus(error);
+        if (status === 409) {
+          return context.json({ error: { code: error.code, message: error.message } }, 409);
+        }
+        return jsonError(context, status, error.code, error.message);
+      }
+
+      await audit(false, "internal_error");
+      throw error;
+    }
   }
 
   private async upsertConnection(context: Context, service: string): Promise<Response> {
@@ -736,6 +988,7 @@ export class ConnectServer {
     }
 
     const values = body.values ?? body;
+    const tenant = readTenant(context, body);
     const connectionName = readConnectionName(context, body);
     const logContext: ConnectionLogContext = {
       operation: "connect",
@@ -748,7 +1001,7 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithoutAuth(service, { connectionName }),
+        this.options.connections.connectWithoutAuth(tenant, service, { connectionName }),
         logContext,
       );
     }
@@ -756,7 +1009,7 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithApiKey(service, { values, connectionName }),
+        this.options.connections.connectWithApiKey(tenant, service, { values, connectionName }),
         logContext,
       );
     }
@@ -764,7 +1017,7 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithCustomCredential(service, { values, connectionName }),
+        this.options.connections.connectWithCustomCredential(tenant, service, { values, connectionName }),
         logContext,
       );
     }
@@ -791,7 +1044,7 @@ export class ConnectServer {
     this.options.logger?.info(logContext, "connection disconnect started");
     return this.writeConnectionResult(
       context,
-      this.options.connections.disconnect(service, connectionName),
+      this.options.connections.disconnect(readTenant(context), service, connectionName),
       logContext,
     );
   }
@@ -813,7 +1066,11 @@ export class ConnectServer {
       };
       this.options.logger?.info(logContext, "oauth authorization started");
 
-      const authorization = await this.options.oauthFlow.startAuthorization({ service, connectionName });
+      const authorization = await this.options.oauthFlow.startAuthorization({
+        tenant: readTenant(context, body),
+        service,
+        connectionName,
+      });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(
         {
@@ -853,12 +1110,22 @@ export class ConnectServer {
       return jsonError(context, 400, "invalid_input", "name is required.");
     }
 
-    const created = await this.options.runtimeTokens.createToken(name, readTokenPolicy(body, true));
+    // Token creation is an admin operation, so the tenant is read from the request here —
+    // this is the one place a tenant is chosen rather than derived. Everything the token
+    // later does is pinned to whatever is recorded now.
+    const created = await this.options.runtimeTokens.createToken(
+      name,
+      readTokenPolicy(body, true),
+      readTenant(context, body),
+      readAllowedConnections(body),
+    );
     return context.json({
       token: created.token,
       record: {
         id: created.record.id,
         name: created.record.name,
+        tenant: created.record.tenant,
+        allowedConnections: created.record.allowedConnections,
         allowedActions: created.record.allowedActions,
         blockedActions: created.record.blockedActions,
         allowedProxies: created.record.allowedProxies,
@@ -961,12 +1228,16 @@ export class ConnectServer {
     }
 
     let service: string;
+    let completion: OAuthAuthorizationComplete;
     try {
-      service = (await this.options.oauthFlow.completeAuthorization({ state, code })).service;
+      completion = await this.options.oauthFlow.completeAuthorization({ state, code });
+      service = completion.service;
       this.options.logger?.info(
         {
           ...logContext,
           service,
+          tenant: completion.tenant,
+          connectionName: completion.connectionName,
         },
         "oauth callback completed",
       );
@@ -984,7 +1255,16 @@ export class ConnectServer {
       throw error;
     }
 
-    return context.html(renderOAuthCompletionPage(service));
+    if (this.options.completionRedirectUrl) {
+      const redirectUrl = new URL(this.options.completionRedirectUrl);
+      redirectUrl.searchParams.set("service", service);
+      redirectUrl.searchParams.set("connectionId", completion.connectionId);
+      redirectUrl.searchParams.set("tenant", completion.tenant);
+      redirectUrl.searchParams.set("connectionName", completion.connectionName);
+      return context.redirect(redirectUrl.toString());
+    }
+
+    return context.html(renderOAuthCompletionPage(service, completion));
   }
 
   private async writeConnectionResult(
@@ -1102,6 +1382,53 @@ function readConnectionName(context: Context, body?: Record<string, unknown>): s
     optionalString(context.req.query("connectionName")) ??
     optionalString(context.req.query("alias"))
   );
+}
+
+/**
+ * Resolve the tenant a request operates within.
+ *
+ * Note the asymmetry with `readConnectionName`: a connection name is a caller's free
+ * choice among connections it already owns, but a tenant is an identity claim. Hence the
+ * precedence:
+ *
+ *   1. The authenticated runtime grant. **Authoritative** — a token carries the tenant it
+ *      was issued for, and request-supplied values are ignored entirely. This is what
+ *      stops an agent from reaching another tenant by setting a header or passing a
+ *      `connectionName` from somewhere else.
+ *   2. An explicit header/query. Reachable only when there is no runtime grant, i.e. by
+ *      admin callers, who are already trusted with every tenant's data.
+ *   3. `defaultTenant`, which keeps single-tenant deployments working unchanged.
+ *
+ * The early return in step 1 is the security control; do not "fall through" to the header
+ * when a grant is present, even if the header names the same tenant.
+ */
+function readTenant(context: Context, body?: Record<string, unknown>): Tenant {
+  const grant = readRuntimeGrant(context);
+  if (grant) {
+    return grant.tenant;
+  }
+
+  return (
+    optionalString(body?.tenant) ??
+    optionalString(context.req.header("x-oo-connector-tenant")) ??
+    optionalString(context.req.query("tenant")) ??
+    defaultTenant
+  );
+}
+
+/** Services a connect session may authorize. Accepts one name or a list. */
+function readAllowedServices(body: Record<string, unknown>): string[] {
+  const single = optionalString(body.service);
+  if (single) {
+    return [single];
+  }
+
+  const list = body.allowedServices ?? body.allowed_integrations;
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0);
 }
 
 type SearchQuery =
