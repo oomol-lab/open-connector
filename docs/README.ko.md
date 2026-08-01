@@ -15,7 +15,7 @@
 
 </div>
 
-OpenConnector는 AI Agent를 위한 오픈 소스 connector gateway이자 Composio의 대안입니다.
+OpenConnector는 AI Agent를 위한 오픈 소스 connector gateway이자 Pipedream/Composio의 대안입니다.
 사용자의 앱 계정을 한 번 연결하면 1,000개 이상의 provider와 10,000개 이상의 사전 구축된 Action을
 Agent와 애플리케이션에 공통 catalog로 제공할 수 있습니다.
 

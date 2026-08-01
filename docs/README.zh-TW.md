@@ -15,7 +15,7 @@
 
 </div>
 
-OpenConnector 是一套供 AI Agent 使用的開放原始碼連接器閘道，也是 Composio 的替代方案。
+OpenConnector 是一套供 AI Agent 使用的開放原始碼連接器閘道，也是 Pipedream/Composio 的替代方案。
 只要連線一次使用者的應用程式帳號，就能向 Agent 與應用程式提供共用目錄，其中包含 1,000 多個服務提供者及 10,000 多個預先建置的 Action。
 
 <table>

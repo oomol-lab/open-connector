@@ -15,7 +15,7 @@
 
 </div>
 
-OpenConnector est un connector gateway open source pour AI agents, et une alternative à Composio.
+OpenConnector est un connector gateway open source pour AI agents, et une alternative à Pipedream/Composio.
 Connectez les comptes d'apps utilisateur une fois, puis exposez un catalog partagé de 1,000+
 providers et 10 000+ Actions prêtes à l'emploi aux agents et applications.
 
