@@ -87,7 +87,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
       {
         ...pageInput,
         q: s.string("Search query."),
-        id: s.string("Filter locally by template ID."),
+        id: s.string("Only return the template with this ID."),
         shared: s.boolean("Whether to include shared templates."),
         deleted: s.boolean("Whether to include deleted templates."),
         folder_uuid: s.string("Folder UUID filter."),
