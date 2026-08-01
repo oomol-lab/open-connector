@@ -28,7 +28,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://your-instance.app.n8n.cloud",
           description:
-            "Your n8n instance URL, such as https://your-instance.app.n8n.cloud for n8n Cloud or your self-hosted public HTTPS base URL. URLs ending in /api/v1 are also accepted.",
+            "Your n8n instance URL, such as https://your-instance.app.n8n.cloud for n8n Cloud or your self-hosted public HTTPS base URL. LAN and overlay-network instances (including plain http://) require the deployment to set OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true. URLs ending in /api/v1 are also accepted.",
         },
       ],
     },
