@@ -21,8 +21,8 @@ Agent와 애플리케이션에 공통 catalog로 제공할 수 있습니다.
 
 | <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
 | --- | --- | --- |
-| 지원되는 provider를 위한 managed OAuth app, hosted runtime, 매월 제공되는 Connect credits를 이용합니다. 직접 배포하거나 OAuth app을 등록할 필요가 없습니다. | 자신의 Cloudflare 계정에서 Workers, D1, R2, Static Assets를 사용합니다. 배포는 직접 관리합니다. | Docker 또는 Node.js로 로컬이나 자체 인프라에서 실행합니다. Storage와 OAuth app은 직접 관리합니다. |
-| <div align="center"><a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Cloudflare에 배포</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>OpenConnector Self-hosting</strong></a></div> |
+| Managed OAuth와 hosted runtime을 바로 사용할 수 있습니다. 배포하거나 OAuth app을 설정할 필요가 없습니다. | Cloudflare 계정에서 Workers, D1, R2, Static Assets를 사용합니다. 배포와 OAuth app은 직접 관리합니다. | Docker 또는 Node.js로 로컬이나 자체 인프라에서 실행합니다. Storage와 OAuth app은 직접 관리합니다. |
+| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Cloudflare에 배포</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></div> |
 
 애플리케이션 코드에서는 [Connector SDK](https://github.com/oomol-lab/connector-sdk), 로컬 Agent
 relay에는 [oo CLI](https://github.com/oomol-lab/oo-cli), Agent host에는 MCP, custom client에는

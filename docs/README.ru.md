@@ -21,8 +21,8 @@ OpenConnector — open-source connector gateway для AI agents и альтер
 
 | <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
 | --- | --- | --- |
-| Готовые OAuth apps для поддерживаемых providers, hosted runtime и ежемесячные Connect credits. Не нужно разворачивать runtime или регистрировать OAuth apps. | Workers, D1, R2 и Static Assets в вашем аккаунте Cloudflare. Вы самостоятельно управляете deployment. | Запуск локально или в собственной инфраструктуре через Docker или Node.js. Вы управляете storage и OAuth apps. |
-| <div align="center"><a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Развернуть в Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Развернуть OpenConnector самостоятельно</strong></a></div> |
+| Managed OAuth и hosted runtime готовы к использованию. Не нужно разворачивать runtime или настраивать OAuth apps. | Workers, D1, R2 и Static Assets в вашем аккаунте Cloudflare. Вы самостоятельно управляете deployment и OAuth apps. | Запуск локально или в собственной инфраструктуре через Docker или Node.js. Вы управляете storage и OAuth apps. |
+| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Развернуть в Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></div> |
 
 В application code используйте [Connector SDK](https://github.com/oomol-lab/connector-sdk), для
 local-agent relay — [oo CLI](https://github.com/oomol-lab/oo-cli), для agent hosts — MCP, для

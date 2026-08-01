@@ -20,8 +20,8 @@ OpenConnector 是一套供 AI Agent 使用的開放原始碼連接器閘道，�
 
 | <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="自行代管" width="140"> |
 | --- | --- | --- |
-| OOMOL 為支援的服務提供者提供代管 OAuth 應用程式、代管執行階段與每月 Connect 點數。無須自行部署或申請 OAuth 應用程式。 | 在自己的 Cloudflare 帳號中使用 Workers、D1、R2 與 Static Assets。部署由你負責維護。 | 使用 Docker 或 Node.js 在本機或自己的基礎架構中執行。儲存空間與 OAuth 應用程式由你負責管理。 |
-| <div align="center"><a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL 代管</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>部署至 Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>自行代管 OpenConnector</strong></a></div> |
+| 代管 OAuth 與執行階段，開箱即用。無須部署或設定 OAuth 應用程式。 | 在你的 Cloudflare 帳號中使用 Workers、D1、R2 與 Static Assets。部署與 OAuth 應用程式由你負責管理。 | 使用 Docker 或 Node.js 在本機或自己的基礎架構中執行。儲存空間與 OAuth 應用程式由你負責管理。 |
+| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL 代管</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>部署至 Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>自行代管</strong></a></div> |
 
 在應用程式程式碼中使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，以
 [oo CLI](https://github.com/oomol-lab/oo-cli) 作為本機 Agent 的轉接工具；Agent 主機可使用 MCP，

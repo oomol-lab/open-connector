@@ -21,8 +21,8 @@ catalog を Agent とアプリケーションに公開できます。
 
 | <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="セルフホスト" width="140"> |
 | --- | --- | --- |
-| 対応 provider 向けのマネージド OAuth app、hosted runtime、毎月の Connect credits を利用できます。デプロイや OAuth app の登録は不要です。 | 自分の Cloudflare アカウントで Workers、D1、R2、Static Assets を使用します。デプロイは自身で管理します。 | Docker または Node.js を使い、ローカル環境や自分の infrastructure で実行します。storage と OAuth app は自身で管理します。 |
-| <div align="center"><a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Cloudflare にデプロイ</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>OpenConnector をセルフホスト</strong></a></div> |
+| マネージド OAuth と hosted runtime をすぐに利用できます。デプロイや OAuth app の設定は不要です。 | Cloudflare アカウントで Workers、D1、R2、Static Assets を使用します。デプロイと OAuth app は自身で管理します。 | Docker または Node.js を使い、ローカル環境や自分の infrastructure で実行します。storage と OAuth app は自身で管理します。 |
+| <div align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Cloudflare にデプロイ</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>セルフホスト</strong></a></div> |
 
 アプリコードには [Connector SDK](https://github.com/oomol-lab/connector-sdk)、ローカル
 Agent の relay には [oo CLI](https://github.com/oomol-lab/oo-cli)、Agent host には
