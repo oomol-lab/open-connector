@@ -116,6 +116,16 @@ describe("generic IMAP host access", () => {
     }
   });
 
+  it("preserves the application password exactly", () => {
+    const credential = genericImapRuntimeConfig.readCredential({
+      email: "user@example.com",
+      password: "  application password  ",
+      imapHost: "imap.example.com",
+    });
+
+    expect(credential.authorizationCode).toBe("  application password  ");
+  });
+
   it("reports the offending field in the rejection message", () => {
     expect(() => readCredential("169.254.169.254")).toThrow(/IMAP host/);
     expect(() => readCredential("imap.gmail.com", "169.254.169.254")).toThrow(/SMTP host/);

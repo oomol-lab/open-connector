@@ -1,7 +1,7 @@
 import type { GuardedFetchDnsLookup } from "./guarded-fetch.ts";
 
 import { describe, expect, it, vi } from "vitest";
-import { createGuardedFetch, unwrapGuardedFetch } from "./guarded-fetch.ts";
+import { createGuardedFetch, resolveGuardedEgressTarget, unwrapGuardedFetch } from "./guarded-fetch.ts";
 
 interface RecordedCall {
   url: string;
@@ -39,6 +39,35 @@ function lookupTable(entries: Record<string, Array<{ address: string; family: nu
     return result;
   };
 }
+
+describe("resolveGuardedEgressTarget", () => {
+  it("returns every screened address for transports that pin DNS results", async () => {
+    const addresses = [
+      { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 },
+      { address: "93.184.216.34", family: 4 },
+    ];
+
+    const target = await resolveGuardedEgressTarget("https://MAIL.EXAMPLE.COM", {
+      fieldName: "mail host",
+      createError: (message) => new Error(message),
+      lookup: async () => addresses,
+    });
+
+    expect(target.url.hostname).toBe("mail.example.com");
+    expect(target.addresses).toEqual(addresses);
+  });
+
+  it("lets non-fetch transports classify DNS failures separately", async () => {
+    await expect(
+      resolveGuardedEgressTarget("https://mail.example.com", {
+        fieldName: "mail host",
+        createError: (message) => new Error(`guard: ${message}`),
+        createResolutionError: (message) => new Error(`dns: ${message}`),
+        lookup: async () => [],
+      }),
+    ).rejects.toThrow("dns: mail host could not be resolved for validation");
+  });
+});
 
 describe("createGuardedFetch redirects", () => {
   it("follows public redirects with manual hops and returns the final response", async () => {

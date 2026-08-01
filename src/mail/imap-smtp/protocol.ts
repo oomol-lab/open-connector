@@ -1,18 +1,21 @@
+import type { GuardedFetchDnsLookup, ResolvedAddress } from "../../core/guarded-fetch.ts";
 import type { FetchMessageObject, ImapFlowOptions, MessageStructureObject, SearchObject } from "imapflow";
+import type { LookupFunction, Socket, TcpNetConnectOpts } from "node:net";
 
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
-import { lookup as dnsLookup } from "node:dns/promises";
 import { createWriteStream } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
-import { networkInterfaces, tmpdir } from "node:os";
+import { connect as connectSocket } from "node:net";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import nodemailer from "nodemailer";
-import { isBlockedIpAddress, isIpAddress, isIpv4Address, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { resolveGuardedEgressTarget } from "../../core/guarded-fetch.ts";
+import { isIpAddress, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { mailAttachmentDownloadByteLimit, mailConnectionTimeoutMs, mailImapPort, mailSmtpPort } from "./config.ts";
 import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";
@@ -192,9 +195,8 @@ export interface MailProtocol {
 export interface MailProtocolDependencies {
   createSmtpTransport?: (config: Record<string, unknown>) => MailSmtpTransport;
   createImapClient?: (config: Record<string, unknown>) => MailImapClient;
-  resolveHostAddresses?: (hostname: string) => Promise<string[]>;
-  /** Local interface table, used to tell which address families the deployment can route. */
-  readNetworkInterfaces?: () => ReturnType<typeof networkInterfaces>;
+  lookup?: GuardedFetchDnsLookup;
+  connectSocket?: (options: TcpNetConnectOpts) => Socket;
 }
 
 interface MailSmtpTransport {
@@ -481,100 +483,48 @@ async function moveMessageToFolder(client: RuntimeImapClient, uid: number, targe
   }
 }
 
-/**
- * Resolve a mailbox host to an address that is safe to connect to.
- *
- * `assertPublicHttpUrl` screens the hostname when the credential is read, but
- * nothing stops the DNS record from pointing at an internal address by the time
- * the socket is opened: IMAP and SMTP connect over raw TLS, so the guarded fetch
- * never sees them. Resolving here and handing the connection library a literal
- * address closes that window — both `imapflow` and `nodemailer` skip their own
- * lookup when the host is already an IP, so no second, unchecked resolution can
- * happen. The hostname travels separately as `servername`, so SNI and
- * certificate verification still run against the name the user typed. That
- * option belongs at the top level of both client configs, not nested under
- * `tls`: `imapflow` reads `options.servername` (imap-flow.js:282) and
- * `nodemailer` reads it in the SMTPConnection constructor
- * (smtp-connection/index.js:84), each falling back to the host only when it is
- * absent. Drop it and a pinned literal address is checked against the
- * certificate as an IP, which fails for every certificate without an IP SAN.
- *
- * Every resolved address must pass: a host answering with one public and one
- * private address would otherwise slip through, since the library is free to
- * pick either one. An empty answer is rejected rather than allowed through:
- * the screening loop would pass vacuously over it.
- */
+interface MailHostTarget {
+  host: string;
+  servername?: string;
+  lookup?: LookupFunction;
+}
+
 async function pinMailHost(
   host: string,
   fieldName: string,
   config: MailProtocolConfig,
   deps: MailProtocolDependencies,
-): Promise<{ host: string; servername?: string }> {
+): Promise<MailHostTarget> {
   if (!config.enforceHostNetworkPolicy) {
     return { host };
   }
 
-  const allowPrivateNetwork = isPrivateNetworkAccessAllowed();
-
-  if (isIpAddress(host)) {
-    if (isBlockedIpAddress(host, allowPrivateNetwork)) {
-      throw new MailProtocolError("blocked_host", `${fieldName} ${host} is a private or reserved address.`);
-    }
-    return { host };
+  const target = await resolveGuardedEgressTarget(`https://${host}`, {
+    fieldName,
+    createError: (message) => new MailProtocolError("blocked_host", message),
+    createResolutionError: (message) => new MailProtocolError("network", message),
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+    lookup: deps.lookup,
+  });
+  if (target.addresses.length === 0) {
+    throw new MailProtocolError("network", `${fieldName} could not be resolved for validation.`);
   }
-
-  const addresses = deps.resolveHostAddresses
-    ? await deps.resolveHostAddresses(host)
-    : (await dnsLookup(host, { all: true, verbatim: true })).map((entry) => entry.address);
-
-  if (!addresses.length) {
-    throw new MailProtocolError("network", `${fieldName} ${host} could not be resolved.`);
-  }
-
-  for (const address of addresses) {
-    if (isBlockedIpAddress(address, allowPrivateNetwork)) {
-      // The resolved address is deliberately left out of the message: it would
-      // turn a rejected mailbox host into an internal name-to-address oracle,
-      // which is exactly what the guard exists to prevent. The shared egress
-      // guard withholds it for the same reason.
-      throw new MailProtocolError("blocked_host", `${fieldName} ${host} resolves to a private or reserved address.`);
-    }
-  }
-
-  return { host: selectConnectableAddress(addresses, deps), servername: host };
+  return {
+    host: target.url.hostname,
+    ...(!isIpAddress(target.url.hostname) ? { servername: target.url.hostname } : {}),
+    lookup: createPinnedLookup(target.addresses),
+  };
 }
 
-/**
- * Pick which screened address to connect to.
- *
- * Pinning takes address selection away from the transport, so it has to make the
- * choice the transport would have made. `nodemailer` resolves A records before
- * AAAA and skips families the host has no external interface for; `imapflow`
- * leaves the choice to Node, whose Happy Eyeballs retries the other family after
- * a failed attempt. Handing either one a lone AAAA address on an IPv4-only
- * deployment — a plain Docker bridge network, typically — would turn a working
- * mailbox into ENETUNREACH, so the same preference is applied here: families the
- * host can actually route first, then IPv4 before IPv6.
- */
-function selectConnectableAddress(addresses: string[], deps: MailProtocolDependencies): string {
-  const interfaces = (deps.readNetworkInterfaces ?? networkInterfaces)();
-  const routable = addresses.filter((address) => hasInterfaceForFamily(address, interfaces));
-  const candidates = routable.length > 0 ? routable : addresses;
-  return candidates.find((address) => isIpv4Address(address)) ?? (candidates[0] as string);
-}
-
-/**
- * Whether the deployment has a non-internal interface in the address's family.
- *
- * A table with no external interface at all — a container on a loopback-only
- * network — leaves every family unroutable, so the caller falls back to the
- * resolved list rather than treating the host as unreachable.
- */
-function hasInterfaceForFamily(address: string, interfaces: ReturnType<typeof networkInterfaces>): boolean {
-  const family = isIpv4Address(address) ? "IPv4" : "IPv6";
-  return Object.values(interfaces).some((entries) =>
-    entries?.some((entry) => !entry.internal && entry.family === family),
-  );
+function createPinnedLookup(addresses: ResolvedAddress[]): LookupFunction {
+  return ((_hostname, options, callback) => {
+    if (typeof options === "object" && options.all) {
+      callback(null, addresses);
+      return;
+    }
+    const first = addresses[0]!;
+    callback(null, first.address, first.family);
+  }) as LookupFunction;
 }
 
 async function createSmtpTransport(
@@ -588,6 +538,7 @@ async function createSmtpTransport(
     host: target.host,
     ...(target.servername ? { servername: target.servername } : {}),
     port,
+    ...(target.lookup ? { getSocket: createSmtpSocketFactory(target.host, port, target.lookup, deps) } : {}),
     // Implicit TLS is the wire convention on 465 only. Every other submission
     // port starts in cleartext and upgrades, so STARTTLS is demanded rather than
     // taken opportunistically: nodemailer then aborts instead of sending the
@@ -619,6 +570,7 @@ async function createImapClient(
   const clientConfig = {
     host: target.host,
     ...(target.servername ? { servername: target.servername } : {}),
+    ...(target.lookup ? { tls: { lookup: target.lookup, autoSelectFamily: true } } : {}),
     port: mailImapPort,
     secure: true,
     auth: {
@@ -632,6 +584,38 @@ async function createImapClient(
   };
 
   return deps.createImapClient ? deps.createImapClient(clientConfig) : new ImapFlow(clientConfig as ImapFlowOptions);
+}
+
+function createSmtpSocketFactory(host: string, port: number, lookup: LookupFunction, deps: MailProtocolDependencies) {
+  return (_options: unknown, callback: (error: Error | null, options?: { connection: Socket }) => void): void => {
+    const socket = (deps.connectSocket ?? connectSocket)({ host, port, lookup, autoSelectFamily: true });
+    let settled = false;
+
+    const finish = (error?: Error): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      socket.removeListener("connect", onConnect);
+      socket.removeListener("error", onError);
+      socket.removeListener("timeout", onTimeout);
+      socket.setTimeout(0);
+      callback(error ?? null, error ? undefined : { connection: socket });
+    };
+    const onConnect = (): void => finish();
+    const onError = (error: Error): void => finish(error);
+    const onTimeout = (): void => {
+      const error = new Error("Connection timeout") as NodeJS.ErrnoException;
+      error.code = "ETIMEDOUT";
+      socket.destroy();
+      finish(error);
+    };
+
+    socket.once("connect", onConnect);
+    socket.once("error", onError);
+    socket.once("timeout", onTimeout);
+    socket.setTimeout(mailConnectionTimeoutMs);
+  };
 }
 
 async function withImapClient<T>(

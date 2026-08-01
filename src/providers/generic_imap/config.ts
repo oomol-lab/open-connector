@@ -22,7 +22,7 @@ export const genericImapRuntimeConfig: MailRuntimeConfig = {
   enforceHostNetworkPolicy: true,
   readCredential(values): MailCredential {
     const email = values.email?.trim() ?? "";
-    const authorizationCode = values.password?.trim() ?? "";
+    const authorizationCode = values.password ?? "";
 
     const parts = email.split("@");
     const hasWhitespace = [...email].some((character) => character.trim().length === 0);
@@ -97,13 +97,10 @@ function defaultSmtpHost(imapHost: string): string {
  * Validate a user-supplied mailbox host against the shared SSRF policy and
  * return its normalized form.
  *
- * IMAP and SMTP connect over implicit TLS sockets instead of `providerFetch`, so
- * the guarded fetch never sees these hosts and the credential path is the only
- * place the policy can be applied. The value is checked as a bare hostname first
- * so that scheme, userinfo, port, or path forms cannot smuggle a different
- * target past the URL parser, then handed to the shared `assertPublicHttpUrl`
- * guard: this provider inherits the cloud-metadata, loopback, link-local,
- * reserved, and IPv6 blocklists rather than re-implementing them. Private
+ * The value is checked as a bare hostname first so that scheme, userinfo, port,
+ * or path forms cannot smuggle a different target past the URL parser, then
+ * handed to the shared `assertPublicHttpUrl` guard. The socket path performs the
+ * shared resolved-address check again immediately before connecting. Private
  * (RFC 1918 / CGNAT / private-suffix) mailboxes stay blocked unless the
  * deployment opts in through `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`.
  */

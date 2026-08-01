@@ -267,6 +267,8 @@ export interface GuardedEgressUrlOptions {
   fieldName: string;
   /** Error factory for guard violations. */
   createError: (message: string) => Error;
+  /** Error factory for DNS resolution failures. Defaults to {@link createError}. */
+  createResolutionError?: (message: string) => Error;
   /** Allow RFC 1918 and other private targets while retaining reserved-target guards. */
   allowPrivateNetwork?: boolean;
   /**
@@ -274,6 +276,12 @@ export interface GuardedEgressUrlOptions {
    * `undefined` uses the module default (`node:dns` where available).
    */
   lookup?: GuardedFetchDnsLookup | null;
+}
+
+/** Normalized URL and DNS answers accepted by the shared provider egress policy. */
+export interface GuardedEgressTarget {
+  url: URL;
+  addresses: ResolvedAddress[];
 }
 
 /**
@@ -288,6 +296,17 @@ export interface GuardedEgressUrlOptions {
  * the same policy instead of growing a second, drifting implementation.
  */
 export async function assertGuardedEgressUrl(value: string, options: GuardedEgressUrlOptions): Promise<URL> {
+  return (await resolveGuardedEgressTarget(value, options)).url;
+}
+
+/**
+ * Apply the shared SSRF policy and return the screened DNS results for a
+ * transport that must pin the connection without resolving the hostname again.
+ */
+export async function resolveGuardedEgressTarget(
+  value: string,
+  options: GuardedEgressUrlOptions,
+): Promise<GuardedEgressTarget> {
   const allowPrivateNetwork = options.allowPrivateNetwork === true;
   const lookup = options.lookup === undefined ? await resolveDefaultLookup() : options.lookup;
   const url = assertPublicHttpUrl(value, {
@@ -295,17 +314,19 @@ export async function assertGuardedEgressUrl(value: string, options: GuardedEgre
     createError: options.createError,
     allowPrivateNetwork,
   });
-  await assertResolvedAddressesAllowed(url.hostname, options.fieldName, {
+  const addresses = await assertResolvedAddressesAllowed(url.hostname, options.fieldName, {
     allowPrivateNetwork,
     createError: options.createError,
+    createResolutionError: options.createResolutionError ?? options.createError,
     lookup,
   });
-  return url;
+  return { url, addresses };
 }
 
 interface ResolvedAddressPolicy {
   allowPrivateNetwork: boolean;
   createError: (message: string) => Error;
+  createResolutionError: (message: string) => Error;
   lookup: GuardedFetchDnsLookup | null | undefined;
 }
 
@@ -313,13 +334,16 @@ async function assertResolvedAddressesAllowed(
   hostname: string,
   fieldName: string,
   policy: ResolvedAddressPolicy,
-): Promise<void> {
+): Promise<ResolvedAddress[]> {
   // Skip resolution only for canonical IPv4 literals, which assertPublicHttpUrl
   // has already address-validated. Looser numeric forms (octal, out-of-range)
   // that it did not recognize as an IP must go through DNS validation, since a
   // resolver may still interpret them as a reserved address.
-  if (!policy.lookup || isIpv4Address(hostname)) {
-    return;
+  if (isIpv4Address(hostname)) {
+    return [{ address: hostname, family: 4 }];
+  }
+  if (!policy.lookup) {
+    return [];
   }
 
   let results: ResolvedAddress[];
@@ -330,19 +354,20 @@ async function assertResolvedAddressesAllowed(
     // silently skip address validation, or a forced-failure / split-resolver
     // could bypass the guard. A genuinely unresolvable host fails here instead
     // of at the transport, with the same net outcome (the request is rejected).
-    throw policy.createError(`${fieldName} could not be resolved for validation`);
+    throw policy.createResolutionError(`${fieldName} could not be resolved for validation`);
   }
   if (!Array.isArray(results)) {
-    throw policy.createError(`${fieldName} could not be resolved for validation`);
+    throw policy.createResolutionError(`${fieldName} could not be resolved for validation`);
   }
   if (results.length === 0) {
-    throw policy.createError(`${fieldName} could not be resolved for validation`);
+    throw policy.createResolutionError(`${fieldName} could not be resolved for validation`);
   }
   for (const entry of results) {
     if (entry && typeof entry.address === "string" && isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
       throw policy.createError(`${fieldName} must not resolve to private or reserved IP addresses`);
     }
   }
+  return results;
 }
 
 async function resolveDefaultLookup(): Promise<GuardedFetchDnsLookup | null | undefined> {
