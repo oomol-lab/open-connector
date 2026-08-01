@@ -22,7 +22,7 @@ providers et 10 000+ Actions prêtes à l'emploi aux agents et applications.
 | <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="Auto-hébergé" width="140"> |
 | --- | --- | --- |
 | Des apps OAuth gérées pour les providers pris en charge, un runtime hébergé et des Connect credits mensuels. Aucun déploiement ni enregistrement d'app OAuth n'est nécessaire. | Utilisez Workers, D1, R2 et Static Assets dans votre compte Cloudflare. Vous gérez le déploiement. | Exécutez OpenConnector en local ou sur votre infrastructure avec Docker ou Node.js. Vous gérez le stockage et les apps OAuth. |
-| <a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL hébergé</strong></a> | **[Déployer sur Cloudflare](cloudflare.md)** | **[Auto-héberger OpenConnector](https://oomol.com/docs/openconnector-self-hosting/)** |
+| <div align="center"><a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL hébergé</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>Déployer sur Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Auto-héberger OpenConnector</strong></a></div> |
 
 Utilisez le [Connector SDK](https://github.com/oomol-lab/connector-sdk) dans le code applicatif,
 [oo CLI](https://github.com/oomol-lab/oo-cli) comme relais pour les agents locaux, MCP pour les

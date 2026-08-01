@@ -22,7 +22,7 @@ Agent 和应用。
 | <img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="../assets/deployment-options/self-hosted.svg" alt="自托管" width="140"> |
 | --- | --- | --- |
 | OOMOL 为支持的 provider 提供托管 OAuth 应用、托管 runtime 和每月 Connect 点数。无需自行部署或申请 OAuth 应用。 | 在自己的 Cloudflare 账号中使用 Workers、D1、R2 和 Static Assets。部署由你负责维护。 | 使用 Docker 或 Node.js 在本地或自己的基础设施中运行。存储和 OAuth 应用由你负责管理。 |
-| <a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL 托管</strong></a> | **[部署到 Cloudflare](cloudflare.md)** | **[自托管 OpenConnector](https://oomol.com/docs/openconnector-self-hosting/)** |
+| <div align="center"><a href="https://oomol.com/docs/connector-saas/"><img src="../assets/deployment-options/oomol-mark.svg" alt="" width="16"> <strong>OOMOL 托管</strong></a></div> | <div align="center"><a href="cloudflare.md"><strong>部署到 Cloudflare</strong></a></div> | <div align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>自托管 OpenConnector</strong></a></div> |
 
 应用代码使用 [Connector SDK](https://github.com/oomol-lab/connector-sdk)，本地 Agent 使用
 [oo CLI](https://github.com/oomol-lab/oo-cli) 中继，Agent host 使用 MCP，自定义客户端使用
