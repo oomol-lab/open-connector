@@ -56,6 +56,45 @@ export const giteaActionHandlers: Record<GiteaActionName, GiteaActionHandler> = 
   create_issue_comment(input, context) {
     return createIssueComment(input, context);
   },
+  list_pull_requests(input, context) {
+    return listPullRequests(input, context);
+  },
+  get_pull_request(input, context) {
+    return getPullRequest(input, context);
+  },
+  create_pull_request(input, context) {
+    return createPullRequest(input, context);
+  },
+  update_pull_request(input, context) {
+    return updatePullRequest(input, context);
+  },
+  merge_pull_request(input, context) {
+    return mergePullRequest(input, context);
+  },
+  list_pull_request_files(input, context) {
+    return listPullRequestFiles(input, context);
+  },
+  list_pull_request_reviews(input, context) {
+    return listPullRequestReviews(input, context);
+  },
+  create_pull_request_review(input, context) {
+    return createPullRequestReview(input, context);
+  },
+  submit_pull_request_review(input, context) {
+    return submitPullRequestReview(input, context);
+  },
+  get_repository_contents(input, context) {
+    return getRepositoryContents(input, context);
+  },
+  create_file(input, context) {
+    return createFile(input, context);
+  },
+  update_file(input, context) {
+    return updateFile(input, context);
+  },
+  delete_file(input, context) {
+    return deleteFile(input, context);
+  },
 };
 
 export async function validateGiteaCredential(
@@ -295,6 +334,366 @@ async function createIssueComment(input: Record<string, unknown>, context: Gitea
     notFoundAsInvalidInput: true,
   });
   return payload;
+}
+
+async function listPullRequests(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const { items, totalCount } = await requestGiteaArray({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
+    query: compactObject({
+      state: optionalString(input.state),
+      base_branch: optionalString(input.baseBranch),
+      sort: optionalString(input.sort),
+      milestone: readOptionalPositiveInteger(input.milestone, "milestone"),
+      labels: joinCsv(asOptionalArray(input.labels), "labels"),
+      poster: optionalString(input.poster),
+      page: readOptionalPositiveInteger(input.page, "page"),
+      limit: readOptionalPositiveInteger(input.limit, "limit"),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+
+  return compactObject({
+    pull_requests: items,
+    total_count: totalCount,
+  });
+}
+
+async function getPullRequest(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}`,
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function createPullRequest(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
+    method: "POST",
+    body: compactObject({
+      title: requireInputString(input.title, "title"),
+      body: optionalString(input.body),
+      base: requireInputString(input.base, "base"),
+      head: requireInputString(input.head, "head"),
+      assignees: normalizeOptionalStringArray(input.assignees, "assignees"),
+      labels: normalizeOptionalPositiveIntegerArray(input.labelIds, "labelIds"),
+      milestone: readOptionalPositiveInteger(input.milestoneId, "milestoneId"),
+      reviewers: normalizeOptionalStringArray(input.reviewers, "reviewers"),
+      team_reviewers: normalizeOptionalStringArray(input.teamReviewers, "teamReviewers"),
+      allow_maintainer_edit: optionalBoolean(input.allowMaintainerEdit),
+      due_date: optionalString(input.dueDate),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function updatePullRequest(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}`,
+    method: "PATCH",
+    body: compactObject({
+      title: optionalString(input.title),
+      body: optionalString(input.body),
+      state: optionalString(input.state),
+      base: optionalString(input.base),
+      assignees: normalizeOptionalStringArray(input.assignees, "assignees"),
+      labels: normalizeOptionalPositiveIntegerArray(input.labelIds, "labelIds"),
+      milestone: readOptionalPositiveInteger(input.milestoneId, "milestoneId"),
+      allow_maintainer_edit: optionalBoolean(input.allowMaintainerEdit),
+      unset_due_date: optionalBoolean(input.unsetDueDate),
+      due_date: optionalString(input.dueDate),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function mergePullRequest(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const mergeStyle = requireInputString(input.do, "do");
+  const { payload } = await requestGiteaJson<unknown>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/merge`,
+    method: "POST",
+    body: compactObject({
+      Do: mergeStyle,
+      merge_title_field: optionalString(input.mergeTitle),
+      merge_message_field: optionalString(input.mergeMessage),
+      delete_branch_after_merge: optionalBoolean(input.deleteBranchAfterMerge),
+      force_merge: optionalBoolean(input.forceMerge),
+      merge_when_checks_succeed: optionalBoolean(input.mergeWhenChecksSucceed),
+      head_commit_id: optionalString(input.headCommitId),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return compactObject({
+    ok: true,
+    response: payload,
+  });
+}
+
+async function listPullRequestFiles(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const { items, totalCount } = await requestGiteaArray({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/files`,
+    query: compactObject({
+      page: readOptionalPositiveInteger(input.page, "page"),
+      limit: readOptionalPositiveInteger(input.limit, "limit"),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+
+  return compactObject({
+    files: items,
+    total_count: totalCount,
+  });
+}
+
+async function listPullRequestReviews(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const { items, totalCount } = await requestGiteaArray({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/reviews`,
+    query: compactObject({
+      page: readOptionalPositiveInteger(input.page, "page"),
+      limit: readOptionalPositiveInteger(input.limit, "limit"),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+
+  return compactObject({
+    reviews: items,
+    total_count: totalCount,
+  });
+}
+
+async function createPullRequestReview(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/reviews`,
+    method: "POST",
+    body: compactObject({
+      body: optionalString(input.body),
+      event: optionalString(input.event),
+      commit_id: optionalString(input.commitId),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function submitPullRequestReview(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const pullRequestNumber = requirePositiveInteger(input.pullRequestNumber, "pullRequestNumber");
+  const reviewId = requirePositiveInteger(input.reviewId, "reviewId");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullRequestNumber}/reviews/${reviewId}`,
+    method: "POST",
+    body: compactObject({
+      body: optionalString(input.body),
+      event: optionalString(input.event),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function getRepositoryContents(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const filePath = requireInputString(input.filePath, "filePath");
+  const { payload } = await requestGiteaJson<Record<string, unknown> | Record<string, unknown>[]>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeFilePath(filePath)}`,
+    query: compactObject({
+      ref: optionalString(input.ref),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function createFile(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const filePath = requireInputString(input.filePath, "filePath");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeFilePath(filePath)}`,
+    method: "POST",
+    body: compactObject({
+      content: encodeContent(requireInputString(input.content, "content")),
+      message: optionalString(input.message),
+      branch: optionalString(input.branch),
+      new_branch: optionalString(input.newBranch),
+      author: buildIdentity(input, "author"),
+      committer: buildIdentity(input, "committer"),
+      signoff: optionalBoolean(input.signoff),
+      force_push: optionalBoolean(input.forcePush),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function updateFile(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const filePath = requireInputString(input.filePath, "filePath");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeFilePath(filePath)}`,
+    method: "PUT",
+    body: compactObject({
+      content: encodeContent(requireInputString(input.content, "content")),
+      sha: optionalString(input.sha),
+      message: optionalString(input.message),
+      branch: optionalString(input.branch),
+      new_branch: optionalString(input.newBranch),
+      from_path: optionalString(input.fromPath),
+      author: buildIdentity(input, "author"),
+      committer: buildIdentity(input, "committer"),
+      signoff: optionalBoolean(input.signoff),
+      force_push: optionalBoolean(input.forcePush),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+async function deleteFile(input: Record<string, unknown>, context: GiteaActionContext): Promise<unknown> {
+  const owner = requireInputString(input.owner, "owner");
+  const repo = requireInputString(input.repo, "repo");
+  const filePath = requireInputString(input.filePath, "filePath");
+  const { payload } = await requestGiteaJson<Record<string, unknown>>({
+    apiKey: context.apiKey,
+    baseUrl: context.baseUrl,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeFilePath(filePath)}`,
+    method: "DELETE",
+    body: compactObject({
+      sha: requireInputString(input.sha, "sha"),
+      message: optionalString(input.message),
+      branch: optionalString(input.branch),
+      new_branch: optionalString(input.newBranch),
+      author: buildIdentity(input, "author"),
+      committer: buildIdentity(input, "committer"),
+      signoff: optionalBoolean(input.signoff),
+    }),
+    fetcher: context.fetcher,
+    signal: context.signal,
+    phase: "execute",
+    notFoundAsInvalidInput: true,
+  });
+  return payload;
+}
+
+function buildIdentity(
+  input: Record<string, unknown>,
+  prefix: "author" | "committer",
+): Record<string, unknown> | undefined {
+  const name = optionalString(input[`${prefix}Name`]);
+  const email = optionalString(input[`${prefix}Email`]);
+  if (!name && !email) {
+    return undefined;
+  }
+  return compactObject({
+    name,
+    email,
+  });
+}
+
+function encodeContent(value: string): string {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(value, "utf8").toString("base64");
+  }
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
+function encodeFilePath(value: string): string {
+  return value
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 }
 
 interface GiteaRequestInput {
