@@ -2,7 +2,7 @@ import type { R2BucketBinding, R2ObjectBinding } from "../cloudflare/cloudflare-
 import type { ITransitFileService, TransitFileRead, TransitFileUpload } from "./transit-file-store.ts";
 
 import { extname } from "node:path";
-import { contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
 
 export interface R2TransitFileOptions {
   bucket: R2BucketBinding;
@@ -71,7 +71,7 @@ export class R2TransitFileService implements ITransitFileService {
       headers: {
         "content-length": String(metadata.sizeBytes),
         "content-type": metadata.mimeType,
-        "content-disposition": `attachment; filename="${escapeHeaderValue(metadata.name)}"`,
+        "content-disposition": contentDispositionForFileName(metadata.name),
       },
     });
   }
@@ -149,10 +149,6 @@ function assertSafeFileId(fileId: string): void {
   if (!/^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?$/.test(fileId)) {
     throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
   }
-}
-
-function escapeHeaderValue(value: string): string {
-  return value.replace(/["\\\r\n]/g, "_");
 }
 
 function safeExtension(name: string): string {

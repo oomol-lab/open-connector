@@ -138,6 +138,19 @@ describe("KVTransitFileService", () => {
     expect(response.headers.get("content-disposition")).toBe('attachment; filename="a_b_c_d_e.txt"');
   });
 
+  it("serves a file whose name is outside Latin-1", async () => {
+    const namespace = new MemoryKVNamespace();
+    const service = createService(namespace);
+    const upload = await service.create(new File(["ok"], "发票.pdf", { type: "application/pdf" }));
+
+    const response = await service.response(upload.fileId);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-disposition")).toBe(
+      "attachment; filename=\"__.pdf\"; filename*=UTF-8''%E5%8F%91%E7%A5%A8.pdf",
+    );
+  });
+
   it("rejects non-integer, non-positive, or non-finite ttl/maxBytes at construction", () => {
     // NaN maxBytes would otherwise slip past Math.min and disable the size check entirely.
     for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, 0, -1, 1.5]) {

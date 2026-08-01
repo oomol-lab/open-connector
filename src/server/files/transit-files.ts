@@ -7,7 +7,7 @@ import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:
 import { extname, join } from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
-import { contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
 
 export interface TransitFileOptions {
   rootDir: string;
@@ -97,7 +97,7 @@ export class TransitFileService implements ITransitFileService {
       headers: {
         "content-length": String(stats.size),
         "content-type": metadata.mimeType,
-        "content-disposition": `attachment; filename="${escapeHeaderValue(metadata.name)}"`,
+        "content-disposition": contentDispositionForFileName(metadata.name),
       },
     });
   }
@@ -217,8 +217,4 @@ function normalizeMetadata(
   const mimeType =
     typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : fallback.mimeType;
   return { name, mimeType };
-}
-
-function escapeHeaderValue(value: string): string {
-  return value.replace(/["\\\r\n]/g, "_");
 }

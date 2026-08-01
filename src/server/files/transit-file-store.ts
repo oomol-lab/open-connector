@@ -38,9 +38,34 @@ export function createTransitFileResponse(file: TransitFileRead): Response {
     headers: {
       "content-length": String(file.sizeBytes),
       "content-type": file.mimeType,
-      "content-disposition": `attachment; filename="${escapeHeaderValue(file.name)}"`,
+      "content-disposition": contentDispositionForFileName(file.name),
     },
   });
+}
+
+/**
+ * Build the `content-disposition` value for a transit file download.
+ *
+ * Header values are ByteStrings, so a name holding a character above U+00FF
+ * throws while the response is constructed and the download fails. Such names
+ * travel in the RFC 6266 `filename*` parameter, and `filename` keeps an
+ * ASCII-only form for clients that do not read `filename*`.
+ */
+export function contentDispositionForFileName(name: string): string {
+  const asciiName = name.replace(/[^\u0020-\u007e]/gu, "_").replace(/["\\]/g, "_");
+  if (!/[\u0080-\u{10ffff}]/u.test(name)) {
+    return `attachment; filename="${asciiName}"`;
+  }
+
+  return `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeExtendedValue(name)}`;
+}
+
+/** Percent-encode a file name as an RFC 8187 `ext-value`, which allows fewer literals than a URI component. */
+function encodeExtendedValue(name: string): string {
+  return encodeURIComponent(name).replace(
+    /['()*]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
 }
 
 export function contentTypeFromFileId(fileId: string): string {
@@ -93,8 +118,4 @@ export function contentTypeFromFileId(fileId: string): string {
     default:
       return "application/octet-stream";
   }
-}
-
-function escapeHeaderValue(value: string): string {
-  return value.replace(/["\\\r\n]/g, "_");
 }

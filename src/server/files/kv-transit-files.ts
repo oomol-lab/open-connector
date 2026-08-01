@@ -2,7 +2,7 @@ import type { KVNamespaceBinding } from "../cloudflare/cloudflare-bindings.ts";
 import type { ITransitFileService, TransitFileRead, TransitFileUpload } from "./transit-file-store.ts";
 
 import { extname } from "node:path";
-import { contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
 
 // Workers KV rejects an `expirationTtl` below 60 seconds.
 const KV_MIN_TTL_SECONDS = 60;
@@ -83,7 +83,7 @@ export class KVTransitFileService implements ITransitFileService {
       headers: {
         "content-length": String(metadata.sizeBytes),
         "content-type": metadata.mimeType,
-        "content-disposition": `attachment; filename="${escapeHeaderValue(metadata.name)}"`,
+        "content-disposition": contentDispositionForFileName(metadata.name),
       },
     });
   }
@@ -150,9 +150,6 @@ function positiveInteger(value: number, field: string): number {
     throw new TypeError(`KVTransitFileService: "${field}" must be a positive integer (received ${value}).`);
   }
   return value;
-}
-function escapeHeaderValue(value: string): string {
-  return value.replace(/["\\\r\n]/g, "_");
 }
 function safeExtension(name: string): string {
   const extension = extname(name).toLowerCase();
