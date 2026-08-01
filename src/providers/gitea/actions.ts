@@ -340,6 +340,356 @@ const giteaMergeResponseSchema = s.actionOutput(
   ["ok"],
 );
 
+const giteaBranchSchema = s.looseObject(
+  {
+    name: s.string("Branch name."),
+    protected: s.boolean("Whether the branch is protected."),
+    user_can_push: s.boolean("Whether the current user can push to the branch."),
+    user_can_merge: s.boolean("Whether the current user can merge to the branch."),
+    effective_branch_protection_name: s.nullableString("Name of the effective branch protection rule."),
+    commit: looseObjectSchema,
+  },
+  { description: "A Gitea branch." },
+);
+
+const giteaCommitRecordSchema = s.looseObject(
+  {
+    sha: s.string("Commit SHA."),
+    message: s.string("Commit message."),
+    url: s.string("API URL of the commit."),
+    html_url: s.string("HTML URL of the commit."),
+    created: isoDateTimeField,
+    author: giteaUserSchema,
+    committer: giteaUserSchema,
+    parents: s.array("Parent commits of this commit.", looseObjectSchema),
+  },
+  { description: "A Gitea commit record." },
+);
+
+const giteaGitCommitSchema = s.looseObject(
+  {
+    sha: s.string("Commit SHA."),
+    url: s.string("API URL of the commit."),
+    html_url: s.string("HTML URL of the commit."),
+    message: s.string("Commit message."),
+    author: s.looseObject("Commit author.", {
+      name: s.string("Author name."),
+      email: s.string("Author email."),
+      date: isoDateTimeField,
+    }),
+    committer: s.looseObject("Commit committer.", {
+      name: s.string("Committer name."),
+      email: s.string("Committer email."),
+      date: isoDateTimeField,
+    }),
+    parents: s.array("Parent commits of this commit.", looseObjectSchema),
+  },
+  { description: "A Gitea git commit." },
+);
+
+const giteaTagSchema = s.looseObject(
+  {
+    id: s.string("ID of the tag object."),
+    name: s.string("Tag name."),
+    message: s.nullableString("Annotated tag message."),
+    commit: s.looseObject("Commit the tag points to.", {
+      id: s.string("Commit SHA."),
+      message: s.string("Commit message."),
+      url: s.string("API URL of the commit."),
+    }),
+    tarball_url: s.string("Tarball download URL."),
+    zipball_url: s.string("Zipball download URL."),
+  },
+  { description: "A Gitea tag." },
+);
+
+const giteaReleaseSchema = s.looseObject(
+  {
+    id: s.integer("Numeric release ID."),
+    tag_name: s.string("Git tag associated with the release."),
+    name: s.string("Release title."),
+    body: s.nullableString("Release notes."),
+    draft: s.boolean("Whether the release is a draft."),
+    prerelease: s.boolean("Whether the release is a prerelease."),
+    target_commitish: s.string("Target commitish of the release."),
+    html_url: s.string("HTML URL of the release."),
+    url: s.string("API URL of the release."),
+    tarball_url: s.string("Tarball download URL."),
+    zipball_url: s.string("Zipball download URL."),
+    created_at: isoDateTimeField,
+    published_at: s.nullableString("Timestamp when the release was published."),
+    author: giteaUserSchema,
+    assets: s.array("Files attached to the release.", looseObjectSchema),
+  },
+  { description: "A Gitea release." },
+);
+
+const giteaHookSchema = s.looseObject(
+  {
+    id: s.integer("Numeric hook ID."),
+    type: s.string("Hook type (gitea, slack, discord, etc.)."),
+    name: s.nullableString("Human-readable hook name."),
+    active: s.boolean("Whether the hook is active."),
+    events: s.stringArray("Events that trigger the hook.", { itemDescription: "A webhook event name." }),
+    config: looseObjectSchema,
+    branch_filter: s.nullableString("Branch filter pattern of the hook."),
+    authorization_header: s.nullableString("Authorization header included in hook requests."),
+    created_at: isoDateTimeField,
+    updated_at: isoDateTimeField,
+  },
+  { description: "A Gitea repository webhook." },
+);
+
+const giteaOrganizationSchema = s.looseObject(
+  {
+    id: s.integer("Numeric organization ID."),
+    name: s.string("Organization name."),
+    username: s.string("Organization username."),
+    full_name: s.string("Full display name of the organization."),
+    description: s.nullableString("Organization description."),
+    website: s.nullableString("Website URL of the organization."),
+    location: s.nullableString("Location of the organization."),
+    email: s.nullableString("Email address of the organization."),
+    avatar_url: s.string("Avatar URL of the organization."),
+    visibility: s.string("Visibility level of the organization."),
+  },
+  { description: "A Gitea organization." },
+);
+
+const giteaDeployKeySchema = s.looseObject(
+  {
+    id: s.integer("Numeric deploy key ID."),
+    key: s.string("SSH public key content."),
+    title: s.string("Key title."),
+    read_only: s.boolean("Whether the key is read-only."),
+    fingerprint: s.string("Key fingerprint."),
+    url: s.string("API URL of the deploy key."),
+    created_at: isoDateTimeField,
+  },
+  { description: "A Gitea repository deploy key." },
+);
+
+const giteaCommitStatusSchema = s.looseObject(
+  {
+    id: s.integer("Numeric status ID."),
+    context: s.string("Status context."),
+    description: s.nullableString("Status description."),
+    state: s.stringEnum("Status state.", ["pending", "success", "error", "failure", "warning", "skipped"]),
+    target_url: s.nullableString("URL with more details about the status."),
+    url: s.string("API URL of the status."),
+    created_at: isoDateTimeField,
+    updated_at: isoDateTimeField,
+    creator: giteaUserSchema,
+  },
+  { description: "A Gitea commit status." },
+);
+
+const giteaPullReviewCommentSchema = s.looseObject(
+  {
+    id: s.integer("Numeric comment ID."),
+    body: s.string("Comment body."),
+    path: s.string("File path the comment is attached to."),
+    position: s.integer("Line position in the current diff."),
+    original_position: s.integer("Line position in the original diff."),
+    commit_id: s.string("Commit SHA the comment is attached to."),
+    original_commit_id: s.string("Original commit SHA the comment was created against."),
+    diff_hunk: s.string("Diff hunk context of the comment."),
+    html_url: s.string("HTML URL of the comment."),
+    pull_request_url: s.string("API URL of the pull request."),
+    pull_request_review_id: s.integer("Numeric review ID the comment belongs to."),
+    created_at: isoDateTimeField,
+    updated_at: isoDateTimeField,
+    user: giteaUserSchema,
+  },
+  { description: "A Gitea pull request review comment." },
+);
+
+const giteaPermissionSchema = s.looseObject(
+  {
+    admin: s.boolean("Whether the user has admin access."),
+    pull: s.boolean("Whether the user has pull access."),
+    push: s.boolean("Whether the user has push access."),
+  },
+  { description: "Permission levels of a collaborator." },
+);
+
+const giteaCollaboratorPermissionSchema = s.looseObject(
+  {
+    permission: giteaPermissionSchema,
+    role_name: s.string("Role name of the collaborator."),
+    user: giteaUserSchema,
+  },
+  { description: "Permission details of a Gitea collaborator." },
+);
+
+const branchesListSchema = s.actionOutput(
+  {
+    branches: s.array("Branches returned by the request.", giteaBranchSchema),
+    total_count: s.integer("Total number of matching branches from the x-total-count header when available."),
+  },
+  "A list of Gitea branches.",
+  ["branches"],
+);
+
+const commitsListSchema = s.actionOutput(
+  {
+    commits: s.array("Commits returned by the request.", giteaCommitRecordSchema),
+    total_count: s.integer("Total number of matching commits from the x-total-count header when available."),
+  },
+  "A list of Gitea commits.",
+  ["commits"],
+);
+
+const tagsListSchema = s.actionOutput(
+  {
+    tags: s.array("Tags returned by the request.", giteaTagSchema),
+    total_count: s.integer("Total number of matching tags from the x-total-count header when available."),
+  },
+  "A list of Gitea tags.",
+  ["tags"],
+);
+
+const releasesListSchema = s.actionOutput(
+  {
+    releases: s.array("Releases returned by the request.", giteaReleaseSchema),
+    total_count: s.integer("Total number of matching releases from the x-total-count header when available."),
+  },
+  "A list of Gitea releases.",
+  ["releases"],
+);
+
+const repositoryLabelsListSchema = s.actionOutput(
+  {
+    labels: s.array("Labels returned by the request.", giteaLabelSchema),
+    total_count: s.integer("Total number of matching labels from the x-total-count header when available."),
+  },
+  "A list of Gitea repository labels.",
+  ["labels"],
+);
+
+const milestonesListSchema = s.actionOutput(
+  {
+    milestones: s.array("Milestones returned by the request.", giteaMilestoneSchema),
+    total_count: s.integer("Total number of matching milestones from the x-total-count header when available."),
+  },
+  "A list of Gitea milestones.",
+  ["milestones"],
+);
+
+const hooksListSchema = s.actionOutput(
+  {
+    hooks: s.array("Webhooks returned by the request.", giteaHookSchema),
+    total_count: s.integer("Total number of matching hooks from the x-total-count header when available."),
+  },
+  "A list of Gitea repository webhooks.",
+  ["hooks"],
+);
+
+const collaboratorsListSchema = s.actionOutput(
+  {
+    collaborators: s.array("Collaborators returned by the request.", giteaUserSchema),
+    total_count: s.integer("Total number of matching collaborators from the x-total-count header when available."),
+  },
+  "A list of Gitea repository collaborators.",
+  ["collaborators"],
+);
+
+const organizationsListSchema = s.actionOutput(
+  {
+    organizations: s.array("Organizations returned by the request.", giteaOrganizationSchema),
+    total_count: s.integer("Total number of matching organizations from the x-total-count header when available."),
+  },
+  "A list of Gitea organizations.",
+  ["organizations"],
+);
+
+const organizationMembersListSchema = s.actionOutput(
+  {
+    members: s.array("Organization members returned by the request.", giteaUserSchema),
+    total_count: s.integer("Total number of matching members from the x-total-count header when available."),
+  },
+  "A list of Gitea organization members.",
+  ["members"],
+);
+
+const deployKeysListSchema = s.actionOutput(
+  {
+    keys: s.array("Deploy keys returned by the request.", giteaDeployKeySchema),
+    total_count: s.integer("Total number of matching deploy keys from the x-total-count header when available."),
+  },
+  "A list of Gitea repository deploy keys.",
+  ["keys"],
+);
+
+const commitStatusesListSchema = s.actionOutput(
+  {
+    statuses: s.array("Commit statuses returned by the request.", giteaCommitStatusSchema),
+    total_count: s.integer("Total number of matching statuses from the x-total-count header when available."),
+  },
+  "A list of Gitea commit statuses.",
+  ["statuses"],
+);
+
+const reviewCommentsListSchema = s.actionOutput(
+  {
+    comments: s.array("Review comments returned by the request.", giteaPullReviewCommentSchema),
+    total_count: s.integer("Total number of matching comments from the x-total-count header when available."),
+  },
+  "A list of Gitea pull request review comments.",
+  ["comments"],
+);
+
+const stargazersListSchema = s.actionOutput(
+  {
+    stargazers: s.array("Stargazers returned by the request.", giteaUserSchema),
+    total_count: s.integer("Total number of matching stargazers from the x-total-count header when available."),
+  },
+  "A list of Gitea repository stargazers.",
+  ["stargazers"],
+);
+
+const watchersListSchema = s.actionOutput(
+  {
+    watchers: s.array("Watchers returned by the request.", giteaUserSchema),
+    total_count: s.integer("Total number of matching watchers from the x-total-count header when available."),
+  },
+  "A list of Gitea repository watchers.",
+  ["watchers"],
+);
+
+const assigneesListSchema = s.actionOutput(
+  {
+    assignees: s.array("Assignees returned by the request.", giteaUserSchema),
+    total_count: s.integer("Total number of matching assignees from the x-total-count header when available."),
+  },
+  "A list of Gitea repository assignees.",
+  ["assignees"],
+);
+
+const repositoryTopicsSchema = s.actionOutput(
+  {
+    topics: s.stringArray("Topics of the repository.", { itemDescription: "A repository topic." }),
+  },
+  "The topics of a Gitea repository.",
+  ["topics"],
+);
+
+const mergeCheckSchema = s.actionOutput(
+  {
+    merged: s.boolean("Whether the pull request has been merged."),
+  },
+  "Whether a Gitea pull request has been merged.",
+  ["merged"],
+);
+
+const okResponseSchema = s.actionOutput(
+  {
+    ok: s.boolean("Whether the operation succeeded."),
+  },
+  "A Gitea operation result.",
+  ["ok"],
+);
+
 function repositoryInput(
   description: string,
   extra: Record<string, JsonSchema> = {},
@@ -839,6 +1189,1070 @@ export const giteaActions: ActionDefinition[] = [
     outputSchema: giteaFileOperationResponseSchema,
     followUpActions: ["gitea.get_repository_contents"],
   }),
+  defineProviderAction(service, {
+    name: "create_repository",
+    description: "Create a repository for the authenticated Gitea user.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        name: s.nonEmptyString("Name of the repository to create."),
+        description: s.string("Description of the repository."),
+        private: s.boolean("Whether the repository should be private."),
+        autoInit: s.boolean("Whether the repository should be auto-initialized with a README."),
+        defaultBranch: s.nonEmptyString("Default branch to use when initializing the repository."),
+        gitignores: s.string("Comma-separated list of gitignore templates to use."),
+        license: s.string("License template to use."),
+        readme: s.string("README template to use."),
+        issueLabels: s.string("Label set to use for the repository."),
+        template: s.boolean("Whether the repository should be a template repository."),
+        objectFormatName: s.stringEnum("Git object format of the repository.", ["sha1", "sha256"]),
+        trustModel: s.stringEnum("Trust model of the repository.", [
+          "default",
+          "collaborator",
+          "committer",
+          "collaboratorcommitter",
+        ]),
+      },
+      {
+        optional: [
+          "description",
+          "private",
+          "autoInit",
+          "defaultBranch",
+          "gitignores",
+          "license",
+          "readme",
+          "issueLabels",
+          "template",
+          "objectFormatName",
+          "trustModel",
+        ],
+      },
+    ),
+    outputSchema: giteaRepositorySchema,
+    followUpActions: ["gitea.get_repository", "gitea.create_file"],
+  }),
+  defineProviderAction(service, {
+    name: "update_repository",
+    description: "Update settings of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        name: s.string("New name of the repository."),
+        description: s.string("New description of the repository."),
+        website: s.string("A URL with more information about the repository."),
+        private: s.boolean("Whether the repository should be private."),
+        template: s.boolean("Whether the repository should be a template repository."),
+        archived: s.boolean("Whether the repository should be archived."),
+        defaultBranch: s.string("New default branch of the repository."),
+        defaultMergeStyle: s.stringEnum("Default merge style of the repository.", [
+          "merge",
+          "rebase",
+          "rebase-merge",
+          "squash",
+          "fast-forward-only",
+        ]),
+        defaultDeleteBranchAfterMerge: s.boolean("Whether to delete the pull request branch after merge by default."),
+        defaultAllowMaintainerEdit: s.boolean("Whether maintainers can edit pull requests by default."),
+        hasIssues: s.boolean("Whether the issues unit is enabled."),
+        hasPullRequests: s.boolean("Whether the pull requests unit is enabled."),
+        hasProjects: s.boolean("Whether the projects unit is enabled."),
+        hasWiki: s.boolean("Whether the wiki unit is enabled."),
+        hasActions: s.boolean("Whether the actions unit is enabled."),
+        hasPackages: s.boolean("Whether the packages unit is enabled."),
+        hasReleases: s.boolean("Whether the releases unit is enabled."),
+        allowMergeCommits: s.boolean("Whether merging with merge commits is allowed."),
+        allowRebase: s.boolean("Whether rebase merging is allowed."),
+        allowRebaseExplicit: s.boolean("Whether rebase with explicit merge commits is allowed."),
+        allowRebaseUpdate: s.boolean("Whether updating the pull request branch by rebase is allowed."),
+        allowSquashMerge: s.boolean("Whether squash merging is allowed."),
+        allowFastForwardOnlyMerge: s.boolean("Whether fast-forward-only merging is allowed."),
+        allowManualMerge: s.boolean("Whether marking a pull request as merged manually is allowed."),
+        autodetectManualMerge: s.boolean("Whether manual merge should be autodetected."),
+        ignoreWhitespaceConflicts: s.boolean("Whether whitespace conflicts are ignored."),
+        enablePrune: s.boolean("Whether to prune remote-tracking references when mirroring."),
+        mirrorInterval: s.string("Mirror interval, for example 8h30m0s."),
+      },
+      [
+        "name",
+        "description",
+        "website",
+        "private",
+        "template",
+        "archived",
+        "defaultBranch",
+        "defaultMergeStyle",
+        "defaultDeleteBranchAfterMerge",
+        "defaultAllowMaintainerEdit",
+        "hasIssues",
+        "hasPullRequests",
+        "hasProjects",
+        "hasWiki",
+        "hasActions",
+        "hasPackages",
+        "hasReleases",
+        "allowMergeCommits",
+        "allowRebase",
+        "allowRebaseExplicit",
+        "allowRebaseUpdate",
+        "allowSquashMerge",
+        "allowFastForwardOnlyMerge",
+        "allowManualMerge",
+        "autodetectManualMerge",
+        "ignoreWhitespaceConflicts",
+        "enablePrune",
+        "mirrorInterval",
+      ],
+    ),
+    outputSchema: giteaRepositorySchema,
+    followUpActions: ["gitea.get_repository"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_repository",
+    description: "Delete a Gitea repository permanently.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action."),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "fork_repository",
+    description: "Fork a Gitea repository to the authenticated user or an organization.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        name: s.nonEmptyString("Name of the forked repository. Defaults to the original name."),
+        organization: s.nonEmptyString("Organization name when forking into an organization."),
+      },
+      ["name", "organization"],
+    ),
+    outputSchema: giteaRepositorySchema,
+    followUpActions: ["gitea.get_repository", "gitea.list_pull_requests"],
+  }),
+  defineProviderAction(service, {
+    name: "list_repository_topics",
+    description: "List topics of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action."),
+    outputSchema: repositoryTopicsSchema,
+    followUpActions: ["gitea.update_repository_topics"],
+  }),
+  defineProviderAction(service, {
+    name: "update_repository_topics",
+    description: "Replace all topics of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      topics: s.stringArray("New list of topics for the repository.", { itemDescription: "A repository topic." }),
+    }),
+    outputSchema: repositoryTopicsSchema,
+    followUpActions: ["gitea.list_repository_topics"],
+  }),
+  defineProviderAction(service, {
+    name: "list_branches",
+    description: "List branches of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: branchesListSchema,
+    followUpActions: ["gitea.get_branch", "gitea.create_branch"],
+  }),
+  defineProviderAction(service, {
+    name: "get_branch",
+    description: "Get a branch of a Gitea repository by name.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      branch: s.nonEmptyString("Name of the branch."),
+    }),
+    outputSchema: giteaBranchSchema,
+    followUpActions: ["gitea.get_repository_contents"],
+  }),
+  defineProviderAction(service, {
+    name: "create_branch",
+    description: "Create a new branch in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        newBranchName: s.nonEmptyString("Name of the new branch to create."),
+        oldRefName: s.nonEmptyString("Branch, tag or commit SHA the new branch is created from."),
+      },
+      ["oldRefName"],
+    ),
+    outputSchema: giteaBranchSchema,
+    followUpActions: ["gitea.get_branch", "gitea.create_file"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_branch",
+    description: "Delete a branch of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      branch: s.nonEmptyString("Name of the branch to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_commits",
+    description: "List commits of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        sha: s.nonEmptyString("Branch, tag or commit SHA to list commits from."),
+        path: s.nonEmptyString("Only list commits affecting this file path."),
+        author: s.nonEmptyString("Only list commits authored by this username."),
+        since: isoDateTimeField,
+        until: isoDateTimeField,
+        page: pageField,
+        limit: limitField,
+      },
+      ["sha", "path", "author", "since", "until", "page", "limit"],
+    ),
+    outputSchema: commitsListSchema,
+    followUpActions: ["gitea.get_commit", "gitea.create_commit_status"],
+  }),
+  defineProviderAction(service, {
+    name: "get_commit",
+    description: "Get a commit of a Gitea repository by SHA.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      sha: s.nonEmptyString("Commit SHA to fetch."),
+    }),
+    outputSchema: giteaGitCommitSchema,
+    followUpActions: ["gitea.create_commit_status"],
+  }),
+  defineProviderAction(service, {
+    name: "create_commit_status",
+    description: "Create a commit status for a commit SHA in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        sha: s.nonEmptyString("Commit SHA to attach the status to."),
+        state: s.stringEnum("Status state.", ["pending", "success", "error", "failure", "warning", "skipped"]),
+        context: s.nonEmptyString("Unique context identifier for the status."),
+        description: s.string("Short description of the status."),
+        targetUrl: s.nonEmptyString("URL with more details about the status."),
+      },
+      ["context", "description", "targetUrl"],
+    ),
+    outputSchema: giteaCommitStatusSchema,
+    followUpActions: ["gitea.list_commit_statuses"],
+  }),
+  defineProviderAction(service, {
+    name: "list_commit_statuses",
+    description: "List commit statuses for a commit SHA or ref in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      ref: s.nonEmptyString("Commit SHA or ref to list statuses for."),
+    }),
+    outputSchema: commitStatusesListSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_tags",
+    description: "List tags of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: tagsListSchema,
+    followUpActions: ["gitea.get_tag", "gitea.create_tag"],
+  }),
+  defineProviderAction(service, {
+    name: "get_tag",
+    description: "Get a tag of a Gitea repository by name.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      tag: s.nonEmptyString("Name of the tag."),
+    }),
+    outputSchema: giteaTagSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_tag",
+    description: "Create a tag in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        tagName: s.nonEmptyString("Name of the tag to create."),
+        target: s.nonEmptyString("Commit SHA or branch name the tag points to."),
+        message: s.string("Message of the annotated tag."),
+      },
+      ["message"],
+    ),
+    outputSchema: giteaTagSchema,
+    followUpActions: ["gitea.get_tag", "gitea.create_release"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_tag",
+    description: "Delete a tag from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      tag: s.nonEmptyString("Name of the tag to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_releases",
+    description: "List releases of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        draft: s.boolean("Whether to include draft releases."),
+        prerelease: s.boolean("Whether to include prereleases."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["draft", "prerelease", "page", "limit"],
+    ),
+    outputSchema: releasesListSchema,
+    followUpActions: ["gitea.get_release", "gitea.create_release"],
+  }),
+  defineProviderAction(service, {
+    name: "get_release",
+    description: "Get a release of a Gitea repository by ID.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      releaseId: s.positiveInteger("Numeric ID of the release."),
+    }),
+    outputSchema: giteaReleaseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_release",
+    description: "Create a release in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        tagName: s.nonEmptyString("Git tag associated with the release."),
+        name: s.string("Display title of the release."),
+        body: s.string("Release notes or description."),
+        targetCommitish: s.nonEmptyString("Commit SHA or branch the release targets."),
+        draft: s.boolean("Whether to create the release as a draft."),
+        prerelease: s.boolean("Whether to mark the release as a prerelease."),
+        tagMessage: s.string("Message of the git tag."),
+      },
+      ["name", "body", "targetCommitish", "draft", "prerelease", "tagMessage"],
+    ),
+    outputSchema: giteaReleaseSchema,
+    followUpActions: ["gitea.get_release"],
+  }),
+  defineProviderAction(service, {
+    name: "update_release",
+    description: "Update a release of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        releaseId: s.positiveInteger("Numeric ID of the release."),
+        tagName: s.string("New git tag associated with the release."),
+        name: s.string("New display title of the release."),
+        body: s.string("New release notes or description."),
+        targetCommitish: s.string("New target commitish of the release."),
+        draft: s.boolean("Whether the release should be a draft."),
+        prerelease: s.boolean("Whether the release should be a prerelease."),
+      },
+      ["tagName", "name", "body", "targetCommitish", "draft", "prerelease"],
+    ),
+    outputSchema: giteaReleaseSchema,
+    followUpActions: ["gitea.get_release"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_release",
+    description: "Delete a release from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      releaseId: s.positiveInteger("Numeric ID of the release to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_repository_labels",
+    description: "List labels of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: repositoryLabelsListSchema,
+    followUpActions: ["gitea.get_label", "gitea.create_label"],
+  }),
+  defineProviderAction(service, {
+    name: "get_label",
+    description: "Get a label of a Gitea repository by ID.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      labelId: s.positiveInteger("Numeric ID of the label."),
+    }),
+    outputSchema: giteaLabelSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_label",
+    description: "Create a label in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        name: s.nonEmptyString("Display name of the label."),
+        color: s.nonEmptyString("Hex color of the label, for example #00aabb."),
+        description: s.string("Description of the label."),
+        exclusive: s.boolean("Whether the label is exclusive."),
+        isArchived: s.boolean("Whether the label is archived."),
+      },
+      ["description", "exclusive", "isArchived"],
+    ),
+    outputSchema: giteaLabelSchema,
+    followUpActions: ["gitea.list_repository_labels"],
+  }),
+  defineProviderAction(service, {
+    name: "update_label",
+    description: "Update a label of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        labelId: s.positiveInteger("Numeric ID of the label."),
+        name: s.string("New display name of the label."),
+        color: s.string("New hex color of the label, for example #00aabb."),
+        description: s.string("New description of the label."),
+        exclusive: s.boolean("Whether the label is exclusive."),
+        isArchived: s.boolean("Whether the label is archived."),
+      },
+      ["name", "color", "description", "exclusive", "isArchived"],
+    ),
+    outputSchema: giteaLabelSchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_label",
+    description: "Delete a label from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      labelId: s.positiveInteger("Numeric ID of the label to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_milestones",
+    description: "List milestones of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        state: s.stringEnum("Milestone state filter.", ["open", "closed", "all"]),
+        name: s.nonEmptyString("Filter milestones by name."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["state", "name", "page", "limit"],
+    ),
+    outputSchema: milestonesListSchema,
+    followUpActions: ["gitea.get_milestone", "gitea.create_milestone"],
+  }),
+  defineProviderAction(service, {
+    name: "get_milestone",
+    description: "Get a milestone of a Gitea repository by ID.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      milestoneId: s.positiveInteger("Numeric ID of the milestone."),
+    }),
+    outputSchema: giteaMilestoneSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_milestone",
+    description: "Create a milestone in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        title: s.nonEmptyString("Title of the milestone."),
+        description: s.string("Description of the milestone."),
+        state: s.stringEnum("Initial state of the milestone.", ["open", "closed"]),
+        dueOn: s.nonEmptyString("Due date of the milestone in RFC 3339 format."),
+      },
+      ["description", "state", "dueOn"],
+    ),
+    outputSchema: giteaMilestoneSchema,
+    followUpActions: ["gitea.list_milestones"],
+  }),
+  defineProviderAction(service, {
+    name: "update_milestone",
+    description: "Update a milestone of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        milestoneId: s.positiveInteger("Numeric ID of the milestone."),
+        title: s.string("New title of the milestone."),
+        description: s.string("New description of the milestone."),
+        state: s.stringEnum("New state of the milestone.", ["open", "closed"]),
+        dueOn: s.nonEmptyString("New due date of the milestone in RFC 3339 format."),
+      },
+      ["title", "description", "state", "dueOn"],
+    ),
+    outputSchema: giteaMilestoneSchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_milestone",
+    description: "Delete a milestone from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      milestoneId: s.positiveInteger("Numeric ID of the milestone to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "update_issue",
+    description: "Update an issue in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        issueNumber: issueNumberField,
+        title: s.string("New title of the issue."),
+        body: s.string("New body of the issue."),
+        state: s.stringEnum("New state of the issue.", ["open", "closed"]),
+        assignees: s.stringArray("New list of assignee usernames.", { itemDescription: "An assignee username." }),
+        milestoneId: s.positiveInteger("New milestone ID."),
+        ref: s.nonEmptyString("Git reference associated with the issue."),
+        dueDate: s.nonEmptyString("New deadline in RFC 3339 format. Gitea only uses the date component."),
+        unsetDueDate: s.boolean("Whether to remove the current deadline."),
+      },
+      ["title", "body", "state", "assignees", "milestoneId", "ref", "dueDate", "unsetDueDate"],
+    ),
+    outputSchema: giteaIssueSchema,
+    followUpActions: ["gitea.get_issue", "gitea.create_issue_comment"],
+  }),
+  defineProviderAction(service, {
+    name: "list_issue_labels",
+    description: "List labels attached to a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      issueNumber: issueNumberField,
+    }),
+    outputSchema: repositoryLabelsListSchema,
+    followUpActions: ["gitea.add_issue_labels"],
+  }),
+  defineProviderAction(service, {
+    name: "add_issue_labels",
+    description: "Add labels to a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        issueNumber: issueNumberField,
+        labels: s.array("Label IDs to add to the issue.", s.positiveInteger("A label ID.")),
+      },
+      ["labels"],
+    ),
+    outputSchema: repositoryLabelsListSchema,
+    followUpActions: ["gitea.list_issue_labels"],
+  }),
+  defineProviderAction(service, {
+    name: "replace_issue_labels",
+    description: "Replace all labels of a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        issueNumber: issueNumberField,
+        labels: s.array("New list of label IDs for the issue.", s.positiveInteger("A label ID.")),
+      },
+      ["labels"],
+    ),
+    outputSchema: repositoryLabelsListSchema,
+    followUpActions: ["gitea.list_issue_labels"],
+  }),
+  defineProviderAction(service, {
+    name: "remove_issue_label",
+    description: "Remove a label from a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      issueNumber: issueNumberField,
+      labelId: s.positiveInteger("Numeric ID of the label to remove."),
+    }),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.list_issue_labels"],
+  }),
+  defineProviderAction(service, {
+    name: "clear_issue_labels",
+    description: "Remove all labels from a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      issueNumber: issueNumberField,
+    }),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.list_issue_labels"],
+  }),
+  defineProviderAction(service, {
+    name: "update_issue_comment",
+    description: "Update a comment on a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        commentId: s.positiveInteger("Numeric ID of the comment to update."),
+        body: s.nonEmptyString("New body of the comment."),
+      },
+      ["body"],
+    ),
+    outputSchema: giteaCommentSchema,
+    followUpActions: ["gitea.list_issue_comments"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_issue_comment",
+    description: "Delete a comment from a Gitea issue.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      commentId: s.positiveInteger("Numeric ID of the comment to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_issue_assignees",
+    description: "List users that can be assigned to issues in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action."),
+    outputSchema: assigneesListSchema,
+    followUpActions: ["gitea.create_issue", "gitea.update_issue"],
+  }),
+  defineProviderAction(service, {
+    name: "list_pull_request_commits",
+    description: "List commits of a Gitea pull request.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: commitsListSchema,
+    followUpActions: ["gitea.create_commit_status"],
+  }),
+  defineProviderAction(service, {
+    name: "check_pull_request_merged",
+    description: "Check whether a Gitea pull request has been merged.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+    }),
+    outputSchema: mergeCheckSchema,
+    followUpActions: ["gitea.get_pull_request"],
+  }),
+  defineProviderAction(service, {
+    name: "request_pull_request_reviewers",
+    description: "Request reviews for a Gitea pull request from users or teams.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        reviewers: s.stringArray("Usernames to request review from.", { itemDescription: "A reviewer username." }),
+        teamReviewers: s.stringArray("Team names to request review from.", {
+          itemDescription: "A team reviewer name.",
+        }),
+      },
+      ["reviewers", "teamReviewers"],
+    ),
+    outputSchema: giteaPullRequestSchema,
+    followUpActions: ["gitea.get_pull_request"],
+  }),
+  defineProviderAction(service, {
+    name: "remove_pull_request_reviewers",
+    description: "Remove requested reviewers from a Gitea pull request.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        reviewers: s.stringArray("Usernames to remove from the review request.", {
+          itemDescription: "A reviewer username.",
+        }),
+        teamReviewers: s.stringArray("Team names to remove from the review request.", {
+          itemDescription: "A team reviewer name.",
+        }),
+      },
+      ["reviewers", "teamReviewers"],
+    ),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.get_pull_request"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_pull_request_review",
+    description: "Delete a review from a Gitea pull request.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+      reviewId: s.positiveInteger("ID of the review to delete."),
+    }),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.list_pull_request_reviews"],
+  }),
+  defineProviderAction(service, {
+    name: "dismiss_pull_request_review",
+    description: "Dismiss a review on a Gitea pull request.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        reviewId: s.positiveInteger("ID of the review to dismiss."),
+        message: s.nonEmptyString("Dismissal message shown to the review author."),
+        priors: s.boolean("Whether previous reviews should be dismissed as well."),
+      },
+      ["priors"],
+    ),
+    outputSchema: giteaPullReviewSchema,
+    followUpActions: ["gitea.list_pull_request_reviews"],
+  }),
+  defineProviderAction(service, {
+    name: "list_pull_request_review_comments",
+    description: "List review comments of a Gitea pull request review.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        reviewId: s.positiveInteger("ID of the review to list comments for."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: reviewCommentsListSchema,
+    followUpActions: ["gitea.create_pull_request_review"],
+  }),
+  defineProviderAction(service, {
+    name: "update_pull_request_branch",
+    description: "Update the head branch of a Gitea pull request to the latest base branch.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        style: s.stringEnum("Update style.", ["merge", "rebase"]),
+      },
+      ["style"],
+    ),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.get_pull_request"],
+  }),
+  defineProviderAction(service, {
+    name: "list_repository_hooks",
+    description: "List webhooks of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: hooksListSchema,
+    followUpActions: ["gitea.get_repository_hook", "gitea.create_repository_hook"],
+  }),
+  defineProviderAction(service, {
+    name: "create_repository_hook",
+    description: "Create a webhook in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        type: s.stringEnum("Hook type.", [
+          "dingtalk",
+          "discord",
+          "gitea",
+          "gogs",
+          "msteams",
+          "slack",
+          "telegram",
+          "feishu",
+          "wechatwork",
+          "packagist",
+        ]),
+        config: s.object(
+          "Configuration of the hook.",
+          {
+            url: s.nonEmptyString("URL the hook sends requests to."),
+            content_type: s.stringEnum("Content type of the request body.", ["json", "form"]),
+            secret: s.string("Secret used to sign hook requests."),
+            insecure_ssl: s.string("Whether to skip TLS verification. Use 'true' or 'false'."),
+          },
+          { optional: ["content_type", "secret", "insecure_ssl"] },
+        ),
+        events: s.stringArray("Events that trigger the hook.", { itemDescription: "A webhook event name." }),
+        active: s.boolean("Whether the hook is active."),
+        branchFilter: s.string("Branch filter pattern of the hook."),
+        authorizationHeader: s.string("Authorization header to include in hook requests."),
+      },
+      ["config", "events", "active", "branchFilter", "authorizationHeader"],
+    ),
+    outputSchema: giteaHookSchema,
+    followUpActions: ["gitea.list_repository_hooks"],
+  }),
+  defineProviderAction(service, {
+    name: "get_repository_hook",
+    description: "Get a webhook of a Gitea repository by ID.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      hookId: s.positiveInteger("Numeric ID of the webhook."),
+    }),
+    outputSchema: giteaHookSchema,
+  }),
+  defineProviderAction(service, {
+    name: "update_repository_hook",
+    description: "Update a webhook of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        hookId: s.positiveInteger("Numeric ID of the webhook."),
+        config: s.object(
+          "Configuration of the hook.",
+          {
+            url: s.nonEmptyString("URL the hook sends requests to."),
+            content_type: s.stringEnum("Content type of the request body.", ["json", "form"]),
+            secret: s.string("Secret used to sign hook requests."),
+            insecure_ssl: s.string("Whether to skip TLS verification. Use 'true' or 'false'."),
+          },
+          { optional: ["url", "content_type", "secret", "insecure_ssl"] },
+        ),
+        events: s.stringArray("Events that trigger the hook.", { itemDescription: "A webhook event name." }),
+        active: s.boolean("Whether the hook is active."),
+        branchFilter: s.string("Branch filter pattern of the hook."),
+        authorizationHeader: s.string("Authorization header to include in hook requests."),
+      },
+      ["config", "events", "active", "branchFilter", "authorizationHeader"],
+    ),
+    outputSchema: giteaHookSchema,
+    followUpActions: ["gitea.get_repository_hook"],
+  }),
+  defineProviderAction(service, {
+    name: "delete_repository_hook",
+    description: "Delete a webhook from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      hookId: s.positiveInteger("Numeric ID of the webhook to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_collaborators",
+    description: "List collaborators of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: collaboratorsListSchema,
+    followUpActions: ["gitea.get_collaborator_permission"],
+  }),
+  defineProviderAction(service, {
+    name: "add_collaborator",
+    description: "Add a collaborator to a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        collaborator: s.nonEmptyString("Username of the collaborator to add."),
+        permission: s.stringEnum("Permission level of the collaborator.", ["read", "write", "admin"]),
+      },
+      ["permission"],
+    ),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.list_collaborators"],
+  }),
+  defineProviderAction(service, {
+    name: "remove_collaborator",
+    description: "Remove a collaborator from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      collaborator: s.nonEmptyString("Username of the collaborator to remove."),
+    }),
+    outputSchema: okResponseSchema,
+    followUpActions: ["gitea.list_collaborators"],
+  }),
+  defineProviderAction(service, {
+    name: "get_collaborator_permission",
+    description: "Get the permission level of a Gitea repository collaborator.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      collaborator: s.nonEmptyString("Username of the collaborator."),
+    }),
+    outputSchema: giteaCollaboratorPermissionSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_my_organizations",
+    description: "List organizations the authenticated Gitea user belongs to.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      { optional: ["page", "limit"] },
+    ),
+    outputSchema: organizationsListSchema,
+    followUpActions: ["gitea.get_organization", "gitea.list_organization_repositories"],
+  }),
+  defineProviderAction(service, {
+    name: "get_organization",
+    description: "Get a Gitea organization by name.",
+    requiredScopes: [],
+    inputSchema: s.object("The input payload for this action.", {
+      org: s.nonEmptyString("Name of the organization."),
+    }),
+    outputSchema: giteaOrganizationSchema,
+    followUpActions: ["gitea.list_organization_repositories", "gitea.list_organization_members"],
+  }),
+  defineProviderAction(service, {
+    name: "list_organization_repositories",
+    description: "List repositories of a Gitea organization.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        org: s.nonEmptyString("Name of the organization."),
+        page: pageField,
+        limit: limitField,
+      },
+      { optional: ["page", "limit"] },
+    ),
+    outputSchema: repositoriesListSchema,
+    followUpActions: ["gitea.get_repository"],
+  }),
+  defineProviderAction(service, {
+    name: "list_organization_members",
+    description: "List members of a Gitea organization.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        org: s.nonEmptyString("Name of the organization."),
+        page: pageField,
+        limit: limitField,
+      },
+      { optional: ["page", "limit"] },
+    ),
+    outputSchema: organizationMembersListSchema,
+    followUpActions: ["gitea.get_organization"],
+  }),
+  defineProviderAction(service, {
+    name: "list_repository_stargazers",
+    description: "List stargazers of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: stargazersListSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_repository_watchers",
+    description: "List watchers of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: watchersListSchema,
+  }),
+  defineProviderAction(service, {
+    name: "star_repository",
+    description: "Star a Gitea repository for the authenticated user.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action."),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "unstar_repository",
+    description: "Remove a star from a Gitea repository for the authenticated user.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action."),
+    outputSchema: okResponseSchema,
+  }),
+  defineProviderAction(service, {
+    name: "list_repository_keys",
+    description: "List deploy keys of a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
+    outputSchema: deployKeysListSchema,
+    followUpActions: ["gitea.get_repository_key", "gitea.create_repository_key"],
+  }),
+  defineProviderAction(service, {
+    name: "create_repository_key",
+    description: "Create a deploy key in a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        title: s.nonEmptyString("Title of the deploy key."),
+        key: s.nonEmptyString("SSH public key content."),
+        readOnly: s.boolean("Whether the key should be read-only."),
+      },
+      ["readOnly"],
+    ),
+    outputSchema: giteaDeployKeySchema,
+    followUpActions: ["gitea.list_repository_keys"],
+  }),
+  defineProviderAction(service, {
+    name: "get_repository_key",
+    description: "Get a deploy key of a Gitea repository by ID.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      keyId: s.positiveInteger("Numeric ID of the deploy key."),
+    }),
+    outputSchema: giteaDeployKeySchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_repository_key",
+    description: "Delete a deploy key from a Gitea repository.",
+    requiredScopes: [],
+    inputSchema: repositoryInput("The input payload for this action.", {
+      keyId: s.positiveInteger("Numeric ID of the deploy key to delete."),
+    }),
+    outputSchema: okResponseSchema,
+  }),
 ];
 
 export type GiteaActionName =
@@ -863,4 +2277,75 @@ export type GiteaActionName =
   | "get_repository_contents"
   | "create_file"
   | "update_file"
-  | "delete_file";
+  | "delete_file"
+  | "create_repository"
+  | "update_repository"
+  | "delete_repository"
+  | "fork_repository"
+  | "list_repository_topics"
+  | "update_repository_topics"
+  | "list_branches"
+  | "get_branch"
+  | "create_branch"
+  | "delete_branch"
+  | "list_commits"
+  | "get_commit"
+  | "create_commit_status"
+  | "list_commit_statuses"
+  | "list_tags"
+  | "get_tag"
+  | "create_tag"
+  | "delete_tag"
+  | "list_releases"
+  | "get_release"
+  | "create_release"
+  | "update_release"
+  | "delete_release"
+  | "list_repository_labels"
+  | "get_label"
+  | "create_label"
+  | "update_label"
+  | "delete_label"
+  | "list_milestones"
+  | "get_milestone"
+  | "create_milestone"
+  | "update_milestone"
+  | "delete_milestone"
+  | "update_issue"
+  | "list_issue_labels"
+  | "add_issue_labels"
+  | "replace_issue_labels"
+  | "remove_issue_label"
+  | "clear_issue_labels"
+  | "update_issue_comment"
+  | "delete_issue_comment"
+  | "list_issue_assignees"
+  | "list_pull_request_commits"
+  | "check_pull_request_merged"
+  | "request_pull_request_reviewers"
+  | "remove_pull_request_reviewers"
+  | "delete_pull_request_review"
+  | "dismiss_pull_request_review"
+  | "list_pull_request_review_comments"
+  | "update_pull_request_branch"
+  | "list_repository_hooks"
+  | "create_repository_hook"
+  | "get_repository_hook"
+  | "update_repository_hook"
+  | "delete_repository_hook"
+  | "list_collaborators"
+  | "add_collaborator"
+  | "remove_collaborator"
+  | "get_collaborator_permission"
+  | "list_my_organizations"
+  | "get_organization"
+  | "list_organization_repositories"
+  | "list_organization_members"
+  | "list_repository_stargazers"
+  | "list_repository_watchers"
+  | "star_repository"
+  | "unstar_repository"
+  | "list_repository_keys"
+  | "create_repository_key"
+  | "get_repository_key"
+  | "delete_repository_key";
