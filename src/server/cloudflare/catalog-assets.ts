@@ -7,6 +7,7 @@ import { createCatalogStore, resolveExecutableActionIds } from "../../catalog-st
 const catalogIndexPath = "/catalog/index.json";
 const legacyCatalogPath = "/catalog/apps.json";
 const chunkNamePattern = /^apps-\d{4}\.json$/;
+const jsonContentTypePattern = /^application\/(?:[\w.+-]+\+)?json$/i;
 
 interface CatalogAssetIndex {
   version: 1;
@@ -14,28 +15,20 @@ interface CatalogAssetIndex {
   chunks: string[];
 }
 
+/** A catalog asset read attempt: either the parsed JSON, or why the asset is treated as absent. */
+type CatalogAsset = { found: true; value: unknown } | { found: false; reason: string };
+
 export async function loadCatalogFromAssets(
   assets: AssetsBinding,
   options: LoadCatalogOptions = {},
 ): Promise<CatalogStore> {
-  const indexResponse = await fetchAsset(assets, catalogIndexPath);
-  if (indexResponse.status === 404) {
-    const providers = requireProviderArray(await readJsonAsset(assets, legacyCatalogPath), legacyCatalogPath);
-    return createCatalogStore(providers, {
-      executableActionIds: resolveExecutableActionIds(providers, options),
-    });
-  }
-  if (!indexResponse.ok) {
-    throw assetRequestError(catalogIndexPath, indexResponse.status);
+  const indexAsset = await readJsonAsset(assets, catalogIndexPath);
+  if (!indexAsset.found) {
+    return createCatalog(await requireProviderArrayAsset(assets, legacyCatalogPath), options);
   }
 
-  const index = parseCatalogIndex(await readResponseJson(indexResponse, catalogIndexPath));
-  const chunks = await Promise.all(
-    index.chunks.map(async (chunk) => {
-      const path = `/catalog/${chunk}`;
-      return requireProviderArray(await readJsonAsset(assets, path), path);
-    }),
-  );
+  const index = parseCatalogIndex(indexAsset.value, catalogIndexPath);
+  const chunks = await Promise.all(index.chunks.map((chunk) => requireProviderArrayAsset(assets, `/catalog/${chunk}`)));
   const providers = chunks.flat();
   if (providers.length !== index.providerCount) {
     throw new Error(
@@ -43,14 +36,18 @@ export async function loadCatalogFromAssets(
     );
   }
 
+  return createCatalog(providers, options);
+}
+
+function createCatalog(providers: ProviderDefinition[], options: LoadCatalogOptions): CatalogStore {
   return createCatalogStore(providers, {
     executableActionIds: resolveExecutableActionIds(providers, options),
   });
 }
 
-function parseCatalogIndex(value: unknown): CatalogAssetIndex {
+function parseCatalogIndex(value: unknown, path: string): CatalogAssetIndex {
   if (!isRecord(value)) {
-    throw new Error("Cloudflare asset catalog index must be an object");
+    throw new Error(`Cloudflare asset catalog index must be an object: ${path}`);
   }
   const keys = Object.keys(value).sort();
   if (keys.join(",") !== "chunks,providerCount,version") {
@@ -83,28 +80,54 @@ function parseCatalogIndex(value: unknown): CatalogAssetIndex {
   };
 }
 
-function requireProviderArray(value: unknown, path: string): ProviderDefinition[] {
-  if (!Array.isArray(value)) {
+async function requireProviderArrayAsset(assets: AssetsBinding, path: string): Promise<ProviderDefinition[]> {
+  const asset = await readJsonAsset(assets, path);
+  if (!asset.found) {
+    throw assetRequestError(path, asset.reason);
+  }
+  if (!Array.isArray(asset.value)) {
     throw new Error(`Cloudflare asset catalog must be an array: ${path}`);
   }
-  return value as ProviderDefinition[];
+
+  return asset.value as ProviderDefinition[];
 }
 
-async function readJsonAsset(assets: AssetsBinding, path: string): Promise<unknown> {
+/**
+ * Read one catalog asset as JSON, reporting absence instead of throwing.
+ *
+ * `not_found_handling: "single-page-application"` (see `wrangler.example.jsonc`) makes the assets
+ * binding answer an unknown path with `index.html` and status 200 rather than 404, and it does so
+ * for binding fetches regardless of the request's `Accept` header. Absence is therefore decided by
+ * the response content type as well as by the status, so a deployment whose assets predate catalog
+ * chunking still resolves to the legacy catalog instead of failing on the SPA shell.
+ */
+async function readJsonAsset(assets: AssetsBinding, path: string): Promise<CatalogAsset> {
   const response = await fetchAsset(assets, path);
-  if (!response.ok) {
-    throw assetRequestError(path, response.status);
+  if (response.status === 404) {
+    return { found: false, reason: "returned 404" };
   }
-  return readResponseJson(response, path);
+  if (!response.ok) {
+    throw assetRequestError(path, `returned ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type");
+  if (!isJsonContentType(contentType)) {
+    return { found: false, reason: `returned content type ${contentType ?? "(none)"} instead of JSON` };
+  }
+
+  return { found: true, value: await readResponseJson(response, path) };
 }
 
 function fetchAsset(assets: AssetsBinding, path: string): Promise<Response> {
-  // Avoid treating a missing JSON asset as an SPA navigation that returns index.html.
   return assets.fetch(
     new Request(new URL(path, "https://assets.local"), {
       headers: { accept: "application/json" },
     }),
   );
+}
+
+function isJsonContentType(contentType: string | null): boolean {
+  return contentType !== null && jsonContentTypePattern.test(contentType.split(";", 1)[0]!.trim());
 }
 
 async function readResponseJson(response: Response, path: string): Promise<unknown> {
@@ -115,8 +138,8 @@ async function readResponseJson(response: Response, path: string): Promise<unkno
   }
 }
 
-function assetRequestError(path: string, status: number): Error {
-  return new Error(`Cloudflare asset catalog request failed: ${path} returned ${status}`);
+function assetRequestError(path: string, reason: string): Error {
+  return new Error(`Cloudflare asset catalog request failed: ${path} ${reason}`);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
