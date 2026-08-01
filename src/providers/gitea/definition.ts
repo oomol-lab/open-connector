@@ -28,7 +28,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://gitea.example.com",
           description:
-            "Gitea instance base URL, such as https://gitea.com or your self-hosted domain. URLs ending in /api/v1 are also accepted.",
+            "Gitea instance base URL, such as https://gitea.com or your self-hosted domain. URLs ending in /api/v1 are also accepted. Private/overlay targets and plain HTTP require the self-hosted runtime to enable OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK.",
         },
       ],
     },

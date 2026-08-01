@@ -10,7 +10,7 @@ import {
   positiveInteger,
   requiredString,
 } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const giteaApiSegment = "api/v1";
@@ -2546,7 +2546,10 @@ function buildValidationEndpoint(baseUrl: string, path: string): string {
   return new URL(pathWithoutLeadingSlash(path), buildGiteaApiBaseUrl(baseUrl)).pathname;
 }
 
-function normalizeGiteaBaseUrl(value: string | undefined): string {
+function normalizeGiteaBaseUrl(
+  value: string | undefined,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const trimmed = value?.trim();
   if (!trimmed) {
     throw new ProviderRequestError(400, "Base URL is required");
@@ -2555,9 +2558,10 @@ function normalizeGiteaBaseUrl(value: string | undefined): string {
   const parsed = assertPublicHttpUrl(trimmed, {
     fieldName: "baseUrl",
     createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
   });
 
-  if (parsed.protocol !== "https:") {
+  if (parsed.protocol === "http:" && !allowPrivateNetwork) {
     throw new ProviderRequestError(400, "Base URL must use https");
   }
 

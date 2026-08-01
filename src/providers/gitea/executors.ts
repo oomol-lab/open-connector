@@ -6,7 +6,13 @@ import type {
 } from "../../core/types.ts";
 import type { GiteaActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import {
+  createProviderFetch,
+  defineProviderExecutors,
+  defineProviderProxy,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 import { giteaActionHandlers, resolveGiteaBaseUrl, validateGiteaCredential } from "./runtime.ts";
 
 const service = "gitea";
@@ -27,6 +33,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<GiteaActionC
     };
   },
   fallbackMessage: "Gitea request failed.",
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
@@ -43,10 +50,12 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     type: "api_key_authorization",
     prefix: "token ",
   },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    return validateGiteaCredential(input, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateGiteaCredential(input, guardedFetcher, signal);
   },
 };
