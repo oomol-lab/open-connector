@@ -2110,7 +2110,7 @@ async function addCollaborator(input: Record<string, unknown>, context: GiteaAct
   await requestGiteaJson<unknown>({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
-    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeFilePath(collaborator)}`,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeURIComponent(collaborator)}`,
     method: "PUT",
     body: compactObject({
       permission: optionalString(input.permission),
@@ -2132,7 +2132,7 @@ async function removeCollaborator(input: Record<string, unknown>, context: Gitea
   await requestGiteaJson<unknown>({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
-    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeFilePath(collaborator)}`,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeURIComponent(collaborator)}`,
     method: "DELETE",
     fetcher: context.fetcher,
     signal: context.signal,
@@ -2154,7 +2154,7 @@ async function getCollaboratorPermission(
   const { payload } = await requestGiteaJson<Record<string, unknown>>({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
-    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeFilePath(collaborator)}/permission`,
+    path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeURIComponent(collaborator)}/permission`,
     fetcher: context.fetcher,
     signal: context.signal,
     phase: "execute",
@@ -2188,7 +2188,7 @@ async function getOrganization(input: Record<string, unknown>, context: GiteaAct
   const { payload } = await requestGiteaJson<Record<string, unknown>>({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
-    path: `/orgs/${encodeFilePath(org)}`,
+    path: `/orgs/${encodeURIComponent(org)}`,
     fetcher: context.fetcher,
     signal: context.signal,
     phase: "execute",
@@ -2205,7 +2205,7 @@ async function listOrganizationRepositories(
   const { items, totalCount } = await requestGiteaArray({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
-    path: `/orgs/${encodeFilePath(org)}/repos`,
+    path: `/orgs/${encodeURIComponent(org)}/repos`,
     query: compactObject({
       page: readOptionalPositiveInteger(input.page, "page"),
       limit: readOptionalPositiveInteger(input.limit, "limit"),
@@ -2227,7 +2227,7 @@ async function listOrganizationMembers(input: Record<string, unknown>, context: 
   const { items, totalCount } = await requestGiteaArray({
     apiKey: context.apiKey,
     baseUrl: context.baseUrl,
-    path: `/orgs/${encodeFilePath(org)}/members`,
+    path: `/orgs/${encodeURIComponent(org)}/members`,
     query: compactObject({
       page: readOptionalPositiveInteger(input.page, "page"),
       limit: readOptionalPositiveInteger(input.limit, "limit"),

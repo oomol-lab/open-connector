@@ -511,6 +511,19 @@ describe("gitea webhook, collaborator and organization handlers", () => {
     expect(JSON.parse(init.body as string)).toEqual({ permission: "write" });
   });
 
+  it("URL-encodes collaborator and organization single-segment identifiers", async () => {
+    const collaboratorFetcher = jsonFetch(204, null);
+    await giteaActionHandlers.add_collaborator(
+      { owner: "org", repo: "repo", collaborator: "a/b c" },
+      createContext(collaboratorFetcher),
+    );
+    expect(lastRequest(collaboratorFetcher).url).toContain("/repos/org/repo/collaborators/a%2Fb%20c");
+
+    const orgFetcher = jsonFetch(200, { id: 1, name: "a/b c" });
+    await giteaActionHandlers.get_organization({ org: "a/b c" }, createContext(orgFetcher));
+    expect(lastRequest(orgFetcher).url).toContain("/orgs/a%2Fb%20c");
+  });
+
   it("lists organizations of the authenticated user", async () => {
     const fetcher = jsonFetch(200, [{ id: 1, name: "org" }]);
     await giteaActionHandlers.list_my_organizations({ page: 1, limit: 10 }, createContext(fetcher));

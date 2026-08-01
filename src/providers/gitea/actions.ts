@@ -284,7 +284,7 @@ const pullReviewsListSchema = s.actionOutput(
   ["reviews"],
 );
 
-const giteaContentsResponseSchema = s.looseObject(
+const giteaContentsEntrySchema = s.looseObject(
   {
     type: s.string("Entry type: file, dir, symlink or submodule."),
     encoding: s.nullableString("Content encoding, populated when type is file."),
@@ -302,6 +302,17 @@ const giteaContentsResponseSchema = s.looseObject(
     last_commit_sha: s.string("SHA of the last commit that affected this entry."),
   },
   { description: "A Gitea repository contents entry." },
+);
+
+const giteaContentsResponseSchema = s.union(
+  [
+    giteaContentsEntrySchema,
+    s.array("Directory entries returned when filePath points to a directory.", giteaContentsEntrySchema),
+  ],
+  {
+    description:
+      "A Gitea repository contents response: a single entry for a file, or an array of entries for a directory.",
+  },
 );
 
 const giteaCommitSchema = s.looseObject(
@@ -326,7 +337,7 @@ const giteaCommitSchema = s.looseObject(
 
 const giteaFileOperationResponseSchema = s.looseObject(
   {
-    content: s.nullable(giteaContentsResponseSchema),
+    content: s.nullable(giteaContentsEntrySchema),
     commit: giteaCommitSchema,
   },
   { description: "Response of a Gitea file operation." },
@@ -335,6 +346,7 @@ const giteaFileOperationResponseSchema = s.looseObject(
 const giteaMergeResponseSchema = s.actionOutput(
   {
     ok: s.boolean("Whether the merge request succeeded."),
+    response: looseObjectSchema,
   },
   "A Gitea pull request merge response.",
   ["ok"],
@@ -1030,11 +1042,15 @@ export const giteaActions: ActionDefinition[] = [
     name: "list_pull_request_files",
     description: "List files changed by a Gitea pull request.",
     requiredScopes: [],
-    inputSchema: repositoryInput("The input payload for this action.", {
-      pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
-      page: pageField,
-      limit: limitField,
-    }),
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
     outputSchema: pullRequestFilesListSchema,
     followUpActions: ["gitea.get_repository_contents"],
   }),
@@ -1042,11 +1058,15 @@ export const giteaActions: ActionDefinition[] = [
     name: "list_pull_request_reviews",
     description: "List reviews for a Gitea pull request.",
     requiredScopes: [],
-    inputSchema: repositoryInput("The input payload for this action.", {
-      pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
-      page: pageField,
-      limit: limitField,
-    }),
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        page: pageField,
+        limit: limitField,
+      },
+      ["page", "limit"],
+    ),
     outputSchema: pullReviewsListSchema,
     followUpActions: ["gitea.create_pull_request_review", "gitea.submit_pull_request_review"],
   }),
@@ -1071,12 +1091,16 @@ export const giteaActions: ActionDefinition[] = [
     name: "submit_pull_request_review",
     description: "Submit a pending Gitea pull request review.",
     requiredScopes: [],
-    inputSchema: repositoryInput("The input payload for this action.", {
-      pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
-      reviewId: s.positiveInteger("ID of the review to submit."),
-      body: s.string("Review body."),
-      event: s.stringEnum("Review event.", ["APPROVED", "PENDING", "COMMENT", "REQUEST_CHANGES", "REQUEST_REVIEW"]),
-    }),
+    inputSchema: repositoryInput(
+      "The input payload for this action.",
+      {
+        pullRequestNumber: s.positiveInteger("Pull request number within the repository."),
+        reviewId: s.positiveInteger("ID of the review to submit."),
+        body: s.string("Review body."),
+        event: s.stringEnum("Review event.", ["APPROVED", "PENDING", "COMMENT", "REQUEST_CHANGES", "REQUEST_REVIEW"]),
+      },
+      ["body", "event"],
+    ),
     outputSchema: giteaPullReviewSchema,
   }),
   defineProviderAction(service, {
