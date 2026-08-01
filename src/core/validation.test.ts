@@ -19,4 +19,30 @@ describe("validateActionInput", () => {
       ]),
     );
   });
+
+  it("reports every invalid property instead of stopping at the first", () => {
+    const action = {
+      id: "example.echo",
+      service: "example",
+      name: "echo",
+      description: "Example action.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          first: { type: "string" },
+          second: { type: "number" },
+          third: { type: "boolean" },
+        },
+        required: ["first", "second", "third"],
+      },
+      outputSchema: { type: "object" },
+    } as never;
+
+    const result = validateActionInput(action, { first: 1, second: "two", third: "three" });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors.map((error) => error.instanceLocation)).toEqual(
+      expect.arrayContaining(["#/first", "#/second", "#/third"]),
+    );
+  });
 });
