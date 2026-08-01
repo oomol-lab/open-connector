@@ -19,11 +19,10 @@ OpenConnector is an open-source connector gateway for AI agents and an alternati
 Connect user app accounts once, then expose a shared catalog of 1,000+ providers and 10,000+
 prebuilt Actions to agents and applications.
 
-> [!IMPORTANT]
-> **Need OAuth ready to use?** [OOMOL-hosted connectors](https://oomol.com/apps) include managed OAuth
-> apps for supported providers and monthly Connect credits for roughly 15,000–20,000 calls,
-> depending on usage. Self-hosted OpenConnector includes the OAuth flow, credential storage, and
-> token refresh, but you provide your own OAuth apps.
+| <img src="assets/deployment-options/oomol.svg" alt="OOMOL" width="140"> | <img src="assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"> | <img src="assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"> |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Managed OAuth apps for supported providers, hosted runtime, and monthly Connect credits. No deployment or OAuth app registration required. | Run on Workers, D1, R2, and Static Assets in your own Cloudflare account. You manage the deployment. | Run locally or on your own infrastructure with Docker or Node.js. You manage storage and OAuth apps. |
+| **[OOMOL Hosted](https://oomol.com/apps)** | **[Deploy to Cloudflare](docs/cloudflare.md)** | **[Self-host OpenConnector](#quick-start)** |
 
 Use the [Connector SDK](https://github.com/oomol-lab/connector-sdk) from app code,
 [oo CLI](https://github.com/oomol-lab/oo-cli) as the local-agent relay, MCP from agent hosts,
