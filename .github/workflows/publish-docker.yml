@@ -20,6 +20,13 @@ concurrency:
   group: publish-docker-${{ github.ref }}
   cancel-in-progress: true
 
+# Reusable workflow calls are capped by what the caller grants — without this,
+# the token falls back to the repo/org default (packages: read here), and
+# build-image.yml's own `packages: write` request gets rejected.
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     name: Build & push
