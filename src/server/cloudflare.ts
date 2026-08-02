@@ -12,6 +12,7 @@ import { executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
 import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
+import { IsolatePromiseCache } from "./cloudflare/isolate-promise-cache.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { KVTransitFileService } from "./files/kv-transit-files.ts";
 import { R2TransitFileService } from "./files/r2-transit-files.ts";
@@ -24,28 +25,15 @@ interface CloudflareExecutionContext {
   passThroughOnException(): void;
 }
 
-let catalogPromise: Promise<CatalogStore> | undefined;
-let cachedSecretCodec: { key: string; codec: Promise<ISecretCodec> } | undefined;
-let cachedApp: { key: string; app: Promise<ConnectApp> } | undefined;
+const catalogCache = new IsolatePromiseCache<CatalogStore>();
+const secretCodecCache = new IsolatePromiseCache<ISecretCodec>();
+const appCache = new IsolatePromiseCache<ConnectApp>();
 
 export default {
   async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
     setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
     const publicOrigin = resolvePublicOrigin(request, env);
-    const cacheKey = createCacheKey(env, publicOrigin);
-    let appPromise = cachedApp?.key === cacheKey ? cachedApp.app : undefined;
-    if (!appPromise) {
-      const createdApp = createCloudflareApp(env, publicOrigin);
-      cachedApp = { key: cacheKey, app: createdApp };
-      void createdApp.catch(() => {
-        if (cachedApp?.app === createdApp) {
-          cachedApp = undefined;
-        }
-      });
-      appPromise = createdApp;
-    }
-
-    const { app } = await appPromise;
+    const { app } = await appCache.get(createCacheKey(env, publicOrigin), () => createCloudflareApp(env, publicOrigin));
     const response = await app.fetch(request, env);
     if (response.status === 404 && env.ASSETS && shouldServeAsset(request)) {
       return env.ASSETS.fetch(request);
@@ -127,28 +115,17 @@ function writeWorkerLog(level: "error" | "info" | "warn"): (fields: unknown, mes
 }
 
 function loadCatalogOnce(assets: AssetsBinding): Promise<CatalogStore> {
-  if (catalogPromise) {
-    return catalogPromise;
-  }
-
-  const createdCatalog = loadCatalogFromAssets(assets, {
-    executableServices: Object.keys(executorModules),
-  });
-  catalogPromise = createdCatalog;
-  void createdCatalog.catch(() => {
-    if (catalogPromise === createdCatalog) {
-      catalogPromise = undefined;
-    }
-  });
-  return createdCatalog;
+  // The catalog depends only on the assets binding, which is fixed for the isolate, so one slot
+  // under a constant key covers every request.
+  return catalogCache.get("", () =>
+    loadCatalogFromAssets(assets, {
+      executableServices: Object.keys(executorModules),
+    }),
+  );
 }
 
 function createSecretCodec(encryptionKey: string | undefined): Promise<ISecretCodec> {
-  const key = encryptionKey ?? "";
-  if (!cachedSecretCodec || cachedSecretCodec.key !== key) {
-    cachedSecretCodec = { key, codec: createWorkerSecretCodec(encryptionKey) };
-  }
-  return cachedSecretCodec.codec;
+  return secretCodecCache.get(encryptionKey ?? "", () => createWorkerSecretCodec(encryptionKey));
 }
 
 function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {

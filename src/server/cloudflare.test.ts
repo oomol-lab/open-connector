@@ -26,6 +26,10 @@ describe("cloudflare worker", () => {
   });
 
   it("deduplicates concurrent app creation and retries after a transient catalog failure", async () => {
+    // The app and catalog caches live in module state, so this test needs an isolate of its own:
+    // the shared `worker` above has already cached a healthy catalog. The reimported copy also
+    // gets a fresh `guarded-fetch` module, which `vitest.setup.ts` no longer holds off real DNS —
+    // keep this instance on local routes that perform no provider egress.
     vi.resetModules();
     const { default: isolatedWorker } = await import("./cloudflare.ts");
     const fallback = memoryAssets(chunkedCatalog());
