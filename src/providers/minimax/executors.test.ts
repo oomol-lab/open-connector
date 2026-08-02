@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { minimaxActions } from "./actions.ts";
 import { minimaxActionHandlers } from "./executors.ts";
 
 const apiBaseUrl = "https://api.minimax.io";
@@ -29,8 +31,8 @@ describe("MiniMax H3 video generation", () => {
         model: " MiniMax-H3 ",
         content: [
           { type: "text", text: "city skyline" },
-          { type: "image_url", image_url: "https://example.com/frame.png", role: "first_frame" },
-          { type: "audio_url", audio_url: "https://example.com/ref.mp3", role: "reference_audio" },
+          { type: "image_url", image_url: { url: "https://example.com/frame.png" }, role: "first_frame" },
+          { type: "audio_url", audio_url: { url: "https://example.com/ref.mp3" }, role: "reference_audio" },
         ],
         resolution: " 2K ",
         duration: 12,
@@ -52,10 +54,60 @@ describe("MiniMax H3 video generation", () => {
       callback_url: "https://example.com/callback",
       content: [
         { type: "text", text: "city skyline" },
-        { type: "image_url", image_url: "https://example.com/frame.png", role: "first_frame" },
-        { type: "audio_url", audio_url: "https://example.com/ref.mp3", role: "reference_audio" },
+        { type: "image_url", image_url: { url: "https://example.com/frame.png" }, role: "first_frame" },
+        { type: "audio_url", audio_url: { url: "https://example.com/ref.mp3" }, role: "reference_audio" },
       ],
     });
+  });
+
+  it("validates the v2 media shape and required text prompt", () => {
+    const action = minimaxActions.find((action) => action.id === "minimax.create_video_generation_v2")!;
+    const input = {
+      model: "MiniMax-H3",
+      content: [
+        { type: "text", text: "city skyline" },
+        { type: "image_url", image_url: { url: "https://example.com/frame.png" }, role: "first_frame" },
+      ],
+      resolution: "768P",
+      duration: 5,
+    };
+
+    expect(validateActionInput(action, input).valid).toBe(true);
+    expect(
+      validateActionInput(action, {
+        ...input,
+        content: [{ type: "image_url", image_url: { url: "https://example.com/frame.png" } }],
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateActionInput(action, {
+        ...input,
+        content: [
+          { type: "text", text: "city skyline" },
+          { type: "video_url", video_url: "https://example.com/ref.mp4", role: "reference_video" },
+        ],
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateActionInput(action, {
+        ...input,
+        content: [
+          { type: "text", text: "city skyline" },
+          {
+            type: "image_url",
+            image_url: { url: "https://example.com/frame.png" },
+            role: "reference_video",
+          },
+        ],
+      }).valid,
+    ).toBe(false);
+  });
+
+  it("validates v2 list status filters", () => {
+    const action = minimaxActions.find((action) => action.id === "minimax.list_video_generation_v2")!;
+
+    expect(validateActionInput(action, { filter: { status: "succeeded" } }).valid).toBe(true);
+    expect(validateActionInput(action, { filter: { status: "Success" } }).valid).toBe(false);
   });
 
   it("routes v2 video query, list, and delete operations", async () => {
@@ -67,7 +119,7 @@ describe("MiniMax H3 video generation", () => {
       {
         page_num: 2,
         page_size: 10,
-        filter: { status: "Success", task_ids: ["task-1", "task-2"], model: "MiniMax-H3", task_type: "text" },
+        filter: { status: "succeeded", task_ids: ["task-1", "task-2"], model: "MiniMax-H3", task_type: "text" },
       },
       context,
     );
@@ -76,7 +128,7 @@ describe("MiniMax H3 video generation", () => {
     expect(vi.mocked(fetcher).mock.calls.map(([url, init]) => [String(url), init?.method])).toEqual([
       [`${apiBaseUrl}/v2/query/video_generation/task%2F1`, "GET"],
       [
-        `${apiBaseUrl}/v2/query/video_generation?page_num=2&page_size=10&filter.status=Success&filter.model=MiniMax-H3&filter.task_type=text&filter.task_ids=task-1&filter.task_ids=task-2`,
+        `${apiBaseUrl}/v2/query/video_generation?page_num=2&page_size=10&filter.status=succeeded&filter.model=MiniMax-H3&filter.task_type=text&filter.task_ids=task-1&filter.task_ids=task-2`,
         "GET",
       ],
       [`${apiBaseUrl}/v2/video_generation/task%2F1`, "DELETE"],

@@ -206,6 +206,7 @@ const createResponseOutputSchema = s.looseRequiredObject(
 );
 
 const h3VideoModel = "MiniMax-H3";
+const videoGenerationV2Statuses = ["queued", "running", "succeeded", "failed", "cancelled", "expired"];
 
 const textToVideoModels = ["MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "T2V-01-Director", "T2V-01"];
 
@@ -244,41 +245,59 @@ const videoPromptOptimizerSchema = s.boolean("Whether MiniMax may rewrite the pr
 const videoFastPretreatmentSchema = s.boolean("Whether MiniMax applies fast pre-processing to speed up generation.");
 const videoCallbackUrlSchema = s.url("URL MiniMax calls with asynchronous task status updates.");
 
-const videoGenerationV2ContentSchema = s.object(
-  "MiniMax H3 video generation content item.",
-  {
-    type: s.stringEnum("Content item type.", ["text", "image_url", "video_url", "audio_url"]),
-    text: trimmedNonEmptyString("Text prompt content."),
-    image_url: trimmedNonEmptyString("Image content URL."),
-    video_url: trimmedNonEmptyString("Video content URL."),
-    audio_url: trimmedNonEmptyString("Audio content URL."),
-    role: s.stringEnum("Content role for frame, reference image, video, or audio guidance.", [
-      "first_frame",
-      "last_frame",
-      "reference_image",
-      "reference_video",
-      "reference_audio",
-    ]),
-  },
-  { optional: ["text", "image_url", "video_url", "audio_url", "role"] },
-);
+const videoGenerationV2TextContentSchema = s.object("MiniMax H3 text content item.", {
+  type: s.literal("text", { description: "Text content item type." }),
+  text: s.string({ description: "Text prompt content.", minLength: 1, maxLength: 7000, pattern: "\\S" }),
+});
+
+const videoGenerationV2ContentSchema = s.anyOf("MiniMax H3 video generation content item.", [
+  videoGenerationV2TextContentSchema,
+  s.object(
+    "MiniMax H3 image content item.",
+    {
+      type: s.literal("image_url", { description: "Image content item type." }),
+      image_url: s.object("Image input location.", {
+        url: trimmedNonEmptyString("Public URL, MiniMax file URI, or image data URI."),
+      }),
+      role: s.stringEnum("Image purpose in the generated video.", ["first_frame", "last_frame", "reference_image"]),
+    },
+    { optional: ["role"] },
+  ),
+  s.object("MiniMax H3 reference video content item.", {
+    type: s.literal("video_url", { description: "Video content item type." }),
+    video_url: s.object("Reference video location.", {
+      url: trimmedNonEmptyString("Public URL, MiniMax file URI, or video data URI."),
+    }),
+    role: s.literal("reference_video", { description: "Reference video content role." }),
+  }),
+  s.object("MiniMax H3 reference audio content item.", {
+    type: s.literal("audio_url", { description: "Audio content item type." }),
+    audio_url: s.object("Reference audio location.", {
+      url: trimmedNonEmptyString("Public URL, MiniMax file URI, or audio data URI."),
+    }),
+    role: s.literal("reference_audio", { description: "Reference audio content role." }),
+  }),
+]);
 
 const videoGenerationV2InputSchema = s.object(
   "Request body for creating a MiniMax H3 video generation task.",
   {
     model: s.literal(h3VideoModel, { description: "MiniMax H3 video generation model." }),
-    content: s.array("Ordered text, image, video, or audio content for generation.", videoGenerationV2ContentSchema, {
-      minItems: 1,
-    }),
-    resolution: s.stringEnum("Generated video resolution.", ["2K"], { default: "2K" }),
+    content: {
+      ...s.array("Ordered text, image, video, or audio content for generation.", videoGenerationV2ContentSchema, {
+        minItems: 1,
+      }),
+      contains: videoGenerationV2TextContentSchema,
+    },
+    resolution: s.stringEnum(["768P", "2K"], { description: "Generated video resolution.", default: "2K" }),
     duration: s.integer("Generated video duration in seconds.", { minimum: 4, maximum: 15 }),
-    ratio: s.stringEnum("Generated video aspect ratio.", ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"], {
+    ratio: s.stringEnum(["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"], {
+      description: "Generated video aspect ratio.",
       default: "adaptive",
     }),
     callback_url: videoCallbackUrlSchema,
-    aigc_watermark: s.boolean("Whether to add the regional AIGC watermark when supported by the selected region."),
   },
-  { optional: ["ratio", "callback_url", "aigc_watermark"] },
+  { optional: ["ratio", "callback_url"] },
 );
 
 const textToVideoInputSchema = s.object(
@@ -322,7 +341,7 @@ const listVideoGenerationV2InputSchema = s.object(
     filter: s.object(
       "Optional MiniMax H3 video task filters.",
       {
-        status: optionalTrimmedString("Task status filter."),
+        status: s.stringEnum("Task status filter.", videoGenerationV2Statuses),
         task_ids: s.array("Task identifiers to include.", trimmedNonEmptyString("Task identifier."), { minItems: 1 }),
         model: s.literal(h3VideoModel, { description: "MiniMax H3 video generation model." }),
         task_type: optionalTrimmedString("Task type filter."),
@@ -371,8 +390,10 @@ const videoGenerationV2TaskSchema = s.looseRequiredObject(
   {
     id: s.string("MiniMax H3 video task identifier."),
     model: s.string("MiniMax model that processed the task."),
-    status: s.string("Current task status."),
+    status: s.stringEnum("Current task status.", videoGenerationV2Statuses),
     error: s.unknownObject("Task error details when generation fails."),
+    created_at: s.integer("Unix timestamp when MiniMax created the task."),
+    updated_at: s.integer("Unix timestamp when MiniMax last updated the task."),
     content: s.looseRequiredObject("Generated video content.", {
       url: s.string("Generated video URL."),
     }),
@@ -381,9 +402,23 @@ const videoGenerationV2TaskSchema = s.looseRequiredObject(
     usage: s.unknownObject("MiniMax H3 video usage details."),
     ratio: s.string("Generated video aspect ratio."),
     task_type: s.string("MiniMax H3 video task type."),
-    modality: s.string("Generated task modality."),
   },
-  { optional: ["id", "model", "status", "error", "content", "resolution", "duration", "usage", "ratio", "task_type", "modality"] },
+  {
+    optional: [
+      "id",
+      "model",
+      "status",
+      "error",
+      "created_at",
+      "updated_at",
+      "content",
+      "resolution",
+      "duration",
+      "usage",
+      "ratio",
+      "task_type",
+    ],
+  },
 );
 
 const videoGenerationV2CreatedOutputSchema = s.looseRequiredObject("MiniMax H3 video task creation response.", {
@@ -401,7 +436,7 @@ const videoGenerationV2ListOutputSchema = s.looseRequiredObject("MiniMax H3 vide
 
 const videoGenerationV2DeleteOutputSchema = s.looseRequiredObject("MiniMax H3 video task deletion response.", {
   task_id: s.string("Identifier of the deleted MiniMax H3 video generation task."),
-  action: s.string("Deletion action name."),
+  action: s.stringEnum("Deletion action name.", ["cancel", "delete"]),
   status: s.string("Deletion status."),
 });
 
