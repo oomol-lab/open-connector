@@ -33,11 +33,19 @@ export default {
     setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
     const publicOrigin = resolvePublicOrigin(request, env);
     const cacheKey = createCacheKey(env, publicOrigin);
-    if (!cachedApp || cachedApp.key !== cacheKey) {
-      cachedApp = { key: cacheKey, app: createCloudflareApp(env, publicOrigin) };
+    let appPromise = cachedApp?.key === cacheKey ? cachedApp.app : undefined;
+    if (!appPromise) {
+      const createdApp = createCloudflareApp(env, publicOrigin);
+      cachedApp = { key: cacheKey, app: createdApp };
+      void createdApp.catch(() => {
+        if (cachedApp?.app === createdApp) {
+          cachedApp = undefined;
+        }
+      });
+      appPromise = createdApp;
     }
 
-    const { app } = await cachedApp.app;
+    const { app } = await appPromise;
     const response = await app.fetch(request, env);
     if (response.status === 404 && env.ASSETS && shouldServeAsset(request)) {
       return env.ASSETS.fetch(request);
@@ -119,10 +127,20 @@ function writeWorkerLog(level: "error" | "info" | "warn"): (fields: unknown, mes
 }
 
 function loadCatalogOnce(assets: AssetsBinding): Promise<CatalogStore> {
-  catalogPromise ??= loadCatalogFromAssets(assets, {
+  if (catalogPromise) {
+    return catalogPromise;
+  }
+
+  const createdCatalog = loadCatalogFromAssets(assets, {
     executableServices: Object.keys(executorModules),
   });
-  return catalogPromise;
+  catalogPromise = createdCatalog;
+  void createdCatalog.catch(() => {
+    if (catalogPromise === createdCatalog) {
+      catalogPromise = undefined;
+    }
+  });
+  return createdCatalog;
 }
 
 function createSecretCodec(encryptionKey: string | undefined): Promise<ISecretCodec> {

@@ -25,6 +25,45 @@ describe("cloudflare worker", () => {
     vi.restoreAllMocks();
   });
 
+  it("deduplicates concurrent app creation and retries after a transient catalog failure", async () => {
+    vi.resetModules();
+    const { default: isolatedWorker } = await import("./cloudflare.ts");
+    const fallback = memoryAssets(chunkedCatalog());
+    let indexAttempts = 0;
+    const assets: AssetsBinding = {
+      async fetch(request) {
+        if (new URL(request.url).pathname === "/catalog/index.json" && ++indexAttempts === 1) {
+          return new Response("upstream", { status: 500 });
+        }
+        return fallback.fetch(request);
+      },
+    };
+    const env: CloudflareEnv = {
+      DB: new UnusedD1Database(),
+      TRANSIT_FILES: new UnusedR2Bucket(),
+      ASSETS: assets,
+    };
+    const request = (): Request => new Request("https://catalog-retry.example.com/api/auth/session");
+    const failures = await Promise.allSettled([
+      isolatedWorker.fetch(request(), env, createExecutionContext()),
+      isolatedWorker.fetch(request(), env, createExecutionContext()),
+    ]);
+
+    for (const failure of failures) {
+      expect(failure).toMatchObject({
+        status: "rejected",
+        reason: {
+          message: "Cloudflare asset catalog request failed: /catalog/index.json returned 500",
+        },
+      });
+    }
+    expect(indexAttempts).toBe(1);
+
+    const response = await isolatedWorker.fetch(request(), env, createExecutionContext());
+    expect(response.status).toBe(200);
+    expect(indexAttempts).toBe(2);
+  });
+
   it("writes connection logs to console", async () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const response = await worker.fetch(
