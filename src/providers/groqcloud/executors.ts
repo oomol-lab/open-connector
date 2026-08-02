@@ -78,14 +78,16 @@ async function groqcloudRequest(input: {
   phase: GroqcloudRequestPhase;
   method?: "GET" | "POST";
   path: string;
-  body?: Record<string, unknown>;
+  body?: Record<string, unknown> | FormData;
 }): Promise<unknown> {
+  // Multipart carries its own boundary, so omit the JSON content type.
+  const isMultipart = input.body instanceof FormData;
   let response: Response;
   try {
     response = await input.context.fetcher(`${groqcloudApiBaseUrl}${input.path}`, {
       method: input.method ?? "GET",
-      headers: groqcloudHeaders(input.context.apiKey, input.body !== undefined),
-      body: input.body ? JSON.stringify(input.body) : undefined,
+      headers: groqcloudHeaders(input.context.apiKey, input.body !== undefined && !isMultipart),
+      body: isMultipart ? (input.body as FormData) : input.body ? JSON.stringify(input.body) : undefined,
       signal: input.context.signal,
     });
   } catch (error) {
