@@ -5,7 +5,12 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "groqcloud";
 
-export type GroqcloudActionName = "list_models" | "get_model" | "create_chat_completion";
+export type GroqcloudActionName =
+  | "list_models"
+  | "get_model"
+  | "create_chat_completion"
+  | "create_audio_transcription"
+  | "create_audio_translation";
 
 const nullSchema: JsonSchema = { type: "null", description: "Null value." };
 const unknownJsonValueSchema = s.unknown("Any JSON value accepted by the upstream API.");
@@ -119,6 +124,92 @@ const chatCompletionOutputSchema = s.looseObject("The response payload for a Gro
   system_fingerprint: s.string("The backend system fingerprint for the completion."),
 });
 
+const audioModelSchema = s.stringEnum("The GroqCloud speech-to-text model identifier.", [
+  "whisper-large-v3",
+  "whisper-large-v3-turbo",
+]);
+const translationModelSchema = s.stringEnum(
+  "The GroqCloud speech-to-text model identifier. Only whisper-large-v3 supports translation.",
+  ["whisper-large-v3"],
+);
+const audioFileSchema: JsonSchema = {
+  ...s.object(
+    "The audio source. Provide url for GroqCloud to fetch the audio, or content_base64 to upload the bytes inline.",
+    {
+      name: s.nonEmptyString(
+        "The file name reported to GroqCloud, including the audio file extension. Required with content_base64.",
+      ),
+      mimetype: s.string("The MIME type of the audio file, such as audio/mpeg."),
+      url: s.string("A public URL that GroqCloud downloads the audio from."),
+      content_base64: s.nonEmptyString("The base64-encoded audio content to upload."),
+    },
+    { optional: ["name", "mimetype", "url", "content_base64"] },
+  ),
+  anyOf: [{ required: ["url"] }, { required: ["content_base64", "name"] }],
+};
+const audioResponseFormatSchema = s.stringEnum(
+  "The transcript format to return. This connector returns structured payloads, so the plain text format is not offered.",
+  ["json", "verbose_json"],
+);
+const audioTemperatureSchema = s.number("The sampling temperature applied to the transcription.", {
+  minimum: 0,
+  maximum: 1,
+});
+const audioPromptSchema = s.string("Optional context or style guidance for the transcript, limited to 224 tokens.");
+const transcriptionInputSchema = s.object(
+  "The input payload for transcribing audio with GroqCloud.",
+  {
+    model: audioModelSchema,
+    file: audioFileSchema,
+    language: s.string("The ISO-639-1 code of the spoken language, such as en, which improves accuracy and latency."),
+    prompt: audioPromptSchema,
+    response_format: audioResponseFormatSchema,
+    temperature: audioTemperatureSchema,
+    timestamp_granularities: s.array(
+      "The timestamp detail to include. Requires response_format to be verbose_json.",
+      s.stringEnum("A timestamp granularity.", ["word", "segment"]),
+      { minItems: 1 },
+    ),
+  },
+  { required: ["model", "file"] },
+);
+const translationInputSchema = s.object(
+  "The input payload for translating audio into English with GroqCloud.",
+  {
+    model: translationModelSchema,
+    file: audioFileSchema,
+    prompt: audioPromptSchema,
+    response_format: audioResponseFormatSchema,
+    temperature: audioTemperatureSchema,
+  },
+  { required: ["model", "file"] },
+);
+const audioSegmentSchema = s.looseObject("A transcribed segment of the audio.", {
+  id: s.integer("The segment index."),
+  seek: s.integer("The seek offset of the segment."),
+  start: s.number("The segment start time in seconds."),
+  end: s.number("The segment end time in seconds."),
+  text: s.string("The transcribed text for the segment."),
+  tokens: s.array("The token identifiers for the segment.", s.integer("A token identifier.")),
+  temperature: s.number("The sampling temperature used for the segment."),
+  avg_logprob: s.number("The average log probability of the segment."),
+  compression_ratio: s.number("The compression ratio of the segment."),
+  no_speech_prob: s.number("The probability that the segment contains no speech."),
+});
+const audioWordSchema = s.looseObject("A transcribed word with timestamps.", {
+  word: s.string("The transcribed word."),
+  start: s.number("The word start time in seconds."),
+  end: s.number("The word end time in seconds."),
+});
+const audioTranscriptOutputSchema = s.looseObject("The transcript payload returned by GroqCloud.", {
+  text: s.string("The full transcript text."),
+  language: s.string("The detected or requested language of the audio."),
+  duration: s.number("The audio duration in seconds."),
+  segments: s.array("The transcribed segments, returned for the verbose_json format.", audioSegmentSchema),
+  words: s.array("The transcribed words, returned when word timestamp granularity is requested.", audioWordSchema),
+  x_groq: jsonObjectSchema,
+});
+
 export const groqcloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
@@ -137,5 +228,19 @@ export const groqcloudActions: ActionDefinition[] = [
     description: "Create a non-streaming GroqCloud OpenAI-compatible chat completion.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_audio_transcription",
+    description:
+      "Transcribe an audio file into text in its original language using a GroqCloud Whisper model. Supply the audio inline as base64 or as a public URL that GroqCloud downloads.",
+    inputSchema: transcriptionInputSchema,
+    outputSchema: audioTranscriptOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_audio_translation",
+    description:
+      "Translate an audio file into English text using a GroqCloud Whisper model. Supply the audio inline as base64 or as a public URL that GroqCloud downloads.",
+    inputSchema: translationInputSchema,
+    outputSchema: audioTranscriptOutputSchema,
   }),
 ];
