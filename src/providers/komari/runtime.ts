@@ -1,13 +1,15 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { KomariOperation } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
-import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";
+import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
+import { komariOperations } from "./operations.ts";
 
 type KomariRequestPhase = "validate" | "execute";
 type KomariActionHandler = (input: Record<string, unknown>, context: KomariActionContext) => Promise<unknown>;
@@ -27,82 +29,61 @@ export interface KomariActionContext {
 const defaultRequestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 const rpcPath = "api/rpc2";
+const safeNodeFields = [
+  "uuid",
+  "name",
+  "cpu_name",
+  "virtualization",
+  "arch",
+  "cpu_cores",
+  "cpu_physical_cores",
+  "os",
+  "kernel_version",
+  "gpu_name",
+  "region",
+  "public_remark",
+  "mem_total",
+  "swap_total",
+  "disk_total",
+  "weight",
+  "group",
+  "tags",
+  "hidden",
+  "traffic_limit",
+  "traffic_limit_type",
+  "created_at",
+  "updated_at",
+];
+const safeAdminNodeFields = [
+  ...safeNodeFields,
+  "ipv4",
+  "ipv6",
+  "remark",
+  "version",
+  "price",
+  "billing_cycle",
+  "auto_renewal",
+  "currency",
+  "expired_at",
+];
 
-export const komariActionHandlers: Record<string, KomariActionHandler> = {
-  async get_version(_input, context) {
-    return normalizeVersion(await requestKomariRpc("public:getVersion", {}, context, "execute"));
-  },
-  async list_nodes(_input, context) {
-    const result = await requestKomariRpc("public:getNodesInformation", {}, context, "execute");
-    return { nodes: requiredRecordArray(result, "node list").map(safeNode) };
-  },
-  async get_recent_metrics(input, context) {
-    const uuid = requiredInputString(input.uuid, "uuid");
-    return {
-      records: requiredRecordArray(
-        await requestKomariRpc("public:getClientRecentRecords", { uuid }, context, "execute"),
-        "recent metrics",
-      ),
-    };
-  },
-  async get_load_history(input, context) {
-    const uuid = requiredInputString(input.uuid, "uuid");
-    const loadType = optionalString(input.loadType) ?? "all";
-    const hours = optionalPositiveInteger(input.hours, "hours") ?? 4;
-    const result = requiredResultRecord(
-      await requestKomariRpc(
-        "public:getRecordsByUUID",
-        { uuid, load_type: loadType, hours: String(hours) },
-        context,
-        "execute",
-      ),
-      "load history",
-    );
-    return {
-      count: numberOrZero(result.count),
-      records: arrayOfRecords(result.records),
-      loadType: optionalString(result.load_type) ?? (loadType === "all" ? null : loadType),
-      ...(typeof result.has_gpu_data === "boolean" ? { hasGpuData: result.has_gpu_data } : {}),
-      ...(optionalRecord(result.gpu_devices) ? { gpuDevices: result.gpu_devices } : {}),
-    };
-  },
-  async list_ping_tasks(_input, context) {
-    return {
-      tasks: requiredRecordArray(
-        await requestKomariRpc("public:getPublicPingTasks", {}, context, "execute"),
-        "ping task list",
-      ),
-    };
-  },
-  async get_node_ping_history(input, context) {
-    return executePingHistory(
-      {
-        uuid: requiredInputString(input.uuid, "uuid"),
-        hours: String(optionalPositiveInteger(input.hours, "hours") ?? 4),
-      },
-      context,
-    );
-  },
-  async get_task_ping_history(input, context) {
-    return executePingHistory(
-      {
-        task_id: String(requiredPositiveInteger(input.taskId, "taskId")),
-        hours: String(optionalPositiveInteger(input.hours, "hours") ?? 4),
-      },
-      context,
-    );
-  },
-};
+export const komariActionHandlers: Record<string, KomariActionHandler> = Object.fromEntries(
+  komariOperations.map((operation) => [
+    operation.name,
+    (input: Record<string, unknown>, context: KomariActionContext) => executeKomariOperation(operation, input, context),
+  ]),
+);
 
 export function createKomariContext(
   values: Record<string, string>,
   apiKey: string,
   fetcher: typeof fetch,
+  allowPrivateNetwork: boolean,
   signal?: AbortSignal,
 ): KomariActionContext {
   return {
     apiKey,
-    baseUrl: normalizeKomariBaseUrl(values.baseUrl),
+    baseUrl: normalizeKomariBaseUrl(values.baseUrl, allowPrivateNetwork),
     fetcher,
     signal,
   };
@@ -112,9 +93,10 @@ export async function validateKomariCredential(
   values: Record<string, string>,
   apiKey: string,
   fetcher: typeof fetch,
+  allowPrivateNetwork: boolean,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const context = createKomariContext(values, apiKey, fetcher, signal);
+  const context = createKomariContext(values, apiKey, fetcher, allowPrivateNetwork, signal);
   const version = normalizeVersion(await requestKomariRpc("public:getVersion", {}, context, "validate"));
   await requestKomariRpc("admin:getDatabaseSize", {}, context, "validate");
   const host = new URL(context.baseUrl).host;
@@ -133,10 +115,7 @@ export async function validateKomariCredential(
 }
 
 /** Normalize a Komari instance URL while preserving a reverse-proxy base path. */
-export function normalizeKomariBaseUrl(
-  value: unknown,
-  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
-): string {
+export function normalizeKomariBaseUrl(value: unknown, allowPrivateNetwork: boolean): string {
   const instanceUrl = requiredString(value, "baseUrl", credentialError);
   const url = assertPublicHttpUrl(instanceUrl, {
     fieldName: "baseUrl",
@@ -158,22 +137,102 @@ export function normalizeKomariBaseUrl(
   return url.toString().replace(/\/$/u, "");
 }
 
-async function executePingHistory(params: Record<string, string>, context: KomariActionContext): Promise<unknown> {
-  const result = requiredResultRecord(
-    await requestKomariRpc("public:getPingRecords", params, context, "execute"),
-    "ping history",
+async function executeKomariOperation(
+  operation: KomariOperation,
+  input: Record<string, unknown>,
+  context: KomariActionContext,
+): Promise<unknown> {
+  const result = await requestKomariRpc(
+    operation.rpcMethod,
+    prepareOperationParams(operation, input),
+    context,
+    "execute",
   );
+  if (operation.resultMode === "success") {
+    return { success: true };
+  }
+  if (operation.resultMode === "safe_node") {
+    const node = safeNode(requiredResultRecord(result, "client"));
+    return operation.resultKey ? { [operation.resultKey]: node } : node;
+  }
+  if (operation.resultMode === "safe_nodes") {
+    const nodes = requiredRecordArray(result, "node list").map(safeNode);
+    return { [operation.resultKey ?? "nodes"]: nodes };
+  }
+  if (operation.resultMode === "safe_admin_node") {
+    const node = safeAdminNode(requiredResultRecord(result, "client"));
+    return operation.resultKey ? { [operation.resultKey]: node } : node;
+  }
+  if (operation.resultMode === "safe_admin_nodes") {
+    const nodes = requiredRecordArray(result, "client list").map(safeAdminNode);
+    return { [operation.resultKey ?? "clients"]: nodes };
+  }
+  if (operation.resultMode === "load_history") {
+    return normalizeLoadHistory(result, input);
+  }
+  if (operation.resultMode === "ping_history") {
+    return normalizePingHistory(result);
+  }
+  if (operation.name === "get_version") {
+    return normalizeVersion(result);
+  }
+  return operation.resultKey ? { [operation.resultKey]: result } : result;
+}
+
+function prepareOperationParams(operation: KomariOperation, input: Record<string, unknown>): unknown {
+  if (operation.paramsArrayField) {
+    return input[operation.paramsArrayField];
+  }
+  const params = { ...input };
+  for (const field of operation.stringifyFields ?? []) {
+    if (params[field] !== undefined) {
+      params[field] = String(params[field]);
+    }
+  }
+  return params;
+}
+
+interface KomariLoadHistory {
+  count: number;
+  records: Array<Record<string, unknown>>;
+  load_type?: string | null;
+  has_gpu_data?: boolean;
+  gpu_devices?: Record<string, unknown>;
+}
+
+function normalizeLoadHistory(value: unknown, input: Record<string, unknown>): KomariLoadHistory {
+  const result = requiredResultRecord(value, "load history");
+  const normalized: KomariLoadHistory = {
+    count: numberOrZero(result.count),
+    records: arrayOfRecords(result.records),
+  };
+  const loadType = optionalString(result.load_type) ?? optionalString(input.load_type);
+  if (loadType) {
+    normalized.load_type = loadType;
+  }
+  if (typeof result.has_gpu_data === "boolean") {
+    normalized.has_gpu_data = result.has_gpu_data;
+  }
+  const gpuDevices = optionalRecord(result.gpu_devices);
+  if (gpuDevices) {
+    normalized.gpu_devices = gpuDevices;
+  }
+  return normalized;
+}
+
+function normalizePingHistory(value: unknown): unknown {
+  const result = requiredResultRecord(value, "ping history");
   return {
     count: numberOrZero(result.count),
     records: arrayOfRecords(result.records),
-    basicInfo: arrayOfRecords(result.basic_info),
+    basic_info: arrayOfRecords(result.basic_info),
     tasks: arrayOfRecords(result.tasks),
   };
 }
 
 async function requestKomariRpc(
   method: string,
-  params: Record<string, unknown>,
+  params: unknown,
   context: KomariActionContext,
   phase: KomariRequestPhase,
 ): Promise<unknown> {
@@ -251,32 +310,15 @@ function normalizeVersion(value: unknown): { version: string; hash: string | nul
 }
 
 function safeNode(value: Record<string, unknown>): Record<string, unknown> {
-  const safeFields = [
-    "uuid",
-    "name",
-    "cpu_name",
-    "virtualization",
-    "arch",
-    "cpu_cores",
-    "cpu_physical_cores",
-    "os",
-    "kernel_version",
-    "gpu_name",
-    "region",
-    "public_remark",
-    "mem_total",
-    "swap_total",
-    "disk_total",
-    "weight",
-    "group",
-    "tags",
-    "hidden",
-    "traffic_limit",
-    "traffic_limit_type",
-    "created_at",
-    "updated_at",
-  ] as const;
-  return Object.fromEntries(safeFields.flatMap((field) => (value[field] === undefined ? [] : [[field, value[field]]])));
+  return Object.fromEntries(
+    safeNodeFields.flatMap((field) => (value[field] === undefined ? [] : [[field, value[field]]])),
+  );
+}
+
+function safeAdminNode(value: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    safeAdminNodeFields.flatMap((field) => (value[field] === undefined ? [] : [[field, value[field]]])),
+  );
 }
 
 function arrayOfRecords(value: unknown): Array<Record<string, unknown>> {
@@ -320,24 +362,6 @@ function rpcErrorMessage(value: unknown): string | undefined {
 
 function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function optionalPositiveInteger(value: unknown, fieldName: string): number | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  return requiredPositiveInteger(value, fieldName);
-}
-
-function requiredPositiveInteger(value: unknown, fieldName: string): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
-    throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
-  }
-  return value;
 }
 
 function credentialError(message: string): ProviderRequestError {

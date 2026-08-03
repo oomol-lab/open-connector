@@ -17,7 +17,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<KomariAction
   handlers: komariActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<KomariActionContext> {
     const credential = await requireApiKeyCredential(context, service);
-    return createKomariContext(credential.values, credential.apiKey, fetcher, context.signal);
+    return createKomariContext(
+      credential.values,
+      credential.apiKey,
+      fetcher,
+      isPrivateNetworkAccessAllowed(),
+      context.signal,
+    );
   },
   fallbackMessage: "Komari request failed",
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
@@ -26,6 +32,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<KomariAction
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
-    return validateKomariCredential(input.values, input.apiKey, guardedFetcher, signal);
+    return validateKomariCredential(
+      input.values,
+      input.apiKey,
+      guardedFetcher,
+      isPrivateNetworkAccessAllowed(),
+      signal,
+    );
   },
 };
