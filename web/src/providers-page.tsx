@@ -178,6 +178,7 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     [credentialConnectionsByService, props.data.providers],
   );
   const searchedProviders = filterProviders(sortedProviders, query);
+  const categoryFilteredProviders = filterProvidersByCategory(searchedProviders, categoryFilter);
   const statusFilteredProviders = filterProvidersByStatus(searchedProviders, statusFilter, statusByService);
   const visibleProviders = filterProvidersByCategory(statusFilteredProviders, categoryFilter);
   const {
@@ -192,17 +193,20 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     () =>
       providerStatusOptions.map((option) => ({
         ...option,
-        count: countProvidersForStatus(searchedProviders, option.id, statusByService),
+        count: countProvidersForStatus(categoryFilteredProviders, option.id, statusByService),
       })),
-    [searchedProviders, statusByService],
+    [categoryFilteredProviders, statusByService],
   );
-  const categoryCounts = useMemo(() => providerCategoryCounts(searchedProviders), [searchedProviders]);
+  const categoryCounts = useMemo(() => providerCategoryCounts(statusFilteredProviders), [statusFilteredProviders]);
   const categoryOptions = useMemo(
     () =>
-      [...categoryCounts.entries()]
+      [
+        ...categoryCounts.entries(),
+        ...(categoryFilter !== "all" && !categoryCounts.has(categoryFilter) ? [[categoryFilter, 0] as const] : []),
+      ]
         .sort((left, right) => left[0].localeCompare(right[0]))
         .map(([category, count]) => ({ category, count })),
-    [categoryCounts],
+    [categoryCounts, categoryFilter],
   );
 
   function resetFilters(): void {
@@ -365,7 +369,7 @@ function ProviderCollectionBar(props: {
           <ToggleGroupItem
             key={option.id}
             value={option.id}
-            className="h-8 gap-2 rounded-md border px-3 text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:[&>span:last-child]:text-primary-foreground/70 [&>span:last-child]:text-xs [&>span:last-child]:text-muted-foreground [&>span:last-child]:tabular-nums"
+            className="h-8 gap-2 rounded-md border px-3 text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:[&>span:last-child]:text-primary-foreground/70 [&>span:last-child]:min-w-8 [&>span:last-child]:text-right [&>span:last-child]:text-xs [&>span:last-child]:text-muted-foreground [&>span:last-child]:tabular-nums"
             disabled={option.count === 0 && option.id !== "all"}
           >
             <span>{t(option.labelKey)}</span>
@@ -381,7 +385,7 @@ function ProviderCollectionBar(props: {
         >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent position="popper" align="start">
+        <SelectContent className="p-1" position="popper" align="start">
           <SelectItem value="all">{t("providers.categories.all")}</SelectItem>
           {props.categoryOptions.map((option) => (
             <SelectItem key={option.category} value={option.category}>

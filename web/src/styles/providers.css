@@ -25,7 +25,6 @@
 .provider-collection-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 8px 16px;
   border-bottom: 1px solid var(--border);
@@ -33,7 +32,7 @@
 
 .provider-filter-list {
   display: flex;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   gap: 8px;
   overflow-x: auto;
@@ -41,6 +40,7 @@
 
 .provider-result-meta {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;

@@ -248,9 +248,9 @@
       "executable": "実行可能",
       "catalogOnly": "カタログのみ"
     },
-    "categoryFilterLabel": "Category",
+    "categoryFilterLabel": "カテゴリー",
     "categories": {
-      "all": "All categories"
+      "all": "すべてのカテゴリー"
     }
   },
   "actions": {

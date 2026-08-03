@@ -248,9 +248,9 @@
       "executable": "Выполняемое",
       "catalogOnly": "Только каталог"
     },
-    "categoryFilterLabel": "Category",
+    "categoryFilterLabel": "Категория",
     "categories": {
-      "all": "All categories"
+      "all": "Все категории"
     }
   },
   "actions": {

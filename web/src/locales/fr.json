@@ -248,9 +248,9 @@
       "executable": "Exécutable",
       "catalogOnly": "Catalogue uniquement"
     },
-    "categoryFilterLabel": "Category",
+    "categoryFilterLabel": "Catégorie",
     "categories": {
-      "all": "All categories"
+      "all": "Toutes les catégories"
     }
   },
   "actions": {

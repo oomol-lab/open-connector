@@ -248,9 +248,9 @@
       "executable": "可执行",
       "catalogOnly": "仅目录"
     },
-    "categoryFilterLabel": "Category",
+    "categoryFilterLabel": "分类",
     "categories": {
-      "all": "All categories"
+      "all": "所有分类"
     }
   },
   "actions": {

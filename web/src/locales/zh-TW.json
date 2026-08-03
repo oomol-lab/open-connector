@@ -248,9 +248,9 @@
       "executable": "可執行",
       "catalogOnly": "僅供目錄查閱"
     },
-    "categoryFilterLabel": "Category",
+    "categoryFilterLabel": "分類",
     "categories": {
-      "all": "All categories"
+      "all": "所有分類"
     }
   },
   "actions": {
