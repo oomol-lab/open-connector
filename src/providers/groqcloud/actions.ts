@@ -140,7 +140,7 @@ const audioFileSchema: JsonSchema = {
         "The file name reported to GroqCloud, including the audio file extension. Required with content_base64.",
       ),
       mimetype: s.string("The MIME type of the audio file, such as audio/mpeg."),
-      url: s.string("A public URL that GroqCloud downloads the audio from."),
+      url: s.nonEmptyString("A public URL that GroqCloud downloads the audio from."),
       content_base64: s.nonEmptyString("The base64-encoded audio content to upload."),
     },
     { optional: ["name", "mimetype", "url", "content_base64"] },

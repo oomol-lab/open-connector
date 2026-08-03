@@ -133,6 +133,21 @@ describe("GroqCloud audio transcription", () => {
     ).toThrow("file.content_base64 must be valid base64");
   });
 
+  it("rejects inline audio above GroqCloud's attachment limit", () => {
+    const fetcher = jsonFetcher();
+    const attachmentMaxBytes = 25 * 1024 * 1024;
+    const oversizedAudioBase64 = Buffer.alloc(attachmentMaxBytes + 1).toString("base64");
+
+    expect(() =>
+      groqcloudActionHandlers.create_audio_transcription(
+        { model: "whisper-large-v3", file: { name: "a.mp3", content_base64: oversizedAudioBase64 } },
+        createContext(fetcher),
+      ),
+    ).toThrow(`file.content_base64 exceeds ${attachmentMaxBytes} bytes`);
+
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("repeats timestamp granularities as an array field and requires verbose_json", async () => {
     const fetcher = jsonFetcher({ text: "hello" });
 
@@ -187,5 +202,11 @@ describe("GroqCloud audio transcription", () => {
         file: { name: "a.mp3", content_base64: audioBase64, url: "https://example.com/a.mp3" },
       }).valid,
     ).toBe(false);
+  });
+
+  it("rejects empty audio urls in the action schema", () => {
+    const action = groqcloudActions.find((action) => action.id === "groqcloud.create_audio_transcription")!;
+
+    expect(validateActionInput(action, { model: "whisper-large-v3", file: { url: "" } }).valid).toBe(false);
   });
 });

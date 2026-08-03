@@ -16,8 +16,8 @@ import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent 
 
 const service = "groqcloud";
 const groqcloudApiBaseUrl = "https://api.groq.com/openai/v1";
-// 25 MB on the free tier, 100 MB on developer.
-const groqcloudAudioMaxBytes = 100 * 1024 * 1024;
+// Multipart attachments are capped at 25 MB; larger audio must use url.
+const groqcloudAudioAttachmentMaxBytes = 25 * 1024 * 1024;
 
 type GroqcloudRequestPhase = "validate" | "execute";
 type GroqcloudActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -222,8 +222,8 @@ function buildGroqcloudAudioFormData(input: Record<string, unknown>): FormData {
       "file.content_base64",
       (message) => new ProviderRequestError(400, message),
     );
-    if (bytes.byteLength > groqcloudAudioMaxBytes) {
-      throw new ProviderRequestError(400, `file.content_base64 exceeds ${groqcloudAudioMaxBytes} bytes`);
+    if (bytes.byteLength > groqcloudAudioAttachmentMaxBytes) {
+      throw new ProviderRequestError(400, `file.content_base64 exceeds ${groqcloudAudioAttachmentMaxBytes} bytes`);
     }
     const mimetype = optionalString(file.mimetype) ?? "application/octet-stream";
     formData.set("file", new File([bytes], name, { type: mimetype }));
