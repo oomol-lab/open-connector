@@ -181,5 +181,11 @@ describe("GroqCloud audio transcription", () => {
     expect(
       validateActionInput(action, { model: "whisper-large-v3", file: { content_base64: audioBase64 } }).valid,
     ).toBe(false);
+    expect(
+      validateActionInput(action, {
+        model: "whisper-large-v3",
+        file: { name: "a.mp3", content_base64: audioBase64, url: "https://example.com/a.mp3" },
+      }).valid,
+    ).toBe(false);
   });
 });

@@ -146,6 +146,7 @@ const audioFileSchema: JsonSchema = {
     { optional: ["name", "mimetype", "url", "content_base64"] },
   ),
   anyOf: [{ required: ["url"] }, { required: ["content_base64", "name"] }],
+  not: { required: ["url", "content_base64"] },
 };
 const audioResponseFormatSchema = s.stringEnum(
   "The transcript format to return. This connector returns structured payloads, so the plain text format is not offered.",
