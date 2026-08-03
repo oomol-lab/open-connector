@@ -36,5 +36,6 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://github.com/cloudflare/mcp",
+  iconUrl: "https://workers.cloudflare.com/favicon.ico",
   actions: cloudflareMcpActions,
 };
