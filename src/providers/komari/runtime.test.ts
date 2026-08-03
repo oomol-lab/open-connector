@@ -275,4 +275,15 @@ describe("Komari RPC runtime", () => {
       params: { session: "session-secret" },
     });
   });
+
+  it("returns not found when a stable session identifier does not match", async () => {
+    const fetcher = async (): Promise<Response> =>
+      Response.json({ jsonrpc: "2.0", id: 1, result: { current: null, data: [] } });
+    const context = { apiKey: "komari-secret", baseUrl: "https://monitor.example.com", fetcher };
+
+    await expect(komariActionHandlers.delete_session!({ session_id: "0".repeat(64) }, context)).rejects.toMatchObject({
+      status: 404,
+      message: "Komari session was not found",
+    });
+  });
 });
