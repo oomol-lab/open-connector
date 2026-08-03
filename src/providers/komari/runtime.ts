@@ -29,6 +29,19 @@ export interface KomariActionContext {
 const defaultRequestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 const rpcPath = "api/rpc2";
+const rpcErrorStatusByCode = new Map<number, number>([
+  [-32602, 400],
+  [-32010, 409],
+  [-32011, 504],
+  [-32021, 409],
+  [-32022, 400],
+  [-32040, 401],
+  [-32041, 403],
+  [-32044, 404],
+  [-32045, 409],
+  [-32050, 501],
+  [-32051, 503],
+]);
 const safeNodeFields = [
   "uuid",
   "name",
@@ -328,7 +341,7 @@ async function requestKomariRpc(
     const rpcError = parseRpcError(envelope.error);
     if (rpcError) {
       const authFailure = rpcError.code === -32040 || rpcError.code === -32041;
-      const status = authFailure ? (phase === "validate" ? 400 : 401) : rpcError.code === -32602 ? 400 : 502;
+      const status = authFailure && phase === "validate" ? 400 : (rpcErrorStatusByCode.get(rpcError.code) ?? 502);
       throw new ProviderRequestError(status, rpcError.message);
     }
     if (!("result" in envelope)) {

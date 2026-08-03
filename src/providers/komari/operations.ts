@@ -28,12 +28,14 @@ export interface KomariOperation {
 const emptyInput = s.object("This operation takes no input.", {});
 const successOutput = s.object("Operation result.", { success: s.boolean("Whether Komari completed the operation.") });
 const looseItem = s.looseObject("A Komari resource object.");
-const uuidInput = s.object("Select a Komari client.", { uuid: s.uuid("The client UUID.") });
-const taskIdInput = s.object("Select an execution task.", { task_id: s.string("The execution task ID.") });
-const idsInput = s.object("Select resources by ID.", {
+const uuidInput = s.requiredObject("Select a Komari client.", { uuid: s.uuid("The client UUID.") });
+const taskIdInput = s.requiredObject("Select an execution task.", {
+  task_id: s.string("The execution task ID."),
+});
+const idsInput = s.requiredObject("Select resources by ID.", {
   id: s.array("Resource IDs.", s.positiveInteger("A resource ID."), { minItems: 1 }),
 });
-const clientsInput = s.object("Select Komari clients.", {
+const clientsInput = s.requiredObject("Select Komari clients.", {
   clients: s.array("Client UUIDs.", s.uuid("A client UUID."), { minItems: 1 }),
 });
 
@@ -232,8 +234,9 @@ export const komariOperations: readonly KomariOperation[] = [
     "query_metrics",
     "public:queryMetrics",
     "Query metric time-series points with filters, aggregation, and downsampling.",
-    s.looseObject(
+    s.looseRequiredObject(
       "Komari metric query. Use metric_keys plus optional entity_ids, time bounds, tags, aggregation, and point limits.",
+      { metric_keys: s.array("Metric keys to query.", s.string("A metric key."), { minItems: 1 }) },
     ),
     s.looseObject("Metric query response."),
   ),
@@ -274,7 +277,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "edit_client",
     "admin:editClient",
     "Update client fields. This changes Komari configuration.",
-    s.looseObject("Partial client fields to update.", { uuid: s.uuid("The client UUID.") }),
+    s.looseRequiredObject("Partial client fields to update.", { uuid: s.uuid("The client UUID.") }),
     successOutput,
     { resultMode: "success" },
   ),
@@ -318,7 +321,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "get_clipboard",
     "admin:getClipboard",
     "Get one clipboard entry.",
-    s.object("Clipboard selector.", { id: s.positiveInteger("Clipboard ID.") }),
+    s.requiredObject("Clipboard selector.", { id: s.positiveInteger("Clipboard ID.") }),
     s.looseObject("Clipboard entry."),
     { stringifyFields: ["id"] },
   ),
@@ -341,7 +344,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "update_clipboard",
     "admin:updateClipboard",
     "Update a clipboard entry.",
-    s.looseObject("Clipboard ID and fields to update."),
+    s.looseRequiredObject("Clipboard ID and fields to update.", { id: s.positiveInteger("Clipboard ID.") }),
     successOutput,
     { resultMode: "success", stringifyFields: ["id"] },
   ),
@@ -349,7 +352,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "delete_clipboard",
     "admin:deleteClipboard",
     "Delete a clipboard entry.",
-    s.object("Clipboard selector.", { id: s.positiveInteger("Clipboard ID.") }),
+    s.requiredObject("Clipboard selector.", { id: s.positiveInteger("Clipboard ID.") }),
     successOutput,
     { resultMode: "success", stringifyFields: ["id"] },
   ),
@@ -357,7 +360,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "batch_delete_clipboard",
     "admin:batchDeleteClipboard",
     "Delete multiple clipboard entries.",
-    s.object("Clipboard selectors.", {
+    s.requiredObject("Clipboard selectors.", {
       ids: s.array("Clipboard IDs.", s.positiveInteger("Clipboard ID."), { minItems: 1 }),
     }),
     successOutput,
@@ -391,7 +394,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "update_metric_definition",
     "admin:updateMetricDefinition",
     "Change a metric retention policy; zero deletes stored data for that metric.",
-    s.object("Metric retention update.", {
+    s.requiredObject("Metric retention update.", {
       name: s.string("Metric name."),
       retention_days: s.nonNegativeInteger("Retention in days; zero disables storage."),
     }),
@@ -442,7 +445,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "delete_session",
     "admin:deleteSession",
     "Revoke one login session using the stable identifier returned by list_sessions.",
-    s.object("Session selector.", {
+    s.requiredObject("Session selector.", {
       session_id: s.string("Stable session identifier returned by list_sessions.", {
         minLength: 64,
         maxLength: 64,
@@ -518,7 +521,9 @@ export const komariOperations: readonly KomariOperation[] = [
     "edit_load_notification",
     "admin:editLoadNotification",
     "Replace load notification rule fields.",
-    s.object("Load notification updates.", { notifications: s.array("Rules to update.", looseItem, { minItems: 1 }) }),
+    s.requiredObject("Load notification updates.", {
+      notifications: s.array("Rules to update.", looseItem, { minItems: 1 }),
+    }),
     successOutput,
     { resultMode: "success" },
   ),
@@ -542,7 +547,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "edit_offline_notifications",
     "admin:editOfflineNotification",
     "Replace offline notification rule fields.",
-    s.object("Offline notification updates.", {
+    s.requiredObject("Offline notification updates.", {
       notifications: s.array("Rules to update.", looseItem, { minItems: 1 }),
     }),
     successOutput,
@@ -576,7 +581,9 @@ export const komariOperations: readonly KomariOperation[] = [
     "edit_traffic_report_notifications",
     "admin:editTrafficReportNotifications",
     "Replace traffic-report rule fields.",
-    s.object("Traffic report updates.", { notifications: s.array("Rules to update.", looseItem, { minItems: 1 }) }),
+    s.requiredObject("Traffic report updates.", {
+      notifications: s.array("Rules to update.", looseItem, { minItems: 1 }),
+    }),
     successOutput,
     { resultMode: "success", paramsArrayField: "notifications" },
   ),
@@ -628,7 +635,9 @@ export const komariOperations: readonly KomariOperation[] = [
     "edit_ping_tasks",
     "admin:editPingTask",
     "Replace ping task fields.",
-    s.object("Ping task updates.", { tasks: s.array("Tasks to update.", pingTaskSchema, { minItems: 1 }) }),
+    s.requiredObject("Ping task updates.", {
+      tasks: s.array("Tasks to update.", pingTaskSchema, { minItems: 1 }),
+    }),
     successOutput,
     { resultMode: "success" },
   ),
@@ -662,10 +671,14 @@ export const komariOperations: readonly KomariOperation[] = [
     "set_message_sender_provider",
     "admin:setMessageSenderProvider",
     "Save and possibly reload a message-sender provider configuration.",
-    s.object("Message-sender provider.", {
-      name: s.string("Provider name."),
-      addition: s.string("Provider-specific JSON configuration; may contain secrets."),
-    }),
+    s.object(
+      "Message-sender provider.",
+      {
+        name: s.string("Provider name."),
+        addition: s.string("Provider-specific JSON configuration; may contain secrets."),
+      },
+      { optional: ["addition"] },
+    ),
     s.looseObject("Configuration status."),
   ),
   operation(
@@ -680,10 +693,14 @@ export const komariOperations: readonly KomariOperation[] = [
     "set_oidc_provider",
     "admin:setOidcProvider",
     "Save and possibly reload an OIDC provider configuration.",
-    s.object("OIDC provider.", {
-      name: s.string("Provider name."),
-      addition: s.string("Provider-specific JSON configuration; may contain secrets."),
-    }),
+    s.object(
+      "OIDC provider.",
+      {
+        name: s.string("Provider name."),
+        addition: s.string("Provider-specific JSON configuration; may contain secrets."),
+      },
+      { optional: ["addition"] },
+    ),
     s.looseObject("Configuration status."),
   ),
 
@@ -708,7 +725,7 @@ export const komariOperations: readonly KomariOperation[] = [
     "execute_command",
     "admin:exec",
     "DANGEROUS: execute a shell command on selected clients. Komari API keys bypass interactive 2FA for this sensitive RPC.",
-    s.object("Remote command.", {
+    s.requiredObject("Remote command.", {
       command: s.string("Shell command to execute."),
       clients: s.array("Target client UUIDs.", s.uuid("Client UUID."), { minItems: 1 }),
     }),
@@ -756,7 +773,10 @@ export const komariOperations: readonly KomariOperation[] = [
     "get_client_task_result",
     "admin:getSpecificTaskResult",
     "Get one client's result for an execution task.",
-    s.object("Task result selector.", { task_id: s.string("Execution task ID."), uuid: s.uuid("Client UUID.") }),
+    s.requiredObject("Task result selector.", {
+      task_id: s.string("Execution task ID."),
+      uuid: s.uuid("Client UUID."),
+    }),
     s.looseObject("Execution result."),
   ),
   operation(
