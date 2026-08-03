@@ -247,6 +247,10 @@
     "execution": {
       "executable": "Exécutable",
       "catalogOnly": "Catalogue uniquement"
+    },
+    "categoryFilterLabel": "Category",
+    "categories": {
+      "all": "All categories"
     }
   },
   "actions": {

@@ -1,7 +1,13 @@
 import type { AppData, ProviderDefinition, RunLog } from "./model";
 
 import { describe, expect, it } from "vitest";
-import { createOverviewSummary, resolveProviderConnectionStatus, sortProviders } from "./model";
+import {
+  createOverviewSummary,
+  filterProvidersByCategory,
+  providerCategoryCounts,
+  resolveProviderConnectionStatus,
+  sortProviders,
+} from "./model";
 
 function provider(service: string, displayName: string): ProviderDefinition {
   return {
@@ -98,6 +104,56 @@ describe("sortProviders", () => {
       "google_bigquery",
       "ably",
     ]);
+  });
+});
+
+describe("filterProvidersByCategory", () => {
+  function categorized(service: string, categories: string[]): ProviderDefinition {
+    return { ...provider(service, service), categories };
+  }
+
+  it("returns everything for the all filter", () => {
+    const providers = [categorized("a", ["Data"]), categorized("b", ["Communication"])];
+
+    expect(filterProvidersByCategory(providers, "all")).toEqual(providers);
+  });
+
+  it("keeps only providers in the selected category", () => {
+    const providers = [
+      categorized("a", ["Data"]),
+      categorized("b", ["Communication"]),
+      categorized("c", ["Data", "AI"]),
+    ];
+
+    expect(filterProvidersByCategory(providers, "Data").map((item) => item.service)).toEqual(["a", "c"]);
+    expect(filterProvidersByCategory(providers, "AI").map((item) => item.service)).toEqual(["c"]);
+  });
+
+  it("returns nothing for an unmatched category", () => {
+    const providers = [categorized("a", ["Data"])];
+
+    expect(filterProvidersByCategory(providers, "Storage")).toEqual([]);
+  });
+});
+
+describe("providerCategoryCounts", () => {
+  it("counts providers per category, including multi-category providers once per category", () => {
+    const providers = [
+      { ...provider("a", "a"), categories: ["Data", "AI"] },
+      { ...provider("b", "b"), categories: ["Data"] },
+      { ...provider("c", "c"), categories: ["Communication"] },
+    ];
+
+    const counts = providerCategoryCounts(providers);
+    expect(counts.get("Data")).toBe(2);
+    expect(counts.get("AI")).toBe(1);
+    expect(counts.get("Communication")).toBe(1);
+    expect(counts.get("Storage")).toBeUndefined();
+  });
+
+  it("handles providers without categories", () => {
+    const counts = providerCategoryCounts([provider("a", "a"), provider("b", "b")]);
+    expect(counts.size).toBe(0);
   });
 });
 

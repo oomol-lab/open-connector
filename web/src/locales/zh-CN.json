@@ -247,6 +247,10 @@
     "execution": {
       "executable": "可执行",
       "catalogOnly": "仅目录"
+    },
+    "categoryFilterLabel": "Category",
+    "categories": {
+      "all": "All categories"
     }
   },
   "actions": {

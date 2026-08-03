@@ -82,9 +82,24 @@
 .provider-card-title-row {
   display: flex;
   align-items: center;
-  flex: 1;
   min-width: 0;
   gap: 8px;
+}
+
+.provider-card-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.provider-card-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted-foreground);
 }
 
 .provider-card-title {

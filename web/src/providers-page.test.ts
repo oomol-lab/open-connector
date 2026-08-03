@@ -443,9 +443,14 @@ describe("isProviderLocallyAvailable", () => {
 });
 
 describe("providerBrowserResetKey", () => {
-  it("changes when search or status filters change", () => {
-    expect(providerBrowserResetKey("gmail", "all")).not.toBe(providerBrowserResetKey("gmail", "connected"));
-    expect(providerBrowserResetKey("gmail", "all")).not.toBe(providerBrowserResetKey("slack", "all"));
+  it("changes when search, status, or category filters change", () => {
+    expect(providerBrowserResetKey("gmail", "all", "all")).not.toBe(
+      providerBrowserResetKey("gmail", "connected", "all"),
+    );
+    expect(providerBrowserResetKey("gmail", "all", "all")).not.toBe(providerBrowserResetKey("slack", "all", "all"));
+    expect(providerBrowserResetKey("gmail", "all", "all")).not.toBe(
+      providerBrowserResetKey("gmail", "all", "Communication"),
+    );
   });
 });
 

@@ -370,6 +370,21 @@ export function filterProviders(providers: ProviderDefinition[], query: string):
   );
 }
 
+export function filterProvidersByCategory(providers: ProviderDefinition[], category: string): ProviderDefinition[] {
+  if (category === "all") return providers;
+  return providers.filter((provider) => provider.categories.includes(category));
+}
+
+export function providerCategoryCounts(providers: ProviderDefinition[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const provider of providers) {
+    for (const category of provider.categories) {
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
 export function sortProviders(
   providers: ProviderDefinition[],
   connectionsByService: Map<string, ConnectionRecord>,
