@@ -105,7 +105,7 @@ export async function validateKomariCredential(
       accountId: `komari:${host}`,
       displayName: `Komari ${host}`,
     },
-    grantedScopes: [],
+    grantedScopes: komariOperations.map((operation) => operation.rpcMethod),
     metadata: {
       baseUrl: context.baseUrl,
       version: version.version,
@@ -142,6 +142,9 @@ async function executeKomariOperation(
   input: Record<string, unknown>,
   context: KomariActionContext,
 ): Promise<unknown> {
+  if (operation.name === "delete_session") {
+    return deleteSessionByStableId(input, context);
+  }
   const result = await requestKomariRpc(
     operation.rpcMethod,
     prepareOperationParams(operation, input),
@@ -167,6 +170,9 @@ async function executeKomariOperation(
     const nodes = requiredRecordArray(result, "client list").map(safeAdminNode);
     return { [operation.resultKey ?? "clients"]: nodes };
   }
+  if (operation.resultMode === "safe_sessions") {
+    return normalizeSessions(result);
+  }
   if (operation.resultMode === "load_history") {
     return normalizeLoadHistory(result, input);
   }
@@ -177,6 +183,67 @@ async function executeKomariOperation(
     return normalizeVersion(result);
   }
   return operation.resultKey ? { [operation.resultKey]: result } : result;
+}
+
+const safeSessionFields = ["uuid", "login_method", "latest_online", "expires", "created_at"] as const;
+
+async function normalizeSessions(value: unknown): Promise<unknown> {
+  const result = requiredResultRecord(value, "session list");
+  const currentToken = optionalString(result.current);
+  const sessions = requiredRecordArray(result.data, "session list");
+  const normalized = await Promise.all(
+    sessions.map(async (session) => {
+      const token = requiredString(session.session, "session token", invalidUpstreamResponse);
+      const summary: Record<string, unknown> = {
+        session_id: await stableSessionId(token),
+        current: token === currentToken,
+      };
+      for (const field of safeSessionFields) {
+        if (session[field] !== undefined) {
+          summary[field] = session[field];
+        }
+      }
+      return summary;
+    }),
+  );
+  return {
+    current_session_id: currentToken ? await stableSessionId(currentToken) : null,
+    sessions: normalized,
+  };
+}
+
+async function deleteSessionByStableId(
+  input: Record<string, unknown>,
+  context: KomariActionContext,
+): Promise<{ success: true }> {
+  const sessionId = requiredString(input.session_id, "session_id", (message) => new ProviderRequestError(400, message));
+  const result = requiredResultRecord(
+    await requestKomariRpc("admin:getSessions", {}, context, "execute"),
+    "session list",
+  );
+  const sessions = requiredRecordArray(result.data, "session list");
+  let token: string | undefined;
+  for (const session of sessions) {
+    const candidate = requiredString(session.session, "session token", invalidUpstreamResponse);
+    if ((await stableSessionId(candidate)) === sessionId) {
+      token = candidate;
+      break;
+    }
+  }
+  if (!token) {
+    throw new ProviderRequestError(404, "Komari session was not found");
+  }
+  await requestKomariRpc("admin:deleteSession", { session: token }, context, "execute");
+  return { success: true };
+}
+
+async function stableSessionId(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function invalidUpstreamResponse(message: string): ProviderRequestError {
+  return new ProviderRequestError(502, `Invalid Komari ${message}`);
 }
 
 function prepareOperationParams(operation: KomariOperation, input: Record<string, unknown>): unknown {

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { komariActions } from "./actions.ts";
+import { komariOperations } from "./operations.ts";
 import { komariActionHandlers, normalizeKomariBaseUrl, validateKomariCredential } from "./runtime.ts";
 
 beforeEach(() => setPrivateNetworkAccessAllowed(false));
@@ -59,7 +61,7 @@ describe("Komari RPC runtime", () => {
     ]);
     expect(validation).toEqual({
       profile: { accountId: "komari:monitor.example.com", displayName: "Komari monitor.example.com" },
-      grantedScopes: [],
+      grantedScopes: komariOperations.map((operation) => operation.rpcMethod),
       metadata: {
         baseUrl: "https://monitor.example.com/komari",
         version: "1.3.2",
@@ -93,6 +95,13 @@ describe("Komari RPC runtime", () => {
       },
     });
     expect(output).toEqual({ count: 0, records: [], load_type: "cpu", has_gpu_data: false });
+  });
+
+  it("declares each JSON-RPC method as its action capability", () => {
+    expect(komariActions).toHaveLength(71);
+    expect(komariActions.map((action) => action.requiredScopes)).toEqual(
+      komariOperations.map((operation) => [operation.rpcMethod]),
+    );
   });
 
   it("never returns Komari client tokens from the node list", async () => {
@@ -219,5 +228,51 @@ describe("Komari RPC runtime", () => {
         { apiKey: "komari-secret", baseUrl: "https://monitor.example.com", fetcher },
       ),
     ).rejects.toMatchObject({ status: 504, message: "Komari request timed out" });
+  });
+
+  it("redacts session tokens and IPs and revokes sessions by a stable identifier", async () => {
+    const requests: Array<{ method: string; params: unknown }> = [];
+    const fetcher = async (_input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      const body = JSON.parse(String(init?.body)) as { method: string; params: unknown };
+      requests.push(body);
+      if (body.method === "admin:getSessions") {
+        return Response.json({
+          jsonrpc: "2.0",
+          id: 1,
+          result: {
+            current: "session-secret",
+            data: [
+              {
+                session: "session-secret",
+                uuid: "9a7b4379-b85f-4ed3-a942-12e097cf4c77",
+                ip: "192.0.2.10",
+                latest_ip: "192.0.2.11",
+                login_method: "password",
+                created_at: "2026-08-03T00:00:00Z",
+              },
+            ],
+          },
+        });
+      }
+      return Response.json({ jsonrpc: "2.0", id: 1, result: null });
+    };
+    const context = { apiKey: "komari-secret", baseUrl: "https://monitor.example.com", fetcher };
+
+    const output = (await komariActionHandlers.list_sessions!({}, context)) as {
+      current_session_id: string;
+      sessions: Array<{ session_id: string }>;
+    };
+    expect(output.current_session_id).toHaveLength(64);
+    expect(output.sessions[0]?.session_id).toBe(output.current_session_id);
+    expect(JSON.stringify(output)).not.toContain("session-secret");
+    expect(JSON.stringify(output)).not.toContain("192.0.2.");
+
+    await expect(
+      komariActionHandlers.delete_session!({ session_id: output.current_session_id }, context),
+    ).resolves.toEqual({ success: true });
+    expect(requests.at(-1)).toMatchObject({
+      method: "admin:deleteSession",
+      params: { session: "session-secret" },
+    });
   });
 });

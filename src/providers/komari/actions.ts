@@ -9,6 +9,7 @@ export const komariActions: ProviderActionDefinition[] = komariOperations.map((o
   defineProviderAction(service, {
     name: operation.name,
     description: operation.description,
+    requiredScopes: [operation.rpcMethod],
     inputSchema: operation.inputSchema,
     outputSchema: operation.outputSchema,
   }),
