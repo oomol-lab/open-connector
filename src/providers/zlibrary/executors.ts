@@ -3,7 +3,7 @@ import type { ZLibraryRuntimeContext } from "./runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError, requireCustomCredential } from "../provider-runtime.ts";
-import { resolveEapiDomain, zlibraryActionHandlers, zlibraryEapiLogin } from "./runtime.ts";
+import { zlibraryActionHandlers, zlibraryEapiLoginWithFallback } from "./runtime.ts";
 
 const service = "zlibrary";
 
@@ -40,7 +40,7 @@ export const credentialValidators: CredentialValidators = {
     );
     const eapiDomain = input.values.eapiDomain ? String(input.values.eapiDomain) : undefined;
     const context: ZLibraryRuntimeContext = { email, password, eapiDomain, fetcher, signal };
-    const session = await zlibraryEapiLogin(context, resolveEapiDomain(context));
+    const session = await zlibraryEapiLoginWithFallback(context);
     return {
       profile: {
         accountId: email,
@@ -49,7 +49,7 @@ export const credentialValidators: CredentialValidators = {
       grantedScopes: [],
       metadata: {
         remixUserid: session.remixUserid,
-        eapiDomain: eapiDomain ?? undefined,
+        eapiDomain: session.domain,
       },
     };
   },

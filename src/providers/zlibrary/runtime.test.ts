@@ -27,6 +27,12 @@ describe("resolveEapiDomain", () => {
   it("honors an explicit override and strips scheme and trailing slashes", () => {
     expect(resolveEapiDomain({ email: "a@b.c", password: "x", eapiDomain: "https://1lib.sk/" })).toBe("1lib.sk");
   });
+
+  it("rejects an override containing a path", () => {
+    expect(() => resolveEapiDomain({ email: "a@b.c", password: "x", eapiDomain: "https://1lib.sk/eapi" })).toThrow(
+      "without a path",
+    );
+  });
 });
 
 describe("zlibrary search_books", () => {
@@ -39,6 +45,7 @@ describe("zlibrary search_books", () => {
         return jsonResponse({ success: 1, user: { id: 42, remix_userkey: "key123" } });
       }
       return jsonResponse({
+        success: 1,
         total: 1,
         books: [
           {
@@ -90,6 +97,42 @@ describe("zlibrary search_books", () => {
       status: 401,
     });
   });
+
+  it("falls back when the preferred domain returns an anti-bot page", async () => {
+    const calls: string[] = [];
+    const fetcher = async (url: RequestInfo | URL) => {
+      const raw = String(url);
+      calls.push(raw);
+      if (raw.startsWith("https://blocked.example")) {
+        return new Response("<html>blocked</html>", { status: 403 });
+      }
+      if (raw.endsWith("/eapi/user/login")) {
+        return jsonResponse({ success: 1, user: { id: 42, remix_userkey: "key123" } });
+      }
+      return jsonResponse({ success: 1, total: 0, books: [] });
+    };
+
+    await expect(
+      zlibraryActionHandlers.search_books?.(
+        { message: "example" },
+        context({ fetcher, eapiDomain: "blocked.example" }),
+      ),
+    ).resolves.toEqual({ books: [], total: 0 });
+    expect(calls.some((url) => url.startsWith("https://z-library.ec"))).toBe(true);
+  });
+
+  it("surfaces an EAPI business error", async () => {
+    const fetcher = async (url: RequestInfo | URL) => {
+      if (String(url).endsWith("/eapi/user/login")) {
+        return jsonResponse({ success: 1, user: { id: 42, remix_userkey: "key123" } });
+      }
+      return jsonResponse({ success: 0, error: "search unavailable" });
+    };
+
+    await expect(zlibraryActionHandlers.search_books?.({ message: "x" }, context({ fetcher }))).rejects.toThrow(
+      "search unavailable",
+    );
+  });
 });
 
 describe("zlibrary get_download_limits", () => {
@@ -99,7 +142,7 @@ describe("zlibrary get_download_limits", () => {
       if (raw.endsWith("/eapi/user/login")) {
         return jsonResponse({ success: 1, user: { id: 1, remix_userkey: "k" } });
       }
-      return jsonResponse({ user: { downloads_today: 3, downloads_limit: 10 } });
+      return jsonResponse({ success: 1, user: { downloads_today: 3, downloads_limit: 10 } });
     };
 
     const result = await zlibraryActionHandlers.get_download_limits?.({}, context({ fetcher }));
@@ -112,6 +155,7 @@ describe("zlibrary get_download_limits", () => {
 
 describe("zlibrary download_book_to_file", () => {
   it("uploads the file to transit storage and returns the download url", async () => {
+    let loginCount = 0;
     let uploadedName = "";
     const transitFiles = {
       create: async (file: File) => {
@@ -123,10 +167,11 @@ describe("zlibrary download_book_to_file", () => {
     const fetcher = async (url: RequestInfo | URL) => {
       const raw = String(url);
       if (raw.endsWith("/eapi/user/login")) {
+        loginCount += 1;
         return jsonResponse({ success: 1, user: { id: 1, remix_userkey: "k" } });
       }
       if (raw.endsWith("/file")) {
-        return jsonResponse({ file: { downloadLink: "https://cdn.example.com/book.pdf" } });
+        return jsonResponse({ success: 1, file: { downloadLink: "https://cdn.example.com/book.pdf" } });
       }
       return new Response(new Uint8Array([1, 2, 3]), {
         status: 200,
@@ -140,8 +185,56 @@ describe("zlibrary download_book_to_file", () => {
     );
 
     expect(uploadedName).toBe("book.pdf");
+    expect(loginCount).toBe(1);
     expect(result).toEqual({
       file: { name: "book.pdf", mimetype: "application/pdf", downloadUrl: "http://transit/f1" },
     });
+  });
+
+  it("rejects a missing download link", async () => {
+    const fetcher = async (url: RequestInfo | URL) =>
+      String(url).endsWith("/eapi/user/login")
+        ? jsonResponse({ success: 1, user: { id: 1, remix_userkey: "k" } })
+        : jsonResponse({ success: 1, file: {} });
+
+    await expect(
+      zlibraryActionHandlers.download_book_to_file?.(
+        { id: "7", hash: "abc" },
+        context({ fetcher, transitFiles: { create: async () => undefined } as never }),
+      ),
+    ).rejects.toThrow("no download link");
+  });
+
+  it("rejects a failed download response", async () => {
+    const fetcher = async (url: RequestInfo | URL) => {
+      const raw = String(url);
+      if (raw.endsWith("/eapi/user/login")) {
+        return jsonResponse({ success: 1, user: { id: 1, remix_userkey: "k" } });
+      }
+      if (raw.endsWith("/file")) {
+        return jsonResponse({ success: 1, file: { downloadLink: "https://cdn.example.com/book.pdf" } });
+      }
+      return new Response("unavailable", { status: 503 });
+    };
+
+    await expect(
+      zlibraryActionHandlers.download_book_to_file?.(
+        { id: "7", hash: "abc" },
+        context({ fetcher, transitFiles: { create: async () => undefined } as never }),
+      ),
+    ).rejects.toMatchObject({ status: 503 });
+  });
+
+  it("requires transit storage before making a request", async () => {
+    let requested = false;
+    const fetcher = async () => {
+      requested = true;
+      return jsonResponse({});
+    };
+
+    await expect(
+      zlibraryActionHandlers.download_book_to_file?.({ id: "7", hash: "abc" }, context({ fetcher })),
+    ).rejects.toThrow("requires local transit files");
+    expect(requested).toBe(false);
   });
 });

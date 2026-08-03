@@ -3,11 +3,11 @@ import type { TransitFileWriter } from "../../core/types.ts";
 import { optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-type ZLibraryCredential = {
+interface ZLibraryCredential {
   email: string;
   password: string;
   eapiDomain?: string;
-};
+}
 
 export type ZLibraryRuntimeContext = ZLibraryCredential & {
   fetcher: typeof fetch;
@@ -25,12 +25,45 @@ const eapiHeaders = {
   "content-type": "application/x-www-form-urlencoded",
 };
 
-export function resolveEapiDomain(credential: ZLibraryCredential): string {
-  const override = credential.eapiDomain?.trim();
-  if (override) {
-    return override.replace(/^https?:\/\//u, "").replace(/\/+$/u, "");
+interface ZLibrarySession {
+  remixUserid: string;
+  remixUserkey: string;
+}
+
+class ZLibraryAntiBotError extends ProviderRequestError {}
+
+function normalizeEapiDomain(value: string, fieldName: string): string {
+  let url: URL;
+  try {
+    url = new URL(value.includes("://") ? value : `https://${value}`);
+  } catch {
+    throw new ProviderRequestError(400, `${fieldName} must be a valid HTTPS domain`);
   }
-  return defaultEapiDomains[0];
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    url.port ||
+    (url.pathname !== "/" && url.pathname !== "") ||
+    url.search ||
+    url.hash
+  ) {
+    throw new ProviderRequestError(400, `${fieldName} must be an HTTPS domain without a path, port, or credentials`);
+  }
+  return url.hostname;
+}
+
+function resolveEapiDomains(credential: ZLibraryCredential): string[] {
+  const configuredDomains = [
+    credential.eapiDomain?.trim(),
+    process.env.ZLIBRARY_EAPI_DOMAIN?.trim(),
+    ...defaultEapiDomains,
+  ].filter((value): value is string => Boolean(value));
+  return [...new Set(configuredDomains.map((value) => normalizeEapiDomain(value, "Z-Library EAPI domain")))];
+}
+
+export function resolveEapiDomain(credential: ZLibraryCredential): string {
+  return resolveEapiDomains(credential)[0];
 }
 
 function buildEapiUrl(domain: string, path: string): string {
@@ -43,8 +76,8 @@ async function readJson(response: Response, domain: string): Promise<Record<stri
   try {
     payload = JSON.parse(text);
   } catch {
-    throw new ProviderRequestError(
-      response.status,
+    throw new ZLibraryAntiBotError(
+      response.status === 200 ? 502 : response.status,
       `zlibrary ${domain} returned non-JSON HTTP ${response.status} (possible anti-bot block page)`,
     );
   }
@@ -54,10 +87,41 @@ async function readJson(response: Response, domain: string): Promise<Record<stri
   return payload as Record<string, unknown>;
 }
 
-export async function zlibraryEapiLogin(
+function assertSuccessfulPayload(
+  payload: Record<string, unknown>,
+  response: Response,
+  path: string,
+): Record<string, unknown> {
+  if (payload.success !== 1) {
+    throw new ProviderRequestError(
+      response.status === 200 ? 502 : response.status,
+      optionalString(payload.error) ?? optionalString(payload.message) ?? `zlibrary request to ${path} failed`,
+      payload,
+    );
+  }
+  return payload;
+}
+
+async function withEapiDomainFallback<T>(
   context: ZLibraryRuntimeContext,
-  domain: string,
-): Promise<{ remixUserid: string; remixUserkey: string }> {
+  operation: (domain: string) => Promise<T>,
+): Promise<T> {
+  const domains = resolveEapiDomains(context);
+  let antiBotError: ZLibraryAntiBotError | undefined;
+  for (const domain of domains) {
+    try {
+      return await operation(domain);
+    } catch (error) {
+      if (!(error instanceof ZLibraryAntiBotError)) {
+        throw error;
+      }
+      antiBotError = error;
+    }
+  }
+  throw antiBotError ?? new ProviderRequestError(502, "zlibrary has no configured EAPI domain");
+}
+
+export async function zlibraryEapiLogin(context: ZLibraryRuntimeContext, domain: string): Promise<ZLibrarySession> {
   const body = new URLSearchParams({
     email: context.email,
     password: context.password,
@@ -111,24 +175,25 @@ async function eapiPost(
     body,
     signal: context.signal,
   });
-  return readJson(response, domain);
+  return assertSuccessfulPayload(await readJson(response, domain), response, path);
 }
 
 async function eapiGet(
   context: ZLibraryRuntimeContext,
   domain: string,
   path: string,
+  session?: ZLibrarySession,
 ): Promise<Record<string, unknown>> {
-  const session = await zlibraryEapiLogin(context, domain);
+  const activeSession = session ?? (await zlibraryEapiLogin(context, domain));
   const response = await context.fetcher(buildEapiUrl(domain, path), {
     method: "GET",
     headers: {
       ...eapiHeaders,
-      cookie: `remix_userid=${session.remixUserid}; remix_userkey=${session.remixUserkey}`,
+      cookie: `remix_userid=${activeSession.remixUserid}; remix_userkey=${activeSession.remixUserkey}`,
     },
     signal: context.signal,
   });
-  return readJson(response, domain);
+  return assertSuccessfulPayload(await readJson(response, domain), response, path);
 }
 
 function normalizeBook(raw: Record<string, unknown>): Record<string, unknown> {
@@ -170,7 +235,8 @@ async function downloadBookFile(
     throw new ProviderRequestError(500, "zlibrary file output requires local transit files");
   }
 
-  const linkPayload = await eapiGet(context, domain, `/eapi/book/${bookId}/${bookHash}/file`);
+  const session = await zlibraryEapiLogin(context, domain);
+  const linkPayload = await eapiGet(context, domain, `/eapi/book/${bookId}/${bookHash}/file`, session);
   const filePayload = (linkPayload.file ?? linkPayload) as Record<string, unknown>;
   const downloadLink = optionalString(filePayload.downloadLink) ?? optionalString(filePayload.url) ?? "";
 
@@ -179,7 +245,6 @@ async function downloadBookFile(
   }
   const absoluteUrl = downloadLink.startsWith("/") ? buildEapiUrl(domain, downloadLink) : downloadLink;
 
-  const session = await zlibraryEapiLogin(context, domain);
   const response = await context.fetcher(absoluteUrl, {
     method: "GET",
     headers: {
@@ -222,7 +287,6 @@ async function downloadBookFile(
 
 export const zlibraryActionHandlers: Record<string, ZLibraryActionHandler> = {
   async search_books(input, context) {
-    const domain = resolveEapiDomain(context);
     const data: Record<string, string | string[]> = {
       message: requiredString(input.message, "message", (message) => new ProviderRequestError(400, message)),
       limit: String(input.limit ?? 10),
@@ -242,7 +306,9 @@ export const zlibraryActionHandlers: Record<string, ZLibraryActionHandler> = {
     const order = input.order;
     if (typeof order === "string") data.order = order;
 
-    const payload = await eapiPost(context, domain, "/eapi/book/search", data);
+    const payload = await withEapiDomainFallback(context, (domain) =>
+      eapiPost(context, domain, "/eapi/book/search", data),
+    );
     const books = Array.isArray(payload.books)
       ? payload.books.map((book) => normalizeBook(book as Record<string, unknown>))
       : [];
@@ -252,25 +318,24 @@ export const zlibraryActionHandlers: Record<string, ZLibraryActionHandler> = {
   },
 
   async get_book_metadata(input, context) {
-    const domain = resolveEapiDomain(context);
     const bookId = requiredString(input.id, "id", (message) => new ProviderRequestError(400, message));
     const bookHash = requiredString(input.hash, "hash", (message) => new ProviderRequestError(400, message));
-    const payload = await eapiGet(context, domain, `/eapi/book/${bookId}/${bookHash}`);
+    const payload = await withEapiDomainFallback(context, (domain) =>
+      eapiGet(context, domain, `/eapi/book/${bookId}/${bookHash}`),
+    );
     const raw = (payload.book ?? payload) as Record<string, unknown>;
     return { book: normalizeBook(raw) };
   },
 
   async download_book_to_file(input, context) {
-    const domain = resolveEapiDomain(context);
     const bookId = requiredString(input.id, "id", (message) => new ProviderRequestError(400, message));
     const bookHash = requiredString(input.hash, "hash", (message) => new ProviderRequestError(400, message));
-    const file = await downloadBookFile(context, domain, bookId, bookHash);
+    const file = await withEapiDomainFallback(context, (domain) => downloadBookFile(context, domain, bookId, bookHash));
     return { file };
   },
 
   async get_download_limits(_input, context) {
-    const domain = resolveEapiDomain(context);
-    const payload = await eapiGet(context, domain, "/eapi/user/profile");
+    const payload = await withEapiDomainFallback(context, (domain) => eapiGet(context, domain, "/eapi/user/profile"));
     const user = (payload.user ?? {}) as Record<string, unknown>;
     const today = Number(user.downloads_today ?? user.dailyDownloadsCount ?? 0);
     const allowed = Number(user.downloads_limit ?? user.dailyDownloadLimit ?? 0);
@@ -284,11 +349,19 @@ export const zlibraryActionHandlers: Record<string, ZLibraryActionHandler> = {
   },
 
   async get_recent_books(_input, context) {
-    const domain = resolveEapiDomain(context);
-    const payload = await eapiGet(context, domain, "/eapi/book/recently");
+    const payload = await withEapiDomainFallback(context, (domain) => eapiGet(context, domain, "/eapi/book/recently"));
     const books = Array.isArray(payload.books)
       ? payload.books.map((book) => normalizeBook(book as Record<string, unknown>))
       : [];
     return { books };
   },
 };
+
+export async function zlibraryEapiLoginWithFallback(
+  context: ZLibraryRuntimeContext,
+): Promise<ZLibrarySession & { domain: string }> {
+  return withEapiDomainFallback(context, async (domain) => ({
+    ...(await zlibraryEapiLogin(context, domain)),
+    domain,
+  }));
+}
