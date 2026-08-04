@@ -1,13 +1,16 @@
+import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { arrayPayload, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "upsales";
 const apiBaseUrl = "https://integration.upsales.com/api/v2";
+/** Query parameters this runtime sets itself, which a caller-supplied filter must not overwrite. */
+const reservedQueryKeys = new Set(["token", "limit", "isExternal"]);
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -110,7 +113,7 @@ export const credentialValidators: CredentialValidators = {
 function upsalesRequest(
   path: string,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  query: Record<string, string | number | undefined> = {},
+  query: Record<string, QueryValue> = {},
   method = "GET",
   body?: unknown,
 ): Promise<unknown> {
@@ -139,21 +142,52 @@ function listOutput(key: string, raw: unknown): Record<string, unknown> {
   return { [key]: arrayPayload(object.data ?? object[key], key), raw: object };
 }
 
-function listQuery(input: Record<string, unknown>): Record<string, string | number | undefined> {
+function listQuery(input: Record<string, unknown>): Record<string, QueryValue> {
   return {
-    page: optionalInteger(input.page),
     limit: optionalInteger(input.limit),
-    query: optionalString(input.query),
-    sort: optionalString(input.sort),
+    ...filterQuery(input.filters),
   };
+}
+
+/**
+ * Spread declared filters into the query string. Upsales filters are plain query
+ * parameters keyed by API field name, so each entry is sent under its own key.
+ *
+ * Keys that would overwrite a parameter this runtime already controls are
+ * rejected rather than merged, so a filter can never replace the API token.
+ */
+function filterQuery(value: unknown): Record<string, QueryValue> {
+  const filters = optionalRecord(value);
+  if (!filters) {
+    return {};
+  }
+
+  const query: Record<string, QueryValue> = {};
+  for (const [key, filterValue] of Object.entries(filters)) {
+    if (filterValue === undefined || filterValue === null) {
+      continue;
+    }
+    if (reservedQueryKeys.has(key)) {
+      throw new ProviderRequestError(400, `filters cannot set the reserved "${key}" query parameter`);
+    }
+    if (typeof filterValue !== "string" && typeof filterValue !== "number" && typeof filterValue !== "boolean") {
+      throw new ProviderRequestError(400, `filters."${key}" must be a string, number, or boolean`);
+    }
+    query[key] = filterValue;
+  }
+  return query;
 }
 
 function contactQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return {
-    useFirstNameLastName: input.useFirstNameLastName === true ? "true" : undefined,
+    useFirstNameLastName: input.usingFirstnameLastname === true ? "true" : undefined,
   };
 }
 
+/**
+ * Encode a record identifier for a URL path. Upsales IDs are declared as positive
+ * integers, so the numeric form callers actually send is what has to be accepted.
+ */
 function pathValue(value: unknown, fieldName: string): string {
-  return encodePathSegment(requiredString(value, fieldName));
+  return encodePathSegment(positiveInteger(value, fieldName));
 }
