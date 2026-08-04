@@ -2,7 +2,7 @@ import type { ResolvedCredential } from "../core/types.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 
 import { ConnectionError } from "../connection-service.ts";
-import { requestRefreshToken } from "./oauth-token.ts";
+import { expiresAtFromLifetime, requestRefreshToken } from "./oauth-token.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
@@ -45,6 +45,13 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     return {
       ...refreshed,
       refreshToken: refreshed.refreshToken ?? credential.refreshToken,
+      // `expires_in` is optional on a refresh response, and a credential without an
+      // expiry is never treated as expired again, so the token silently stops being
+      // refreshed and every later call fails once it lapses. Reuse the lifetime the
+      // provider last reported instead. Carrying `credential.expiresAt` forward is
+      // not an option: a refresh only runs once that timestamp is already past, so
+      // the stored token would look expired immediately and refresh on every call.
+      expiresAt: refreshed.expiresAt ?? expiresAtFromLifetime(credential.metadata.expires_in),
       profile: credential.profile,
       metadata: {
         ...credential.metadata,
