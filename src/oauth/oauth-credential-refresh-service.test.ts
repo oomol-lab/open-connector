@@ -95,6 +95,19 @@ describe("OAuthCredentialRefreshService", () => {
     expect(second.expiresAt).toBe(new Date(now + 3600_000).toISOString());
   });
 
+  it("keeps the last usable lifetime when a refresh reports an unusable value", async () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    const service = new OAuthCredentialRefreshService(clientConfigs);
+    stubRefreshResponse({ expires_in: 0 });
+    const first = await service.refresh("example", expiredCredential({ expires_in: 3600 }));
+
+    stubRefreshResponse({});
+    const second = await service.refresh("example", { ...first, expiresAt: new Date(now - 60_000).toISOString() });
+
+    expect(second.expiresAt).toBe(new Date(now + 3600_000).toISOString());
+  });
+
   it("keeps the stored refresh token when the response omits a new one", async () => {
     stubRefreshResponse({});
 

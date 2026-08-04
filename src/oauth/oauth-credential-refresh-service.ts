@@ -41,6 +41,8 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       tokenUrl: this.clientConfigs.resolveEndpointUrl(service, auth.refreshTokenUrl ?? auth.tokenUrl, config),
       createError: (message) => new ConnectionError("oauth_token_refresh_failed", message),
     });
+    const expiresIn =
+      refreshed.expiresAt === undefined ? credential.metadata.expires_in : refreshed.metadata.expires_in;
 
     return {
       ...refreshed,
@@ -51,11 +53,12 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       // provider last reported instead. Carrying `credential.expiresAt` forward is
       // not an option: a refresh only runs once that timestamp is already past, so
       // the stored token would look expired immediately and refresh on every call.
-      expiresAt: refreshed.expiresAt ?? expiresAtFromLifetime(credential.metadata.expires_in),
+      expiresAt: refreshed.expiresAt ?? expiresAtFromLifetime(expiresIn),
       profile: credential.profile,
       metadata: {
         ...credential.metadata,
         ...refreshed.metadata,
+        expires_in: expiresIn,
         refreshedAt: new Date().toISOString(),
       },
     };
