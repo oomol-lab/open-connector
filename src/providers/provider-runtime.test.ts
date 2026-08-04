@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
   createProviderTimeout,
+  defineOAuthProviderExecutors,
   defineProviderExecutors,
   defineProviderProxy,
   providerFetch,
@@ -52,6 +53,29 @@ describe("defineProviderExecutors", () => {
         code: "rate_limited",
         message: "provider quota exhausted",
       },
+    });
+  });
+
+  it("passes provider-owned OAuth secret state to handlers", async () => {
+    const executors = defineOAuthProviderExecutors("test_service", {
+      async probe(_input, context) {
+        return context.providerSecret;
+      },
+    });
+    const context: ExecutionContext = {
+      getCredential: async () => ({
+        authType: "oauth2",
+        accessToken: "access-token",
+        tokenType: "Bearer",
+        providerSecret: { userGrant: { accessToken: "user-access" } },
+        profile: { accountId: "acct", displayName: "Test", grantedScopes: [] },
+        metadata: {},
+      }),
+    };
+
+    await expect(executors["test_service.probe"]!({}, context)).resolves.toMatchObject({
+      ok: true,
+      output: { userGrant: { accessToken: "user-access" } },
     });
   });
 });

@@ -12,6 +12,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 import { slackConversationTypes } from "./constants.ts";
+import { readSlackScopes, readSlackUserGrant } from "./oauth.ts";
 
 const service = "slack";
 const slackApiBaseUrl = "https://slack.com/api";
@@ -34,6 +35,9 @@ export const slackActionHandlers: Record<string, SlackActionHandler> = {
   },
   get_channel_messages(input, context) {
     return slackGetChannelMessages(input, context);
+  },
+  search_messages(input, context) {
+    return slackSearchMessages(input, context);
   },
   post_message(input, context) {
     return slackPostMessage(input, context);
@@ -119,6 +123,12 @@ export const credentialValidators: CredentialValidators = {
         accountId: payload.user_id ?? payload.team_id ?? "slack:oauth2",
         displayName: payload.team ?? payload.team_id ?? payload.user_id ?? "Slack Workspace",
       },
+      grantedScopes: [
+        ...new Set([
+          ...readSlackScopes(input.metadata.scope),
+          ...(readSlackUserGrant(input.providerSecret)?.scopes ?? []),
+        ]),
+      ],
       metadata: {
         currentAccount: payload,
       },
@@ -167,6 +177,66 @@ async function slackGetChannelMessages(input: Record<string, unknown>, context: 
       text: message.text ?? "",
     })),
     hasMore: payload.has_more ?? false,
+  };
+}
+
+async function slackSearchMessages(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {
+  const query = requiredString(input.query, "query", (message) => new ProviderRequestError(400, message));
+  if (input.page != null && input.cursor != null) {
+    throw new ProviderRequestError(400, "page and cursor cannot be used together");
+  }
+  const userGrant = readSlackUserGrant(context.providerSecret);
+  if (!userGrant) {
+    throw new ProviderRequestError(
+      401,
+      "Reconnect Slack to restore the user authorization required for message search.",
+    );
+  }
+
+  const url = slackApiUrl("search.messages");
+  url.searchParams.set("query", query);
+  if (input.count != null) {
+    url.searchParams.set("count", String(input.count));
+  }
+  if (input.page != null) {
+    url.searchParams.set("page", String(input.page));
+  }
+  if (input.cursor != null) {
+    url.searchParams.set("cursor", String(input.cursor));
+  }
+  if (input.highlight != null) {
+    url.searchParams.set("highlight", String(input.highlight));
+  }
+  if (input.sort != null) {
+    url.searchParams.set("sort", String(input.sort));
+  }
+  if (input.sortDir != null) {
+    url.searchParams.set("sort_dir", String(input.sortDir));
+  }
+  if (input.teamId != null) {
+    url.searchParams.set("team_id", String(input.teamId));
+  }
+
+  const payload = await slackGetJson<{
+    ok: boolean;
+    query?: string;
+    messages?: {
+      matches?: Array<Record<string, unknown>>;
+      total?: number;
+      pagination?: Record<string, unknown>;
+      paging?: Record<string, unknown>;
+    };
+    response_metadata?: { next_cursor?: string };
+    error?: string;
+  }>(url, { ...context, accessToken: userGrant.accessToken });
+
+  return {
+    query: optionalString(payload.query) ?? query,
+    matches: (payload.messages?.matches ?? []).map((match) => normalizeSearchMessageMatch(match)),
+    total: typeof payload.messages?.total === "number" ? payload.messages.total : 0,
+    pagination: payload.messages?.pagination ?? {},
+    paging: payload.messages?.paging ?? {},
+    nextCursor: normalizeNextCursor(payload.response_metadata?.next_cursor),
   };
 }
 
@@ -783,6 +853,23 @@ function normalizeConversation(conversation: Record<string, unknown>): Record<st
     purpose: typeof purpose?.value === "string" ? purpose.value : null,
     userId: optionalString(conversation.user),
     locale: optionalString(conversation.locale),
+  });
+}
+
+function normalizeSearchMessageMatch(match: Record<string, unknown>): Record<string, unknown> {
+  const channel = optionalRecord(match.channel) ?? {};
+
+  return compactObject({
+    matchId: optionalString(match.iid),
+    channelId: optionalString(channel.id),
+    channelName: typeof channel.name === "string" ? channel.name : null,
+    ts: optionalString(match.ts),
+    userId: optionalString(match.user),
+    username: optionalString(match.username),
+    text: typeof match.text === "string" ? match.text : "",
+    permalink: optionalString(match.permalink),
+    teamId: optionalString(match.team),
+    type: optionalString(match.type),
   });
 }
 

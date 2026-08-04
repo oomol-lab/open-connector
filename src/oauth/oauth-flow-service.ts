@@ -2,6 +2,7 @@ import type { ConnectionService } from "../connection-service.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 
 import { createHash, randomBytes } from "node:crypto";
+import { normalizeSlackAuthorizationCredential } from "../providers/slack/oauth.ts";
 import { requestAuthorizationCodeToken } from "./oauth-token.ts";
 
 /**
@@ -129,7 +130,7 @@ export class OAuthFlowService {
       );
     }
 
-    const tokenResponse = await requestAuthorizationCodeToken({
+    let tokenResponse = await requestAuthorizationCodeToken({
       code: input.code,
       clientId: config.clientId,
       clientSecret: config.clientSecret,
@@ -142,6 +143,11 @@ export class OAuthFlowService {
       extraFields: createTokenExtraFields(pending),
       createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
     });
+    if (pending.service == "slack") {
+      // Slack returns a separately rotated user grant in `authed_user`.
+      // Move it out of non-secret metadata before storing the credential.
+      tokenResponse = normalizeSlackAuthorizationCredential(tokenResponse);
+    }
     const oauthCredential = {
       ...tokenResponse,
       metadata: {

@@ -7,6 +7,7 @@ import type { IOAuthStateStore, OAuthAuthorizationState } from "./oauth-flow-ser
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
+import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
 
@@ -265,6 +266,53 @@ describe("OAuthFlowService", () => {
       accessToken: "access-token",
     });
     await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
+  });
+
+  it("stores Slack's user grant outside token metadata", async () => {
+    const services = createServices([{ ...slackProvider, actions: [] }]);
+    await services.clientConfigs.upsertConfig({
+      service: "slack",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          access_token: "bot-access",
+          refresh_token: "bot-refresh",
+          token_type: "bot",
+          expires_in: 43_200,
+          scope: "channels:read,chat:write",
+          authed_user: {
+            access_token: "user-access",
+            refresh_token: "user-refresh",
+            token_type: "user",
+            expires_in: 43_200,
+            scope: "search:read",
+          },
+        }),
+      ),
+    );
+
+    const started = await services.flow.startAuthorization({ service: "slack" });
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+
+    const credential = await services.connections.getCredential("slack");
+    expect(credential).toMatchObject({
+      authType: "oauth2",
+      accessToken: "bot-access",
+      tokenType: "Bearer",
+      providerSecret: {
+        userGrant: {
+          accessToken: "user-access",
+          refreshToken: "user-refresh",
+          scopes: ["search:read"],
+        },
+      },
+    });
+    expect(credential?.authType === "oauth2" ? credential.metadata : {}).not.toHaveProperty("authed_user");
   });
 
   it("rejects expired OAuth authorization states", async () => {

@@ -11,6 +11,12 @@ const channelIdSchema = nonEmptyString("The Slack conversation or channel ID.");
 const messageTsSchema = nonEmptyString("The Slack message timestamp, for example '1711.0001'.");
 const userIdSchema = nonEmptyString("The Slack user ID.");
 const fileIdSchema = nonEmptyString("The Slack file ID.");
+const searchSortSchema = s.stringEnum(["score", "timestamp"], {
+  description: "How Slack should sort search results.",
+});
+const sortDirectionSchema = s.stringEnum(["asc", "desc"], {
+  description: "The sort direction for Slack search results.",
+});
 
 const conversationTypeSchema = s.stringEnum([...slackConversationTypes], {
   description: "A Slack conversation type.",
@@ -48,6 +54,22 @@ const slackMessageSchema = s.looseObject(
     text: s.string({ description: "The text content of the message." }),
   },
   { description: "A Slack message record." },
+);
+
+const searchMessageMatchSchema = s.looseObject(
+  {
+    matchId: s.string({ description: "Slack's search result item identifier." }),
+    channelId: s.string({ description: "The conversation identifier containing the message." }),
+    channelName: s.nullable(s.string({ description: "The conversation name when Slack returns one." })),
+    ts: s.string({ description: "The message timestamp identifier." }),
+    userId: s.string({ description: "The user ID of the message author." }),
+    username: s.string({ description: "The username of the message author when Slack returns one." }),
+    text: s.string({ description: "The matching message text." }),
+    permalink: s.string({ description: "A Slack permalink for the matching message." }),
+    teamId: s.string({ description: "The Slack team ID returned for the match." }),
+    type: s.string({ description: "The Slack result type." }),
+  },
+  { description: "A normalized Slack message search match." },
 );
 
 const conversationSchema = s.object(
@@ -160,6 +182,45 @@ export const slackActions: ActionDefinition[] = [
         hasMore: s.boolean({ description: "Whether more messages are available beyond this page." }),
       },
       { required: ["messages", "hasMore"], description: "The output payload for this action." },
+    ),
+  }),
+  action({
+    name: "search_messages",
+    description:
+      "Search Slack messages visible to the connected user. Supports Slack search modifiers such as in:channel_name and from:<@UserID>.",
+    requiredScopes: ["search:read"],
+    inputSchema: s.object(
+      {
+        query: nonEmptyString("The Slack search query."),
+        count: s.integer({
+          minimum: 1,
+          maximum: 100,
+          description: "The number of results to return per page.",
+        }),
+        page: s.integer({ minimum: 1, maximum: 100, description: "The Slack page number to fetch." }),
+        cursor: s.string({
+          description: "The Slack cursor for cursormark pagination. Use '*' for the first request.",
+        }),
+        highlight: s.boolean({ description: "Whether Slack should mark query terms in matching text." }),
+        sort: searchSortSchema,
+        sortDir: sortDirectionSchema,
+        teamId: s.string({ description: "The encoded team ID to search when using an org-level token." }),
+      },
+      { required: ["query"], description: "Input parameters for searching Slack messages." },
+    ),
+    outputSchema: s.object(
+      {
+        query: s.string({ description: "The search query Slack executed." }),
+        matches: s.array(searchMessageMatchSchema, { description: "The matching Slack messages." }),
+        total: s.integer({ description: "The total number of matches Slack reports." }),
+        pagination: s.unknownObject("Slack pagination metadata when returned."),
+        paging: s.unknownObject("Slack legacy paging metadata when returned."),
+        nextCursor: s.nullable(s.string({ description: "The cursor for the next page when Slack returns one." })),
+      },
+      {
+        required: ["query", "matches", "total", "pagination", "paging", "nextCursor"],
+        description: "The output payload for this action.",
+      },
     ),
   }),
   action({

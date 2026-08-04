@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { slackActions } from "./actions.ts";
-import { slackOAuthScopes } from "./scopes.ts";
+import { slackOAuthScopes, slackUserOAuthScopes } from "./scopes.ts";
 
 const service = "slack";
 
@@ -20,6 +20,9 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://slack.com/api/oauth.v2.access",
       scopes: slackOAuthScopes,
       scopeSeparator: ",",
+      authorizationParams: {
+        user_scope: slackUserOAuthScopes.join(","),
+      },
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

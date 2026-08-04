@@ -254,6 +254,8 @@ export type ResolvedCredential =
       expiresAt?: string;
       /** OAuth refresh token, if the provider issued one. */
       refreshToken?: string;
+      /** Provider-owned secret state stored with the credential. */
+      providerSecret?: Record<string, unknown>;
       /** Stable provider account identity safe to show in local APIs and MCP. */
       profile: CredentialProfile;
       /** Raw token metadata such as provider scope or token type. */
