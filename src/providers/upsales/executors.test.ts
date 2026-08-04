@@ -22,24 +22,28 @@ describe("Upsales list filters", () => {
   it("sends declared filters as query parameters", async () => {
     const urls: string[] = [];
     await upsalesActionHandlers.list_companies!(
-      { limit: 10, filters: { "user.id": 7, name: "acme", active: true } },
+      { limit: 10, offset: 20, filters: { "user.id": 7, name: "acme", active: true } },
       contextCapturing(urls, []),
     );
 
     const query = queryOf(urls[0]!);
     expect(query.get("limit")).toBe("10");
+    expect(query.get("offset")).toBe("20");
     expect(query.get("user.id")).toBe("7");
     expect(query.get("name")).toBe("acme");
     expect(query.get("active")).toBe("true");
   });
 
-  it("rejects a filter that would overwrite a reserved query parameter", async () => {
-    const urls: string[] = [];
-    await expect(
-      upsalesActionHandlers.list_companies!({ filters: { token: "other" } }, contextCapturing(urls, [])),
-    ).rejects.toThrow(ProviderRequestError);
-    expect(urls).toEqual([]);
-  });
+  it.each(["token", "limit", "offset", "isExternal"])(
+    'rejects a filter that would overwrite the reserved "%s" query parameter',
+    async (key) => {
+      const urls: string[] = [];
+      await expect(
+        upsalesActionHandlers.list_companies!({ filters: { [key]: "other" } }, contextCapturing(urls, [])),
+      ).rejects.toThrow(ProviderRequestError);
+      expect(urls).toEqual([]);
+    },
+  );
 
   it("rejects a filter value that cannot be sent as a query parameter", async () => {
     const urls: string[] = [];
@@ -74,17 +78,17 @@ describe("Upsales contact name handling", () => {
   it("forwards the declared first/last name flag", async () => {
     const urls: string[] = [];
     await upsalesActionHandlers.create_contact!(
-      { contact: { name: "Ada" }, usingFirstnameLastname: true },
+      { contact: { firstName: "Ada", lastName: "Lovelace" }, usingFirstnameLastname: true },
       contextCapturing(urls, {}),
     );
 
-    expect(queryOf(urls[0]!).get("useFirstNameLastName")).toBe("true");
+    expect(queryOf(urls[0]!).get("usingFirstnameLastname")).toBe("true");
   });
 
   it("omits the flag when it is not requested", async () => {
     const urls: string[] = [];
     await upsalesActionHandlers.update_contact!({ id: 1, contact: { name: "Ada" } }, contextCapturing(urls, {}));
 
-    expect(queryOf(urls[0]!).has("useFirstNameLastName")).toBe(false);
+    expect(queryOf(urls[0]!).has("usingFirstnameLastname")).toBe(false);
   });
 });

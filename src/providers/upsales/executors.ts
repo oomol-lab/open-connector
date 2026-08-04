@@ -10,7 +10,7 @@ import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestErro
 const service = "upsales";
 const apiBaseUrl = "https://integration.upsales.com/api/v2";
 /** Query parameters this runtime sets itself, which a caller-supplied filter must not overwrite. */
-const reservedQueryKeys = new Set(["token", "limit", "isExternal"]);
+const reservedQueryKeys = new Set(["token", "limit", "offset", "isExternal"]);
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -145,6 +145,7 @@ function listOutput(key: string, raw: unknown): Record<string, unknown> {
 function listQuery(input: Record<string, unknown>): Record<string, QueryValue> {
   return {
     limit: optionalInteger(input.limit),
+    offset: optionalInteger(input.offset),
     ...filterQuery(input.filters),
   };
 }
@@ -180,7 +181,7 @@ function filterQuery(value: unknown): Record<string, QueryValue> {
 
 function contactQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return {
-    useFirstNameLastName: input.usingFirstnameLastname === true ? "true" : undefined,
+    usingFirstnameLastname: input.usingFirstnameLastname === true ? "true" : undefined,
   };
 }
 
