@@ -100,10 +100,6 @@ export type OAuth2AuthDefinition = {
   scopes: string[];
   /** Separator used when joining OAuth scopes. Defaults to a space. */
   scopeSeparator?: " " | ",";
-  /** OAuth user scopes joined into the authorization URL `user_scope` parameter. */
-  userScopes?: string[];
-  /** Separator used when joining OAuth user scopes. Defaults to scopeSeparator, then a space. */
-  userScopeSeparator?: " " | ",";
   /** How the runtime sends client credentials to the token endpoint. */
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
   /** Token request body encoding. Defaults to OAuth form encoding. */
@@ -133,8 +129,6 @@ export type OAuth2AuthDefinition = {
     successCode?: number;
     messageField?: string;
   };
-  /** Extra access tokens extracted from token response by dot-separated paths. */
-  extraAccessTokenPaths?: Record<string, string>;
   /** Proof Key for Code Exchange mode for providers that require per-flow verifiers. */
   pkce?: {
     method: "S256";
@@ -254,8 +248,6 @@ export type ResolvedCredential =
       authType: "oauth2";
       /** OAuth access token sent to provider APIs. */
       accessToken: string;
-      /** Additional OAuth access tokens from provider-specific token responses. */
-      extraAccessTokens?: Record<string, string>;
       /** Token type used in Authorization headers, usually `Bearer`. */
       tokenType: string;
       /** ISO timestamp when the access token expires, if the provider returned one. */

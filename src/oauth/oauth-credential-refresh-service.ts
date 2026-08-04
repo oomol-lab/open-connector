@@ -33,7 +33,6 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     const refreshed = await requestRefreshToken({
       clientId: config.clientId,
       clientSecret: config.clientSecret,
-      extraAccessTokenPaths: auth.extraAccessTokenPaths,
       responseEnvelope: auth.tokenResponseEnvelope,
       refreshToken: credential.refreshToken ?? "",
       tokenRequestFields: auth.tokenRequestFields,
@@ -45,7 +44,6 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
 
     return {
       ...refreshed,
-      extraAccessTokens: mergeExtraAccessTokens(credential.extraAccessTokens, refreshed.extraAccessTokens),
       refreshToken: refreshed.refreshToken ?? credential.refreshToken,
       profile: credential.profile,
       metadata: {
@@ -55,12 +53,4 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       },
     };
   }
-}
-
-function mergeExtraAccessTokens(
-  current: Record<string, string> | undefined,
-  refreshed: Record<string, string> | undefined,
-): Record<string, string> | undefined {
-  const merged = { ...(current ?? {}), ...(refreshed ?? {}) };
-  return Object.keys(merged).length > 0 ? merged : undefined;
 }

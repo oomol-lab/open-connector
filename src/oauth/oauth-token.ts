@@ -12,7 +12,6 @@ const maxExpiresInSeconds = 100 * 365 * 24 * 60 * 60;
 export interface OAuthTokenRequestOptions {
   clientId: string;
   clientSecret: string;
-  extraAccessTokenPaths?: Record<string, string>;
   responseEnvelope?: OAuth2AuthDefinition["tokenResponseEnvelope"];
   tokenRequestFields?: OAuth2AuthDefinition["tokenRequestFields"];
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
@@ -117,11 +116,9 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
   const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
   const tokenType = optionalString(payload.token_type) ?? "Bearer";
   const expiresIn = readExpiresInSeconds(payload.expires_in);
-  const extraAccessTokens = readExtraAccessTokens(payload, input.extraAccessTokenPaths);
   return {
     authType: "oauth2",
     accessToken,
-    ...(Object.keys(extraAccessTokens).length > 0 ? { extraAccessTokens } : {}),
     tokenType,
     refreshToken: optionalString(payload.refresh_token),
     expiresAt: expiresIn === undefined ? undefined : new Date(Date.now() + expiresIn * 1000).toISOString(),
@@ -161,54 +158,12 @@ function createTokenMetadata(payload: Record<string, unknown>): Record<string, u
   const metadata: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(payload)) {
     if (!isSensitiveTokenResponseField(key)) {
-      metadata[key] = redactSensitiveTokenFields(value);
+      metadata[key] = value;
     }
   }
   metadata.rawTokenType = payload.token_type;
   metadata.scope = payload.scope;
   return metadata;
-}
-
-function readExtraAccessTokens(
-  payload: Record<string, unknown>,
-  paths: Record<string, string> = {},
-): Record<string, string> {
-  const tokens: Record<string, string> = {};
-  for (const [name, path] of Object.entries(paths)) {
-    const value = readPath(payload, path);
-    if (value) {
-      tokens[name] = value;
-    }
-  }
-  return tokens;
-}
-
-function readPath(payload: Record<string, unknown>, path: string): string | undefined {
-  let current: unknown = payload;
-  for (const segment of path.split(".")) {
-    if (!segment || typeof current !== "object" || current == null || Array.isArray(current)) {
-      return undefined;
-    }
-    current = (current as Record<string, unknown>)[segment];
-  }
-  return optionalString(current);
-}
-
-function redactSensitiveTokenFields(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => redactSensitiveTokenFields(item));
-  }
-  if (typeof value !== "object" || value == null) {
-    return value;
-  }
-
-  const output: Record<string, unknown> = {};
-  for (const [key, nestedValue] of Object.entries(value)) {
-    if (!isSensitiveTokenResponseField(key)) {
-      output[key] = redactSensitiveTokenFields(nestedValue);
-    }
-  }
-  return output;
 }
 
 /**
