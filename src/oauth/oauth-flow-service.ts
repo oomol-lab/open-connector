@@ -100,6 +100,12 @@ export class OAuthFlowService {
         auth.scopes.join(auth.scopeSeparator ?? " "),
       );
     }
+    if (auth.userScopes && auth.userScopes.length > 0) {
+      authorizationUrl.searchParams.set(
+        "user_scope",
+        auth.userScopes.join(auth.userScopeSeparator ?? auth.scopeSeparator ?? " "),
+      );
+    }
     if (pkceCodeVerifier) {
       authorizationUrl.searchParams.set("code_challenge", createPkceCodeChallenge(pkceCodeVerifier));
       authorizationUrl.searchParams.set("code_challenge_method", auth.pkce?.method ?? "S256");
@@ -134,6 +140,7 @@ export class OAuthFlowService {
       clientId: config.clientId,
       clientSecret: config.clientSecret,
       redirectUri: this.clientConfigs.expectedRedirectUri(pending.service),
+      extraAccessTokenPaths: auth.extraAccessTokenPaths,
       responseEnvelope: auth.tokenResponseEnvelope,
       tokenRequestFields: auth.tokenRequestFields,
       tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,

@@ -74,6 +74,8 @@ const customOAuthProvider: ProviderDefinition = {
       refreshTokenUrl: "https://example.com/{tenant}/refresh",
       scopes: ["read", "write"],
       scopeSeparator: ",",
+      userScopes: ["search:read", "users:read"],
+      userScopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       tokenRequestFormat: "json",
       authorizationRequestFields: {
@@ -445,6 +447,7 @@ describe("OAuthFlowService", () => {
     expect(authorizationUrl.searchParams.has("client_id")).toBe(false);
     expect(authorizationUrl.searchParams.has("response_type")).toBe(false);
     expect(authorizationUrl.searchParams.get("scope")).toBe("read,write");
+    expect(authorizationUrl.searchParams.get("user_scope")).toBe("search:read,users:read");
 
     await services.flow.completeAuthorization({ state: started.state, code: "code" });
     const tokenRequest = fetcher.mock.calls[0];

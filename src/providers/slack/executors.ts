@@ -35,6 +35,9 @@ export const slackActionHandlers: Record<string, SlackActionHandler> = {
   get_channel_messages(input, context) {
     return slackGetChannelMessages(input, context);
   },
+  search_messages(input, context) {
+    return slackSearchMessages(input, context);
+  },
   post_message(input, context) {
     return slackPostMessage(input, context);
   },
@@ -119,6 +122,7 @@ export const credentialValidators: CredentialValidators = {
         accountId: payload.user_id ?? payload.team_id ?? "slack:oauth2",
         displayName: payload.team ?? payload.team_id ?? payload.user_id ?? "Slack Workspace",
       },
+      grantedScopes: readSlackGrantedScopes(input.metadata),
       metadata: {
         currentAccount: payload,
       },
@@ -146,6 +150,26 @@ async function slackListChannels(input: Record<string, unknown>, context: SlackA
   };
 }
 
+function readSlackGrantedScopes(metadata: Record<string, unknown>): string[] {
+  return [
+    ...new Set([
+      ...readSlackScopeList(metadata.scope),
+      ...readSlackScopeList(optionalRecord(metadata.authed_user)?.scope),
+    ]),
+  ];
+}
+
+function readSlackScopeList(value: unknown): string[] {
+  const scopeText = optionalString(value);
+  if (!scopeText) {
+    return [];
+  }
+  return scopeText
+    .split(/[,\s]+/u)
+    .map((scope) => scope.trim())
+    .filter(Boolean);
+}
+
 async function slackGetChannelMessages(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {
   const url = slackApiUrl("conversations.history");
   url.searchParams.set("channel", String(input.channelId));
@@ -167,6 +191,60 @@ async function slackGetChannelMessages(input: Record<string, unknown>, context: 
       text: message.text ?? "",
     })),
     hasMore: payload.has_more ?? false,
+  };
+}
+
+async function slackSearchMessages(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {
+  const query = requiredString(input.query, "query", (message) => new ProviderRequestError(400, message));
+  const userAccessToken = context.extraAccessTokens?.user;
+  if (!userAccessToken) {
+    throw new ProviderRequestError(401, "Reconnect Slack with the search:read user scope before searching messages.");
+  }
+
+  const url = slackApiUrl("search.messages");
+  url.searchParams.set("query", query);
+  if (input.count != null) {
+    url.searchParams.set("count", String(input.count));
+  }
+  if (input.page != null) {
+    url.searchParams.set("page", String(input.page));
+  }
+  if (input.cursor != null) {
+    url.searchParams.set("cursor", String(input.cursor));
+  }
+  if (input.highlight != null) {
+    url.searchParams.set("highlight", String(input.highlight));
+  }
+  if (input.sort != null) {
+    url.searchParams.set("sort", String(input.sort));
+  }
+  if (input.sortDir != null) {
+    url.searchParams.set("sort_dir", String(input.sortDir));
+  }
+  if (input.teamId != null) {
+    url.searchParams.set("team_id", String(input.teamId));
+  }
+
+  const payload = await slackGetJson<{
+    ok: boolean;
+    query?: string;
+    messages?: {
+      matches?: Array<Record<string, unknown>>;
+      total?: number;
+      pagination?: Record<string, unknown>;
+      paging?: Record<string, unknown>;
+    };
+    response_metadata?: { next_cursor?: string };
+    error?: string;
+  }>(url, { ...context, accessToken: userAccessToken });
+
+  return {
+    query: optionalString(payload.query) ?? query,
+    matches: (payload.messages?.matches ?? []).map((match) => normalizeSearchMessageMatch(match)),
+    total: typeof payload.messages?.total === "number" ? payload.messages.total : 0,
+    pagination: payload.messages?.pagination ?? {},
+    paging: payload.messages?.paging ?? {},
+    nextCursor: normalizeNextCursor(payload.response_metadata?.next_cursor),
   };
 }
 
@@ -783,6 +861,23 @@ function normalizeConversation(conversation: Record<string, unknown>): Record<st
     purpose: typeof purpose?.value === "string" ? purpose.value : null,
     userId: optionalString(conversation.user),
     locale: optionalString(conversation.locale),
+  });
+}
+
+function normalizeSearchMessageMatch(match: Record<string, unknown>): Record<string, unknown> {
+  const channel = optionalRecord(match.channel) ?? {};
+
+  return compactObject({
+    matchId: optionalString(match.iid),
+    channelId: optionalString(channel.id),
+    channelName: typeof channel.name === "string" ? channel.name : null,
+    ts: optionalString(match.ts),
+    userId: optionalString(match.user),
+    username: optionalString(match.username),
+    text: typeof match.text === "string" ? match.text : "",
+    permalink: optionalString(match.permalink),
+    teamId: optionalString(match.team),
+    type: optionalString(match.type),
   });
 }
 

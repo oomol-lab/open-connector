@@ -134,4 +134,43 @@ describe("OAuth token requests", () => {
       expiresAt: undefined,
     });
   });
+
+  it("stores configured extra access tokens without leaking nested tokens into metadata", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          access_token: "bot-access-token",
+          token_type: "Bearer",
+          authed_user: {
+            id: "U123",
+            access_token: "user-access-token",
+            refresh_token: "user-refresh-token",
+          },
+        }),
+      ),
+    );
+
+    const credential = await requestAuthorizationCodeToken({
+      ...authorizationCodeRequest,
+      extraAccessTokenPaths: {
+        user: "authed_user.access_token",
+      },
+    });
+
+    expect(credential).toMatchObject({
+      accessToken: "bot-access-token",
+      extraAccessTokens: {
+        user: "user-access-token",
+      },
+      metadata: {
+        authed_user: {
+          id: "U123",
+        },
+      },
+    });
+    const authedUser = credential.metadata.authed_user as Record<string, unknown>;
+    expect(authedUser).not.toHaveProperty("access_token");
+    expect(authedUser).not.toHaveProperty("refresh_token");
+  });
 });
