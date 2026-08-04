@@ -115,13 +115,12 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
 
   const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
   const tokenType = optionalString(payload.token_type) ?? "Bearer";
-  const expiresIn = readExpiresInSeconds(payload.expires_in);
   return {
     authType: "oauth2",
     accessToken,
     tokenType,
     refreshToken: optionalString(payload.refresh_token),
-    expiresAt: expiresIn === undefined ? undefined : new Date(Date.now() + expiresIn * 1000).toISOString(),
+    expiresAt: expiresAtFromLifetime(payload.expires_in),
     profile: {
       accountId: "oauth2",
       displayName: "OAuth Credential",
@@ -164,6 +163,15 @@ function createTokenMetadata(payload: Record<string, unknown>): Record<string, u
   metadata.rawTokenType = payload.token_type;
   metadata.scope = payload.scope;
   return metadata;
+}
+
+/**
+ * Build the absolute expiry for an OAuth `expires_in` lifetime, or undefined when
+ * the provider did not report a usable one.
+ */
+export function expiresAtFromLifetime(value: unknown): string | undefined {
+  const seconds = readExpiresInSeconds(value);
+  return seconds === undefined ? undefined : new Date(Date.now() + seconds * 1000).toISOString();
 }
 
 /**
