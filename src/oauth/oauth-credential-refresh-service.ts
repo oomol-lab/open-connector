@@ -31,7 +31,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       );
     }
 
-    const refreshToken = (value: string): Promise<OAuthCredential> =>
+    const requestTokenRefresh = (value: string): Promise<OAuthCredential> =>
       requestRefreshToken({
         clientId: config.clientId,
         clientSecret: config.clientSecret,
@@ -44,10 +44,10 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
         createError: (message) => new ConnectionError("oauth_token_refresh_failed", message),
       });
     if (service == "slack") {
-      return refreshSlackOAuthCredential(credential, refreshToken);
+      return refreshSlackOAuthCredential(credential, requestTokenRefresh);
     }
 
-    const refreshed = await refreshToken(credential.refreshToken ?? "");
+    const refreshed = await requestTokenRefresh(credential.refreshToken ?? "");
     const expiresIn =
       refreshed.expiresAt === undefined ? credential.metadata.expires_in : refreshed.metadata.expires_in;
 
@@ -61,6 +61,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       // not an option: a refresh only runs once that timestamp is already past, so
       // the stored token would look expired immediately and refresh on every call.
       expiresAt: refreshed.expiresAt ?? expiresAtFromLifetime(expiresIn),
+      providerSecret: credential.providerSecret,
       profile: credential.profile,
       metadata: {
         ...credential.metadata,

@@ -108,15 +108,18 @@ describe("OAuthCredentialRefreshService", () => {
     expect(second.expiresAt).toBe(new Date(now + 3600_000).toISOString());
   });
 
-  it("keeps the stored refresh token when the response omits a new one", async () => {
+  it("keeps stored refresh tokens and provider secrets when the response omits them", async () => {
     stubRefreshResponse({});
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh(
-      "example",
-      expiredCredential({ expires_in: 3600 }),
-    );
+    const credential = {
+      ...expiredCredential({ expires_in: 3600 }),
+      providerSecret: { opaque: "provider-owned-secret" },
+    };
+
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("example", credential);
 
     expect(refreshed.refreshToken).toBe("refresh-token");
+    expect(refreshed.providerSecret).toEqual(credential.providerSecret);
   });
 
   it("refreshes Slack's user and bot grants through the provider-specific path", async () => {

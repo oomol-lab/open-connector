@@ -9,7 +9,7 @@ type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 export interface SlackUserGrant {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   expiresAt?: string;
   scopes: string[];
 }
@@ -47,10 +47,6 @@ export async function refreshSlackOAuthCredential(
   if (credential.providerSecret?.userGrant !== undefined && !previousUserGrant) {
     throw slackUserGrantReconnectError();
   }
-  if (previousUserGrant && !previousUserGrant.refreshToken) {
-    throw slackUserGrantReconnectError();
-  }
-
   const userGrant = previousUserGrant ? await refreshSlackUserGrant(previousUserGrant, requestRefreshToken) : undefined;
   const refreshedBot = await requestRefreshToken(credential.refreshToken ?? "");
   assertSlackTokenKind(refreshedBot.metadata.rawTokenType, "bot", "oauth_token_refresh_failed");
@@ -83,12 +79,11 @@ export async function refreshSlackOAuthCredential(
 export function readSlackUserGrant(providerSecret: Record<string, unknown> | undefined): SlackUserGrant | undefined {
   const value = optionalRecord(providerSecret?.userGrant);
   const accessToken = optionalString(value?.accessToken);
-  const refreshToken = value?.refreshToken;
+  const refreshToken = optionalString(value?.refreshToken);
   const expiresAt = value?.expiresAt;
   const scopes = value?.scopes;
   if (
     !accessToken ||
-    typeof refreshToken !== "string" ||
     (expiresAt !== undefined && typeof expiresAt !== "string") ||
     !Array.isArray(scopes) ||
     !scopes.every((scope) => typeof scope === "string")
@@ -108,6 +103,9 @@ async function refreshSlackUserGrant(
   previous: SlackUserGrant,
   requestRefreshToken: SlackRefreshTokenRequest,
 ): Promise<SlackUserGrant> {
+  if (!previous.refreshToken) {
+    throw slackUserGrantReconnectError();
+  }
   const refreshed = await requestRefreshToken(previous.refreshToken);
   assertSlackTokenKind(refreshed.metadata.rawTokenType, "user", "oauth_token_refresh_failed");
   const scopes = readSlackScopes(refreshed.metadata.scope);
@@ -128,7 +126,7 @@ function normalizeSlackUserGrant(payload: Record<string, unknown> | undefined): 
   assertSlackTokenKind(payload?.token_type, "user", "oauth_token_exchange_failed");
   return {
     accessToken,
-    refreshToken: optionalString(payload?.refresh_token) ?? "",
+    refreshToken: optionalString(payload?.refresh_token),
     expiresAt: expiresAtFromLifetime(payload?.expires_in),
     scopes: readSlackScopes(payload?.scope),
   };
