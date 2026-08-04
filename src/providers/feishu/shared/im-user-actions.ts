@@ -6,6 +6,13 @@ const userIdType = s.stringEnum("The user identifier type returned by Feishu.", 
 const pageSize = s.positiveInteger("The maximum number of results on this page.", {
   maximum: 100,
 });
+// GET /im/v1/messages caps page_size at 50 — a larger value fails the whole
+// request with Feishu 99992402 (field validation failed), so the schema must
+// not admit it. `list_thread_messages` (the same endpoint through the thread
+// container) already declares 50.
+const messagePageSize = s.positiveInteger("The maximum number of results on this page.", {
+  maximum: 50,
+});
 const pageToken = s.string("The page token returned by the previous request.", {
   minLength: 1,
 });
@@ -130,7 +137,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
           startTime: s.string("The inclusive Unix timestamp in seconds.", { minLength: 1 }),
           endTime: s.string("The exclusive Unix timestamp in seconds.", { minLength: 1 }),
           sortType: s.stringEnum("The message sort order.", ["ByCreateTimeAsc", "ByCreateTimeDesc"]),
-          pageSize,
+          pageSize: messagePageSize,
           pageToken,
         },
         {
