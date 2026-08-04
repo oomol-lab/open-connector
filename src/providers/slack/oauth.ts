@@ -44,8 +44,12 @@ export async function refreshSlackOAuthCredential(
   requestRefreshToken: SlackRefreshTokenRequest,
 ): Promise<OAuthCredential> {
   const previousUserGrant = readSlackUserGrant(credential.providerSecret);
+  // A present but unreadable user grant is invalid state, not a legacy bot-only connection.
   if (credential.providerSecret?.userGrant !== undefined && !previousUserGrant) {
-    throw slackUserGrantReconnectError();
+    throw new ConnectionError(
+      "oauth_token_expired",
+      "The stored Slack user authorization is incomplete or invalid. Reconnect Slack to restore message search.",
+    );
   }
   const userGrant = previousUserGrant ? await refreshSlackUserGrant(previousUserGrant, requestRefreshToken) : undefined;
   const refreshedBot = await requestRefreshToken(credential.refreshToken ?? "");
@@ -104,7 +108,10 @@ async function refreshSlackUserGrant(
   requestRefreshToken: SlackRefreshTokenRequest,
 ): Promise<SlackUserGrant> {
   if (!previous.refreshToken) {
-    throw slackUserGrantReconnectError();
+    throw new ConnectionError(
+      "oauth_token_expired",
+      "The stored Slack user authorization does not include a refresh token. Reconnect Slack to restore message search.",
+    );
   }
   const refreshed = await requestRefreshToken(previous.refreshToken);
   assertSlackTokenKind(refreshed.metadata.rawTokenType, "user", "oauth_token_refresh_failed");
@@ -167,11 +174,4 @@ function assertSlackTokenKind(
   if (value !== expected) {
     throw new ConnectionError(errorCode, `Slack OAuth response is invalid: expected a ${expected} token.`);
   }
-}
-
-function slackUserGrantReconnectError(): ConnectionError {
-  return new ConnectionError(
-    "oauth_token_expired",
-    "Reconnect Slack to restore the user authorization required for message search.",
-  );
 }
