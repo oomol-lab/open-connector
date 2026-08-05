@@ -63,6 +63,15 @@ const dashboardSchema = s.looseObject("A Monday dashboard summary.");
 const formSchema = s.looseObject("A Monday form response.");
 const departmentSchema = s.looseObject("A Monday department.");
 
+function updateDateFilterSchema(description: string): JsonSchema {
+  return s.anyOf(description, [
+    s.date("A calendar date in YYYY-MM-DD format."),
+    s.stringPattern("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$", {
+      description: "A date and time in YYYY-MM-DDTHH:mm format.",
+    }),
+  ]);
+}
+
 function input(description: string, properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {
   return s.object(properties, { required, description });
 }
@@ -555,12 +564,10 @@ actions.push(
       "List Monday updates with optional date filtering.",
       ["updates:read"],
       input("The input payload for listing Monday updates.", {
-        board_ids: idArraySchema,
-        item_ids: idArraySchema,
-        limit: s.positiveInteger("Page size."),
+        limit: s.positiveInteger("Page size, up to 100 updates.", { maximum: 100 }),
         page: s.positiveInteger("Page number."),
-        since: s.date("Only updates created on or after this date, as YYYY-MM-DD. Requires until."),
-        until: s.date("Only updates created on or before this date, as YYYY-MM-DD. Requires since."),
+        since: updateDateFilterSchema("Only updates created on or after this date. Requires until."),
+        until: updateDateFilterSchema("Only updates created on or before this date. Requires since."),
       }),
       { updates: s.array("The Monday updates returned by the query.", updateSchema) },
     ),
@@ -572,8 +579,7 @@ actions.push(
         "The input payload for listing Monday update replies.",
         {
           board_ids: idArraySchema,
-          update_ids: idArraySchema,
-          limit: s.positiveInteger("Page size."),
+          limit: s.positiveInteger("Page size, up to 100 replies.", { maximum: 100 }),
           page: s.positiveInteger("Page number."),
         },
         ["board_ids"],
