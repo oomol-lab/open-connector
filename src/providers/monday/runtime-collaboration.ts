@@ -54,8 +54,8 @@ async function mondayListUpdates(input: MondayProviderActionInput, fetcher: type
     input.apiKey,
     {
       query: `
-        query ListUpdates($limit: Int, $from_date: Date, $to_date: Date) {
-          updates(limit: $limit, from_date: $from_date, to_date: $to_date) {
+        query ListUpdates($limit: Int, $page: Int, $from_date: Date, $to_date: Date) {
+          updates(limit: $limit, page: $page, from_date: $from_date, to_date: $to_date) {
             id
             body
             created_at
@@ -68,10 +68,13 @@ async function mondayListUpdates(input: MondayProviderActionInput, fetcher: type
           }
         }
       `,
+      // `since`/`until` are the declared input names; monday's own arguments are
+      // `from_date`/`to_date`, so the mapping happens here rather than in the schema.
       variables: compactObject({
         limit: typeof source.limit === "number" ? source.limit : undefined,
-        from_date: typeof source.from_date === "string" ? source.from_date : undefined,
-        to_date: typeof source.to_date === "string" ? source.to_date : undefined,
+        page: typeof source.page === "number" ? source.page : undefined,
+        from_date: typeof source.since === "string" ? source.since : undefined,
+        to_date: typeof source.until === "string" ? source.until : undefined,
       }),
     },
     fetcher,
