@@ -11,6 +11,7 @@ import {
   normalizeMondayDocNameResult,
   normalizeMondayReply,
   normalizeMondayUpdate,
+  mondayProviderError,
 } from "./runtime-common.ts";
 
 export const mondayCollaborationActionHandlers: Record<string, MondayActionHandler> = {
@@ -48,13 +49,23 @@ export const mondayCollaborationActionHandlers: Record<string, MondayActionHandl
 
 async function mondayListUpdates(input: MondayProviderActionInput, fetcher: typeof fetch) {
   const source = input.input;
+  // `since`/`until` are the declared input names; monday's own arguments are
+  // `from_date`/`to_date`, so the mapping happens here rather than in the schema.
+  const since = typeof source.since === "string" ? source.since : undefined;
+  const until = typeof source.until === "string" ? source.until : undefined;
+  // monday rejects a half-open range on the root `updates` query, so a partial
+  // range is caught here instead of spending a request to be told.
+  if ((since === undefined) !== (until === undefined)) {
+    throw mondayProviderError("invalid_input", "since and until must be supplied together.", 400);
+  }
+
   const payload = await mondayGraphqlRequest<{
     updates?: Array<Record<string, unknown>>;
   }>(
     input.apiKey,
     {
       query: `
-        query ListUpdates($limit: Int, $page: Int, $from_date: Date, $to_date: Date) {
+        query ListUpdates($limit: Int, $page: Int, $from_date: String, $to_date: String) {
           updates(limit: $limit, page: $page, from_date: $from_date, to_date: $to_date) {
             id
             body
@@ -68,13 +79,11 @@ async function mondayListUpdates(input: MondayProviderActionInput, fetcher: type
           }
         }
       `,
-      // `since`/`until` are the declared input names; monday's own arguments are
-      // `from_date`/`to_date`, so the mapping happens here rather than in the schema.
       variables: compactObject({
         limit: typeof source.limit === "number" ? source.limit : undefined,
         page: typeof source.page === "number" ? source.page : undefined,
-        from_date: typeof source.since === "string" ? source.since : undefined,
-        to_date: typeof source.until === "string" ? source.until : undefined,
+        from_date: since,
+        to_date: until,
       }),
     },
     fetcher,

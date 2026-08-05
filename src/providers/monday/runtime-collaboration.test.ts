@@ -38,6 +38,21 @@ describe("monday list_updates filters", () => {
     expect(call.query).toContain("page: $page");
   });
 
+  it("declares the date variables as the String type monday's arguments take", async () => {
+    const call = await callWithCapture("list_updates", { since: "2026-01-01", until: "2026-06-30" });
+
+    expect(call.query).toContain("$from_date: String");
+    expect(call.query).toContain("$to_date: String");
+  });
+
+  it("rejects a half-open range, which monday answers with an error", async () => {
+    for (const partial of [{ since: "2026-01-01" }, { until: "2026-06-30" }]) {
+      await expect(callWithCapture("list_updates", partial)).rejects.toThrow(
+        "since and until must be supplied together.",
+      );
+    }
+  });
+
   it("omits filters that were not supplied", async () => {
     const call = await callWithCapture("list_updates", { limit: 5 });
 
