@@ -80,6 +80,7 @@ const createTaskInput = s.object(
     priority,
     sortOrder: s.integer("The TickTick task sort order."),
     items: s.array("Checklist items to create under the task.", checklistItemInput),
+    tags: s.stringArray("Task tags."),
   },
   {
     optional: [
@@ -94,6 +95,7 @@ const createTaskInput = s.object(
       "priority",
       "sortOrder",
       "items",
+      "tags",
     ],
   },
 );
@@ -122,6 +124,9 @@ const updateTaskInput = s.object(
     ],
   },
 );
+const batchCreateTasksInput = s.object("TickTick batch create-task input.", {
+  tasks: s.array("The TickTick tasks to create.", createTaskInput, { minItems: 1, maxItems: 50 }),
+});
 const completedFilterInput = s.object(
   "TickTick completed-task filter input.",
   {
@@ -154,6 +159,7 @@ export type TicktickActionName =
   | "get_task_by_project_and_id"
   | "create_task"
   | "create_task2"
+  | "batch_add_tasks"
   | "update_task"
   | "complete_task"
   | "delete_task"
@@ -239,6 +245,13 @@ export const ticktickActions: ActionDefinition[] = [
     requiredScopes: writeScope,
     inputSchema: createTaskInput,
     outputSchema: s.object({ task }),
+  }),
+  defineProviderAction(service, {
+    name: "batch_add_tasks",
+    description: "Batch create multiple TickTick tasks in one request.",
+    requiredScopes: writeScope,
+    inputSchema: batchCreateTasksInput,
+    outputSchema: s.object({ tasks: s.array("The created TickTick tasks.", task) }),
   }),
   defineProviderAction(service, {
     name: "update_task",
