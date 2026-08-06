@@ -34,6 +34,22 @@ describe("Mux extended video actions", () => {
     expect(validateActionInput(action!, { corsOrigin: "*", timeout: 604801 }).valid).toBe(false);
   });
 
+  it("rejects an update_asset request that carries no metadata change", async () => {
+    const action = muxActions.find((candidate) => candidate.name === "update_asset");
+    expect(validateActionInput(action!, { assetId: "asset-123", meta: { title: "" } }).valid).toBe(false);
+    expect(validateActionInput(action!, { assetId: "asset-123", passthrough: "" }).valid).toBe(true);
+
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json({ data: { id: "asset-123" } }));
+
+    await expect(muxActionHandlers.update_asset!({ assetId: "asset-123" }, context(fetcher))).rejects.toThrow(
+      "At least one of passthrough or meta must be provided",
+    );
+    await expect(muxActionHandlers.update_asset!({ assetId: "asset-123", meta: {} }, context(fetcher))).rejects.toThrow(
+      "At least one of passthrough or meta must be provided",
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("updates asset metadata and preserves an empty passthrough value", async () => {
     const fetcher = vi.fn<typeof fetch>(async () => Response.json({ data: { id: "asset-123", status: "ready" } }));
 
@@ -67,7 +83,7 @@ describe("Mux extended video actions", () => {
         return Response.json({ data: upload() });
       }
       if (pathname.endsWith("/uploads") && (!init?.method || init.method === "GET")) {
-        return Response.json({ data: [upload()], page: 2, limit: 10, total: 11 });
+        return Response.json({ data: [upload()] });
       }
       if (url.endsWith("/uploads/upload-123")) {
         return Response.json({ data: { ...upload(), status: "asset_created", asset_id: "asset-123" } });
@@ -101,9 +117,14 @@ describe("Mux extended video actions", () => {
       timeout: 120,
     });
 
-    await muxActionHandlers.list_direct_uploads!({ limit: 10, page: 2 }, muxContext);
-    await muxActionHandlers.get_direct_upload!({ uploadId: "upload-123" }, muxContext);
-    await muxActionHandlers.cancel_direct_upload!({ uploadId: "upload-123" }, muxContext);
+    const listed = await muxActionHandlers.list_direct_uploads!({ limit: 10, page: 2 }, muxContext);
+    expect(listed).toEqual({ uploads: [upload()] });
+
+    const retrieved = await muxActionHandlers.get_direct_upload!({ uploadId: "upload-123" }, muxContext);
+    expect(retrieved).toEqual({ upload: { ...upload(), status: "asset_created", asset_id: "asset-123" } });
+
+    const cancelled = await muxActionHandlers.cancel_direct_upload!({ uploadId: "upload-123" }, muxContext);
+    expect(cancelled).toEqual({ upload: { ...upload(), status: "cancelled" } });
 
     expect(fetcher.mock.calls.map(([url, init]) => `${init?.method ?? "GET"} ${String(url)}`)).toEqual([
       "POST https://api.mux.com/video/v1/uploads",

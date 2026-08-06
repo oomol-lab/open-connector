@@ -38,9 +38,9 @@ const assetOutput = s.actionOutput({ asset }, "A Mux asset response.");
 const assetMeta = s.object(
   "Customer-provided metadata attached to a Mux asset. This may be exposed to video players; do not include PII.",
   {
-    title: s.string("A human-readable asset title.", { maxLength: 512 }),
-    creatorId: s.string("Your identifier for the asset creator.", { maxLength: 128 }),
-    externalId: s.string("Your identifier linking the asset to an external record.", { maxLength: 128 }),
+    title: s.string("A human-readable asset title.", { minLength: 1, maxLength: 512 }),
+    creatorId: s.string("Your identifier for the asset creator.", { minLength: 1, maxLength: 128 }),
+    externalId: s.string("Your identifier linking the asset to an external record.", { minLength: 1, maxLength: 128 }),
   },
   { optional: ["title", "creatorId", "externalId"] },
 );
@@ -58,7 +58,10 @@ const directUploadAssetSettings = s.object(
     maxResolutionTier: s.stringEnum(["1080p", "1440p", "2160p"], {
       description: "The maximum resolution tier Mux should produce.",
     }),
-    passthrough: s.string("Opaque metadata returned in asset details and related webhooks.", { maxLength: 255 }),
+    passthrough: s.string("Opaque metadata returned in asset details and related webhooks.", {
+      minLength: 1,
+      maxLength: 255,
+    }),
     meta: assetMeta,
   },
   { optional: ["playbackPolicies", "videoQuality", "maxResolutionTier", "passthrough", "meta"] },
@@ -118,15 +121,7 @@ export const muxActions: ActionDefinition[] = [
           description: "Opaque metadata returned in asset details and related webhooks.",
         }),
         test: s.boolean("Whether to create a free, watermarked test asset limited to 10 seconds and 24 hours."),
-        meta: s.object(
-          "Structured asset metadata. Do not include sensitive or personally identifiable information.",
-          {
-            title: s.string("A human-readable asset title.", { maxLength: 512 }),
-            creatorId: s.string("Your identifier for the asset creator.", { maxLength: 128 }),
-            externalId: s.string("Your identifier linking the asset to an external record.", { maxLength: 128 }),
-          },
-          { optional: ["title", "creatorId", "externalId"] },
-        ),
+        meta: assetMeta,
       },
       ["sourceUrl"],
       "Settings for creating a Mux asset from a remote media file.",
@@ -231,7 +226,7 @@ export const muxActions: ActionDefinition[] = [
     description:
       "Create a signed Mux Direct Upload URL for client-side or server-side media ingest without proxying video bytes through the connector.",
     providerPermissions: [videoWritePermission],
-    followUpActions: ["mux.get_direct_upload", "mux.list_assets"],
+    followUpActions: ["mux.get_direct_upload", "mux.cancel_direct_upload", "mux.list_assets"],
     inputSchema: s.actionInput(
       {
         corsOrigin: s.nonEmptyString("The browser origin that will use the signed upload URL, or * for any origin."),
@@ -267,18 +262,13 @@ export const muxActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Pagination for Mux Direct Uploads.",
       {
-        limit: s.integer("The maximum number of Direct Uploads to return.", { minimum: 1, maximum: 100 }),
+        limit: s.integer("The maximum number of Direct Uploads to return.", { minimum: 1, default: 25 }),
         page: s.positiveInteger("The one-based page number."),
       },
       { optional: ["limit", "page"] },
     ),
     outputSchema: s.actionOutput(
-      {
-        uploads: s.array("Mux Direct Uploads in this page.", upload),
-        page: s.nullableInteger("The current page number returned by Mux."),
-        limit: s.nullableInteger("The page size returned by Mux."),
-        total: s.nullableInteger("The total number of Direct Uploads reported by Mux."),
-      },
+      { uploads: s.array("Mux Direct Uploads in this page. Mux returns no page metadata for this endpoint.", upload) },
       "A page of Mux Direct Uploads.",
     ),
   }),

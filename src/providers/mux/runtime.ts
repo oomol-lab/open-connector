@@ -76,7 +76,6 @@ async function createAsset(input: Record<string, unknown>, context: MuxContext):
     fieldName: "sourceUrl",
     createError: inputError,
   });
-  const meta = optionalRecord(input.meta);
   const body = compactObject({
     inputs: [{ url: sourceUrl.toString() }],
     playback_policies: readOptionalStringArray(input.playbackPolicies, "playbackPolicies"),
@@ -84,13 +83,7 @@ async function createAsset(input: Record<string, unknown>, context: MuxContext):
     max_resolution_tier: optionalString(input.maxResolutionTier),
     passthrough: optionalString(input.passthrough),
     test: optionalBoolean(input.test),
-    meta: meta
-      ? compactObject({
-          title: optionalString(meta.title),
-          creator_id: optionalString(meta.creatorId),
-          external_id: optionalString(meta.externalId),
-        })
-      : undefined,
+    meta: serializeAssetMeta(input.meta),
   });
   const payload = await requestMuxJson({
     path: "/video/v1/assets",
@@ -134,7 +127,7 @@ async function getAsset(input: Record<string, unknown>, context: MuxContext): Pr
 
 async function updateAsset(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
   const assetId = requiredInputString(input.assetId, "assetId");
-  const passthrough = optionalUpdateString(input.passthrough, "passthrough");
+  const passthrough = optionalRawString(input.passthrough);
   const meta = serializeAssetMeta(input.meta);
   if (passthrough === undefined && meta === undefined) {
     throw inputError("At least one of passthrough or meta must be provided");
@@ -220,12 +213,7 @@ async function listDirectUploads(input: Record<string, unknown>, context: MuxCon
     phase: "execute",
   });
   const response = requiredRecord(payload, "Mux list Direct Uploads response", muxResponseError);
-  return {
-    uploads: objectArray(response.data, "Mux Direct Upload", muxResponseError),
-    page: optionalInteger(response.page) ?? null,
-    limit: optionalInteger(response.limit) ?? null,
-    total: optionalInteger(response.total) ?? null,
-  };
+  return { uploads: objectArray(response.data, "Mux Direct Upload", muxResponseError) };
 }
 
 async function cancelDirectUpload(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
@@ -337,16 +325,11 @@ function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, inputError);
 }
 
-function optionalUpdateString(value: unknown, fieldName: string): string | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (typeof value !== "string") {
-    throw inputError(`${fieldName} must be a string`);
-  }
-  return optionalRawString(value);
-}
-
+/**
+ * Map camelCase meta input onto the Mux asset `meta` object, or undefined when
+ * no field carries a value. Mux only documents empty-string clearing for
+ * `passthrough`, so an empty `meta` must not be sent as a content-free write.
+ */
 function serializeAssetMeta(value: unknown): Record<string, string> | undefined {
   if (value === undefined) {
     return undefined;
@@ -355,11 +338,12 @@ function serializeAssetMeta(value: unknown): Record<string, string> | undefined 
   if (!meta) {
     throw inputError("meta must be an object");
   }
-  return compactObject({
+  const serialized = compactObject({
     title: optionalString(meta.title),
     creator_id: optionalString(meta.creatorId),
     external_id: optionalString(meta.externalId),
   });
+  return Object.keys(serialized).length > 0 ? serialized : undefined;
 }
 
 function serializeDirectUploadAssetSettings(value: unknown): Record<string, unknown> | undefined {
@@ -374,7 +358,7 @@ function serializeDirectUploadAssetSettings(value: unknown): Record<string, unkn
     playback_policies: readOptionalStringArray(settings.playbackPolicies, "newAssetSettings.playbackPolicies"),
     video_quality: optionalString(settings.videoQuality),
     max_resolution_tier: optionalString(settings.maxResolutionTier),
-    passthrough: optionalUpdateString(settings.passthrough, "newAssetSettings.passthrough"),
+    passthrough: optionalString(settings.passthrough),
     meta: serializeAssetMeta(settings.meta),
   });
 }
