@@ -38,7 +38,7 @@ describe("OAuth token requests", () => {
     vi.stubGlobal("fetch", fetcher);
 
     await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
-      "OAuth token request failed.",
+      "OAuth token request failed before reaching the provider: provider network request failed",
     );
 
     expect(fetcher).toHaveBeenCalledOnce();
@@ -62,10 +62,79 @@ describe("OAuth token requests", () => {
     });
 
     await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
-      "OAuth token request failed.",
+      "OAuth token request failed (HTTP 302, empty body).",
     );
 
     expect(calls).toEqual(["https://provider.example.com/oauth/token"]);
+  });
+
+  it("names the platform cause when the transport never reached the provider", async () => {
+    // The case that motivated this: an SSRF/egress-guard rejection and an
+    // unreachable host both threw the same bare string, and the guard one fails
+    // in tens of milliseconds without touching the network.
+    const refused = new TypeError("fetch failed");
+    (refused as { cause?: unknown }).cause = { code: "ECONNREFUSED" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Promise.reject(refused)),
+    );
+
+    await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
+      "OAuth token request failed before reaching the provider: provider network request failed (ECONNREFUSED)",
+    );
+  });
+
+  it("reports status and a bounded body excerpt when the provider sends no structured error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response("<html><head><title>502 Bad Gateway</title></head>\n<body>nginx</body></html>", {
+            status: 502,
+            headers: { "content-type": "text/html" },
+          }),
+      ),
+    );
+
+    await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
+      "OAuth token request failed (HTTP 502, body: <html><head><title>502 Bad Gateway</title></head> <body>nginx</body></html>).",
+    );
+  });
+
+  it("truncates a long error body and redacts the client secret from it", async () => {
+    const body = `x`.repeat(400) + " client_secret=client-secret";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(body, { status: 400 })),
+    );
+
+    let message = "";
+    try {
+      await requestAuthorizationCodeToken({ ...authorizationCodeRequest });
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toContain("HTTP 400");
+    expect(message).toContain("…");
+    expect(message).not.toContain("client-secret");
+    // 200 bytes of excerpt plus the surrounding text, nowhere near the 400-byte body.
+    expect(message.length).toBeLessThan(300);
+  });
+
+  it("still prefers the provider's own error message over the excerpt", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: "invalid_grant", error_description: "code already redeemed" }), {
+            status: 400,
+          }),
+      ),
+    );
+
+    await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
+      "code already redeemed",
+    );
   });
 
   it("preserves the token-request timeout error", async () => {

@@ -275,7 +275,7 @@ describe("provider runtime fetch", () => {
       ok: false,
       error: {
         code: "provider_error",
-        message: "provider network request failed",
+        message: expect.stringContaining("provider network request failed"),
         details: { status: 502 },
       },
     });

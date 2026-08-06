@@ -46,7 +46,9 @@ export function createProviderFetch(options: ProviderFetchOptions = {}): Provide
     allowPrivateNetwork: options.allowPrivateNetwork,
     skipDnsValidation: options.skipDnsValidation,
     mapTransportError: (error) =>
-      error instanceof TypeError ? new ProviderRequestError(502, "provider network request failed") : error,
+      error instanceof TypeError
+        ? new ProviderRequestError(502, `provider network request failed${describeTransportCauseCode(error)}`)
+        : error,
     createError: (message) => new ProviderRequestError(502, message),
   });
 }
@@ -981,4 +983,19 @@ export async function requireBearerCredential(context: ExecutionContext, service
   }
 
   throw new ProviderRequestError(401, `Configure ${service} credentials first.`);
+}
+
+/**
+ * The platform error code behind a transport failure (`ENOTFOUND`,
+ * `ECONNREFUSED`, `CERT_HAS_EXPIRED`, ...), formatted for appending to a
+ * provider-visible message, or `""` when there is none.
+ *
+ * Only the code — never `cause.message`, which on undici embeds the target host
+ * (`getaddrinfo ENOTFOUND secret.internal`). That host is exactly what the
+ * transport-error mapping exists to keep out of provider-visible errors; the
+ * code is an enum-like token that identifies the failure without naming it.
+ */
+export function describeTransportCauseCode(error: unknown): string {
+  const code = (error as { cause?: { code?: unknown } } | null)?.cause?.code;
+  return typeof code === "string" && code !== "" ? ` (${code})` : "";
 }
