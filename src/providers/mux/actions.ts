@@ -35,6 +35,56 @@ const asset = s.looseObject("A Mux video asset, including its current processing
   meta: s.looseObject("Customer-provided structured metadata for the asset."),
 });
 const assetOutput = s.actionOutput({ asset }, "A Mux asset response.");
+const assetMeta = s.object(
+  "Customer-provided metadata attached to a Mux asset. This may be exposed to video players; do not include PII.",
+  {
+    title: s.string("A human-readable asset title.", { maxLength: 512 }),
+    creatorId: s.string("Your identifier for the asset creator.", { maxLength: 128 }),
+    externalId: s.string("Your identifier linking the asset to an external record.", { maxLength: 128 }),
+  },
+  { optional: ["title", "creatorId", "externalId"] },
+);
+const directUploadAssetSettings = s.object(
+  "Asset settings applied after a direct upload completes.",
+  {
+    playbackPolicies: s.array(
+      "Playback policies to create for the resulting asset.",
+      s.stringEnum(["public", "signed"], { description: "A non-DRM Mux playback policy." }),
+      { minItems: 1, maxItems: 2 },
+    ),
+    videoQuality: s.stringEnum(["basic", "plus", "premium"], {
+      description: "The cost and encoding-quality tier for the resulting asset.",
+    }),
+    maxResolutionTier: s.stringEnum(["1080p", "1440p", "2160p"], {
+      description: "The maximum resolution tier Mux should produce.",
+    }),
+    passthrough: s.string("Opaque metadata returned in asset details and related webhooks.", { maxLength: 255 }),
+    meta: assetMeta,
+  },
+  { optional: ["playbackPolicies", "videoQuality", "maxResolutionTier", "passthrough", "meta"] },
+);
+const upload = s.looseObject("A Mux Direct Upload and its current ingest status.", {
+  id: s.nonEmptyString("The Direct Upload ID."),
+  cors_origin: s.nonEmptyString("The browser origin allowed to use the signed upload URL."),
+  status: s.stringEnum(["waiting", "asset_created", "errored", "cancelled", "timed_out"], {
+    description: "The current Direct Upload status.",
+  }),
+  timeout: s.nonNegativeInteger("The signed upload URL validity period in seconds."),
+  asset_id: s.nullableString("The resulting asset ID once the upload has been ingested."),
+  error: s.looseObject("The ingest error reported for a failed Direct Upload."),
+  new_asset_settings: s.looseObject("The asset settings used after ingest."),
+  test: s.boolean("Whether this is a Mux test upload."),
+  url: s.nullableString("The signed URL to which the source media should be uploaded."),
+});
+const uploadOutput = s.actionOutput({ upload }, "A Mux Direct Upload response.");
+const playbackLookup = s.looseObject("The Mux object associated with a playback ID.", {
+  id: s.nonEmptyString("The playback ID."),
+  object: s.looseObject("The associated Mux object.", {
+    id: s.nonEmptyString("The associated asset or live stream ID."),
+    type: s.stringEnum(["asset", "live_stream"], { description: "The associated Mux object type." }),
+  }),
+  policy: playbackPolicy,
+});
 const assetLifecycle = {
   startActionId: "mux.create_asset",
   statusActionId: "mux.get_asset",
@@ -117,6 +167,25 @@ export const muxActions: ActionDefinition[] = [
     outputSchema: assetOutput,
   }),
   defineProviderAction(service, {
+    name: "update_asset",
+    description: "Update the passthrough value or customer metadata for an existing Mux video asset.",
+    providerPermissions: [videoWritePermission],
+    followUpActions: ["mux.get_asset"],
+    inputSchema: s.actionInput(
+      {
+        assetId,
+        passthrough: s.string(
+          "Opaque metadata to include in asset details and related webhooks. Pass an empty string to clear it.",
+          { maxLength: 255 },
+        ),
+        meta: assetMeta,
+      },
+      ["assetId"],
+      "The metadata changes to apply to a Mux asset.",
+    ),
+    outputSchema: assetOutput,
+  }),
+  defineProviderAction(service, {
     name: "delete_asset",
     description: "Permanently delete a Mux video asset and all of its data.",
     providerPermissions: [videoWritePermission],
@@ -156,5 +225,83 @@ export const muxActions: ActionDefinition[] = [
       { description: "The asset and access policy for a new Mux playback ID." },
     ),
     outputSchema: s.actionOutput({ playbackId }, "The playback ID created by Mux."),
+  }),
+  defineProviderAction(service, {
+    name: "create_direct_upload",
+    description:
+      "Create a signed Mux Direct Upload URL for client-side or server-side media ingest without proxying video bytes through the connector.",
+    providerPermissions: [videoWritePermission],
+    followUpActions: ["mux.get_direct_upload", "mux.list_assets"],
+    inputSchema: s.actionInput(
+      {
+        corsOrigin: s.nonEmptyString("The browser origin that will use the signed upload URL, or * for any origin."),
+        newAssetSettings: directUploadAssetSettings,
+        test: s.boolean("Whether to create a free, watermarked test upload."),
+        timeout: s.integer("How long the signed upload URL remains valid, in seconds.", {
+          minimum: 1,
+          maximum: 604800,
+        }),
+      },
+      ["corsOrigin"],
+      "Settings for creating a Mux Direct Upload.",
+    ),
+    outputSchema: uploadOutput,
+  }),
+  defineProviderAction(service, {
+    name: "get_direct_upload",
+    description: "Retrieve the status, signed URL, and resulting asset ID for a Mux Direct Upload.",
+    providerPermissions: [videoReadPermission],
+    followUpActions: ["mux.get_asset"],
+    inputSchema: s.actionInput(
+      { uploadId: s.nonEmptyString("The Mux Direct Upload ID.") },
+      ["uploadId"],
+      "The Direct Upload to retrieve.",
+    ),
+    outputSchema: uploadOutput,
+  }),
+  defineProviderAction(service, {
+    name: "list_direct_uploads",
+    description: "List Mux Direct Uploads in the current environment, including waiting and completed uploads.",
+    providerPermissions: [videoReadPermission],
+    followUpActions: ["mux.get_direct_upload", "mux.get_asset"],
+    inputSchema: s.object(
+      "Pagination for Mux Direct Uploads.",
+      {
+        limit: s.integer("The maximum number of Direct Uploads to return.", { minimum: 1, maximum: 100 }),
+        page: s.positiveInteger("The one-based page number."),
+      },
+      { optional: ["limit", "page"] },
+    ),
+    outputSchema: s.actionOutput(
+      {
+        uploads: s.array("Mux Direct Uploads in this page.", upload),
+        page: s.nullableInteger("The current page number returned by Mux."),
+        limit: s.nullableInteger("The page size returned by Mux."),
+        total: s.nullableInteger("The total number of Direct Uploads reported by Mux."),
+      },
+      "A page of Mux Direct Uploads.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "cancel_direct_upload",
+    description: "Cancel a waiting Mux Direct Upload so that a later upload cannot create an asset.",
+    providerPermissions: [videoWritePermission],
+    inputSchema: s.actionInput(
+      { uploadId: s.nonEmptyString("The Mux Direct Upload ID.") },
+      ["uploadId"],
+      "The Direct Upload to cancel.",
+    ),
+    outputSchema: uploadOutput,
+  }),
+  defineProviderAction(service, {
+    name: "get_playback_id",
+    description: "Resolve a Mux playback ID to the asset or live stream it belongs to and its access policy.",
+    providerPermissions: [videoReadPermission],
+    inputSchema: s.actionInput(
+      { playbackId: s.nonEmptyString("The Mux playback ID to resolve.") },
+      ["playbackId"],
+      "The playback ID to resolve.",
+    ),
+    outputSchema: s.actionOutput({ playbackId: playbackLookup }, "The Mux playback ID association."),
   }),
 ];

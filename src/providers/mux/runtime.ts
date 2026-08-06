@@ -7,6 +7,7 @@ import {
   objectArray,
   optionalBoolean,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   requiredRecord,
@@ -31,8 +32,14 @@ export const muxActionHandlers: Record<string, MuxActionHandler> = {
   create_asset: createAsset,
   list_assets: listAssets,
   get_asset: getAsset,
+  update_asset: updateAsset,
   delete_asset: deleteAsset,
   create_playback_id: createPlaybackId,
+  create_direct_upload: createDirectUpload,
+  get_direct_upload: getDirectUpload,
+  list_direct_uploads: listDirectUploads,
+  cancel_direct_upload: cancelDirectUpload,
+  get_playback_id: getPlaybackId,
 };
 
 export async function validateMuxCredential(context: MuxContext): Promise<CredentialValidationResult> {
@@ -125,6 +132,24 @@ async function getAsset(input: Record<string, unknown>, context: MuxContext): Pr
   return { asset: muxDataRecord(payload, "Mux asset response") };
 }
 
+async function updateAsset(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
+  const assetId = requiredInputString(input.assetId, "assetId");
+  const passthrough = optionalUpdateString(input.passthrough, "passthrough");
+  const meta = serializeAssetMeta(input.meta);
+  if (passthrough === undefined && meta === undefined) {
+    throw inputError("At least one of passthrough or meta must be provided");
+  }
+
+  const payload = await requestMuxJson({
+    path: `/video/v1/assets/${encodeURIComponent(assetId)}`,
+    method: "PATCH",
+    body: compactObject({ passthrough, meta }),
+    context,
+    phase: "execute",
+  });
+  return { asset: muxDataRecord(payload, "Mux update asset response") };
+}
+
 async function deleteAsset(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
   const assetId = requiredInputString(input.assetId, "assetId");
   await requestMuxJson({
@@ -155,6 +180,73 @@ async function createPlaybackId(input: Record<string, unknown>, context: MuxCont
     phase: "execute",
   });
   return { playbackId: muxDataRecord(payload, "Mux create playback ID response") };
+}
+
+async function createDirectUpload(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
+  const newAssetSettings = serializeDirectUploadAssetSettings(input.newAssetSettings);
+  const payload = await requestMuxJson({
+    path: "/video/v1/uploads",
+    method: "POST",
+    body: compactObject({
+      cors_origin: requiredInputString(input.corsOrigin, "corsOrigin"),
+      new_asset_settings: newAssetSettings,
+      test: optionalBoolean(input.test),
+      timeout: optionalInteger(input.timeout),
+    }),
+    context,
+    phase: "execute",
+  });
+  return { upload: muxDataRecord(payload, "Mux create Direct Upload response") };
+}
+
+async function getDirectUpload(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
+  const uploadId = requiredInputString(input.uploadId, "uploadId");
+  const payload = await requestMuxJson({
+    path: `/video/v1/uploads/${encodeURIComponent(uploadId)}`,
+    context,
+    phase: "execute",
+  });
+  return { upload: muxDataRecord(payload, "Mux Direct Upload response") };
+}
+
+async function listDirectUploads(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
+  const payload = await requestMuxJson({
+    path: "/video/v1/uploads",
+    query: {
+      limit: stringifyInteger(input.limit),
+      page: stringifyInteger(input.page),
+    },
+    context,
+    phase: "execute",
+  });
+  const response = requiredRecord(payload, "Mux list Direct Uploads response", muxResponseError);
+  return {
+    uploads: objectArray(response.data, "Mux Direct Upload", muxResponseError),
+    page: optionalInteger(response.page) ?? null,
+    limit: optionalInteger(response.limit) ?? null,
+    total: optionalInteger(response.total) ?? null,
+  };
+}
+
+async function cancelDirectUpload(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
+  const uploadId = requiredInputString(input.uploadId, "uploadId");
+  const payload = await requestMuxJson({
+    path: `/video/v1/uploads/${encodeURIComponent(uploadId)}/cancel`,
+    method: "PUT",
+    context,
+    phase: "execute",
+  });
+  return { upload: muxDataRecord(payload, "Mux cancel Direct Upload response") };
+}
+
+async function getPlaybackId(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
+  const playbackId = requiredInputString(input.playbackId, "playbackId");
+  const payload = await requestMuxJson({
+    path: `/video/v1/playback-ids/${encodeURIComponent(playbackId)}`,
+    context,
+    phase: "execute",
+  });
+  return { playbackId: muxDataRecord(payload, "Mux playback ID response") };
 }
 
 interface MuxRequestOptions {
@@ -243,6 +335,48 @@ function createMuxAuthorization(context: Pick<MuxContext, "tokenId" | "tokenSecr
 
 function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, inputError);
+}
+
+function optionalUpdateString(value: unknown, fieldName: string): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw inputError(`${fieldName} must be a string`);
+  }
+  return optionalRawString(value);
+}
+
+function serializeAssetMeta(value: unknown): Record<string, string> | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const meta = optionalRecord(value);
+  if (!meta) {
+    throw inputError("meta must be an object");
+  }
+  return compactObject({
+    title: optionalString(meta.title),
+    creator_id: optionalString(meta.creatorId),
+    external_id: optionalString(meta.externalId),
+  });
+}
+
+function serializeDirectUploadAssetSettings(value: unknown): Record<string, unknown> | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const settings = optionalRecord(value);
+  if (!settings) {
+    throw inputError("newAssetSettings must be an object");
+  }
+  return compactObject({
+    playback_policies: readOptionalStringArray(settings.playbackPolicies, "newAssetSettings.playbackPolicies"),
+    video_quality: optionalString(settings.videoQuality),
+    max_resolution_tier: optionalString(settings.maxResolutionTier),
+    passthrough: optionalUpdateString(settings.passthrough, "newAssetSettings.passthrough"),
+    meta: serializeAssetMeta(settings.meta),
+  });
 }
 
 function inputError(message: string): ProviderRequestError {
