@@ -1,4 +1,10 @@
-import { assertPublicHttpUrl, isBlockedIpAddress, isIpAddress, isIpv4Address } from "./request.ts";
+import {
+  assertPublicHttpUrl,
+  isBlockedIpAddress,
+  isEgressIpCheckSkippedForHost,
+  isIpAddress,
+  isIpv4Address,
+} from "./request.ts";
 
 /**
  * Single resolved address returned by a DNS lookup, mirroring the shape of
@@ -362,9 +368,28 @@ async function assertResolvedAddressesAllowed(
   if (results.length === 0) {
     throw policy.createResolutionError(`${fieldName} could not be resolved for validation`);
   }
+  // Deployment-level allowlist, resolved per request so a bootstrap that
+  // configures it after module load is honored. Skips only this range check;
+  // the URL, redirect-Location, and response-size guards still ran and still run.
+  const skipRangeCheck = isEgressIpCheckSkippedForHost(hostname);
   for (const entry of results) {
     if (entry && typeof entry.address === "string" && isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
-      throw policy.createError(`${fieldName} must not resolve to private or reserved IP addresses`);
+      if (skipRangeCheck) {
+        continue;
+      }
+      // Name the way out. This rejection happens before any packet leaves the
+      // process, so on its own it is indistinguishable from a network failure:
+      // the caller sees a sub-100ms error with nothing pointing at DNS, at this
+      // guard, or at the fact that an operator-level opt-out exists. The
+      // resolved address is deliberately NOT included — for hosts that come from
+      // tenant input (mail credentials, self-hosted base URLs) echoing it back
+      // would turn the guard into a DNS/internal-range probe oracle, a property
+      // src/mail/imap-smtp/host-pinning.test.ts asserts.
+      throw policy.createError(
+        `${fieldName} must not resolve to private or reserved IP addresses ` +
+          `(if this host is reached through a corporate VPN that maps it into a reserved ` +
+          `range, add it to OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS)`,
+      );
     }
   }
   return results;

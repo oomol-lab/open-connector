@@ -1,7 +1,8 @@
 import type { GuardedFetchDnsLookup } from "./guarded-fetch.ts";
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGuardedFetch, resolveGuardedEgressTarget, unwrapGuardedFetch } from "./guarded-fetch.ts";
+import { setEgressIpCheckSkipHosts } from "./request.ts";
 
 interface RecordedCall {
   url: string;
@@ -317,6 +318,60 @@ describe("createGuardedFetch request URL guard", () => {
   });
 });
 
+describe("createGuardedFetch egress IP-check host allowlist", () => {
+  afterEach(() => setEgressIpCheckSkipHosts([]));
+
+  it("lets an allowlisted host through a reserved-range result while other hosts stay blocked", async () => {
+    setEgressIpCheckSkipHosts([".feishu.cn"]);
+    const entries = {
+      "open.feishu.cn": [{ address: "198.18.0.196", family: 4 }],
+      "open.other.example": [{ address: "198.18.0.196", family: 4 }],
+    };
+
+    const { transport, calls } = createTransport([new Response("ok", { status: 200 })]);
+    const allowed = createGuardedFetch({ fetch: transport, lookup: lookupTable(entries) });
+    await allowed("https://open.feishu.cn/open-apis/authen/v2/oauth/token");
+    expect(calls).toHaveLength(1);
+
+    const blocked = createGuardedFetch({ fetch: createTransport([]).transport, lookup: lookupTable(entries) });
+    await expect(blocked("https://open.other.example/")).rejects.toThrow(/must not resolve/u);
+  });
+
+  it("keeps the URL guard intact for an allowlisted host", async () => {
+    // The allowlist covers only DNS results. A literal reserved address in the
+    // URL, a non-http scheme, and a redirect into a blocked target are all still
+    // rejected, so allowlisting a host does not turn off the guard for it.
+    setEgressIpCheckSkipHosts([".feishu.cn", "198.18.0.196"]);
+    const guarded = createGuardedFetch({
+      fetch: createTransport([]).transport,
+      lookup: lookupTable({ "open.feishu.cn": [{ address: "198.18.0.196", family: 4 }] }),
+    });
+    await expect(guarded("https://198.18.0.196/")).rejects.toThrow(/must not/u);
+    await expect(guarded("ftp://open.feishu.cn/")).rejects.toThrow(/must use http or https/u);
+
+    const redirecting = createGuardedFetch({
+      fetch: createTransport([redirectTo("http://169.254.169.254/latest/meta-data/")]).transport,
+      lookup: lookupTable({
+        "open.feishu.cn": [{ address: "198.18.0.196", family: 4 }],
+        "169.254.169.254": [{ address: "169.254.169.254", family: 4 }],
+      }),
+    });
+    await expect(redirecting("https://open.feishu.cn/")).rejects.toThrow(/must not/u);
+  });
+
+  it("is re-read per request so a bootstrap after module load is honored", async () => {
+    const entries = { "open.feishu.cn": [{ address: "198.18.0.196", family: 4 }] };
+    const guarded = createGuardedFetch({
+      fetch: createTransport([new Response("ok", { status: 200 })]).transport,
+      lookup: lookupTable(entries),
+    });
+
+    await expect(guarded("https://open.feishu.cn/")).rejects.toThrow(/must not resolve/u);
+    setEgressIpCheckSkipHosts([".feishu.cn"]);
+    await expect(guarded("https://open.feishu.cn/")).resolves.toBeInstanceOf(Response);
+  });
+});
+
 describe("createGuardedFetch resolved-address validation", () => {
   it("blocks hostnames resolving to reserved or metadata addresses", async () => {
     const { transport, calls } = createTransport([]);
@@ -368,6 +423,21 @@ describe("createGuardedFetch resolved-address validation", () => {
     });
 
     await expect(guarded("https://rebind.example.com/")).rejects.toThrow(/must not resolve/u);
+  });
+
+  it("points at the operator opt-out without disclosing the resolved address", async () => {
+    const guarded = createGuardedFetch({
+      fetch: createTransport([]).transport,
+      lookup: lookupTable({ "open.vpn-mapped.example": [{ address: "198.18.0.196", family: 4 }] }),
+    });
+
+    // The rejection happens before any packet leaves the process, so on its own it
+    // is indistinguishable from a network failure; naming the opt-out is what makes
+    // it actionable. The address stays out — see host-pinning.test.ts.
+    await expect(guarded("https://open.vpn-mapped.example/token")).rejects.toThrow(
+      /OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS/u,
+    );
+    await expect(guarded("https://open.vpn-mapped.example/token")).rejects.not.toThrow(/198\.18\.0\.196/u);
   });
 
   it("allows hostnames resolving to public addresses", async () => {

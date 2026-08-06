@@ -239,6 +239,72 @@ export function parsePrivateNetworkAccessFlag(value: string | undefined): boolea
 }
 
 /**
+ * Hosts whose DNS-resolved addresses skip the private/reserved-range check.
+ *
+ * Zero-trust corporate VPNs (aTrust / EasyConnect class) resolve public SaaS
+ * domains into a reserved range — commonly `198.18.0.0/15` — and tunnel the
+ * traffic from there, so on those networks a reserved address is the normal
+ * path to the real service rather than an SSRF target. Reserved ranges are
+ * checked unconditionally, so {@link isPrivateNetworkAccessAllowed} cannot open
+ * them, and there is otherwise no way for an operator to say "this host is
+ * reachable through my VPN". Every other guard still applies: scheme, port,
+ * URL-literal IP addresses, redirect `Location` re-validation, and response
+ * size limits. Empty by default.
+ */
+let egressIpCheckSkipHosts: readonly string[] = [];
+
+/**
+ * Configure the hosts that skip the resolved-address range check (called once at
+ * deployment bootstrap).
+ */
+export function setEgressIpCheckSkipHosts(hosts: readonly string[]): void {
+  egressIpCheckSkipHosts = hosts;
+}
+
+/**
+ * Whether `hostname` is allowlisted out of the resolved-address range check.
+ *
+ * An entry starting with `.` matches that domain and its subdomains
+ * (`.feishu.cn` covers `feishu.cn` and `open.feishu.cn`); any other entry must
+ * match the host exactly. Only affects addresses a hostname resolves to — a URL
+ * whose host is already a literal private or reserved IP is rejected earlier by
+ * {@link assertPublicHttpUrl} and this list does not reach it.
+ */
+export function isEgressIpCheckSkippedForHost(hostname: string): boolean {
+  if (egressIpCheckSkipHosts.length === 0) {
+    return false;
+  }
+  const host = normalizeSkipHostEntry(hostname);
+  if (host.length === 0) {
+    return false;
+  }
+  return egressIpCheckSkipHosts.some((entry) =>
+    entry.startsWith(".") ? host === entry.slice(1) || host.endsWith(entry) : host === entry,
+  );
+}
+
+/**
+ * Parse the `OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS` flag: a comma-separated
+ * host list, e.g. `".feishu.cn,.larksuite.com,api.example.com"`. Blank entries
+ * are dropped so a trailing comma cannot produce an entry that matches nothing
+ * (or, worse, everything).
+ */
+export function parseEgressIpCheckSkipHosts(value: string | undefined): string[] {
+  if (value === undefined) {
+    return [];
+  }
+  return value
+    .split(",")
+    .map(normalizeSkipHostEntry)
+    .filter((entry) => entry.length > 0 && entry !== ".");
+}
+
+/** Lowercase, trim, and drop a fully-qualified trailing dot so entries and hosts compare equal. */
+function normalizeSkipHostEntry(value: string): string {
+  return value.trim().toLowerCase().replace(/\.$/, "");
+}
+
+/**
  * Parse a user-supplied URL and reject unsafe network targets.
  *
  * This is a local runtime SSRF guard for provider actions that fetch remote

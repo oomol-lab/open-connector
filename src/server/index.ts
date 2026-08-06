@@ -3,7 +3,12 @@ import { access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { loadCatalog } from "../catalog-store.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
-import { parsePrivateNetworkAccessFlag, setPrivateNetworkAccessAllowed } from "../core/request.ts";
+import {
+  parseEgressIpCheckSkipHosts,
+  parsePrivateNetworkAccessFlag,
+  setEgressIpCheckSkipHosts,
+  setPrivateNetworkAccessAllowed,
+} from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executorModules } from "../providers/registry.generated.ts";
 import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
@@ -37,6 +42,7 @@ const actionPolicy = new ActionPolicyService({
   blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
 });
 setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
+setEgressIpCheckSkipHosts(parseEgressIpCheckSkipHosts(process.env.OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS));
 const builtRoot = join(process.cwd(), "dist/web");
 const staticRoot = await resolveStaticRoot(builtRoot);
 await mkdir(dataDir, { recursive: true });

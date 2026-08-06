@@ -5,7 +5,10 @@ import {
   isIpAddress,
   isIpv4Address,
   isPrivateNetworkAccessAllowed,
+  isEgressIpCheckSkippedForHost,
+  parseEgressIpCheckSkipHosts,
   parsePrivateNetworkAccessFlag,
+  setEgressIpCheckSkipHosts,
   setPrivateNetworkAccessAllowed,
 } from "./request.ts";
 
@@ -237,3 +240,39 @@ function readPublicUrl(value: string, allowPrivateNetwork = false): URL {
     allowPrivateNetwork,
   });
 }
+
+describe("egress IP-check host allowlist", () => {
+  afterEach(() => setEgressIpCheckSkipHosts([]));
+
+  it("parses a comma-separated list and drops entries that would match nothing", () => {
+    expect(parseEgressIpCheckSkipHosts(" .feishu.cn , API.Example.com ,, . ,")).toEqual([
+      ".feishu.cn",
+      "api.example.com",
+    ]);
+    expect(parseEgressIpCheckSkipHosts(undefined)).toEqual([]);
+    expect(parseEgressIpCheckSkipHosts("")).toEqual([]);
+  });
+
+  it("matches a dot-prefixed entry against the domain and its subdomains only", () => {
+    setEgressIpCheckSkipHosts([".feishu.cn"]);
+    expect(isEgressIpCheckSkippedForHost("feishu.cn")).toBe(true);
+    expect(isEgressIpCheckSkippedForHost("open.feishu.cn")).toBe(true);
+    expect(isEgressIpCheckSkippedForHost("OPEN.FEISHU.CN")).toBe(true);
+    expect(isEgressIpCheckSkippedForHost("open.feishu.cn.")).toBe(true);
+    // A look-alike registration must not inherit the allowlist.
+    expect(isEgressIpCheckSkippedForHost("evilfeishu.cn")).toBe(false);
+    expect(isEgressIpCheckSkippedForHost("feishu.cn.attacker.example")).toBe(false);
+  });
+
+  it("requires an exact match for an entry without a leading dot", () => {
+    setEgressIpCheckSkipHosts(["api.example.com"]);
+    expect(isEgressIpCheckSkippedForHost("api.example.com")).toBe(true);
+    expect(isEgressIpCheckSkippedForHost("sub.api.example.com")).toBe(false);
+    expect(isEgressIpCheckSkippedForHost("example.com")).toBe(false);
+  });
+
+  it("skips nothing by default", () => {
+    expect(isEgressIpCheckSkippedForHost("open.feishu.cn")).toBe(false);
+    expect(isEgressIpCheckSkippedForHost("")).toBe(false);
+  });
+});
