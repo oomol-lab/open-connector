@@ -995,7 +995,7 @@ export async function requireBearerCredential(context: ExecutionContext, service
  * transport-error mapping exists to keep out of provider-visible errors; the
  * code is an enum-like token that identifies the failure without naming it.
  */
-export function describeTransportCauseCode(error: unknown): string {
-  const code = (error as { cause?: { code?: unknown } } | null)?.cause?.code;
-  return typeof code === "string" && code !== "" ? ` (${code})` : "";
+function describeTransportCauseCode(error: unknown): string {
+  const code = optionalString(optionalRecord(optionalRecord(error)?.cause)?.code);
+  return code ? ` (${code})` : "";
 }

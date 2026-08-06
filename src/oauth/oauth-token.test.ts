@@ -25,6 +25,15 @@ function stubTokenResponse(expiresIn: unknown): void {
   );
 }
 
+async function readRejectionMessage(operation: Promise<unknown>): Promise<string> {
+  try {
+    await operation;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+  throw new Error("Expected operation to reject");
+}
+
 describe("OAuth token requests", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -38,7 +47,7 @@ describe("OAuth token requests", () => {
     vi.stubGlobal("fetch", fetcher);
 
     await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
-      "OAuth token request failed before reaching the provider: provider network request failed",
+      "OAuth token request failed without an HTTP response: provider network request failed",
     );
 
     expect(fetcher).toHaveBeenCalledOnce();
@@ -68,7 +77,7 @@ describe("OAuth token requests", () => {
     expect(calls).toEqual(["https://provider.example.com/oauth/token"]);
   });
 
-  it("names the platform cause when the transport never reached the provider", async () => {
+  it("names the platform cause when the transport returns no HTTP response", async () => {
     // The case that motivated this: an SSRF/egress-guard rejection and an
     // unreachable host both threw the same bare string, and the guard one fails
     // in tens of milliseconds without touching the network.
@@ -80,11 +89,11 @@ describe("OAuth token requests", () => {
     );
 
     await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
-      "OAuth token request failed before reaching the provider: provider network request failed (ECONNREFUSED)",
+      "OAuth token request failed without an HTTP response: provider network request failed (ECONNREFUSED)",
     );
   });
 
-  it("reports status and a bounded body excerpt when the provider sends no structured error", async () => {
+  it("reports status without exposing an unstructured provider error body", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -97,31 +106,42 @@ describe("OAuth token requests", () => {
     );
 
     await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
-      "OAuth token request failed (HTTP 502, body: <html><head><title>502 Bad Gateway</title></head> <body>nginx</body></html>).",
+      "OAuth token request failed (HTTP 502, unrecognized response body).",
     );
   });
 
-  it("truncates a long error body and redacts the client secret from it", async () => {
-    const body = `x`.repeat(400) + " client_secret=client-secret";
+  it("does not expose echoed authorization-code request credentials", async () => {
+    const codeVerifier = "pkce-code-verifier";
+    const body = `client_secret=${authorizationCodeRequest.clientSecret}&code=${authorizationCodeRequest.code}&code_verifier=${codeVerifier}`;
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response(body, { status: 400 })),
     );
 
-    let message = "";
-    try {
-      await requestAuthorizationCodeToken({ ...authorizationCodeRequest });
-    } catch (error) {
-      message = (error as Error).message;
-    }
-    expect(message).toContain("HTTP 400");
-    expect(message).toContain("…");
-    expect(message).not.toContain("client-secret");
-    // 200 bytes of excerpt plus the surrounding text, nowhere near the 400-byte body.
-    expect(message.length).toBeLessThan(300);
+    const message = await readRejectionMessage(
+      requestAuthorizationCodeToken({ ...authorizationCodeRequest, extraFields: { code_verifier: codeVerifier } }),
+    );
+    expect(message).toBe("OAuth token request failed (HTTP 400, unrecognized response body).");
+    expect(message).not.toContain(authorizationCodeRequest.clientSecret);
+    expect(message).not.toContain(authorizationCodeRequest.code);
+    expect(message).not.toContain(codeVerifier);
   });
 
-  it("still prefers the provider's own error message over the excerpt", async () => {
+  it("does not expose tokens from an unrecognized refresh error response", async () => {
+    const refreshToken = "stored-refresh-token";
+    const accessToken = "unexpected-access-token";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: accessToken, refresh_token: refreshToken }, { status: 400 })),
+    );
+
+    const message = await readRejectionMessage(requestRefreshToken({ ...authorizationCodeRequest, refreshToken }));
+    expect(message).toBe("OAuth token request failed (HTTP 400, unrecognized response body).");
+    expect(message).not.toContain(refreshToken);
+    expect(message).not.toContain(accessToken);
+  });
+
+  it("still prefers the provider's own error message over the fallback", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(

@@ -1,13 +1,11 @@
 import type { OAuth2AuthDefinition, ResolvedCredential } from "../core/types.ts";
 
-import { optionalString, requiredString } from "../core/cast.ts";
+import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 
 const oauthTokenRequestTimeoutMs = 30_000;
 const oauthTokenResponseMaxBytes = 1024 * 1024;
-/** Bytes of a token-error body quoted back when the provider sent no structured error message. */
-const tokenErrorExcerptMaxBytes = 200;
 /** Longest `expires_in` we accept; anything larger overflows the ECMAScript `Date` range. */
 const maxExpiresInSeconds = 100 * 365 * 24 * 60 * 60;
 
@@ -104,25 +102,26 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
     if (error instanceof Error && error.name === "TimeoutError") {
       throw input.createError("OAuth token request timed out.");
     }
-    // Nothing reached the provider, so there is no status or body to report —
-    // the thrown error is the only evidence of why. Naming it separates a DNS or
-    // egress-guard rejection from a TLS failure from a connection reset, which
-    // the bare message could not: an SSRF-guard rejection and an unreachable
-    // host produced the same string, and the guard one fails in tens of
-    // milliseconds without ever hitting the network.
-    throw input.createError(`OAuth token request failed before reaching the provider: ${describeCause(error)}`);
+    // A rejected fetch has no HTTP response to inspect, but the request may
+    // still have reached the provider before the connection failed.
+    throw input.createError(`OAuth token request failed without an HTTP response: ${describeCause(error)}`);
   }
-  const bytes = await readTokenResponseBytes(response, input.createError);
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: oauthTokenResponseMaxBytes,
+    fieldName: "OAuth token response",
+    createError: input.createError,
+  });
   const rawPayload = decodeTokenPayload(bytes);
   const payload = unwrapTokenPayload(rawPayload, input.responseEnvelope);
   if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
     const providerMessage = readTokenErrorMessage(rawPayload, payload, input.responseEnvelope);
+    const bodyDescription = bytes.byteLength === 0 ? "empty body" : "unrecognized response body";
     throw input.createError(
       providerMessage ??
-        // No structured message: report the status and a short excerpt instead of
-        // discarding the response. Without this, a 4xx with an unrecognized error
-        // shape, an HTML error page, and an empty body are all the same string.
-        `OAuth token request failed (HTTP ${response.status}${describeResponseBody(bytes, input.clientSecret)}).`,
+        // Token endpoints and intermediaries can echo request credentials. Keep
+        // arbitrary response bytes out of the public error while distinguishing
+        // an empty body from a non-conforming one.
+        `OAuth token request failed (HTTP ${response.status}, ${bodyDescription}).`,
     );
   }
 
@@ -141,15 +140,6 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
     },
     metadata: createTokenMetadata(payload),
   };
-}
-
-/** Read the token response under the size cap. Split from decoding so a failure path can still report the bytes. */
-async function readTokenResponseBytes(response: Response, createError: OAuthTokenErrorFactory): Promise<Uint8Array> {
-  return readBoundedResponseBytes(response, {
-    maxBytes: oauthTokenResponseMaxBytes,
-    fieldName: "OAuth token response",
-    createError,
-  });
 }
 
 /** Decode a JSON object body, or `{}` for an empty, non-JSON, or non-object one. */
@@ -177,34 +167,12 @@ function describeCause(error: unknown): string {
   if (!(error instanceof Error)) {
     return String(error);
   }
-  const code = (error as { cause?: { code?: unknown } }).cause?.code;
-  const suffix = typeof code === "string" && code !== "" ? ` (cause: ${code})` : "";
+  const code = optionalString(optionalRecord(error.cause)?.code);
+  const suffix = code ? ` (cause: ${code})` : "";
   // A plain `Error` name adds nothing; a subclass name (TypeError, TimeoutError,
   // AbortError) is often the only thing distinguishing the failure.
   const prefix = error.name === "Error" || error.name === "" ? "" : `${error.name}: `;
   return `${prefix}${error.message}${suffix}`;
-}
-
-/**
- * Excerpt of a token-error response, for when no structured message could be
- * extracted. Bounded to one line so an HTML error page cannot flood the message,
- * and the client secret is redacted in case the endpoint echoes the request back
- * — provider-supplied error text already reaches this error via
- * {@link readTokenErrorMessage}, so the excerpt adds no new class of disclosure.
- */
-function describeResponseBody(bytes: Uint8Array, clientSecret: string): string {
-  if (bytes.byteLength === 0) {
-    return ", empty body";
-  }
-  let text = new TextDecoder().decode(bytes.subarray(0, tokenErrorExcerptMaxBytes)).replaceAll(/\s+/gu, " ").trim();
-  if (clientSecret !== "") {
-    text = text.replaceAll(clientSecret, "[redacted]");
-  }
-  if (text === "") {
-    return ", empty body";
-  }
-  const truncated = bytes.byteLength > tokenErrorExcerptMaxBytes ? "…" : "";
-  return `, body: ${text}${truncated}`;
 }
 
 function createTokenMetadata(payload: Record<string, unknown>): Record<string, unknown> {
