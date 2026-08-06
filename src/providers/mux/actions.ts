@@ -238,7 +238,7 @@ export const muxActions: ActionDefinition[] = [
         newAssetSettings: directUploadAssetSettings,
         test: s.boolean("Whether to create a free, watermarked test upload."),
         timeout: s.integer("How long the signed upload URL remains valid, in seconds.", {
-          minimum: 1,
+          minimum: 60,
           maximum: 604800,
         }),
       },

@@ -1,6 +1,8 @@
 import type { MuxContext } from "./runtime.ts";
 
 import { describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { muxActions } from "./actions.ts";
 import { muxActionHandlers } from "./runtime.ts";
 
 function context(fetcher: typeof fetch): MuxContext {
@@ -22,6 +24,16 @@ function upload(id = "upload-123"): Record<string, unknown> {
 }
 
 describe("Mux extended video actions", () => {
+  it("enforces the Mux Direct Upload timeout range", () => {
+    const action = muxActions.find((candidate) => candidate.name === "create_direct_upload");
+    expect(action).toBeDefined();
+
+    expect(validateActionInput(action!, { corsOrigin: "*", timeout: 59 }).valid).toBe(false);
+    expect(validateActionInput(action!, { corsOrigin: "*", timeout: 60 }).valid).toBe(true);
+    expect(validateActionInput(action!, { corsOrigin: "*", timeout: 604800 }).valid).toBe(true);
+    expect(validateActionInput(action!, { corsOrigin: "*", timeout: 604801 }).valid).toBe(false);
+  });
+
   it("updates asset metadata and preserves an empty passthrough value", async () => {
     const fetcher = vi.fn<typeof fetch>(async () => Response.json({ data: { id: "asset-123", status: "ready" } }));
 
