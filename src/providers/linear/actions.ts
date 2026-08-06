@@ -290,8 +290,6 @@ const actions: LinearActionSource[] = [
       first,
       project_id: stringId,
       assignee_id: stringId,
-      original_cursor: cursor,
-      cursor_was_corrupted: s.boolean({ description: "Whether the cursor was corrupted." }),
     }),
     object({ issues: s.array(objectSchema), page_info: pageInfo }),
   ),
