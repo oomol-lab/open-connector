@@ -106,10 +106,10 @@ export const ticktickActionHandlers: Record<TicktickActionName, TicktickHandler>
     const payloadAny = payload as TicktickPayload | TicktickPayload[] | undefined;
     const add = (payloadAny as { add?: TicktickPayload[] } | undefined)?.add;
     const nested = (payloadAny as { tasks?: TicktickPayload[] } | undefined)?.tasks;
-    const created = Array.isArray(payloadAny) ? payloadAny : (add ?? nested ?? []);
+    const created = Array.isArray(payloadAny) ? payloadAny : (add ?? nested);
     return {
-      tasks: created,
-      createdCount: created.length > 0 ? created.length : tasks.length,
+      tasks: created ?? [],
+      createdCount: created?.length ?? tasks.length,
     };
   },
   async update_task(input, context) {

@@ -106,23 +106,7 @@ const updateTaskInput = s.object(
     id: s.string("Optional task ID repeated in the request body."),
     ...(createTaskInput.properties as Record<string, unknown> as Record<string, ReturnType<typeof s.string>>),
   },
-  {
-    optional: [
-      "id",
-      "title",
-      "content",
-      "desc",
-      "isAllDay",
-      "startDate",
-      "dueDate",
-      "timeZone",
-      "reminders",
-      "repeatFlag",
-      "priority",
-      "sortOrder",
-      "items",
-    ],
-  },
+  { required: ["taskId", "projectId"] },
 );
 const batchCreateTasksInput = s.object("TickTick batch create-task input.", {
   tasks: s.array("The TickTick tasks to create.", createTaskInput, { minItems: 1, maxItems: 50 }),
