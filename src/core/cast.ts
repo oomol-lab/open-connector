@@ -391,13 +391,17 @@ export function optionalStringOrNull(value: unknown): string | null {
 }
 
 /**
- * Return an integer from an integer number or numeric string, or null.
+ * Return an integer from an integer number or numeric string, or null. Examples:
+ * `optionalIntegerOrNull("2") => 2`, `optionalIntegerOrNull("") => null`.
+ *
+ * A blank string is reported as missing rather than parsed, because `Number("")`
+ * is `0` and an empty field would otherwise reach a provider as a real zero.
  */
 export function optionalIntegerOrNull(value: unknown): number | null {
   if (Number.isInteger(value)) {
     return value as number;
   }
-  if (typeof value === "string") {
+  if (typeof value === "string" && value.trim() !== "") {
     const parsed = Number(value);
     return Number.isInteger(parsed) ? parsed : null;
   }

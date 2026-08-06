@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   base64Bytes,
+  optionalIntegerOrNull,
   optionalStringArray,
   positiveInteger,
   requiredBoolean,
@@ -16,6 +17,20 @@ describe("cast helpers", () => {
   it("rejects invalid base64 bytes", () => {
     expect(() => base64Bytes("not base64!", "payload")).toThrow("payload must be valid base64");
     expect(() => base64Bytes("", "payload")).toThrow("payload must be valid base64");
+  });
+
+  it("reports a blank optional integer as missing instead of zero", () => {
+    expect(optionalIntegerOrNull("")).toBeNull();
+    expect(optionalIntegerOrNull("   ")).toBeNull();
+    expect(optionalIntegerOrNull("\n")).toBeNull();
+  });
+
+  it("still reads optional integers that are present", () => {
+    expect(optionalIntegerOrNull("2")).toBe(2);
+    expect(optionalIntegerOrNull(" 2 ")).toBe(2);
+    expect(optionalIntegerOrNull(0)).toBe(0);
+    expect(optionalIntegerOrNull("0")).toBe(0);
+    expect(optionalIntegerOrNull("2.5")).toBeNull();
   });
 
   it("rejects zero for positive integer strings", () => {
