@@ -110,6 +110,45 @@ describe("OAuth token requests", () => {
     );
   });
 
+  it("maps response-stream failures to a sanitized OAuth error", async () => {
+    const platformMessage = "upstream read failed at secret.internal";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.error(new Error(platformMessage));
+              },
+            }),
+            { status: 502 },
+          ),
+      ),
+    );
+
+    const message = await readRejectionMessage(requestAuthorizationCodeToken({ ...authorizationCodeRequest }));
+    expect(message).toBe("OAuth token request failed (HTTP 502, response body could not be read).");
+    expect(message).not.toContain(platformMessage);
+  });
+
+  it("preserves the bounded-response size error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(null, {
+            status: 502,
+            headers: { "content-length": String(1024 * 1024 + 1) },
+          }),
+      ),
+    );
+
+    await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).rejects.toThrow(
+      "OAuth token response exceeds 1048576 bytes",
+    );
+  });
+
   it("does not expose echoed authorization-code request credentials", async () => {
     const codeVerifier = "pkce-code-verifier";
     const body = `client_secret=${authorizationCodeRequest.clientSecret}&code=${authorizationCodeRequest.code}&code_verifier=${codeVerifier}`;

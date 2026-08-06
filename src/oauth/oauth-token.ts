@@ -9,6 +9,8 @@ const oauthTokenResponseMaxBytes = 1024 * 1024;
 /** Longest `expires_in` we accept; anything larger overflows the ECMAScript `Date` range. */
 const maxExpiresInSeconds = 100 * 365 * 24 * 60 * 60;
 
+class OAuthTokenResponseSizeError extends Error {}
+
 export interface OAuthTokenRequestOptions {
   clientId: string;
   clientSecret: string;
@@ -106,11 +108,7 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
     // still have reached the provider before the connection failed.
     throw input.createError(`OAuth token request failed without an HTTP response: ${describeCause(error)}`);
   }
-  const bytes = await readBoundedResponseBytes(response, {
-    maxBytes: oauthTokenResponseMaxBytes,
-    fieldName: "OAuth token response",
-    createError: input.createError,
-  });
+  const bytes = await readTokenResponseBytes(response, input.createError);
   const rawPayload = decodeTokenPayload(bytes);
   const payload = unwrapTokenPayload(rawPayload, input.responseEnvelope);
   if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
@@ -140,6 +138,22 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
     },
     metadata: createTokenMetadata(payload),
   };
+}
+
+/** Read a bounded token response and map body-stream failures to a safe OAuth error. */
+async function readTokenResponseBytes(response: Response, createError: OAuthTokenErrorFactory): Promise<Uint8Array> {
+  try {
+    return await readBoundedResponseBytes(response, {
+      maxBytes: oauthTokenResponseMaxBytes,
+      fieldName: "OAuth token response",
+      createError: (message) => new OAuthTokenResponseSizeError(message),
+    });
+  } catch (error) {
+    if (error instanceof OAuthTokenResponseSizeError) {
+      throw createError(error.message);
+    }
+    throw createError(`OAuth token request failed (HTTP ${response.status}, response body could not be read).`);
+  }
 }
 
 /** Decode a JSON object body, or `{}` for an empty, non-JSON, or non-object one. */
