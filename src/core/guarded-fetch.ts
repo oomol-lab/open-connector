@@ -1,11 +1,4 @@
-import {
-  assertPublicHttpUrl,
-  isAlwaysBlockedIpAddress,
-  isBlockedIpAddress,
-  isEgressIpCheckSkippedForHost,
-  isIpAddress,
-  isIpv4Address,
-} from "./request.ts";
+import { assertPublicHttpUrl, classifyIpAddress, isEgressTrustedHost, isIpAddress, isIpv4Address } from "./request.ts";
 
 /**
  * Single resolved address returned by a DNS lookup, mirroring the shape of
@@ -369,19 +362,20 @@ async function assertResolvedAddressesAllowed(
   if (results.length === 0) {
     throw policy.createResolutionError(`${fieldName} could not be resolved for validation`);
   }
-  // Deployment-level allowlist, resolved per request so a bootstrap that
+  // Deployment-level trusted-host setting, resolved per request so a bootstrap that
   // configures it after module load is honored. It may open private and
   // VPN-mapped results, while unsafe special-use targets remain blocked.
-  const skipRangeCheck = isEgressIpCheckSkippedForHost(hostname);
+  const trustedHost = isEgressTrustedHost(hostname);
   for (const entry of results) {
     if (entry && typeof entry.address === "string") {
-      if (isAlwaysBlockedIpAddress(entry.address)) {
+      const addressClass = classifyIpAddress(entry.address);
+      if (addressClass === "always-blocked") {
         throw policy.createError(`${fieldName} must not resolve to private or reserved IP addresses`);
       }
-      if (!isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
+      if (addressClass === "public" || (addressClass === "private" && policy.allowPrivateNetwork)) {
         continue;
       }
-      if (skipRangeCheck) {
+      if (trustedHost) {
         continue;
       }
       // Name the way out. This rejection happens before any packet leaves the
@@ -394,8 +388,8 @@ async function assertResolvedAddressesAllowed(
       // src/mail/imap-smtp/host-pinning.test.ts asserts.
       throw policy.createError(
         `${fieldName} must not resolve to private or reserved IP addresses ` +
-          `(if this host is reached through a corporate VPN that maps it into a reserved ` +
-          `range, add it to OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS)`,
+          `(if this host is reached through a corporate VPN or split DNS, add it to ` +
+          `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS)`,
       );
     }
   }
@@ -413,7 +407,7 @@ async function resolveDefaultLookup(): Promise<GuardedFetchDnsLookup | null | un
         // Keep only real addresses. workerd's node:dns resolves over DoH and maps
         // every answer record into an entry without filtering by record type, so a
         // CNAME answer arrives as { address: "target.example.com.", family: 4 }.
-        // isBlockedIpAddress treats unparseable input as blocked, which would
+        // classifyIpAddress treats unparseable input as blocked, which would
         // reject every CNAME'd host (api.tailscale.com, graph.microsoft.com, ...).
         // The real A/AAAA records are present alongside, so dropping non-addresses
         // keeps the resolved-address check intact rather than disabling it.

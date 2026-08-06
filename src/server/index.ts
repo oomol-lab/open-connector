@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { loadCatalog } from "../catalog-store.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import {
-  parseEgressIpCheckSkipHosts,
+  parseEgressTrustedHosts,
   parsePrivateNetworkAccessFlag,
-  setEgressIpCheckSkipHosts,
+  setEgressTrustedHosts,
   setPrivateNetworkAccessAllowed,
 } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
@@ -42,7 +42,7 @@ const actionPolicy = new ActionPolicyService({
   blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
 });
 setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
-setEgressIpCheckSkipHosts(parseEgressIpCheckSkipHosts(process.env.OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS));
+setEgressTrustedHosts(parseEgressTrustedHosts(process.env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
 const builtRoot = join(process.cwd(), "dist/web");
 const staticRoot = await resolveStaticRoot(builtRoot);
 await mkdir(dataDir, { recursive: true });

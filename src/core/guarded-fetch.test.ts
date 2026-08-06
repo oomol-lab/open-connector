@@ -2,7 +2,7 @@ import type { GuardedFetchDnsLookup } from "./guarded-fetch.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGuardedFetch, resolveGuardedEgressTarget, unwrapGuardedFetch } from "./guarded-fetch.ts";
-import { setEgressIpCheckSkipHosts } from "./request.ts";
+import { setEgressTrustedHosts } from "./request.ts";
 
 interface RecordedCall {
   url: string;
@@ -318,15 +318,16 @@ describe("createGuardedFetch request URL guard", () => {
   });
 });
 
-describe("createGuardedFetch egress IP-check host allowlist", () => {
-  afterEach(() => setEgressIpCheckSkipHosts([]));
+describe("createGuardedFetch trusted egress hosts", () => {
+  afterEach(() => setEgressTrustedHosts([]));
 
-  it("lets an allowlisted host use private and VPN-mapped results while other hosts stay blocked", async () => {
-    setEgressIpCheckSkipHosts([".feishu.cn"]);
+  it("lets a trusted host use private and VPN-mapped results while other hosts stay blocked", async () => {
+    setEgressTrustedHosts([".feishu.cn"]);
     const mappedAddresses = [
       { address: "198.18.0.196", family: 4 },
       { address: "10.0.0.5", family: 4 },
       { address: "fd00::1", family: 6 },
+      { address: "::ffff:198.18.0.196", family: 6 },
     ];
     const entries = {
       "open.feishu.cn": mappedAddresses,
@@ -342,11 +343,11 @@ describe("createGuardedFetch egress IP-check host allowlist", () => {
     await expect(blocked("https://open.other.example/")).rejects.toThrow(/must not resolve/u);
   });
 
-  it("keeps the URL guard intact for an allowlisted host", async () => {
-    // The allowlist covers only DNS results. A literal reserved address in the
+  it("keeps the URL guard intact for a trusted host", async () => {
+    // The trusted-host setting covers only DNS results. A literal reserved address in the
     // URL, a non-http scheme, and a redirect into a blocked target are all still
-    // rejected, so allowlisting a host does not turn off the guard for it.
-    setEgressIpCheckSkipHosts([".feishu.cn", "198.18.0.196"]);
+    // rejected, so trusting a host does not turn off the guard for it.
+    setEgressTrustedHosts([".feishu.cn", "198.18.0.196"]);
     const guarded = createGuardedFetch({
       fetch: createTransport([]).transport,
       lookup: lookupTable({ "open.feishu.cn": [{ address: "198.18.0.196", family: 4 }] }),
@@ -364,10 +365,17 @@ describe("createGuardedFetch egress IP-check host allowlist", () => {
     await expect(redirecting("https://open.feishu.cn/")).rejects.toThrow(/must not/u);
   });
 
-  it("keeps local and metadata DNS results blocked for an allowlisted host", async () => {
-    setEgressIpCheckSkipHosts(["metadata.attacker.com"]);
+  it("keeps local and metadata DNS results blocked for a trusted host", async () => {
+    setEgressTrustedHosts(["metadata.attacker.com"]);
 
-    for (const address of ["127.0.0.1", "169.254.169.254", "100.100.100.200", "::1", "fe80::1"]) {
+    for (const address of [
+      "127.0.0.1",
+      "169.254.169.254",
+      "100.100.100.200",
+      "::1",
+      "fe80::1",
+      "::ffff:169.254.169.254",
+    ]) {
       const { transport, calls } = createTransport([]);
       const guarded = createGuardedFetch({
         fetch: transport,
@@ -389,7 +397,7 @@ describe("createGuardedFetch egress IP-check host allowlist", () => {
     });
 
     await expect(guarded("https://open.feishu.cn/")).rejects.toThrow(/must not resolve/u);
-    setEgressIpCheckSkipHosts([".feishu.cn"]);
+    setEgressTrustedHosts([".feishu.cn"]);
     await expect(guarded("https://open.feishu.cn/")).resolves.toBeInstanceOf(Response);
   });
 });
@@ -457,7 +465,7 @@ describe("createGuardedFetch resolved-address validation", () => {
     // is indistinguishable from a network failure; naming the opt-out is what makes
     // it actionable. The address stays out — see host-pinning.test.ts.
     await expect(guarded("https://open.vpn-mapped.example/token")).rejects.toThrow(
-      /OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS/u,
+      /OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS/u,
     );
     await expect(guarded("https://open.vpn-mapped.example/token")).rejects.not.toThrow(/198\.18\.0\.196/u);
   });

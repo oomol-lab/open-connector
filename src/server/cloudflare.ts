@@ -7,9 +7,9 @@ import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import {
-  parseEgressIpCheckSkipHosts,
+  parseEgressTrustedHosts,
   parsePrivateNetworkAccessFlag,
-  setEgressIpCheckSkipHosts,
+  setEgressTrustedHosts,
   setPrivateNetworkAccessAllowed,
 } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
@@ -37,7 +37,7 @@ const appCache = new IsolatePromiseCache<ConnectApp>();
 export default {
   async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
     setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
-    setEgressIpCheckSkipHosts(parseEgressIpCheckSkipHosts(env.OOMOL_CONNECT_EGRESS_SKIP_IP_CHECK_HOSTS));
+    setEgressTrustedHosts(parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
     const publicOrigin = resolvePublicOrigin(request, env);
     const { app } = await appCache.get(createCacheKey(env, publicOrigin), () => createCloudflareApp(env, publicOrigin));
     const response = await app.fetch(request, env);
