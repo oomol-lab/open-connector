@@ -251,7 +251,10 @@ export const ticktickActions: ActionDefinition[] = [
     description: "Batch create multiple TickTick tasks in one request.",
     requiredScopes: writeScope,
     inputSchema: batchCreateTasksInput,
-    outputSchema: s.object({ tasks: s.array("The created TickTick tasks.", task) }),
+    outputSchema: s.object({
+      tasks: s.array("The created TickTick tasks.", task),
+      createdCount: s.integer("The number of tasks created."),
+    }),
   }),
   defineProviderAction(service, {
     name: "update_task",

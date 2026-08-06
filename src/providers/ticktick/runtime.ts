@@ -96,15 +96,21 @@ export const ticktickActionHandlers: Record<TicktickActionName, TicktickHandler>
   },
   async batch_add_tasks(input, context) {
     const tasks = objectArray(input.tasks, "tasks").map((task) => buildCreateTaskBody(task));
-    const { payload } = await requestTicktickJson<TicktickPayload | { add?: TicktickPayload[] }>({
+    const { payload } = await requestTicktickJson<TicktickPayload | TicktickPayload[]>({
       ...requestContext(context),
       path: "/open/v1/task/batch",
       method: "POST",
       body: { add: tasks },
       phase: "execute",
     });
-    const created = Array.isArray(payload) ? payload : (payload?.add ?? []);
-    return { tasks: created };
+    const payloadAny = payload as TicktickPayload | TicktickPayload[] | undefined;
+    const add = (payloadAny as { add?: TicktickPayload[] } | undefined)?.add;
+    const nested = (payloadAny as { tasks?: TicktickPayload[] } | undefined)?.tasks;
+    const created = Array.isArray(payloadAny) ? payloadAny : (add ?? nested ?? []);
+    return {
+      tasks: created,
+      createdCount: created.length > 0 ? created.length : tasks.length,
+    };
   },
   async update_task(input, context) {
     const projectId = resolveProjectId(input);
