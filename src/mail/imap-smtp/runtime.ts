@@ -589,6 +589,7 @@ async function buildReplySendInput(
   }
 
   const cc = input.cc ?? (input.replyAll ? filterRecipientEmails(original.cc, credential.email) : undefined);
+  const referenceChain = buildReferenceChain(original);
   const resolvedAttachments = input.attachments ? await resolveOutgoingAttachments(input.attachments, context) : null;
   return {
     sendInput: {
@@ -598,16 +599,28 @@ async function buildReplySendInput(
       subject: input.subject ?? prefixSubject("Re:", original.summary.subject),
       ...(input.text !== undefined ? { text: buildReplyText(input.text, original) } : {}),
       ...(input.html !== undefined ? { html: buildReplyHtml(input.html, original) } : {}),
-      ...(original.summary.messageId
-        ? {
-            inReplyTo: original.summary.messageId,
-            references: original.summary.messageId,
-          }
-        : {}),
+      ...(original.summary.messageId ? { inReplyTo: original.summary.messageId } : {}),
+      ...(referenceChain ? { references: referenceChain } : {}),
       ...(resolvedAttachments ? { attachments: resolvedAttachments.attachments } : {}),
     },
     cleanup: resolvedAttachments?.cleanup ?? noop,
   };
+}
+
+/**
+ * Build the reply's `References` header: the parent's own chain with the parent's
+ * Message-ID appended (RFC 5322 section 3.6.4).
+ *
+ * Sending only the parent's Message-ID discards everything above it, which makes
+ * conformant clients start a fresh thread instead of continuing the existing one.
+ */
+function buildReferenceChain(original: MailFetchedMessage): string {
+  const messageId = original.summary.messageId;
+  const chain = original.references.filter((reference) => reference !== messageId);
+  if (messageId) {
+    chain.push(messageId);
+  }
+  return chain.join(" ");
 }
 
 async function buildForwardSendInput(

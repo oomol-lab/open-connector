@@ -147,6 +147,8 @@ export interface MailFolderStatus {
 
 export interface MailFetchedMessage {
   summary: MailSummary;
+  /** Message-IDs from the message's own `References` header, oldest first. */
+  references: string[];
   cc: MailAddress[];
   replyTo: MailAddress[];
   text: string | null;
@@ -346,6 +348,9 @@ export function createMailProtocol(config: MailProtocolConfig, deps: MailProtoco
             flags: true,
             size: true,
             bodyStructure: true,
+            // The IMAP envelope carries no `References`, so a reply can only
+            // continue the thread if the header is fetched alongside it.
+            headers: ["references"],
           },
           { uid: true },
         );
@@ -372,6 +377,7 @@ export function createMailProtocol(config: MailProtocolConfig, deps: MailProtoco
 
         return {
           summary: normalizeSummary(message),
+          references: readReferences(toRecord(message)?.headers),
           cc: normalizeEnvelopeAddresses(message, "cc"),
           replyTo: normalizeEnvelopeAddresses(message, "replyTo"),
           text: parsedBody.text,
@@ -750,6 +756,26 @@ function normalizeMailbox(value: unknown): MailFolder {
     flags: normalizeStringArray(record?.flags),
     specialUse: readString(record?.specialUse),
   };
+}
+
+/**
+ * Read the Message-IDs out of a fetched `References` header block.
+ *
+ * Header fields fold across lines, so continuations are joined before the field
+ * is read. Anything that is not a `<...>` reference is ignored.
+ */
+function readReferences(value: unknown): string[] {
+  const raw =
+    value instanceof Uint8Array ? new TextDecoder().decode(value) : typeof value === "string" ? value : undefined;
+  if (!raw) {
+    return [];
+  }
+
+  const line = raw
+    .replaceAll(/\r?\n[ \t]+/g, " ")
+    .split(/\r?\n/)
+    .find((candidate) => /^references:/i.test(candidate));
+  return line?.slice(line.indexOf(":") + 1).match(/<[^>]+>/g) ?? [];
 }
 
 function normalizeSummary(value: unknown): MailSummary {

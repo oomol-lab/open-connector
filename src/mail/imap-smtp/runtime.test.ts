@@ -129,6 +129,7 @@ describe("IMAP/SMTP mail runtime", () => {
           hasAttachments: false,
           size: 100,
         },
+        references: [],
         cc: [],
         replyTo: [{ name: null, email: "reply@example.com" }],
         text: "Original message",
@@ -151,6 +152,84 @@ describe("IMAP/SMTP mail runtime", () => {
     );
 
     expect(sendMail).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ to: ["reply@example.com"] }));
+  });
+
+  it.each([
+    [["<a@example.com>", "<b@example.com>"], "<a@example.com> <b@example.com> <message-id>"],
+    [[], "<message-id>"],
+    [["<a@example.com>", "<message-id>"], "<a@example.com> <message-id>"],
+  ])("continues the thread by appending the parent to its References chain", async (references, expected) => {
+    const sendMail = vi.fn(async () => ({ messageId: null, accepted: [], rejected: [], response: "ok" }));
+    const protocol = {
+      fetchMessage: vi.fn(async () => ({
+        summary: {
+          uid: 1,
+          messageId: "<message-id>",
+          subject: "Subject",
+          from: { name: null, email: "author@example.com" },
+          to: [{ name: null, email: "user@qq.com" }],
+          date: null,
+          flags: [],
+          seen: false,
+          hasAttachments: false,
+          size: 100,
+        },
+        references,
+        cc: [],
+        replyTo: [],
+        text: "Original message",
+        html: null,
+        attachments: [],
+        truncated: false,
+      })),
+      sendMail,
+    } as unknown as MailProtocol;
+
+    await executeMailAction(
+      "reply_email",
+      { uid: 1, text: "Reply" },
+      { values: { email: "user@qq.com", authorizationCode }, fetcher: fetch, protocol, config: qqMailRuntimeConfig },
+    );
+
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ inReplyTo: "<message-id>", references: expected }),
+    );
+  });
+
+  it("reads the References chain from the fetched message headers", async () => {
+    const protocol = createMailProtocol(
+      { displayName: "Mail Test", attachmentFallbackPrefix: "mail-test" },
+      {
+        createImapClient: () => ({
+          connect: vi.fn(async () => undefined),
+          logout: vi.fn(async () => undefined),
+          list: vi.fn(async () => []),
+          mailboxOpen: vi.fn(async () => undefined),
+          fetchOne: vi.fn(async () => ({
+            uid: 1,
+            envelope: { from: [{ address: "author@example.com" }], to: [{ address: "user@qq.com" }] },
+            flags: new Set<string>(),
+            size: 100,
+            // Header fields fold across lines, which is how a long chain arrives.
+            headers: Buffer.from("References: <a@example.com>\r\n <b@example.com>\r\n\r\n"),
+          })),
+        }),
+      },
+    );
+
+    await expect(
+      protocol.fetchMessage(
+        qqMailRuntimeConfig.readCredential({ email: "user@qq.com", authorizationCode }),
+        "INBOX",
+        1,
+        {
+          peek: true,
+          maxBytes: 1024,
+          skipAttachmentBodies: true,
+        },
+      ),
+    ).resolves.toMatchObject({ references: ["<a@example.com>", "<b@example.com>"] });
   });
 
   it("bounds temporary filenames while preserving a short extension", () => {
