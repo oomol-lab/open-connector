@@ -120,13 +120,16 @@ export async function readBoundedResponseBytes(
   return bytes;
 }
 
-// Egress targets are classified into two tiers for the SSRF guard:
+// Egress targets are classified into three tiers for the SSRF guard:
 //
 //   - "reserved" (localHostnames, cloudMetadataHostnames, localHostnameSuffixes,
 //     reservedIpv4Cidrs, reservedIpv6Cidrs): loopback, link-local, cloud-metadata,
 //     multicast, and other unsafe special-use ranges. ALWAYS blocked — the
 //     private-network opt-in never unblocks these, because they are the classic
 //     SSRF escalation targets ("don't let the deployment attack itself").
+//   - "VPN-mapped" (vpnMappedIpv4Cidrs): benchmark address space used by some
+//     zero-trust VPNs to tunnel public SaaS traffic. Blocked by default, but a
+//     deployment may allow it for explicitly trusted hostnames.
 //   - "private" (privateHostnameSuffixes, privateIpv4Cidrs, privateIpv6Cidrs):
 //     RFC 1918 / CGNAT / IPv6 ULA LAN ranges and private hostname suffixes.
 //     Blocked by default, but reachable once a self-hosted deployment opts in via
@@ -153,8 +156,8 @@ const privateIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("192.168.0.0"), 16],
 ];
 // Always blocked (opt-in never unblocks these): this-network (0/8), loopback (127/8),
-// link-local incl. the 169.254.169.254 metadata host (169.254/16), IANA protocol/documentation/
-// benchmark blocks, multicast (224/4), and future-use (240/4). 100.100.100.200/32 is the Alibaba
+// link-local incl. the 169.254.169.254 metadata host (169.254/16), IANA protocol/documentation
+// blocks, multicast (224/4), and future-use (240/4). 100.100.100.200/32 is the Alibaba
 // Cloud metadata endpoint — it sits inside CGNAT (100.64/10) but is pinned here so it stays
 // blocked even after opting into private networks.
 const reservedIpv4Cidrs: Array<[number, number]> = [
@@ -164,12 +167,14 @@ const reservedIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("169.254.0.0"), 16],
   [ipv4ToNumber("192.0.0.0"), 24],
   [ipv4ToNumber("192.0.2.0"), 24],
-  [ipv4ToNumber("198.18.0.0"), 15],
   [ipv4ToNumber("198.51.100.0"), 24],
   [ipv4ToNumber("203.0.113.0"), 24],
   [ipv4ToNumber("224.0.0.0"), 4],
   [ipv4ToNumber("240.0.0.0"), 4],
 ];
+// Host-allowlisted only: RFC 2544 benchmark space used by aTrust/EasyConnect-class VPNs to map
+// public SaaS hostnames into locally routed addresses.
+const vpnMappedIpv4Cidrs: Array<[number, number]> = [[ipv4ToNumber("198.18.0.0"), 15]];
 // Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), multicast (ff00::/8),
 // plus discard, documentation, benchmark, and other special-purpose IPv6 ranges (RFC 6890 registry).
 const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
@@ -239,7 +244,7 @@ export function parsePrivateNetworkAccessFlag(value: string | undefined): boolea
 }
 
 /**
- * Hosts whose DNS-resolved addresses skip the private/reserved-range check.
+ * Hosts whose DNS-resolved addresses may use private or VPN-mapped ranges.
  *
  * Zero-trust corporate VPNs (aTrust / EasyConnect class) resolve public SaaS
  * domains into a reserved range — commonly `198.18.0.0/15` — and tunnel the
@@ -247,22 +252,21 @@ export function parsePrivateNetworkAccessFlag(value: string | undefined): boolea
  * path to the real service rather than an SSRF target. Reserved ranges are
  * checked unconditionally, so {@link isPrivateNetworkAccessAllowed} cannot open
  * them, and there is otherwise no way for an operator to say "this host is
- * reachable through my VPN". Every other guard still applies: scheme, port,
- * URL-literal IP addresses, redirect `Location` re-validation, and response
- * size limits. Empty by default.
+ * reachable through my VPN". Loopback, link-local, cloud-metadata, multicast,
+ * and other unsafe special-use ranges remain blocked. Empty by default.
  */
 let egressIpCheckSkipHosts: readonly string[] = [];
 
 /**
- * Configure the hosts that skip the resolved-address range check (called once at
- * deployment bootstrap).
+ * Configure the hosts that may resolve through private or VPN-mapped ranges
+ * (called once at deployment bootstrap).
  */
 export function setEgressIpCheckSkipHosts(hosts: readonly string[]): void {
   egressIpCheckSkipHosts = hosts;
 }
 
 /**
- * Whether `hostname` is allowlisted out of the resolved-address range check.
+ * Whether `hostname` may resolve through private or VPN-mapped ranges.
  *
  * An entry starting with `.` matches that domain and its subdomains
  * (`.feishu.cn` covers `feishu.cn` and `open.feishu.cn`); any other entry must
@@ -388,6 +392,36 @@ export function isBlockedIpAddress(address: string, allowPrivateNetwork = false)
 }
 
 /**
+ * Return whether a resolved address must remain blocked for every deployment.
+ *
+ * Trusted-host exceptions never open loopback, link-local, cloud-metadata,
+ * multicast, documentation, or other unsafe special-use ranges. Private and
+ * VPN-mapped ranges are handled by the caller's narrower opt-in policy.
+ */
+export function isAlwaysBlockedIpAddress(address: string): boolean {
+  const ipv4 = parseIpv4(address);
+  if (ipv4 !== undefined) {
+    return isAlwaysBlockedIpv4(ipv4);
+  }
+
+  const ipv6 = parseIpv6(address);
+  if (ipv6 === undefined) {
+    return true;
+  }
+  if (reservedIpv6Cidrs.some(([network, bits]) => ipv6InCidr(ipv6, network, bits))) {
+    return true;
+  }
+  for (const [network, bits, offset] of ipv4EmbeddedIpv6Cidrs) {
+    if (ipv6InCidr(ipv6, network, bits)) {
+      const embedded =
+        ((ipv6[offset]! << 24) | (ipv6[offset + 1]! << 16) | (ipv6[offset + 2]! << 8) | ipv6[offset + 3]!) >>> 0;
+      return isAlwaysBlockedIpv4(embedded);
+    }
+  }
+  return false;
+}
+
+/**
  * Whether a hostname is a canonical dotted-decimal IPv4 literal (each octet
  * 0-255), matching exactly what {@link assertPublicHttpUrl} validates as a
  * literal IPv4. Callers use this to decide a hostname is already an
@@ -410,10 +444,14 @@ export function isIpAddress(value: string): boolean {
 }
 
 function isBlockedIpv4(value: number, allowPrivateNetwork: boolean): boolean {
-  if (reservedIpv4Cidrs.some(([network, bits]) => ipv4InCidr(value, network, bits))) {
+  if (isAlwaysBlockedIpv4(value) || vpnMappedIpv4Cidrs.some(([network, bits]) => ipv4InCidr(value, network, bits))) {
     return true;
   }
   return !allowPrivateNetwork && privateIpv4Cidrs.some(([network, bits]) => ipv4InCidr(value, network, bits));
+}
+
+function isAlwaysBlockedIpv4(value: number): boolean {
+  return reservedIpv4Cidrs.some(([network, bits]) => ipv4InCidr(value, network, bits));
 }
 
 function normalizeHostname(value: string): string {

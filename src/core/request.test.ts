@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   assertPublicHttpUrl,
+  isAlwaysBlockedIpAddress,
   isBlockedIpAddress,
+  isEgressIpCheckSkippedForHost,
   isIpAddress,
   isIpv4Address,
   isPrivateNetworkAccessAllowed,
-  isEgressIpCheckSkippedForHost,
   parseEgressIpCheckSkipHosts,
   parsePrivateNetworkAccessFlag,
   setEgressIpCheckSkipHosts,
@@ -205,6 +206,20 @@ describe("isIpAddress", () => {
       "",
     ]) {
       expect(isIpAddress(value)).toBe(false);
+    }
+  });
+});
+
+describe("isAlwaysBlockedIpAddress", () => {
+  it("keeps local, metadata, and unsafe special-use targets closed", () => {
+    for (const value of ["127.0.0.1", "169.254.169.254", "100.100.100.200", "::1", "fe80::1", "ff02::1"]) {
+      expect(isAlwaysBlockedIpAddress(value)).toBe(true);
+    }
+  });
+
+  it("leaves private and VPN-mapped targets to the caller policy", () => {
+    for (const value of ["10.0.0.5", "100.64.0.1", "198.18.0.196", "fd00::1", "93.184.216.34"]) {
+      expect(isAlwaysBlockedIpAddress(value)).toBe(false);
     }
   });
 });

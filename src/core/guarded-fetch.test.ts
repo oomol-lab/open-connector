@@ -321,11 +321,16 @@ describe("createGuardedFetch request URL guard", () => {
 describe("createGuardedFetch egress IP-check host allowlist", () => {
   afterEach(() => setEgressIpCheckSkipHosts([]));
 
-  it("lets an allowlisted host through a reserved-range result while other hosts stay blocked", async () => {
+  it("lets an allowlisted host use private and VPN-mapped results while other hosts stay blocked", async () => {
     setEgressIpCheckSkipHosts([".feishu.cn"]);
+    const mappedAddresses = [
+      { address: "198.18.0.196", family: 4 },
+      { address: "10.0.0.5", family: 4 },
+      { address: "fd00::1", family: 6 },
+    ];
     const entries = {
-      "open.feishu.cn": [{ address: "198.18.0.196", family: 4 }],
-      "open.other.example": [{ address: "198.18.0.196", family: 4 }],
+      "open.feishu.cn": mappedAddresses,
+      "open.other.example": mappedAddresses,
     };
 
     const { transport, calls } = createTransport([new Response("ok", { status: 200 })]);
@@ -357,6 +362,23 @@ describe("createGuardedFetch egress IP-check host allowlist", () => {
       }),
     });
     await expect(redirecting("https://open.feishu.cn/")).rejects.toThrow(/must not/u);
+  });
+
+  it("keeps local and metadata DNS results blocked for an allowlisted host", async () => {
+    setEgressIpCheckSkipHosts(["metadata.attacker.com"]);
+
+    for (const address of ["127.0.0.1", "169.254.169.254", "100.100.100.200", "::1", "fe80::1"]) {
+      const { transport, calls } = createTransport([]);
+      const guarded = createGuardedFetch({
+        fetch: transport,
+        lookup: lookupTable({
+          "metadata.attacker.com": [{ address, family: address.includes(":") ? 6 : 4 }],
+        }),
+      });
+
+      await expect(guarded("https://metadata.attacker.com/latest/meta-data/")).rejects.toThrow(/must not resolve/u);
+      expect(calls).toHaveLength(0);
+    }
   });
 
   it("is re-read per request so a bootstrap after module load is honored", async () => {

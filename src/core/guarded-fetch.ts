@@ -1,5 +1,6 @@
 import {
   assertPublicHttpUrl,
+  isAlwaysBlockedIpAddress,
   isBlockedIpAddress,
   isEgressIpCheckSkippedForHost,
   isIpAddress,
@@ -369,11 +370,17 @@ async function assertResolvedAddressesAllowed(
     throw policy.createResolutionError(`${fieldName} could not be resolved for validation`);
   }
   // Deployment-level allowlist, resolved per request so a bootstrap that
-  // configures it after module load is honored. Skips only this range check;
-  // the URL, redirect-Location, and response-size guards still ran and still run.
+  // configures it after module load is honored. It may open private and
+  // VPN-mapped results, while unsafe special-use targets remain blocked.
   const skipRangeCheck = isEgressIpCheckSkippedForHost(hostname);
   for (const entry of results) {
-    if (entry && typeof entry.address === "string" && isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
+    if (entry && typeof entry.address === "string") {
+      if (isAlwaysBlockedIpAddress(entry.address)) {
+        throw policy.createError(`${fieldName} must not resolve to private or reserved IP addresses`);
+      }
+      if (!isBlockedIpAddress(entry.address, policy.allowPrivateNetwork)) {
+        continue;
+      }
       if (skipRangeCheck) {
         continue;
       }
