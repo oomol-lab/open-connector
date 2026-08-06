@@ -197,7 +197,30 @@ describe("IMAP/SMTP mail runtime", () => {
     );
   });
 
-  it("reads the References chain from the fetched message headers", async () => {
+  it.each([
+    {
+      name: "reads a folded References chain",
+      headers: "References: <a@example.com>\r\n <b@example.com>\r\n\r\n",
+      expected: ["<a@example.com>", "<b@example.com>"],
+    },
+    {
+      name: "falls back to a single In-Reply-To value",
+      headers: "In-Reply-To: <a@example.com>\r\n\r\n",
+      expected: ["<a@example.com>"],
+    },
+    {
+      name: "does not use multiple In-Reply-To values as a fallback",
+      headers: "In-Reply-To: <a@example.com> <b@example.com>\r\n\r\n",
+      expected: [],
+    },
+  ])("$name from the fetched message headers", async ({ headers, expected }) => {
+    const fetchOne = vi.fn(async () => ({
+      uid: 1,
+      envelope: { from: [{ address: "author@example.com" }], to: [{ address: "user@qq.com" }] },
+      flags: new Set<string>(),
+      size: 100,
+      headers: Buffer.from(headers),
+    }));
     const protocol = createMailProtocol(
       { displayName: "Mail Test", attachmentFallbackPrefix: "mail-test" },
       {
@@ -206,14 +229,7 @@ describe("IMAP/SMTP mail runtime", () => {
           logout: vi.fn(async () => undefined),
           list: vi.fn(async () => []),
           mailboxOpen: vi.fn(async () => undefined),
-          fetchOne: vi.fn(async () => ({
-            uid: 1,
-            envelope: { from: [{ address: "author@example.com" }], to: [{ address: "user@qq.com" }] },
-            flags: new Set<string>(),
-            size: 100,
-            // Header fields fold across lines, which is how a long chain arrives.
-            headers: Buffer.from("References: <a@example.com>\r\n <b@example.com>\r\n\r\n"),
-          })),
+          fetchOne,
         }),
       },
     );
@@ -229,7 +245,11 @@ describe("IMAP/SMTP mail runtime", () => {
           skipAttachmentBodies: true,
         },
       ),
-    ).resolves.toMatchObject({ references: ["<a@example.com>", "<b@example.com>"] });
+    ).resolves.toMatchObject({ references: expected });
+
+    expect(fetchOne).toHaveBeenCalledWith(1, expect.objectContaining({ headers: ["references", "in-reply-to"] }), {
+      uid: true,
+    });
   });
 
   it("bounds temporary filenames while preserving a short extension", () => {
