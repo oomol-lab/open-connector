@@ -22,59 +22,48 @@ interface MicrosoftTodoRequestInput {
   signal?: AbortSignal;
 }
 
+interface MicrosoftTodoGraphPage {
+  value?: unknown;
+  "@odata.nextLink"?: unknown;
+}
+
+interface MicrosoftTodoPage {
+  value: unknown[];
+  nextLink?: string;
+}
+
+function toPage(response: MicrosoftTodoGraphPage): MicrosoftTodoPage {
+  const value = Array.isArray(response.value) ? response.value : [];
+  const nextLink = optionalString(response["@odata.nextLink"]);
+  return nextLink ? { value, nextLink } : { value };
+}
+
 export const microsoftTodoActionHandlers: Record<string, MicrosoftTodoActionHandler> = {
-  list_task_lists(input, context) {
-    return listTaskLists(input, context);
-  },
-  get_task_list(input, context) {
-    return getTaskList(input, context);
-  },
-  create_task_list(input, context) {
-    return createTaskList(input, context);
-  },
-  update_task_list(input, context) {
-    return updateTaskList(input, context);
-  },
-  delete_task_list(input, context) {
-    return deleteTaskList(input, context);
-  },
-  list_tasks(input, context) {
-    return listTasks(input, context);
-  },
-  get_task(input, context) {
-    return getTask(input, context);
-  },
-  create_task(input, context) {
-    return createTask(input, context);
-  },
-  update_task(input, context) {
-    return updateTask(input, context);
-  },
-  delete_task(input, context) {
-    return deleteTask(input, context);
-  },
-  list_checklist_items(input, context) {
-    return listChecklistItems(input, context);
-  },
-  create_checklist_item(input, context) {
-    return createChecklistItem(input, context);
-  },
-  update_checklist_item(input, context) {
-    return updateChecklistItem(input, context);
-  },
-  delete_checklist_item(input, context) {
-    return deleteChecklistItem(input, context);
-  },
+  list_task_lists: listTaskLists,
+  get_task_list: getTaskList,
+  create_task_list: createTaskList,
+  update_task_list: updateTaskList,
+  delete_task_list: deleteTaskList,
+  list_tasks: listTasks,
+  get_task: getTask,
+  create_task: createTask,
+  update_task: updateTask,
+  delete_task: deleteTask,
+  list_checklist_items: listChecklistItems,
+  create_checklist_item: createChecklistItem,
+  update_checklist_item: updateChecklistItem,
+  delete_checklist_item: deleteChecklistItem,
 };
 
 async function listTaskLists(input: Record<string, unknown>, { accessToken, fetcher, signal }: OAuthProviderContext) {
   const nextLink = optionalString(input.nextLink);
-  return microsoftTodoJsonRequest(nextLink ?? "me/todo/lists", {
+  const response = await microsoftTodoJsonRequest<MicrosoftTodoGraphPage>(nextLink ?? "me/todo/lists", {
     accessToken,
     fetcher,
     signal,
     query: nextLink ? undefined : listQuery(input),
   });
+  return toPage(response);
 }
 
 async function getTaskList(input: Record<string, unknown>, { accessToken, fetcher, signal }: OAuthProviderContext) {
@@ -120,12 +109,11 @@ async function listTasks(input: Record<string, unknown>, { accessToken, fetcher,
   const listId = requiredString(input.listId, "listId");
   const nextLink = optionalString(input.nextLink);
   const query = nextLink ? undefined : listQuery(input, { $expand: expandChecklistItemsQuery(input) });
-  return microsoftTodoJsonRequest(nextLink ?? `me/todo/lists/${encodePathSegment(listId)}/tasks`, {
-    accessToken,
-    fetcher,
-    signal,
-    query,
-  });
+  const response = await microsoftTodoJsonRequest<MicrosoftTodoGraphPage>(
+    nextLink ?? `me/todo/lists/${encodePathSegment(listId)}/tasks`,
+    { accessToken, fetcher, signal, query },
+  );
+  return toPage(response);
 }
 
 async function getTask(input: Record<string, unknown>, { accessToken, fetcher, signal }: OAuthProviderContext) {
@@ -183,10 +171,11 @@ async function listChecklistItems(
   const listId = requiredString(input.listId, "listId");
   const taskId = requiredString(input.taskId, "taskId");
   const nextLink = optionalString(input.nextLink);
-  return microsoftTodoJsonRequest(
+  const response = await microsoftTodoJsonRequest<MicrosoftTodoGraphPage>(
     nextLink ?? `me/todo/lists/${encodePathSegment(listId)}/tasks/${encodePathSegment(taskId)}/checklistItems`,
     { accessToken, fetcher, signal },
   );
+  return toPage(response);
 }
 
 async function createChecklistItem(
@@ -365,11 +354,11 @@ function isAllowedMicrosoftTodoNextLinkPath(pathname: string): boolean {
     return true;
   }
   // v1.0/me/todo/lists/{listId}/tasks
-  if (segments.length === 6 && segments[4] !== "" && segments[5] === "tasks") {
+  if (segments.length === 6 && segments[5] === "tasks") {
     return true;
   }
   // v1.0/me/todo/lists/{listId}/tasks/{taskId}/checklistItems
-  return segments.length === 8 && segments[4] !== "" && segments[5] === "tasks" && segments[7] === "checklistItems";
+  return segments.length === 8 && segments[5] === "tasks" && segments[7] === "checklistItems";
 }
 
 function trimTrailingSlash(value: string): string {

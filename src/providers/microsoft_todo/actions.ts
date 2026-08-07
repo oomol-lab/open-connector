@@ -2,9 +2,11 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { microsoftTodoReadScopes, microsoftTodoWriteScopes } from "./scopes.ts";
+import { microsoftTodoProviderScopes, microsoftTodoReadScopes, microsoftTodoWriteScopes } from "./scopes.ts";
 
 const service = "microsoft_todo";
+const readPermissions = [microsoftTodoProviderScopes.tasksRead];
+const writePermissions = [microsoftTodoProviderScopes.tasksReadWrite];
 
 interface MicrosoftTodoActionSource {
   name: string;
@@ -184,7 +186,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "list_task_lists",
     "List the current user's Microsoft To Do task lists.",
     microsoftTodoReadScopes,
-    ["Tasks.Read"],
+    readPermissions,
     s.object(listQueryProperties, { optional: Object.keys(listQueryProperties) }),
     taskListsPage,
   ),
@@ -192,7 +194,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "get_task_list",
     "Get one Microsoft To Do task list by ID.",
     microsoftTodoReadScopes,
-    ["Tasks.Read"],
+    readPermissions,
     s.object({ listId: taskListId }, { required: ["listId"] }),
     todoTaskList,
   ),
@@ -200,7 +202,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "create_task_list",
     "Create a new Microsoft To Do task list.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object({ displayName: nonEmptyString("Display name for the new task list.") }, { required: ["displayName"] }),
     todoTaskList,
   ),
@@ -208,7 +210,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "update_task_list",
     "Rename a Microsoft To Do task list.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object(
       { listId: taskListId, displayName: nonEmptyString("Updated display name for the task list.") },
       { required: ["listId", "displayName"] },
@@ -219,7 +221,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "delete_task_list",
     "Delete a Microsoft To Do task list and all of its tasks.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object({ listId: taskListId }, { required: ["listId"] }),
     deletedConfirmation("Confirmation that the task list was deleted."),
   ),
@@ -227,7 +229,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "list_tasks",
     "List tasks in a Microsoft To Do task list.",
     microsoftTodoReadScopes,
-    ["Tasks.Read"],
+    readPermissions,
     s.object(
       {
         listId: taskListId,
@@ -242,7 +244,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "get_task",
     "Get one task from a Microsoft To Do task list.",
     microsoftTodoReadScopes,
-    ["Tasks.Read"],
+    readPermissions,
     s.object({ listId: taskListId, taskId }, { required: ["listId", "taskId"] }),
     todoTask,
   ),
@@ -250,7 +252,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "create_task",
     "Create a new task in a Microsoft To Do task list.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object(
       {
         listId: taskListId,
@@ -276,7 +278,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "update_task",
     "Update fields on an existing Microsoft To Do task.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object(
       {
         listId: taskListId,
@@ -304,7 +306,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "delete_task",
     "Delete a task from a Microsoft To Do task list.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object({ listId: taskListId, taskId }, { required: ["listId", "taskId"] }),
     deletedConfirmation("Confirmation that the task was deleted."),
   ),
@@ -312,7 +314,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "list_checklist_items",
     "List checklist items on a Microsoft To Do task.",
     microsoftTodoReadScopes,
-    ["Tasks.Read"],
+    readPermissions,
     s.object({ listId: taskListId, taskId, nextLink }, { required: ["listId", "taskId"], optional: ["nextLink"] }),
     checklistItemsPage,
   ),
@@ -320,7 +322,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "create_checklist_item",
     "Add a checklist item to a Microsoft To Do task.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object(
       { listId: taskListId, taskId, displayName: nonEmptyString("Display name for the checklist item.") },
       { required: ["listId", "taskId", "displayName"] },
@@ -331,7 +333,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "update_checklist_item",
     "Update a checklist item on a Microsoft To Do task.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object(
       {
         listId: taskListId,
@@ -348,7 +350,7 @@ const actions: MicrosoftTodoActionSource[] = [
     "delete_checklist_item",
     "Delete a checklist item from a Microsoft To Do task.",
     microsoftTodoWriteScopes,
-    ["Tasks.ReadWrite"],
+    writePermissions,
     s.object({ listId: taskListId, taskId, checklistItemId }, { required: ["listId", "taskId", "checklistItemId"] }),
     deletedConfirmation("Confirmation that the checklist item was deleted."),
   ),

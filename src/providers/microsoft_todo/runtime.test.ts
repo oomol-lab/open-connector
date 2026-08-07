@@ -32,6 +32,28 @@ it("follows an allowed nextLink for checklist item pagination", async () => {
   expect(output).toEqual({ value: [] });
 });
 
+it("maps @odata.nextLink to nextLink in list responses", async () => {
+  const odataNextLink = "https://graph.microsoft.com/v1.0/me/todo/lists/list-1/tasks?$skiptoken=abc";
+  const fetcher = async (): Promise<Response> =>
+    Response.json({
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#...",
+      value: [{ id: "task-1" }],
+      "@odata.nextLink": odataNextLink,
+    });
+
+  const output = await microsoftTodoActionHandlers.list_tasks({ listId: "list-1" }, { accessToken: "token", fetcher });
+
+  expect(output).toEqual({ value: [{ id: "task-1" }], nextLink: odataNextLink });
+});
+
+it("omits nextLink from list responses when Graph does not return @odata.nextLink", async () => {
+  const fetcher = async (): Promise<Response> => Response.json({ value: [{ id: "task-1" }] });
+
+  const output = await microsoftTodoActionHandlers.list_tasks({ listId: "list-1" }, { accessToken: "token", fetcher });
+
+  expect(output).toEqual({ value: [{ id: "task-1" }] });
+});
+
 it("rejects a nextLink that does not target graph.microsoft.com", async () => {
   const fetcher = async (): Promise<Response> => Response.json({ value: [] });
 
