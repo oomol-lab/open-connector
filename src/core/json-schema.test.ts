@@ -56,6 +56,24 @@ describe("jsonSchema.nonWhitespaceString", () => {
   });
 });
 
+describe("jsonSchema.array", () => {
+  it("preserves array uniqueness constraints", () => {
+    expect(
+      jsonSchema.stringArray("Unique identifiers.", {
+        maxItems: 100,
+        uniqueItems: true,
+        itemDescription: "An identifier.",
+      }),
+    ).toEqual({
+      type: "array",
+      items: { type: "string", minLength: 1, description: "An identifier." },
+      maxItems: 100,
+      uniqueItems: true,
+      description: "Unique identifiers.",
+    });
+  });
+});
+
 describe("jsonSchema.looseRequiredObject", () => {
   it("requires every property except explicitly optional properties", () => {
     expect(

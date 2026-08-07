@@ -21,6 +21,7 @@ type ObjectOptions = JsonSchemaOptions & {
 type ArrayOptions = JsonSchemaOptions & {
   minItems?: number;
   maxItems?: number;
+  uniqueItems?: boolean;
   itemDescription?: string;
 };
 
@@ -107,6 +108,7 @@ export const jsonSchema = {
     withOptions(schema, options);
     if (options.minItems != null) schema.minItems = options.minItems;
     if (options.maxItems != null) schema.maxItems = options.maxItems;
+    if (options.uniqueItems != null) schema.uniqueItems = options.uniqueItems;
     return schema;
   },
 
@@ -337,20 +339,11 @@ export const jsonSchema = {
     };
   },
 
-  stringArray(
-    description: string,
-    options: Omit<JsonSchemaOptions, "description"> & {
-      minItems?: number;
-      maxItems?: number;
-      itemDescription?: string;
-    } = {},
-  ): JsonSchema {
-    return this.array(this.string({ minLength: 1, description: options.itemDescription }), {
+  stringArray(description: string, options: Omit<ArrayOptions, "description"> = {}): JsonSchema {
+    const { itemDescription, ...arrayOptions } = options;
+    return this.array(this.string({ minLength: 1, description: itemDescription }), {
+      ...arrayOptions,
       description,
-      minItems: options.minItems,
-      maxItems: options.maxItems,
-      default: options.default,
-      format: options.format,
     });
   },
 

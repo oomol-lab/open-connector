@@ -7,19 +7,33 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  optionalStringArray,
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
 import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "discord";
-const discordApiBaseUrl = "https://discord.com/api";
+// Pin regular REST calls to v10; use the unversioned OAuth/OIDC URLs from official discovery.
+// https://discord.com/.well-known/openid-configuration
+const discordApiBaseUrl = "https://discord.com/api/v10";
+const discordOauthApiBaseUrl = "https://discord.com/api";
 
 interface DiscordContext {
   accessToken: string;
   tokenType?: string;
   fetcher: typeof fetch;
   signal?: AbortSignal;
+}
+
+interface DiscordRequestInput {
+  readonly method?: string;
+  readonly path: string;
+  readonly baseUrl?: string;
+  readonly query?: Record<string, unknown>;
+  readonly body?: Record<string, unknown>;
+  readonly context: DiscordContext;
+  readonly authenticated?: boolean;
 }
 
 type DiscordActionHandler = (input: Record<string, unknown>, context: DiscordContext) => Promise<unknown>;
@@ -68,16 +82,21 @@ export const discordActionHandlers: Record<string, DiscordActionHandler> = {
     });
   },
   get_my_oauth2_authorization(_input, context) {
-    return discordRequestJson({ path: "/oauth2/@me", context });
+    return discordRequestJson({ path: "/oauth2/@me", baseUrl: discordOauthApiBaseUrl, context });
   },
   get_my_user(_input, context) {
     return discordRequestJson({ path: "/users/@me", context });
   },
   get_openid_connect_userinfo(_input, context) {
-    return discordRequestJson({ path: "/oauth2/userinfo", context });
+    return discordRequestJson({ path: "/oauth2/userinfo", baseUrl: discordOauthApiBaseUrl, context });
   },
   get_public_keys(_input, context) {
-    return discordRequestJson({ path: "/oauth2/keys", context, authenticated: false });
+    return discordRequestJson({
+      path: "/oauth2/keys",
+      baseUrl: discordOauthApiBaseUrl,
+      context,
+      authenticated: false,
+    });
   },
   get_user(input, context) {
     if (input.user_id !== "@me") {
@@ -114,12 +133,15 @@ export const discordActionHandlers: Record<string, DiscordActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, discordActionHandlers);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, discordActionHandlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: discordApiBaseUrl,
   auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -158,13 +180,10 @@ async function getCurrentUserApplicationEntitlements(
   context: DiscordContext,
 ): Promise<unknown> {
   const entitlements = await discordRequestJson({
-    path: `/applications/${requiredPath(input.application_id, "application_id")}/entitlements`,
+    path: `/users/@me/applications/${requiredPath(input.application_id, "application_id")}/entitlements`,
     query: jsonObject({
-      before: optionalString(input.before),
-      after: optionalString(input.after),
-      limit: optionalInteger(input.limit),
-      exclude_ended: optionalBoolean(input.exclude_ended),
-      exclude_deleted: optionalBoolean(input.exclude_deleted),
+      sku_ids: optionalStringArray(input.sku_ids)?.join(","),
+      exclude_consumed: optionalBoolean(input.exclude_consumed),
     }),
     context,
   });
@@ -233,22 +252,16 @@ function fetchInvite(inviteCode: string, input: Record<string, unknown>, context
     path: `/invites/${encodePathSegment(inviteCode)}`,
     query: jsonObject({
       with_counts: optionalBoolean(input.with_counts),
-      with_expiration: optionalBoolean(input.with_expiration),
       guild_scheduled_event_id: optionalString(input.guild_scheduled_event_id),
+      target_channel_id: optionalString(input.target_channel_id),
+      target_message_id: optionalString(input.target_message_id),
     }),
     context,
     authenticated: false,
   });
 }
 
-async function discordRequestJson(input: {
-  method?: string;
-  path: string;
-  query?: Record<string, unknown>;
-  body?: Record<string, unknown>;
-  context: DiscordContext;
-  authenticated?: boolean;
-}): Promise<unknown> {
+async function discordRequestJson(input: DiscordRequestInput): Promise<unknown> {
   const response = await discordRequest(input);
   try {
     return (await response.json()) as unknown;
@@ -257,15 +270,8 @@ async function discordRequestJson(input: {
   }
 }
 
-async function discordRequest(input: {
-  method?: string;
-  path: string;
-  query?: Record<string, unknown>;
-  body?: Record<string, unknown>;
-  context: DiscordContext;
-  authenticated?: boolean;
-}): Promise<Response> {
-  const url = new URL(`${discordApiBaseUrl}${input.path}`);
+async function discordRequest(input: DiscordRequestInput): Promise<Response> {
+  const url = new URL(`${input.baseUrl ?? discordApiBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {
       url.searchParams.set(key, String(value));
@@ -305,7 +311,7 @@ async function toDiscordError(response: Response, authenticated: boolean): Promi
     } catch {}
   }
   const resolvedMessage = message || `Discord request failed with ${response.status}`;
-  if (authenticated && (response.status === 401 || response.status === 403)) {
+  if (authenticated && response.status === 401) {
     return new ProviderRequestError(401, resolvedMessage);
   }
   if (response.status === 429) {
