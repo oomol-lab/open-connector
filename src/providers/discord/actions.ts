@@ -43,10 +43,16 @@ export const discordActions: ActionDefinition[] = [
     inputSchema: s.object(
       {
         application_id: snowflakeSchema,
+        before: snowflakeSchema,
+        after: snowflakeSchema,
+        limit: s.integer("The maximum number of entitlements to return.", { minimum: 1, maximum: 100 }),
         exclude_ended: s.boolean("Whether to exclude entitlements that have already ended."),
         exclude_deleted: s.boolean("Whether to exclude entitlements marked as deleted."),
       },
-      { required: ["application_id"], optional: ["exclude_ended", "exclude_deleted"] },
+      {
+        required: ["application_id"],
+        optional: ["before", "after", "limit", "exclude_ended", "exclude_deleted"],
+      },
     ),
     outputSchema: s.requiredObject("Current-user application entitlements.", {
       entitlements: s.array("The entitlements visible to the current OAuth user.", rawObjectSchema),

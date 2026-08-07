@@ -160,6 +160,9 @@ async function getCurrentUserApplicationEntitlements(
   const entitlements = await discordRequestJson({
     path: `/applications/${requiredPath(input.application_id, "application_id")}/entitlements`,
     query: jsonObject({
+      before: optionalString(input.before),
+      after: optionalString(input.after),
+      limit: optionalInteger(input.limit),
       exclude_ended: optionalBoolean(input.exclude_ended),
       exclude_deleted: optionalBoolean(input.exclude_deleted),
     }),
