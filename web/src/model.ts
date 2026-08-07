@@ -22,6 +22,8 @@ export interface CredentialField {
   secret: boolean;
   placeholder?: string;
   description?: string;
+  location?: "extra" | "secretExtra";
+  defaultValue?: string;
 }
 
 export type JsonSchema = Record<string, unknown>;
@@ -84,6 +86,7 @@ export interface OAuthConfig {
   clientId: string | null;
   expectedRedirectUri?: string;
   auth?: Extract<AuthDefinition, { type: "oauth2" }>;
+  extra?: Record<string, string>;
 }
 
 export interface RuntimeTokenSummary {

@@ -96,6 +96,7 @@ interface ConnectionManagerProps {
 
 interface OAuthConfigFormProps {
   provider: ProviderDefinition;
+  auth: AuthDefinition;
   config?: OAuthConfig;
   onRefresh(): void;
 }
@@ -1331,33 +1332,82 @@ function OAuthClientSettings(props: {
       {status ? <FormStatus message={status} /> : null}
       {shouldShowOAuthClientForm(props.auth, props.expanded) ? (
         <div className="oauth-client-editor">
-          <OAuthConfigForm provider={props.provider} config={props.config} onRefresh={props.onRefresh} />
+          <OAuthConfigForm
+            provider={props.provider}
+            auth={props.auth}
+            config={props.config}
+            onRefresh={props.onRefresh}
+          />
         </div>
       ) : null}
     </div>
   );
 }
 
+export function clientConfigFieldsFor(auth: AuthDefinition): CredentialField[] {
+  return auth.type === "oauth2" ? (auth.clientConfigFields ?? []) : [];
+}
+
+export function initialClientConfigFieldValues(
+  fields: CredentialField[],
+  config: OAuthConfig | undefined,
+): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const field of fields) {
+    values[field.key] = config?.extra?.[field.key] ?? field.defaultValue ?? "";
+  }
+  return values;
+}
+
+export interface ClientConfigFieldValues {
+  extra: Record<string, string>;
+  secretExtra: Record<string, string>;
+}
+
+export function splitClientConfigFieldValues(
+  fields: CredentialField[],
+  values: Record<string, string>,
+): ClientConfigFieldValues {
+  const extra: Record<string, string> = {};
+  const secretExtra: Record<string, string> = {};
+  for (const field of fields) {
+    const target = field.location === "secretExtra" ? secretExtra : extra;
+    target[field.key] = values[field.key] ?? "";
+  }
+  return { extra, secretExtra };
+}
+
 function OAuthConfigForm(props: OAuthConfigFormProps): ReactNode {
   const t = useTranslate();
+  const clientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
   const [clientId, setClientId] = useState(() => props.config?.clientId ?? "");
   const [clientSecret, setClientSecret] = useState("");
+  const [extraValues, setExtraValues] = useState(() =>
+    initialClientConfigFieldValues(clientConfigFields, props.config),
+  );
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
     setClientId(props.config?.clientId ?? "");
     setClientSecret("");
+    setExtraValues(initialClientConfigFieldValues(clientConfigFields, props.config));
     setStatus(null);
-  }, [props.provider.service, props.config?.clientId]);
+    // Deliberately excludes `props.config` itself: it gets a new object identity on every
+    // background data refresh (for example when an unrelated OAuth popup completes elsewhere),
+    // and resetting on that would wipe out an in-progress edit. `clientId` changing is what
+    // actually signals a real context switch (provider changed, config saved, or config reset).
+  }, [props.provider.service, props.config?.clientId, clientConfigFields]);
 
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault();
     setStatus(t("providers.oauthClientSettings.saving"));
     try {
+      const { extra, secretExtra } = splitClientConfigFieldValues(clientConfigFields, extraValues);
       await apiPut(`/api/oauth/configs/${props.provider.service}`, {
         clientId,
         clientSecret,
-        extra: {},
+        extra,
+        secretExtra,
       });
       setStatus(t("providers.oauthClientSettings.saved"));
       props.onRefresh();
@@ -1377,6 +1427,14 @@ function OAuthConfigForm(props: OAuthConfigFormProps): ReactNode {
         <Input type="password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} />
         {props.config ? <small>{t("providers.oauthClientSettings.storedSecretHint")}</small> : null}
       </Label>
+      {clientConfigFields.map((field) => (
+        <CredentialInput
+          key={field.key}
+          field={field}
+          value={extraValues[field.key] ?? ""}
+          onChange={(value) => setExtraValues((previous) => ({ ...previous, [field.key]: value }))}
+        />
+      ))}
       <div className="button-row">
         <Button type="submit">
           <Settings size={16} />
@@ -1398,6 +1456,7 @@ function CredentialInput(props: { field: CredentialField; value: string; onChang
           value={props.value}
           placeholder={props.field.placeholder}
           onChange={(event) => props.onChange(event.target.value)}
+          required={props.field.required}
           spellCheck={false}
         />
       ) : (
@@ -1406,6 +1465,7 @@ function CredentialInput(props: { field: CredentialField; value: string; onChang
           placeholder={props.field.placeholder}
           value={props.value}
           onChange={(event) => props.onChange(event.target.value)}
+          required={props.field.required}
         />
       )}
       {props.field.description ? <small>{props.field.description}</small> : null}

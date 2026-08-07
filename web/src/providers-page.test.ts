@@ -1,4 +1,4 @@
-import type { AppData, AuthDefinition, ProviderDefinition } from "./model";
+import type { AppData, AuthDefinition, CredentialField, OAuthConfig, ProviderDefinition } from "./model";
 
 import { I18nProvider } from "@embra/i18n/react";
 import { createElement } from "react";
@@ -7,12 +7,14 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
 import {
+  clientConfigFieldsFor,
   configurableConnectionsForProvider,
   connectionDeletePath,
   connectionDisplayLabel,
   connectionSubmitLabel,
   createOAuthPopupFeatures,
   credentialConnectionRequestBody,
+  initialClientConfigFieldValues,
   isProviderLocallyAvailable,
   oauthClientActionLabel,
   oauthAuthorizationRequestBody,
@@ -24,6 +26,7 @@ import {
   shouldShowConnectionActions,
   shouldShowDisconnectAction,
   shouldShowOAuthClientForm,
+  splitClientConfigFieldValues,
   startOAuthRefreshPolling,
   validateNewConnectionName,
 } from "./providers-page";
@@ -111,6 +114,102 @@ describe("oauthClientActionLabel", () => {
     expect(oauthClientActionLabel({ service: "gmail", configured: true, clientId: "gmail-client-id" })).toBe(
       "Edit OAuth Client",
     );
+  });
+});
+
+describe("clientConfigFieldsFor", () => {
+  const tenantField: CredentialField = {
+    key: "tenant",
+    label: "Tenant",
+    inputType: "text",
+    required: true,
+    secret: false,
+    defaultValue: "common",
+  };
+
+  it("returns the oauth2 auth definition's clientConfigFields", () => {
+    const auth: AuthDefinition = { type: "oauth2", scopes: [], clientConfigFields: [tenantField] };
+
+    expect(clientConfigFieldsFor(auth)).toEqual([tenantField]);
+  });
+
+  it("returns an empty array for non-oauth2 auth", () => {
+    const auth: AuthDefinition = { type: "api_key" };
+
+    expect(clientConfigFieldsFor(auth)).toEqual([]);
+  });
+
+  it("returns an empty array when oauth2 auth declares no clientConfigFields", () => {
+    const auth: AuthDefinition = { type: "oauth2", scopes: [] };
+
+    expect(clientConfigFieldsFor(auth)).toEqual([]);
+  });
+});
+
+describe("initialClientConfigFieldValues", () => {
+  const tenantField: CredentialField = {
+    key: "tenant",
+    label: "Tenant",
+    inputType: "text",
+    required: true,
+    secret: false,
+    defaultValue: "common",
+  };
+
+  it("falls back to the field's default value when nothing is stored", () => {
+    expect(initialClientConfigFieldValues([tenantField], undefined)).toEqual({ tenant: "common" });
+  });
+
+  it("prefers a previously stored non-secret value over the default", () => {
+    const config: OAuthConfig = {
+      service: "microsoft_todo",
+      configured: true,
+      clientId: "client-id",
+      extra: { tenant: "consumers" },
+    };
+
+    expect(initialClientConfigFieldValues([tenantField], config)).toEqual({ tenant: "consumers" });
+  });
+
+  it("leaves the value empty when there is neither a stored value nor a default", () => {
+    const field: CredentialField = { ...tenantField, defaultValue: undefined };
+
+    expect(initialClientConfigFieldValues([field], undefined)).toEqual({ tenant: "" });
+  });
+});
+
+describe("splitClientConfigFieldValues", () => {
+  const tenantField: CredentialField = {
+    key: "tenant",
+    label: "Tenant",
+    inputType: "text",
+    required: true,
+    secret: false,
+  };
+  const appSecretField: CredentialField = {
+    key: "appSecret",
+    label: "App secret",
+    inputType: "password",
+    required: true,
+    secret: true,
+    location: "secretExtra",
+  };
+
+  it("routes fields without a location to extra", () => {
+    const { extra, secretExtra } = splitClientConfigFieldValues([tenantField], { tenant: "consumers" });
+
+    expect(extra).toEqual({ tenant: "consumers" });
+    expect(secretExtra).toEqual({});
+  });
+
+  it("routes fields marked secretExtra separately from extra", () => {
+    const { extra, secretExtra } = splitClientConfigFieldValues([tenantField, appSecretField], {
+      tenant: "consumers",
+      appSecret: "shh",
+    });
+
+    expect(extra).toEqual({ tenant: "consumers" });
+    expect(secretExtra).toEqual({ appSecret: "shh" });
   });
 });
 

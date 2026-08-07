@@ -24,6 +24,7 @@ export type OAuthClientConfigSummary = {
   clientId: string | null;
   expectedRedirectUri: string;
   auth: OAuth2AuthDefinition;
+  extra: Record<string, string>;
 };
 
 /**
@@ -164,6 +165,7 @@ export class OAuthClientConfigService {
       clientId: config?.clientId ?? null,
       expectedRedirectUri: this.expectedRedirectUri(service),
       auth,
+      extra: config?.extra ?? {},
     };
   }
 }
