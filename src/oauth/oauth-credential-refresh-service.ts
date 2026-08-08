@@ -3,6 +3,7 @@ import type { OAuthClientConfigService } from "./oauth-client-config-service.ts"
 
 import { ConnectionError } from "../connection-service.ts";
 import { refreshSlackOAuthCredential } from "../providers/slack/oauth.ts";
+import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";
 import { expiresAtFromLifetime, requestRefreshToken } from "./oauth-token.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -23,7 +24,8 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
 
   async refresh(service: string, credential: OAuthCredential): Promise<OAuthCredential> {
     const auth = this.clientConfigs.getOAuthDefinition(service);
-    const config = await this.clientConfigs.getConfig(service);
+    const config =
+      readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
     if (!config) {
       throw new ConnectionError(
         "oauth_client_config_required",

@@ -58,6 +58,11 @@ interface RotatedIdempotencySecret {
   value: string;
 }
 
+interface RotatedStateSecret {
+  state: string;
+  value: string;
+}
+
 /**
  * Shared SQLite connection for local runtime state.
  */
@@ -79,7 +84,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.initialize(options.logger);
     this.connectionStore = new SqliteConnectionStore(this.database, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
-    this.oauthStateStore = new SqliteOAuthStateStore(this.database);
+    this.oauthStateStore = new SqliteOAuthStateStore(this.database, this.secretCodec);
     this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database);
     this.runtimePolicyStore = new SqliteRuntimePolicyStore(this.database);
     this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? DEFAULT_RUN_LIMIT);
@@ -98,10 +103,12 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       nextSecretCodec,
       "oauth_client_configs",
     );
+    const oauthStates = await readRotatedStateSecrets(this.database, this.secretCodec, nextSecretCodec);
     const idempotencyResponses = await readRotatedIdempotencySecrets(this.database, this.secretCodec, nextSecretCodec);
     runInTransaction(this.database, () => {
       writeRotatedConnectionSecrets(this.database, connections);
       writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
+      writeRotatedStateSecrets(this.database, oauthStates);
       writeRotatedIdempotencySecrets(this.database, idempotencyResponses);
     });
   }
@@ -266,9 +273,11 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
 
 export class SqliteOAuthStateStore implements IOAuthStateStore {
   private readonly database: DatabaseSync;
+  private readonly secretCodec: ISecretCodec;
 
-  constructor(database: DatabaseSync) {
+  constructor(database: DatabaseSync, secretCodec: ISecretCodec) {
     this.database = database;
+    this.secretCodec = secretCodec;
   }
 
   async set(state: OAuthAuthorizationState): Promise<void> {
@@ -280,13 +289,15 @@ export class SqliteOAuthStateStore implements IOAuthStateStore {
         on conflict(state) do update set value = excluded.value, created_at = excluded.created_at
       `,
       )
-      .run(state.state, JSON.stringify(state), state.createdAt);
+      .run(state.state, await this.secretCodec.encode(JSON.stringify(state)), state.createdAt);
   }
 
   async take(state: string): Promise<OAuthAuthorizationState | undefined> {
-    const pending = getJson<OAuthAuthorizationState>(this.database, "oauth_states", "state", state);
+    const row = this.database.prepare("select value from oauth_states where state = ?").get(state);
     this.database.prepare("delete from oauth_states where state = ?").run(state);
-    return pending;
+    return row
+      ? parseJson<OAuthAuthorizationState>(await this.secretCodec.decode(readString(row, "value")))
+      : undefined;
   }
 }
 
@@ -709,6 +720,27 @@ function writeRotatedServiceSecrets(
   }
 }
 
+async function readRotatedStateSecrets(
+  database: DatabaseSync,
+  currentCodec: ISecretCodec,
+  nextCodec: ISecretCodec,
+): Promise<RotatedStateSecret[]> {
+  const rows = database.prepare("select state, value from oauth_states").all();
+  return await Promise.all(
+    rows.map(async (row) => ({
+      state: readString(row, "state"),
+      value: await nextCodec.encode(await currentCodec.decode(readString(row, "value"))),
+    })),
+  );
+}
+
+function writeRotatedStateSecrets(database: DatabaseSync, states: RotatedStateSecret[]): void {
+  const statement = database.prepare("update oauth_states set value = ? where state = ?");
+  for (const state of states) {
+    statement.run(state.value, state.state);
+  }
+}
+
 async function readRotatedIdempotencySecrets(
   database: DatabaseSync,
   currentCodec: ISecretCodec,
@@ -742,11 +774,6 @@ function runInTransaction<T>(database: DatabaseSync, work: () => T): T {
     database.exec("rollback");
     throw error;
   }
-}
-
-function getJson<T>(database: DatabaseSync, table: "oauth_states", keyColumn: "state", key: string): T | undefined {
-  const row = database.prepare(`select value from ${table} where ${keyColumn} = ?`).get(key) as RuntimeRow | undefined;
-  return row ? parseJson<T>(readString(row, "value")) : undefined;
 }
 
 async function getSecretJson<T>(input: SecretJsonInput): Promise<T | undefined> {

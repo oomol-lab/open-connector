@@ -1009,6 +1009,8 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
     post: {
       tags: ["OAuth"],
       summary: "Start provider OAuth authorization.",
+      description:
+        "The console may provide a connection-scoped OAuth app through clientId/clientSecret and provider-declared extra fields. The provider must be enabled through OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH and pending OAuth state requires OOMOL_CONNECT_ENCRYPTION_KEY.",
       requestBody: {
         required: true,
         content: {
@@ -1019,6 +1021,20 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                 connectionName: jsonSchema.string({
                   description: "Optional local connection name. Defaults to default.",
                 }),
+                clientId: jsonSchema.string({ description: "Optional connection-scoped OAuth app client id." }),
+                clientSecret: jsonSchema.string({
+                  description: "Optional connection-scoped OAuth app client secret.",
+                }),
+                extra: {
+                  type: "object",
+                  additionalProperties: { type: "string" },
+                  description: "Provider-declared non-secret OAuth client fields.",
+                },
+                secretExtra: {
+                  type: "object",
+                  additionalProperties: { type: "string" },
+                  description: "Provider-declared secret OAuth client fields.",
+                },
               },
               {
                 required: ["service"],

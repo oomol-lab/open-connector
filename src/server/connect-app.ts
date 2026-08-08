@@ -25,6 +25,7 @@ export interface ConnectAppOptions {
   secretCodec: ISecretCodec;
   adminToken?: string;
   runtimeToken?: string;
+  allowedCustomOAuth?: string[];
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
   registerStaticRoutes?: (app: Hono) => void;
@@ -73,6 +74,9 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         clientConfigs: oauthClientConfigs,
         connections,
         states: options.runtimeDatabase.oauthStateStore,
+        secretCodec: options.secretCodec,
+        isCustomClientConfigAllowed: (service) =>
+          options.allowedCustomOAuth?.includes("*") === true || options.allowedCustomOAuth?.includes(service) === true,
       }),
       actions,
       idempotency: options.runtimeDatabase.idempotencyStore,

@@ -15,19 +15,19 @@ Set `OOMOL_CONNECT_DATA_DIR` to use another directory. The Docker image defaults
 
 - `no_auth` providers are available as virtual connections and do not store secrets.
 - `api_key` and `custom_credential` providers store their local secrets in SQLite.
-- `oauth2` providers use user-provided OAuth client configuration and a localhost callback URL.
+- `oauth2` providers use user-provided OAuth client configuration and a runtime callback URL.
 
 ## Encryption
 
-Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials, OAuth client configuration, and
-completed idempotent Action response payloads:
+Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials, OAuth client configuration,
+pending OAuth state, and completed idempotent Action response payloads:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="replace-with-a-long-random-secret" npm run dev
 ```
 
-The runtime uses AES-256-GCM for provider credential records, OAuth client configuration, and the
-completed response payload retained for an idempotent HTTP Action retry. The raw `Idempotency-Key`
+The runtime uses AES-256-GCM for provider credential records, OAuth client configuration, pending
+OAuth state, and the completed response payload retained for an idempotent HTTP Action retry. The raw `Idempotency-Key`
 is never stored; the database contains its hash and a request fingerprint. Claim identifiers,
 state, timestamps, and expiry are also stored as unencrypted metadata. The encryption key is not
 stored by OpenConnector; if it is lost, encrypted records cannot be recovered.
@@ -166,6 +166,21 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
 
 Open the returned `authorizationUrl` in a browser. After the provider redirects to the local
 callback URL, the runtime stores the OAuth credential as the default connection.
+
+The console can start a connection-scoped OAuth flow with a custom app without changing the global
+config. Set `OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH` to `*` or a comma-separated provider list, and set
+`OOMOL_CONNECT_ENCRYPTION_KEY`. Then include `clientId` and `clientSecret` (plus provider-declared
+`extra` or `secretExtra` fields) in the existing OAuth authorization request:
+
+```bash
+curl -s -X POST http://localhost:3000/api/oauth/authorizations \
+  -H 'content-type: application/json' \
+  -d '{"service":"github","connectionName":"work","clientId":"...","clientSecret":"..."}'
+```
+
+The callback URL is still the deployment's `/oauth/callback` (for example,
+`https://connect.example.com/oauth/callback`), and the connection keeps the supplied app values
+for future token refreshes. Omitting all client fields continues to use the global config.
 
 To store the OAuth credential as a named connection, include `connectionName` when starting
 authorization:

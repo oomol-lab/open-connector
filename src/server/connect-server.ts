@@ -2,6 +2,7 @@ import type { CatalogStore, RuntimeActionDefinition } from "../catalog-store.ts"
 import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
+import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
@@ -813,7 +814,11 @@ export class ConnectServer {
       };
       this.options.logger?.info(logContext, "oauth authorization started");
 
-      const authorization = await this.options.oauthFlow.startAuthorization({ service, connectionName });
+      const authorization = await this.options.oauthFlow.startAuthorization({
+        service,
+        connectionName,
+        clientConfig: readOAuthClientConfigInput(body),
+      });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(
         {
@@ -835,7 +840,8 @@ export class ConnectServer {
           },
           "oauth authorization failed",
         );
-        return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
+        const status = error.code === "unknown_service" ? 404 : 400;
+        return jsonError(context, status, error.code, error.message);
       }
 
       throw error;
@@ -1063,6 +1069,20 @@ export class ConnectServer {
       throw new Error("Runtime policy is unavailable.");
     }
   }
+}
+
+function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientConfigInput | undefined {
+  const keys = ["clientId", "clientSecret", "extra", "secretExtra"];
+  if (!keys.some((key) => key in body)) {
+    return undefined;
+  }
+
+  return {
+    clientId: optionalString(body.clientId) ?? "",
+    clientSecret: optionalString(body.clientSecret) ?? "",
+    extra: optionalRecord(body.extra),
+    secretExtra: optionalRecord(body.secretExtra),
+  };
 }
 
 interface ConnectionLogContext {

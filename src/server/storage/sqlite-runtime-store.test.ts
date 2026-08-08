@@ -618,6 +618,52 @@ describe("SqliteRuntimeDatabase", () => {
     second.close();
   });
 
+  it("encrypts pending OAuth state while keeping legacy plaintext state readable", async () => {
+    const databasePath = await createDatabasePath();
+    const encrypted = new SqliteRuntimeDatabase(databasePath, {
+      secretCodec: new AesGcmSecretCodec("local-test-key"),
+    });
+    await encrypted.oauthStateStore.set({
+      service: "github",
+      state: "state-encrypted",
+      createdAt: "2026-06-30T00:00:00.000Z",
+      clientConfig: {
+        service: "github",
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        extra: {},
+        secretExtra: {},
+      },
+    });
+    const inspected = new DatabaseSync(databasePath);
+    const stored = inspected.prepare("select value from oauth_states where state = ?").get("state-encrypted") as {
+      value: string;
+    };
+    expect(stored.value).toMatch(/^enc:v1:/);
+    expect(stored.value).not.toContain("client-secret");
+    inspected.close();
+    await expect(encrypted.oauthStateStore.take("state-encrypted")).resolves.toMatchObject({
+      clientConfig: { clientSecret: "client-secret" },
+    });
+    encrypted.close();
+
+    const legacy = new SqliteRuntimeDatabase(databasePath, {
+      secretCodec: new AesGcmSecretCodec("local-test-key"),
+    });
+    const plainState = {
+      service: "github",
+      state: "state-legacy",
+      createdAt: "2026-06-30T00:00:00.000Z",
+    };
+    const raw = new DatabaseSync(databasePath);
+    raw
+      .prepare("insert into oauth_states (state, value, created_at) values (?, ?, ?)")
+      .run(plainState.state, JSON.stringify(plainState), plainState.createdAt);
+    raw.close();
+    await expect(legacy.oauthStateStore.take("state-legacy")).resolves.toEqual(plainState);
+    legacy.close();
+  });
+
   it("stores runtime token hashes and supports verification and revocation", async () => {
     const databasePath = await createDatabasePath();
     const database = new SqliteRuntimeDatabase(databasePath);
@@ -752,6 +798,18 @@ describe("SqliteRuntimeDatabase", () => {
       extra: {},
       secretExtra: {},
     });
+    await database.oauthStateStore.set({
+      service: "gmail",
+      state: "state-rotation",
+      createdAt: "2026-06-30T00:00:00.000Z",
+      clientConfig: {
+        service: "gmail",
+        clientId: "state-client-id",
+        clientSecret: "state-client-secret",
+        extra: {},
+        secretExtra: {},
+      },
+    });
     const claim = {
       keyHash: "key-hash",
       requestHash: "request-hash",
@@ -789,6 +847,9 @@ describe("SqliteRuntimeDatabase", () => {
     });
     await expect(withNewKey.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientSecret: "client-secret",
+    });
+    await expect(withNewKey.oauthStateStore.take("state-rotation")).resolves.toMatchObject({
+      clientConfig: { clientSecret: "state-client-secret" },
     });
     await expect(withNewKey.runtimeTokenStore.list()).resolves.toMatchObject([{ id: token.record.id }]);
     await expect(withNewKey.runLogStore.list()).resolves.toMatchObject({ items: [{ id: "run-1" }] });

@@ -1,5 +1,10 @@
 import type { ConnectionService } from "../connection-service.ts";
-import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
+import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
+import type {
+  OAuthClientConfig,
+  OAuthClientConfigInput,
+  OAuthClientConfigService,
+} from "./oauth-client-config-service.ts";
 
 import { createHash, randomBytes } from "node:crypto";
 import { normalizeSlackAuthorizationCredential } from "../providers/slack/oauth.ts";
@@ -16,6 +21,7 @@ export type OAuthAuthorizationStart = {
 export interface OAuthAuthorizationStartInput {
   service: string;
   connectionName?: string;
+  clientConfig?: OAuthClientConfigInput;
 }
 
 export interface OAuthAuthorizationCompleteInput {
@@ -32,6 +38,7 @@ export type OAuthAuthorizationState = {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
+  clientConfig?: OAuthClientConfig;
 };
 
 /**
@@ -43,31 +50,39 @@ export interface IOAuthStateStore {
 }
 
 /**
- * Coordinates localhost OAuth authorization and token exchange.
+ * Coordinates runtime OAuth authorization and token exchange.
  */
 export class OAuthFlowService {
   private readonly clientConfigs: OAuthClientConfigService;
   private readonly connections: ConnectionService;
   private readonly states: IOAuthStateStore;
   private readonly stateMaxAgeMs: number;
+  private readonly secretCodec?: ISecretCodec;
+  private readonly isCustomClientConfigAllowed: (service: string) => boolean;
 
   constructor(input: {
     clientConfigs: OAuthClientConfigService;
     connections: ConnectionService;
     states: IOAuthStateStore;
     stateMaxAgeMs?: number;
+    secretCodec?: ISecretCodec;
+    isCustomClientConfigAllowed?: (service: string) => boolean;
   }) {
     this.clientConfigs = input.clientConfigs;
     this.connections = input.connections;
     this.states = input.states;
     this.stateMaxAgeMs = input.stateMaxAgeMs ?? 15 * 60 * 1000;
+    this.secretCodec = input.secretCodec;
+    this.isCustomClientConfigAllowed = input.isCustomClientConfigAllowed ?? (() => false);
   }
 
   async startAuthorization(input: OAuthAuthorizationStartInput): Promise<OAuthAuthorizationStart> {
     const { service, connectionName } = input;
     this.connections.assertProviderAvailable(service);
     const auth = this.clientConfigs.getOAuthDefinition(service);
-    const config = await this.clientConfigs.getConfig(service);
+    const config = input.clientConfig
+      ? this.resolveCustomClientConfig(service, input.clientConfig)
+      : await this.clientConfigs.getConfig(service);
     if (!config) {
       throw new OAuthFlowError("oauth_client_config_required", `Configure an OAuth client for ${service} first.`);
     }
@@ -80,6 +95,7 @@ export class OAuthFlowService {
       state,
       createdAt: new Date().toISOString(),
       pkceCodeVerifier,
+      clientConfig: input.clientConfig ? config : undefined,
     });
 
     const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));
@@ -122,7 +138,7 @@ export class OAuthFlowService {
     }
 
     const auth = this.clientConfigs.getOAuthDefinition(pending.service);
-    const config = await this.clientConfigs.getConfig(pending.service);
+    const config = pending.clientConfig ?? (await this.clientConfigs.getConfig(pending.service));
     if (!config) {
       throw new OAuthFlowError(
         "oauth_client_config_required",
@@ -155,6 +171,7 @@ export class OAuthFlowService {
         oauthClientId: config.clientId,
         oauthClientExtra: config.extra,
         oauthClientSecretExtra: config.secretExtra,
+        ...(pending.clientConfig ? { oauthClientConfig: config } : {}),
       },
     };
 
@@ -163,6 +180,22 @@ export class OAuthFlowService {
       service: pending.service,
       connected: true,
     };
+  }
+
+  private resolveCustomClientConfig(service: string, input: OAuthClientConfigInput): OAuthClientConfig {
+    if (!this.isCustomClientConfigAllowed(service)) {
+      throw new OAuthFlowError(
+        "oauth_custom_app_not_allowed",
+        `Custom OAuth apps are not enabled for ${service} on this runtime.`,
+      );
+    }
+    if (!this.secretCodec?.encrypted) {
+      throw new OAuthFlowError(
+        "oauth_custom_app_encryption_required",
+        "Configure OOMOL_CONNECT_ENCRYPTION_KEY before using a custom OAuth app.",
+      );
+    }
+    return this.clientConfigs.normalizeConfig(service, input);
   }
 }
 

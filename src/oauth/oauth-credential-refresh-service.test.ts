@@ -7,7 +7,12 @@ import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-servic
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 const clientConfigs = {
-  getOAuthDefinition: () => ({ type: "oauth2", tokenUrl: "https://provider.example.com/oauth/token" }),
+  getOAuthDefinition: () => ({
+    type: "oauth2",
+    tokenUrl: "https://provider.example.com/oauth/token",
+    tokenEndpointAuthMethod: "client_secret_post",
+    scopes: [],
+  }),
   getConfig: async () => ({ clientId: "client-id", clientSecret: "client-secret", extra: {} }),
   resolveEndpointUrl: (_service: string, endpointUrl: string) => endpointUrl,
 } as unknown as OAuthClientConfigService;
@@ -49,6 +54,30 @@ describe("OAuthCredentialRefreshService", () => {
     );
 
     expect(refreshed.expiresAt).toBe(new Date(now + 3600_000).toISOString());
+  });
+
+  it("uses a connection-scoped OAuth client config before the global config", async () => {
+    const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) => {
+      return Response.json({ access_token: "new-access-token" });
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    await new OAuthCredentialRefreshService(clientConfigs).refresh(
+      "example",
+      expiredCredential({
+        oauthClientConfig: {
+          clientId: "connection-client-id",
+          clientSecret: "connection-client-secret",
+        },
+      }),
+    );
+
+    const request = fetcher.mock.calls[0]?.[1];
+    expect(request?.headers).toMatchObject({
+      "content-type": "application/x-www-form-urlencoded",
+    });
+    expect(String(request?.body)).toContain("client_id=connection-client-id");
+    expect(String(request?.body)).toContain("client_secret=connection-client-secret");
   });
 
   it("never carries the lapsed expiry forward, which would refresh on every call", async () => {

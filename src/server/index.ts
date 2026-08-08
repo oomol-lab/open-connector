@@ -41,6 +41,7 @@ const actionPolicy = new ActionPolicyService({
   allowedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_PROXIES),
   blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
 });
+const allowedCustomOAuth = parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH);
 setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
 setEgressTrustedHosts(parseEgressTrustedHosts(process.env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
 const builtRoot = join(process.cwd(), "dist/web");
@@ -73,6 +74,7 @@ const { app, runtimeAuthConfigured } = await createConnectApp({
   runtimeToken,
   verifyRuntimeJwt,
   actionPolicy,
+  allowedCustomOAuth,
   registerStaticRoutes: (app) => registerStaticRoutes(app, staticRoot),
   logger,
 });
@@ -105,7 +107,7 @@ serve(
     }
     if (!secretCodec.encrypted) {
       logger.warn(
-        "local data encryption is disabled; set OOMOL_CONNECT_ENCRYPTION_KEY to encrypt stored credentials, OAuth client configuration, and completed idempotent action responses",
+        "local data encryption is disabled; set OOMOL_CONNECT_ENCRYPTION_KEY to encrypt stored credentials, OAuth client configuration, pending OAuth state, and completed idempotent action responses",
       );
     }
     if (!staticRoot) {

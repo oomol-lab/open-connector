@@ -41,7 +41,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
     this.connectionStore = new D1ConnectionStore(database, secretCodec);
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
-    this.oauthStateStore = new D1OAuthStateStore(database);
+    this.oauthStateStore = new D1OAuthStateStore(database, secretCodec);
     this.runtimeTokenStore = new D1RuntimeTokenStore(database);
     this.runtimePolicyStore = new D1RuntimePolicyStore(database);
     this.runLogStore = new D1RunLogStore(database, options.runLimit ?? DEFAULT_RUN_LIMIT);
@@ -195,9 +195,11 @@ export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
 
 export class D1OAuthStateStore implements IOAuthStateStore {
   private readonly database: D1DatabaseBinding;
+  private readonly secretCodec: ISecretCodec;
 
-  constructor(database: D1DatabaseBinding) {
+  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
     this.database = database;
+    this.secretCodec = secretCodec;
   }
 
   async set(state: OAuthAuthorizationState): Promise<void> {
@@ -209,7 +211,7 @@ export class D1OAuthStateStore implements IOAuthStateStore {
         on conflict(state) do update set value = excluded.value, created_at = excluded.created_at
       `,
       )
-      .bind(state.state, JSON.stringify(state), state.createdAt)
+      .bind(state.state, await this.secretCodec.encode(JSON.stringify(state)), state.createdAt)
       .run();
   }
 
@@ -218,7 +220,9 @@ export class D1OAuthStateStore implements IOAuthStateStore {
       .prepare("delete from oauth_states where state = ? returning value")
       .bind(state)
       .first<RuntimeRow>();
-    return row ? parseJson<OAuthAuthorizationState>(readString(row, "value")) : undefined;
+    return row
+      ? parseJson<OAuthAuthorizationState>(await this.secretCodec.decode(readString(row, "value")))
+      : undefined;
   }
 }
 

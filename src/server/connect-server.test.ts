@@ -15,6 +15,7 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { Logger } from "./logger.ts";
+import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type {
   CompleteIdempotencyInput,
   IdempotencyClaimInput,
@@ -40,6 +41,7 @@ import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { TransitFileService } from "./files/transit-files.ts";
+import { AesGcmSecretCodec } from "./secrets/secret-codec.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./storage/runtime-store.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 
@@ -163,6 +165,94 @@ describe("ConnectServer", () => {
         code: "provider_unavailable",
         message: "OAuth Catalog Only is not available in this runtime.",
       },
+    });
+  });
+
+  it("starts console OAuth with a connection-scoped client", async () => {
+    const app = createTestServer([oauthProvider], {
+      allowedCustomOAuth: ["oauth_example"],
+      secretCodec: new AesGcmSecretCodec("test-encryption-key"),
+    }).createApp();
+
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        service: "oauth_example",
+        connectionName: "work",
+        clientId: "connection-client-id",
+        clientSecret: "connection-client-secret",
+        secretExtra: { appBearerToken: "connection-app-token" },
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      authorizationUrl: expect.stringContaining("client_id=connection-client-id"),
+      state: expect.any(String),
+    });
+  });
+
+  it("rejects custom OAuth clients outside the deployment allowlist", async () => {
+    const app = createTestServer([oauthProvider], {
+      secretCodec: new AesGcmSecretCodec("test-encryption-key"),
+    }).createApp();
+
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        service: "oauth_example",
+        clientId: "connection-client-id",
+        clientSecret: "connection-client-secret",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "oauth_custom_app_not_allowed" },
+    });
+  });
+
+  it("requires encrypted state storage for an allowed custom OAuth client", async () => {
+    const app = createTestServer([oauthProvider], {
+      allowedCustomOAuth: ["oauth_example"],
+    }).createApp();
+
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        service: "oauth_example",
+        clientId: "connection-client-id",
+        clientSecret: "connection-client-secret",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "oauth_custom_app_encryption_required" },
+    });
+  });
+
+  it("keeps console OAuth without client fields on the global OAuth config", async () => {
+    const app = createTestServer([oauthProvider]).createApp();
+    const config = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId: "global-client-id", clientSecret: "global-client-secret" }),
+    });
+    expect(config.status).toBe(200);
+
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example" }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      authorizationUrl: expect.stringContaining("client_id=global-client-id"),
     });
   });
 
@@ -2973,6 +3063,8 @@ interface CreateTestServerOptions {
   runs?: MemoryRunLogStore;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
+  secretCodec?: ISecretCodec;
+  allowedCustomOAuth?: string[];
 }
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
@@ -3022,6 +3114,9 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       clientConfigs,
       connections,
       states: new MemoryOAuthStateStore(),
+      secretCodec: options.secretCodec,
+      isCustomClientConfigAllowed: (service) =>
+        options.allowedCustomOAuth?.includes("*") === true || options.allowedCustomOAuth?.includes(service) === true,
     }),
     actions: actionRunner,
     idempotency,
