@@ -205,7 +205,7 @@
     "connectionMessages": {
       "noAuth": "Этот провайдер работает без локальных учетных данных.",
       "needsOAuthClient": "{{name}} требует локальный OAuth client перед подключением.",
-      "manualOAuthClient": "Подключить {{name}} с приложением OAuth, введённым для этого подключения.",
+      "manualOAuthClient": "Подключить {{name}} через собственное приложение OAuth.",
       "connectedOAuth": "{{name}} подключен через OAuth.",
       "connectOAuth": "Подключите {{name}} через OAuth authorization flow.",
       "saving": "Сохранение подключения...",

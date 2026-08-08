@@ -205,7 +205,7 @@
     "connectionMessages": {
       "noAuth": "此服務提供者無須本機憑證即可執行。",
       "needsOAuthClient": "{{name}} 需要本機 OAuth 用戶端才能連線。",
-      "manualOAuthClient": "使用為此連線手動輸入的 OAuth app 連線 {{name}}。",
+      "manualOAuthClient": "使用自訂 OAuth App 連線 {{name}}。",
       "connectedOAuth": "{{name}} 已透過 OAuth 連線。",
       "connectOAuth": "透過 {{name}} 的 OAuth 授權流程連線。",
       "saving": "正在儲存連線...",

@@ -205,7 +205,7 @@
     "connectionMessages": {
       "noAuth": "这个提供商无需本地凭证即可运行。",
       "needsOAuthClient": "{{name}} 需要先配置本地 OAuth client 才能连接。",
-      "manualOAuthClient": "使用为此连接手动输入的 OAuth app 连接 {{name}}。",
+      "manualOAuthClient": "使用自定义 OAuth App 连接 {{name}}。",
       "connectedOAuth": "{{name}} 已通过 OAuth 连接。",
       "connectOAuth": "通过 OAuth 授权流程连接 {{name}}。",
       "saving": "正在保存连接...",

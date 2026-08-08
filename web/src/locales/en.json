@@ -205,7 +205,7 @@
     "connectionMessages": {
       "noAuth": "This provider runs without local credentials.",
       "needsOAuthClient": "{{name}} needs a local OAuth client before it can connect.",
-      "manualOAuthClient": "Connect {{name}} with an OAuth app entered for this connection.",
+      "manualOAuthClient": "Connect {{name}} with a custom OAuth app.",
       "connectedOAuth": "{{name}} is connected through OAuth.",
       "connectOAuth": "Connect {{name}} through its OAuth authorization flow.",
       "saving": "Saving connection...",

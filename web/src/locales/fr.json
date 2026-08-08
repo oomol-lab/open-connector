@@ -205,7 +205,7 @@
     "connectionMessages": {
       "noAuth": "Ce fournisseur s’exécute sans identifiants locaux.",
       "needsOAuthClient": "{{name}} nécessite un client OAuth local avant la connexion.",
-      "manualOAuthClient": "Connectez {{name}} avec une application OAuth saisie pour cette connexion.",
+      "manualOAuthClient": "Connectez {{name}} avec une application OAuth personnalisée.",
       "connectedOAuth": "{{name}} est connecté via OAuth.",
       "connectOAuth": "Connectez {{name}} avec son flux d’autorisation OAuth.",
       "saving": "Enregistrement de la connexion...",
