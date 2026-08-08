@@ -193,6 +193,26 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("reports when connection-scoped OAuth clients are available to the console", async () => {
+    const availableApp = createTestServer([oauthProvider], {
+      allowedCustomOAuth: ["oauth_example"],
+      secretCodec: new AesGcmSecretCodec("test-encryption-key"),
+    }).createApp();
+    const unavailableApp = createTestServer([oauthProvider], {
+      allowedCustomOAuth: ["oauth_example"],
+    }).createApp();
+
+    const availableResponse = await availableApp.request("/api/oauth/configs");
+    const unavailableResponse = await unavailableApp.request("/api/oauth/configs");
+
+    await expect(availableResponse.json()).resolves.toMatchObject([
+      { service: "oauth_example", customClientAvailable: true },
+    ]);
+    await expect(unavailableResponse.json()).resolves.toMatchObject([
+      { service: "oauth_example", customClientAvailable: false },
+    ]);
+  });
+
   it("rejects custom OAuth clients outside the deployment allowlist", async () => {
     const app = createTestServer([oauthProvider], {
       secretCodec: new AesGcmSecretCodec("test-encryption-key"),
@@ -3104,10 +3124,15 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     providerLoader,
     store: new MemoryConnectionStore(),
   });
+  const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
+  const isCustomClientConfigAllowed = (service: string): boolean =>
+    allowedCustomOAuth.has("*") || allowedCustomOAuth.has(service);
   const clientConfigs = new OAuthClientConfigService({
     catalog,
     origin: "http://localhost:3000",
     store: new MemoryOAuthClientConfigStore(),
+    isCustomClientConfigAvailable: (service) =>
+      (options.secretCodec?.encrypted ?? false) && isCustomClientConfigAllowed(service),
   });
   const transitFiles =
     options.transitFiles ??
@@ -3139,8 +3164,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       connections,
       states: new MemoryOAuthStateStore(),
       secretCodec: options.secretCodec,
-      isCustomClientConfigAllowed: (service) =>
-        options.allowedCustomOAuth?.includes("*") === true || options.allowedCustomOAuth?.includes(service) === true,
+      isCustomClientConfigAllowed,
     }),
     actions: actionRunner,
     idempotency,

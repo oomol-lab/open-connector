@@ -103,6 +103,48 @@ describe("shouldEnableConnectionSubmit", () => {
       ),
     ).toBe(true);
   });
+
+  it("validates a manually entered OAuth client", () => {
+    const auth: AuthDefinition = {
+      type: "oauth2",
+      scopes: [],
+      tokenEndpointAuthMethod: "client_secret_post",
+      clientConfigFields: [
+        {
+          key: "tenant",
+          label: "Tenant",
+          inputType: "text",
+          required: true,
+          secret: false,
+        },
+      ],
+    };
+
+    expect(
+      shouldEnableConnectionSubmit(auth, undefined, {
+        clientId: "client-id",
+        clientSecret: "",
+        extraValues: { tenant: "common" },
+      }),
+    ).toBe(false);
+    expect(
+      shouldEnableConnectionSubmit(auth, undefined, {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        extraValues: { tenant: "common" },
+      }),
+    ).toBe(true);
+  });
+
+  it("allows public OAuth clients without a secret", () => {
+    expect(
+      shouldEnableConnectionSubmit({ type: "oauth2", scopes: [], tokenEndpointAuthMethod: "none" }, undefined, {
+        clientId: "public-client",
+        clientSecret: "",
+        extraValues: {},
+      }),
+    ).toBe(true);
+  });
 });
 
 describe("oauthClientActionLabel", () => {
@@ -218,6 +260,35 @@ describe("ProvidersPage OAuth client settings", () => {
     const markup = renderProvidersPage(providerData, "/providers/gmail");
 
     expect(markup).toContain("Reset OAuth Client");
+  });
+
+  it("offers manual input only when connection-scoped OAuth clients are available", () => {
+    const availableMarkup = renderProvidersPage(
+      {
+        ...providerData,
+        oauthConfigs: [
+          {
+            service: "gmail",
+            configured: false,
+            customClientAvailable: true,
+            clientId: null,
+            expectedRedirectUri: "http://localhost:3000/oauth/callback",
+          },
+        ],
+      },
+      "/providers/gmail",
+    );
+    const unavailableMarkup = renderProvidersPage(
+      {
+        ...providerData,
+        oauthConfigs: [{ service: "gmail", configured: false, customClientAvailable: false, clientId: null }],
+      },
+      "/providers/gmail",
+    );
+
+    expect(availableMarkup).toContain("Configured app");
+    expect(availableMarkup).toContain("Manual input");
+    expect(unavailableMarkup).not.toContain("Manual input");
   });
 });
 
@@ -526,6 +597,43 @@ describe("named provider connections", () => {
       service: "gmail",
       connectionName: "personal",
     });
+    expect(
+      oauthAuthorizationRequestBody("gmail", "work", {
+        auth: {
+          type: "oauth2",
+          scopes: [],
+          clientConfigFields: [
+            {
+              key: "tenant",
+              label: "Tenant",
+              inputType: "text",
+              required: true,
+              secret: false,
+            },
+            {
+              key: "appToken",
+              label: "App token",
+              inputType: "password",
+              required: true,
+              secret: true,
+              location: "secretExtra",
+            },
+          ],
+        },
+        values: {
+          clientId: "client-id",
+          clientSecret: "client-secret",
+          extraValues: { tenant: "common", appToken: "secret-token" },
+        },
+      }),
+    ).toEqual({
+      service: "gmail",
+      connectionName: "work",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "common" },
+      secretExtra: { appToken: "secret-token" },
+    });
   });
 });
 
@@ -722,7 +830,12 @@ describe("oauthConfigForProvider", () => {
     });
   });
 
-  it("ignores unconfigured OAuth config summaries", () => {
-    expect(oauthConfigForProvider([{ service: "gmail", configured: false, clientId: null }], "gmail")).toBeUndefined();
+  it("keeps unconfigured summaries so provider capabilities remain available", () => {
+    expect(
+      oauthConfigForProvider(
+        [{ service: "gmail", configured: false, customClientAvailable: true, clientId: null }],
+        "gmail",
+      ),
+    ).toMatchObject({ service: "gmail", configured: false, customClientAvailable: true });
   });
 });

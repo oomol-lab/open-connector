@@ -173,6 +173,11 @@
       "duplicate": "この名前はすでに使用されています。既存の接続を選択して更新してください。"
     },
     "connectionMethod": "接続方式",
+    "oauthAppMode": "OAuth App",
+    "oauthAppModes": {
+      "configured": "設定済み App",
+      "manual": "手動入力"
+    },
     "connectionDescriptions": {
       "noSetup": "このプロバイダーはローカル認証情報なしで実行できます。",
       "adding": "新しい名前付き接続を設定します。",
@@ -200,6 +205,7 @@
     "connectionMessages": {
       "noAuth": "このプロバイダーはローカル認証情報なしで実行できます。",
       "needsOAuthClient": "{{name}} を接続するには、先にローカル OAuth client を設定してください。",
+      "manualOAuthClient": "この接続用に入力した OAuth app で {{name}} に接続します。",
       "connectedOAuth": "{{name}} は OAuth で接続済みです。",
       "connectOAuth": "OAuth 認可フローで {{name}} に接続します。",
       "saving": "接続を保存中...",
@@ -234,6 +240,7 @@
       "configuredTitle": "OAuth client 設定済み",
       "requiredTitle": "OAuth client が必要です",
       "missingDescription": "{{name}} を接続するには、先にローカル OAuth client が必要です。",
+      "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "storedSecretHint": "保存済みの secret は表示されません。変更を保存するときは再入力してください。",

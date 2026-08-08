@@ -173,6 +173,11 @@
       "duplicate": "Это имя уже используется. Выберите это подключение, чтобы обновить его."
     },
     "connectionMethod": "Способ подключения",
+    "oauthAppMode": "Приложение OAuth",
+    "oauthAppModes": {
+      "configured": "Настроенное приложение",
+      "manual": "Ручной ввод"
+    },
     "connectionDescriptions": {
       "noSetup": "Этот провайдер может работать без локальных учетных данных.",
       "adding": "Настройте новое именованное подключение.",
@@ -200,6 +205,7 @@
     "connectionMessages": {
       "noAuth": "Этот провайдер работает без локальных учетных данных.",
       "needsOAuthClient": "{{name}} требует локальный OAuth client перед подключением.",
+      "manualOAuthClient": "Подключить {{name}} с приложением OAuth, введённым для этого подключения.",
       "connectedOAuth": "{{name}} подключен через OAuth.",
       "connectOAuth": "Подключите {{name}} через OAuth authorization flow.",
       "saving": "Сохранение подключения...",
@@ -234,6 +240,7 @@
       "configuredTitle": "OAuth client настроен",
       "requiredTitle": "Требуется OAuth client",
       "missingDescription": "{{name}} требует локальный OAuth client перед подключением.",
+      "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "storedSecretHint": "Сохраненный secret не отображается. Введите его снова при сохранении изменений.",

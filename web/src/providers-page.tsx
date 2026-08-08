@@ -101,6 +101,28 @@ interface OAuthConfigFormProps {
   onRefresh(): void;
 }
 
+type OAuthClientMode = "configured" | "manual";
+
+export interface ManualOAuthClientValues {
+  clientId: string;
+  clientSecret: string;
+  extraValues: Record<string, string>;
+}
+
+export interface OAuthAuthorizationRequestBody {
+  service: string;
+  connectionName: string;
+  clientId?: string;
+  clientSecret?: string;
+  extra?: Record<string, string>;
+  secretExtra?: Record<string, string>;
+}
+
+export interface ManualOAuthAuthorizationInput {
+  auth: Extract<AuthDefinition, { type: "oauth2" }>;
+  values: ManualOAuthClientValues;
+}
+
 type ProviderStatusFilter = "all" | "connected" | "not_connected" | "oauth_needs_config";
 
 const providerPageSize = 48;
@@ -829,8 +851,26 @@ export function shouldShowDisconnectAction(connection: AppData["connections"][nu
   return connection != null;
 }
 
-export function shouldEnableConnectionSubmit(auth: AuthDefinition, oauthConfig: OAuthConfig | undefined): boolean {
-  return auth.type !== "oauth2" || oauthConfig != null;
+export function shouldEnableConnectionSubmit(
+  auth: AuthDefinition,
+  oauthConfig: OAuthConfig | undefined,
+  manualValues?: ManualOAuthClientValues,
+): boolean {
+  if (auth.type !== "oauth2") {
+    return true;
+  }
+  if (!manualValues) {
+    return oauthConfig?.configured ?? false;
+  }
+  if (!manualValues.clientId.trim()) {
+    return false;
+  }
+  if (auth.tokenEndpointAuthMethod !== "none" && !manualValues.clientSecret.trim()) {
+    return false;
+  }
+  return clientConfigFieldsFor(auth).every(
+    (field) => !field.required || Boolean(manualValues.extraValues[field.key]?.trim()),
+  );
 }
 
 export function connectionSubmitLabel(auth: AuthDefinition, connected: boolean, providerName: string): string {
@@ -841,7 +881,7 @@ export function connectionSubmitLabel(auth: AuthDefinition, connected: boolean, 
 }
 
 export function oauthClientActionLabel(config: OAuthConfig | undefined): string {
-  return config ? "Edit OAuth Client" : "Configure OAuth Client";
+  return config?.configured ? "Edit OAuth Client" : "Configure OAuth Client";
 }
 
 export function shouldClearOAuthClientStatus(input: {
@@ -961,8 +1001,23 @@ export function credentialConnectionRequestBody(
   return authType === "no_auth" ? { authType, connectionName } : { authType, connectionName, values };
 }
 
-export function oauthAuthorizationRequestBody(service: string, connectionName: string): Record<string, string> {
-  return { service, connectionName };
+export function oauthAuthorizationRequestBody(
+  service: string,
+  connectionName: string,
+  manual?: ManualOAuthAuthorizationInput,
+): OAuthAuthorizationRequestBody {
+  const body: OAuthAuthorizationRequestBody = { service, connectionName };
+  if (manual) {
+    const { extra, secretExtra } = splitClientConfigFieldValues(
+      clientConfigFieldsFor(manual.auth),
+      manual.values.extraValues,
+    );
+    body.clientId = manual.values.clientId;
+    body.clientSecret = manual.values.clientSecret;
+    body.extra = extra;
+    body.secretExtra = secretExtra;
+  }
+  return body;
 }
 
 function ConnectionManager(props: ConnectionManagerProps): ReactNode {
@@ -1097,16 +1152,36 @@ function UnavailableProviderConnection(props: {
 function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
   const [values, setValues] = useState<Record<string, string>>({});
+  const [oauthClientMode, setOAuthClientMode] = useState<OAuthClientMode>("configured");
+  const [manualClientId, setManualClientId] = useState("");
+  const [manualClientSecret, setManualClientSecret] = useState("");
+  const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
+  const [manualExtraValues, setManualExtraValues] = useState(() =>
+    initialClientConfigFieldValues(manualClientConfigFields, undefined),
+  );
   const [status, setStatus] = useState<string | null>(null);
   const stopOAuthRefreshPolling = useRef<(() => void) | undefined>(undefined);
   const fields = credentialFieldsFor(props.auth);
   const showActions = shouldShowConnectionActions(props.auth);
   const connected = props.connection != null;
-  const needsOAuthClient = props.auth.type === "oauth2" && !props.oauthConfig;
+  const customOAuthClientAvailable =
+    props.auth.type === "oauth2" && (props.oauthConfig?.customClientAvailable ?? false);
+  const manualValues: ManualOAuthClientValues = {
+    clientId: manualClientId,
+    clientSecret: manualClientSecret,
+    extraValues: manualExtraValues,
+  };
+  const needsOAuthClient =
+    props.auth.type === "oauth2" && oauthClientMode === "configured" && !props.oauthConfig?.configured;
   const canSubmit =
     props.connectionName.length > 0 &&
     props.connectionNameValid &&
-    shouldEnableConnectionSubmit(props.auth, props.oauthConfig);
+    (oauthClientMode !== "manual" || customOAuthClientAvailable) &&
+    shouldEnableConnectionSubmit(
+      props.auth,
+      props.oauthConfig,
+      oauthClientMode === "manual" ? manualValues : undefined,
+    );
   const submitLabel =
     props.auth.type === "oauth2"
       ? t(connected ? "providers.buttons.reconnectProvider" : "providers.buttons.connectProvider", {
@@ -1127,6 +1202,12 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
       stopOAuthRefreshPolling.current = undefined;
     }
   }, [props.connection]);
+
+  useEffect(() => {
+    if (!customOAuthClientAvailable) {
+      setOAuthClientMode("configured");
+    }
+  }, [customOAuthClientAvailable]);
 
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -1163,7 +1244,11 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
       } else {
         const result = await apiPost<{ authorizationUrl?: string }>(
           `/api/oauth/authorizations`,
-          oauthAuthorizationRequestBody(props.provider.service, connectionName),
+          oauthAuthorizationRequestBody(
+            props.provider.service,
+            connectionName,
+            oauthClientMode === "manual" ? { auth: props.auth, values: manualValues } : undefined,
+          ),
         );
         if (result.authorizationUrl) {
           window.open(
@@ -1209,17 +1294,83 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           <AlertDescription>{t("providers.connectionMessages.noAuth")}</AlertDescription>
         </Alert>
       ) : null}
+      {props.auth.type === "oauth2" && customOAuthClientAvailable ? (
+        <ToggleGroup
+          className="auth-method-control bg-muted p-[3px]"
+          type="single"
+          value={oauthClientMode}
+          spacing={0}
+          aria-label={t("providers.oauthAppMode")}
+          onValueChange={(value) => {
+            if (value === "configured" || value === "manual") {
+              setOAuthClientMode(value);
+              setStatus(null);
+            }
+          }}
+        >
+          <ToggleGroupItem
+            value="configured"
+            className="h-[30px] rounded-md px-3 text-sm data-[state=on]:bg-background data-[state=on]:shadow-none"
+          >
+            {t("providers.oauthAppModes.configured")}
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="manual"
+            className="h-[30px] rounded-md px-3 text-sm data-[state=on]:bg-background data-[state=on]:shadow-none"
+          >
+            {t("providers.oauthAppModes.manual")}
+          </ToggleGroupItem>
+        </ToggleGroup>
+      ) : null}
       {props.auth.type === "oauth2" ? (
         <Alert variant={needsOAuthClient ? "warning" : "default"}>
           {needsOAuthClient ? <Settings size={16} /> : <ExternalLink size={16} />}
           <AlertDescription>
             {needsOAuthClient
               ? t("providers.connectionMessages.needsOAuthClient", { name: props.provider.displayName })
-              : connected
-                ? t("providers.connectionMessages.connectedOAuth", { name: props.provider.displayName })
-                : t("providers.connectionMessages.connectOAuth", { name: props.provider.displayName })}
+              : oauthClientMode === "manual"
+                ? t("providers.connectionMessages.manualOAuthClient", { name: props.provider.displayName })
+                : connected
+                  ? t("providers.connectionMessages.connectedOAuth", { name: props.provider.displayName })
+                  : t("providers.connectionMessages.connectOAuth", { name: props.provider.displayName })}
           </AlertDescription>
         </Alert>
+      ) : null}
+      {props.auth.type === "oauth2" && oauthClientMode === "manual" ? (
+        <>
+          {props.oauthConfig?.expectedRedirectUri ? (
+            <Label className="field">
+              <span>{t("providers.oauthClientSettings.callbackUrl")}</span>
+              <Input className="font-mono text-xs" value={props.oauthConfig.expectedRedirectUri} readOnly />
+            </Label>
+          ) : null}
+          <Label className="field">
+            <span>{t("providers.oauthClientSettings.clientId")}</span>
+            <Input value={manualClientId} onChange={(event) => setManualClientId(event.target.value)} required />
+          </Label>
+          <Label className="field">
+            <span>{t("providers.oauthClientSettings.clientSecret")}</span>
+            <Input
+              type="password"
+              value={manualClientSecret}
+              onChange={(event) => setManualClientSecret(event.target.value)}
+              required={props.auth.tokenEndpointAuthMethod !== "none"}
+            />
+          </Label>
+          {manualClientConfigFields.map((field) => (
+            <CredentialInput
+              key={field.key}
+              field={field}
+              value={manualExtraValues[field.key] ?? ""}
+              onChange={(value) =>
+                setManualExtraValues((previous) => ({
+                  ...previous,
+                  [field.key]: value,
+                }))
+              }
+            />
+          ))}
+        </>
       ) : null}
       {fields.map((field) => (
         <CredentialInput
@@ -1264,6 +1415,7 @@ function OAuthClientSettings(props: {
   onRefresh(): void;
 }): ReactNode {
   const t = useTranslate();
+  const configured = props.config?.configured ?? false;
   const [status, setStatus] = useState<string | null>(null);
   const previousProviderService = useRef(props.provider.service);
   const skipNextConfigClear = useRef(false);
@@ -1300,12 +1452,12 @@ function OAuthClientSettings(props: {
           <div className="oauth-client-title">
             <KeyRound size={16} />
             <strong>
-              {props.config
+              {configured
                 ? t("providers.oauthClientSettings.configuredTitle")
                 : t("providers.oauthClientSettings.requiredTitle")}
             </strong>
-            <Badge tone={props.config ? "success" : "warning"}>
-              {props.config ? t("providers.summary.configured") : t("providers.summary.required")}
+            <Badge tone={configured ? "success" : "warning"}>
+              {configured ? t("providers.summary.configured") : t("providers.summary.required")}
             </Badge>
           </div>
           <p className={props.config?.clientId ? "oauth-client-id" : "oauth-client-description"}>
@@ -1319,9 +1471,9 @@ function OAuthClientSettings(props: {
             <Settings size={14} />
             {props.expanded
               ? t("common.close")
-              : t(props.config ? "providers.buttons.editOAuthClient" : "providers.buttons.configureOAuthClient")}
+              : t(configured ? "providers.buttons.editOAuthClient" : "providers.buttons.configureOAuthClient")}
           </Button>
-          {props.config ? (
+          {configured ? (
             <Button variant="outline" size="sm" type="button" onClick={() => void reset()}>
               <Trash2 size={14} />
               {t("providers.buttons.resetOAuthClient")}
@@ -1379,6 +1531,7 @@ export function splitClientConfigFieldValues(
 
 function OAuthConfigForm(props: OAuthConfigFormProps): ReactNode {
   const t = useTranslate();
+  const configured = props.config?.configured ?? false;
   const clientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
   const [clientId, setClientId] = useState(() => props.config?.clientId ?? "");
   const [clientSecret, setClientSecret] = useState("");
@@ -1425,7 +1578,7 @@ function OAuthConfigForm(props: OAuthConfigFormProps): ReactNode {
       <Label className="field">
         <span>{t("providers.oauthClientSettings.clientSecret")}</span>
         <Input type="password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} />
-        {props.config ? <small>{t("providers.oauthClientSettings.storedSecretHint")}</small> : null}
+        {configured ? <small>{t("providers.oauthClientSettings.storedSecretHint")}</small> : null}
       </Label>
       {clientConfigFields.map((field) => (
         <CredentialInput
@@ -1438,7 +1591,7 @@ function OAuthConfigForm(props: OAuthConfigFormProps): ReactNode {
       <div className="button-row">
         <Button type="submit">
           <Settings size={16} />
-          {props.config ? t("providers.buttons.updateOAuthClient") : t("providers.buttons.saveOAuthClient")}
+          {configured ? t("providers.buttons.updateOAuthClient") : t("providers.buttons.saveOAuthClient")}
         </Button>
       </div>
       {status ? <FormStatus message={status} /> : null}
@@ -1504,7 +1657,7 @@ function compactProviderCount(value: number): string {
 }
 
 export function oauthConfigForProvider(configs: OAuthConfig[], service: string): OAuthConfig | undefined {
-  return configs.find((config) => config.service === service && config.configured);
+  return configs.find((config) => config.service === service);
 }
 
 const providerStatusOptions: Array<{ id: ProviderStatusFilter; labelKey: string }> = [

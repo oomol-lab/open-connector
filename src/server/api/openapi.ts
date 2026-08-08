@@ -336,6 +336,9 @@ export function createOpenApiDocument(
             configured: jsonSchema.boolean({
               description: "Whether a local OAuth client config is configured.",
             }),
+            customClientAvailable: jsonSchema.boolean({
+              description: "Whether the console may use a connection-scoped OAuth client for this provider.",
+            }),
             clientId: jsonSchema.nullable(jsonSchema.string({ description: "Configured OAuth client id." })),
             expectedRedirectUri: jsonSchema.string({
               description: "Callback URL to configure in the provider OAuth app.",
@@ -343,7 +346,7 @@ export function createOpenApiDocument(
             auth: jsonSchema.unknownObject("Provider OAuth capability metadata."),
           },
           {
-            required: ["service", "configured", "clientId", "expectedRedirectUri", "auth"],
+            required: ["service", "configured", "customClientAvailable", "clientId", "expectedRedirectUri", "auth"],
             description: "OAuth client config summary safe for the local console.",
           },
         ),

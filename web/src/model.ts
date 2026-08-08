@@ -11,6 +11,7 @@ export type AuthDefinition =
   | {
       type: "oauth2";
       scopes: string[];
+      tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
       clientConfigFields?: CredentialField[];
     };
 
@@ -83,6 +84,7 @@ export interface ConnectionRecord {
 export interface OAuthConfig {
   service: string;
   configured: boolean;
+  customClientAvailable?: boolean;
   clientId: string | null;
   expectedRedirectUri?: string;
   auth?: Extract<AuthDefinition, { type: "oauth2" }>;

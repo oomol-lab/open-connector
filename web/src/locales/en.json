@@ -173,6 +173,11 @@
       "duplicate": "This name is already in use. Select that connection to update it."
     },
     "connectionMethod": "Connection method",
+    "oauthAppMode": "OAuth app",
+    "oauthAppModes": {
+      "configured": "Configured app",
+      "manual": "Manual input"
+    },
     "connectionDescriptions": {
       "noSetup": "This provider can run without local credentials.",
       "adding": "Configure a new named connection.",
@@ -200,6 +205,7 @@
     "connectionMessages": {
       "noAuth": "This provider runs without local credentials.",
       "needsOAuthClient": "{{name}} needs a local OAuth client before it can connect.",
+      "manualOAuthClient": "Connect {{name}} with an OAuth app entered for this connection.",
       "connectedOAuth": "{{name}} is connected through OAuth.",
       "connectOAuth": "Connect {{name}} through its OAuth authorization flow.",
       "saving": "Saving connection...",
@@ -234,6 +240,7 @@
       "configuredTitle": "OAuth client configured",
       "requiredTitle": "OAuth client required",
       "missingDescription": "{{name}} needs a local OAuth client before connection.",
+      "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "storedSecretHint": "Stored secret is not shown. Enter it again when saving changes.",

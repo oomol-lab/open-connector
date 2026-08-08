@@ -26,14 +26,22 @@ export interface OAuthClientConfigInput {
 /**
  * OAuth client config summary safe to return to the local console.
  */
-export type OAuthClientConfigSummary = {
+export interface OAuthClientConfigSummary {
   service: string;
   configured: boolean;
+  customClientAvailable: boolean;
   clientId: string | null;
   expectedRedirectUri: string;
   auth: OAuth2AuthDefinition;
   extra: Record<string, string>;
-};
+}
+
+export interface OAuthClientConfigServiceOptions {
+  catalog: CatalogStore;
+  origin: string;
+  store: IOAuthClientConfigStore;
+  isCustomClientConfigAvailable?: (service: string) => boolean;
+}
 
 /**
  * Storage contract for local OAuth client configs.
@@ -57,11 +65,13 @@ export class OAuthClientConfigService {
   private readonly catalog: CatalogStore;
   private readonly origin: string;
   private readonly store: IOAuthClientConfigStore;
+  private readonly isCustomClientConfigAvailable: (service: string) => boolean;
 
-  constructor(input: { catalog: CatalogStore; origin: string; store: IOAuthClientConfigStore }) {
+  constructor(input: OAuthClientConfigServiceOptions) {
     this.catalog = input.catalog;
     this.origin = input.origin.replace(/\/$/, "");
     this.store = input.store;
+    this.isCustomClientConfigAvailable = input.isCustomClientConfigAvailable ?? (() => false);
   }
 
   async listConfigs(): Promise<OAuthClientConfigSummary[]> {
@@ -175,6 +185,7 @@ export class OAuthClientConfigService {
     return {
       service,
       configured: config != null,
+      customClientAvailable: this.isCustomClientConfigAvailable(service),
       clientId: config?.clientId ?? null,
       expectedRedirectUri: this.expectedRedirectUri(service),
       auth,

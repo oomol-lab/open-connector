@@ -173,6 +173,11 @@
       "duplicate": "此名稱已被使用，請選擇現有連線進行更新。"
     },
     "connectionMethod": "連線方式",
+    "oauthAppMode": "OAuth App",
+    "oauthAppModes": {
+      "configured": "已設定的 App",
+      "manual": "手動輸入"
+    },
     "connectionDescriptions": {
       "noSetup": "此服務提供者無須本機憑證即可執行。",
       "adding": "設定新的命名連線。",
@@ -200,6 +205,7 @@
     "connectionMessages": {
       "noAuth": "此服務提供者無須本機憑證即可執行。",
       "needsOAuthClient": "{{name}} 需要本機 OAuth 用戶端才能連線。",
+      "manualOAuthClient": "使用為此連線手動輸入的 OAuth app 連線 {{name}}。",
       "connectedOAuth": "{{name}} 已透過 OAuth 連線。",
       "connectOAuth": "透過 {{name}} 的 OAuth 授權流程連線。",
       "saving": "正在儲存連線...",
@@ -234,6 +240,7 @@
       "configuredTitle": "OAuth 用戶端已設定",
       "requiredTitle": "需要 OAuth 用戶端",
       "missingDescription": "{{name}} 需要本機 OAuth 用戶端才能連線。",
+      "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "storedSecretHint": "已儲存的 secret 不會顯示。儲存變更時請再次輸入。",
