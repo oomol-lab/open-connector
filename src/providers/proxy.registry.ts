@@ -132,6 +132,12 @@ export const registeredProxyExecutors: Record<string, ProviderProxyExecutor> = {
     baseUrl: "https://slides.googleapis.com/v1",
     auth: { type: "oauth_bearer" },
   }),
+  grafana: defineProviderProxy({
+    service: "grafana",
+    baseUrl: credentialProviderProxyBaseUrl("baseUrl"),
+    auth: { type: "bearer" },
+    allowedEndpoint: allowedPathPrefixes("/api"),
+  }),
   hackernews: defineProviderProxy({
     service: "hackernews",
     baseUrl: "https://hacker-news.firebaseio.com/v0",
