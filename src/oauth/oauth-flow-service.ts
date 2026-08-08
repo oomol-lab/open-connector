@@ -113,10 +113,11 @@ export class OAuthFlowService {
     );
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.responseType, "response_type", "code");
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.state, "state", state);
-    if (auth.scopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
+    const effectiveScopes = this.clientConfigs.getEffectiveScopes(service, config);
+    if (effectiveScopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
       authorizationUrl.searchParams.set(
         auth.authorizationRequestFields?.scope ?? "scope",
-        auth.scopes.join(auth.scopeSeparator ?? " "),
+        effectiveScopes.join(auth.scopeSeparator ?? " "),
       );
     }
     if (pkceCodeVerifier) {

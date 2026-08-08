@@ -26,6 +26,30 @@ describe("OAuthClientConfigService", () => {
       { service: "alpha", configured: false, clientId: null },
     ]);
   });
+
+  it("normalizes a requested scope subset and rejects provider-undeclared scopes", () => {
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example")]),
+      origin: "http://localhost:3000",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+
+    expect(
+      service.normalizeConfig("example", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: [" write ", "read", "write"],
+      }),
+    ).toMatchObject({ requestedScopes: ["write", "read"] });
+
+    expect(() =>
+      service.normalizeConfig("example", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: ["admin"],
+      }),
+    ).toThrowError("requestedScopes contains a scope not declared by example: admin.");
+  });
 });
 
 function oauthProvider(service: string): ProviderDefinition {
@@ -39,7 +63,7 @@ function oauthProvider(service: string): ProviderDefinition {
         type: "oauth2",
         authorizationUrl: "https://example.com/oauth/authorize",
         tokenUrl: "https://example.com/oauth/token",
-        scopes: ["read"],
+        scopes: ["read", "write"],
         tokenEndpointAuthMethod: "client_secret_post",
       },
     ],

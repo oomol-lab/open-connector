@@ -64,7 +64,7 @@ const oauthProvider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://example.com/oauth/authorize",
       tokenUrl: "https://example.com/oauth/token",
-      scopes: ["read"],
+      scopes: ["read", "write"],
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {
@@ -182,15 +182,17 @@ describe("ConnectServer", () => {
         connectionName: "work",
         clientId: "connection-client-id",
         clientSecret: "connection-client-secret",
+        requestedScopes: ["read"],
         secretExtra: { appBearerToken: "connection-app-token" },
       }),
     });
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
-      authorizationUrl: expect.stringContaining("client_id=connection-client-id"),
-      state: expect.any(String),
-    });
+    const body = (await response.json()) as { authorizationUrl: string; state: string };
+    const authorizationUrl = new URL(body.authorizationUrl);
+    expect(authorizationUrl.searchParams.get("client_id")).toBe("connection-client-id");
+    expect(authorizationUrl.searchParams.get("scope")).toBe("read");
+    expect(body.state).toEqual(expect.any(String));
   });
 
   it("reports when connection-scoped OAuth clients are available to the console", async () => {
@@ -298,6 +300,50 @@ describe("ConnectServer", () => {
     await expect(response.json()).resolves.toMatchObject({
       authorizationUrl: expect.stringContaining("client_id=global-client-id"),
     });
+  });
+
+  it("configures a safe OAuth scope subset through the public API", async () => {
+    const app = createTestServer([oauthProvider]).createApp();
+    const config = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: ["read"],
+      }),
+    });
+
+    expect(config.status).toBe(200);
+    await expect(config.json()).resolves.toMatchObject({
+      requestedScopes: ["read"],
+      effectiveScopes: ["read"],
+    });
+
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example" }),
+    });
+    const body = (await authorization.json()) as { authorizationUrl: string };
+
+    expect(authorization.status).toBe(200);
+    expect(new URL(body.authorizationUrl).searchParams.get("scope")).toBe("read");
+  });
+
+  it("rejects malformed or provider-undeclared requested scopes through the public API", async () => {
+    const app = createTestServer([oauthProvider]).createApp();
+
+    for (const requestedScopes of ["read", ["admin"]]) {
+      const response = await app.request("/api/oauth/configs/oauth_example", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", requestedScopes }),
+      });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+    }
   });
 
   it("lists providers without action schemas and serves full schemas per action", async () => {

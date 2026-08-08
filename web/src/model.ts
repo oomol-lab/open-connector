@@ -88,6 +88,8 @@ export interface OAuthConfig {
   clientId: string | null;
   expectedRedirectUri?: string;
   auth?: Extract<AuthDefinition, { type: "oauth2" }>;
+  requestedScopes?: string[] | null;
+  effectiveScopes?: string[];
   extra?: Record<string, string>;
 }
 

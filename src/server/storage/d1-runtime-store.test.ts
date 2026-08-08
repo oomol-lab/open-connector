@@ -32,6 +32,7 @@ describe("D1RuntimeDatabase", () => {
       service: "gmail",
       clientId: "client-id",
       clientSecret: "client-secret",
+      requestedScopes: ["gmail.readonly"],
       extra: { tenant: "default" },
       secretExtra: {},
     });
@@ -49,6 +50,7 @@ describe("D1RuntimeDatabase", () => {
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientId: "client-id",
       clientSecret: "client-secret",
+      requestedScopes: ["gmail.readonly"],
       extra: { tenant: "default" },
     });
     await expect(database.connectionStore.list()).resolves.toMatchObject([

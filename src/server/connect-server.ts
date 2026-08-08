@@ -21,7 +21,7 @@ import { compress } from "hono/compress";
 import { ConnectionError, defaultConnectionName } from "../connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
-import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
+import { optionalRecord, optionalString, requiredString, requiredStringArray } from "../core/cast.ts";
 import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
@@ -921,6 +921,7 @@ export class ConnectServer {
         service,
         clientId: optionalString(body.clientId) ?? "",
         clientSecret: optionalString(body.clientSecret) ?? "",
+        requestedScopes: readRequestedScopes(body),
         extra: optionalRecord(body.extra),
         secretExtra: optionalRecord(body.secretExtra),
       }),
@@ -1076,7 +1077,7 @@ export class ConnectServer {
 }
 
 function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientConfigInput | undefined {
-  const keys = ["clientId", "clientSecret", "extra", "secretExtra"];
+  const keys = ["clientId", "clientSecret", "requestedScopes", "extra", "secretExtra"];
   if (!keys.some((key) => key in body)) {
     return undefined;
   }
@@ -1084,9 +1085,21 @@ function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientC
   return {
     clientId: optionalString(body.clientId) ?? "",
     clientSecret: optionalString(body.clientSecret) ?? "",
+    requestedScopes: readRequestedScopes(body),
     extra: optionalRecord(body.extra),
     secretExtra: optionalRecord(body.secretExtra),
   };
+}
+
+function readRequestedScopes(body: Record<string, unknown>): string[] | undefined {
+  if (!("requestedScopes" in body)) {
+    return undefined;
+  }
+  return requiredStringArray(
+    body.requestedScopes,
+    "requestedScopes",
+    (message) => new HttpRequestError("invalid_input", `${message}.`),
+  );
 }
 
 interface ConnectionLogContext {

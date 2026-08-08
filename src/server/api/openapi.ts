@@ -86,6 +86,9 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
     clientSecret: jsonSchema.string({
       description: "OAuth app client secret. Optional only for public-client providers.",
     }),
+    requestedScopes: jsonSchema.array(jsonSchema.string(), {
+      description: "Provider-declared scope subset to request. Omit to use every provider default.",
+    }),
     extra: {
       type: "object",
       additionalProperties: { type: "string" },
@@ -344,9 +347,26 @@ export function createOpenApiDocument(
               description: "Callback URL to configure in the provider OAuth app.",
             }),
             auth: jsonSchema.unknownObject("Provider OAuth capability metadata."),
+            requestedScopes: jsonSchema.nullable(
+              jsonSchema.array(jsonSchema.string(), {
+                description: "Configured scope subset, or null when provider defaults are used.",
+              }),
+            ),
+            effectiveScopes: jsonSchema.array(jsonSchema.string(), {
+              description: "Scopes the runtime will include in new authorization requests.",
+            }),
           },
           {
-            required: ["service", "configured", "customClientAvailable", "clientId", "expectedRedirectUri", "auth"],
+            required: [
+              "service",
+              "configured",
+              "customClientAvailable",
+              "clientId",
+              "expectedRedirectUri",
+              "auth",
+              "requestedScopes",
+              "effectiveScopes",
+            ],
             description: "OAuth client config summary safe for the local console.",
           },
         ),
@@ -1028,6 +1048,9 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                 clientSecret: jsonSchema.string({
                   description: "Optional connection-scoped OAuth app client secret.",
                 }),
+                requestedScopes: jsonSchema.array(jsonSchema.string(), {
+                  description: "Optional provider-declared scope subset to request.",
+                }),
                 extra: {
                   type: "object",
                   additionalProperties: { type: "string" },
@@ -1074,7 +1097,7 @@ function createOAuthConfigPath(): Record<string, unknown> {
       tags: ["OAuth"],
       summary: "Upsert local OAuth client configuration.",
       description:
-        "Open-source users provide their own OAuth app. Additional extra fields are declared by provider catalog auth metadata.",
+        "Open-source users provide their own OAuth app. requestedScopes may narrow the provider-declared defaults but cannot add scopes. Additional extra fields are declared by provider catalog auth metadata.",
       requestBody: {
         required: true,
         content: {

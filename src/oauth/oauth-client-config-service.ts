@@ -1,7 +1,7 @@
 import type { CatalogStore } from "../catalog-store.ts";
 import type { OAuth2AuthDefinition, OAuthClientConfigFieldDefinition } from "../core/types.ts";
 
-import { optionalRecord, optionalString } from "../core/cast.ts";
+import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
 import { assertPublicHttpUrl } from "../core/request.ts";
 
@@ -12,6 +12,8 @@ export type OAuthClientConfig = {
   service: string;
   clientId: string;
   clientSecret: string;
+  /** Provider-declared scope subset to request. Omit to use every provider default. */
+  requestedScopes?: string[];
   extra: Record<string, string>;
   secretExtra: Record<string, string>;
 };
@@ -19,6 +21,8 @@ export type OAuthClientConfig = {
 export interface OAuthClientConfigInput {
   clientId: string;
   clientSecret: string;
+  /** Provider-declared scope subset to request. Omit to use every provider default. */
+  requestedScopes?: string[];
   extra?: Record<string, unknown>;
   secretExtra?: Record<string, unknown>;
 }
@@ -33,6 +37,8 @@ export interface OAuthClientConfigSummary {
   clientId: string | null;
   expectedRedirectUri: string;
   auth: OAuth2AuthDefinition;
+  requestedScopes: string[] | null;
+  effectiveScopes: string[];
   extra: Record<string, string>;
 }
 
@@ -86,13 +92,7 @@ export class OAuthClientConfigService {
     return normalizeStoredOAuthClientConfig(await this.store.get(service));
   }
 
-  async upsertConfig(input: {
-    service: string;
-    clientId: string;
-    clientSecret: string;
-    extra?: Record<string, unknown>;
-    secretExtra?: Record<string, unknown>;
-  }): Promise<OAuthClientConfigSummary> {
+  async upsertConfig(input: OAuthClientConfigInput & { service: string }): Promise<OAuthClientConfigSummary> {
     const config = this.normalizeConfig(input.service, input);
     await this.store.set(config);
     return this.toSummary(input.service, this.getOAuthDefinition(input.service), config);
@@ -114,6 +114,7 @@ export class OAuthClientConfigService {
       service,
       clientId,
       clientSecret,
+      requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, auth.scopes),
       extra: normalizeCredentialValues({
         fields: filterClientConfigFields(auth.clientConfigFields, "extra"),
         values: pickClientConfigFieldValues(auth.clientConfigFields, submittedExtra, "extra"),
@@ -170,6 +171,12 @@ export class OAuthClientConfigService {
     return auth;
   }
 
+  /** Resolve the validated scopes an authorization request should send. */
+  getEffectiveScopes(service: string, config: OAuthClientConfig): string[] {
+    const auth = this.getOAuthDefinition(service);
+    return normalizeRequestedScopes(service, config.requestedScopes, auth.scopes) ?? [...auth.scopes];
+  }
+
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
     return this.catalog.providers.flatMap((provider) => {
       const auth = provider.auth.find((auth) => auth.type === "oauth2");
@@ -189,6 +196,8 @@ export class OAuthClientConfigService {
       clientId: config?.clientId ?? null,
       expectedRedirectUri: this.expectedRedirectUri(service),
       auth,
+      requestedScopes: config?.requestedScopes ?? null,
+      effectiveScopes: normalizeRequestedScopes(service, config?.requestedScopes, auth.scopes) ?? [...auth.scopes],
       extra: config?.extra ?? {},
     };
   }
@@ -209,6 +218,7 @@ export function readOAuthClientConfigMetadata(
     service,
     clientId,
     clientSecret: optionalString(value?.clientSecret) ?? "",
+    requestedScopes: optionalStringArray(value?.requestedScopes),
     extra: readStringRecord(value?.extra),
     secretExtra: readStringRecord(value?.secretExtra),
   };
@@ -267,6 +277,35 @@ function normalizeStoredOAuthClientConfig(config: OAuthClientConfig | undefined)
     ...config,
     secretExtra: config.secretExtra ?? {},
   };
+}
+
+function normalizeRequestedScopes(
+  service: string,
+  requestedScopes: string[] | undefined,
+  providerScopes: string[],
+): string[] | undefined {
+  if (requestedScopes === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(requestedScopes) || requestedScopes.some((scope) => typeof scope !== "string")) {
+    throw new OAuthClientConfigError("invalid_input", "requestedScopes must be an array of strings.");
+  }
+
+  const normalized = [...new Set(requestedScopes.map((scope) => scope.trim()))];
+  if (normalized.some((scope) => !scope)) {
+    throw new OAuthClientConfigError("invalid_input", "requestedScopes must not contain empty values.");
+  }
+
+  const declaredScopes = new Set(providerScopes);
+  const undeclaredScope = normalized.find((scope) => !declaredScopes.has(scope));
+  if (undeclaredScope) {
+    throw new OAuthClientConfigError(
+      "invalid_input",
+      `requestedScopes contains a scope not declared by ${service}: ${undeclaredScope}.`,
+    );
+  }
+
+  return normalized;
 }
 
 function readStringRecord(value: unknown): Record<string, string> {

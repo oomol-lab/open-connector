@@ -8,6 +8,7 @@ export type JsonRequestBody = {
   values?: Record<string, unknown>;
   clientId?: unknown;
   clientSecret?: unknown;
+  requestedScopes?: unknown;
   extra?: unknown;
   [key: string]: unknown;
 };

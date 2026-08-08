@@ -153,6 +153,21 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
   -d '{"clientId":"...","clientSecret":"..."}'
 ```
 
+By default, authorization requests include every scope declared by the provider. A deployment that
+needs a smaller permission surface can save `requestedScopes` with the OAuth client configuration:
+
+```bash
+curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
+  -H 'content-type: application/json' \
+  -d '{"clientId":"...","clientSecret":"...","requestedScopes":["read:user"]}'
+```
+
+Every requested scope must come from the provider's declared `auth[].scopes`. The runtime rejects
+unknown scopes instead of silently expanding authorization. Omit `requestedScopes` to keep the
+provider defaults, or send an empty array when the provider accepts an authorization request
+without a `scope` parameter. Config summaries expose both `requestedScopes` and the resulting
+`effectiveScopes`.
+
 Some providers declare additional OAuth client fields in `auth[].clientConfigFields`; send those as
 `extra`.
 
@@ -178,6 +193,8 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
   -H 'content-type: application/json' \
   -d '{"service":"github","connectionName":"work","clientId":"...","clientSecret":"..."}'
 ```
+
+Connection-scoped OAuth client requests may include the same validated `requestedScopes` subset.
 
 The callback URL is still the deployment's `/oauth/callback` (for example,
 `https://connect.example.com/oauth/callback`), and the connection keeps the supplied app values

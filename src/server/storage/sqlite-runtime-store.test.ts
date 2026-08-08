@@ -100,6 +100,7 @@ describe("SqliteRuntimeDatabase", () => {
       service: "gmail",
       clientId: "client-id",
       clientSecret: "client-secret",
+      requestedScopes: ["gmail.readonly"],
       extra: { tenant: "default" },
       secretExtra: {},
     });
@@ -132,6 +133,7 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(second.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientId: "client-id",
       clientSecret: "client-secret",
+      requestedScopes: ["gmail.readonly"],
       extra: { tenant: "default" },
     });
     await expect(second.oauthStateStore.take("state-1")).resolves.toMatchObject({
