@@ -9,7 +9,6 @@ import {
   gmailReadScopes,
   gmailSendScopes,
   gmailSettingsBasicScopes,
-  gmailSettingsSharingScopes,
 } from "./scopes.ts";
 
 const service = "gmail";
@@ -595,14 +594,14 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "get_auto_forwarding",
     description: "Get the current Gmail auto-forwarding configuration.",
-    requiredScopes: gmailSettingsSharingScopes,
+    requiredScopes: gmailSettingsBasicScopes,
     properties: withUser(),
     outputSchema: gmailObject,
   }),
   action({
     name: "list_forwarding_addresses",
     description: "List registered forwarding addresses.",
-    requiredScopes: gmailSettingsSharingScopes,
+    requiredScopes: gmailSettingsBasicScopes,
     properties: withUser(),
     outputSchema: gmailObject,
   }),
