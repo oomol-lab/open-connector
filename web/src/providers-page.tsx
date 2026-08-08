@@ -75,8 +75,10 @@ interface ConnectionFormProps {
   connectionNameValid: boolean;
   connection?: AppData["connections"][number];
   oauthConfig?: OAuthConfig;
+  oauthClientMode: OAuthClientMode;
   onRefresh(): void;
   onConfigureOAuthClient(): void;
+  onOAuthClientModeChange(mode: OAuthClientMode): void;
   onConnectionPendingChange?(connectionName?: string): void;
 }
 
@@ -567,12 +569,25 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
       : undefined;
   const [selectedAuthType, setSelectedAuthType] = useState(() => initialAuthType(props.provider, selectedConnection));
   const [oauthClientExpanded, setOAuthClientExpanded] = useState(false);
+  const [oauthClientMode, setOAuthClientMode] = useState<OAuthClientMode>("configured");
+  const changeOAuthClientMode = useCallback((mode: OAuthClientMode) => {
+    setOAuthClientMode(mode);
+    if (mode === "manual") {
+      setOAuthClientExpanded(false);
+    }
+  }, []);
   const selectedAuth = props.provider.auth.find((auth) => auth.type === selectedAuthType) ?? props.provider.auth[0];
   const oauthAuth = props.provider.auth.find((auth) => auth.type === "oauth2");
   const hasMultipleAuthMethods = props.provider.auth.length > 1;
   const locallyAvailable = isProviderLocallyAvailable(props.provider);
   const supportsCredentialConnections = props.provider.auth.some((auth) => shouldShowConnectionActions(auth));
   const connectionEditorOpen = !supportsCredentialConnections || creatingConnection || selectedConnection != null;
+  const showOAuthClientSettings =
+    connectionEditorOpen &&
+    locallyAvailable &&
+    oauthAuth != null &&
+    selectedAuth?.type === "oauth2" &&
+    oauthClientMode === "configured";
   const formConnectionName = creatingConnection ? newConnectionName.trim() : (selectedConnectionName ?? "");
   const newConnectionNameError = creatingConnection
     ? validateNewConnectionName(newConnectionName, props.connections)
@@ -602,6 +617,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
         setNewConnectionName("");
         setPendingConnectionName(undefined);
         setSelectedAuthType(initialAuthType(props.provider, createdConnection));
+        setOAuthClientMode("configured");
       }
       return;
     }
@@ -614,6 +630,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
       } else {
         setSelectedConnectionName(undefined);
         setSelectedAuthType(initialAuthType(props.provider, undefined));
+        setOAuthClientMode("configured");
       }
       return;
     }
@@ -638,6 +655,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
     setCreatingConnection(false);
     setNewConnectionName("");
     setSelectedAuthType(initialAuthType(props.provider, connection));
+    setOAuthClientMode("configured");
   }
 
   function startNewConnection(): void {
@@ -647,12 +665,14 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
     setPendingConnectionName(undefined);
     setSelectedAuthType(initialAuthType(props.provider, undefined));
     setOAuthClientExpanded(false);
+    setOAuthClientMode("configured");
   }
 
   function cancelNewConnection(): void {
     setCreatingConnection(false);
     setNewConnectionName("");
     setPendingConnectionName(undefined);
+    setOAuthClientMode("configured");
   }
 
   function clearConnectionSelection(): void {
@@ -662,6 +682,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
     setPendingConnectionName(undefined);
     setSelectedAuthType(initialAuthType(props.provider, undefined));
     setOAuthClientExpanded(false);
+    setOAuthClientMode("configured");
   }
 
   return (
@@ -736,7 +757,12 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               value={selectedAuth?.type}
               spacing={0}
               aria-label={t("providers.connectionMethod")}
-              onValueChange={(value) => (value ? setSelectedAuthType(value as AuthDefinition["type"]) : undefined)}
+              onValueChange={(value) => {
+                if (value) {
+                  setSelectedAuthType(value as AuthDefinition["type"]);
+                  setOAuthClientMode("configured");
+                }
+              }}
             >
               {props.provider.auth.map((auth) => (
                 <ToggleGroupItem
@@ -765,8 +791,10 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               connectionName={formConnectionName}
               connectionNameValid={!newConnectionNameError}
               oauthConfig={props.oauthConfig}
+              oauthClientMode={oauthClientMode}
               onRefresh={props.onRefresh}
               onConfigureOAuthClient={() => setOAuthClientExpanded(true)}
+              onOAuthClientModeChange={changeOAuthClientMode}
               onConnectionPendingChange={creatingConnection ? setPendingConnectionName : undefined}
             />
           ) : (
@@ -775,7 +803,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               description={t("providers.noConnectionMethodDescription")}
             />
           )}
-          {connectionEditorOpen && locallyAvailable && oauthAuth && selectedAuth?.type === "oauth2" ? (
+          {showOAuthClientSettings ? (
             <div className="provider-inline-oauth-settings">
               <h3>{t("providers.oauthClient")}</h3>
               <OAuthClientSettings
@@ -1152,7 +1180,6 @@ function UnavailableProviderConnection(props: {
 function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
   const [values, setValues] = useState<Record<string, string>>({});
-  const [oauthClientMode, setOAuthClientMode] = useState<OAuthClientMode>("configured");
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1172,15 +1199,15 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
     extraValues: manualExtraValues,
   };
   const needsOAuthClient =
-    props.auth.type === "oauth2" && oauthClientMode === "configured" && !props.oauthConfig?.configured;
+    props.auth.type === "oauth2" && props.oauthClientMode === "configured" && !props.oauthConfig?.configured;
   const canSubmit =
     props.connectionName.length > 0 &&
     props.connectionNameValid &&
-    (oauthClientMode !== "manual" || customOAuthClientAvailable) &&
+    (props.oauthClientMode !== "manual" || customOAuthClientAvailable) &&
     shouldEnableConnectionSubmit(
       props.auth,
       props.oauthConfig,
-      oauthClientMode === "manual" ? manualValues : undefined,
+      props.oauthClientMode === "manual" ? manualValues : undefined,
     );
   const submitLabel =
     props.auth.type === "oauth2"
@@ -1204,10 +1231,10 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   }, [props.connection]);
 
   useEffect(() => {
-    if (!customOAuthClientAvailable) {
-      setOAuthClientMode("configured");
+    if (!customOAuthClientAvailable && props.oauthClientMode === "manual") {
+      props.onOAuthClientModeChange("configured");
     }
-  }, [customOAuthClientAvailable]);
+  }, [customOAuthClientAvailable, props.oauthClientMode, props.onOAuthClientModeChange]);
 
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -1247,7 +1274,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           oauthAuthorizationRequestBody(
             props.provider.service,
             connectionName,
-            oauthClientMode === "manual" ? { auth: props.auth, values: manualValues } : undefined,
+            props.oauthClientMode === "manual" ? { auth: props.auth, values: manualValues } : undefined,
           ),
         );
         if (result.authorizationUrl) {
@@ -1298,12 +1325,12 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         <ToggleGroup
           className="auth-method-control bg-muted p-[3px]"
           type="single"
-          value={oauthClientMode}
+          value={props.oauthClientMode}
           spacing={0}
           aria-label={t("providers.oauthAppMode")}
           onValueChange={(value) => {
             if (value === "configured" || value === "manual") {
-              setOAuthClientMode(value);
+              props.onOAuthClientModeChange(value);
               setStatus(null);
             }
           }}
@@ -1328,7 +1355,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           <AlertDescription>
             {needsOAuthClient
               ? t("providers.connectionMessages.needsOAuthClient", { name: props.provider.displayName })
-              : oauthClientMode === "manual"
+              : props.oauthClientMode === "manual"
                 ? t("providers.connectionMessages.manualOAuthClient", { name: props.provider.displayName })
                 : connected
                   ? t("providers.connectionMessages.connectedOAuth", { name: props.provider.displayName })
@@ -1336,7 +1363,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           </AlertDescription>
         </Alert>
       ) : null}
-      {props.auth.type === "oauth2" && oauthClientMode === "manual" ? (
+      {props.auth.type === "oauth2" && props.oauthClientMode === "manual" ? (
         <>
           {props.oauthConfig?.expectedRedirectUri ? (
             <Label className="field">
