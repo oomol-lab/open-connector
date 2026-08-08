@@ -32,14 +32,23 @@ export interface OAuthAuthorizationCompleteInput {
 /**
  * Short-lived OAuth state stored while the browser completes authorization.
  */
-export type OAuthAuthorizationState = {
+export interface OAuthAuthorizationState {
   service: string;
   connectionName?: string;
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
   clientConfig?: OAuthClientConfig;
-};
+}
+
+export interface OAuthFlowServiceOptions {
+  clientConfigs: OAuthClientConfigService;
+  connections: ConnectionService;
+  states: IOAuthStateStore;
+  stateMaxAgeMs?: number;
+  secretCodec?: ISecretCodec;
+  isCustomClientConfigAllowed?: (service: string) => boolean;
+}
 
 /**
  * Storage contract for pending OAuth authorization states.
@@ -60,14 +69,7 @@ export class OAuthFlowService {
   private readonly secretCodec?: ISecretCodec;
   private readonly isCustomClientConfigAllowed: (service: string) => boolean;
 
-  constructor(input: {
-    clientConfigs: OAuthClientConfigService;
-    connections: ConnectionService;
-    states: IOAuthStateStore;
-    stateMaxAgeMs?: number;
-    secretCodec?: ISecretCodec;
-    isCustomClientConfigAllowed?: (service: string) => boolean;
-  }) {
+  constructor(input: OAuthFlowServiceOptions) {
     this.clientConfigs = input.clientConfigs;
     this.connections = input.connections;
     this.states = input.states;
@@ -171,7 +173,7 @@ export class OAuthFlowService {
         oauthClientId: config.clientId,
         oauthClientExtra: config.extra,
         oauthClientSecretExtra: config.secretExtra,
-        ...(pending.clientConfig ? { oauthClientConfig: config } : {}),
+        oauthClientConfig: pending.clientConfig ? config : undefined,
       },
     };
 

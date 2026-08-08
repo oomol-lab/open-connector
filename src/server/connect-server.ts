@@ -830,7 +830,11 @@ export class ConnectServer {
       );
       return context.json(authorization);
     } catch (error) {
-      if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
+      if (
+        error instanceof OAuthClientConfigError ||
+        error instanceof OAuthFlowError ||
+        error instanceof ConnectionError
+      ) {
         this.options.logger?.warn(
           {
             errorCode: error.code,

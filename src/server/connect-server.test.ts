@@ -235,6 +235,30 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("returns invalid input for an incomplete custom OAuth client", async () => {
+    const app = createTestServer([oauthProvider], {
+      allowedCustomOAuth: ["oauth_example"],
+      secretCodec: new AesGcmSecretCodec("test-encryption-key"),
+    }).createApp();
+
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        service: "oauth_example",
+        clientId: "connection-client-id",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "invalid_input",
+        message: "clientSecret is required.",
+      },
+    });
+  });
+
   it("keeps console OAuth without client fields on the global OAuth config", async () => {
     const app = createTestServer([oauthProvider]).createApp();
     const config = await app.request("/api/oauth/configs/oauth_example", {

@@ -33,8 +33,8 @@ state, timestamps, and expiry are also stored as unencrypted metadata. The encry
 stored by OpenConnector; if it is lost, encrypted records cannot be recovered.
 
 Without `OOMOL_CONNECT_ENCRYPTION_KEY`, the runtime stays usable for local development and prints a
-startup warning. In that mode, credentials, OAuth client configuration, and completed idempotent
-Action responses are stored as plaintext. Action responses may contain sensitive provider data, so
+startup warning. In that mode, credentials, OAuth client configuration, pending OAuth state, and
+completed idempotent Action responses are stored as plaintext. Action responses may contain sensitive provider data, so
 treat `connect.sqlite` or D1 as a sensitive data store even after a response is no longer eligible
 for replay.
 
@@ -169,8 +169,9 @@ callback URL, the runtime stores the OAuth credential as the default connection.
 
 The console can start a connection-scoped OAuth flow with a custom app without changing the global
 config. Set `OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH` to `*` or a comma-separated provider list, and set
-`OOMOL_CONNECT_ENCRYPTION_KEY`. Then include `clientId` and `clientSecret` (plus provider-declared
-`extra` or `secretExtra` fields) in the existing OAuth authorization request:
+`OOMOL_CONNECT_ENCRYPTION_KEY`. Then include `clientId` and, when required by the provider,
+`clientSecret` (plus provider-declared `extra` or `secretExtra` fields) in the existing OAuth
+authorization request:
 
 ```bash
 curl -s -X POST http://localhost:3000/api/oauth/authorizations \

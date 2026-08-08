@@ -637,13 +637,15 @@ describe("OAuthFlowService", () => {
   });
 });
 
+interface CreateServicesOptions {
+  stateMaxAgeMs?: number;
+  allowedCustomOAuth?: string[];
+  secretCodec?: ISecretCodec;
+}
+
 function createServices(
   providers: ProviderDefinition[],
-  options: {
-    stateMaxAgeMs?: number;
-    allowedCustomOAuth?: string[];
-    secretCodec?: ISecretCodec;
-  } = {},
+  options: CreateServicesOptions = {},
 ): {
   clientConfigs: OAuthClientConfigService;
   connections: ConnectionService;
