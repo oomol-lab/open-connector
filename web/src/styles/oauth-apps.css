@@ -1,0 +1,128 @@
+.oauth-apps-panel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--console-shadow-sm);
+}
+
+.oauth-apps-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  align-items: center;
+  gap: 20px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.oauth-apps-header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.oauth-apps-header h2,
+.oauth-apps-header p {
+  margin: 0;
+}
+
+.oauth-apps-header h2 {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.oauth-apps-header p {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.oauth-apps-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.oauth-apps-search > svg {
+  position: absolute;
+  z-index: 1;
+  left: 10px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.oauth-apps-search [data-slot="input"] {
+  padding-left: 32px;
+}
+
+.oauth-app-row {
+  display: grid;
+  grid-template-columns: auto minmax(140px, 1fr) minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 16px;
+}
+
+.oauth-app-row + .oauth-app-row {
+  border-top: 1px solid var(--border);
+}
+
+.oauth-app-provider,
+.oauth-app-status {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.oauth-app-provider strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.oauth-app-provider span,
+.oauth-app-status code {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oauth-app-status [data-slot="badge"] {
+  justify-self: start;
+}
+
+.oauth-app-status code {
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 720px) {
+  .oauth-apps-header {
+    grid-template-columns: 1fr;
+  }
+
+  .oauth-app-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .oauth-app-status {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .oauth-app-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .oauth-app-row > [data-slot="button"] {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .oauth-app-status {
+    grid-column: 2;
+  }
+}

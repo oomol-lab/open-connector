@@ -40,6 +40,7 @@
   "nav": {
     "overview": "Обзор",
     "providers": "Провайдеры",
+    "oauthApps": "OAuth Apps",
     "actions": "Действия",
     "runs": "Запуски",
     "access": "API Key",
@@ -66,6 +67,10 @@
       "providers": {
         "title": "Провайдеры",
         "subtitle": "Подключайте провайдеры и проверяйте их возможности."
+      },
+      "oauthApps": {
+        "title": "OAuth Apps",
+        "subtitle": "Управляйте OAuth App по умолчанию для каждого провайдера."
       },
       "actions": {
         "title": "Действия",
@@ -175,8 +180,8 @@
     "connectionMethod": "Способ подключения",
     "oauthAppMode": "Приложение OAuth",
     "oauthAppModes": {
-      "configured": "Настроенное приложение",
-      "manual": "Ручной ввод"
+      "configured": "App по умолчанию",
+      "manual": "Своя App"
     },
     "connectionDescriptions": {
       "noSetup": "Этот провайдер может работать без локальных учетных данных.",
@@ -189,7 +194,6 @@
     },
     "noConnectionMethodTitle": "Нет способа подключения",
     "noConnectionMethodDescription": "Этому провайдеру не нужны локальные учетные данные.",
-    "oauthClient": "OAuth Client",
     "scopes": "Scopes",
     "scopesDescription": "Scopes, которые запрашивают локальные действия этого провайдера.",
     "actions": "Действия",
@@ -219,8 +223,8 @@
       "disconnectFailed": "Не удалось отключиться."
     },
     "buttons": {
-      "configureOAuthClient": "Настроить OAuth Client",
-      "editOAuthClient": "Изменить OAuth Client",
+      "configureOAuthClient": "Настроить App по умолчанию",
+      "editOAuthClient": "Изменить App по умолчанию",
       "saveConnection": "Сохранить подключение",
       "addConnection": "Добавить подключение",
       "cancel": "Отмена",
@@ -232,14 +236,11 @@
       "connectProvider": "Подключить {{name}}",
       "reconnectProvider": "Переподключить {{name}}",
       "disconnect": "Отключить",
-      "saveOAuthClient": "Сохранить OAuth Client",
-      "updateOAuthClient": "Обновить OAuth Client",
-      "resetOAuthClient": "Сбросить OAuth Client"
+      "saveOAuthClient": "Сохранить App по умолчанию",
+      "updateOAuthClient": "Обновить App по умолчанию",
+      "resetOAuthClient": "Сбросить App по умолчанию"
     },
     "oauthClientSettings": {
-      "configuredTitle": "OAuth client настроен",
-      "requiredTitle": "Требуется OAuth client",
-      "missingDescription": "{{name}} требует локальный OAuth client перед подключением.",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -258,6 +259,23 @@
     "categoryFilterLabel": "Категория",
     "categories": {
       "all": "Все категории"
+    }
+  },
+  "oauthApps": {
+    "title": "OAuth Apps по умолчанию",
+    "description": "Управляйте OAuth App, используемой по умолчанию для каждого провайдера.",
+    "searchPlaceholder": "Поиск провайдеров",
+    "configured": "Настроено",
+    "notConfigured": "Не настроено",
+    "configure": "Настроить",
+    "edit": "Изменить",
+    "emptyTitle": "Нет OAuth-провайдеров",
+    "emptyDescription": "В текущем каталоге нет провайдеров с поддержкой OAuth.",
+    "noResultsTitle": "Провайдеры не найдены",
+    "noResultsDescription": "Попробуйте другой запрос.",
+    "dialog": {
+      "configureTitle": "Настроить OAuth App для {{name}}",
+      "editTitle": "Изменить OAuth App для {{name}}"
     }
   },
   "actions": {
@@ -326,10 +344,10 @@
   },
   "access": {
     "title": "Runtime Tokens",
-    "description": "Выдавайте bearer tokens для клиентов /v1 и MCP. Новые tokens показываются один раз.",
+    "description": "Аутентификация клиентов /v1 и MCP.",
     "policy": {
-      "title": "Runtime Policy",
-      "description": "Управляйте actions и provider proxies, доступными этому runtime.",
+      "title": "Access Policy",
+      "description": "Ограничивайте actions и provider proxy requests.",
       "rulesHint": "Block rules имеют приоритет. Непустые allowlists пересекаются между deployment, runtime и token layers. По одному rule в строке.",
       "deployment": "Deployment policy (только чтение)",
       "runtime": "Runtime policy",
@@ -391,7 +409,7 @@
         "none": "Нет rules"
       },
       "runtimeSummary": {
-        "title": "Настройка runtime policy",
+        "title": "Runtime policy",
         "updated": "Последнее обновление {{date}}",
         "edit": "Изменить policy"
       },
@@ -400,7 +418,7 @@
         "restricted": "Allow rules: {{count}}",
         "withBlocked": "{{allow}} · Всегда блокировать: {{count}}"
       },
-      "layerSummary": "Actions: {{action}} · Provider proxy: {{proxy}}",
+      "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
       "tokenSummary": "Action allow rules: {{allowed}} · Action block rules: {{blocked}} · Proxy grants: {{proxies}} · Дополнительно ограничено runtime-базой",
       "editor": {
         "title": "Изменить runtime policy",
@@ -482,8 +500,8 @@
     "copiedToken": "Скопировано",
     "copyRuntimeToken": "Копировать runtime token",
     "copiedRuntimeToken": "Runtime token скопирован",
-    "noTokensTitle": "Runtime tokens пока нет",
-    "noTokensDescription": "Создайте token перед подключением MCP client или локального script. Token показывается один раз.",
+    "noTokensTitle": "Нет tokens",
+    "noTokensDescription": "Создайте token для доступа к /v1 или MCP.",
     "table": {
       "name": "Имя",
       "status": "Статус",

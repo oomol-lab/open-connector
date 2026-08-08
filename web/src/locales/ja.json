@@ -40,6 +40,7 @@
   "nav": {
     "overview": "概要",
     "providers": "プロバイダー",
+    "oauthApps": "OAuth Apps",
     "actions": "アクション",
     "runs": "実行履歴",
     "access": "API Key",
@@ -66,6 +67,10 @@
       "providers": {
         "title": "プロバイダー",
         "subtitle": "プロバイダーを接続し、機能を確認します。"
+      },
+      "oauthApps": {
+        "title": "OAuth Apps",
+        "subtitle": "各プロバイダーのデフォルト OAuth App を管理します。"
       },
       "actions": {
         "title": "アクション",
@@ -175,8 +180,8 @@
     "connectionMethod": "接続方式",
     "oauthAppMode": "OAuth App",
     "oauthAppModes": {
-      "configured": "設定済み App",
-      "manual": "手動入力"
+      "configured": "デフォルト App",
+      "manual": "カスタム App"
     },
     "connectionDescriptions": {
       "noSetup": "このプロバイダーはローカル認証情報なしで実行できます。",
@@ -189,7 +194,6 @@
     },
     "noConnectionMethodTitle": "接続方式はありません",
     "noConnectionMethodDescription": "このプロバイダーはローカル認証情報を必要としません。",
-    "oauthClient": "OAuth Client",
     "scopes": "Scopes",
     "scopesDescription": "このプロバイダーのローカルアクションが要求する scopes です。",
     "actions": "アクション",
@@ -219,8 +223,8 @@
       "disconnectFailed": "切断に失敗しました。"
     },
     "buttons": {
-      "configureOAuthClient": "OAuth Client を設定",
-      "editOAuthClient": "OAuth Client を編集",
+      "configureOAuthClient": "デフォルト App を設定",
+      "editOAuthClient": "デフォルト App を編集",
       "saveConnection": "接続を保存",
       "addConnection": "接続を追加",
       "cancel": "キャンセル",
@@ -232,14 +236,11 @@
       "connectProvider": "{{name}} に接続",
       "reconnectProvider": "{{name}} に再接続",
       "disconnect": "切断",
-      "saveOAuthClient": "OAuth Client を保存",
-      "updateOAuthClient": "OAuth Client を更新",
-      "resetOAuthClient": "OAuth Client をリセット"
+      "saveOAuthClient": "デフォルト App を保存",
+      "updateOAuthClient": "デフォルト App を更新",
+      "resetOAuthClient": "デフォルト App をリセット"
     },
     "oauthClientSettings": {
-      "configuredTitle": "OAuth client 設定済み",
-      "requiredTitle": "OAuth client が必要です",
-      "missingDescription": "{{name}} を接続するには、先にローカル OAuth client が必要です。",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -258,6 +259,23 @@
     "categoryFilterLabel": "カテゴリー",
     "categories": {
       "all": "すべてのカテゴリー"
+    }
+  },
+  "oauthApps": {
+    "title": "デフォルト OAuth Apps",
+    "description": "各プロバイダーがデフォルトで使用する OAuth App を管理します。",
+    "searchPlaceholder": "プロバイダーを検索",
+    "configured": "設定済み",
+    "notConfigured": "未設定",
+    "configure": "設定",
+    "edit": "編集",
+    "emptyTitle": "OAuth プロバイダーがありません",
+    "emptyDescription": "現在のカタログには OAuth 対応プロバイダーがありません。",
+    "noResultsTitle": "プロバイダーが見つかりません",
+    "noResultsDescription": "別のキーワードで検索してください。",
+    "dialog": {
+      "configureTitle": "{{name}} OAuth App を設定",
+      "editTitle": "{{name}} OAuth App を編集"
     }
   },
   "actions": {
@@ -326,10 +344,10 @@
   },
   "access": {
     "title": "Runtime Tokens",
-    "description": "/v1 と MCP client 向けの bearer token を発行します。新しい token は一度だけ表示されます。",
+    "description": "/v1 と MCP client の認証に使用します。",
     "policy": {
-      "title": "Runtime Policy",
-      "description": "この runtime で実行できる action と provider proxy を制御します。",
+      "title": "Access Policy",
+      "description": "Action と provider proxy request を制限します。",
       "rulesHint": "Block rule が優先されます。空でない allowlist は deployment、runtime、token の各 layer で共通する範囲に制限されます。1 行に 1 rule を入力してください。",
       "deployment": "Deployment policy（読み取り専用）",
       "runtime": "Runtime policy",
@@ -391,7 +409,7 @@
         "none": "Rules なし"
       },
       "runtimeSummary": {
-        "title": "Runtime policy 設定",
+        "title": "Runtime policy",
         "updated": "最終更新 {{date}}",
         "edit": "Policy を編集"
       },
@@ -400,7 +418,7 @@
         "restricted": "Allow rules: {{count}}",
         "withBlocked": "{{allow}} · 常に block: {{count}}"
       },
-      "layerSummary": "Actions: {{action}} · Provider proxy: {{proxy}}",
+      "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
       "tokenSummary": "Action allow rules {{allowed}} · Action block rules {{blocked}} · Proxy grants {{proxies}} · Runtime ベースラインでさらに制限",
       "editor": {
         "title": "Runtime policy を編集",
@@ -482,8 +500,8 @@
     "copiedToken": "コピーしました",
     "copyRuntimeToken": "runtime token をコピー",
     "copiedRuntimeToken": "runtime token をコピーしました",
-    "noTokensTitle": "runtime token はまだありません",
-    "noTokensDescription": "MCP client またはローカル script を接続する前に作成してください。token は一度だけ表示されます。",
+    "noTokensTitle": "Token はありません",
+    "noTokensDescription": "/v1 または MCP 用の token を作成します。",
     "table": {
       "name": "名前",
       "status": "ステータス",

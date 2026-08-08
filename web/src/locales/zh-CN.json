@@ -40,6 +40,7 @@
   "nav": {
     "overview": "概览",
     "providers": "提供商",
+    "oauthApps": "OAuth Apps",
     "actions": "操作",
     "runs": "运行记录",
     "access": "API Key",
@@ -66,6 +67,10 @@
       "providers": {
         "title": "提供商",
         "subtitle": "连接提供商并查看能力配置。"
+      },
+      "oauthApps": {
+        "title": "OAuth Apps",
+        "subtitle": "管理各提供商默认使用的 OAuth App。"
       },
       "actions": {
         "title": "操作",
@@ -175,8 +180,8 @@
     "connectionMethod": "连接方式",
     "oauthAppMode": "OAuth App",
     "oauthAppModes": {
-      "configured": "已配置的 App",
-      "manual": "手动输入"
+      "configured": "默认 App",
+      "manual": "自定义 App"
     },
     "connectionDescriptions": {
       "noSetup": "这个提供商无需本地凭证即可运行。",
@@ -189,7 +194,6 @@
     },
     "noConnectionMethodTitle": "没有连接方式",
     "noConnectionMethodDescription": "这个提供商不需要本地凭证。",
-    "oauthClient": "OAuth Client",
     "scopes": "Scopes",
     "scopesDescription": "这个提供商的本地操作需要的 scopes。",
     "actions": "操作",
@@ -219,8 +223,8 @@
       "disconnectFailed": "断开连接失败。"
     },
     "buttons": {
-      "configureOAuthClient": "配置 OAuth Client",
-      "editOAuthClient": "编辑 OAuth Client",
+      "configureOAuthClient": "配置默认 App",
+      "editOAuthClient": "编辑默认 App",
       "saveConnection": "保存连接",
       "addConnection": "添加连接",
       "cancel": "取消",
@@ -232,14 +236,11 @@
       "connectProvider": "连接 {{name}}",
       "reconnectProvider": "重新连接 {{name}}",
       "disconnect": "断开连接",
-      "saveOAuthClient": "保存 OAuth Client",
-      "updateOAuthClient": "更新 OAuth Client",
-      "resetOAuthClient": "重置 OAuth Client"
+      "saveOAuthClient": "保存默认 App",
+      "updateOAuthClient": "更新默认 App",
+      "resetOAuthClient": "重置默认 App"
     },
     "oauthClientSettings": {
-      "configuredTitle": "OAuth client 已配置",
-      "requiredTitle": "需要 OAuth client",
-      "missingDescription": "{{name}} 需要先配置本地 OAuth client 才能连接。",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -258,6 +259,23 @@
     "categoryFilterLabel": "分类",
     "categories": {
       "all": "所有分类"
+    }
+  },
+  "oauthApps": {
+    "title": "默认 OAuth Apps",
+    "description": "管理各提供商默认使用的 OAuth App。",
+    "searchPlaceholder": "搜索提供商",
+    "configured": "已配置",
+    "notConfigured": "未配置",
+    "configure": "配置",
+    "edit": "编辑",
+    "emptyTitle": "暂无 OAuth 提供商",
+    "emptyDescription": "当前目录中没有支持 OAuth 的提供商。",
+    "noResultsTitle": "未找到提供商",
+    "noResultsDescription": "请尝试其他搜索词。",
+    "dialog": {
+      "configureTitle": "配置 {{name}} OAuth App",
+      "editTitle": "编辑 {{name}} OAuth App"
     }
   },
   "actions": {
@@ -326,10 +344,10 @@
   },
   "access": {
     "title": "运行时 Token",
-    "description": "为 /v1 和 MCP 客户端签发 bearer token。新 token 只会显示一次。",
+    "description": "用于 /v1 和 MCP 客户端认证。",
     "policy": {
-      "title": "运行时策略",
-      "description": "控制这个运行时可以执行哪些操作和提供商代理请求。",
+      "title": "访问策略",
+      "description": "限制操作和提供商代理请求。",
       "rulesHint": "Block 规则优先；非空 allowlist 会在部署、运行时和 token 层之间取交集。每行填写一条规则。",
       "deployment": "部署策略（只读）",
       "runtime": "运行时策略",
@@ -391,7 +409,7 @@
         "none": "无规则"
       },
       "runtimeSummary": {
-        "title": "运行时策略配置",
+        "title": "运行时策略",
         "updated": "最后更新于 {{date}}",
         "edit": "编辑策略"
       },
@@ -400,7 +418,7 @@
         "restricted": "允许规则 {{count}} 条",
         "withBlocked": "{{allow}} · 始终阻止 {{count}} 条"
       },
-      "layerSummary": "操作：{{action}} · 提供商代理请求：{{proxy}}",
+      "layerSummary": "操作：{{action}} · 代理：{{proxy}}",
       "tokenSummary": "操作允许规则 {{allowed}} 条 · 操作阻止规则 {{blocked}} 条 · Proxy 授权 {{proxies}} 条 · 仍受运行时基线限制",
       "editor": {
         "title": "编辑运行时策略",
@@ -482,8 +500,8 @@
     "copiedToken": "已复制",
     "copyRuntimeToken": "复制运行时 token",
     "copiedRuntimeToken": "已复制运行时 token",
-    "noTokensTitle": "暂无运行时 token",
-    "noTokensDescription": "连接 MCP 客户端或本地脚本前先创建一个 token。token 只会显示一次。",
+    "noTokensTitle": "暂无 Token",
+    "noTokensDescription": "创建 Token 后即可访问 /v1 或 MCP。",
     "table": {
       "name": "名称",
       "status": "状态",

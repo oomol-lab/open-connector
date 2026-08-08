@@ -7,15 +7,75 @@
   gap: 16px;
 }
 
-.runtime-policy-panel {
-  display: grid;
-  gap: 16px;
+.access-section-disclosure {
   padding-bottom: 24px;
   border-bottom: 1px solid var(--border);
 }
 
+.access-section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 3px;
+}
+
+.access-section-heading h2,
+.access-section-heading p {
+  margin: 0;
+}
+
+.access-section-heading h2 {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.access-section-heading p {
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.access-section-disclosure > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.access-section-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.access-section-disclosure > summary > svg {
+  color: var(--muted-foreground);
+  transition: transform 150ms ease-out;
+}
+
+.access-section-disclosure[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.access-section-content {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.access-settings-list {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.access-settings-list > .policy-layer-disclosure,
+.access-settings-list > .runtime-policy-summary {
+  border: 0;
+  border-radius: 0;
+}
+
+.access-settings-list > * + * {
+  border-top: 1px solid var(--border);
+}
+
 .policy-section-title,
-.runtime-policy-editor-heading,
 .policy-rule-heading {
   display: flex;
   align-items: flex-start;
@@ -24,7 +84,6 @@
 }
 
 .policy-section-title h3,
-.runtime-policy-editor-heading h3,
 .policy-impact-panel > h3 {
   margin: 0;
   font-size: 14px;
@@ -32,7 +91,6 @@
 }
 
 .policy-section-title p,
-.runtime-policy-editor-heading p,
 .policy-impact-panel > p {
   color: var(--muted-foreground);
   font-size: 13px;
@@ -173,13 +231,22 @@
 .policy-decision-trace summary,
 .policy-layer-disclosure summary,
 .policy-advanced-editor summary {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 8px 12px;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 12px;
+  min-height: 54px;
+  padding: 9px 12px;
   cursor: pointer;
   list-style: none;
+}
+
+.policy-decision-trace summary,
+.policy-advanced-editor summary {
+  display: flex;
+  min-height: 42px;
+  gap: 10px;
+  padding: 8px 12px;
 }
 
 .policy-decision-trace summary::-webkit-details-marker,
@@ -188,29 +255,47 @@
   display: none;
 }
 
-.policy-decision-trace summary > code,
-.policy-layer-disclosure summary > span {
+.policy-decision-trace summary > code {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.policy-decision-trace summary > span,
-.policy-layer-disclosure summary > span {
+.policy-decision-trace summary > span {
   color: var(--muted-foreground);
   font-size: 12px;
 }
 
-.policy-decision-trace summary > span {
-  margin-left: auto;
-}
-
 .policy-decision-trace summary > svg:last-child,
 .policy-layer-disclosure summary > svg:last-child {
-  margin-left: auto;
   color: var(--muted-foreground);
   transition: transform 150ms ease-out;
+}
+
+.access-setting-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.access-setting-copy strong,
+.access-setting-copy span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.access-setting-copy strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.access-setting-copy span {
+  color: var(--muted-foreground);
+  font-size: 12px;
 }
 
 .policy-decision-trace[open] summary > svg:last-child,
@@ -293,38 +378,34 @@
 
 .runtime-policy-summary {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-  min-height: 58px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--background);
-}
-
-.runtime-policy-summary > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.runtime-policy-summary > p,
-.runtime-policy-summary > span {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 12px;
+  min-height: 54px;
+  padding: 9px 12px;
+  background: transparent;
 }
 
 .runtime-policy-editor {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--background);
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.runtime-policy-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-right: 28px;
+}
+
+.runtime-policy-dialog-heading > [data-slot="badge"] {
+  flex: 0 0 auto;
+}
+
+.runtime-policy-dialog .policy-impact-panel {
+  top: 0;
 }
 
 .runtime-policy-editor-grid {
@@ -577,18 +658,7 @@
   font-size: 12px;
 }
 
-.access-panel-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
-  align-items: start;
-}
-
-.access-panel .detail-heading {
-  margin-bottom: 0;
-}
-
-.access-panel-header > [data-slot="button"] {
+.access-section-heading > [data-slot="button"] {
   justify-self: end;
 }
 
@@ -598,7 +668,7 @@
 }
 
 @media (max-width: 960px) {
-  .access-panel-header {
+  .access-panel > .access-section-heading {
     grid-template-columns: 1fr;
   }
 
@@ -610,7 +680,7 @@
     position: static;
   }
 
-  .access-panel-header > [data-slot="button"] {
+  .access-panel > .access-section-heading > [data-slot="button"] {
     justify-self: start;
   }
 }
@@ -657,8 +727,12 @@
     display: flex;
   }
 
-  .runtime-policy-summary > p,
-  .runtime-policy-summary > span {
+  .runtime-policy-summary > .access-setting-copy {
+    flex: 1;
+  }
+
+  .access-setting-copy strong,
+  .access-setting-copy span {
     overflow: visible;
     white-space: normal;
   }
@@ -669,6 +743,10 @@
 
   .runtime-policy-actions .button-row {
     width: 100%;
+  }
+
+  .runtime-policy-dialog-heading {
+    display: grid;
   }
 
   .policy-rule-row {

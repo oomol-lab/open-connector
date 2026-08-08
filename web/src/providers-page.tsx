@@ -2,7 +2,6 @@ import type {
   AppData,
   AuthDefinition,
   ConnectionRecord,
-  CredentialField,
   OAuthConfig,
   ProviderConnectionStatus,
   ProviderDefinition,
@@ -18,7 +17,6 @@ import {
   ChevronRight,
   CircleSlash2,
   ExternalLink,
-  KeyRound,
   Plus,
   Search,
   Settings,
@@ -28,6 +26,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { apiDelete, apiPost, apiPut } from "./api";
+import { CredentialInput } from "./credential-input";
 import {
   credentialFieldsFor,
   filterProviders,
@@ -37,13 +36,18 @@ import {
   sortProviders,
   usableConnectionsForService,
 } from "./model";
+import {
+  clientConfigFieldsFor,
+  initialClientConfigFieldValues,
+  OAuthAppDialog,
+  splitClientConfigFieldValues,
+} from "./oauth-app-form";
 import { Badge, EmptyState, FormStatus, ProviderIcon, TagList } from "./shared-ui";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface ProvidersPageProps {
@@ -94,13 +98,6 @@ interface ConnectionManagerProps {
   onCancel(): void;
   onClearSelection(): void;
   onNewConnectionNameChange(connectionName: string): void;
-}
-
-interface OAuthConfigFormProps {
-  provider: ProviderDefinition;
-  auth: AuthDefinition;
-  config?: OAuthConfig;
-  onRefresh(): void;
 }
 
 type OAuthClientMode = "configured" | "manual";
@@ -568,26 +565,15 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
       ? connectionByName(props.connections, selectedConnectionName)
       : undefined;
   const [selectedAuthType, setSelectedAuthType] = useState(() => initialAuthType(props.provider, selectedConnection));
-  const [oauthClientExpanded, setOAuthClientExpanded] = useState(false);
+  const [oauthAppDialogOpen, setOAuthAppDialogOpen] = useState(false);
   const [oauthClientMode, setOAuthClientMode] = useState<OAuthClientMode>("configured");
-  const changeOAuthClientMode = useCallback((mode: OAuthClientMode) => {
-    setOAuthClientMode(mode);
-    if (mode === "manual") {
-      setOAuthClientExpanded(false);
-    }
-  }, []);
+  const changeOAuthClientMode = useCallback((mode: OAuthClientMode) => setOAuthClientMode(mode), []);
   const selectedAuth = props.provider.auth.find((auth) => auth.type === selectedAuthType) ?? props.provider.auth[0];
   const oauthAuth = props.provider.auth.find((auth) => auth.type === "oauth2");
   const hasMultipleAuthMethods = props.provider.auth.length > 1;
   const locallyAvailable = isProviderLocallyAvailable(props.provider);
   const supportsCredentialConnections = props.provider.auth.some((auth) => shouldShowConnectionActions(auth));
   const connectionEditorOpen = !supportsCredentialConnections || creatingConnection || selectedConnection != null;
-  const showOAuthClientSettings =
-    connectionEditorOpen &&
-    locallyAvailable &&
-    oauthAuth != null &&
-    selectedAuth?.type === "oauth2" &&
-    oauthClientMode === "configured";
   const formConnectionName = creatingConnection ? newConnectionName.trim() : (selectedConnectionName ?? "");
   const newConnectionNameError = creatingConnection
     ? validateNewConnectionName(newConnectionName, props.connections)
@@ -645,10 +631,6 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
     setSelectedAuthType(initialAuthType(props.provider, selectedConnection));
   }, [props.provider.service, selectedConnection?.authType]);
 
-  useEffect(() => {
-    setOAuthClientExpanded(false);
-  }, [props.provider.service, props.oauthConfig?.clientId]);
-
   function selectConnection(connectionName: string): void {
     const connection = connectionByName(props.connections, connectionName);
     setSelectedConnectionName(connectionName);
@@ -664,7 +646,6 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
     setNewConnectionName("");
     setPendingConnectionName(undefined);
     setSelectedAuthType(initialAuthType(props.provider, undefined));
-    setOAuthClientExpanded(false);
     setOAuthClientMode("configured");
   }
 
@@ -681,7 +662,6 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
     setNewConnectionName("");
     setPendingConnectionName(undefined);
     setSelectedAuthType(initialAuthType(props.provider, undefined));
-    setOAuthClientExpanded(false);
     setOAuthClientMode("configured");
   }
 
@@ -793,7 +773,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               oauthConfig={props.oauthConfig}
               oauthClientMode={oauthClientMode}
               onRefresh={props.onRefresh}
-              onConfigureOAuthClient={() => setOAuthClientExpanded(true)}
+              onConfigureOAuthClient={() => setOAuthAppDialogOpen(true)}
               onOAuthClientModeChange={changeOAuthClientMode}
               onConnectionPendingChange={creatingConnection ? setPendingConnectionName : undefined}
             />
@@ -803,19 +783,6 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               description={t("providers.noConnectionMethodDescription")}
             />
           )}
-          {showOAuthClientSettings ? (
-            <div className="provider-inline-oauth-settings">
-              <h3>{t("providers.oauthClient")}</h3>
-              <OAuthClientSettings
-                provider={props.provider}
-                auth={oauthAuth}
-                config={props.oauthConfig}
-                expanded={oauthClientExpanded}
-                onToggle={() => setOAuthClientExpanded((value) => !value)}
-                onRefresh={props.onRefresh}
-              />
-            </div>
-          ) : null}
         </section>
 
         <section className="detail-panel provider-detail-card">
@@ -859,12 +826,18 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
           )}
         </section>
       </div>
+      {oauthAuth ? (
+        <OAuthAppDialog
+          open={oauthAppDialogOpen}
+          provider={props.provider}
+          auth={oauthAuth}
+          config={props.oauthConfig}
+          onOpenChange={setOAuthAppDialogOpen}
+          onRefresh={props.onRefresh}
+        />
+      ) : null}
     </div>
   );
-}
-
-export function shouldShowOAuthClientForm(auth: AuthDefinition | undefined, expanded: boolean): boolean {
-  return auth?.type === "oauth2" && expanded;
 }
 
 export function isProviderLocallyAvailable(provider: ProviderDefinition): boolean {
@@ -906,17 +879,6 @@ export function connectionSubmitLabel(auth: AuthDefinition, connected: boolean, 
     return `${connected ? "Reconnect" : "Connect"} ${providerName}`;
   }
   return "Save Connection";
-}
-
-export function oauthClientActionLabel(config: OAuthConfig | undefined): string {
-  return config?.configured ? "Edit OAuth Client" : "Configure OAuth Client";
-}
-
-export function shouldClearOAuthClientStatus(input: {
-  providerChanged: boolean;
-  skipNextConfigClear: boolean;
-}): boolean {
-  return input.providerChanged || !input.skipNextConfigClear;
 }
 
 export interface OAuthPopupPlacement {
@@ -1415,10 +1377,18 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
               {t("providers.buttons.configureOAuthClient")}
             </Button>
           ) : (
-            <Button type="submit" disabled={!canSubmit}>
-              {props.auth.type === "oauth2" ? <ExternalLink size={16} /> : <Check size={16} />}
-              {submitLabel}
-            </Button>
+            <>
+              <Button type="submit" disabled={!canSubmit}>
+                {props.auth.type === "oauth2" ? <ExternalLink size={16} /> : <Check size={16} />}
+                {submitLabel}
+              </Button>
+              {props.auth.type === "oauth2" && props.oauthClientMode === "configured" ? (
+                <Button variant="outline" type="button" onClick={props.onConfigureOAuthClient}>
+                  <Settings size={16} />
+                  {t("providers.buttons.editOAuthClient")}
+                </Button>
+              ) : null}
+            </>
           )}
           {shouldShowDisconnectAction(props.connection) ? (
             <Button variant="outline" type="button" onClick={() => void disconnect()}>
@@ -1433,226 +1403,6 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   );
 }
 
-function OAuthClientSettings(props: {
-  provider: ProviderDefinition;
-  auth: AuthDefinition;
-  config?: OAuthConfig;
-  expanded: boolean;
-  onToggle(): void;
-  onRefresh(): void;
-}): ReactNode {
-  const t = useTranslate();
-  const configured = props.config?.configured ?? false;
-  const [status, setStatus] = useState<string | null>(null);
-  const previousProviderService = useRef(props.provider.service);
-  const skipNextConfigClear = useRef(false);
-
-  useEffect(() => {
-    const providerChanged = previousProviderService.current !== props.provider.service;
-    previousProviderService.current = props.provider.service;
-    const shouldClear = shouldClearOAuthClientStatus({
-      providerChanged,
-      skipNextConfigClear: skipNextConfigClear.current,
-    });
-    skipNextConfigClear.current = false;
-    if (shouldClear) {
-      setStatus(null);
-    }
-  }, [props.provider.service, props.config?.clientId]);
-
-  async function reset(): Promise<void> {
-    setStatus(t("providers.oauthClientSettings.resetting"));
-    try {
-      await apiDelete(`/api/oauth/configs/${props.provider.service}`);
-      setStatus(t("providers.oauthClientSettings.reset"));
-      skipNextConfigClear.current = true;
-      props.onRefresh();
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : t("providers.oauthClientSettings.resetFailed"));
-    }
-  }
-
-  return (
-    <div className="oauth-client-settings">
-      <div className="oauth-client-summary">
-        <div className="oauth-client-summary-main">
-          <div className="oauth-client-title">
-            <KeyRound size={16} />
-            <strong>
-              {configured
-                ? t("providers.oauthClientSettings.configuredTitle")
-                : t("providers.oauthClientSettings.requiredTitle")}
-            </strong>
-            <Badge tone={configured ? "success" : "warning"}>
-              {configured ? t("providers.summary.configured") : t("providers.summary.required")}
-            </Badge>
-          </div>
-          <p className={props.config?.clientId ? "oauth-client-id" : "oauth-client-description"}>
-            {props.config?.clientId
-              ? props.config.clientId
-              : t("providers.oauthClientSettings.missingDescription", { name: props.provider.displayName })}
-          </p>
-        </div>
-        <div className="oauth-client-actions">
-          <Button variant="outline" size="sm" type="button" onClick={props.onToggle}>
-            <Settings size={14} />
-            {props.expanded
-              ? t("common.close")
-              : t(configured ? "providers.buttons.editOAuthClient" : "providers.buttons.configureOAuthClient")}
-          </Button>
-          {configured ? (
-            <Button variant="outline" size="sm" type="button" onClick={() => void reset()}>
-              <Trash2 size={14} />
-              {t("providers.buttons.resetOAuthClient")}
-            </Button>
-          ) : null}
-        </div>
-      </div>
-      {status ? <FormStatus message={status} /> : null}
-      {shouldShowOAuthClientForm(props.auth, props.expanded) ? (
-        <div className="oauth-client-editor">
-          <OAuthConfigForm
-            provider={props.provider}
-            auth={props.auth}
-            config={props.config}
-            onRefresh={props.onRefresh}
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function clientConfigFieldsFor(auth: AuthDefinition): CredentialField[] {
-  return auth.type === "oauth2" ? (auth.clientConfigFields ?? []) : [];
-}
-
-export function initialClientConfigFieldValues(
-  fields: CredentialField[],
-  config: OAuthConfig | undefined,
-): Record<string, string> {
-  const values: Record<string, string> = {};
-  for (const field of fields) {
-    values[field.key] = config?.extra?.[field.key] ?? field.defaultValue ?? "";
-  }
-  return values;
-}
-
-export interface ClientConfigFieldValues {
-  extra: Record<string, string>;
-  secretExtra: Record<string, string>;
-}
-
-export function splitClientConfigFieldValues(
-  fields: CredentialField[],
-  values: Record<string, string>,
-): ClientConfigFieldValues {
-  const extra: Record<string, string> = {};
-  const secretExtra: Record<string, string> = {};
-  for (const field of fields) {
-    const target = field.location === "secretExtra" ? secretExtra : extra;
-    target[field.key] = values[field.key] ?? "";
-  }
-  return { extra, secretExtra };
-}
-
-function OAuthConfigForm(props: OAuthConfigFormProps): ReactNode {
-  const t = useTranslate();
-  const configured = props.config?.configured ?? false;
-  const clientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
-  const [clientId, setClientId] = useState(() => props.config?.clientId ?? "");
-  const [clientSecret, setClientSecret] = useState("");
-  const [extraValues, setExtraValues] = useState(() =>
-    initialClientConfigFieldValues(clientConfigFields, props.config),
-  );
-  const [status, setStatus] = useState<string | null>(null);
-
-  useEffect(() => {
-    setClientId(props.config?.clientId ?? "");
-    setClientSecret("");
-    setExtraValues(initialClientConfigFieldValues(clientConfigFields, props.config));
-    setStatus(null);
-    // Deliberately excludes `props.config` itself: it gets a new object identity on every
-    // background data refresh (for example when an unrelated OAuth popup completes elsewhere),
-    // and resetting on that would wipe out an in-progress edit. `clientId` changing is what
-    // actually signals a real context switch (provider changed, config saved, or config reset).
-  }, [props.provider.service, props.config?.clientId, clientConfigFields]);
-
-  async function submit(event: FormEvent): Promise<void> {
-    event.preventDefault();
-    setStatus(t("providers.oauthClientSettings.saving"));
-    try {
-      const { extra, secretExtra } = splitClientConfigFieldValues(clientConfigFields, extraValues);
-      await apiPut(`/api/oauth/configs/${props.provider.service}`, {
-        clientId,
-        clientSecret,
-        extra,
-        secretExtra,
-      });
-      setStatus(t("providers.oauthClientSettings.saved"));
-      props.onRefresh();
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : t("providers.oauthClientSettings.failed"));
-    }
-  }
-
-  return (
-    <form className="form-grid" onSubmit={(event) => void submit(event)}>
-      <Label className="field">
-        <span>{t("providers.oauthClientSettings.clientId")}</span>
-        <Input value={clientId} onChange={(event) => setClientId(event.target.value)} />
-      </Label>
-      <Label className="field">
-        <span>{t("providers.oauthClientSettings.clientSecret")}</span>
-        <Input type="password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} />
-        {configured ? <small>{t("providers.oauthClientSettings.storedSecretHint")}</small> : null}
-      </Label>
-      {clientConfigFields.map((field) => (
-        <CredentialInput
-          key={field.key}
-          field={field}
-          value={extraValues[field.key] ?? ""}
-          onChange={(value) => setExtraValues((previous) => ({ ...previous, [field.key]: value }))}
-        />
-      ))}
-      <div className="button-row">
-        <Button type="submit">
-          <Settings size={16} />
-          {configured ? t("providers.buttons.updateOAuthClient") : t("providers.buttons.saveOAuthClient")}
-        </Button>
-      </div>
-      {status ? <FormStatus message={status} /> : null}
-    </form>
-  );
-}
-
-function CredentialInput(props: { field: CredentialField; value: string; onChange(value: string): void }): ReactNode {
-  return (
-    <Label className="field">
-      <span>{props.field.label}</span>
-      {props.field.inputType === "textarea" || props.field.inputType === "json" ? (
-        <Textarea
-          className="min-h-24 resize-y font-mono text-xs leading-relaxed"
-          value={props.value}
-          placeholder={props.field.placeholder}
-          onChange={(event) => props.onChange(event.target.value)}
-          required={props.field.required}
-          spellCheck={false}
-        />
-      ) : (
-        <Input
-          type={props.field.secret ? "password" : "text"}
-          placeholder={props.field.placeholder}
-          value={props.value}
-          onChange={(event) => props.onChange(event.target.value)}
-          required={props.field.required}
-        />
-      )}
-      {props.field.description ? <small>{props.field.description}</small> : null}
-    </Label>
-  );
-}
-
 function filterProvidersByStatus(
   providers: ProviderDefinition[],
   status: ProviderStatusFilter,
@@ -1661,9 +1411,9 @@ function filterProvidersByStatus(
   if (status === "all") return providers;
   return providers.filter((provider) => {
     const providerStatus = statusByService.get(provider.service);
-    if (status === "connected") return providerStatus?.connected === true;
-    if (status === "not_connected") return providerStatus?.connected !== true;
-    return providerStatus?.oauthClientRequired === true;
+    if (status === "connected") return providerStatus?.connected;
+    if (status === "not_connected") return !providerStatus?.connected;
+    return providerStatus?.oauthClientRequired;
   });
 }
 

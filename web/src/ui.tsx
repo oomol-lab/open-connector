@@ -16,6 +16,7 @@ import {
   Activity,
   BookOpen,
   Cable,
+  Fingerprint,
   Home,
   KeyRound,
   Loader2,
@@ -33,6 +34,7 @@ import { ApiError, apiGet, apiPost } from "./api";
 import oomolConnectLogoUrl from "./assets/oomol-connect-logo.png";
 import { persistLang, supportedLangs } from "./i18n";
 import { emptyData } from "./model";
+import { OAuthAppsPage } from "./oauth-apps-page";
 import { OverviewPage } from "./overview-page";
 import { ProvidersPage } from "./providers-page";
 import { ResourcesPage } from "./resources-page";
@@ -47,6 +49,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const navItems = [
   { path: "/overview", labelKey: "nav.overview", icon: Home },
   { path: "/providers", labelKey: "nav.providers", icon: Cable },
+  { path: "/oauth-apps", labelKey: "nav.oauthApps", icon: Fingerprint },
   { path: "/actions", labelKey: "nav.actions", icon: TerminalSquare },
   { path: "/runs", labelKey: "nav.runs", icon: Activity },
   { path: "/access", labelKey: "nav.access", icon: KeyRound },
@@ -327,7 +330,7 @@ function AppShell(props: {
   ]
     .filter(Boolean)
     .join(" ");
-  const currentNavItem = navItems.find((item) => item.path.slice(1) === heading) ?? navItems[0];
+  const currentNavItem = navItems.find((item) => item.labelKey === `nav.${heading}`) ?? navItems[0];
   const CurrentNavIcon = currentNavItem.icon;
 
   return (
@@ -402,6 +405,7 @@ function AppShell(props: {
               path="/providers/:service"
               element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />}
             />
+            <Route path="/oauth-apps" element={<OAuthAppsPage data={props.data} onRefresh={props.onRefresh} />} />
             <Route path="/actions" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
             <Route path="/actions/:actionId" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
             <Route
@@ -559,6 +563,9 @@ function headingForPath(pathname: string): string {
   const section = pathname.split("/").filter(Boolean)[0];
   if (section === "providers") {
     return "providers";
+  }
+  if (section === "oauth-apps") {
+    return "oauthApps";
   }
   if (section === "actions") {
     return "actions";

@@ -6,53 +6,28 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
+import { clientConfigFieldsFor, initialClientConfigFieldValues, splitClientConfigFieldValues } from "./oauth-app-form";
 import {
-  clientConfigFieldsFor,
   configurableConnectionsForProvider,
   connectionDeletePath,
   connectionDisplayLabel,
   connectionSubmitLabel,
   createOAuthPopupFeatures,
   credentialConnectionRequestBody,
-  initialClientConfigFieldValues,
   isProviderLocallyAvailable,
-  oauthClientActionLabel,
   oauthAuthorizationRequestBody,
   oauthConfigForProvider,
   providerBrowserResetKey,
   ProvidersPage,
-  shouldClearOAuthClientStatus,
   shouldEnableConnectionSubmit,
   shouldShowConnectionActions,
   shouldShowDisconnectAction,
-  shouldShowOAuthClientForm,
-  splitClientConfigFieldValues,
   startOAuthRefreshPolling,
   validateNewConnectionName,
 } from "./providers-page";
 
 afterEach(() => {
   vi.useRealTimers();
-});
-
-describe("shouldShowOAuthClientForm", () => {
-  it("keeps OAuth client settings collapsed until the user expands them", () => {
-    const auth: AuthDefinition = { type: "oauth2", scopes: [] };
-
-    expect(shouldShowOAuthClientForm(auth, false)).toBe(false);
-  });
-
-  it("hides OAuth client settings while API key auth is selected", () => {
-    const auth: AuthDefinition = { type: "api_key" };
-
-    expect(shouldShowOAuthClientForm(auth, true)).toBe(false);
-  });
-
-  it("shows OAuth client settings while OAuth auth is selected and expanded", () => {
-    const auth: AuthDefinition = { type: "oauth2", scopes: [] };
-
-    expect(shouldShowOAuthClientForm(auth, true)).toBe(true);
-  });
 });
 
 describe("shouldShowConnectionActions", () => {
@@ -144,18 +119,6 @@ describe("shouldEnableConnectionSubmit", () => {
         extraValues: {},
       }),
     ).toBe(true);
-  });
-});
-
-describe("oauthClientActionLabel", () => {
-  it("asks the user to configure missing OAuth client settings", () => {
-    expect(oauthClientActionLabel(undefined)).toBe("Configure OAuth Client");
-  });
-
-  it("shows an edit action for saved OAuth client settings", () => {
-    expect(oauthClientActionLabel({ service: "gmail", configured: true, clientId: "gmail-client-id" })).toBe(
-      "Edit OAuth Client",
-    );
   });
 });
 
@@ -256,10 +219,11 @@ describe("splitClientConfigFieldValues", () => {
 });
 
 describe("ProvidersPage OAuth client settings", () => {
-  it("shows a reset action for saved OAuth client settings", () => {
+  it("shows an edit action for a configured OAuth app", () => {
     const markup = renderProvidersPage(providerData, "/providers/gmail");
 
-    expect(markup).toContain("Reset OAuth Client");
+    expect(markup).toContain("Edit Default App");
+    expect(markup).not.toContain("Reset Default App");
   });
 
   it("offers manual input only when connection-scoped OAuth clients are available", () => {
@@ -286,9 +250,9 @@ describe("ProvidersPage OAuth client settings", () => {
       "/providers/gmail",
     );
 
-    expect(availableMarkup).toContain("Configured app");
-    expect(availableMarkup).toContain("Manual input");
-    expect(unavailableMarkup).not.toContain("Manual input");
+    expect(availableMarkup).toContain("Default App");
+    expect(availableMarkup).toContain("Custom App");
+    expect(unavailableMarkup).not.toContain("Custom App");
   });
 });
 
@@ -298,7 +262,7 @@ describe("ProvidersPage route shell", () => {
 
     expect(markup).toContain("Providers");
     expect(markup).toContain("Showing 1 / 1");
-    expect(markup).not.toContain("Reset OAuth Client");
+    expect(markup).not.toContain("Reset Default App");
   });
 
   it("renders a full provider detail page at /providers/:service", () => {
@@ -361,7 +325,7 @@ describe("ProvidersPage route shell", () => {
     const markup = renderProvidersPage({ ...providerData, oauthConfigs: [] }, "/providers/gmail");
 
     expect(markup).toContain("OAuth client required");
-    expect(markup).toContain("Configure OAuth Client");
+    expect(markup).toContain("Configure Default App");
   });
 
   it("does not show an OAuth warning when an API-key connection is already usable", () => {
@@ -440,7 +404,7 @@ describe("ProvidersPage route shell", () => {
 
     expect(markup).toContain('value="default"');
     expect(markup).toContain("Connect Gmail");
-    expect(markup).toContain("OAuth Client");
+    expect(markup).toContain("Edit Default App");
     expect(markup).not.toContain("Add Connection");
   });
 
@@ -526,7 +490,7 @@ describe("ProvidersPage route shell", () => {
     const markup = renderProvidersPage({ ...providerData, oauthConfigs: [] }, "/providers");
 
     expect(markup).not.toContain("OAuth client required");
-    expect(markup).toContain("Configure OAuth Client");
+    expect(markup).toContain("Configure Default App");
   });
 
   it("starts the provider browser with a 48 item visible limit", () => {
@@ -658,16 +622,6 @@ describe("providerBrowserResetKey", () => {
     expect(providerBrowserResetKey("gmail", "all", "all")).not.toBe(
       providerBrowserResetKey("gmail", "all", "Communication"),
     );
-  });
-});
-
-describe("shouldClearOAuthClientStatus", () => {
-  it("keeps the reset status when refresh removes the OAuth config for the same provider", () => {
-    expect(shouldClearOAuthClientStatus({ providerChanged: false, skipNextConfigClear: true })).toBe(false);
-  });
-
-  it("clears the reset status when the selected provider changes", () => {
-    expect(shouldClearOAuthClientStatus({ providerChanged: true, skipNextConfigClear: true })).toBe(true);
   });
 });
 

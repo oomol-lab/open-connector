@@ -40,6 +40,7 @@
   "nav": {
     "overview": "總覽",
     "providers": "服務提供者",
+    "oauthApps": "OAuth Apps",
     "actions": "動作",
     "runs": "執行記錄",
     "access": "API 金鑰",
@@ -66,6 +67,10 @@
       "providers": {
         "title": "服務提供者",
         "subtitle": "連線至服務提供者並檢視其功能。"
+      },
+      "oauthApps": {
+        "title": "OAuth Apps",
+        "subtitle": "管理各服務提供者預設使用的 OAuth App。"
       },
       "actions": {
         "title": "動作",
@@ -175,8 +180,8 @@
     "connectionMethod": "連線方式",
     "oauthAppMode": "OAuth App",
     "oauthAppModes": {
-      "configured": "已設定的 App",
-      "manual": "手動輸入"
+      "configured": "預設 App",
+      "manual": "自訂 App"
     },
     "connectionDescriptions": {
       "noSetup": "此服務提供者無須本機憑證即可執行。",
@@ -189,7 +194,6 @@
     },
     "noConnectionMethodTitle": "無連線方式",
     "noConnectionMethodDescription": "此服務提供者不需要本機憑證。",
-    "oauthClient": "OAuth 用戶端",
     "scopes": "權限範圍",
     "scopesDescription": "此服務提供者的本機動作所要求的權限範圍。",
     "actions": "動作",
@@ -219,8 +223,8 @@
       "disconnectFailed": "中斷連線失敗。"
     },
     "buttons": {
-      "configureOAuthClient": "設定 OAuth 用戶端",
-      "editOAuthClient": "編輯 OAuth 用戶端",
+      "configureOAuthClient": "設定預設 App",
+      "editOAuthClient": "編輯預設 App",
       "saveConnection": "儲存連線",
       "addConnection": "新增連線",
       "cancel": "取消",
@@ -232,14 +236,11 @@
       "connectProvider": "連線至 {{name}}",
       "reconnectProvider": "重新連線至 {{name}}",
       "disconnect": "中斷連線",
-      "saveOAuthClient": "儲存 OAuth 用戶端",
-      "updateOAuthClient": "更新 OAuth 用戶端",
-      "resetOAuthClient": "重設 OAuth 用戶端"
+      "saveOAuthClient": "儲存預設 App",
+      "updateOAuthClient": "更新預設 App",
+      "resetOAuthClient": "重設預設 App"
     },
     "oauthClientSettings": {
-      "configuredTitle": "OAuth 用戶端已設定",
-      "requiredTitle": "需要 OAuth 用戶端",
-      "missingDescription": "{{name}} 需要本機 OAuth 用戶端才能連線。",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -258,6 +259,23 @@
     "categoryFilterLabel": "分類",
     "categories": {
       "all": "所有分類"
+    }
+  },
+  "oauthApps": {
+    "title": "預設 OAuth Apps",
+    "description": "管理各服務提供者預設使用的 OAuth App。",
+    "searchPlaceholder": "搜尋服務提供者",
+    "configured": "已設定",
+    "notConfigured": "未設定",
+    "configure": "設定",
+    "edit": "編輯",
+    "emptyTitle": "沒有 OAuth 服務提供者",
+    "emptyDescription": "目前目錄中沒有支援 OAuth 的服務提供者。",
+    "noResultsTitle": "找不到服務提供者",
+    "noResultsDescription": "請嘗試其他搜尋詞。",
+    "dialog": {
+      "configureTitle": "設定 {{name}} OAuth App",
+      "editTitle": "編輯 {{name}} OAuth App"
     }
   },
   "actions": {
@@ -326,10 +344,10 @@
   },
   "access": {
     "title": "執行階段權杖",
-    "description": "為 /v1 與 MCP 用戶端核發 Bearer 權杖。新權杖僅顯示一次。",
+    "description": "用於 /v1 與 MCP 用戶端驗證。",
     "policy": {
-      "title": "執行階段策略",
-      "description": "控制這個執行階段可以執行哪些操作與提供者代理請求。",
+      "title": "存取策略",
+      "description": "限制操作與提供者代理請求。",
       "rulesHint": "Block 規則優先；非空 allowlist 會在部署、執行階段與權杖層之間取交集。每行填寫一條規則。",
       "deployment": "部署策略（唯讀）",
       "runtime": "執行階段策略",
@@ -391,7 +409,7 @@
         "none": "無規則"
       },
       "runtimeSummary": {
-        "title": "執行階段策略設定",
+        "title": "執行階段策略",
         "updated": "最後更新於 {{date}}",
         "edit": "編輯策略"
       },
@@ -400,7 +418,7 @@
         "restricted": "允許規則 {{count}} 條",
         "withBlocked": "{{allow}} · 始終阻止 {{count}} 條"
       },
-      "layerSummary": "操作：{{action}} · 提供商代理請求：{{proxy}}",
+      "layerSummary": "操作：{{action}} · 代理：{{proxy}}",
       "tokenSummary": "操作允許規則 {{allowed}} 條 · 操作阻止規則 {{blocked}} 條 · Proxy 授權 {{proxies}} 條 · 仍受執行階段基準限制",
       "editor": {
         "title": "編輯執行階段策略",
@@ -482,8 +500,8 @@
     "copiedToken": "已複製",
     "copyRuntimeToken": "複製執行階段權杖",
     "copiedRuntimeToken": "已複製執行階段權杖",
-    "noTokensTitle": "尚無執行階段權杖",
-    "noTokensDescription": "連線 MCP 用戶端或本機指令碼前，請先建立權杖。權杖僅顯示一次。",
+    "noTokensTitle": "尚無權杖",
+    "noTokensDescription": "建立權杖後即可存取 /v1 或 MCP。",
     "table": {
       "name": "名稱",
       "status": "狀態",

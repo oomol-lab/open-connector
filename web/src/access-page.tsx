@@ -17,7 +17,6 @@ import {
   CircleCheck,
   CircleX,
   Copy,
-  Eye,
   KeyRound,
   Loader2,
   Pencil,
@@ -25,6 +24,7 @@ import {
   RotateCcw,
   Save,
   ShieldCheck,
+  SlidersHorizontal,
   Trash2,
   X,
 } from "lucide-react";
@@ -96,6 +96,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   const [editTokenDraft, setEditTokenDraft] = useState(() => createPolicyEditorDraft(emptyPolicyRules()));
   const [policy, setPolicy] = useState(props.policy);
   const [runtimeDraft, setRuntimeDraft] = useState(() => createPolicyEditorDraft(props.policy.runtime));
+  const [policyExpanded, setPolicyExpanded] = useState(true);
   const [runtimeEditing, setRuntimeEditing] = useState(false);
   const [runtimeSaving, setRuntimeSaving] = useState(false);
   const [confirmRuntimeSave, setConfirmRuntimeSave] = useState(false);
@@ -246,6 +247,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   }
 
   function discardRuntimeEditing(): void {
+    setConfirmRuntimeSave(false);
     setPolicy(props.policy);
     setRuntimeDraft(createPolicyEditorDraft(props.policy.runtime));
     setRuntimeStatus(null);
@@ -254,51 +256,37 @@ export function AccessPage(props: AccessPageProps): ReactNode {
 
   return (
     <section className="detail-panel access-panel">
-      <section className="runtime-policy-panel">
-        <div className="detail-heading">
-          <div className="action-mark">
-            <ShieldCheck size={20} />
-          </div>
+      <details
+        className="access-section-disclosure"
+        open={policyExpanded}
+        onToggle={(event) => setPolicyExpanded(event.currentTarget.open)}
+      >
+        <summary className="access-section-heading">
           <div>
             <h2>{t("access.policy.title")}</h2>
             <p>{t("access.policy.description")}</p>
           </div>
+          <ChevronDown size={17} />
+        </summary>
+
+        <div className="access-section-content">
+          <PolicyBaseline policy={policy} providers={props.providers} />
+          <PolicyTester policy={policy} providers={props.providers} tokens={props.tokens} />
+          <div className="access-settings-list">
+            <PolicyLayerDisclosure rules={policy.deployment} />
+            <RuntimePolicySummary policy={policy} onEdit={startRuntimeEditing} />
+          </div>
+          {!runtimeEditing && runtimeStatus ? <FormStatus message={runtimeStatus} /> : null}
+        </div>
+      </details>
+
+      <div className="access-section-heading">
+        <div>
+          <h2>{t("access.title")}</h2>
+          <p>{t("access.description")}</p>
         </div>
 
-        <PolicyBaseline policy={policy} providers={props.providers} />
-        <PolicyTester policy={policy} providers={props.providers} tokens={props.tokens} />
-        <PolicyLayerDisclosure rules={policy.deployment} />
-
-        {runtimeEditing ? (
-          <RuntimePolicyEditor
-            draft={runtimeDraft}
-            draftState={runtimeDraftState}
-            providers={props.providers}
-            dirty={runtimeDirty}
-            risk={runtimeRisk}
-            saving={runtimeSaving}
-            status={runtimeStatus}
-            onDraftChange={setRuntimeDraft}
-            onDiscard={discardRuntimeEditing}
-            onSave={requestRuntimeSave}
-          />
-        ) : (
-          <RuntimePolicySummary policy={policy} status={runtimeStatus} onEdit={startRuntimeEditing} />
-        )}
-      </section>
-
-      <div className="access-panel-header">
-        <div className="detail-heading">
-          <div className="action-mark">
-            <KeyRound size={20} />
-          </div>
-          <div>
-            <h2>{t("access.title")}</h2>
-            <p>{t("access.description")}</p>
-          </div>
-        </div>
-
-        <Button type="button" onClick={openCreate}>
+        <Button variant="outline" size="sm" type="button" onClick={openCreate}>
           <KeyRound size={16} />
           {t("access.createToken")}
         </Button>
@@ -312,6 +300,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
             icon={<KeyRound size={20} />}
             title={t("access.noTokensTitle")}
             description={t("access.noTokensDescription")}
+            density="compact"
           />
         ) : (
           <Table>
@@ -353,6 +342,21 @@ export function AccessPage(props: AccessPageProps): ReactNode {
           </Table>
         )}
       </section>
+
+      {runtimeEditing ? (
+        <RuntimePolicyDialog
+          draft={runtimeDraft}
+          draftState={runtimeDraftState}
+          providers={props.providers}
+          dirty={runtimeDirty}
+          risk={runtimeRisk}
+          saving={runtimeSaving}
+          status={runtimeStatus}
+          onDraftChange={setRuntimeDraft}
+          onDiscard={discardRuntimeEditing}
+          onSave={requestRuntimeSave}
+        />
+      ) : null}
 
       {createOpen ? (
         <CreateTokenDialog
@@ -591,8 +595,10 @@ function PolicyLayerDisclosure(props: { rules: PolicyRules }): ReactNode {
     <details className="policy-layer-disclosure">
       <summary>
         <ShieldCheck size={16} />
-        <strong>{t("access.policy.deploymentSummary.title")}</strong>
-        <span>{policyLayerSummary(props.rules, t)}</span>
+        <div className="access-setting-copy">
+          <strong>{t("access.policy.deploymentSummary.title")}</strong>
+          <span>{policyLayerSummary(props.rules, t)}</span>
+        </div>
         <ChevronDown size={15} />
       </summary>
       <PolicyRuleReadout rules={props.rules} />
@@ -600,30 +606,29 @@ function PolicyLayerDisclosure(props: { rules: PolicyRules }): ReactNode {
   );
 }
 
-function RuntimePolicySummary(props: { policy: RuntimePolicyState; status: string | null; onEdit(): void }): ReactNode {
+function RuntimePolicySummary(props: { policy: RuntimePolicyState; onEdit(): void }): ReactNode {
   const t = useTranslate();
   return (
-    <>
-      <section className="runtime-policy-summary">
-        <div>
-          <Save size={16} />
-          <strong>{t("access.policy.runtimeSummary.title")}</strong>
-        </div>
-        <p>{policyLayerSummary(props.policy.runtime, t)}</p>
-        {props.policy.updatedAt ? (
-          <span>{t("access.policy.runtimeSummary.updated", { date: formatDate(props.policy.updatedAt) })}</span>
-        ) : null}
-        <Button onClick={props.onEdit}>
-          <Pencil size={15} />
-          {t("access.policy.runtimeSummary.edit")}
-        </Button>
-      </section>
-      {props.status ? <FormStatus message={props.status} /> : null}
-    </>
+    <section className="runtime-policy-summary">
+      <SlidersHorizontal size={16} />
+      <div className="access-setting-copy">
+        <strong>{t("access.policy.runtimeSummary.title")}</strong>
+        <span>
+          {policyLayerSummary(props.policy.runtime, t)}
+          {props.policy.updatedAt
+            ? ` · ${t("access.policy.runtimeSummary.updated", { date: formatDate(props.policy.updatedAt) })}`
+            : ""}
+        </span>
+      </div>
+      <Button variant="outline" size="sm" onClick={props.onEdit}>
+        <Pencil size={15} />
+        {t("access.policy.runtimeSummary.edit")}
+      </Button>
+    </section>
   );
 }
 
-function RuntimePolicyEditor(props: {
+interface RuntimePolicyDialogProps {
   draft: PolicyEditorDraft;
   draftState: RuntimePolicyState;
   providers: ProviderDefinition[];
@@ -634,21 +639,34 @@ function RuntimePolicyEditor(props: {
   onDraftChange(draft: PolicyEditorDraft): void;
   onDiscard(): void;
   onSave(): void;
-}): ReactNode {
+}
+
+function RuntimePolicyDialog(props: RuntimePolicyDialogProps): ReactNode {
+  const t = useTranslate();
+  return (
+    <Dialog open onOpenChange={(open) => (!open ? props.onDiscard() : undefined)}>
+      <DialogContent className="runtime-policy-dialog max-h-[calc(100svh-2rem)] max-w-[min(1080px,calc(100vw-2rem))] overflow-y-auto sm:max-w-[min(1080px,calc(100vw-2rem))]">
+        <div className="runtime-policy-dialog-heading">
+          <DialogHeader>
+            <DialogTitle>{t("access.policy.editor.title")}</DialogTitle>
+            <DialogDescription>{t("access.policy.editor.description")}</DialogDescription>
+          </DialogHeader>
+          <Badge tone={props.dirty ? "warning" : undefined}>
+            {t(props.dirty ? "access.policy.editor.unsaved" : "access.policy.editor.noChanges")}
+          </Badge>
+        </div>
+        <RuntimePolicyEditor {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RuntimePolicyEditor(props: RuntimePolicyDialogProps): ReactNode {
   const t = useTranslate();
   const issues = validatePolicyEditorDraft(props.draft, true);
 
   return (
     <section className="runtime-policy-editor">
-      <div className="runtime-policy-editor-heading">
-        <div>
-          <h3>{t("access.policy.editor.title")}</h3>
-          <p>{t("access.policy.editor.description")}</p>
-        </div>
-        <Badge tone={props.dirty ? "warning" : undefined}>
-          {t(props.dirty ? "access.policy.editor.unsaved" : "access.policy.editor.noChanges")}
-        </Badge>
-      </div>
       <div className="runtime-policy-editor-grid">
         <PolicyEditor draft={props.draft} providers={props.providers} includeProxies onChange={props.onDraftChange} />
         <aside className="policy-impact-panel" id="runtime-policy-impact">
@@ -670,14 +688,6 @@ function RuntimePolicyEditor(props: {
           <Button type="button" variant="outline" onClick={props.onDiscard}>
             <RotateCcw size={15} />
             {t("access.policy.editor.discard")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById("runtime-policy-impact")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            <Eye size={15} />
-            {t("access.policy.editor.preview")}
           </Button>
           <Button type="button" disabled={!props.dirty || issues.length > 0 || props.saving} onClick={props.onSave}>
             {props.saving ? <Loader2 className="spin" size={15} /> : <Save size={15} />}

@@ -357,7 +357,6 @@
 .provider-connection-card > .auth-method-control,
 .provider-connection-card > .connection-manager,
 .provider-connection-card > .connection-form,
-.provider-inline-oauth-settings,
 .provider-detail-card > .tag-list,
 .provider-detail-card > .linked-list,
 .provider-detail-card > .muted-copy {
@@ -440,17 +439,6 @@
   color: var(--destructive) !important;
 }
 
-.provider-inline-oauth-settings {
-  display: grid;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.provider-inline-oauth-settings > h3 {
-  margin: 0;
-}
-
 .connection-form {
   max-width: 760px;
 }
@@ -482,73 +470,6 @@
 .provider-summary-grid .info-block strong {
   font-size: 16px;
   line-height: 1.25;
-}
-
-.oauth-client-settings {
-  display: grid;
-  gap: 12px;
-}
-
-.oauth-client-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--background);
-}
-
-.oauth-client-summary-main {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.oauth-client-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.oauth-client-title svg {
-  flex: 0 0 auto;
-  color: var(--muted-foreground);
-}
-
-.oauth-client-title strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-  line-height: 1.35;
-}
-
-.oauth-client-description,
-.oauth-client-id {
-  color: var(--muted-foreground);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.oauth-client-id {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: "SF Mono", ui-monospace, "Cascadia Code", "Roboto Mono", monospace;
-}
-
-.oauth-client-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.oauth-client-editor {
-  padding-top: 2px;
 }
 
 .auth-method-control {
@@ -625,19 +546,6 @@
     min-width: 0;
     max-width: 112px;
     padding-top: 8px;
-  }
-
-  .oauth-client-summary {
-    align-items: stretch;
-    grid-template-columns: 1fr;
-  }
-
-  .oauth-client-summary [data-slot="button"] {
-    justify-self: start;
-  }
-
-  .oauth-client-actions {
-    justify-content: flex-start;
   }
 
   .connection-list-item,

@@ -481,18 +481,18 @@ tr:last-child td {
   grid-template-columns: auto minmax(0, 1fr);
   place-items: initial;
   align-items: center;
-  min-height: 124px;
+  min-height: 76px;
   gap: 4px 12px;
-  padding: 18px 16px;
+  padding: 12px 14px;
   background: transparent;
   text-align: left;
 }
 
 .empty-state.compact > svg {
   grid-row: 1 / span 2;
-  width: 34px;
-  height: 34px;
-  padding: 7px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--muted);

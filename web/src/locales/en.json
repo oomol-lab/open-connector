@@ -40,6 +40,7 @@
   "nav": {
     "overview": "Overview",
     "providers": "Providers",
+    "oauthApps": "OAuth Apps",
     "actions": "Actions",
     "runs": "Runs",
     "access": "API Key",
@@ -66,6 +67,10 @@
       "providers": {
         "title": "Providers",
         "subtitle": "Connect providers and review provider capabilities."
+      },
+      "oauthApps": {
+        "title": "OAuth Apps",
+        "subtitle": "Manage the default OAuth app for each provider."
       },
       "actions": {
         "title": "Actions",
@@ -175,8 +180,8 @@
     "connectionMethod": "Connection method",
     "oauthAppMode": "OAuth app",
     "oauthAppModes": {
-      "configured": "Configured app",
-      "manual": "Manual input"
+      "configured": "Default App",
+      "manual": "Custom App"
     },
     "connectionDescriptions": {
       "noSetup": "This provider can run without local credentials.",
@@ -189,7 +194,6 @@
     },
     "noConnectionMethodTitle": "No connection method",
     "noConnectionMethodDescription": "This provider does not need local credentials.",
-    "oauthClient": "OAuth Client",
     "scopes": "Scopes",
     "scopesDescription": "Scopes requested by this provider's local actions.",
     "actions": "Actions",
@@ -219,8 +223,8 @@
       "disconnectFailed": "Disconnect failed."
     },
     "buttons": {
-      "configureOAuthClient": "Configure OAuth Client",
-      "editOAuthClient": "Edit OAuth Client",
+      "configureOAuthClient": "Configure Default App",
+      "editOAuthClient": "Edit Default App",
       "saveConnection": "Save Connection",
       "addConnection": "Add Connection",
       "cancel": "Cancel",
@@ -232,14 +236,11 @@
       "connectProvider": "Connect {{name}}",
       "reconnectProvider": "Reconnect {{name}}",
       "disconnect": "Disconnect",
-      "saveOAuthClient": "Save OAuth Client",
-      "updateOAuthClient": "Update OAuth Client",
-      "resetOAuthClient": "Reset OAuth Client"
+      "saveOAuthClient": "Save Default App",
+      "updateOAuthClient": "Update Default App",
+      "resetOAuthClient": "Reset Default App"
     },
     "oauthClientSettings": {
-      "configuredTitle": "OAuth client configured",
-      "requiredTitle": "OAuth client required",
-      "missingDescription": "{{name}} needs a local OAuth client before connection.",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -258,6 +259,23 @@
     "categoryFilterLabel": "Category",
     "categories": {
       "all": "All categories"
+    }
+  },
+  "oauthApps": {
+    "title": "Default OAuth Apps",
+    "description": "Manage the OAuth app used by default for each provider.",
+    "searchPlaceholder": "Search providers",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "configure": "Configure",
+    "edit": "Edit",
+    "emptyTitle": "No OAuth providers",
+    "emptyDescription": "The current catalog has no providers that support OAuth.",
+    "noResultsTitle": "No providers found",
+    "noResultsDescription": "Try a different search.",
+    "dialog": {
+      "configureTitle": "Configure {{name}} OAuth App",
+      "editTitle": "Edit {{name}} OAuth App"
     }
   },
   "actions": {
@@ -326,10 +344,10 @@
   },
   "access": {
     "title": "Runtime Tokens",
-    "description": "Issue bearer tokens for /v1 and MCP clients. New tokens are shown once.",
+    "description": "Authenticate /v1 and MCP clients.",
     "policy": {
-      "title": "Runtime Policy",
-      "description": "Control which actions and provider proxies this runtime may execute.",
+      "title": "Access Policy",
+      "description": "Limit actions and provider proxy requests.",
       "rulesHint": "Block rules take priority. Non-empty allowlists intersect across deployment, runtime, and token layers. Enter one rule per line.",
       "deployment": "Deployment policy (read-only)",
       "runtime": "Runtime policy",
@@ -391,7 +409,7 @@
         "none": "No rules"
       },
       "runtimeSummary": {
-        "title": "Runtime policy configuration",
+        "title": "Runtime policy",
         "updated": "Last updated {{date}}",
         "edit": "Edit policy"
       },
@@ -400,7 +418,7 @@
         "restricted": "Allow rules: {{count}}",
         "withBlocked": "{{allow}} · Always block: {{count}}"
       },
-      "layerSummary": "Actions: {{action}} · Provider proxy: {{proxy}}",
+      "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
       "tokenSummary": "Action allow rules {{allowed}} · Action block rules {{blocked}} · Proxy grants {{proxies}} · Further limited by the runtime baseline",
       "editor": {
         "title": "Edit runtime policy",
@@ -482,8 +500,8 @@
     "copiedToken": "Copied",
     "copyRuntimeToken": "Copy runtime token",
     "copiedRuntimeToken": "Copied runtime token",
-    "noTokensTitle": "No runtime tokens yet",
-    "noTokensDescription": "Create one before connecting an MCP client or local script. The token is shown once.",
+    "noTokensTitle": "No tokens",
+    "noTokensDescription": "Create a token for /v1 or MCP access.",
     "table": {
       "name": "Name",
       "status": "Status",

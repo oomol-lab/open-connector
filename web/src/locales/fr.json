@@ -40,6 +40,7 @@
   "nav": {
     "overview": "Vue d’ensemble",
     "providers": "Fournisseurs",
+    "oauthApps": "Apps OAuth",
     "actions": "Actions",
     "runs": "Exécutions",
     "access": "API Key",
@@ -66,6 +67,10 @@
       "providers": {
         "title": "Fournisseurs",
         "subtitle": "Connectez des fournisseurs et examinez leurs capacités."
+      },
+      "oauthApps": {
+        "title": "Apps OAuth",
+        "subtitle": "Gérez l’application OAuth par défaut de chaque fournisseur."
       },
       "actions": {
         "title": "Actions",
@@ -175,8 +180,8 @@
     "connectionMethod": "Méthode de connexion",
     "oauthAppMode": "Application OAuth",
     "oauthAppModes": {
-      "configured": "Application configurée",
-      "manual": "Saisie manuelle"
+      "configured": "App par défaut",
+      "manual": "App personnalisée"
     },
     "connectionDescriptions": {
       "noSetup": "Ce fournisseur peut s’exécuter sans identifiants locaux.",
@@ -189,7 +194,6 @@
     },
     "noConnectionMethodTitle": "Aucune méthode de connexion",
     "noConnectionMethodDescription": "Ce fournisseur n’a pas besoin d’identifiants locaux.",
-    "oauthClient": "Client OAuth",
     "scopes": "Scopes",
     "scopesDescription": "Scopes demandés par les actions locales de ce fournisseur.",
     "actions": "Actions",
@@ -219,8 +223,8 @@
       "disconnectFailed": "Échec de la déconnexion."
     },
     "buttons": {
-      "configureOAuthClient": "Configurer le client OAuth",
-      "editOAuthClient": "Modifier le client OAuth",
+      "configureOAuthClient": "Configurer l’app par défaut",
+      "editOAuthClient": "Modifier l’app par défaut",
       "saveConnection": "Enregistrer la connexion",
       "addConnection": "Ajouter une connexion",
       "cancel": "Annuler",
@@ -232,14 +236,11 @@
       "connectProvider": "Connecter {{name}}",
       "reconnectProvider": "Reconnecter {{name}}",
       "disconnect": "Déconnecter",
-      "saveOAuthClient": "Enregistrer le client OAuth",
-      "updateOAuthClient": "Mettre à jour le client OAuth",
-      "resetOAuthClient": "Réinitialiser le client OAuth"
+      "saveOAuthClient": "Enregistrer l’app par défaut",
+      "updateOAuthClient": "Mettre à jour l’app par défaut",
+      "resetOAuthClient": "Réinitialiser l’app par défaut"
     },
     "oauthClientSettings": {
-      "configuredTitle": "Client OAuth configuré",
-      "requiredTitle": "Client OAuth requis",
-      "missingDescription": "{{name}} nécessite un client OAuth local avant la connexion.",
       "callbackUrl": "URL de callback",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -258,6 +259,23 @@
     "categoryFilterLabel": "Catégorie",
     "categories": {
       "all": "Toutes les catégories"
+    }
+  },
+  "oauthApps": {
+    "title": "Apps OAuth par défaut",
+    "description": "Gérez l’application OAuth utilisée par défaut pour chaque fournisseur.",
+    "searchPlaceholder": "Rechercher des fournisseurs",
+    "configured": "Configurée",
+    "notConfigured": "Non configurée",
+    "configure": "Configurer",
+    "edit": "Modifier",
+    "emptyTitle": "Aucun fournisseur OAuth",
+    "emptyDescription": "Le catalogue actuel ne contient aucun fournisseur compatible OAuth.",
+    "noResultsTitle": "Aucun fournisseur trouvé",
+    "noResultsDescription": "Essayez une autre recherche.",
+    "dialog": {
+      "configureTitle": "Configurer l’app OAuth {{name}}",
+      "editTitle": "Modifier l’app OAuth {{name}}"
     }
   },
   "actions": {
@@ -326,10 +344,10 @@
   },
   "access": {
     "title": "Tokens runtime",
-    "description": "Émettez des bearer tokens pour les clients /v1 et MCP. Les nouveaux tokens ne sont affichés qu’une seule fois.",
+    "description": "Authentifiez les clients /v1 et MCP.",
     "policy": {
-      "title": "Politique runtime",
-      "description": "Contrôlez les actions et proxys de fournisseurs que ce runtime peut exécuter.",
+      "title": "Politique d’accès",
+      "description": "Limitez les actions et les requêtes proxy des fournisseurs.",
       "rulesHint": "Les règles de blocage sont prioritaires. Les listes d’autorisation non vides s’intersectent entre les couches de déploiement, runtime et token. Une règle par ligne.",
       "deployment": "Politique de déploiement (lecture seule)",
       "runtime": "Politique runtime",
@@ -391,7 +409,7 @@
         "none": "Aucune règle"
       },
       "runtimeSummary": {
-        "title": "Configuration de la politique runtime",
+        "title": "Politique runtime",
         "updated": "Dernière mise à jour {{date}}",
         "edit": "Modifier la politique"
       },
@@ -400,7 +418,7 @@
         "restricted": "Règles d’autorisation : {{count}}",
         "withBlocked": "{{allow}} · Toujours bloquer : {{count}}"
       },
-      "layerSummary": "Actions : {{action}} · Proxy fournisseur : {{proxy}}",
+      "layerSummary": "Actions : {{action}} · Proxys : {{proxy}}",
       "tokenSummary": "Actions autorisées {{allowed}} · Actions bloquées {{blocked}} · Accès proxy {{proxies}} · Encore limité par la référence runtime",
       "editor": {
         "title": "Modifier la politique runtime",
@@ -482,8 +500,8 @@
     "copiedToken": "Copié",
     "copyRuntimeToken": "Copier le token runtime",
     "copiedRuntimeToken": "Token runtime copié",
-    "noTokensTitle": "Aucun token runtime",
-    "noTokensDescription": "Créez-en un avant de connecter un client MCP ou un script local. Le token est affiché une seule fois.",
+    "noTokensTitle": "Aucun token",
+    "noTokensDescription": "Créez un token pour accéder à /v1 ou MCP.",
     "table": {
       "name": "Nom",
       "status": "Statut",
