@@ -472,6 +472,9 @@ class SqliteD1Database implements D1DatabaseBinding {
     this.database.exec(
       readFileSync(new URL("../../../migrations/0010_connection_revision.sql", import.meta.url), "utf8"),
     );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0011_cloudflare_service.sql", import.meta.url), "utf8"),
+    );
   }
 
   prepare(query: string): D1PreparedStatementBinding {

@@ -163,7 +163,13 @@ export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
   }
 
   async get(service: string): Promise<OAuthClientConfig | undefined> {
-    return await getSecretJson<OAuthClientConfig>(this.database, this.secretCodec, "oauth_client_configs", service);
+    const config = await getSecretJson<OAuthClientConfig>(
+      this.database,
+      this.secretCodec,
+      "oauth_client_configs",
+      service,
+    );
+    return config ? { ...config, service } : undefined;
   }
 
   async set(config: OAuthClientConfig): Promise<void> {
@@ -185,10 +191,13 @@ export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
 
   async list(): Promise<OAuthClientConfig[]> {
     const { results } = await this.database
-      .prepare("select value from oauth_client_configs order by service")
+      .prepare("select service, value from oauth_client_configs order by service")
       .all<RuntimeRow>();
     return await Promise.all(
-      results.map(async (row) => parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value")))),
+      results.map(async (row) => ({
+        ...parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value"))),
+        service: readString(row, "service"),
+      })),
     );
   }
 }

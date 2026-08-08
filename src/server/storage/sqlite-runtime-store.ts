@@ -234,12 +234,13 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
   }
 
   async get(service: string): Promise<OAuthClientConfig | undefined> {
-    return await getSecretJson<OAuthClientConfig>({
+    const config = await getSecretJson<OAuthClientConfig>({
       database: this.database,
       secretCodec: this.secretCodec,
       table: "oauth_client_configs",
       service,
     });
+    return config ? { ...config, service } : undefined;
   }
 
   async set(config: OAuthClientConfig): Promise<void> {
@@ -257,9 +258,12 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
   }
 
   async list(): Promise<OAuthClientConfig[]> {
-    const rows = this.database.prepare("select value from oauth_client_configs order by service").all();
+    const rows = this.database.prepare("select service, value from oauth_client_configs order by service").all();
     return await Promise.all(
-      rows.map(async (row) => parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value")))),
+      rows.map(async (row) => ({
+        ...parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value"))),
+        service: readString(row, "service"),
+      })),
     );
   }
 }

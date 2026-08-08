@@ -1,8 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
-import { cloudflareMcpActions } from "./actions.ts";
+import { cloudflareActions } from "./actions.ts";
 
-const service = "cloudflare_mcp";
+const service = "cloudflare";
 
 /**
  * Cloudflare provider backed by Cloudflare's official unified MCP service.
@@ -12,7 +12,7 @@ const service = "cloudflare_mcp";
  */
 export const provider: ProviderDefinition = {
   service,
-  displayName: "Cloudflare MCP",
+  displayName: "Cloudflare",
   description:
     "Search Cloudflare documentation and API schemas, then manage Cloudflare resources through the official unified MCP service. API tokens connect directly; OAuth uses a public client registered through https://mcp.cloudflare.com/register with this Open Connector deployment's callback URL.",
   categories: ["Developer Tools", "Infrastructure"],
@@ -37,5 +37,5 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://github.com/cloudflare/mcp",
   iconUrl: "https://workers.cloudflare.com/favicon.ico",
-  actions: cloudflareMcpActions,
+  actions: cloudflareActions,
 };

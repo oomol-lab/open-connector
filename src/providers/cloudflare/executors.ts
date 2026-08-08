@@ -9,7 +9,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 import { createHash } from "node:crypto";
 import { defineBearerProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const service = "cloudflare_mcp";
+const service = "cloudflare";
 const cloudflareMcpEndpoint = "https://mcp.cloudflare.com/mcp";
 const cloudflareMcpRequestTimeoutMs = 60_000;
 const expectedTools = ["docs", "execute", "search"];

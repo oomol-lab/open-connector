@@ -49,6 +49,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0008_runtime_token_policy.sql",
       "0009_runtime_token_proxy.sql",
       "0010_connection_revision.sql",
+      "0011_cloudflare_service.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -448,6 +449,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0008_runtime_token_policy.sql",
       "0009_runtime_token_proxy.sql",
       "0010_connection_revision.sql",
+      "0011_cloudflare_service.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
@@ -555,6 +557,9 @@ describe("SqliteRuntimeDatabase", () => {
     expect(
       inspected.prepare("select name from runtime_migrations where name = ?").get("0010_connection_revision.sql"),
     ).toBeDefined();
+    expect(
+      inspected.prepare("select name from runtime_migrations where name = ?").get("0011_cloudflare_service.sql"),
+    ).toBeDefined();
     expect(inspected.prepare("pragma table_info(connections)").all()).toContainEqual(
       expect.objectContaining({ name: "id", notnull: 1 }),
     );
@@ -567,6 +572,152 @@ describe("SqliteRuntimeDatabase", () => {
         .get("runs_started_at_id_idx"),
     ).toBeDefined();
     inspected.close();
+  });
+
+  it("migrates persisted Cloudflare MCP service identifiers", async () => {
+    const databasePath = await createDatabasePath();
+    const legacy = new DatabaseSync(databasePath);
+    const appliedMigrations = [
+      "0001_runtime.sql",
+      "0002_run_service.sql",
+      "0003_action_idempotency.sql",
+      "0004_action_run_audit.sql",
+      "0005_run_retention.sql",
+      "0006_connection_identity.sql",
+      "0007_runtime_policy.sql",
+      "0008_runtime_token_policy.sql",
+      "0009_runtime_token_proxy.sql",
+      "0010_connection_revision.sql",
+    ];
+    for (const migration of appliedMigrations) {
+      legacy.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
+    }
+    legacy.exec(`
+      create table runtime_migrations (
+        name text primary key,
+        applied_at text not null
+      );
+    `);
+    const recordMigration = legacy.prepare("insert into runtime_migrations (name, applied_at) values (?, ?)");
+    for (const migration of appliedMigrations) {
+      recordMigration.run(migration, "2026-08-05T00:00:00.000Z");
+    }
+    legacy
+      .prepare(
+        `insert into connections
+          (id, revision, service, connection_name, value, updated_at)
+        values (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "connection-id",
+        "connection-revision",
+        "cloudflare_mcp",
+        "default",
+        JSON.stringify({ authType: "api_key", apiKey: "token", values: { apiKey: "token" } }),
+        "2026-08-05T00:00:00.000Z",
+      );
+    legacy.prepare("insert into oauth_client_configs (service, value, updated_at) values (?, ?, ?)").run(
+      "cloudflare_mcp",
+      JSON.stringify({
+        service: "cloudflare_mcp",
+        clientId: "client-id",
+        clientSecret: "",
+        extra: {},
+        secretExtra: {},
+      }),
+      "2026-08-05T00:00:00.000Z",
+    );
+    legacy.prepare("insert into oauth_states (state, value, created_at) values (?, ?, ?)").run(
+      "oauth-state",
+      JSON.stringify({
+        service: "cloudflare_mcp",
+        connectionName: "default",
+        state: "oauth-state",
+        createdAt: "2026-08-05T00:00:00.000Z",
+      }),
+      "2026-08-05T00:00:00.000Z",
+    );
+    legacy
+      .prepare(
+        `insert into runs
+          (id, service, action_id, caller, started_at, completed_at, ok, value)
+        values (?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "run-id",
+        "cloudflare_mcp",
+        "cloudflare_mcp.execute",
+        "http",
+        "2026-08-05T00:00:00.000Z",
+        "2026-08-05T00:00:01.000Z",
+        1,
+        JSON.stringify({
+          id: "run-id",
+          service: "cloudflare_mcp",
+          actionId: "cloudflare_mcp.execute",
+          caller: "http",
+          startedAt: "2026-08-05T00:00:00.000Z",
+          completedAt: "2026-08-05T00:00:01.000Z",
+          durationMs: 1000,
+          ok: true,
+        }),
+      );
+    legacy
+      .prepare(
+        `insert into runtime_tokens
+          (id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at)
+        values (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "token-id",
+        "Cloudflare token",
+        "token-hash",
+        JSON.stringify(["cloudflare_mcp.*"]),
+        JSON.stringify(["cloudflare_mcp.execute"]),
+        JSON.stringify(["cloudflare_mcp"]),
+        "2026-08-05T00:00:00.000Z",
+      );
+    legacy.prepare("insert into runtime_policy (id, value, updated_at) values (1, ?, ?)").run(
+      JSON.stringify({
+        allowedActions: ["cloudflare_mcp.*"],
+        blockedActions: ["cloudflare_mcp.execute"],
+        allowedProxies: ["cloudflare_mcp"],
+        blockedProxies: ["cloudflare_mcp"],
+      }),
+      "2026-08-05T00:00:00.000Z",
+    );
+    legacy.close();
+
+    const migrated = new SqliteRuntimeDatabase(databasePath);
+    await expect(migrated.connectionStore.get("cloudflare", "default")).resolves.toMatchObject({
+      service: "cloudflare",
+    });
+    await expect(migrated.oauthClientConfigStore.get("cloudflare")).resolves.toMatchObject({
+      service: "cloudflare",
+      clientId: "client-id",
+    });
+    await expect(migrated.oauthClientConfigStore.list()).resolves.toMatchObject([{ service: "cloudflare" }]);
+    await expect(migrated.oauthStateStore.take("oauth-state")).resolves.toMatchObject({ service: "cloudflare" });
+    await expect(migrated.runLogStore.get("run-id")).resolves.toMatchObject({
+      service: "cloudflare",
+      actionId: "cloudflare.execute",
+    });
+    await expect(migrated.runtimeTokenStore.list()).resolves.toMatchObject([
+      {
+        allowedActions: ["cloudflare.*"],
+        blockedActions: ["cloudflare.execute"],
+        allowedProxies: ["cloudflare"],
+      },
+    ]);
+    await expect(migrated.runtimePolicyStore.get()).resolves.toMatchObject({
+      rules: {
+        allowedActions: ["cloudflare.*"],
+        blockedActions: ["cloudflare.execute"],
+        allowedProxies: ["cloudflare"],
+        blockedProxies: ["cloudflare"],
+      },
+    });
+    migrated.close();
   });
 
   it("encrypts stored credentials when a secret codec is configured", async () => {

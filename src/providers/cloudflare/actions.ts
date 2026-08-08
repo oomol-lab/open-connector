@@ -3,13 +3,13 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "cloudflare_mcp";
+const service = "cloudflare";
 
 const codeSchema = s.nonWhitespaceString(
   "A JavaScript async arrow function. Use `search` before `execute` to discover the exact Cloudflare API path and parameters.",
 );
 
-export const cloudflareMcpActions: ActionDefinition[] = [
+export const cloudflareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "docs",
     description: "Search the official Cloudflare developer documentation for relevant guidance and examples.",
@@ -41,7 +41,7 @@ export const cloudflareMcpActions: ActionDefinition[] = [
       code: codeSchema,
     }),
     outputSchema: s.unknown("The value returned by the supplied search function."),
-    followUpActions: ["cloudflare_mcp.execute"],
+    followUpActions: ["cloudflare.execute"],
   }),
   defineProviderAction(service, {
     name: "execute",
