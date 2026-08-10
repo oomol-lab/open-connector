@@ -1,8 +1,19 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { GrafanaContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import {
+  createProviderFetch,
+  defineProviderExecutors,
+  defineProviderProxy,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 import { grafanaActionHandlers, normalizeGrafanaBaseUrl, validateGrafanaCredential } from "./runtime.ts";
 
 const service = "grafana";
@@ -22,10 +33,25 @@ export const executors: ProviderExecutors = defineProviderExecutors<GrafanaConte
     };
   },
   fallbackMessage: "grafana request failed",
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeGrafanaBaseUrl(
+      optionalString(credential.values.baseUrl) ?? optionalString(credential.metadata.baseUrl),
+    );
+  },
+  auth: { type: "bearer" },
+  allowedEndpoint: (endpoint) => endpoint === "/api" || endpoint.startsWith("/api/"),
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
-    return validateGrafanaCredential(input.apiKey, input.values, fetcher, signal);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateGrafanaCredential(input.apiKey, input.values, guardedFetcher, signal);
   },
 };

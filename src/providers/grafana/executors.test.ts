@@ -1,7 +1,7 @@
-import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
+import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { registeredProxyExecutors } from "./proxy.registry.ts";
+import { proxy as grafanaProxy } from "./executors.ts";
 
 const grafanaCredential: ResolvedCredential = {
   authType: "api_key",
@@ -41,7 +41,7 @@ describe("grafana proxy", () => {
       }),
     ]);
 
-    const result = await registeredProxyExecutors.grafana!(
+    const result = await grafanaProxy(
       { method: "POST", endpoint: "/api/ds/query", body: { queries: [] } },
       executionContext,
     );
@@ -56,16 +56,13 @@ describe("grafana proxy", () => {
   it("rejects endpoints outside /api", async () => {
     const calls = stubFetchSequence([]);
 
-    const result = await registeredProxyExecutors.grafana!({ method: "GET", endpoint: "/login" }, executionContext);
+    const result = await grafanaProxy({ method: "GET", endpoint: "/login" }, executionContext);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
     expect(result.error.message).toContain("endpoint is not supported");
 
-    const prefixCollision = await registeredProxyExecutors.grafana!(
-      { method: "GET", endpoint: "/apifoo" },
-      executionContext,
-    );
+    const prefixCollision = await grafanaProxy({ method: "GET", endpoint: "/apifoo" }, executionContext);
 
     expect(prefixCollision.ok).toBe(false);
     if (prefixCollision.ok) throw new Error("expected failure");
