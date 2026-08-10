@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { ShortIoActionName } from "./actions.ts";
 
@@ -11,7 +11,12 @@ import {
   positiveInteger,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "short_io";
 const shortIoApiBaseUrl = "https://api.short.io";
@@ -418,3 +423,9 @@ function readOptionalRedirectType(value: unknown): number | undefined {
   }
   return redirectType;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.short.io",
+  auth: { type: "api_key_authorization", prefix: "" },
+});

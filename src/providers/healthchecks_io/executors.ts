@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { HealthchecksIoActionName } from "./actions.ts";
 
@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "healthchecks_io";
 const healthchecksIoApiBaseUrl = "https://healthchecks.io/api/v3";
@@ -409,3 +414,9 @@ function isAbortLikeError(error: unknown): boolean {
       String((error as { name?: unknown }).name) === "TimeoutError")
   );
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://healthchecks.io/api/v3",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

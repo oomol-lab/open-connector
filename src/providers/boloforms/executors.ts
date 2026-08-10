@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -11,7 +11,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "boloforms";
 const boloformsApiBaseUrl = "https://sapi.boloforms.com";
@@ -54,7 +59,7 @@ export const credentialValidators: CredentialValidators = {
 
     return {
       profile: {
-        accountId: "boloforms",
+        accountId: service,
         displayName: "BoloForms API Key",
       },
       grantedScopes: [],
@@ -406,3 +411,9 @@ function invalidInputError(message: string): ProviderRequestError {
 function providerDataError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, message);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://sapi.boloforms.com",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

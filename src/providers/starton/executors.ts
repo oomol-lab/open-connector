@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { StartonActionName } from "./actions.ts";
 
@@ -6,6 +6,7 @@ import { nullableString, optionalBoolean, optionalNumber, optionalRecord, option
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -326,3 +327,9 @@ function readOptionalIntegerString(value: unknown): string | undefined {
 function compactUndefined(input: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.starton.com",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

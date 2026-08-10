@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { SemanticScholarActionName } from "./actions.ts";
 
 import { compactObject, optionalRawString, optionalRecord } from "../../core/cast.ts";
@@ -6,10 +11,14 @@ import { encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
-  providerUserAgent,
+  defineProviderProxy,
+  providerProxyEndpointPrefixes,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
+
+const service = "semantic_scholar";
 
 const graphApiBaseUrl = "https://api.semanticscholar.org/graph/v1";
 const recommendationsApiBaseUrl = "https://api.semanticscholar.org/recommendations/v1";
@@ -284,10 +293,10 @@ const semanticScholarExecutorHandlers = Object.fromEntries(
 >;
 
 export const executors: ProviderExecutors = defineProviderExecutors<SemanticScholarActionContext>({
-  service: "semantic_scholar",
+  service,
   handlers: semanticScholarExecutorHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<SemanticScholarActionContext> {
-    const credential = await requireApiKeyCredential(context, "semantic_scholar");
+    const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
       fetcher,
@@ -573,3 +582,10 @@ function readStringList(value: unknown) {
 function isAbortLikeError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.semanticscholar.org",
+  auth: { type: "api_key_header", name: "x-api-key" },
+  allowedEndpoint: providerProxyEndpointPrefixes("/graph/v1", "/recommendations/v1", "/datasets/v1"),
+});

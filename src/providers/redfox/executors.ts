@@ -1,8 +1,13 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "redfox";
 const redfoxApiBaseUrl = "https://redfox.hk";
@@ -361,6 +366,12 @@ function readRequiredString(value: unknown, fieldName: string): string {
   }
   return result;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://redfox.hk",
+  auth: { type: "api_key_header", name: "redfox_api_key" },
+});
 
 function readOptionalString(value: unknown): string | undefined {
   if (typeof value !== "string") {

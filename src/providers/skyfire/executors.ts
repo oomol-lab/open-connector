@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { SkyfireActionName } from "./actions.ts";
 
@@ -10,7 +10,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "skyfire";
 const skyfireApiBaseUrl = "https://api.skyfire.xyz";
@@ -245,3 +250,9 @@ function optionalStringArray(value: unknown): string[] | undefined {
     return parsed ? [parsed] : [];
   });
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.skyfire.xyz",
+  auth: { type: "api_key_header", name: "skyfire-api-key" },
+});

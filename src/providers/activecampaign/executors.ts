@@ -1,10 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  credentialProviderProxyBaseUrl,
   defineProviderExecutors,
-  providerUserAgent,
+  defineProviderProxy,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -659,3 +666,9 @@ function endsWithPathSegment(value: string, segment: string) {
   }
   return value.slice(value.length - segment.length) === segment;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: credentialProviderProxyBaseUrl("apiUrl"),
+  auth: { type: "api_key_header", name: "api-token" },
+});

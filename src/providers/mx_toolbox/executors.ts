@@ -1,11 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { MxToolboxActionName, MxToolboxLookupActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
-  providerUserAgent,
+  defineProviderProxy,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -252,3 +258,9 @@ function extractMxToolboxErrorMessage(payload: unknown): string | undefined {
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://mxtoolbox.com",
+  auth: { type: "api_key_authorization", prefix: "" },
+});

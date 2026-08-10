@@ -1,6 +1,6 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { bigpictureIoActionHandlers, validateBigpictureIoCredential } from "./runtime.ts";
 
 const service = "bigpicture_io";
@@ -12,3 +12,9 @@ export const credentialValidators: CredentialValidators = {
     return validateBigpictureIoCredential(input.apiKey, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://company.bigpicture.io",
+  auth: { type: "api_key_authorization", prefix: "" },
+});

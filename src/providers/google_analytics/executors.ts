@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -14,7 +14,9 @@ import {
   requiredRecord,
 } from "../../core/cast.ts";
 import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+
+const service = "google_analytics";
 
 export const googleAnalyticsDataApiBaseUrl = "https://analyticsdata.googleapis.com/v1beta";
 export const googleAnalyticsDataApiAlphaBaseUrl = "https://analyticsdata.googleapis.com/v1alpha";
@@ -58,10 +60,7 @@ export const googleAnalyticsActionHandlers: Record<string, GoogleAnalyticsAction
   list_data_streams: listDataStreams,
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors(
-  "google_analytics",
-  googleAnalyticsActionHandlers,
-);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googleAnalyticsActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {
@@ -1213,3 +1212,9 @@ function extractTrailingResourceId(value: string) {
   }
   return value.slice(separatorIndex + 1);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://analyticsdata.googleapis.com/v1beta",
+  auth: { type: "oauth_bearer" },
+});

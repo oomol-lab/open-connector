@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { MotionActionName } from "./actions.ts";
 
@@ -7,9 +12,10 @@ import { jsonObject, queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
 } from "../provider-runtime.ts";
 
 const service = "motion";
@@ -392,3 +398,9 @@ function readArrayPayload(value: unknown, key: string, context: string): unknown
   }
   return readArrayProperty(value, key, context);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.usemotion.com/v1",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

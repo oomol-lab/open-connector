@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { CraftmypdfActionName } from "./actions.ts";
 
 import {
@@ -12,8 +17,9 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
-  providerUserAgent,
+  defineProviderProxy,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -403,3 +409,9 @@ function booleanToFlag(value: unknown): number | undefined {
   }
   return parsed ? 1 : 0;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.craftmypdf.com/v1",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { LeadmagicActionName } from "./actions.ts";
 
@@ -15,9 +20,10 @@ import {
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
 } from "../provider-runtime.ts";
 
 const service = "leadmagic";
@@ -162,7 +168,7 @@ async function validateLeadmagicCredential(
 
   return {
     profile: {
-      accountId: "leadmagic",
+      accountId: service,
       displayName: `LeadMagic (${formatCredits(account.credits)} credits)`,
     },
     grantedScopes: [],
@@ -455,3 +461,9 @@ function hasText(value: unknown): boolean {
 function formatCredits(credits: number): string {
   return Number.isInteger(credits) ? String(credits) : String(Number(credits.toFixed(2)));
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.leadmagic.io/v1",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

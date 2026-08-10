@@ -1,9 +1,10 @@
-import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { OpenfootballWorldcupActionName } from "./actions.ts";
 
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -202,3 +203,9 @@ function readObjectPayload(value: unknown, label: string): Record<string, unknow
 function readString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://raw.githubusercontent.com/openfootball/worldcup.json/master",
+  auth: { type: "none" },
+});

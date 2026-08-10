@@ -1,8 +1,13 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { FalAiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "fal_ai";
 const falAiPlatformApiBaseUrl = "https://api.fal.ai";
@@ -506,3 +511,9 @@ async function readFalAiError(response: Response): Promise<{ detail: string | un
     };
   }
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.fal.ai",
+  auth: { type: "api_key_authorization", prefix: "Key " },
+});

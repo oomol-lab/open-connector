@@ -3,13 +3,14 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { HuggingfaceActionName } from "./actions.ts";
 import type { HuggingfaceActionContext, HuggingfaceCurrentUser } from "./runtime.shared.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 import {
   getHuggingfaceDatasetFirstRows,
   getHuggingfaceDatasetInfo,
@@ -152,3 +153,9 @@ function credentialValidationResult(user: HuggingfaceCurrentUser): CredentialVal
     },
   };
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://datasets-server.huggingface.co",
+  auth: { type: "bearer" },
+});

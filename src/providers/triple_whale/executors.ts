@@ -1,6 +1,11 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { tripleWhaleActionHandlers, validateTripleWhaleCredential } from "./runtime.ts";
 
 const service = "triple_whale";
@@ -12,3 +17,9 @@ export const credentialValidators: CredentialValidators = {
     return validateTripleWhaleCredential(input.apiKey, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.triplewhale.com/api/v2/",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

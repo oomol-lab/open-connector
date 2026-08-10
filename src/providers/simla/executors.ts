@@ -1,7 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  credentialProviderProxyBaseUrl,
+  defineProviderExecutors,
+  defineProviderProxy,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 import { normalizeSimlaApiBaseUrl, simlaActionHandlers, validateSimlaCredential } from "./runtime.ts";
 
 const service = "simla";
@@ -29,3 +39,9 @@ export const credentialValidators: CredentialValidators = {
     return validateSimlaCredential(input.apiKey, input.values, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: credentialProviderProxyBaseUrl("apiBaseUrl"),
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

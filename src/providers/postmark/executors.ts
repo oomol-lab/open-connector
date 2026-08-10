@@ -1,8 +1,13 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "postmark";
 const postmarkApiBaseUrl = "https://api.postmarkapp.com";
@@ -263,3 +268,9 @@ function stringifyPathValue(value: unknown, fieldName: string): string {
   if (typeof value === "number" && Number.isInteger(value) && value > 0) return String(value);
   return requiredInputString(value, fieldName);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.postmarkapp.com",
+  auth: { type: "api_key_header", name: "x-postmark-server-token" },
+});

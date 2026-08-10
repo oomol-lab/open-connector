@@ -1,7 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  providerProxyEndpointPrefixes,
+} from "../provider-runtime.ts";
 import { youtubeActionHandlers } from "./runtime.ts";
 
 const service = "youtube";
@@ -27,3 +31,10 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://www.googleapis.com",
+  auth: { type: "oauth_bearer" },
+  allowedEndpoint: providerProxyEndpointPrefixes("/youtube/v3", "/upload/youtube/v3"),
+});

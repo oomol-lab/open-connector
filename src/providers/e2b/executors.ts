@@ -1,6 +1,6 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { e2bActionHandlers, validateE2bCredential } from "./runtime.ts";
 
 const service = "e2b";
@@ -12,3 +12,9 @@ export const credentialValidators: CredentialValidators = {
     return validateE2bCredential(input.apiKey, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.e2b.app",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { TeltelActionName } from "./actions.ts";
 
@@ -10,7 +15,7 @@ import {
   optionalStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "teltel";
 const teltelApiBaseUrl = "https://api.teltel.io/v2";
@@ -288,3 +293,9 @@ function nullableInteger(value: unknown): number | null {
   const parsed = nullableNumber(value);
   return parsed === null ? null : Number.isInteger(parsed) ? parsed : null;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.teltel.io/v2",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

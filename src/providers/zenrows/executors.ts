@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { ZenrowsActionName } from "./actions.ts";
 
@@ -13,9 +18,11 @@ import {
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
-  providerUserAgent,
+  providerProxyEndpointPrefixes,
   ProviderRequestError,
+  providerUserAgent,
 } from "../provider-runtime.ts";
 
 const service = "zenrows";
@@ -100,7 +107,7 @@ export const credentialValidators: CredentialValidators = {
 
     return {
       profile: {
-        accountId: "zenrows",
+        accountId: service,
         displayName: "ZenRows API Key",
       },
       grantedScopes: [],
@@ -320,3 +327,10 @@ function readOptionalHeaderInteger(headers: Headers, name: string): number | nul
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.zenrows.com",
+  auth: { type: "api_key_header", name: "x-api-key" },
+  allowedEndpoint: providerProxyEndpointPrefixes("/v1"),
+});

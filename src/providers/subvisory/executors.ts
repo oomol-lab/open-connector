@@ -1,12 +1,20 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { subvisoryActionHandlers, validateSubvisoryCredential } from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors("subvisory", subvisoryActionHandlers);
+const service = "subvisory";
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, subvisoryActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     return validateSubvisoryCredential(input.apiKey, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://www.subvisory.com",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  providerProxyEndpointPrefixes,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import {
   createComment,
   createPermission,
@@ -50,6 +55,8 @@ import {
   resolveRequiredString,
   resolveSupportsAllDrives,
 } from "./runtime-shared.ts";
+
+const service = "googledrive";
 
 const driveApiBaseUrl = "https://www.googleapis.com/drive/v3";
 const driveUploadApiBaseUrl = "https://www.googleapis.com/upload/drive/v3";
@@ -218,7 +225,7 @@ const googledriveActionHandlers: Record<string, ActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("googledrive", googledriveActionHandlers);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googledriveActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
@@ -962,3 +969,10 @@ function normalizeApproval(payload: Record<string, unknown>) {
     requesterEmailAddress: optionalString(payload.requesterEmailAddress) ?? null,
   };
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://www.googleapis.com",
+  auth: { type: "oauth_bearer" },
+  allowedEndpoint: providerProxyEndpointPrefixes("/drive/v3", "/upload/drive/v3"),
+});

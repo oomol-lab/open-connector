@@ -1,6 +1,6 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { kitActionHandlers, validateKitCredential } from "./runtime.ts";
 
 const service = "kit";
@@ -16,3 +16,9 @@ export const credentialValidators: CredentialValidators = {
     });
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.kit.com/v4",
+  auth: { type: "api_key_header", name: "x-kit-api-key" },
+});

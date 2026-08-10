@@ -1,11 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ForemActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
-  providerUserAgent,
+  defineProviderProxy,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 import { foremArticleMutableKeys } from "./actions.ts";
@@ -522,3 +528,26 @@ function assertCommentTarget(input: Record<string, unknown>): void {
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }
+
+async function foremProxyBaseUrl(context: ExecutionContext, service: string): Promise<string> {
+  const credential = await context.getCredential(service);
+  if (!credential || credential.authType === "no_auth") {
+    throw new ProviderRequestError(401, `Configure ${service} credentials first.`);
+  }
+
+  const apiBaseUrl = optionalString(credential.metadata.apiBaseUrl);
+  if (apiBaseUrl) {
+    return apiBaseUrl.endsWith("/") ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+  }
+
+  const metadataBaseUrl = optionalString(credential.metadata.baseUrl);
+  const valuesBaseUrl = "values" in credential ? optionalString(credential.values.baseUrl) : undefined;
+  const baseUrl = metadataBaseUrl ?? valuesBaseUrl ?? foremDefaultBaseUrl;
+  return `${baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl}/api`;
+}
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: foremProxyBaseUrl,
+  auth: { type: "api_key_header", name: "api-key" },
+});

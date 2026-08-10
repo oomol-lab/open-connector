@@ -434,6 +434,12 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
   };
 }
 
+/** Match a normalized provider proxy endpoint against one or more path prefixes. */
+export function providerProxyEndpointPrefixes(...prefixes: string[]): (endpoint: string) => boolean {
+  return (endpoint) =>
+    prefixes.some((prefix) => endpoint === prefix || endpoint.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`));
+}
+
 export function defineBearerProviderProxy(input: BearerProviderProxyDefinition): ProviderProxyExecutor {
   return defineProviderProxy({
     ...input,

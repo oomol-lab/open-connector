@@ -1,6 +1,6 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { altTextAiActionHandlers, validateAltTextAiCredential } from "./runtime.ts";
 
 const service = "alt_text_ai";
@@ -12,3 +12,9 @@ export const credentialValidators: CredentialValidators = {
     return validateAltTextAiCredential({ apiKey: input.apiKey }, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://alttext.ai/api/v1",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

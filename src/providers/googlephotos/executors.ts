@@ -1,4 +1,10 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { GooglePhotosActionName } from "./actions.ts";
 
@@ -12,8 +18,9 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
-  providerUserAgent,
+  defineProviderProxy,
   ProviderRequestError,
+  providerUserAgent,
   requireOAuthCredential,
 } from "../provider-runtime.ts";
 
@@ -1105,3 +1112,9 @@ function hasExplicitPort(url: string): boolean {
 function providerRequestError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://photoslibrary.googleapis.com/v1",
+  auth: { type: "oauth_bearer" },
+});

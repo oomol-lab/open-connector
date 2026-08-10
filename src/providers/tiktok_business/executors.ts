@@ -1,12 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineBearerProviderExecutors } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors, defineProviderProxy, requireBearerCredential } from "../provider-runtime.ts";
 import { tiktokBusinessActionHandlers, validateTikTokBusinessCredential } from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineBearerProviderExecutors(
-  "tiktok_business",
-  tiktokBusinessActionHandlers,
-);
+const service = "tiktok_business";
+
+export const executors: ProviderExecutors = defineBearerProviderExecutors(service, tiktokBusinessActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   oauth2(input, { fetcher }): ReturnType<typeof validateTikTokBusinessCredential> {
@@ -29,3 +28,13 @@ export const credentialValidators: CredentialValidators = {
     );
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://business-api.tiktok.com",
+  auth: { type: "none" },
+  async customizeRequest({ context, service, headers }) {
+    const credential = await requireBearerCredential(context, service);
+    headers.set("Access-Token", credential.accessToken);
+  },
+});

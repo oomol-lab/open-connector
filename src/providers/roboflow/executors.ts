@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { RoboflowActionName } from "./actions.ts";
 
@@ -14,7 +19,12 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "roboflow";
 const roboflowApiBaseUrl = "https://api.roboflow.com";
@@ -585,3 +595,9 @@ function readStringArray(value: unknown): string[] {
     ? value.map((item) => optionalScalarString(item)).filter((item): item is string => item != null)
     : [];
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.roboflow.com",
+  auth: { type: "api_key_query", name: "api_key" },
+});

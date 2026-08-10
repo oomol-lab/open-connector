@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { NocodbActionName } from "./actions.ts";
 
 import {
@@ -13,10 +18,12 @@ import {
 import { assertPublicHttpUrl, compactJson, queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
+  credentialProviderProxyBaseUrl,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -651,3 +658,9 @@ function requiredOutputObject(value: unknown, label: string): Record<string, unk
   }
   return record;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: credentialProviderProxyBaseUrl("baseUrl"),
+  auth: { type: "api_key_header", name: "xc-token" },
+});

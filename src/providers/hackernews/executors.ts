@@ -1,7 +1,14 @@
-import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalBoolean, optionalInteger, positiveInteger, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, readProviderJson, setSearchParams } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  readProviderJson,
+  setSearchParams,
+} from "../provider-runtime.ts";
+
+const service = "hackernews";
 
 const firebaseBaseUrl = "https://hacker-news.firebaseio.com/v0";
 const algoliaBaseUrl = "https://hn.algolia.com/api/v1";
@@ -136,7 +143,7 @@ export const hackernewsActionHandlers: Record<
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<HackerNewsActionContext>({
-  service: "hackernews",
+  service,
   handlers: hackernewsActionHandlers,
   createContext(_context, fetcher): HackerNewsActionContext {
     return { fetcher };
@@ -372,3 +379,9 @@ function maybeTruncateText(value: string, truncate: boolean): string {
 
   return value.slice(0, maxTruncatedTextLength);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://hacker-news.firebaseio.com/v0",
+  auth: { type: "none" },
+});

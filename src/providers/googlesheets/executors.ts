@@ -1,8 +1,8 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { GooglesheetsActionName } from "./actions.ts";
 
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import {
   addSheet,
   appendDimension,
@@ -50,6 +50,8 @@ import {
   updateValues,
   updateValuesBatch,
 } from "./runtime-values.ts";
+
+const service = "googlesheets";
 
 const sheetsApiBaseUrl = "https://sheets.googleapis.com/v4";
 
@@ -182,7 +184,7 @@ const implementedActionHandlers: Record<GooglesheetsActionName, ActionHandler> =
 
 export const googlesheetsActionHandlers: Record<GooglesheetsActionName, ActionHandler> = implementedActionHandlers;
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("googlesheets", googlesheetsActionHandlers);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googlesheetsActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
@@ -224,3 +226,9 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://sheets.googleapis.com/v4",
+  auth: { type: "oauth_bearer" },
+});

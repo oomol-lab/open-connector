@@ -1,6 +1,6 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { manusActionHandlers, validateManusCredential } from "./runtime.ts";
 
 const service = "manus";
@@ -12,3 +12,9 @@ export const credentialValidators: CredentialValidators = {
     return validateManusCredential(input.apiKey, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.manus.ai",
+  auth: { type: "api_key_header", name: "x-manus-api-key" },
+});

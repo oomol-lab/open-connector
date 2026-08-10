@@ -1,8 +1,13 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { PosthogRuntimeContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  credentialProviderProxyBaseUrl,
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { posthogActionHandlers, validatePosthogCredential } from "./runtime.ts";
 
 const service = "posthog";
@@ -91,3 +96,9 @@ export const credentialValidators: CredentialValidators = {
     }
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: credentialProviderProxyBaseUrl("baseUrl", "posthog_base_url"),
+  auth: { type: "bearer" },
+});

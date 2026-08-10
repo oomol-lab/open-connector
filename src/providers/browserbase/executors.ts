@@ -1,8 +1,13 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { BrowserbaseContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { browserbaseActionHandlers, validateBrowserbaseCredential } from "./runtime.ts";
 
 const service = "browserbase";
@@ -33,3 +38,9 @@ export const credentialValidators: CredentialValidators = {
     );
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.browserbase.com",
+  auth: { type: "api_key_header", name: "x-bb-api-key" },
+});

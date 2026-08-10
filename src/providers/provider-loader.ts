@@ -1,7 +1,6 @@
 import type { ActionExecutor, CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../core/types.ts";
 
 import { withProviderFallbackMessage } from "./provider-runtime.ts";
-import { registeredProxyExecutors } from "./proxy.registry.ts";
 
 export interface ExecutorModule {
   credentialValidators?: CredentialValidators;
@@ -70,11 +69,6 @@ export class ProviderLoader implements IProviderLoader {
     const loadExecutors = this.executorModules[service];
     if (!loadExecutors) {
       return undefined;
-    }
-
-    const registeredProxy = registeredProxyExecutors[service];
-    if (registeredProxy) {
-      return registeredProxy;
     }
 
     const module = await loadExecutors();

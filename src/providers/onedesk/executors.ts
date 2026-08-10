@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { OnedeskActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "onedesk";
 const onedeskApiBaseUrl = "https://app.onedesk.com";
@@ -322,3 +327,9 @@ function readObjectArray(value: unknown): Array<Record<string, unknown>> {
 function readNullableInteger(value: unknown): number | null {
   return Number.isInteger(value) ? (value as number) : null;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://app.onedesk.com",
+  auth: { type: "api_key_header", name: "od-public-api-key" },
+});

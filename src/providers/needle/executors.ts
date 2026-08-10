@@ -1,6 +1,6 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { needleActionHandlers, validateNeedleCredential } from "./runtime.ts";
 
 const service = "needle";
@@ -12,3 +12,9 @@ export const credentialValidators: CredentialValidators = {
     return validateNeedleCredential(input, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://needle.app",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

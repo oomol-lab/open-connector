@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { KickboxActionName } from "./actions.ts";
 
@@ -6,9 +6,10 @@ import { createHash } from "node:crypto";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
 } from "../provider-runtime.ts";
 
 const service = "kickbox";
@@ -225,3 +226,9 @@ function requireKickboxObject(payload: unknown, endpoint: string): Record<string
   }
   return record;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.kickbox.com",
+  auth: { type: "api_key_query", name: "apikey" },
+});

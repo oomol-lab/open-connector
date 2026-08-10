@@ -1,4 +1,4 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -10,7 +10,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "remove_bg";
 const removeBgApiBaseUrl = "https://api.remove.bg/v1.0";
@@ -468,3 +468,9 @@ function pickNonEmptyString(input: Record<string, unknown>, ...keys: string[]): 
   }
   return undefined;
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.remove.bg/v1.0",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

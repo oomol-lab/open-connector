@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -13,6 +13,7 @@ import {
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -160,7 +161,7 @@ export const credentialValidators: CredentialValidators = {
 
     return {
       profile: {
-        accountId: "bouncer",
+        accountId: service,
         displayName: "Bouncer API Key",
       },
       grantedScopes: [],
@@ -739,3 +740,9 @@ function parseTriState(value: unknown, endpoint: string, fieldName: string): str
 function invalidInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://api.usebouncer.com",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});

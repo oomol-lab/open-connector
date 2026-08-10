@@ -1,7 +1,12 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { JiminnyActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { jiminnyActionHandlers, resolveJiminnyApiBaseUrl, validateJiminnyCredential } from "./runtime.ts";
 
 const service = "jiminny";
@@ -26,3 +31,9 @@ export const credentialValidators: CredentialValidators = {
     return validateJiminnyCredential(input, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://app.jiminny.com/customer/api/v1",
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+});

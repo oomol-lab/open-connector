@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { GammaActionName } from "./actions.ts";
 
@@ -11,7 +11,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "gamma";
 const gammaApiBaseUrl = "https://public-api.gamma.app";
@@ -477,3 +482,9 @@ function sleep(ms: number): Promise<void> {
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
 }
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://public-api.gamma.app",
+  auth: { type: "api_key_header", name: "x-api-key" },
+});
