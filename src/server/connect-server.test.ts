@@ -331,19 +331,20 @@ describe("ConnectServer", () => {
     expect(new URL(body.authorizationUrl).searchParams.get("scope")).toBe("read");
   });
 
-  it("rejects malformed or provider-undeclared requested scopes through the public API", async () => {
+  it.each([
+    ["malformed", "read"],
+    ["empty", []],
+    ["provider-undeclared", ["admin"]],
+  ])("rejects %s requested scopes through the public API", async (_case, requestedScopes) => {
     const app = createTestServer([oauthProvider]).createApp();
+    const response = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", requestedScopes }),
+    });
 
-    for (const requestedScopes of ["read", ["admin"]]) {
-      const response = await app.request("/api/oauth/configs/oauth_example", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", requestedScopes }),
-      });
-
-      expect(response.status).toBe(400);
-      await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
-    }
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
   });
 
   it("lists providers without action schemas and serves full schemas per action", async () => {

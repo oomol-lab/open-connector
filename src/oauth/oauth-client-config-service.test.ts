@@ -50,6 +50,22 @@ describe("OAuthClientConfigService", () => {
       }),
     ).toThrowError("requestedScopes contains a scope not declared by example: admin.");
   });
+
+  it("rejects an empty requested scope subset", () => {
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example")]),
+      origin: "http://localhost:3000",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+
+    expect(() =>
+      service.normalizeConfig("example", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: [],
+      }),
+    ).toThrowError("requestedScopes must contain at least one scope.");
+  });
 });
 
 function oauthProvider(service: string): ProviderDefinition {

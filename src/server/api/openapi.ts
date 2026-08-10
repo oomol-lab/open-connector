@@ -87,7 +87,8 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
       description: "OAuth app client secret. Optional only for public-client providers.",
     }),
     requestedScopes: jsonSchema.array(jsonSchema.string(), {
-      description: "Provider-declared scope subset to request. Omit to use every provider default.",
+      minItems: 1,
+      description: "Non-empty provider-declared scope subset to request. Omit to use every provider default.",
     }),
     extra: {
       type: "object",
@@ -1049,7 +1050,8 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                   description: "Optional connection-scoped OAuth app client secret.",
                 }),
                 requestedScopes: jsonSchema.array(jsonSchema.string(), {
-                  description: "Optional provider-declared scope subset to request.",
+                  minItems: 1,
+                  description: "Optional non-empty provider-declared scope subset to request.",
                 }),
                 extra: {
                   type: "object",

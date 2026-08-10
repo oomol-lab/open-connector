@@ -217,21 +217,6 @@ describe("OAuthFlowService", () => {
     expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("read");
   });
 
-  it("omits the scope parameter for an explicitly empty scope subset", async () => {
-    const services = createServices([oauthProvider]);
-    await services.clientConfigs.upsertConfig({
-      service: "example",
-      clientId: "client-id",
-      clientSecret: "client-secret",
-      extra: { tenant: "default" },
-      requestedScopes: [],
-    });
-
-    const started = await services.flow.startAuthorization({ service: "example" });
-
-    expect(new URL(started.authorizationUrl).searchParams.has("scope")).toBe(false);
-  });
-
   it("requires OAuth client config before authorization", async () => {
     const services = createServices([oauthProvider]);
 

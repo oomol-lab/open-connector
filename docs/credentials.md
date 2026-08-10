@@ -164,9 +164,8 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
 
 Every requested scope must come from the provider's declared `auth[].scopes`. The runtime rejects
 unknown scopes instead of silently expanding authorization. Omit `requestedScopes` to keep the
-provider defaults, or send an empty array when the provider accepts an authorization request
-without a `scope` parameter. Config summaries expose both `requestedScopes` and the resulting
-`effectiveScopes`.
+provider defaults; when present, the array must contain at least one scope. Config summaries expose
+both `requestedScopes` and the resulting `effectiveScopes`.
 
 Some providers declare additional OAuth client fields in `auth[].clientConfigFields`; send those as
 `extra`.

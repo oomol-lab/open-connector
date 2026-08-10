@@ -12,7 +12,7 @@ export type OAuthClientConfig = {
   service: string;
   clientId: string;
   clientSecret: string;
-  /** Provider-declared scope subset to request. Omit to use every provider default. */
+  /** Non-empty provider-declared scope subset to request. Omit to use every provider default. */
   requestedScopes?: string[];
   extra: Record<string, string>;
   secretExtra: Record<string, string>;
@@ -21,7 +21,7 @@ export type OAuthClientConfig = {
 export interface OAuthClientConfigInput {
   clientId: string;
   clientSecret: string;
-  /** Provider-declared scope subset to request. Omit to use every provider default. */
+  /** Non-empty provider-declared scope subset to request. Omit to use every provider default. */
   requestedScopes?: string[];
   extra?: Record<string, unknown>;
   secretExtra?: Record<string, unknown>;
@@ -292,6 +292,9 @@ function normalizeRequestedScopes(
   }
 
   const normalized = [...new Set(requestedScopes.map((scope) => scope.trim()))];
+  if (normalized.length === 0) {
+    throw new OAuthClientConfigError("invalid_input", "requestedScopes must contain at least one scope.");
+  }
   if (normalized.some((scope) => !scope)) {
     throw new OAuthClientConfigError("invalid_input", "requestedScopes must not contain empty values.");
   }
