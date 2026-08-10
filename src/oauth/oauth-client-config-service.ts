@@ -171,10 +171,10 @@ export class OAuthClientConfigService {
     return auth;
   }
 
-  /** Resolve the validated scopes an authorization request should send. */
+  /** Resolve the scopes an authorization request should send. */
   getEffectiveScopes(service: string, config: OAuthClientConfig): string[] {
     const auth = this.getOAuthDefinition(service);
-    return normalizeRequestedScopes(service, config.requestedScopes, auth.scopes) ?? [...auth.scopes];
+    return filterDeclaredScopes(config.requestedScopes, auth.scopes) ?? [...auth.scopes];
   }
 
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
@@ -197,7 +197,7 @@ export class OAuthClientConfigService {
       expectedRedirectUri: this.expectedRedirectUri(service),
       auth,
       requestedScopes: config?.requestedScopes ?? null,
-      effectiveScopes: normalizeRequestedScopes(service, config?.requestedScopes, auth.scopes) ?? [...auth.scopes],
+      effectiveScopes: filterDeclaredScopes(config?.requestedScopes, auth.scopes) ?? [...auth.scopes],
       extra: config?.extra ?? {},
     };
   }
@@ -309,6 +309,26 @@ function normalizeRequestedScopes(
   }
 
   return normalized;
+}
+
+/**
+ * Resolve stored requested scopes against the currently declared provider
+ * scopes. A provider can stop declaring a scope after configs were saved (for
+ * example when the platform restricts who may request it); rejecting the stored
+ * value would break the config listing and every re-authorization, so read
+ * paths drop undeclared scopes and fall back to the provider defaults when none
+ * survive. Writes stay strict via normalizeRequestedScopes.
+ */
+function filterDeclaredScopes(requestedScopes: string[] | undefined, providerScopes: string[]): string[] | undefined {
+  if (requestedScopes === undefined) {
+    return undefined;
+  }
+
+  const declaredScopes = new Set(providerScopes);
+  const filtered = [...new Set(requestedScopes.map((scope) => scope.trim()))].filter((scope) =>
+    declaredScopes.has(scope),
+  );
+  return filtered.length > 0 ? filtered : undefined;
 }
 
 function readStringRecord(value: unknown): Record<string, string> {
