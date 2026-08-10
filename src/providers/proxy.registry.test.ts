@@ -61,6 +61,15 @@ describe("grafana proxy", () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
     expect(result.error.message).toContain("endpoint is not supported");
+
+    const prefixCollision = await registeredProxyExecutors.grafana!(
+      { method: "GET", endpoint: "/apifoo" },
+      executionContext,
+    );
+
+    expect(prefixCollision.ok).toBe(false);
+    if (prefixCollision.ok) throw new Error("expected failure");
+    expect(prefixCollision.error.message).toContain("endpoint is not supported");
     expect(calls).toHaveLength(0);
   });
 });
