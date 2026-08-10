@@ -1,4 +1,4 @@
-import type { BlazeMeterActionHandler, BlazeMeterContext } from "../blaze-meter-runtime.ts";
+import type { BlazeMeterActionHandler, BlazeMeterContext } from "../blaze_meter_performance/shared-runtime.ts";
 import type { BlazeMeterFunctionalActionName } from "./actions.ts";
 
 import {
@@ -7,7 +7,7 @@ import {
   requestBlazeMeterJson,
   requireStoredBlazeMeterApiKeyId,
   validateBlazeMeterCredential,
-} from "../blaze-meter-runtime.ts";
+} from "../blaze_meter_performance/shared-runtime.ts";
 
 export const blazeMeterFunctionalActionHandlers: Record<BlazeMeterFunctionalActionName, BlazeMeterActionHandler> = {
   list_multi_tests(input, context) {

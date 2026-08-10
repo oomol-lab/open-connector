@@ -1,4 +1,8 @@
-import type { BlazeMeterActionHandler, BlazeMeterContext, BlazeMeterRequestInput } from "../blaze-meter-runtime.ts";
+import type {
+  BlazeMeterActionHandler,
+  BlazeMeterContext,
+  BlazeMeterRequestInput,
+} from "../blaze_meter_performance/shared-runtime.ts";
 import type { BlazeMeterServiceVirtualizationActionName } from "./actions.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
@@ -6,7 +10,7 @@ import {
   requestBlazeMeterJson,
   requireStoredBlazeMeterApiKeyId,
   validateBlazeMeterCredential,
-} from "../blaze-meter-runtime.ts";
+} from "../blaze_meter_performance/shared-runtime.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 const blazeMeterJsonHeaders = { "content-type": "application/json" };

@@ -1,8 +1,8 @@
-import type { CredentialValidationResult, ProviderProxyExecutor, ProxyExecutionResult } from "../core/types.ts";
-import type { ProviderFetch, ProviderRuntimeHandler } from "./provider-runtime.ts";
+import type { CredentialValidationResult, ProviderProxyExecutor, ProxyExecutionResult } from "../../core/types.ts";
+import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../core/cast.ts";
+import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../../core/cast.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -14,7 +14,7 @@ import {
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
-} from "./provider-runtime.ts";
+} from "../provider-runtime.ts";
 
 export const blazeMeterApiBaseUrl = "https://a.blazemeter.com/api/v4";
 export const blazeMeterValidationPath = "/user";

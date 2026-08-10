@@ -1,6 +1,6 @@
-import type { JsonSchema } from "../core/types.ts";
+import type { JsonSchema } from "../../core/types.ts";
 
-import { s } from "../core/json-schema.ts";
+import { s } from "../../core/json-schema.ts";
 
 export const blazeMeterSortSchema: JsonSchema = s.array(
   "Sort fields accepted by BlazeMeter, such as name or -created.",

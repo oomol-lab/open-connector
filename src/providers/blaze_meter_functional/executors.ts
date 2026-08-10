@@ -7,7 +7,7 @@ import type {
 import type { BlazeMeterFunctionalContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { createBlazeMeterProxyExecutor } from "../blaze-meter-runtime.ts";
+import { createBlazeMeterProxyExecutor } from "../blaze_meter_performance/shared-runtime.ts";
 import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import {
   blazeMeterFunctionalActionHandlers,

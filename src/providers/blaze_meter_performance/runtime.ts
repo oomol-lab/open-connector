@@ -1,5 +1,5 @@
-import type { BlazeMeterActionHandler, BlazeMeterContext } from "../blaze-meter-runtime.ts";
 import type { BlazeMeterPerformanceActionName } from "./actions.ts";
+import type { BlazeMeterActionHandler, BlazeMeterContext } from "./shared-runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import {
@@ -9,7 +9,7 @@ import {
   requestBlazeMeterJsonOrText,
   requireStoredBlazeMeterApiKeyId,
   validateBlazeMeterCredentialOrText,
-} from "../blaze-meter-runtime.ts";
+} from "./shared-runtime.ts";
 
 export const blazeMeterPerformanceActionHandlers: Record<BlazeMeterPerformanceActionName, BlazeMeterActionHandler> = {
   get_user(_input, context) {

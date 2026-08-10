@@ -2,7 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { blazeMeterResponseEnvelopeSchema } from "../blaze-meter-schemas.ts";
+import { blazeMeterResponseEnvelopeSchema } from "../blaze_meter_performance/shared-schemas.ts";
 
 const service = "blaze_meter_service_virtualization";
 
