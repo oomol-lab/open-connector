@@ -66,6 +66,7 @@ Rules:
 - Keep definitions importable without network, credentials, or executor code.
 - Keep executor modules lazy. `definition.ts` must not import `executors.ts`, and executor modules should not import `definition.ts` just to reuse catalog metadata.
 - Keep provider-local helpers for provider-specific URLs, signing, pagination, envelopes, error extraction, and response normalization. Put generic casts, reads, query building, request helpers, and credential wiring in shared helpers when they are useful across providers.
+- When sibling providers in one product family share product-specific runtime or schema code, keep that code under one owning provider and import it from the siblings. Do not place product-family modules directly under `src/providers/`; reserve that root for genuinely cross-provider infrastructure.
 
 ## Provider Definition
 
