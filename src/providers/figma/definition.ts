@@ -29,9 +29,6 @@ export const provider: ProviderDefinition = {
       tokenEndpointAuthMethod: "client_secret_basic",
       tokenRequestFields: {
         clientId: false,
-        refresh: {
-          grantType: "grant_type",
-        },
       },
       pkce: {
         method: "S256",

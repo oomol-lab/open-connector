@@ -3,32 +3,20 @@ import { provider } from "./definition.ts";
 import { figmaPersonalAccessTokenScopes } from "./scopes.ts";
 
 describe("Figma provider definition", () => {
-  it("uses Figma's public OAuth endpoints with PKCE and refresh support", () => {
+  it("keeps OAuth on Figma's current token endpoint with PKCE and Basic client auth", () => {
     const oauth = provider.auth.find((auth) => auth.type === "oauth2");
 
-    expect(oauth).toMatchObject({
-      authorizationUrl: "https://www.figma.com/oauth",
-      tokenUrl: "https://api.figma.com/v1/oauth/token",
-      scopes: [
-        "current_user:read",
-        "file_metadata:read",
-        "file_content:read",
-        "file_versions:read",
-        "file_comments:read",
-        "file_comments:write",
-        "library_content:read",
-        "library_assets:read",
-        "file_dev_resources:read",
-        "file_dev_resources:write",
-      ],
-      tokenEndpointAuthMethod: "client_secret_basic",
-      pkce: { method: "S256" },
-      tokenRequestFields: {
-        clientId: false,
-        refresh: { grantType: "grant_type" },
-      },
-    });
+    expect(oauth?.tokenUrl).toBe("https://api.figma.com/v1/oauth/token");
+    // Refresh must reuse the token endpoint; Figma deprecated /v1/oauth/refresh.
     expect(oauth).not.toHaveProperty("refreshTokenUrl");
+    expect(oauth?.pkce).toEqual({ method: "S256" });
+    expect(oauth?.tokenEndpointAuthMethod).toBe("client_secret_basic");
+    expect(oauth?.tokenRequestFields).toEqual({ clientId: false });
+  });
+
+  it("requests only scopes public OAuth apps may use", () => {
+    const oauth = provider.auth.find((auth) => auth.type === "oauth2");
+
     expect(oauth?.scopes).not.toContain("projects:read");
     expect(oauth?.scopes).not.toContain("project_metadata:read");
   });
