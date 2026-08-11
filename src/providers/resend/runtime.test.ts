@@ -1,0 +1,193 @@
+import { describe, expect, it } from "vitest";
+import { resendActionHandlers } from "./runtime.ts";
+
+describe("Resend email runtime", () => {
+  it("maps batch email fields and preserves request idempotency", async () => {
+    const requests: Array<{ url: string; method: string; headers: Headers; body: unknown }> = [];
+    const fetcher = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      requests.push({
+        url: String(input),
+        method: init?.method ?? "GET",
+        headers: new Headers(init?.headers),
+        body: JSON.parse(String(init?.body)) as unknown,
+      });
+      return Response.json({ data: [{ id: "email-1" }, { id: "email-2" }] });
+    };
+
+    const output = await resendActionHandlers.send_batch_emails!(
+      {
+        idempotencyKey: "batch-123",
+        emails: [
+          {
+            from: "Sender <sender@example.com>",
+            to: ["first@example.com"],
+            subject: "First",
+            html: "<p>First</p>",
+            cc: ["copy@example.com"],
+            tags: [{ name: "kind", value: "welcome" }],
+          },
+          {
+            from: "sender@example.com",
+            to: ["second@example.com"],
+            subject: "Second",
+            template: { id: "welcome", variables: { NAME: "Ada", COUNT: 2 } },
+          },
+        ],
+      },
+      { apiKey: "re_test", fetcher },
+    );
+
+    expect(output).toEqual({ emailIds: ["email-1", "email-2"] });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.url).toBe("https://api.resend.com/emails/batch");
+    expect(requests[0]?.method).toBe("POST");
+    expect(requests[0]?.headers.get("authorization")).toBe("Bearer re_test");
+    expect(requests[0]?.headers.get("idempotency-key")).toBe("batch-123");
+    expect(requests[0]?.body).toEqual([
+      {
+        from: "Sender <sender@example.com>",
+        to: ["first@example.com"],
+        subject: "First",
+        html: "<p>First</p>",
+        cc: ["copy@example.com"],
+        tags: [{ name: "kind", value: "welcome" }],
+      },
+      {
+        from: "sender@example.com",
+        to: ["second@example.com"],
+        subject: "Second",
+        template: { id: "welcome", variables: { NAME: "Ada", COUNT: 2 } },
+      },
+    ]);
+  });
+
+  it("passes sent email cursors and normalizes provider fields", async () => {
+    let requestUrl = "";
+    const fetcher = async (input: string | URL | Request): Promise<Response> => {
+      requestUrl = String(input);
+      return Response.json({
+        object: "list",
+        has_more: true,
+        data: [
+          {
+            id: "email-1",
+            message_id: "message-1",
+            to: ["person@example.com"],
+            from: "sender@example.com",
+            created_at: "2026-08-11T10:00:00.000Z",
+            subject: "Status",
+            bcc: null,
+            cc: ["copy@example.com"],
+            reply_to: null,
+            last_event: "delivered",
+            scheduled_at: null,
+          },
+        ],
+      });
+    };
+
+    const output = await resendActionHandlers.list_sent_emails!(
+      { limit: 25, after: "email-0" },
+      { apiKey: "re_test", fetcher },
+    );
+
+    expect(requestUrl).toBe("https://api.resend.com/emails?limit=25&after=email-0");
+    expect(output).toEqual({
+      hasMore: true,
+      emails: [
+        {
+          id: "email-1",
+          messageId: "message-1",
+          to: ["person@example.com"],
+          from: "sender@example.com",
+          createdAt: "2026-08-11T10:00:00.000Z",
+          subject: "Status",
+          bcc: null,
+          cc: ["copy@example.com"],
+          replyTo: null,
+          lastEvent: "delivered",
+          scheduledAt: null,
+        },
+      ],
+    });
+  });
+
+  it("rejects conflicting cursors before making a provider request", async () => {
+    let requested = false;
+    const fetcher = async (): Promise<Response> => {
+      requested = true;
+      return Response.json({});
+    };
+
+    await expect(
+      resendActionHandlers.list_received_emails!(
+        { after: "email-1", before: "email-2" },
+        { apiKey: "re_test", fetcher },
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "after and before cannot be used together" });
+    expect(requested).toBe(false);
+  });
+
+  it("normalizes received email content, raw download metadata, and attachments", async () => {
+    const fetcher = async (input: string | URL | Request): Promise<Response> => {
+      expect(String(input)).toBe("https://api.resend.com/emails/receiving/received-1");
+      return Response.json({
+        id: "received-1",
+        message_id: "message-1",
+        to: ["inbox@example.com"],
+        from: "sender@example.com",
+        created_at: "2026-08-11T11:00:00.000Z",
+        subject: "Invoice",
+        html: "<p>Attached</p>",
+        text: null,
+        headers: { "return-path": "sender@example.com" },
+        bcc: [],
+        cc: [],
+        reply_to: ["reply@example.com"],
+        raw: {
+          download_url: "https://inbound-cdn.resend.com/raw/message-1",
+          expires_at: "2026-08-11T12:00:00.000Z",
+        },
+        attachments: [
+          {
+            id: "attachment-1",
+            filename: "invoice.pdf",
+            size: 4096,
+            content_type: "application/pdf",
+            content_disposition: "attachment",
+            content_id: null,
+          },
+        ],
+      });
+    };
+
+    const output = await resendActionHandlers.get_received_email!(
+      { emailId: "received-1" },
+      { apiKey: "re_test", fetcher },
+    );
+
+    expect(output).toMatchObject({
+      email: {
+        id: "received-1",
+        messageId: "message-1",
+        html: "<p>Attached</p>",
+        text: null,
+        headers: { "return-path": "sender@example.com" },
+        raw: {
+          downloadUrl: "https://inbound-cdn.resend.com/raw/message-1",
+          expiresAt: "2026-08-11T12:00:00.000Z",
+        },
+        attachments: [
+          {
+            id: "attachment-1",
+            filename: "invoice.pdf",
+            size: 4096,
+            contentType: "application/pdf",
+            contentDisposition: "attachment",
+            contentId: null,
+          },
+        ],
+      },
+    });
+  });
+});
