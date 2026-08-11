@@ -69,23 +69,15 @@ const batchEmailInputSchema: JsonSchema = {
   anyOf: [{ required: ["html"] }, { required: ["text"] }, { required: ["template"] }],
 };
 
-const paginationInputSchema: JsonSchema = {
-  ...s.object(
-    "Cursor pagination parameters.",
-    {
-      limit: s.integer("The number of records to return, from 1 to 100.", { minimum: 1, maximum: 100 }),
-      after: s.nonEmptyString("Return records after this resource ID."),
-      before: s.nonEmptyString("Return records before this resource ID."),
-    },
-    { optional: ["limit", "after", "before"] },
-  ),
-  not: { required: ["after", "before"] },
+const paginationFields = {
+  limit: s.integer("The number of records to return, from 1 to 100.", { minimum: 1, maximum: 100 }),
+  after: s.nonEmptyString("Return records after this resource ID."),
+  before: s.nonEmptyString("Return records before this resource ID."),
 };
 
-const attachmentListPaginationFields = {
-  limit: s.integer("The number of attachments to return, from 1 to 100.", { minimum: 1, maximum: 100 }),
-  after: s.nonEmptyString("Return attachments after this attachment ID."),
-  before: s.nonEmptyString("Return attachments before this attachment ID."),
+const paginationInputSchema: JsonSchema = {
+  ...s.object("Cursor pagination parameters.", paginationFields, { optional: ["limit", "after", "before"] }),
+  not: { required: ["after", "before"] },
 };
 
 const sentEmailSummarySchema = s.object("A sent Resend email summary.", {
@@ -182,8 +174,15 @@ function listInput(description: string): JsonSchema {
   return { ...paginationInputSchema, description };
 }
 
-function attachmentInput(description: string): JsonSchema {
-  return s.object(description, { emailId: emailIdSchema });
+function attachmentListInput(description: string): JsonSchema {
+  return {
+    ...s.object(
+      description,
+      { emailId: emailIdSchema, ...paginationFields },
+      { optional: ["limit", "after", "before"] },
+    ),
+    not: { required: ["after", "before"] },
+  };
 }
 
 function getAttachmentInput(description: string): JsonSchema {
@@ -277,7 +276,7 @@ export const resendActions: ActionDefinition[] = [
     name: "list_sent_email_attachments",
     description: "List attachments for a sent Resend email.",
     requiredScopes: fullAccessScopes,
-    inputSchema: attachmentInput("The sent email whose attachments should be listed."),
+    inputSchema: attachmentListInput("The sent email and cursor pagination for its attachments."),
     outputSchema: s.object("The sent email attachment list.", {
       hasMore: s.boolean("Whether Resend reports more attachments."),
       attachments: s.array("Attachments on the sent email.", attachmentSchema),
@@ -311,14 +310,7 @@ export const resendActions: ActionDefinition[] = [
     name: "list_received_email_attachments",
     description: "List attachments for a received Resend email.",
     requiredScopes: fullAccessScopes,
-    inputSchema: {
-      ...s.object(
-        "The received email and cursor pagination for its attachments.",
-        { emailId: emailIdSchema, ...attachmentListPaginationFields },
-        { optional: ["limit", "after", "before"] },
-      ),
-      not: { required: ["after", "before"] },
-    },
+    inputSchema: attachmentListInput("The received email and cursor pagination for its attachments."),
     outputSchema: s.object("The received email attachment list.", {
       hasMore: s.boolean("Whether another page of attachments is available."),
       attachments: s.array("Attachments on the received email.", attachmentSchema),

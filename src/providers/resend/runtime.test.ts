@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resendActionHandlers } from "./runtime.ts";
+import { resendActionHandlers, validateResendCredential } from "./runtime.ts";
 
 describe("Resend email runtime", () => {
   it("maps batch email fields and preserves request idempotency", async () => {
@@ -112,6 +112,22 @@ describe("Resend email runtime", () => {
     });
   });
 
+  it("passes sent attachment cursors to Resend", async () => {
+    let requestUrl = "";
+    const fetcher = async (input: string | URL | Request): Promise<Response> => {
+      requestUrl = String(input);
+      return Response.json({ object: "list", has_more: false, data: [] });
+    };
+
+    const output = await resendActionHandlers.list_sent_email_attachments!(
+      { emailId: "email-1", limit: 10, after: "attachment-1" },
+      { apiKey: "re_test", fetcher },
+    );
+
+    expect(requestUrl).toBe("https://api.resend.com/emails/email-1/attachments?limit=10&after=attachment-1");
+    expect(output).toEqual({ hasMore: false, attachments: [] });
+  });
+
   it("rejects conflicting cursors before making a provider request", async () => {
     let requested = false;
     const fetcher = async (): Promise<Response> => {
@@ -189,5 +205,48 @@ describe("Resend email runtime", () => {
         ],
       },
     });
+  });
+
+  it("classifies a restricted API key as sending access", async () => {
+    const fetcher = async (input: string | URL | Request): Promise<Response> => {
+      if (String(input).endsWith("/emails")) {
+        return Response.json({ name: "validation_error", message: "from is required" }, { status: 400 });
+      }
+      return Response.json(
+        { name: "restricted_api_key", message: "This API key is restricted to only send emails." },
+        { status: 401 },
+      );
+    };
+
+    await expect(validateResendCredential("re_test", fetcher)).resolves.toMatchObject({
+      grantedScopes: ["sending_access"],
+      metadata: { accessLevel: "sending_access" },
+    });
+  });
+
+  it.each([
+    [429, 429],
+    [503, 502],
+  ])("rejects a %i scope probe response with status %i", async (providerStatus, expectedStatus) => {
+    const fetcher = async (input: string | URL | Request): Promise<Response> => {
+      if (String(input).endsWith("/emails")) {
+        return Response.json({ name: "validation_error", message: "from is required" }, { status: 400 });
+      }
+      return Response.json({ name: "provider_error", message: "probe failed" }, { status: providerStatus });
+    };
+
+    await expect(validateResendCredential("re_test", fetcher)).rejects.toMatchObject({
+      status: expectedStatus,
+      message: "probe failed",
+    });
+  });
+
+  it.each([404, 409])("preserves provider status %i", async (status) => {
+    const fetcher = async (): Promise<Response> =>
+      Response.json({ name: "provider_error", message: "email operation failed" }, { status });
+
+    await expect(
+      resendActionHandlers.get_sent_email!({ emailId: "email-1" }, { apiKey: "re_test", fetcher }),
+    ).rejects.toMatchObject({ status, message: "email operation failed" });
   });
 });

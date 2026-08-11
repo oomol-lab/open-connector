@@ -36,42 +36,18 @@ interface ResendRequestOptions {
 }
 
 export const resendActionHandlers: Record<string, ResendActionHandler> = {
-  send_email(input, context) {
-    return sendEmail(input, context);
-  },
-  send_batch_emails(input, context) {
-    return sendBatchEmails(input, context);
-  },
-  list_sent_emails(input, context) {
-    return listSentEmails(input, context);
-  },
-  get_sent_email(input, context) {
-    return getSentEmail(input, context);
-  },
-  update_scheduled_email(input, context) {
-    return updateScheduledEmail(input, context);
-  },
-  cancel_scheduled_email(input, context) {
-    return cancelScheduledEmail(input, context);
-  },
-  list_sent_email_attachments(input, context) {
-    return listSentEmailAttachments(input, context);
-  },
-  get_sent_email_attachment(input, context) {
-    return getSentEmailAttachment(input, context);
-  },
-  list_received_emails(input, context) {
-    return listReceivedEmails(input, context);
-  },
-  get_received_email(input, context) {
-    return getReceivedEmail(input, context);
-  },
-  list_received_email_attachments(input, context) {
-    return listReceivedEmailAttachments(input, context);
-  },
-  get_received_email_attachment(input, context) {
-    return getReceivedEmailAttachment(input, context);
-  },
+  send_email: sendEmail,
+  send_batch_emails: sendBatchEmails,
+  list_sent_emails: listSentEmails,
+  get_sent_email: getSentEmail,
+  update_scheduled_email: updateScheduledEmail,
+  cancel_scheduled_email: cancelScheduledEmail,
+  list_sent_email_attachments: listSentEmailAttachments,
+  get_sent_email_attachment: getSentEmailAttachment,
+  list_received_emails: listReceivedEmails,
+  get_received_email: getReceivedEmail,
+  list_received_email_attachments: listReceivedEmailAttachments,
+  get_received_email_attachment: getReceivedEmailAttachment,
 };
 
 export async function validateResendCredential(
@@ -131,15 +107,7 @@ export async function validateResendCredential(
     };
   }
 
-  return {
-    profile: {
-      accountId: "resend-api-key",
-      displayName: "Resend API Key",
-      grantedScopes: [],
-    },
-    grantedScopes: [],
-    metadata,
-  };
+  throw createResendError(scopesResponse.status, scopesError, "validate");
 }
 
 async function sendEmail(input: Record<string, unknown>, context: ResendRequestContext): Promise<unknown> {
@@ -229,7 +197,7 @@ async function listSentEmailAttachments(
   const payload = await resendRequestJson(
     `/emails/${readPathId(input, "emailId")}/attachments`,
     context,
-    {},
+    { query: buildPaginationQuery(input) },
     "execute",
   );
   return normalizeAttachmentList(payload);
@@ -357,7 +325,13 @@ function createResendError(status: number, payload: unknown, phase: ResendReques
   if (error.name === "restricted_api_key") {
     return new ProviderRequestError(phase === "validate" ? 400 : 403, error.message, error);
   }
-  return new ProviderRequestError(status >= 500 ? 502 : 400, error.message, error);
+  if (status >= 500) {
+    return new ProviderRequestError(502, error.message, error);
+  }
+  if (status === 404 || status === 409) {
+    return new ProviderRequestError(status, error.message, error);
+  }
+  return new ProviderRequestError(400, error.message, error);
 }
 
 function parseResendError(status: number, payload: unknown): { name: string; message: string } {
@@ -471,8 +445,8 @@ function normalizeSentEmail(value: unknown): Record<string, unknown> {
   const email = requireResponseObject(value, "Resend sent email");
   return {
     ...normalizeEmailEnvelope(email, "Resend sent email"),
-    html: readNullableRawString(email.html, "html"),
-    text: readNullableRawString(email.text, "text"),
+    html: readNullableString(email.html, "html"),
+    text: readNullableString(email.text, "text"),
     lastEvent: readNullableString(email.last_event, "last_event"),
     scheduledAt: readNullableString(email.scheduled_at, "scheduled_at"),
     tags: optionalObjectArray(email.tags, "Resend email tag", responseError).map(normalizeTagOutput),
@@ -494,8 +468,8 @@ function normalizeReceivedEmail(value: unknown): Record<string, unknown> {
   const raw = email.raw;
   return {
     ...normalizeEmailEnvelope(email, "Resend received email"),
-    html: readNullableRawString(email.html, "html"),
-    text: readNullableRawString(email.text, "text"),
+    html: readNullableString(email.html, "html"),
+    text: readNullableString(email.text, "text"),
     headers: normalizeResponseStringRecord(email.headers, "headers"),
     raw: raw == null ? null : normalizeRawEmail(raw),
     attachments: optionalObjectArray(email.attachments, "Resend attachment", responseError).map(
@@ -619,10 +593,6 @@ function readNullableString(value: unknown, fieldName: string): string | null {
     return value;
   }
   throw responseError(`Resend response field ${fieldName} must be a string or null`);
-}
-
-function readNullableRawString(value: unknown, fieldName: string): string | null {
-  return readNullableString(value, fieldName);
 }
 
 function readNullableStringArray(value: unknown, fieldName: string): string[] | null {
