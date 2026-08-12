@@ -20,17 +20,9 @@ const fullPostBodyLimit = 10_000;
 const listPostBodyLimit = 500;
 const commentBodyLimit = 300;
 const maxAttachmentImageBytes = 30 * 1024 * 1024;
-const imageMimeTypes: Record<string, true> = {
-  "image/jpeg": true,
-  "image/png": true,
-  "image/gif": true,
-  "image/webp": true,
-};
-const signedAttachmentHosts: Record<string, true> = {
-  "files.esa.io": true,
-  "dl.esa.io": true,
-};
-const publicAttachmentHosts: Record<string, true> = { "img.esa.io": true };
+const imageMimeTypes = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+const signedAttachmentHosts = new Set(["files.esa.io", "dl.esa.io"]);
+const publicAttachmentHosts = new Set(["img.esa.io"]);
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 type EsaActionContext = BearerProviderContext;
@@ -343,7 +335,7 @@ async function archivePost(input: Record<string, unknown>, context: EsaActionCon
   const postNumber = readPositiveInteger(input, "postNumber");
   const post = await getRawPost(context, teamName, postNumber);
   const category = optionalRawString(post.category) ?? "";
-  if (category.startsWith("Archived/")) {
+  if (category === "Archived" || category.startsWith("Archived/")) {
     return { message: "Post is already archived", category };
   }
 
@@ -643,10 +635,24 @@ function transformBody(bodyMd: string | undefined, options: BodyOptions): string
   if (options.omitBody || bodyMd === undefined) {
     return undefined;
   }
-  if (options.truncateBody !== undefined && bodyMd.length > options.truncateBody) {
-    return `${bodyMd.slice(0, options.truncateBody)}\n\n... (truncated)`;
+  const truncatedBody = truncateGraphemes(bodyMd, options.truncateBody);
+  if (truncatedBody !== undefined) {
+    return `${truncatedBody}\n\n... (truncated)`;
   }
   return bodyMd;
+}
+function truncateGraphemes(value: string, limit: number | undefined): string | undefined {
+  if (limit === undefined) {
+    return undefined;
+  }
+  let count = 0;
+  for (const segment of graphemeSegmenter.segment(value)) {
+    if (count === limit) {
+      return value.slice(0, segment.index);
+    }
+    count++;
+  }
+  return undefined;
 }
 
 function measureBody(bodyMd: string | undefined): EsaJson | undefined {
@@ -870,10 +876,10 @@ function readAttachmentInput(
   if (url.protocol !== "https:") {
     throw invalidInput("url must use HTTPS");
   }
-  if (signedAttachmentHosts[url.hostname]) {
+  if (signedAttachmentHosts.has(url.hostname)) {
     return { needsSigning: true, path: url.pathname };
   }
-  if (publicAttachmentHosts[url.hostname]) {
+  if (publicAttachmentHosts.has(url.hostname)) {
     return { needsSigning: false, url: url.toString() };
   }
   throw invalidInput("url must use img.esa.io, files.esa.io, dl.esa.io, or an /uploads/... path");
@@ -923,7 +929,7 @@ async function downloadAttachmentImage(context: EsaActionContext, url: string) {
   const mimeType = (response.headers.get("content-type") ?? "").split(";", 1)[0]!.trim().toLowerCase();
   const contentLength = Number(response.headers.get("content-length"));
   const maxBytes = Math.min(maxAttachmentImageBytes, transitFiles.maxBytes);
-  if (!imageMimeTypes[mimeType] || (Number.isFinite(contentLength) && contentLength > maxBytes)) {
+  if (!imageMimeTypes.has(mimeType) || (Number.isFinite(contentLength) && contentLength > maxBytes)) {
     return { url };
   }
 

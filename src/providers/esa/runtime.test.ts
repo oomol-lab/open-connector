@@ -311,6 +311,16 @@ describe("esa provider actions", () => {
       category: "Archived/dev/docs",
     });
   });
+  it("does not create a revision when the post is in the top-level Archived category", async () => {
+    const { output, requests } = await execute("archive_post", { teamName: "team", postNumber: 42 }, [
+      { category: "Archived" },
+    ]);
+    expect(requests).toHaveLength(1);
+    expect(output).toEqual({
+      message: "Post is already archived",
+      category: "Archived",
+    });
+  });
 
   it("duplicates through the source-post draft endpoint and creates a WIP destination post", async () => {
     const { requests } = await execute(
@@ -385,6 +395,27 @@ describe("esa provider actions", () => {
     expect(output).toMatchObject({
       body_md: `${"a".repeat(10_000)}\n\n... (truncated)`,
       body_md_stats: { characters: 10_001, lines: 1 },
+    });
+  });
+  it("truncates long post bodies at grapheme boundaries", async () => {
+    const body = `${"a".repeat(9_999)}👨‍👩‍👧‍👦b`;
+    const { output } = await execute("get_post", { teamName: "team", postNumber: 42 }, [{ body_md: body }]);
+    expect(output).toMatchObject({
+      body_md: `${"a".repeat(9_999)}👨‍👩‍👧‍👦\n\n... (truncated)`,
+      body_md_stats: { characters: 10_001, lines: 1 },
+    });
+  });
+
+  it("rejects inherited object property names as attachment hosts", async () => {
+    await expect(
+      execute(
+        "get_attachment",
+        { teamName: "team", url: "https://constructor/uploads/a.png", forceSignedUrl: true },
+        [],
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "url must use img.esa.io, files.esa.io, dl.esa.io, or an /uploads/... path",
     });
   });
 });
