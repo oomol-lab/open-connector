@@ -8,8 +8,8 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { encodePathSegment, readBoundedResponseBytes } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent, readProviderJsonBody } from "../provider-runtime.ts";
+import { assertPublicHttpUrl, encodePathSegment, readBoundedResponseBytes } from "../../core/request.ts";
+import { ProviderRequestError, providerFetch, providerUserAgent, readProviderJsonBody } from "../provider-runtime.ts";
 
 export const esaApiBaseUrl = "https://api.esa.io";
 
@@ -22,7 +22,6 @@ const commentBodyLimit = 300;
 const maxAttachmentImageBytes = 30 * 1024 * 1024;
 const imageMimeTypes = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 const signedAttachmentHosts = new Set(["files.esa.io", "dl.esa.io"]);
-const publicAttachmentHosts = new Set(["img.esa.io"]);
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 type EsaActionContext = BearerProviderContext;
@@ -635,24 +634,18 @@ function transformBody(bodyMd: string | undefined, options: BodyOptions): string
   if (options.omitBody || bodyMd === undefined) {
     return undefined;
   }
-  const truncatedBody = truncateGraphemes(bodyMd, options.truncateBody);
-  if (truncatedBody !== undefined) {
-    return `${truncatedBody}\n\n... (truncated)`;
+  if (options.truncateBody !== undefined && bodyMd.length > options.truncateBody) {
+    let truncateAt = 0;
+    for (const segment of graphemeSegmenter.segment(bodyMd)) {
+      const segmentEnd = segment.index + segment.segment.length;
+      if (segmentEnd > options.truncateBody) {
+        break;
+      }
+      truncateAt = segmentEnd;
+    }
+    return `${bodyMd.slice(0, truncateAt)}\n\n... (truncated)`;
   }
   return bodyMd;
-}
-function truncateGraphemes(value: string, limit: number | undefined): string | undefined {
-  if (limit === undefined) {
-    return undefined;
-  }
-  let count = 0;
-  for (const segment of graphemeSegmenter.segment(value)) {
-    if (count === limit) {
-      return value.slice(0, segment.index);
-    }
-    count++;
-  }
-  return undefined;
 }
 
 function measureBody(bodyMd: string | undefined): EsaJson | undefined {
@@ -864,25 +857,20 @@ function readAttachmentInput(
   value: string,
 ): { needsSigning: true; path: string } | { needsSigning: false; url: string } {
   if (value.startsWith("/")) {
+    if (!value.startsWith("/uploads/")) {
+      throw invalidInput("url path must start with /uploads/");
+    }
     return { needsSigning: true, path: value };
   }
 
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    throw invalidInput("url must be an esa attachment URL or an /uploads/... path");
-  }
+  const url = assertPublicHttpUrl(value, { fieldName: "url", createError: invalidInput });
   if (url.protocol !== "https:") {
     throw invalidInput("url must use HTTPS");
   }
   if (signedAttachmentHosts.has(url.hostname)) {
     return { needsSigning: true, path: url.pathname };
   }
-  if (publicAttachmentHosts.has(url.hostname)) {
-    return { needsSigning: false, url: url.toString() };
-  }
-  throw invalidInput("url must use img.esa.io, files.esa.io, dl.esa.io, or an /uploads/... path");
+  return { needsSigning: false, url: url.toString() };
 }
 
 async function getSignedAttachmentUrl(context: EsaActionContext, teamName: string, path: string): Promise<string> {
@@ -912,7 +900,7 @@ async function downloadAttachmentImage(context: EsaActionContext, url: string) {
 
   let response: Response;
   try {
-    response = await context.fetcher(url, {
+    response = await providerFetch(url, {
       headers: { accept: "image/*", "user-agent": providerUserAgent },
       signal: context.signal,
     });

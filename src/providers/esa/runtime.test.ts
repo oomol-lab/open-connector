@@ -1,10 +1,12 @@
+import type { TransitFileStore } from "../../core/types.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { esaActions } from "./actions.ts";
 import { esaActionHandlers } from "./runtime.ts";
 
-type RouteCase = {
+interface RouteCase {
   name: keyof typeof esaActionHandlers;
   input: Record<string, unknown>;
   path: string;
@@ -12,9 +14,17 @@ type RouteCase = {
   query?: Record<string, string>;
   body?: unknown;
   response?: unknown;
-};
+}
 
-type CapturedRequest = { url: URL; init: RequestInit | undefined };
+interface CapturedRequest {
+  url: URL;
+  init: RequestInit | undefined;
+}
+
+afterEach(() => {
+  setDefaultGuardedFetchDnsLookup(null);
+  vi.unstubAllGlobals();
+});
 
 const expectedActionNames = [
   "get_teams",
@@ -300,27 +310,15 @@ describe("esa provider actions", () => {
       post: { category: "Archived/dev/docs", message: "Archive post" },
     });
   });
-  it("does not create a revision when the post is already archived", async () => {
-    const { output, requests } = await execute("archive_post", { teamName: "team", postNumber: 42 }, [
-      { category: "Archived/dev/docs" },
-    ]);
+  it.each(["Archived", "Archived/dev/docs"])(
+    "does not create a revision when the post is already archived as %s",
+    async (category) => {
+      const { output, requests } = await execute("archive_post", { teamName: "team", postNumber: 42 }, [{ category }]);
 
-    expect(requests).toHaveLength(1);
-    expect(output).toEqual({
-      message: "Post is already archived",
-      category: "Archived/dev/docs",
-    });
-  });
-  it("does not create a revision when the post is in the top-level Archived category", async () => {
-    const { output, requests } = await execute("archive_post", { teamName: "team", postNumber: 42 }, [
-      { category: "Archived" },
-    ]);
-    expect(requests).toHaveLength(1);
-    expect(output).toEqual({
-      message: "Post is already archived",
-      category: "Archived",
-    });
-  });
+      expect(requests).toHaveLength(1);
+      expect(output).toEqual({ message: "Post is already archived", category });
+    },
+  );
 
   it("duplicates through the source-post draft endpoint and creates a WIP destination post", async () => {
     const { requests } = await execute(
@@ -339,44 +337,39 @@ describe("esa provider actions", () => {
   });
 
   it("downloads a bounded supported image into transit storage", async () => {
-    const requests: CapturedRequest[] = [];
+    const downloadRequests = stubAttachmentDownload(
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { "content-type": "image/png", "content-length": "3" },
+      }),
+    );
+    const create = vi.fn(async (file: File) => {
+      expect(file.name).toBe("image.png");
+      expect(file.type).toBe("image/png");
+      return {
+        fileId: "file-1",
+        downloadUrl: "http://localhost/files/file-1",
+        sizeBytes: 3,
+        name: file.name,
+        mimeType: file.type,
+      };
+    });
+    const apiRequests: CapturedRequest[] = [];
     const output = await esaActionHandlers.get_attachment(
       { teamName: "team", url: "/uploads/image.png" },
       {
         accessToken: "esa-token",
         fetcher: async (input, init) => {
           const url = new URL(input instanceof Request ? input.url : input.toString());
-          requests.push({ url, init });
-          if (url.pathname.endsWith("/signed_urls")) {
-            return Response.json({ signed_urls: [["/uploads/image.png", "https://files.esa.io/signed/image.png"]] });
-          }
-          return new Response(new Uint8Array([1, 2, 3]), {
-            headers: { "content-type": "image/png", "content-length": "3" },
-          });
+          apiRequests.push({ url, init });
+          return Response.json({ signed_urls: [["/uploads/image.png", "https://files.esa.io/signed/image.png"]] });
         },
-        transitFiles: {
-          maxBytes: 10,
-          async create(file) {
-            expect(file.name).toBe("image.png");
-            expect(file.type).toBe("image/png");
-            return {
-              fileId: "file-1",
-              downloadUrl: "http://localhost/files/file-1",
-              sizeBytes: 3,
-              name: file.name,
-              mimeType: file.type,
-            };
-          },
-          async read() {
-            throw new Error("read is not expected in this test");
-          },
-          async delete() {
-            return false;
-          },
-        },
+        transitFiles: createTransitFileStore(10, create),
       },
     );
-    expect(requests).toHaveLength(2);
+    expect(apiRequests).toHaveLength(1);
+    expect(downloadRequests).toHaveLength(1);
+    expect(downloadRequests[0]?.url.toString()).toBe("https://files.esa.io/signed/image.png");
+    expect(create).toHaveBeenCalledOnce();
     expect(output).toEqual({
       url: "https://files.esa.io/signed/image.png",
       file: {
@@ -389,36 +382,197 @@ describe("esa provider actions", () => {
     });
   });
 
-  it("truncates long post bodies while retaining full-body statistics", async () => {
-    const body = "a".repeat(10_001);
-    const { output } = await execute("get_post", { teamName: "team", postNumber: 42 }, [{ body_md: body }]);
-    expect(output).toMatchObject({
-      body_md: `${"a".repeat(10_000)}\n\n... (truncated)`,
-      body_md_stats: { characters: 10_001, lines: 1 },
-    });
-  });
-  it("truncates long post bodies at grapheme boundaries", async () => {
-    const body = `${"a".repeat(9_999)}👨‍👩‍👧‍👦b`;
-    const { output } = await execute("get_post", { teamName: "team", postNumber: 42 }, [{ body_md: body }]);
-    expect(output).toMatchObject({
-      body_md: `${"a".repeat(9_999)}👨‍👩‍👧‍👦\n\n... (truncated)`,
-      body_md_stats: { characters: 10_001, lines: 1 },
-    });
+  it.each([
+    ["https://img.esa.io/uploads/document.pdf", "application/pdf", "3"],
+    ["https://img.esa.io/uploads/constructor", "constructor", "3"],
+    ["https://custom-bucket.example/uploads/image.png", "image/png", "11"],
+  ])("returns only the URL for an unsupported or oversized attachment at %s", async (url, mimeType, contentLength) => {
+    const downloadRequests = stubAttachmentDownload(
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { "content-type": mimeType, "content-length": contentLength },
+      }),
+    );
+    const create = vi.fn<TransitFileStore["create"]>();
+
+    const output = await esaActionHandlers.get_attachment(
+      { teamName: "team", url },
+      {
+        accessToken: "esa-token",
+        fetcher: async () => {
+          throw new Error("esa API fetch was not expected");
+        },
+        transitFiles: createTransitFileStore(10, create),
+      },
+    );
+
+    expect(output).toEqual({ url });
+    expect(downloadRequests).toHaveLength(1);
+    expect(create).not.toHaveBeenCalled();
   });
 
-  it("rejects inherited object property names as attachment hosts", async () => {
+  it("bounds an attachment response when content-length is missing", async () => {
+    stubAttachmentDownload(
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { "content-type": "image/png" },
+      }),
+    );
+    const create = vi.fn<TransitFileStore["create"]>();
+
     await expect(
-      execute(
-        "get_attachment",
-        { teamName: "team", url: "https://constructor/uploads/a.png", forceSignedUrl: true },
-        [],
+      esaActionHandlers.get_attachment(
+        { teamName: "team", url: "https://img.esa.io/uploads/image.png" },
+        {
+          accessToken: "esa-token",
+          fetcher: async () => {
+            throw new Error("esa API fetch was not expected");
+          },
+          transitFiles: createTransitFileStore(2, create),
+        },
       ),
-    ).rejects.toMatchObject({
-      status: 400,
-      message: "url must use img.esa.io, files.esa.io, dl.esa.io, or an /uploads/... path",
+    ).rejects.toMatchObject({ status: 413 });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("blocks an attachment redirect to a private target", async () => {
+    const downloadRequests = stubAttachmentDownload(
+      new Response(null, {
+        status: 302,
+        headers: { location: "http://127.0.0.1/private.png" },
+      }),
+    );
+
+    await expect(
+      esaActionHandlers.get_attachment(
+        { teamName: "team", url: "https://img.esa.io/uploads/image.png" },
+        {
+          accessToken: "esa-token",
+          fetcher: async () => {
+            throw new Error("esa API fetch was not expected");
+          },
+          transitFiles: createTransitFileStore(10, vi.fn<TransitFileStore["create"]>()),
+        },
+      ),
+    ).rejects.toThrow("redirect location must not target private or reserved IP addresses");
+    expect(downloadRequests).toHaveLength(1);
+  });
+
+  it.each(["files.esa.io", "dl.esa.io"])(
+    "signs a full secure attachment URL from %s using only its pathname",
+    async (hostname) => {
+      const path = "/uploads/example/image.png";
+      const signedUrl = "https://cdn.example.com/signed/image.png";
+      const { output, requests } = await execute(
+        "get_attachment",
+        {
+          teamName: "team",
+          url: `https://${hostname}${path}?stale=token#fragment`,
+          forceSignedUrl: true,
+        },
+        [{ signed_urls: [[path, signedUrl]] }],
+      );
+
+      expect(requests).toHaveLength(1);
+      expect(requests[0]?.url.pathname).toBe("/v1/teams/team/signed_urls");
+      expect(Object.fromEntries(requests[0]!.url.searchParams)).toEqual({
+        urls: path,
+        v: "2",
+        expires_in: "300",
+      });
+      expect(output).toEqual({ url: signedUrl });
+    },
+  );
+
+  it("skips the transit download when forceSignedUrl is true", async () => {
+    const downloadRequests = stubAttachmentDownload(
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { "content-type": "image/png", "content-length": "3" },
+      }),
+    );
+    const create = vi.fn<TransitFileStore["create"]>();
+    const signedUrl = "https://cdn.example.com/signed/image.png";
+
+    const output = await esaActionHandlers.get_attachment(
+      { teamName: "team", url: "/uploads/image.png", forceSignedUrl: true },
+      {
+        accessToken: "esa-token",
+        fetcher: async () => Response.json({ signed_urls: [["/uploads/image.png", signedUrl]] }),
+        transitFiles: createTransitFileStore(10, create),
+      },
+    );
+
+    expect(output).toEqual({ url: signedUrl });
+    expect(downloadRequests).toHaveLength(0);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["/not-an-upload/image.png", "url path must start with /uploads/"],
+    ["//example.com/image.png", "url path must start with /uploads/"],
+    ["http://img.esa.io/uploads/image.png", "url must use HTTPS"],
+    ["https://127.0.0.1/image.png", "url must not target private or reserved IP addresses"],
+    ["https://metadata.google.internal/image.png", "url must not target cloud metadata hosts"],
+  ])("rejects unsafe or unsupported attachment URL %s", async (url, message) => {
+    await expect(
+      esaActionHandlers.get_attachment(
+        { teamName: "team", url, forceSignedUrl: true },
+        {
+          accessToken: "esa-token",
+          fetcher: async () => {
+            throw new Error("fetch was not expected");
+          },
+        },
+      ),
+    ).rejects.toThrow(message);
+  });
+
+  it("treats a non-esa hostname inherited from Object.prototype as a public URL, not a secure esa host", async () => {
+    const url = "https://constructor/uploads/image.png";
+    const output = await esaActionHandlers.get_attachment(
+      { teamName: "team", url, forceSignedUrl: true },
+      {
+        accessToken: "esa-token",
+        fetcher: async () => {
+          throw new Error("esa signing API was not expected");
+        },
+      },
+    );
+
+    expect(output).toEqual({ url });
+  });
+
+  it("truncates at a grapheme boundary while retaining full-body statistics", async () => {
+    const familyEmoji = "👨‍👩‍👧‍👦";
+    const body = `${"a".repeat(9_999)}${familyEmoji}tail`;
+    const { output } = await execute("get_post", { teamName: "team", postNumber: 42 }, [{ body_md: body }]);
+    expect(output).toMatchObject({
+      body_md: `${"a".repeat(9_999)}\n\n... (truncated)`,
+      body_md_stats: { characters: 10_004, lines: 1 },
     });
   });
 });
+
+function stubAttachmentDownload(response: Response): CapturedRequest[] {
+  const requests: CapturedRequest[] = [];
+  setDefaultGuardedFetchDnsLookup(null);
+  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+    requests.push({ url: new URL(input instanceof Request ? input.url : input.toString()), init });
+    return response;
+  });
+  return requests;
+}
+
+function createTransitFileStore(maxBytes: number, create: TransitFileStore["create"]): TransitFileStore {
+  return {
+    maxBytes,
+    create,
+    async read() {
+      throw new Error("read is not expected in this test");
+    },
+    async delete() {
+      return false;
+    },
+  };
+}
 
 async function execute(
   name: keyof typeof esaActionHandlers,

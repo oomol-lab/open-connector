@@ -552,19 +552,23 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_attachment",
-    "Get an esa attachment as a local transit file when possible, otherwise return a short-lived signed URL.",
+    "Get an esa attachment as a local transit file when possible, otherwise return its downloadable URL.",
     postInput(
       {
-        url: s.string("An esa attachment URL or an /uploads/... path."),
+        url: s.string("A public HTTPS esa attachment URL or an /uploads/... path."),
         forceSignedUrl: s.optional(
-          s.boolean({ default: false, description: "Return a signed URL without downloading a transit file." }),
+          s.boolean({
+            default: false,
+            description:
+              "Skip the transit download and return the resolved URL. Secure esa attachments use a signed URL.",
+          }),
         ),
       },
       "Attachment lookup input.",
     ),
     s.object(
       {
-        url: s.url("The signed or public attachment URL."),
+        url: s.url("The resolved signed or public attachment URL."),
         file: s.optional(
           s.object(
             {
