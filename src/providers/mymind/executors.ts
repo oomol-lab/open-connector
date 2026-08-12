@@ -32,6 +32,8 @@ const accessTokenTtlSeconds = 300;
 const markdownMediaType = "text/markdown";
 const defaultSearchLimit = 20;
 const defaultObjectLimit = 50;
+/** How mymind words the 422 it returns for an object that has no inline body. */
+const missingContentPattern = /does not have content/iu;
 
 type RequestPhase = "validate" | "execute";
 
@@ -132,13 +134,23 @@ export const myMindActionHandlers: Record<string, ActionHandler> = {
 
   async get_object_content(input, context) {
     const objectId = requiredString(input.objectId, "objectId", badRequest);
-    const markdown = await requestText(
-      `/objects/${encodePathSegment(objectId)}/content`,
-      { method: "GET", accept: markdownMediaType },
-      context,
-      "execute",
-    );
-    return { objectId, markdown };
+    try {
+      const markdown = await requestText(
+        `/objects/${encodePathSegment(objectId)}/content`,
+        { method: "GET", accept: markdownMediaType },
+        context,
+        "execute",
+      );
+      return { objectId, markdown, hasContent: true };
+    } catch (error) {
+      // Plenty of objects carry no inline body at all — a bookmark or an image
+      // is the whole object. mymind reports that as a 422, but for a caller
+      // walking search results it is an ordinary answer, not a failed read.
+      if (error instanceof ProviderRequestError && missingContentPattern.test(error.message)) {
+        return { objectId, markdown: "", hasContent: false };
+      }
+      throw error;
+    }
   },
 
   save_url(input, context) {
@@ -596,8 +608,10 @@ async function requestText(
 /**
  * Map a mymind failure onto a stable execution error.
  *
- * mymind reports failures as RFC 9457 problem documents, so the human-readable
- * reason lives in `detail` or `title` rather than in a bare message field.
+ * mymind reports failures as RFC 9457 problem documents, but it words them in
+ * more than one way: a single `detail` for most failures, and a list of
+ * `errors` for a validation failure. Reading only `detail` would reduce the
+ * useful half of them to a bare status code.
  */
 async function createRequestError(response: Response, phase: RequestPhase): Promise<ProviderRequestError> {
   const problem = optionalRecord(
@@ -609,7 +623,9 @@ async function createRequestError(response: Response, phase: RequestPhase): Prom
   );
   const message =
     optionalString(problem?.detail) ??
+    readProblemErrors(problem) ??
     optionalString(problem?.title) ??
+    optionalString(problem?.type) ??
     `mymind request failed with status ${response.status}`;
 
   if (response.status === 401 || response.status === 403) {
@@ -621,9 +637,17 @@ async function createRequestError(response: Response, phase: RequestPhase): Prom
     return new ProviderRequestError(429, describeRateLimit(response, message), problem);
   }
   if (response.status >= 400 && response.status < 500) {
-    return badRequest(message);
+    return new ProviderRequestError(400, message, problem);
   }
   return new ProviderRequestError(response.status || 502, message, problem);
+}
+
+/** Join the per-field messages mymind lists in a validation problem document. */
+function readProblemErrors(problem: Record<string, unknown> | undefined): string | undefined {
+  const messages = optionalObjectArray(problem?.errors, "problem error")
+    .map((entry) => optionalString(entry.message))
+    .filter((entry): entry is string => entry !== undefined);
+  return messages.length > 0 ? messages.join("; ") : undefined;
 }
 
 /**

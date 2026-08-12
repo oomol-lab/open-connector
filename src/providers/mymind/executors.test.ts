@@ -130,3 +130,71 @@ describe("mymind.search_objects", () => {
     expect(calls).toHaveLength(1);
   });
 });
+
+/** Reply with one RFC 9457 problem document, the shape mymind returns on failure. */
+function stubProblem(status: number, problem: Record<string, unknown>): void {
+  globalThis.fetch = (async () =>
+    new Response(JSON.stringify(problem), {
+      status,
+      headers: { "content-type": "application/problem+json" },
+    })) as typeof fetch;
+}
+
+describe("mymind.get_object_content", () => {
+  it("reports an object with no inline body as empty rather than failing", async () => {
+    // A bookmark or image is the whole object, and mymind answers 422 for it.
+    stubProblem(422, {
+      type: "InvalidParameters",
+      errors: [{ message: "object does not have content." }],
+      status: 422,
+    });
+
+    const result = await executors["mymind.get_object_content"]!({ objectId: "obj-1" }, context);
+
+    expect(result.ok).toBe(true);
+    expect(result.output).toEqual({ objectId: "obj-1", markdown: "", hasContent: false });
+  });
+
+  it("still fails on a 422 that is not about missing content", async () => {
+    stubProblem(422, { type: "InvalidParameters", errors: [{ message: "objectId is malformed." }], status: 422 });
+
+    const result = await executors["mymind.get_object_content"]!({ objectId: "obj-1" }, context);
+
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toBe("objectId is malformed.");
+  });
+});
+
+describe("mymind error mapping", () => {
+  it("reads the message out of a validation problem's errors list", async () => {
+    // Validation failures carry `errors`, not `detail`; reading only `detail`
+    // would reduce these to a bare status code.
+    stubProblem(422, {
+      type: "InvalidParameters",
+      errors: [{ message: "name is required." }, { message: "color is malformed." }],
+      status: 422,
+    });
+
+    const result = await executors["mymind.create_space"]!({ name: "x" }, context);
+
+    expect(result.error?.code).toBe("invalid_input");
+    expect(result.error?.message).toBe("name is required.; color is malformed.");
+  });
+
+  it("falls back to the problem type when there is no message at all", async () => {
+    stubProblem(409, { type: "Conflict", status: 409 });
+
+    const result = await executors["mymind.delete_object"]!({ objectId: "obj-1" }, context);
+
+    expect(result.error?.message).toBe("Conflict");
+  });
+
+  it("prefers detail when mymind sends one", async () => {
+    stubProblem(401, { type: "Unauthorized", detail: "Invalid signature", status: 401 });
+
+    const result = await executors["mymind.list_tags"]!({}, context);
+
+    expect(result.error?.code).toBe("authorization_failed");
+    expect(result.error?.message).toBe("Invalid signature");
+  });
+});

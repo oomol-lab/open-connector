@@ -196,12 +196,14 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_object_content",
-    description: "Get the content body of a mymind object as markdown.",
+    description:
+      "Get the content body of a mymind object as markdown. Many objects are saved without an inline body — a bookmark or an image is the whole object — and those come back empty rather than as an error.",
     requiredScopes: [readOnly],
     inputSchema: s.object("The input for getting object content.", { objectId: objectIdSchema }),
     outputSchema: s.object("The object content.", {
       objectId: s.string("The object the content belongs to."),
-      markdown: s.string("The content body as markdown."),
+      markdown: s.string("The content body as markdown, empty when the object carries no inline body."),
+      hasContent: s.boolean("Whether the object carries an inline content body at all."),
     }),
   }),
   defineProviderAction(service, {
