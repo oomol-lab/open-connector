@@ -23,6 +23,10 @@ const pageInput = s.integer({
   default: 1,
   description: "The page number to return. Xero returns up to 100 items per page.",
 });
+const pageOutput = s.integer({
+  minimum: 1,
+  description: "The page number that was returned.",
+});
 const xeroId = s.uuid("A Xero resource ID.");
 const invoiceStatuses = ["DRAFT", "SUBMITTED", "AUTHORISED", "PAID", "VOIDED", "DELETED"];
 
@@ -81,7 +85,7 @@ const invoiceSummary = s.object(
     invoice_number: s.string(),
     type: s.stringEnum(["ACCREC", "ACCPAY"]),
     status: s.stringEnum(invoiceStatuses),
-    date: s.string({ description: "The invoice date (YYYY-MM-DD)." }),
+    date: s.nullableString("The invoice date (YYYY-MM-DD)."),
     due_date: s.nullableString("The due date (YYYY-MM-DD)."),
     total: money,
     amount_due: money,
@@ -112,7 +116,7 @@ const invoiceDetail = s.object(
     invoice_number: s.string(),
     type: s.stringEnum(["ACCREC", "ACCPAY"]),
     status: s.stringEnum(invoiceStatuses),
-    date: s.string({ description: "The invoice date (YYYY-MM-DD)." }),
+    date: s.nullableString("The invoice date (YYYY-MM-DD)."),
     due_date: s.nullableString("The due date (YYYY-MM-DD)."),
     reference: s.nullableString("The invoice reference."),
     total: money,
@@ -143,7 +147,7 @@ const bankTransactionSummary = s.object(
     bank_transaction_id: xeroId,
     type: s.stringEnum(["RECEIVE", "SPEND"]),
     status: s.stringEnum(["AUTHORISED", "DRAFT", "VOIDED"]),
-    date: s.string({ description: "The transaction date (YYYY-MM-DD)." }),
+    date: s.nullableString("The transaction date (YYYY-MM-DD)."),
     total: money,
     currency_code: s.string(),
     contact_name: s.nullableString("The linked contact name."),
@@ -161,7 +165,7 @@ const bankTransactionDetail = s.object(
     bank_transaction_id: xeroId,
     type: s.stringEnum(["RECEIVE", "SPEND"]),
     status: s.stringEnum(["AUTHORISED", "DRAFT", "VOIDED"]),
-    date: s.string({ description: "The transaction date (YYYY-MM-DD)." }),
+    date: s.nullableString("The transaction date (YYYY-MM-DD)."),
     reference: s.nullableString("The transaction reference."),
     total: money,
     currency_code: s.string(),
@@ -245,7 +249,7 @@ const searchResults = <T extends JsonSchema>(itemSchema: T, description: string)
   s.object(
     {
       items: s.array(itemSchema, { description }),
-      page: pageInput,
+      page: pageOutput,
       returned: s.integer(),
     },
     {
@@ -376,8 +380,10 @@ export const xeroActions: ActionDefinition[] = [
           default: "ACCREC",
           description: "ACCREC bills the customer; ACCPAY records a bill from a supplier.",
         }),
-        date: s.date("The invoice date. Defaults to today."),
-        due_date: s.date("The due date. Defaults to the invoice date plus 30 days."),
+        date: s.date("The invoice date. When omitted, Xero uses today in the organisation timezone."),
+        due_date: s.date(
+          "The due date. Defaults to 30 days after the invoice date, or 30 days from today when the date is omitted.",
+        ),
         reference: s.string({ description: "The invoice reference." }),
         line_items: s.array(lineItemInput, { description: "The invoice line items." }),
       },

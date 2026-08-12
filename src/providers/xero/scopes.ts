@@ -6,11 +6,10 @@
  * https://developer.xero.com/documentation/guides/oauth2/scopes
  */
 /**
- * The `app.connections` scope grants access to the Identity API connections
- * endpoint, but Xero REJECTS authorization requests that list it explicitly
- * ("Requested wrong apps scopes" / access_denied), even though the scope is
- * part of the app's allowed scope list. The connections endpoint works with a
- * live connection regardless, so this scope is kept out of the request list.
+ * The `app.connections` scope is for client-credentials Custom Connection apps.
+ * It is kept out of this provider's authorization-code request list. Requesting
+ * it on a web-app authorize URL returned access_denied ("Requested wrong apps
+ * scopes") in testing; GET /connections still works with a user access token.
  */
 export const xeroConnectionsScope = "app.connections";
 export const xeroSettingsReadScope = "accounting.settings.read";

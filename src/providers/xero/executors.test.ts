@@ -130,19 +130,19 @@ describe("tenant resolution", () => {
     await xeroActionHandlers.search_contacts({ search: "Jane" }, { accessToken, fetcher });
     const contactsRequest = requests.find((request) => request.url.includes("/Contacts"));
     expect(contactsRequest?.headers["xero-tenant-id"]).toBe("tenant-123");
-    expect(decodeURIComponent(contactsRequest?.url ?? "")).toContain('Name.Contains("Jane")');
+    expect(new URL(contactsRequest?.url ?? "https://invalid.example").searchParams.get("SearchTerm")).toBe("Jane");
   });
 
-  it("escapes quotes in the contact name filter", async () => {
+  it("sends quoted search terms through SearchTerm instead of a where clause", async () => {
     const { fetcher, requests } = createFetcher(baseRoutes);
     await xeroActionHandlers.search_contacts(
       { tenant_id: "tenant-123", search: 'Acme "Holdings"' },
       { accessToken, fetcher },
     );
     const contactsRequest = requests.find((request) => request.url.includes("/Contacts"));
-    expect(new URL(contactsRequest?.url ?? "https://invalid.example").searchParams.get("where")).toBe(
-      'Name.Contains("Acme ""Holdings""")',
-    );
+    const url = new URL(contactsRequest?.url ?? "https://invalid.example");
+    expect(url.searchParams.get("SearchTerm")).toBe('Acme "Holdings"');
+    expect(url.searchParams.get("where")).toBeNull();
   });
 
   it("uses an explicit tenant_id without calling the connections endpoint", async () => {
@@ -200,9 +200,12 @@ describe("create_invoice", () => {
       { accessToken, fetcher },
     );
     const postRequest = requests.find((request) => request.method === "POST");
+    const due = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+    due.setUTCDate(due.getUTCDate() + 30);
     expect(postRequest?.body).toEqual({
       Type: "ACCREC",
       Contact: { ContactID: "contact-1" },
+      DueDate: due.toISOString().slice(0, 10),
       Status: "DRAFT",
       LineItems: [{ Description: "Consulting", Quantity: 2, UnitAmount: 500, AccountCode: "200" }],
     });

@@ -49,7 +49,7 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
     const tenantId = await resolveTenantId(input, context);
     const payload = await xeroRequest(context, { path: "/Organisation", tenantId });
     const organisations = resourceList(payload, "Organisations");
-    return organisations.length > 0 ? mapOrganisation(organisations[0]) : null;
+    return mapOrganisation(requireFirst(organisations, "Organisation was not found."));
   },
   async search_contacts(input, context): Promise<unknown> {
     const tenantId = await resolveTenantId(input, context);
@@ -59,7 +59,7 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
       path: "/Contacts",
       tenantId,
       query: compactQuery({
-        where: search ? xeroContainsFilter("Name", search) : undefined,
+        SearchTerm: search,
         page: String(page),
       }),
     });
@@ -89,7 +89,7 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
       }),
     });
     const contacts = resourceList(payload, "Contacts");
-    return { contact: contacts.length > 0 ? mapContact(contacts[0]) : null };
+    return { contact: mapContact(requireFirst(contacts, "Xero did not return the created contact.", 502)) };
   },
   async search_invoices(input, context): Promise<unknown> {
     const tenantId = await resolveTenantId(input, context);
@@ -127,14 +127,14 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
         Type: optionalString(input.type) ?? "ACCREC",
         Contact: { ContactID: requiredString(input.contact_id, "contact_id") },
         Date: invoiceDate,
-        DueDate: optionalString(input.due_date) ?? defaultDueDate(invoiceDate),
+        DueDate: optionalString(input.due_date) ?? defaultDueDate(invoiceDate ?? utcToday()),
         Reference: optionalString(input.reference),
         LineItems: lineItems,
         Status: "DRAFT",
       }),
     });
     const invoices = resourceList(payload, "Invoices");
-    return { invoice: invoices.length > 0 ? mapInvoiceDetail(invoices[0]) : null };
+    return { invoice: mapInvoiceDetail(requireFirst(invoices, "Xero did not return the created invoice.", 502)) };
   },
   async update_invoice_status(input, context): Promise<unknown> {
     const tenantId = await resolveTenantId(input, context);
@@ -147,7 +147,7 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
       body: { InvoiceID: invoiceId, Status: status },
     });
     const invoices = resourceList(updated, "Invoices");
-    return { invoice: invoices.length > 0 ? mapInvoiceSummary(invoices[0]) : null };
+    return { invoice: mapInvoiceSummary(requireFirst(invoices, `Invoice not found: ${invoiceId}`)) };
   },
   async list_accounts(input, context): Promise<unknown> {
     const tenantId = await resolveTenantId(input, context);
@@ -329,17 +329,19 @@ function resourceList(payload: Record<string, unknown>, key: string): unknown[] 
   return Array.isArray(items) ? items : [];
 }
 
+function requireFirst(items: unknown[], message: string, status = 404): unknown {
+  if (items.length === 0) {
+    throw new ProviderRequestError(status, message);
+  }
+  return items[0];
+}
+
 function pageResult<T>(items: unknown[], page: number, map: (raw: unknown) => T): Record<string, unknown> {
   return { items: items.map(map), page, returned: items.length };
 }
 
 function compactQuery(query: Record<string, string | undefined>): Record<string, string> {
   return Object.fromEntries(Object.entries(query).filter(([, value]) => value !== undefined)) as Record<string, string>;
-}
-
-/** Xero where-strings use doubled quotes to escape a literal `"`. */
-function xeroContainsFilter(field: string, value: string): string {
-  return `${field}.Contains("${value.replaceAll('"', '""')}")`;
 }
 
 function optionalRecordValue(value: unknown): Record<string, unknown> {
@@ -528,7 +530,7 @@ async function fetchReport(
     query: compactQuery(query),
   });
   const reports = resourceList(payload, "Reports");
-  return reports.length > 0 ? mapReport(reports[0]) : null;
+  return mapReport(requireFirst(reports, `${report} report was not found.`));
 }
 
 function xeroDate(value: unknown): string | null {
@@ -540,4 +542,8 @@ function xeroDate(value: unknown): string | null {
     return new Date(Number(epoch[1])).toISOString().slice(0, 10);
   }
   return /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
+}
+
+function utcToday(): string {
+  return new Date().toISOString().slice(0, 10);
 }
