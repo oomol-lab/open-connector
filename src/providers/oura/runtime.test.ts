@@ -6,20 +6,18 @@ import { ouraActions } from "./actions.ts";
 import { fetchOuraAccountProfile, ouraActionHandlers } from "./runtime.ts";
 
 describe("Oura action catalog", () => {
-  it("publishes a list action per collection and a get action per document endpoint", () => {
-    const names = ouraActions.map(({ name }) => name);
-
-    expect(names).toContain("list_heartrate");
-    expect(names).toContain("get_daily_sleep");
-    // Oura serves heart rate as a time series without a document endpoint.
-    expect(names).not.toContain("get_heartrate");
-  });
-
-  it("only offers a date window where the collection accepts one", () => {
-    expect(inputProperties("list_daily_sleep")).toContain("startDate");
-    expect(inputProperties("list_heartrate")).toEqual(
-      expect.arrayContaining(["startDatetime", "endDatetime", "latest"]),
-    );
+  it("derives each action from what its collection actually supports", () => {
+    // Heart rate is a time series: no document endpoint, timestamps instead of
+    // days, and a `latest` shortcut. Ring configuration takes no time window.
+    expect(ouraActions.map(({ name }) => name)).not.toContain("get_heartrate");
+    expect(inputProperties("list_heartrate")).toEqual([
+      "startDatetime",
+      "endDatetime",
+      "latest",
+      "nextToken",
+      "fields",
+    ]);
+    expect(inputProperties("list_daily_sleep")).toEqual(["startDate", "endDate", "nextToken", "fields"]);
     expect(inputProperties("list_ring_configuration")).toEqual(["nextToken", "fields"]);
   });
 });

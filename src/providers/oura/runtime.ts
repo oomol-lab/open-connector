@@ -1,3 +1,4 @@
+import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { BearerProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { OuraDocumentCollection } from "./collections.ts";
@@ -11,6 +12,7 @@ import {
   optionalStringArray,
   requiredString,
 } from "../../core/cast.ts";
+import { encodePathSegment, queryParams } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { ouraApiBaseUrl, ouraDocumentCollections, ouraUserCollectionPath } from "./collections.ts";
 
@@ -18,7 +20,6 @@ const ouraPersonalInfoPath = `${ouraUserCollectionPath}/personal_info`;
 const ouraRequestTimeoutMs = 30_000;
 
 type OuraRequestPhase = "validate" | "execute";
-type OuraQueryValue = string | undefined;
 type OuraActionHandler = ProviderRuntimeHandler<BearerProviderContext>;
 
 interface OuraRequestInput {
@@ -26,7 +27,7 @@ interface OuraRequestInput {
   path: string;
   fetcher: ProviderFetch;
   phase: OuraRequestPhase;
-  query?: Record<string, OuraQueryValue>;
+  query?: Record<string, string>;
   /** Report a provider 404 as invalid input; used for document-ID lookups. */
   notFoundAsInvalidInput?: boolean;
   signal?: AbortSignal;
@@ -135,7 +136,7 @@ async function getOuraDocument(
   return {
     document: await requestOuraObject({
       accessToken: context.accessToken,
-      path: `${ouraUserCollectionPath}/${collection.path}/${encodeURIComponent(documentId)}`,
+      path: `${ouraUserCollectionPath}/${collection.path}/${encodePathSegment(documentId)}`,
       fetcher: context.fetcher,
       phase: "execute",
       notFoundAsInvalidInput: true,
@@ -144,8 +145,8 @@ async function getOuraDocument(
   };
 }
 
-function listQuery(collection: OuraDocumentCollection, input: Record<string, unknown>): Record<string, OuraQueryValue> {
-  const query: Record<string, OuraQueryValue> = {
+function listQuery(collection: OuraDocumentCollection, input: Record<string, unknown>): Record<string, string> {
+  const query: Record<string, QueryValue> = {
     next_token: optionalString(input.nextToken),
     fields: joinCommaSeparated(optionalStringArray(input.fields)),
   };
@@ -159,19 +160,16 @@ function listQuery(collection: OuraDocumentCollection, input: Record<string, unk
     query.end_datetime = optionalString(input.endDatetime);
   }
   if (collection.supportsLatest) {
-    const latest = optionalBoolean(input.latest);
-    query.latest = latest === undefined ? undefined : String(latest);
+    query.latest = optionalBoolean(input.latest);
   }
 
-  return compactObject(query);
+  return queryParams(query);
 }
 
 async function requestOuraObject(input: OuraRequestInput): Promise<Record<string, unknown>> {
   const url = new URL(input.path, ouraApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
-    if (value !== undefined) {
-      url.searchParams.set(key, value);
-    }
+    url.searchParams.set(key, value);
   }
 
   const timeout = createProviderTimeout(input.signal, ouraRequestTimeoutMs);
