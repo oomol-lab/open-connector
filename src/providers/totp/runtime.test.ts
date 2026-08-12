@@ -31,4 +31,19 @@ describe("TOTP runtime", () => {
       readTotpCredential({ website: "javascript:alert(1)", username: "alice", secret: "JBSWY3DPEHPK3PXP" }),
     ).toThrow("website must be a valid HTTP or HTTPS URL");
   });
+
+  it("rejects website URLs containing userinfo credentials", () => {
+    expect(() =>
+      readTotpCredential({
+        website: "https://user:password@example.com/login",
+        username: "alice",
+        secret: "JBSWY3DPEHPK3PXP",
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        status: 400,
+        message: "website must be a valid HTTP or HTTPS URL",
+      }),
+    );
+  });
 });

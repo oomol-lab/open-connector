@@ -93,7 +93,7 @@ function decodeBase32Secret(input: string): ArrayBuffer {
 function parseWebsiteUrl(website: string): URL {
   try {
     const url = new URL(website);
-    if ((url.protocol === "http:" || url.protocol === "https:") && url.hostname) {
+    if ((url.protocol === "http:" || url.protocol === "https:") && url.hostname && !url.username && !url.password) {
       return url;
     }
   } catch {
