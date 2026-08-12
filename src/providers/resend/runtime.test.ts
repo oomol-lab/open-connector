@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { resendActions } from "./actions.ts";
 import { resendActionHandlers, validateResendCredential } from "./runtime.ts";
 
 describe("Resend email runtime", () => {
@@ -59,6 +61,34 @@ describe("Resend email runtime", () => {
         template: { id: "welcome", variables: { NAME: "Ada", COUNT: 2 } },
       },
     ]);
+  });
+
+  it("rejects combining a batch template with message content", async () => {
+    const input = {
+      emails: [
+        {
+          from: "sender@example.com",
+          to: ["recipient@example.com"],
+          subject: "Welcome",
+          html: "<p>Welcome</p>",
+          template: { id: "welcome" },
+        },
+      ],
+    };
+    const action = resendActions.find(({ name }) => name === "send_batch_emails")!;
+
+    expect(validateActionInput(action, input).valid).toBe(false);
+
+    let requested = false;
+    const fetcher = async (): Promise<Response> => {
+      requested = true;
+      return Response.json({});
+    };
+    await expect(resendActionHandlers.send_batch_emails!(input, { apiKey: "re_test", fetcher })).rejects.toMatchObject({
+      status: 400,
+      message: "template cannot be used with html or text",
+    });
+    expect(requested).toBe(false);
   });
 
   it("passes sent email cursors and normalizes provider fields", async () => {
@@ -142,6 +172,80 @@ describe("Resend email runtime", () => {
       ),
     ).rejects.toMatchObject({ status: 400, message: "after and before cannot be used together" });
     expect(requested).toBe(false);
+  });
+
+  it("normalizes a received email list item without a subject", async () => {
+    const fetcher = async (): Promise<Response> =>
+      Response.json({
+        object: "list",
+        has_more: false,
+        data: [
+          {
+            id: "received-1",
+            message_id: "message-1",
+            to: ["inbox@example.com"],
+            from: "sender@example.com",
+            created_at: "2026-08-11T11:00:00.000Z",
+            subject: null,
+            bcc: [],
+            cc: [],
+            reply_to: [],
+            attachments: [],
+          },
+        ],
+      });
+
+    await expect(resendActionHandlers.list_received_emails!({}, { apiKey: "re_test", fetcher })).resolves.toMatchObject(
+      { emails: [{ id: "received-1", subject: null }] },
+    );
+  });
+
+  it("normalizes a received email without parsed headers", async () => {
+    const fetcher = async (): Promise<Response> =>
+      Response.json({
+        id: "received-1",
+        message_id: "message-1",
+        to: ["inbox@example.com"],
+        from: "sender@example.com",
+        created_at: "2026-08-11T11:00:00.000Z",
+        subject: "No headers",
+        html: null,
+        text: null,
+        headers: null,
+        bcc: [],
+        cc: [],
+        reply_to: [],
+        raw: null,
+        attachments: [],
+      });
+
+    await expect(
+      resendActionHandlers.get_received_email!({ emailId: "received-1" }, { apiKey: "re_test", fetcher }),
+    ).resolves.toMatchObject({ email: { id: "received-1", headers: null } });
+  });
+
+  it("normalizes an attachment without a filename", async () => {
+    const fetcher = async (): Promise<Response> =>
+      Response.json({
+        object: "list",
+        has_more: false,
+        data: [
+          {
+            id: "attachment-1",
+            filename: null,
+            size: 4096,
+            content_type: "application/octet-stream",
+            content_disposition: null,
+            content_id: null,
+            download_url: "https://inbound-cdn.resend.com/attachment-1",
+            expires_at: "2026-08-11T12:00:00.000Z",
+          },
+        ],
+      });
+
+    await expect(
+      resendActionHandlers.list_received_email_attachments!({ emailId: "received-1" }, { apiKey: "re_test", fetcher }),
+    ).resolves.toMatchObject({ attachments: [{ id: "attachment-1", filename: null }] });
   });
 
   it("normalizes received email content, raw download metadata, and attachments", async () => {

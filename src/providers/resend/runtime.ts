@@ -369,6 +369,9 @@ function buildBatchEmailBody(input: Record<string, unknown>): unknown {
   if (html === undefined && text === undefined && template === undefined) {
     throw inputError("each batch email requires html, text, or template");
   }
+  if (template !== undefined && (html !== undefined || text !== undefined)) {
+    throw inputError("template cannot be used with html or text");
+  }
 
   const headers = optionalRecord(input.headers);
   const tags =
@@ -436,6 +439,7 @@ function normalizeSentEmailSummary(value: unknown): Record<string, unknown> {
   const email = requireResponseObject(value, "Resend sent email");
   return {
     ...normalizeEmailEnvelope(email, "Resend sent email"),
+    subject: readRequiredString(email, "subject", "Resend sent email"),
     lastEvent: readNullableString(email.last_event, "last_event"),
     scheduledAt: readNullableString(email.scheduled_at, "scheduled_at"),
   };
@@ -445,6 +449,7 @@ function normalizeSentEmail(value: unknown): Record<string, unknown> {
   const email = requireResponseObject(value, "Resend sent email");
   return {
     ...normalizeEmailEnvelope(email, "Resend sent email"),
+    subject: readRequiredString(email, "subject", "Resend sent email"),
     html: readNullableString(email.html, "html"),
     text: readNullableString(email.text, "text"),
     lastEvent: readNullableString(email.last_event, "last_event"),
@@ -457,6 +462,7 @@ function normalizeReceivedEmailSummary(value: unknown): Record<string, unknown> 
   const email = requireResponseObject(value, "Resend received email");
   return {
     ...normalizeEmailEnvelope(email, "Resend received email"),
+    subject: readNullableString(email.subject, "subject"),
     attachments: optionalObjectArray(email.attachments, "Resend attachment", responseError).map(
       normalizeAttachmentReference,
     ),
@@ -468,9 +474,10 @@ function normalizeReceivedEmail(value: unknown): Record<string, unknown> {
   const raw = email.raw;
   return {
     ...normalizeEmailEnvelope(email, "Resend received email"),
+    subject: readRequiredString(email, "subject", "Resend received email"),
     html: readNullableString(email.html, "html"),
     text: readNullableString(email.text, "text"),
-    headers: normalizeResponseStringRecord(email.headers, "headers"),
+    headers: email.headers == null ? null : normalizeResponseStringRecord(email.headers, "headers"),
     raw: raw == null ? null : normalizeRawEmail(raw),
     attachments: optionalObjectArray(email.attachments, "Resend attachment", responseError).map(
       normalizeAttachmentReference,
@@ -485,7 +492,6 @@ function normalizeEmailEnvelope(email: Record<string, unknown>, label: string): 
     to: readRequiredStringArray(email, "to", label),
     from: readRequiredString(email, "from", label),
     createdAt: readRequiredString(email, "created_at", label),
-    subject: readRequiredString(email, "subject", label),
     bcc: readNullableStringArray(email.bcc, "bcc"),
     cc: readNullableStringArray(email.cc, "cc"),
     replyTo: readNullableStringArray(email.reply_to, "reply_to"),
@@ -529,7 +535,7 @@ function normalizeAttachmentReference(value: unknown): Record<string, unknown> {
   const attachment = requireResponseObject(value, "Resend attachment");
   return {
     id: readRequiredString(attachment, "id", "Resend attachment"),
-    filename: readRequiredString(attachment, "filename", "Resend attachment"),
+    filename: readNullableString(attachment.filename, "filename"),
     size: readNullableInteger(attachment.size, "size"),
     contentType: readNullableString(attachment.content_type, "content_type"),
     contentDisposition: readNullableString(attachment.content_disposition, "content_disposition"),

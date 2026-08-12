@@ -66,7 +66,16 @@ const batchEmailInputSchema: JsonSchema = {
     },
     { optional: ["html", "text", "cc", "bcc", "replyTo", "headers", "tags", "template"] },
   ),
-  anyOf: [{ required: ["html"] }, { required: ["text"] }, { required: ["template"] }],
+  oneOf: [
+    {
+      anyOf: [{ required: ["html"] }, { required: ["text"] }],
+      not: { required: ["template"] },
+    },
+    {
+      required: ["template"],
+      not: { anyOf: [{ required: ["html"] }, { required: ["text"] }] },
+    },
+  ],
 };
 
 const paginationFields = {
@@ -113,7 +122,7 @@ const sentEmailSchema = s.object("A sent Resend email with message content.", {
 
 const attachmentReferenceSchema = s.object("Attachment metadata included with a received email.", {
   id: s.string("The attachment ID."),
-  filename: s.string("The attachment filename."),
+  filename: s.nullableString("The attachment filename, or null when unavailable."),
   size: s.nullableInteger("The attachment size in bytes, or null when unavailable.", { minimum: 0 }),
   contentType: s.nullableString("The attachment media type, or null when unavailable."),
   contentDisposition: s.nullableString("The attachment disposition, or null when unavailable."),
@@ -122,7 +131,7 @@ const attachmentReferenceSchema = s.object("Attachment metadata included with a 
 
 const attachmentSchema = s.object("A Resend attachment with a temporary download URL.", {
   id: s.string("The attachment ID."),
-  filename: s.string("The attachment filename."),
+  filename: s.nullableString("The attachment filename, or null when unavailable."),
   size: s.integer("The attachment size in bytes.", { minimum: 0 }),
   contentType: s.string("The attachment media type."),
   contentDisposition: s.nullableString("The attachment disposition, or null when unavailable."),
@@ -137,7 +146,7 @@ const receivedEmailSummarySchema = s.object("A received Resend email summary.", 
   to: emailAddressListSchema("Primary recipient email addresses."),
   from: s.string("The sender address."),
   createdAt: s.string("The email creation timestamp."),
-  subject: s.string("The email subject."),
+  subject: s.nullableString("The email subject, or null when omitted."),
   bcc: nullableEmailAddressListSchema("Bcc recipient addresses, or null when omitted."),
   cc: nullableEmailAddressListSchema("Cc recipient addresses, or null when omitted."),
   replyTo: nullableEmailAddressListSchema("Reply-to addresses, or null when omitted."),
@@ -158,7 +167,7 @@ const receivedEmailSchema = s.object("A received Resend email with message conte
   subject: s.string("The email subject."),
   html: s.nullableString("The HTML message body, or null when unavailable."),
   text: s.nullableString("The plain-text message body, or null when unavailable."),
-  headers: s.record("Received email headers.", s.string("A header value.")),
+  headers: s.nullable(s.record("Received email headers.", s.string("A header value."))),
   bcc: nullableEmailAddressListSchema("Bcc recipient addresses, or null when omitted."),
   cc: nullableEmailAddressListSchema("Cc recipient addresses, or null when omitted."),
   replyTo: nullableEmailAddressListSchema("Reply-to addresses, or null when omitted."),
