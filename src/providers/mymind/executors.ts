@@ -1,8 +1,11 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
+import { SignJWT } from "jose";
 import {
+  base64Bytes,
   optionalBoolean,
   optionalInteger,
+  optionalNumber,
   optionalObjectArray,
   optionalRecord,
   optionalString,
@@ -17,35 +20,42 @@ import {
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
+  readProviderTextBody,
   requireCustomCredential,
 } from "../provider-runtime.ts";
-import { markdownToProse, proseToMarkdown } from "./prose.ts";
 
 const service = "mymind";
-const myMindApiBaseUrl = "https://access.mymind.com";
+const myMindApiBaseUrl = "https://api.mymind.com";
 const requestTimeoutMs = 30_000;
-/** Bit mymind sets on tags the account owner created, as opposed to the ones it generates automatically. */
-const customTagFlag = 8;
+/** mymind recommends a five-minute lifetime for the JWT signed for each request. */
+const accessTokenTtlSeconds = 300;
+const markdownMediaType = "text/markdown";
 const defaultSearchLimit = 20;
-const defaultTagLimit = 50;
+const defaultObjectLimit = 50;
 
 type RequestPhase = "validate" | "execute";
 
 /**
- * mymind authenticates the web app with its session cookies plus a CSRF-style
- * header, so a connection carries all three values rather than one token.
+ * A mymind access key. The secret never leaves the runtime: it signs a
+ * short-lived JWT per request, and only that JWT is sent to mymind.
  */
-interface MyMindContext {
-  jwt: string;
-  cid: string;
-  authenticityToken: string;
+interface MyMindAccessKey {
+  keyId: string;
+  keySecret: Uint8Array;
+}
+
+interface MyMindContext extends MyMindAccessKey {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }
 
 interface MyMindRequest {
   method: string;
-  body?: Record<string, unknown>;
+  query?: Record<string, string | string[] | undefined>;
+  json?: unknown;
+  /** A body sent in its own media type, used by the markdown content and note endpoints. */
+  text?: { contentType: string; body: string };
+  accept?: string;
 }
 
 type ActionHandler = (input: Record<string, unknown>, context: MyMindContext) => Promise<unknown>;
@@ -53,125 +63,241 @@ type ActionHandler = (input: Record<string, unknown>, context: MyMindContext) =>
 const badRequest = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
 
 export const myMindActionHandlers: Record<string, ActionHandler> = {
-  async search_cards(input, context) {
-    const query = requiredString(input.query, "query", badRequest);
+  async search_objects(input, context) {
     const limit = optionalInteger(input.limit) ?? defaultSearchLimit;
-    const payload = await requestJson(`/search?q=${encodeURIComponent(query)}`, { method: "GET" }, context, "execute");
-    const matches = optionalObjectArray(optionalRecord(payload)?.matches, "search match");
-
-    const cards: unknown[] = [];
-    for (const match of matches) {
-      if (cards.length >= limit) {
-        break;
-      }
-      const cardId = optionalString(match.id);
-      if (cardId) {
-        cards.push(await readCard(cardId, context));
-      }
-    }
-    return { matchCount: matches.length, cards };
-  },
-
-  get_card(input, context) {
-    return readCard(requiredString(input.cardId, "cardId", badRequest), context);
-  },
-
-  async get_card_content(input, context) {
-    const cardId = requiredString(input.cardId, "cardId", badRequest);
-    const card = await requestJson(`/cards/${encodePathSegment(cardId)}`, { method: "GET" }, context, "execute");
-    const record = optionalRecord(card);
-    return {
-      card,
-      proseMarkdown: proseToMarkdown(record?.prose),
-      noteMarkdown: proseToMarkdown(optionalRecord(record?.note)?.prose),
-    };
-  },
-
-  async create_note(input, context) {
-    const card = await requestJson(
-      "/objects",
+    const payload = await requestJson(
+      "/search",
       {
-        method: "POST",
-        body: {
-          type: "Note",
-          title: optionalString(input.title) ?? "",
-          prose: {
-            type: "doc",
-            content: markdownToProse(requiredString(input.content, "content", badRequest)),
-          },
+        method: "GET",
+        query: {
+          q: requiredString(input.query, "query", badRequest),
+          limit: String(limit),
+          semantic: flag(input.semantic),
+          semanticBoost: numberParam(input.semanticBoost),
+          similarTo: optionalString(input.similarTo),
+          rerank: flag(input.rerank),
         },
       },
       context,
       "execute",
     );
-    return { card, tags: await applyTags(card, input.tags, context) };
+
+    const matches = optionalObjectArray(optionalRecord(payload)?.matches, "search match").slice(0, limit);
+    const objectIds = matches.map((match) => optionalString(match.id)).filter((id): id is string => id !== undefined);
+    // One list call hydrates every match, so relevance order is preserved by
+    // mapping the objects back onto the matches rather than by response order.
+    const objectsById = new Map<string, Record<string, unknown>>();
+    for (const object of await readObjects(objectIds, context)) {
+      const id = optionalString(object.id);
+      if (id) {
+        objectsById.set(id, object);
+      }
+    }
+
+    return {
+      matches: matches.map((match) => {
+        const id = optionalString(match.id);
+        return jsonObject({
+          id,
+          score: optionalNumber(match.score),
+          semanticScore: optionalNumber(match.semanticScore),
+          object: id === undefined ? undefined : objectsById.get(id),
+        });
+      }),
+    };
   },
 
-  async save_url(input, context) {
+  async list_objects(input, context) {
+    const payload = await requestJson(
+      "/objects",
+      {
+        method: "GET",
+        query: {
+          q: optionalString(input.query),
+          id: optionalStringArray(input.objectIds),
+          spaceId: optionalString(input.spaceId),
+          similarTo: optionalString(input.similarTo),
+          limit: String(optionalInteger(input.limit) ?? defaultObjectLimit),
+        },
+      },
+      context,
+      "execute",
+    );
+    return { objects: optionalObjectArray(payload, "object") };
+  },
+
+  get_object(input, context) {
+    return requestJson(`/objects/${objectPath(input)}`, { method: "GET" }, context, "execute");
+  },
+
+  async get_object_content(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const markdown = await requestText(
+      `/objects/${encodePathSegment(objectId)}/content`,
+      { method: "GET", accept: markdownMediaType },
+      context,
+      "execute",
+    );
+    return { objectId, markdown };
+  },
+
+  save_url(input, context) {
     const url = assertPublicHttpUrl(requiredString(input.url, "url", badRequest), {
       fieldName: "url",
       createError: badRequest,
     });
-    const card = await requestJson(
-      "/objects",
-      { method: "POST", body: { type: "WebPage", url: url.toString() } },
+    return createObject(
+      jsonObject({
+        url: url.toString(),
+        title: optionalString(input.title),
+        tags: tagBody(input.tags),
+        spaces: spaceBody(input.spaceIds),
+      }),
       context,
-      "execute",
-    );
-    return { card, tags: await applyTags(card, input.tags, context) };
-  },
-
-  update_card(input, context) {
-    const cardId = requiredString(input.cardId, "cardId", badRequest);
-    return requestJson(
-      `/objects/${encodePathSegment(cardId)}`,
-      { method: "PATCH", body: { title: requiredString(input.title, "title", badRequest) } },
-      context,
-      "execute",
     );
   },
 
-  async delete_card(input, context) {
-    const cardId = requiredString(input.cardId, "cardId", badRequest);
-    await requestJson(`/objects/${encodePathSegment(cardId)}`, { method: "DELETE" }, context, "execute");
-    return { cardId, deleted: true };
+  create_note(input, context) {
+    return createObject(
+      jsonObject({
+        content: { type: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+        title: optionalString(input.title),
+        tags: tagBody(input.tags),
+        spaces: spaceBody(input.spaceIds),
+      }),
+      context,
+    );
   },
 
-  async list_tags(input, context) {
+  async update_object(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    await requestJson(
+      `/objects/${encodePathSegment(objectId)}`,
+      {
+        method: "PATCH",
+        json: jsonObject({
+          title: optionalString(input.title),
+          summary: optionalString(input.summary),
+          completed: optionalBoolean(input.completed),
+        }),
+      },
+      context,
+      "execute",
+    );
+    return { objectId, acknowledged: true };
+  },
+
+  async update_object_content(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    await requestJson(
+      `/objects/${encodePathSegment(objectId)}/content`,
+      {
+        method: "PUT",
+        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+      },
+      context,
+      "execute",
+    );
+    return { objectId, acknowledged: true };
+  },
+
+  async delete_object(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    await requestJson(`/objects/${encodePathSegment(objectId)}`, { method: "DELETE" }, context, "execute");
+    return { objectId, acknowledged: true };
+  },
+
+  async restore_object(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    await requestJson(`/objects/${encodePathSegment(objectId)}/restore`, { method: "POST" }, context, "execute");
+    return { objectId, acknowledged: true };
+  },
+
+  async pin_object(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    await requestJson(
+      `/objects/${encodePathSegment(objectId)}/pin`,
+      { method: "POST", json: jsonObject({ position: optionalInteger(input.position) }) },
+      context,
+      "execute",
+    );
+    return { objectId, acknowledged: true };
+  },
+
+  async unpin_object(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    await requestJson(`/objects/${encodePathSegment(objectId)}/pin`, { method: "DELETE" }, context, "execute");
+    return { objectId, acknowledged: true };
+  },
+
+  async create_object_note(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const payload = await requestJson(
+      `/objects/${encodePathSegment(objectId)}/notes`,
+      {
+        method: "POST",
+        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+      },
+      context,
+      "execute",
+    );
+    const noteId = optionalString(optionalRecord(payload)?.id);
+    if (!noteId) {
+      throw new ProviderRequestError(502, "mymind did not return an id for the new note");
+    }
+    return { objectId, noteId };
+  },
+
+  async update_object_note(input, context) {
+    const noteId = requiredString(input.noteId, "noteId", badRequest);
+    await requestJson(
+      `/objects/${objectPath(input)}/notes/${encodePathSegment(noteId)}`,
+      {
+        method: "PUT",
+        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+      },
+      context,
+      "execute",
+    );
+    return { noteId, acknowledged: true };
+  },
+
+  async delete_object_note(input, context) {
+    const noteId = requiredString(input.noteId, "noteId", badRequest);
+    await requestJson(
+      `/objects/${objectPath(input)}/notes/${encodePathSegment(noteId)}`,
+      { method: "DELETE" },
+      context,
+      "execute",
+    );
+    return { noteId, acknowledged: true };
+  },
+
+  async list_tags(_input, context) {
     const payload = await requestJson("/tags", { method: "GET" }, context, "execute");
-    const tags = optionalObjectArray(payload, "tag");
-    const selected =
-      optionalBoolean(input.customOnly) === true
-        ? tags.filter((tag) => optionalInteger(tag.flags) === customTagFlag)
-        : tags;
-    return { tags: selected.slice(0, optionalInteger(input.limit) ?? defaultTagLimit) };
+    return { tags: optionalObjectArray(payload, "tag") };
   },
 
-  async get_card_tags(input, context) {
-    const cardId = requiredString(input.cardId, "cardId", badRequest);
-    return { cardId, tags: await readCardTags(cardId, context) };
-  },
-
-  async add_card_tag(input, context) {
-    const cardId = requiredString(input.cardId, "cardId", badRequest);
+  async add_object_tags(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
     await requestJson(
-      `/objects/${encodePathSegment(cardId)}/tags`,
-      { method: "POST", body: { name: requiredString(input.tag, "tag", badRequest) } },
+      `/objects/${encodePathSegment(objectId)}/tags`,
+      { method: "POST", json: requiredTagBody(input.tags) },
       context,
       "execute",
     );
-    return { cardId, tags: await readCardTags(cardId, context) };
+    return { objectId, acknowledged: true };
   },
 
-  async remove_card_tag(input, context) {
-    const cardId = requiredString(input.cardId, "cardId", badRequest);
+  async remove_object_tags(input, context) {
+    const objectId = requiredString(input.objectId, "objectId", badRequest);
     await requestJson(
-      `/objects/${encodePathSegment(cardId)}/tags`,
-      { method: "DELETE", body: { name: requiredString(input.tag, "tag", badRequest) } },
+      `/objects/${encodePathSegment(objectId)}/tags`,
+      { method: "DELETE", json: requiredTagBody(input.tags) },
       context,
       "execute",
     );
-    return { cardId, tags: await readCardTags(cardId, context) };
+    return { objectId, acknowledged: true };
   },
 
   async list_spaces(_input, context) {
@@ -180,21 +306,31 @@ export const myMindActionHandlers: Record<string, ActionHandler> = {
   },
 
   get_space(input, context) {
-    const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
-    return requestJson(`/spaces/${encodePathSegment(spaceId)}`, { method: "GET" }, context, "execute");
+    return requestJson(`/spaces/${spacePath(input)}`, { method: "GET" }, context, "execute");
   },
 
   create_space(input, context) {
-    const filters = optionalStringArray(input.filters);
     return requestJson(
       "/spaces",
       {
         method: "POST",
-        body: jsonObject({
+        json: jsonObject({
           name: requiredString(input.name, "name", badRequest),
           color: optionalString(input.color),
-          query: filters?.length ? { filters } : undefined,
+          objects: spaceBody(input.objectIds),
         }),
+      },
+      context,
+      "execute",
+    );
+  },
+
+  update_space(input, context) {
+    return requestJson(
+      `/spaces/${spacePath(input)}`,
+      {
+        method: "PATCH",
+        json: jsonObject({ name: optionalString(input.name), color: optionalString(input.color) }),
       },
       context,
       "execute",
@@ -204,7 +340,56 @@ export const myMindActionHandlers: Record<string, ActionHandler> = {
   async delete_space(input, context) {
     const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
     await requestJson(`/spaces/${encodePathSegment(spaceId)}`, { method: "DELETE" }, context, "execute");
-    return { spaceId, deleted: true };
+    return { spaceId, acknowledged: true };
+  },
+
+  async add_object_to_space(input, context) {
+    const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
+    await requestJson(
+      `/spaces/${encodePathSegment(spaceId)}/objects/${objectPath(input)}`,
+      { method: "PUT" },
+      context,
+      "execute",
+    );
+    return { spaceId, acknowledged: true };
+  },
+
+  async remove_object_from_space(input, context) {
+    const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
+    await requestJson(
+      `/spaces/${encodePathSegment(spaceId)}/objects/${objectPath(input)}`,
+      { method: "DELETE" },
+      context,
+      "execute",
+    );
+    return { spaceId, acknowledged: true };
+  },
+
+  async list_links(_input, context) {
+    const payload = await requestJson("/links", { method: "GET" }, context, "execute");
+    return { links: optionalObjectArray(payload, "link") };
+  },
+
+  async create_link(input, context) {
+    const { payload, status } = await requestJsonWithStatus(
+      "/links",
+      {
+        method: "POST",
+        json: {
+          sourceId: requiredString(input.sourceId, "sourceId", badRequest),
+          targetId: requiredString(input.targetId, "targetId", badRequest),
+        },
+      },
+      context,
+      "execute",
+    );
+    return { link: payload, created: status === 201 };
+  },
+
+  async delete_link(input, context) {
+    const linkId = requiredString(input.linkId, "linkId", badRequest);
+    await requestJson(`/links/${encodePathSegment(linkId)}`, { method: "DELETE" }, context, "execute");
+    return { linkId, acknowledged: true };
   },
 };
 
@@ -215,116 +400,145 @@ export const executors: ProviderExecutors = defineProviderExecutors<MyMindContex
   fallbackMessage: "mymind request failed",
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<MyMindContext> {
     const credential = await requireCustomCredential(context, service);
-    return {
-      ...readSessionValues(credential.values),
-      fetcher,
-      signal: context.signal,
-    };
+    return { ...readAccessKey(credential.values), fetcher, signal: context.signal };
   },
 });
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {
-    await requestJson("/tags", { method: "GET" }, { ...readSessionValues(input.values), fetcher, signal }, "validate");
+    const accessKey = readAccessKey(input.values);
+    await requestJson("/tags", { method: "GET" }, { ...accessKey, fetcher, signal }, "validate");
 
     return {
+      profile: {
+        accountId: accessKey.keyId,
+        displayName: `mymind key ${accessKey.keyId}`,
+      },
       grantedScopes: [],
       metadata: { apiBaseUrl: myMindApiBaseUrl, validationEndpoint: "/tags" },
     };
   },
 };
 
-function readSessionValues(values: Record<string, string>): Pick<MyMindContext, "jwt" | "cid" | "authenticityToken"> {
+function readAccessKey(values: Record<string, string>): MyMindAccessKey {
   return {
-    jwt: requiredString(values.jwt, "jwt", badRequest),
-    cid: requiredString(values.cid, "cid", badRequest),
-    authenticityToken: requiredString(values.authenticityToken, "authenticityToken", badRequest),
+    keyId: requiredString(values.keyId, "keyId", badRequest),
+    keySecret: base64Bytes(values.keySecret, "keySecret", badRequest),
   };
 }
 
-function readCard(cardId: string, context: MyMindContext): Promise<unknown> {
-  return requestJson(`/objects/${encodePathSegment(cardId)}`, { method: "GET" }, context, "execute");
+function objectPath(input: Record<string, unknown>): string {
+  return encodePathSegment(requiredString(input.objectId, "objectId", badRequest));
 }
 
-async function readCardTags(cardId: string, context: MyMindContext): Promise<Array<Record<string, unknown>>> {
-  const payload = await requestJson(
-    `/objects/${encodePathSegment(cardId)}/tags`,
-    { method: "GET" },
-    context,
-    "execute",
-  );
-  return optionalObjectArray(payload, "tag");
+function spacePath(input: Record<string, unknown>): string {
+  return encodePathSegment(requiredString(input.spaceId, "spaceId", badRequest));
 }
 
-/**
- * Apply the requested tags to a card mymind just created.
- *
- * mymind only accepts tags on an existing card, so creating a tagged card is
- * always a create call followed by one tag call per tag.
- */
-async function applyTags(card: unknown, tagsInput: unknown, context: MyMindContext): Promise<string[]> {
-  const tags = optionalStringArray(tagsInput) ?? [];
-  if (tags.length === 0) {
-    return [];
-  }
+function flag(value: unknown): string | undefined {
+  return optionalBoolean(value) === true ? "true" : undefined;
+}
 
-  const cardId = optionalString(optionalRecord(card)?.id);
-  if (!cardId) {
-    throw new ProviderRequestError(502, "mymind did not return an id for the new card");
-  }
+function numberParam(value: unknown): string | undefined {
+  const parsed = optionalNumber(value);
+  return parsed === undefined ? undefined : String(parsed);
+}
 
-  for (const tag of tags) {
-    await requestJson(
-      `/objects/${encodePathSegment(cardId)}/tags`,
-      { method: "POST", body: { name: tag } },
-      context,
-      "execute",
-    );
+function tagBody(value: unknown): Array<{ name: string }> | undefined {
+  const names = optionalStringArray(value);
+  return names?.length ? names.map((name) => ({ name })) : undefined;
+}
+
+function requiredTagBody(value: unknown): Array<{ name: string }> {
+  const tags = tagBody(value);
+  if (!tags) {
+    throw badRequest("tags must contain at least one tag name");
   }
   return tags;
 }
 
-async function requestJson(
+function spaceBody(value: unknown): Array<{ id: string }> | undefined {
+  const ids = optionalStringArray(value);
+  return ids?.length ? ids.map((id) => ({ id })) : undefined;
+}
+
+async function createObject(body: Record<string, unknown>, context: MyMindContext): Promise<unknown> {
+  // mymind answers 201 for a new object and 200 when the save matched one the
+  // mind already holds, so the status is the only signal that it was a duplicate.
+  const { payload, status } = await requestJsonWithStatus(
+    "/objects",
+    { method: "POST", json: body },
+    context,
+    "execute",
+  );
+  return { object: payload, created: status === 201 };
+}
+
+async function readObjects(objectIds: string[], context: MyMindContext): Promise<Array<Record<string, unknown>>> {
+  if (objectIds.length === 0) {
+    return [];
+  }
+
+  const payload = await requestJson(
+    "/objects",
+    { method: "GET", query: { id: objectIds, limit: String(objectIds.length) } },
+    context,
+    "execute",
+  );
+  return optionalObjectArray(payload, "object");
+}
+
+/**
+ * Sign the short-lived JWT mymind expects for one request.
+ *
+ * The token is bound to the method and path it was signed for, so it cannot be
+ * replayed against another endpoint, and every request gets a fresh one.
+ */
+async function signRequestToken(path: string, method: string, accessKey: MyMindAccessKey): Promise<string> {
+  const issuedAt = Math.floor(Date.now() / 1000);
+  return new SignJWT({ path, method })
+    .setProtectedHeader({ alg: "HS256", kid: accessKey.keyId })
+    .setIssuedAt(issuedAt)
+    .setExpirationTime(issuedAt + accessTokenTtlSeconds)
+    .sign(accessKey.keySecret);
+}
+
+async function send(
   path: string,
   init: MyMindRequest,
   context: MyMindContext,
   phase: RequestPhase,
-): Promise<unknown> {
+): Promise<{ response: Response; timeout: ReturnType<typeof createProviderTimeout> }> {
   const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const url = new URL(`${myMindApiBaseUrl}${path}`);
+  for (const [name, value] of Object.entries(init.query ?? {})) {
+    for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value]) {
+      url.searchParams.append(name, item);
+    }
+  }
+
   const headers: Record<string, string> = {
-    accept: "application/json",
-    cookie: `_cid=${context.cid}; _jwt=${context.jwt}`,
-    "x-authenticity-token": context.authenticityToken,
+    accept: init.accept ?? "application/json",
+    authorization: `Bearer ${await signRequestToken(path, init.method, context)}`,
     "user-agent": providerUserAgent,
   };
-  if (init.body !== undefined) {
+  let body: string | undefined;
+  if (init.text) {
+    headers["content-type"] = init.text.contentType;
+    body = init.text.body;
+  } else if (init.json !== undefined) {
     headers["content-type"] = "application/json";
+    body = JSON.stringify(init.json);
   }
 
   try {
-    const response = await context.fetcher(`${myMindApiBaseUrl}${path}`, {
-      method: init.method,
-      headers,
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
-      // mymind redirects to its sign-in page when the session is stale instead of
-      // answering with 401, so the redirect is read as an auth failure rather
-      // than followed into an HTML login page.
-      redirect: "manual",
-      signal: timeout.signal,
-    });
-    if (isRedirect(response.status)) {
-      throw createSessionExpiredError(phase);
-    }
-
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: {},
-      invalidJsonMessage: "mymind returned a non-JSON response",
-    });
+    const response = await context.fetcher(url, { method: init.method, headers, body, signal: timeout.signal });
     if (!response.ok) {
-      throw createRequestError(response, payload, phase);
+      throw await createRequestError(response, phase);
     }
-    return payload;
+    return { response, timeout };
   } catch (error) {
+    timeout.cleanup();
     if (error instanceof ProviderRequestError) {
       throw error;
     }
@@ -335,37 +549,89 @@ async function requestJson(
       502,
       error instanceof Error ? `mymind request failed: ${error.message}` : "mymind request failed",
     );
+  }
+}
+
+async function requestJsonWithStatus(
+  path: string,
+  init: MyMindRequest,
+  context: MyMindContext,
+  phase: RequestPhase,
+): Promise<{ payload: unknown; status: number }> {
+  const { response, timeout } = await send(path, init, context, phase);
+  try {
+    const payload = await readProviderJsonBody(response, {
+      emptyBody: {},
+      invalidJsonMessage: "mymind returned a non-JSON response",
+    });
+    return { payload, status: response.status };
   } finally {
     timeout.cleanup();
   }
 }
 
-function isRedirect(status: number): boolean {
-  return status >= 300 && status < 400;
+async function requestJson(
+  path: string,
+  init: MyMindRequest,
+  context: MyMindContext,
+  phase: RequestPhase,
+): Promise<unknown> {
+  return (await requestJsonWithStatus(path, init, context, phase)).payload;
 }
 
-function createSessionExpiredError(phase: RequestPhase): ProviderRequestError {
-  const message = "mymind rejected the session values. Sign in again and reconnect with fresh values.";
-  return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
+async function requestText(
+  path: string,
+  init: MyMindRequest,
+  context: MyMindContext,
+  phase: RequestPhase,
+): Promise<string> {
+  const { response, timeout } = await send(path, init, context, phase);
+  try {
+    return await readProviderTextBody(response, "mymind content response");
+  } finally {
+    timeout.cleanup();
+  }
 }
 
-function createRequestError(response: Response, payload: unknown, phase: RequestPhase): ProviderRequestError {
-  const object = optionalRecord(payload);
+/**
+ * Map a mymind failure onto a stable execution error.
+ *
+ * mymind reports failures as RFC 9457 problem documents, so the human-readable
+ * reason lives in `detail` or `title` rather than in a bare message field.
+ */
+async function createRequestError(response: Response, phase: RequestPhase): Promise<ProviderRequestError> {
+  const problem = optionalRecord(
+    await readProviderJsonBody(response, {
+      emptyBody: {},
+      invalidJsonMessage: "mymind returned a non-JSON error",
+      invalidJsonFallback: (text) => ({ detail: text }),
+    }),
+  );
   const message =
-    optionalString(object?.error) ??
-    optionalString(object?.message) ??
+    optionalString(problem?.detail) ??
+    optionalString(problem?.title) ??
     `mymind request failed with status ${response.status}`;
 
   if (response.status === 401 || response.status === 403) {
     return phase === "validate"
-      ? createSessionExpiredError(phase)
-      : new ProviderRequestError(response.status, message, payload);
+      ? badRequest(`mymind rejected the access key: ${message}`)
+      : new ProviderRequestError(response.status, message, problem);
   }
   if (response.status === 429) {
-    return new ProviderRequestError(429, message, payload);
+    return new ProviderRequestError(429, describeRateLimit(response, message), problem);
   }
   if (response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message, payload);
+    return badRequest(message);
   }
-  return new ProviderRequestError(response.status || 502, message, payload);
+  return new ProviderRequestError(response.status || 502, message, problem);
+}
+
+/**
+ * mymind meters usage in credits across a burst and a sustained window and
+ * reports both in the RateLimit header, so the header is worth surfacing: it
+ * tells a caller how long to wait rather than just that it was throttled.
+ */
+function describeRateLimit(response: Response, message: string): string {
+  const policy = response.headers.get("ratelimit");
+  return policy ? `${message} (RateLimit: ${policy})` : message;
 }

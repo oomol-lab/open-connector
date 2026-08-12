@@ -4,20 +4,20 @@ import { myMindActions } from "./actions.ts";
 
 const service = "mymind";
 
-const sessionCredentialHelp =
-  "mymind has no public API and issues no API keys, so a connection reuses the session your browser already holds. Sign in at https://access.mymind.com, open the browser developer tools, and read the values from any request the app makes.";
+const accessKeyHelp =
+  "Create an access key on the Extensions page at https://access.mymind.com/extensions. The key identifier and secret are shown together once, at creation.";
 
 /**
- * mymind provider backed by the endpoints the mymind web app uses.
+ * mymind provider backed by the official mymind API.
  *
- * mymind publishes no API, so a connection carries the browser session values
- * instead of an issued credential, and the endpoints may change without notice.
+ * Requests are authenticated with a short-lived JWT signed per request from the
+ * account's access key, so a connection stores the key rather than a token.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "mymind",
   description:
-    "Search, read, and add to the cards saved in a mymind account, including notes, bookmarks, tags, and spaces.",
+    "Search, read, and add to the objects saved in a mymind account, including notes, bookmarks, files, tags, spaces, and links.",
   categories: ["Productivity"],
   authTypes: ["custom_credential"],
   auth: [
@@ -25,36 +25,27 @@ export const provider: ProviderDefinition = {
       type: "custom_credential",
       fields: [
         {
-          key: "jwt",
-          label: "Session JWT",
-          inputType: "password",
+          key: "keyId",
+          label: "Access Key ID",
+          inputType: "text",
           required: true,
-          secret: true,
-          placeholder: "MYMIND_JWT",
-          description: `The value of the _jwt cookie. ${sessionCredentialHelp}`,
+          secret: false,
+          placeholder: "MYMIND_ACCESS_KEY_ID",
+          description: `The access key identifier, sent as the kid header of every signed request. ${accessKeyHelp}`,
         },
         {
-          key: "cid",
-          label: "Client ID",
+          key: "keySecret",
+          label: "Access Key Secret",
           inputType: "password",
           required: true,
           secret: true,
-          placeholder: "MYMIND_CID",
-          description: `The value of the _cid cookie sent alongside the session JWT. ${sessionCredentialHelp}`,
-        },
-        {
-          key: "authenticityToken",
-          label: "Authenticity Token",
-          inputType: "password",
-          required: true,
-          secret: true,
-          placeholder: "MYMIND_AUTHENTICITY_TOKEN",
-          description: `The value of the x-authenticity-token request header, which mymind requires on every request. ${sessionCredentialHelp}`,
+          placeholder: "MYMIND_ACCESS_KEY_SECRET",
+          description: `The base64 access key secret used to sign each request. It is never sent to mymind. ${accessKeyHelp}`,
         },
       ],
       testAction: {
         actionName: "list_tags",
-        input: { limit: 1 },
+        input: {},
       },
     },
   ],
