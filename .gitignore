@@ -14,3 +14,7 @@ src/providers/registry*.generated.ts
 *.log
 *.tsbuildinfo
 data/
+
+# Local Xero OAuth app credentials (never commit)
+xero-credentials.json
+xero-encryption-key.txt
