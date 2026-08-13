@@ -18,7 +18,7 @@ import {
 } from "../provider-runtime.ts";
 
 export const confluenceValidationPath = "/spaces";
-const confluenceDefaultTimeoutMs = 30_000;
+export const confluenceDefaultTimeoutMs = 30_000;
 const defaultLimit = 25;
 const atlassianApiOrigin = "https://api.atlassian.com";
 
@@ -227,6 +227,7 @@ function resolveConfluenceBaseUrl(context: ConfluenceContext, apiVersion: "v1" |
     if (derivedRestApiBaseUrl !== normalizedBaseUrl) {
       return derivedRestApiBaseUrl;
     }
+    throw new ProviderRequestError(400, "Confluence REST v1 base URL is unavailable");
   }
   throw new ProviderRequestError(400, "Confluence siteUrl is required");
 }

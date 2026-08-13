@@ -11,8 +11,10 @@ import type { ConfluenceContext } from "./runtime.ts";
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, optionalStringArray, requiredString } from "../../core/cast.ts";
 import {
+  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   readProviderJsonBody,
   providerUserAgent,
@@ -20,6 +22,7 @@ import {
 import {
   buildConfluenceOAuthApiBaseUrls,
   confluenceActionHandlers,
+  confluenceDefaultTimeoutMs,
   confluenceValidationPath,
   requestConfluenceJson,
   validateConfluenceCredential,
@@ -61,7 +64,8 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: async (context) => resolveConfluenceCredentialBaseUrl(await requireConfluenceCredential(context)),
   auth: { type: "none" },
-  async customizeRequest({ credential, headers }) {
+  async customizeRequest({ context, headers }) {
+    const credential = await requireConfluenceCredential(context);
     if (credential?.authType === "oauth2") {
       headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
       return;
@@ -96,19 +100,42 @@ async function validateConfluenceOAuthCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const resourcesResponse = await fetcher(confluenceAccessibleResourcesUrl, {
-    headers: {
-      authorization: `${credential.tokenType} ${credential.accessToken}`,
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    },
-    signal,
-  });
-  const resourcesPayload = await readProviderJsonBody(resourcesResponse, {
-    emptyBody: null,
-    invalidJsonMessage: "Confluence accessible-resources response must be valid JSON",
-    invalidJsonFallback: (text) => text,
-  });
+  const timeout = createProviderTimeout(signal, confluenceDefaultTimeoutMs);
+  let resourcesResponse: Response;
+  let resourcesPayload: unknown;
+  try {
+    resourcesResponse = await fetcher(confluenceAccessibleResourcesUrl, {
+      headers: {
+        authorization: `${credential.tokenType} ${credential.accessToken}`,
+        accept: "application/json",
+        "user-agent": providerUserAgent,
+      },
+      signal: timeout.signal,
+    });
+    resourcesPayload = await readProviderJsonBody(resourcesResponse, {
+      emptyBody: null,
+      invalidJsonMessage: "Confluence accessible-resources response must be valid JSON",
+      invalidJsonFallback: (text) => text,
+    });
+  } catch (error) {
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
+      throw new ProviderRequestError(
+        504,
+        `Confluence request timed out after ${Math.ceil(confluenceDefaultTimeoutMs / 1000)} seconds`,
+      );
+    }
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    throw new ProviderRequestError(
+      502,
+      error instanceof Error
+        ? `Confluence accessible-resources request failed: ${error.message}`
+        : "Confluence accessible-resources request failed",
+    );
+  } finally {
+    timeout.cleanup();
+  }
   if (!resourcesResponse.ok) {
     throw new ProviderRequestError(
       resourcesResponse.status,

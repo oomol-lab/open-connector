@@ -1,9 +1,10 @@
+import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { describe, expect, it } from "vitest";
-import { credentialValidators } from "./executors.ts";
-import { confluenceActionHandlers } from "./runtime.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { credentialValidators, proxy } from "./executors.ts";
+import { confluenceActionHandlers, confluenceDefaultTimeoutMs, requestConfluenceJson } from "./runtime.ts";
 import { confluenceOAuthScopes } from "./scopes.ts";
 
 const oauthCredential = {
@@ -13,6 +14,11 @@ const oauthCredential = {
   profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
   metadata: {},
 };
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe("Confluence OAuth credentials", () => {
   it("discovers the authorized cloud site and validates its v2 API", async () => {
@@ -77,6 +83,25 @@ describe("Confluence OAuth credentials", () => {
       }),
     ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("multiple sites") });
   });
+
+  it("times out accessible-resource discovery", async () => {
+    vi.useFakeTimers();
+    const validation = credentialValidators.oauth2!(oauthCredential, {
+      fetcher: async (_input, init) =>
+        await new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), {
+            once: true,
+          });
+        }),
+    }).catch((error: unknown) => error);
+
+    await vi.advanceTimersByTimeAsync(confluenceDefaultTimeoutMs);
+
+    await expect(validation).resolves.toMatchObject({
+      status: 504,
+      message: expect.stringContaining("timed out"),
+    });
+  });
 });
 
 describe("Confluence API token credentials", () => {
@@ -131,5 +156,68 @@ describe("Confluence action routing", () => {
         },
       ),
     ).resolves.toEqual({ results: [], pagination: { nextCursor: null } });
+  });
+
+  it("reports an unavailable v1 base URL separately from missing site metadata", async () => {
+    const fetcher = vi.fn<ProviderFetch>();
+
+    await expect(
+      requestConfluenceJson({
+        baseUrl: "https://docs.atlassian.net",
+        auth: { type: "oauth2", accessToken: "confluence-oauth-token", tokenType: "Bearer" },
+        fetcher,
+        method: "GET",
+        path: "/search",
+        phase: "execute",
+        apiVersion: "v1",
+      }),
+    ).rejects.toMatchObject({ status: 400, message: "Confluence REST v1 base URL is unavailable" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("Confluence proxy authentication", () => {
+  it("authenticates OAuth and API-token proxy requests with the resolved credential", async () => {
+    const requests: RequestInit[] = [];
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      requests.push(init ?? {});
+      return Response.json({ ok: true });
+    });
+    vi.stubGlobal("fetch", fetcher);
+    const apiKeyCredential: Extract<ResolvedCredential, { authType: "api_key" }> = {
+      authType: "api_key",
+      apiKey: "api-token",
+      values: { email: "owner@example.com", siteUrl: "https://docs.atlassian.net" },
+      profile: { accountId: "api-key", displayName: "API Token", grantedScopes: [] },
+      metadata: {
+        email: "owner@example.com",
+        baseUrl: "https://docs.atlassian.net/wiki/api/v2",
+      },
+    };
+    const cases: Array<{ credential: ResolvedCredential; authorization: string }> = [
+      {
+        credential: {
+          ...oauthCredential,
+          metadata: {
+            baseUrl: "https://api.atlassian.com/ex/confluence/cloud-123/wiki/api/v2",
+          },
+        },
+        authorization: "Bearer confluence-oauth-token",
+      },
+      {
+        credential: apiKeyCredential,
+        authorization: `Basic ${Buffer.from("owner@example.com:api-token").toString("base64")}`,
+      },
+    ];
+
+    for (const testCase of cases) {
+      const context: ExecutionContext = { getCredential: async () => testCase.credential };
+      await expect(proxy({ method: "GET", endpoint: "/spaces" }, context)).resolves.toMatchObject({ ok: true });
+    }
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(requests.map((request) => new Headers(request.headers).get("authorization"))).toEqual(
+      cases.map((testCase) => testCase.authorization),
+    );
   });
 });
