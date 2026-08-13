@@ -2,12 +2,14 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { gitlabApiScope, gitlabReadApiScope } from "./scopes.ts";
 
 const service = "gitlab";
 
 interface GitlabActionSource {
   name: string;
   description: string;
+  requiredScopes: string[];
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
 }
@@ -128,6 +130,7 @@ const actions: GitlabActionSource[] = [
   {
     name: "get_current_user",
     description: "Get the current authenticated GitLab user profile.",
+    requiredScopes: [gitlabReadApiScope],
     inputSchema: input({}),
     outputSchema: user,
   },
@@ -135,6 +138,7 @@ const actions: GitlabActionSource[] = [
     name: "list_projects",
     description:
       "List GitLab projects visible to the authenticated personal access token, with optional search and membership filters.",
+    requiredScopes: [gitlabReadApiScope],
     inputSchema: input({
       search: s.string({ minLength: 1, description: "Search projects by name or path." }),
       membership: s.boolean({ description: "Limit results to projects the authenticated user is a member of." }),
@@ -151,12 +155,14 @@ const actions: GitlabActionSource[] = [
   {
     name: "get_project",
     description: "Get a GitLab project by numeric ID or URL-encoded path with namespace.",
+    requiredScopes: [gitlabReadApiScope],
     inputSchema: input({ projectId }, ["projectId"]),
     outputSchema: project,
   },
   {
     name: "list_project_issues",
     description: "List issues for a GitLab project with common state, label, assignee, and search filters.",
+    requiredScopes: [gitlabReadApiScope],
     inputSchema: input(
       {
         projectId,
@@ -188,6 +194,7 @@ const actions: GitlabActionSource[] = [
   {
     name: "create_project_issue",
     description: "Create a new issue in a GitLab project.",
+    requiredScopes: [gitlabApiScope],
     inputSchema: input(
       {
         projectId,
@@ -209,7 +216,6 @@ const actions: GitlabActionSource[] = [
 export const gitlabActions: ActionDefinition[] = actions.map((action) =>
   defineProviderAction(service, {
     ...action,
-    requiredScopes: [],
-    providerPermissions: [],
+    providerPermissions: action.requiredScopes,
   }),
 );

@@ -1,10 +1,11 @@
 import type {
+  CredentialValidationResult,
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
+  ResolvedCredential,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -20,7 +21,6 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const defaultGitlabApiBaseUrl = "https://gitlab.com/api/v4";
@@ -30,8 +30,12 @@ type GitlabRequestPhase = "validate" | "execute";
 type GitlabActionInput = Record<string, unknown>;
 type GitlabActionHandler = (input: GitlabActionInput, context: GitlabActionContext) => Promise<unknown>;
 
-interface GitlabActionContext extends ApiKeyProviderContext {
+interface GitlabActionContext {
+  accessToken: string;
+  tokenType: string;
   apiBaseUrl: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
 }
 
 interface GitlabRequestOptions {
@@ -63,17 +67,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<GitlabAction
   service,
   handlers: gitlabActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<GitlabActionContext> {
-    const credential = await requireApiKeyCredential(context, service);
-    const providerContext: GitlabActionContext = {
-      apiKey: credential.apiKey,
-      apiBaseUrl: normalizeGitlabApiBaseUrl(credential.values.baseUrl),
+    const credential = await requireGitlabCredential(context);
+    return {
+      ...resolveGitlabBearerCredential(credential),
+      apiBaseUrl: resolveGitlabApiBaseUrl(credential),
       fetcher,
       signal: context.signal,
     };
-    if (context.transitFiles) {
-      providerContext.transitFiles = context.transitFiles;
-    }
-    return providerContext;
   },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
@@ -81,11 +81,9 @@ export const executors: ProviderExecutors = defineProviderExecutors<GitlabAction
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: async (context) => {
-    const credential = await requireApiKeyCredential(context, service);
-    const value = asOptionalString(credential.metadata.apiBaseUrl) ?? asOptionalString(credential.values.baseUrl);
-    return normalizeGitlabApiBaseUrl(value);
+    return resolveGitlabApiBaseUrl(await requireGitlabCredential(context));
   },
-  auth: { type: "api_key_header", name: "private-token" },
+  auth: { type: "bearer" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
@@ -100,38 +98,59 @@ export const credentialValidators: CredentialValidators = {
       fetch: fetcher,
       allowPrivateNetwork: isPrivateNetworkAccessAllowed,
     });
-    const user = await gitlabRequestJson(
-      "/user",
-      { apiKey: input.apiKey, apiBaseUrl, fetcher: guardedFetcher },
-      "validate",
+    return validateGitlabCredential(input.apiKey, "Bearer", apiBaseUrl, [], guardedFetcher);
+  },
+  async oauth2(input, { fetcher }) {
+    const apiBaseUrl = resolveGitlabApiBaseUrl(input);
+    const guardedFetcher = createProviderFetch({
+      fetch: fetcher,
+      allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+    });
+    return validateGitlabCredential(
+      input.accessToken,
+      input.tokenType,
+      apiBaseUrl,
+      readGitlabScopes(input.metadata.scope),
+      guardedFetcher,
     );
-    const userObject = asGitlabObject(user);
-    const userId = readOptionalPrimitive(userObject.id);
-    const username = asOptionalString(userObject.username);
-    const name = asOptionalString(userObject.name);
-    // Scope the account id by instance host for self-hosted connections so the
-    // same numeric user id on different instances never collides.
-    const instanceHost = apiBaseUrl === defaultGitlabApiBaseUrl ? undefined : new URL(apiBaseUrl).host;
-
-    return {
-      profile: {
-        accountId: instanceHost
-          ? `gitlab:${instanceHost}:${userId ?? username ?? "user"}`
-          : userId
-            ? `gitlab:${userId}`
-            : (username ?? "gitlab:user"),
-        displayName: name ?? username ?? "GitLab User",
-      },
-      metadata: compactObject({
-        apiBaseUrl,
-        validationEndpoint: "/user",
-        userId,
-        username,
-        webUrl: asOptionalString(userObject.web_url),
-      }),
-    };
   },
 };
+
+async function validateGitlabCredential(
+  accessToken: string,
+  tokenType: string,
+  apiBaseUrl: string,
+  grantedScopes: string[],
+  fetcher: typeof fetch,
+): Promise<CredentialValidationResult> {
+  const user = await gitlabRequestJson("/user", { accessToken, tokenType, apiBaseUrl, fetcher }, "validate");
+  const userObject = asGitlabObject(user);
+  const userId = readOptionalPrimitive(userObject.id);
+  const username = asOptionalString(userObject.username);
+  const name = asOptionalString(userObject.name);
+  // Scope the account id by instance host for self-hosted connections so the
+  // same numeric user id on different instances never collides.
+  const instanceHost = apiBaseUrl === defaultGitlabApiBaseUrl ? undefined : new URL(apiBaseUrl).host;
+
+  return {
+    profile: {
+      accountId: instanceHost
+        ? `gitlab:${instanceHost}:${userId ?? username ?? "user"}`
+        : userId
+          ? `gitlab:${userId}`
+          : (username ?? "gitlab:user"),
+      displayName: name ?? username ?? "GitLab User",
+    },
+    grantedScopes,
+    metadata: compactObject({
+      apiBaseUrl,
+      validationEndpoint: "/user",
+      userId,
+      username,
+      webUrl: asOptionalString(userObject.web_url),
+    }),
+  };
+}
 
 /**
  * Resolves the GitLab API base URL for a connection. Empty input targets
@@ -281,13 +300,14 @@ async function gitlabRequest(
     }
   }
 
-  const headers = gitlabHeaders(context.apiKey, Boolean(options.body));
+  const headers = gitlabHeaders(context.accessToken, context.tokenType, Boolean(options.body));
 
   try {
     return await context.fetcher(url, {
       method: options.method ?? "GET",
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: context.signal,
     });
   } catch (error) {
     throw new ProviderRequestError(
@@ -297,16 +317,55 @@ async function gitlabRequest(
   }
 }
 
-function gitlabHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
+function gitlabHeaders(accessToken: string, tokenType: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
     "user-agent": providerUserAgent,
-    "PRIVATE-TOKEN": apiKey,
+    authorization: `${tokenType} ${accessToken}`,
   };
   if (hasBody) {
     headers["content-type"] = "application/json";
   }
   return headers;
+}
+
+async function requireGitlabCredential(
+  context: ExecutionContext,
+): Promise<Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key" || credential?.authType === "oauth2") {
+    return credential;
+  }
+  throw new ProviderRequestError(401, "Configure gitlab OAuth or access token credentials first.");
+}
+
+function resolveGitlabBearerCredential(
+  credential: Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>,
+): { accessToken: string; tokenType: string } {
+  return credential.authType === "oauth2"
+    ? { accessToken: credential.accessToken, tokenType: credential.tokenType }
+    : { accessToken: credential.apiKey, tokenType: "Bearer" };
+}
+
+function resolveGitlabApiBaseUrl(
+  credential: Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>,
+): string {
+  const validatedApiBaseUrl = asOptionalString(credential.metadata.apiBaseUrl);
+  if (validatedApiBaseUrl) {
+    return normalizeGitlabApiBaseUrl(validatedApiBaseUrl);
+  }
+  if (credential.authType === "api_key") {
+    return normalizeGitlabApiBaseUrl(credential.values.baseUrl);
+  }
+  const oauthClientExtra = optionalRecord(credential.metadata.oauthClientExtra);
+  return normalizeGitlabApiBaseUrl(oauthClientExtra?.instanceUrl);
+}
+
+function readGitlabScopes(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((scope): scope is string => typeof scope === "string" && scope.length > 0);
+  }
+  return asOptionalString(value)?.split(/\s+/u).filter(Boolean) ?? [];
 }
 
 async function readGitlabPayload(response: Response): Promise<unknown> {
