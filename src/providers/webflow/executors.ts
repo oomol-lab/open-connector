@@ -7,10 +7,10 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
+  optionalStringArray,
   requiredString,
 } from "../../core/cast.ts";
 import { defineBearerProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
-import { webflowOAuthScopes } from "./scopes.ts";
 
 const service = "webflow";
 const webflowApiBaseUrl = "https://api.webflow.com/v2";
@@ -58,16 +58,15 @@ export const executors: ProviderExecutors = defineBearerProviderExecutors(servic
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    return validateWebflowCredential(input.apiKey, [], fetcher, signal);
+    return validateWebflowApiKeyCredential(input.apiKey, fetcher, signal);
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    return validateWebflowCredential(input.accessToken, parseWebflowScopes(input.metadata.scope), fetcher, signal);
+    return validateWebflowOAuthCredential(input.accessToken, input.metadata.scope, fetcher, signal);
   },
 };
 
-async function validateWebflowCredential(
+async function validateWebflowApiKeyCredential(
   accessToken: string,
-  grantedScopes: string[],
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
@@ -82,7 +81,7 @@ async function validateWebflowCredential(
       accountId: userId ?? "webflow:credential",
       displayName: (userEmail ?? userName) || "Webflow credential",
     },
-    grantedScopes,
+    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: webflowApiBaseUrl,
       validationEndpoint: "/token/authorized_by",
@@ -90,6 +89,39 @@ async function validateWebflowCredential(
       userEmail,
     }),
   };
+}
+
+async function validateWebflowOAuthCredential(
+  accessToken: string,
+  tokenResponseScope: unknown,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const payload = await webflowGetJson("/token/introspect", accessToken, fetcher, signal, "validate");
+  const root = optionalRecord(payload);
+  const authorization = optionalRecord(root?.authorization);
+  const authorizedTo = optionalRecord(authorization?.authorizedTo);
+  const application = optionalRecord(root?.application);
+  const userId = optionalStringArray(authorizedTo?.userIds)?.[0];
+  const authorizationId = optionalString(authorization?.id);
+  const grantedScopes = parseWebflowScopes(authorization?.scope) ?? parseWebflowScopes(tokenResponseScope);
+  const result: CredentialValidationResult = {
+    profile: {
+      accountId: userId ?? authorizationId ?? "webflow:credential",
+      displayName: optionalString(application?.displayName) ?? "Webflow OAuth credential",
+    },
+    metadata: compactObject({
+      apiBaseUrl: webflowApiBaseUrl,
+      validationEndpoint: "/token/introspect",
+      authorizationId,
+      applicationId: optionalString(application?.id),
+      userId,
+    }),
+  };
+  if (grantedScopes) {
+    result.grantedScopes = grantedScopes;
+  }
+  return result;
 }
 
 async function executeListSites(context: BearerProviderContext): Promise<Record<string, unknown>> {
@@ -380,8 +412,10 @@ function webflowHeaders(accessToken: string, contentType?: string): Record<strin
   }) as Record<string, string>;
 }
 
-function parseWebflowScopes(value: unknown): string[] {
-  return optionalString(value)?.split(/\s+/u).filter(Boolean) ?? [...webflowOAuthScopes];
+function parseWebflowScopes(value: unknown): string[] | undefined {
+  return optionalString(value)
+    ?.split(/[,\s]+/u)
+    .filter(Boolean);
 }
 
 async function readWebflowPayload(response: Response): Promise<unknown> {
