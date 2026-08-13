@@ -1,5 +1,5 @@
-import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { WordpressActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -23,16 +23,32 @@ interface WordpressRequestOptions extends WordpressConnection {
   notFoundAsInvalidInput?: boolean;
 }
 
-interface WordpressConnection {
-  apiKey: string;
+interface WordpressBasicAuth {
+  type: "basic";
+  applicationPassword: string;
   username: string;
+}
+
+interface WordpressOAuthAuth {
+  type: "oauth2";
+  accessToken: string;
+  tokenType: string;
+}
+
+interface WordpressConnection {
+  apiBaseUrl: string;
+  auth: WordpressBasicAuth | WordpressOAuthAuth;
   siteUrl: string;
 }
 
-export interface WordpressActionContext extends ApiKeyProviderContext {
-  username: string;
-  siteUrl: string;
+export interface WordpressActionContext extends WordpressConnection {
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
 }
+
+type WordpressCredential =
+  | Extract<ResolvedCredential, { authType: "api_key" }>
+  | Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 export const wordpressActionHandlers: Record<WordpressActionName, WordpressActionHandler> = {
   get_current_user(_input, context) {
@@ -114,17 +130,56 @@ export async function validateWordpressCredential(
   return {
     profile: {
       accountId: `wordpress:${new URL(connection.siteUrl).host}:user:${userId}`,
-      displayName: userName || userSlug || `${connection.username} (${new URL(connection.siteUrl).host})`,
+      displayName:
+        userName ||
+        userSlug ||
+        `${connection.auth.type === "basic" ? connection.auth.username : "WordPress user"} (${new URL(connection.siteUrl).host})`,
     },
     grantedScopes: [],
     metadata: compactObject({
       siteUrl: connection.siteUrl,
-      apiBaseUrl: buildWordpressApiBaseUrl(connection.siteUrl),
-      validationEndpoint: new URL(
-        pathWithoutLeadingSlash(wordpressValidationPath),
-        `${buildWordpressApiBaseUrl(connection.siteUrl)}/`,
-      ).pathname,
-      username: connection.username,
+      apiBaseUrl: connection.apiBaseUrl,
+      validationEndpoint: new URL(pathWithoutLeadingSlash(wordpressValidationPath), `${connection.apiBaseUrl}/`)
+        .pathname,
+      username: connection.auth.type === "basic" ? connection.auth.username : undefined,
+      userId,
+      userName,
+      userSlug,
+    }),
+  };
+}
+
+export async function validateWordpressOAuthCredential(
+  input: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const connection = resolveWordpressOAuthConnection(input);
+  const user = await requestWordpressJson<Record<string, unknown>>({
+    ...connection,
+    path: wordpressValidationPath,
+    query: { context: "edit" },
+    fetcher,
+    signal,
+    phase: "validate",
+  });
+  const userId = requireInteger(user.id, "user.id");
+  const userName = optionalString(user.name);
+  const userSlug = optionalString(user.slug);
+  const blogId = readWordpressBlogId(input.metadata.blog_id);
+
+  return {
+    profile: {
+      accountId: `wordpress:blog:${blogId}:user:${userId}`,
+      displayName: userName || userSlug || `WordPress blog ${blogId}`,
+    },
+    grantedScopes: readWordpressScopes(input.metadata.scope),
+    metadata: compactObject({
+      ...input.metadata,
+      siteUrl: connection.siteUrl,
+      apiBaseUrl: connection.apiBaseUrl,
+      validationEndpoint: new URL(pathWithoutLeadingSlash(wordpressValidationPath), `${connection.apiBaseUrl}/`)
+        .pathname,
       userId,
       userName,
       userSlug,
@@ -133,16 +188,16 @@ export async function validateWordpressCredential(
 }
 
 export function createWordpressContext(
-  apiKey: string,
-  values: Record<string, string>,
+  credential: WordpressCredential,
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): WordpressActionContext {
   return {
-    ...resolveWordpressConnection(apiKey, values),
+    ...(credential.authType === "oauth2"
+      ? resolveWordpressOAuthConnection(credential)
+      : resolveWordpressConnection(credential.apiKey, credential.values)),
     fetcher,
     signal,
-    apiKey,
   };
 }
 
@@ -198,11 +253,42 @@ export function buildWordpressApiBaseUrl(siteUrl: string): string {
   return new URL("wp-json/wp/v2", `${normalizeWordpressSiteUrl(siteUrl)}/`).toString();
 }
 
+export function buildWordpressOAuthApiBaseUrl(blogId: string): string {
+  return `https://public-api.wordpress.com/wp/v2/sites/${encodeURIComponent(blogId)}`;
+}
+
+export function buildWordpressAuthorization(context: WordpressConnection): string {
+  if (context.auth.type === "oauth2") {
+    return `${context.auth.tokenType} ${context.auth.accessToken}`;
+  }
+  return buildBasicAuthorization(context.auth.username, context.auth.applicationPassword);
+}
+
 function resolveWordpressConnection(apiKey: string, values: Record<string, string>): WordpressConnection {
+  const siteUrl = normalizeWordpressSiteUrl(values.siteUrl);
   return {
-    apiKey,
-    username: requiredTrimmedString(values.username, "username"),
-    siteUrl: normalizeWordpressSiteUrl(values.siteUrl),
+    apiBaseUrl: buildWordpressApiBaseUrl(siteUrl),
+    auth: {
+      type: "basic",
+      applicationPassword: apiKey,
+      username: requiredTrimmedString(values.username, "username"),
+    },
+    siteUrl,
+  };
+}
+
+function resolveWordpressOAuthConnection(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+): WordpressConnection {
+  const blogId = readWordpressBlogId(credential.metadata.blog_id);
+  return {
+    apiBaseUrl: buildWordpressOAuthApiBaseUrl(blogId),
+    auth: {
+      type: "oauth2",
+      accessToken: credential.accessToken,
+      tokenType: credential.tokenType || "Bearer",
+    },
+    siteUrl: readWordpressBlogUrl(credential.metadata.blog_url),
   };
 }
 
@@ -321,11 +407,10 @@ async function requestWordpressJson<T>(options: WordpressRequestOptions): Promis
 }
 
 async function requestWordpressResponse(options: WordpressRequestOptions): Promise<Response> {
-  const apiBaseUrl = buildWordpressApiBaseUrl(options.siteUrl);
-  const url = buildWordpressUrl(apiBaseUrl, options.path, options.query);
+  const url = buildWordpressUrl(options.apiBaseUrl, options.path, options.query);
   const headers: Record<string, string> = {
     accept: "application/json",
-    authorization: buildBasicAuthorization(options.username, options.apiKey),
+    authorization: buildWordpressAuthorization(options),
     "user-agent": providerUserAgent,
   };
   const init: RequestInit = {
@@ -536,6 +621,31 @@ function serializeQueryValue(value: WordpressQueryValue): string {
 
 function buildBasicAuthorization(username: string, password: string): string {
   return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
+}
+
+function readWordpressBlogId(value: unknown): string {
+  const blogId = typeof value === "number" && Number.isInteger(value) ? String(value) : optionalString(value)?.trim();
+  if (!blogId) {
+    throw new ProviderRequestError(400, "WordPress OAuth token response is missing blog_id");
+  }
+  return blogId;
+}
+
+function readWordpressBlogUrl(value: unknown): string {
+  const blogUrl = optionalString(value)?.trim();
+  if (!blogUrl) {
+    throw new ProviderRequestError(400, "WordPress OAuth token response is missing blog_url");
+  }
+  try {
+    return new URL(blogUrl).toString();
+  } catch {
+    throw new ProviderRequestError(400, "WordPress OAuth token response contains an invalid blog_url");
+  }
+}
+
+function readWordpressScopes(value: unknown): string[] {
+  const scope = optionalString(value);
+  return scope ? scope.split(/[\s,]+/).filter(Boolean) : [];
 }
 
 function requiredTrimmedString(value: unknown, fieldName: string): string {
