@@ -24,6 +24,7 @@ interface OAuth1RequestTokenInput extends OAuth1ClientCredentials {
 
 interface OAuth1AccessTokenInput extends OAuth1ClientCredentials {
   accessTokenUrl: string;
+  service: string;
   requestToken: string;
   requestTokenSecret: string;
   verifier: string;
@@ -68,8 +69,8 @@ export async function requestOAuth1AccessCredential(
     accessToken: credential.token,
     providerSecret: { oauthTokenSecret: credential.tokenSecret },
     profile: {
-      accountId: "oauth1",
-      displayName: "OAuth Credential",
+      accountId: `${input.service}:oauth1`,
+      displayName: `${input.service} OAuth Credential`,
       grantedScopes: [],
     },
     metadata: {},
@@ -104,6 +105,7 @@ async function executeSignedOAuth1Request(input: SignedOAuth1RequestInput): Prom
         authorization: createOAuth1AuthorizationHeader(oauthParameters),
       },
       redirect: "manual",
+      signal: AbortSignal.timeout(30_000),
     });
   } catch (error) {
     throw input.createError(

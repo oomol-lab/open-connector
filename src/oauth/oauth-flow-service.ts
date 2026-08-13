@@ -43,7 +43,6 @@ export interface OAuthAuthorizationState {
   pkceCodeVerifier?: string;
   oauth1RequestToken?: string;
   oauth1RequestTokenSecret?: string;
-  oauth1Config?: OAuthClientConfig;
   clientConfig?: OAuthClientConfig;
 }
 
@@ -113,7 +112,6 @@ export class OAuthFlowService {
         createdAt: new Date().toISOString(),
         oauth1RequestToken: temporaryCredential.token,
         oauth1RequestTokenSecret: temporaryCredential.tokenSecret,
-        oauth1Config: config,
         clientConfig: input.clientConfig ? config : undefined,
       });
 
@@ -180,8 +178,7 @@ export class OAuthFlowService {
     }
 
     const auth = this.clientConfigs.getOAuthDefinition(pending.service);
-    const config =
-      pending.oauth1Config ?? pending.clientConfig ?? (await this.clientConfigs.getConfig(pending.service));
+    const config = pending.clientConfig ?? (await this.clientConfigs.getConfig(pending.service));
     if (!config) {
       throw new OAuthFlowError(
         "oauth_client_config_required",
@@ -201,6 +198,7 @@ export class OAuthFlowService {
 
       const credential = await requestOAuth1AccessCredential({
         accessTokenUrl: this.clientConfigs.resolveEndpointUrl(pending.service, auth.accessTokenUrl, config),
+        service: pending.service,
         clientId: config.clientId,
         clientSecret: config.clientSecret,
         requestToken,

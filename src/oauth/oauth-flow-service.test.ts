@@ -196,6 +196,7 @@ describe("OAuthFlowService", () => {
       const url = input instanceof Request ? input.url : input.toString();
       const authorization = new Headers(init?.headers).get("authorization");
       expect(init?.method).toBe("POST");
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
       expect(authorization).toContain('oauth_signature_method="HMAC-SHA1"');
       expect(authorization).toContain("oauth_signature=");
 
@@ -224,6 +225,9 @@ describe("OAuthFlowService", () => {
     expect(authorizationUrl.searchParams.get("oauth_token")).toBe("request-token");
     expect(authorizationUrl.searchParams.get("scope")).toBe("read,write");
     expect(authorizationUrl.searchParams.get("expiration")).toBe("never");
+    const pendingState = await services.states.peek(started.state);
+    expect(pendingState).not.toHaveProperty("oauth1Config");
+    expect(JSON.stringify(pendingState)).not.toContain("consumer-secret");
 
     await expect(
       services.flow.completeAuthorization({
@@ -238,9 +242,64 @@ describe("OAuthFlowService", () => {
       accessToken: "access-token",
       providerSecret: { oauthTokenSecret: "access-secret" },
       metadata: { oauthClientId: "consumer-key", scope: "read,write" },
-      profile: { grantedScopes: ["read", "write"] },
+      profile: {
+        accountId: "oauth1_example:oauth1",
+        displayName: "oauth1_example OAuth Credential",
+        grantedScopes: ["read", "write"],
+      },
     });
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects OAuth 1.0 callbacks with a missing token or verifier", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response("oauth_token=request-token&oauth_token_secret=request-secret&oauth_callback_confirmed=true"),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const services = createServices([oauth1Provider]);
+    await services.clientConfigs.upsertConfig({
+      service: "oauth1_example",
+      clientId: "consumer-key",
+      clientSecret: "consumer-secret",
+    });
+
+    const missingToken = await services.flow.startAuthorization({ service: "oauth1_example" });
+    await expect(
+      services.flow.completeAuthorization({ state: missingToken.state, oauthVerifier: "verifier" }),
+    ).rejects.toMatchObject({ code: "invalid_oauth_callback" });
+
+    const missingVerifier = await services.flow.startAuthorization({ service: "oauth1_example" });
+    await expect(
+      services.flow.completeAuthorization({ state: missingVerifier.state, oauthToken: "request-token" }),
+    ).rejects.toMatchObject({ code: "invalid_oauth_callback" });
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an OAuth 1.0 callback whose token does not match the pending flow", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response("oauth_token=request-token&oauth_token_secret=request-secret&oauth_callback_confirmed=true"),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const services = createServices([oauth1Provider]);
+    await services.clientConfigs.upsertConfig({
+      service: "oauth1_example",
+      clientId: "consumer-key",
+      clientSecret: "consumer-secret",
+    });
+
+    const started = await services.flow.startAuthorization({ service: "oauth1_example" });
+    await expect(
+      services.flow.completeAuthorization({
+        state: started.state,
+        oauthToken: "other-request-token",
+        oauthVerifier: "verifier",
+      }),
+    ).rejects.toMatchObject({ code: "invalid_oauth_callback" });
+    await expect(services.connections.getCredential("oauth1_example")).resolves.toBeUndefined();
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it("builds an authorization URL from user-provided client config", async () => {
@@ -853,6 +912,10 @@ class MemoryOAuthStateStore implements IOAuthStateStore {
 
   async set(state: OAuthAuthorizationState): Promise<void> {
     this.states.set(state.state, state);
+  }
+
+  async peek(state: string): Promise<OAuthAuthorizationState | undefined> {
+    return this.states.get(state);
   }
 
   async take(state: string): Promise<OAuthAuthorizationState | undefined> {

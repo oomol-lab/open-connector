@@ -1,5 +1,5 @@
 import type { CatalogStore } from "../catalog-store.ts";
-import type { OAuthAuthDefinition, OAuthClientConfigFieldDefinition } from "../core/types.ts";
+import type { OAuthAuthDefinition, OAuthClientConfigFieldDefinition, ProviderAuthDefinition } from "../core/types.ts";
 
 import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
@@ -163,8 +163,8 @@ export class OAuthClientConfigService {
       throw new OAuthClientConfigError("unknown_service", `Unknown service: ${service}.`);
     }
 
-    const auth = provider.auth.find((auth) => auth.type === "oauth1" || auth.type === "oauth2");
-    if (!auth || (auth.type !== "oauth1" && auth.type !== "oauth2")) {
+    const auth = provider.auth.find(isOAuthAuthDefinition);
+    if (!auth) {
       throw new OAuthClientConfigError("unsupported_auth_type", `${service} does not support OAuth.`);
     }
 
@@ -179,8 +179,8 @@ export class OAuthClientConfigService {
 
   private listOAuthProviders(): Array<{ service: string; auth: OAuthAuthDefinition }> {
     return this.catalog.providers.flatMap((provider) => {
-      const auth = provider.auth.find((auth) => auth.type === "oauth1" || auth.type === "oauth2");
-      return auth && (auth.type === "oauth1" || auth.type === "oauth2") ? [{ service: provider.service, auth }] : [];
+      const auth = provider.auth.find(isOAuthAuthDefinition);
+      return auth ? [{ service: provider.service, auth }] : [];
     });
   }
 
@@ -205,6 +205,10 @@ export class OAuthClientConfigService {
 
 function requiresOAuthClientSecret(auth: OAuthAuthDefinition): boolean {
   return auth.type === "oauth1" || auth.tokenEndpointAuthMethod !== "none";
+}
+
+function isOAuthAuthDefinition(auth: ProviderAuthDefinition): auth is OAuthAuthDefinition {
+  return auth.type === "oauth1" || auth.type === "oauth2";
 }
 
 /** Read a connection-scoped OAuth client config stored in credential metadata. */

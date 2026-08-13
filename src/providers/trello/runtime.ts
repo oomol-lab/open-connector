@@ -12,7 +12,7 @@ export interface TrelloActionContext {
   signal?: AbortSignal;
 }
 
-type TrelloCredential =
+export type TrelloCredential =
   | Extract<ResolvedCredential, { authType: "custom_credential" }>
   | Extract<ResolvedCredential, { authType: "oauth1" }>;
 

@@ -3,9 +3,8 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ResolvedCredential,
 } from "../../core/types.ts";
-import type { TrelloActionContext } from "./runtime.ts";
+import type { TrelloActionContext, TrelloCredential } from "./runtime.ts";
 
 import {
   createProviderFetch,
@@ -75,10 +74,6 @@ export const credentialValidators: CredentialValidators = {
   customCredential: validateTrelloCredential,
   oauth1: validateTrelloOAuthCredential,
 };
-
-type TrelloCredential =
-  | Extract<ResolvedCredential, { authType: "custom_credential" }>
-  | Extract<ResolvedCredential, { authType: "oauth1" }>;
 
 async function requireTrelloCredential(context: ExecutionContext): Promise<TrelloCredential> {
   const credential = await context.getCredential(service);
