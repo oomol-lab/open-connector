@@ -52,5 +52,6 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.atlassian.com/software/confluence",
+  iconUrl: "/provider-icons/confluence.svg",
   actions: confluenceActions,
 };
