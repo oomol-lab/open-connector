@@ -17,8 +17,10 @@ describe("Webflow credentials", () => {
           expect(url.toString()).toBe("https://api.webflow.com/v2/token/authorized_by");
           expect(new Headers(init?.headers).get("authorization")).toBe("Bearer webflow-oauth-token");
           return Response.json({
-            user: { id: "user-1", email: "alice@example.com" },
-            workspace: { id: "workspace-1", name: "Example Workspace" },
+            id: "user-1",
+            email: "alice@example.com",
+            firstName: "Alice",
+            lastName: "Example",
           });
         },
       },
@@ -27,7 +29,7 @@ describe("Webflow credentials", () => {
     expect(result).toMatchObject({
       profile: { accountId: "user-1", displayName: "alice@example.com" },
       grantedScopes: webflowOAuthScopes,
-      metadata: { workspaceId: "workspace-1", workspaceName: "Example Workspace" },
+      metadata: { userId: "user-1", userEmail: "alice@example.com" },
     });
   });
 
@@ -37,13 +39,13 @@ describe("Webflow credentials", () => {
       {
         fetcher: async (_url, init) => {
           expect(new Headers(init?.headers).get("authorization")).toBe("Bearer webflow-api-token");
-          return Response.json({ workspace: { id: "workspace-2", name: "API Workspace" } });
+          return Response.json({ id: "user-2", firstName: "API", lastName: "User" });
         },
       },
     );
 
     expect(result).toMatchObject({
-      profile: { accountId: "workspace-2", displayName: "API Workspace" },
+      profile: { accountId: "user-2", displayName: "API User" },
       grantedScopes: [],
     });
   });

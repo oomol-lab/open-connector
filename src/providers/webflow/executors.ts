@@ -72,28 +72,22 @@ async function validateWebflowCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const payload = await webflowGetJson("/token/authorized_by", accessToken, fetcher, signal, "validate");
-  const authorizedBy = optionalRecord(payload);
-  const user = optionalRecord(authorizedBy?.user);
-  const workspace = optionalRecord(authorizedBy?.workspace);
-  const label =
-    optionalString(user?.email) ??
-    optionalString(user?.displayName) ??
-    optionalString(workspace?.name) ??
-    "Webflow credential";
+  const user = optionalRecord(payload);
+  const userId = optionalString(user?.id);
+  const userEmail = optionalString(user?.email);
+  const userName = [optionalString(user?.firstName), optionalString(user?.lastName)].filter(Boolean).join(" ");
 
   return {
     profile: {
-      accountId: optionalString(user?.id) ?? optionalString(workspace?.id) ?? "webflow:credential",
-      displayName: label,
+      accountId: userId ?? "webflow:credential",
+      displayName: (userEmail ?? userName) || "Webflow credential",
     },
     grantedScopes,
     metadata: compactObject({
       apiBaseUrl: webflowApiBaseUrl,
       validationEndpoint: "/token/authorized_by",
-      userId: optionalString(user?.id),
-      userEmail: optionalString(user?.email),
-      workspaceId: optionalString(workspace?.id),
-      workspaceName: optionalString(workspace?.name),
+      userId,
+      userEmail,
     }),
   };
 }
