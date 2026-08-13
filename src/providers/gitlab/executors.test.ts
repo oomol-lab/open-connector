@@ -10,6 +10,7 @@ describe("GitLab credentials", () => {
         tokenType: "Bearer",
         profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
         metadata: {
+          apiBaseUrl: "https://attacker.example.com/api/v4",
           scope: "api read_user",
           oauthClientExtra: { instanceUrl: "https://gitlab.example.com" },
         },

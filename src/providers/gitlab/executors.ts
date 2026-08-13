@@ -136,9 +136,7 @@ async function validateGitlabCredential(
     profile: {
       accountId: instanceHost
         ? `gitlab:${instanceHost}:${userId ?? username ?? "user"}`
-        : userId
-          ? `gitlab:${userId}`
-          : (username ?? "gitlab:user"),
+        : `gitlab:${userId ?? username ?? "user"}`,
       displayName: name ?? username ?? "GitLab User",
     },
     grantedScopes,
@@ -350,15 +348,15 @@ function resolveGitlabBearerCredential(
 function resolveGitlabApiBaseUrl(
   credential: Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>,
 ): string {
+  if (credential.authType === "oauth2") {
+    const oauthClientExtra = optionalRecord(credential.metadata.oauthClientExtra);
+    return normalizeGitlabApiBaseUrl(oauthClientExtra?.instanceUrl);
+  }
   const validatedApiBaseUrl = asOptionalString(credential.metadata.apiBaseUrl);
   if (validatedApiBaseUrl) {
     return normalizeGitlabApiBaseUrl(validatedApiBaseUrl);
   }
-  if (credential.authType === "api_key") {
-    return normalizeGitlabApiBaseUrl(credential.values.baseUrl);
-  }
-  const oauthClientExtra = optionalRecord(credential.metadata.oauthClientExtra);
-  return normalizeGitlabApiBaseUrl(oauthClientExtra?.instanceUrl);
+  return normalizeGitlabApiBaseUrl(credential.values.baseUrl);
 }
 
 function readGitlabScopes(value: unknown): string[] {
