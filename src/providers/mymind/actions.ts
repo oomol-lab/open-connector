@@ -1,4 +1,4 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -122,6 +122,33 @@ const createdObjectOutput = s.object("The object mymind created or matched.", {
   created: s.boolean("Whether a new object was created, or false when mymind matched an existing duplicate."),
 });
 
+const updateObjectInputSchema = {
+  ...s.object(
+    "The input for updating an object.",
+    {
+      objectId: objectIdSchema,
+      title: s.string("A new title for the object."),
+      summary: s.string("A new summary for the object."),
+      completed: s.boolean("Whether the object is marked completed."),
+    },
+    { optional: ["title", "summary", "completed"] },
+  ),
+  anyOf: [{ required: ["title"] }, { required: ["summary"] }, { required: ["completed"] }],
+} satisfies JsonSchema;
+
+const updateSpaceInputSchema = {
+  ...s.object(
+    "The input for updating a space.",
+    {
+      spaceId: spaceIdSchema,
+      name: s.nonEmptyString("A new name for the space."),
+      color: s.nonEmptyString("A new colour for the space."),
+    },
+    { optional: ["name", "color"] },
+  ),
+  anyOf: [{ required: ["name"] }, { required: ["color"] }],
+} satisfies JsonSchema;
+
 export const myMindActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_objects",
@@ -159,7 +186,7 @@ export const myMindActions: ActionDefinition[] = [
             semanticScore: s.number("The semantic relevance score, present for a semantic or reranked search."),
             object: objectSchema,
           },
-          { optional: ["score", "semanticScore", "object"] },
+          { optional: ["id", "score", "semanticScore", "object"] },
         ),
       ),
     }),
@@ -243,16 +270,7 @@ export const myMindActions: ActionDefinition[] = [
     name: "update_object",
     description: "Update the title, summary, or completed state of a mymind object.",
     requiredScopes: [fullAccess],
-    inputSchema: s.object(
-      "The input for updating an object.",
-      {
-        objectId: objectIdSchema,
-        title: s.string("A new title for the object."),
-        summary: s.string("A new summary for the object."),
-        completed: s.boolean("Whether the object is marked completed."),
-      },
-      { optional: ["title", "summary", "completed"] },
-    ),
+    inputSchema: updateObjectInputSchema,
     outputSchema: acknowledgedOutput("The update result.", "objectId", "The updated object identifier."),
   }),
   defineProviderAction(service, {
@@ -413,15 +431,7 @@ export const myMindActions: ActionDefinition[] = [
     name: "update_space",
     description: "Rename a mymind space or change its colour.",
     requiredScopes: [fullAccess],
-    inputSchema: s.object(
-      "The input for updating a space.",
-      {
-        spaceId: spaceIdSchema,
-        name: s.nonEmptyString("A new name for the space."),
-        color: s.nonEmptyString("A new colour for the space."),
-      },
-      { optional: ["name", "color"] },
-    ),
+    inputSchema: updateSpaceInputSchema,
     outputSchema: spaceSchema,
   }),
   defineProviderAction(service, {

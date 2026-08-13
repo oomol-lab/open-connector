@@ -125,14 +125,19 @@ async function main(): Promise<void> {
     // Strip every tag before deleting, and read them back rather than assuming
     // the one we set: mymind tags new content itself, and a tag outlives the
     // object that carried it, so deleting first leaves those tags in the mind.
-    const beforeDelete = await run("get_object", { objectId: noteId }, context);
-    const attached = names(record(beforeDelete).tags);
-    if (attached.length > 0) {
-      await run("remove_object_tags", { objectId: noteId, tags: attached }, context);
-      console.log(`   remove_object_tags ${attached.join(", ")}`);
+    // Tag cleanup runs in its own try so a failure there still reaches
+    // delete_object below, rather than leaving the note behind entirely.
+    try {
+      const beforeDelete = await run("get_object", { objectId: noteId }, context);
+      const attached = names(record(beforeDelete).tags);
+      if (attached.length > 0) {
+        await run("remove_object_tags", { objectId: noteId, tags: attached }, context);
+        console.log(`   remove_object_tags ${attached.join(", ")}`);
+      }
+    } finally {
+      const deleted = await run("delete_object", { objectId: noteId }, context);
+      console.log(`   delete_object ${noteId} (acknowledged=${String(deleted.acknowledged)})`);
     }
-    const deleted = await run("delete_object", { objectId: noteId }, context);
-    console.log(`   delete_object ${noteId} (acknowledged=${String(deleted.acknowledged)})`);
     console.log(
       "   note: mymind soft-deletes to Trash, and tags new content asynchronously,\n" +
         "   so a few auto-generated tags may still surface. Empty Trash in the app to clear them.",

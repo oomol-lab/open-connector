@@ -146,7 +146,9 @@ export const myMindActionHandlers: Record<string, ActionHandler> = {
       // Plenty of objects carry no inline body at all — a bookmark or an image
       // is the whole object. mymind reports that as a 422, but for a caller
       // walking search results it is an ordinary answer, not a failed read.
-      if (error instanceof ProviderRequestError && missingContentPattern.test(error.message)) {
+      // Both the status and the message are checked so an unrelated failure
+      // that happens to echo this wording is not swallowed as empty content.
+      if (error instanceof ProviderRequestError && error.status === 422 && missingContentPattern.test(error.message)) {
         return { objectId, markdown: "", hasContent: false };
       }
       throw error;
@@ -426,6 +428,10 @@ export const credentialValidators: CredentialValidators = {
         accountId: accessKey.keyId,
         displayName: `mymind key ${accessKey.keyId}`,
       },
+      // mymind exposes no endpoint that reports a key's access level, so
+      // there is nothing to derive this from. Left empty rather than guessed;
+      // the runtime does not gate execution on requiredScopes vs grantedScopes,
+      // so an empty list here does not block any action.
       grantedScopes: [],
       metadata: { apiBaseUrl: myMindApiBaseUrl, validationEndpoint: "/tags" },
     };
@@ -637,7 +643,11 @@ async function createRequestError(response: Response, phase: RequestPhase): Prom
     return new ProviderRequestError(429, describeRateLimit(response, message), problem);
   }
   if (response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message, problem);
+    // Keep the real status (404, 422, ...) rather than flattening every
+    // client error to 400: toProviderExecutionError still reports all of
+    // these as "invalid_input", but callers that branch on error.status
+    // — like the missing-content check above — need the original code.
+    return new ProviderRequestError(response.status, message, problem);
   }
   return new ProviderRequestError(response.status || 502, message, problem);
 }

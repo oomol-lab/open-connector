@@ -131,12 +131,28 @@ describe("mymind.search_objects", () => {
   });
 });
 
+describe("mymind.save_url", () => {
+  it("rejects a private-network URL before any request is sent", async () => {
+    const calls = stubFetch({});
+
+    const result = await executors["mymind.save_url"]!({ url: "http://169.254.169.254/latest/meta-data/" }, context);
+
+    expect(result.ok).toBe(false);
+    expect(result.error?.code).toBe("invalid_input");
+    expect(calls).toHaveLength(0);
+  });
+});
+
 /** Reply with one RFC 9457 problem document, the shape mymind returns on failure. */
-function stubProblem(status: number, problem: Record<string, unknown>): void {
+function stubProblem(
+  status: number,
+  problem: Record<string, unknown>,
+  extraHeaders: Record<string, string> = {},
+): void {
   globalThis.fetch = (async () =>
     new Response(JSON.stringify(problem), {
       status,
-      headers: { "content-type": "application/problem+json" },
+      headers: { "content-type": "application/problem+json", ...extraHeaders },
     })) as typeof fetch;
 }
 
@@ -162,6 +178,16 @@ describe("mymind.get_object_content", () => {
 
     expect(result.ok).toBe(false);
     expect(result.error?.message).toBe("objectId is malformed.");
+  });
+
+  it("does not treat the same wording as missing content when the status is not 422", async () => {
+    // The check must key off the real HTTP status, not just the message text,
+    // so an unrelated 4xx that happens to echo this wording is not swallowed.
+    stubProblem(400, { type: "InvalidParameters", detail: "object does not have content.", status: 400 });
+
+    const result = await executors["mymind.get_object_content"]!({ objectId: "obj-1" }, context);
+
+    expect(result.ok).toBe(false);
   });
 });
 
@@ -196,5 +222,18 @@ describe("mymind error mapping", () => {
 
     expect(result.error?.code).toBe("authorization_failed");
     expect(result.error?.message).toBe("Invalid signature");
+  });
+
+  it("appends the RateLimit header to a 429 so a caller knows which window to wait on", async () => {
+    stubProblem(
+      429,
+      { type: "TooManyRequests", detail: "Burst quota exhausted.", status: 429 },
+      { ratelimit: '"burst";r=0;t=42' },
+    );
+
+    const result = await executors["mymind.list_tags"]!({}, context);
+
+    expect(result.error?.code).toBe("rate_limited");
+    expect(result.error?.message).toBe('Burst quota exhausted. (RateLimit: "burst";r=0;t=42)');
   });
 });
