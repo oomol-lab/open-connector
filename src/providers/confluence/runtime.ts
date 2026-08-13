@@ -17,24 +17,45 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const confluenceValidationPath = "/spaces";
+export const confluenceValidationPath = "/spaces";
 const confluenceDefaultTimeoutMs = 30_000;
 const defaultLimit = 25;
+const atlassianApiOrigin = "https://api.atlassian.com";
 
-type ConfluencePhase = "validate" | "execute";
+export type ConfluencePhase = "validate" | "execute";
 
-interface ConfluenceContext {
-  baseUrl?: unknown;
+export interface ConfluenceBasicAuth {
+  type: "basic";
   email?: unknown;
   apiToken: string;
+}
+
+export interface ConfluenceOAuthAuth {
+  type: "oauth2";
+  accessToken: string;
+  tokenType: string;
+}
+
+type ConfluenceAuth = ConfluenceBasicAuth | ConfluenceOAuthAuth;
+
+export interface ConfluenceContext {
+  baseUrl?: unknown;
+  restApiBaseUrl?: unknown;
+  auth: ConfluenceAuth;
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }
 
-interface ConfluenceRequestInput extends ConfluenceContext {
+export interface ConfluenceApiBaseUrls {
+  baseUrl: string;
+  restApiBaseUrl: string;
+}
+
+export interface ConfluenceRequestInput extends ConfluenceContext {
   method: "GET" | "POST" | "PUT";
   path: string;
   phase: ConfluencePhase;
+  apiVersion?: "v1" | "v2";
   query?: Record<string, string | number | undefined>;
   body?: Record<string, unknown>;
   notFoundAsInvalidInput?: boolean;
@@ -49,6 +70,7 @@ export const confluenceActionHandlers: Record<ConfluenceActionName, ConfluenceAc
       method: "GET",
       path: "/search",
       phase: "execute",
+      apiVersion: "v1",
       query: compactObject({
         cql: requireConfluenceString(input.cql, "cql"),
         limit: optionalInteger(input.limit) ?? defaultLimit,
@@ -132,12 +154,16 @@ export async function validateConfluenceCredential(
   const apiToken = requiredString(input.apiKey, "apiKey", providerInputError);
   const email = requiredString(input.email, "email", providerInputError);
   const siteUrl = normalizeConfluenceSiteUrl(requiredString(input.siteUrl, "siteUrl", providerInputError));
-  const baseUrl = `${siteUrl}/wiki/api/v2`;
+  const { baseUrl, restApiBaseUrl } = buildConfluenceSiteApiBaseUrls(siteUrl);
 
   const payload = await requestConfluenceJson({
     baseUrl,
-    email,
-    apiToken,
+    restApiBaseUrl,
+    auth: {
+      type: "basic",
+      email,
+      apiToken,
+    },
     fetcher,
     signal,
     method: "GET",
@@ -159,6 +185,7 @@ export async function validateConfluenceCredential(
     metadata: compactObject({
       siteUrl,
       baseUrl,
+      restApiBaseUrl,
       email,
       validationEndpoint: confluenceValidationPath,
       validationResultCount: resultCount,
@@ -166,16 +193,46 @@ export async function validateConfluenceCredential(
   };
 }
 
-function resolveConfluenceBaseUrl(context: ConfluenceContext): string {
+/** Build Atlassian's tenant-routed Confluence REST endpoints for one OAuth cloud site. */
+export function buildConfluenceOAuthApiBaseUrls(cloudId: string): ConfluenceApiBaseUrls {
+  const encodedCloudId = encodeURIComponent(requiredString(cloudId, "cloudId", providerInputError));
+  const tenantBaseUrl = `${atlassianApiOrigin}/ex/confluence/${encodedCloudId}/wiki`;
+  return {
+    baseUrl: `${tenantBaseUrl}/api/v2`,
+    restApiBaseUrl: `${tenantBaseUrl}/rest/api`,
+  };
+}
+
+function buildConfluenceSiteApiBaseUrls(siteUrl: string): ConfluenceApiBaseUrls {
+  return {
+    baseUrl: `${siteUrl}/wiki/api/v2`,
+    restApiBaseUrl: `${siteUrl}/wiki/rest/api`,
+  };
+}
+
+function resolveConfluenceBaseUrl(context: ConfluenceContext, apiVersion: "v1" | "v2"): string {
+  if (apiVersion === "v1") {
+    const restApiBaseUrl = optionalString(context.restApiBaseUrl);
+    if (restApiBaseUrl) {
+      return trimTrailingSlash(restApiBaseUrl);
+    }
+  }
   const baseUrl = optionalString(context.baseUrl);
   if (baseUrl) {
-    return trimTrailingSlash(baseUrl);
+    const normalizedBaseUrl = trimTrailingSlash(baseUrl);
+    if (apiVersion === "v2") {
+      return normalizedBaseUrl;
+    }
+    const derivedRestApiBaseUrl = normalizedBaseUrl.replace(/\/wiki\/api\/v2$/u, "/wiki/rest/api");
+    if (derivedRestApiBaseUrl !== normalizedBaseUrl) {
+      return derivedRestApiBaseUrl;
+    }
   }
   throw new ProviderRequestError(400, "Confluence siteUrl is required");
 }
 
-function resolveConfluenceEmail(context: ConfluenceContext): string {
-  const email = optionalString(context.email);
+function resolveConfluenceEmail(auth: ConfluenceBasicAuth): string {
+  const email = optionalString(auth.email);
   if (email) {
     return email;
   }
@@ -200,9 +257,8 @@ function normalizeConfluenceSiteUrl(value: string): string {
   return `https://${url.hostname}`;
 }
 
-async function requestConfluenceJson(input: ConfluenceRequestInput): Promise<unknown> {
-  const baseUrl = resolveConfluenceBaseUrl(input);
-  const email = resolveConfluenceEmail(input);
+export async function requestConfluenceJson(input: ConfluenceRequestInput): Promise<unknown> {
+  const baseUrl = resolveConfluenceBaseUrl(input, input.apiVersion ?? "v2");
   const url = new URL(input.path.replace(/^\//, ""), `${trimTrailingSlash(baseUrl)}/`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {
@@ -216,7 +272,7 @@ async function requestConfluenceJson(input: ConfluenceRequestInput): Promise<unk
   try {
     response = await input.fetcher(url, {
       method: input.method,
-      headers: confluenceHeaders(input, email),
+      headers: confluenceHeaders(input),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
       signal: timeout.signal,
     });
@@ -246,9 +302,13 @@ async function requestConfluenceJson(input: ConfluenceRequestInput): Promise<unk
   return payload;
 }
 
-function confluenceHeaders(input: ConfluenceRequestInput, email: string): Record<string, string> {
+function confluenceHeaders(input: ConfluenceRequestInput): Record<string, string> {
+  const authorization =
+    input.auth.type === "oauth2"
+      ? `${input.auth.tokenType} ${input.auth.accessToken}`
+      : `Basic ${Buffer.from(`${resolveConfluenceEmail(input.auth)}:${input.auth.apiToken}`).toString("base64")}`;
   const headers: Record<string, string> = {
-    Authorization: `Basic ${Buffer.from(`${email}:${input.apiToken}`).toString("base64")}`,
+    Authorization: authorization,
     Accept: "application/json",
     "User-Agent": providerUserAgent,
   };

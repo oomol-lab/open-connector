@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { confluenceActions } from "./actions.ts";
+import { confluenceOAuthScopes } from "./scopes.ts";
 
 const service = "confluence";
 
@@ -8,8 +9,20 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Confluence",
   categories: ["Productivity"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://auth.atlassian.com/authorize",
+      tokenUrl: "https://auth.atlassian.com/oauth/token",
+      scopes: confluenceOAuthScopes,
+      tokenEndpointAuthMethod: "client_secret_post",
+      tokenRequestFormat: "json",
+      authorizationParams: {
+        audience: "api.atlassian.com",
+        prompt: "consent",
+      },
+    },
     {
       type: "api_key",
       label: "API Token",

@@ -2,6 +2,12 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import {
+  confluencePageReadScope,
+  confluencePageWriteScope,
+  confluenceSearchScope,
+  confluenceSpaceReadScope,
+} from "./scopes.ts";
 
 const service = "confluence";
 
@@ -58,7 +64,7 @@ export const confluenceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_content",
     description: "Search Confluence content with CQL and return normalized result metadata plus pagination.",
-    requiredScopes: [],
+    requiredScopes: [confluenceSearchScope],
     inputSchema: s.object(
       "Input parameters for searching Confluence content.",
       {
@@ -76,7 +82,7 @@ export const confluenceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_spaces",
     description: "List Confluence spaces and return normalized space metadata plus pagination.",
-    requiredScopes: [],
+    requiredScopes: [confluenceSpaceReadScope],
     inputSchema: s.object(
       "Input parameters for listing Confluence spaces.",
       {
@@ -95,7 +101,7 @@ export const confluenceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_page",
     description: "Get a Confluence page by ID and optionally include its body representation.",
-    requiredScopes: [],
+    requiredScopes: [confluencePageReadScope],
     inputSchema: s.object(
       "Input parameters for retrieving a Confluence page.",
       {
@@ -117,7 +123,7 @@ export const confluenceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_page",
     description: "Create a Confluence page using a JSON-friendly body value and return the created page.",
-    requiredScopes: [],
+    requiredScopes: [confluencePageWriteScope],
     inputSchema: s.object(
       "Input parameters for creating a Confluence page.",
       {
@@ -137,7 +143,7 @@ export const confluenceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_page",
     description: "Update a Confluence page title, body, or status using an explicit next version number.",
-    requiredScopes: [],
+    requiredScopes: [confluencePageWriteScope],
     inputSchema: s.object(
       "Input parameters for updating a Confluence page.",
       {
