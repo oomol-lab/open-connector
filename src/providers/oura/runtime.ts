@@ -1,6 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { BearerProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { OuraDocumentCollection } from "./collections.ts";
 
 import {
@@ -20,7 +20,7 @@ const ouraPersonalInfoPath = `${ouraUserCollectionPath}/personal_info`;
 const ouraRequestTimeoutMs = 30_000;
 
 type OuraRequestPhase = "validate" | "execute";
-type OuraActionHandler = ProviderRuntimeHandler<BearerProviderContext>;
+type OuraActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
 
 interface OuraRequestInput {
   accessToken: string;
@@ -40,8 +40,8 @@ interface OuraRequestInput {
 export const ouraActionHandlers: Record<string, OuraActionHandler> = buildOuraActionHandlers();
 
 /**
- * Resolve the Oura account behind an access token, used to validate both
- * personal access tokens and OAuth credentials.
+ * Resolve the Oura account behind an access token, used to build the
+ * `oauth2` credential validator's profile.
  */
 export async function fetchOuraAccountProfile(
   accessToken: string,
@@ -109,7 +109,7 @@ function buildOuraActionHandlers(): Record<string, OuraActionHandler> {
 async function listOuraDocuments(
   collection: OuraDocumentCollection,
   input: Record<string, unknown>,
-  context: BearerProviderContext,
+  context: OAuthProviderContext,
 ): Promise<unknown> {
   const payload = await requestOuraObject({
     accessToken: context.accessToken,
@@ -129,7 +129,7 @@ async function listOuraDocuments(
 async function getOuraDocument(
   collection: OuraDocumentCollection,
   input: Record<string, unknown>,
-  context: BearerProviderContext,
+  context: OAuthProviderContext,
 ): Promise<unknown> {
   const documentId = requiredString(input.documentId, "documentId", badInput);
 

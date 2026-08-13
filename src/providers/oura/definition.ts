@@ -10,7 +10,7 @@ export const provider: ProviderDefinition = {
   displayName: "Oura",
   description: "Read Oura Ring sleep, readiness, activity, and biometric data from the Oura API v2 user collections.",
   categories: ["Data"],
-  authTypes: ["oauth2", "api_key"],
+  authTypes: ["oauth2"],
   auth: [
     {
       type: "oauth2",
@@ -18,13 +18,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://api.ouraring.com/oauth/token",
       scopes: ouraOauthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
-    },
-    {
-      type: "api_key",
-      label: "Personal Access Token",
-      placeholder: "oura_personal_access_token",
-      description:
-        "Oura personal access token sent as an Authorization Bearer header. Create one at https://cloud.ouraring.com/personal-access-tokens. A personal access token reads only its own account and is not scoped, so it grants every collection this provider exposes.",
     },
   ],
   homepageUrl: "https://ouraring.com",

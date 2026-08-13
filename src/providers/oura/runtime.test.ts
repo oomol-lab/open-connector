@@ -1,4 +1,4 @@
-import type { BearerProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -105,7 +105,7 @@ function inputProperties(actionName: string): string[] {
   return Object.keys(action?.inputSchema.properties ?? {});
 }
 
-function context(fetcher: ProviderFetch): BearerProviderContext {
+function context(fetcher: ProviderFetch): OAuthProviderContext {
   return { accessToken: "oura-token", fetcher };
 }
 
