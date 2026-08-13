@@ -28,5 +28,6 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://miro.com",
+  iconUrl: "/provider-icons/miro.svg",
   actions: miroActions,
 };
