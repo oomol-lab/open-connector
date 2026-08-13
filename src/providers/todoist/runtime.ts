@@ -3,10 +3,10 @@ import type { TodoistActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { todoistOAuthScopes } from "./scopes.ts";
 
 const todoistApiBaseUrl = "https://api.todoist.com/api/v1";
 const todoistUserPath = "/user";
-const todoistApiKeyGrantedScopes = ["todoist.read", "todoist.write"];
 
 type TodoistRequestPhase = "validate" | "execute";
 
@@ -94,7 +94,7 @@ export async function validateTodoistCredential(
   const validation = await fetchTodoistCurrentAccount(accessToken, fetcher, signal, "validate");
   return {
     ...validation,
-    grantedScopes: todoistApiKeyGrantedScopes,
+    grantedScopes: todoistOAuthScopes,
   };
 }
 
