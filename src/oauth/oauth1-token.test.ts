@@ -1,7 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { createOAuth1Signature } from "./oauth1-token.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createOAuth1Signature, requestOAuth1TemporaryCredential } from "./oauth1-token.ts";
 
 describe("OAuth 1.0 signing", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("matches the RFC 5849 HMAC-SHA1 signature example", async () => {
     await expect(
       createOAuth1Signature({
@@ -19,5 +23,26 @@ describe("OAuth 1.0 signing", () => {
         tokenSecret: "pfkkdhi9sl3r4s00",
       }),
     ).resolves.toBe("tR3+Ty81lMeYAr/Fid0kMTYa/WM=");
+  });
+
+  it("maps request timeouts to a stable OAuth error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        const error = new Error("The operation was aborted due to timeout");
+        error.name = "TimeoutError";
+        throw error;
+      }),
+    );
+
+    await expect(
+      requestOAuth1TemporaryCredential({
+        requestTokenUrl: "https://example.com/oauth/request-token",
+        callbackUrl: "https://connector.example.com/oauth/callback",
+        clientId: "consumer-key",
+        clientSecret: "consumer-secret",
+        createError: (message) => new Error(message),
+      }),
+    ).rejects.toThrow("OAuth token request timed out.");
   });
 });

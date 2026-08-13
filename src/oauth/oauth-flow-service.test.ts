@@ -226,7 +226,7 @@ describe("OAuthFlowService", () => {
     expect(authorizationUrl.searchParams.get("scope")).toBe("read,write");
     expect(authorizationUrl.searchParams.get("expiration")).toBe("never");
     const pendingState = await services.states.peek(started.state);
-    expect(pendingState).not.toHaveProperty("oauth1Config");
+    expect(pendingState?.clientConfig).toBeUndefined();
     expect(JSON.stringify(pendingState)).not.toContain("consumer-secret");
 
     await expect(

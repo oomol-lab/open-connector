@@ -108,6 +108,9 @@ async function executeSignedOAuth1Request(input: SignedOAuth1RequestInput): Prom
       signal: AbortSignal.timeout(30_000),
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw input.createError("OAuth token request timed out.");
+    }
     throw input.createError(
       error instanceof Error ? `OAuth token request failed: ${error.message}` : "OAuth token request failed.",
     );
