@@ -9,6 +9,20 @@ const service = "miro";
 const boardIdSchema = s.nonEmptyString("Unique identifier of the Miro board.");
 const itemIdSchema = s.nonEmptyString("Unique identifier of the Miro board item.");
 const looseRecordSchema = s.unknownObject("Additional provider fields returned by Miro.");
+const miroItemTypes = [
+  "text",
+  "shape",
+  "sticky_note",
+  "image",
+  "document",
+  "card",
+  "app_card",
+  "preview",
+  "frame",
+  "embed",
+  "doc_format",
+  "data_table_format",
+];
 
 const userReferenceSchema = s.looseObject("A Miro user reference.", {
   id: s.string("Miro user identifier."),
@@ -87,11 +101,20 @@ const itemPositionSchema = s.looseObject("Position of the item on the board.", {
   origin: s.stringEnum("Coordinate origin used by Miro.", ["center"]),
 });
 
-const itemGeometrySchema = s.looseObject("Geometry of the Miro item.", {
+const stickyNoteGeometrySchema = s.looseObject("Geometry of the Miro sticky note.", {
   width: s.number("Item width.", { exclusiveMinimum: 0 }),
   height: s.number("Item height.", { exclusiveMinimum: 0 }),
   rotation: s.number("Clockwise item rotation in degrees."),
 });
+
+const textGeometrySchema = s.object(
+  "Geometry of the Miro text item. Miro calculates text height from its content and width.",
+  {
+    width: s.number("Text item width.", { exclusiveMinimum: 0 }),
+    rotation: s.number("Clockwise text item rotation in degrees."),
+  },
+  { optional: ["width", "rotation"] },
+);
 
 const itemParentSchema = s.looseObject("Optional parent frame for the item.", {
   id: s.nonEmptyString("Identifier of the parent frame."),
@@ -160,7 +183,7 @@ export const miroActions: ActionDefinition[] = [
         boardId: boardIdSchema,
         limit: s.integer("Maximum number of items to return.", { minimum: 10, maximum: 50 }),
         cursor: s.nonEmptyString("Opaque pagination cursor returned by Miro."),
-        type: s.nonEmptyString("Miro item type, such as sticky_note, text, shape, frame, card, or image."),
+        type: s.stringEnum("Miro item type.", miroItemTypes),
       },
       { optional: ["limit", "cursor", "type"] },
     ),
@@ -190,7 +213,7 @@ export const miroActions: ActionDefinition[] = [
         data: stickyNoteDataSchema,
         style: itemStyleSchema,
         position: itemPositionSchema,
-        geometry: itemGeometrySchema,
+        geometry: stickyNoteGeometrySchema,
         parent: itemParentSchema,
       },
       { optional: ["style", "position", "geometry", "parent"] },
@@ -208,7 +231,7 @@ export const miroActions: ActionDefinition[] = [
         data: itemDataSchema,
         style: itemStyleSchema,
         position: itemPositionSchema,
-        geometry: itemGeometrySchema,
+        geometry: textGeometrySchema,
         parent: itemParentSchema,
       },
       { optional: ["style", "position", "geometry", "parent"] },
@@ -216,12 +239,3 @@ export const miroActions: ActionDefinition[] = [
     outputSchema: s.object("The created Miro text item.", { item: itemSchema }),
   }),
 ];
-
-export type MiroActionName =
-  | "list_boards"
-  | "get_board"
-  | "create_board"
-  | "list_items"
-  | "get_item"
-  | "create_sticky_note"
-  | "create_text";

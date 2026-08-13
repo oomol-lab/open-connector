@@ -5,7 +5,6 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { MiroActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -48,7 +47,7 @@ interface MiroRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const miroActionHandlers: Record<MiroActionName, MiroActionHandler> = {
+export const miroActionHandlers: Record<string, MiroActionHandler> = {
   async list_boards(input, context): Promise<unknown> {
     const limit = optionalInteger(input.limit) ?? defaultBoardLimit;
     const offset = optionalInteger(input.offset) ?? 0;
@@ -197,6 +196,9 @@ async function createBoardItem(
   const geometry = optionalRecord(input.geometry);
   if (endpoint === "sticky_notes" && geometry?.width !== undefined && geometry.height !== undefined) {
     throw new ProviderRequestError(400, "geometry must specify either width or height, not both");
+  }
+  if (endpoint === "texts" && geometry?.height !== undefined) {
+    throw new ProviderRequestError(400, "geometry.height is not supported for text items");
   }
 
   const item = requireMiroObject(

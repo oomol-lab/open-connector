@@ -73,7 +73,7 @@ describe("Miro board actions", () => {
     };
 
     await expect(
-      miroActionHandlers.list_boards(
+      miroActionHandlers.list_boards!(
         { teamId: "team-123", query: "roadmap", limit: 5, offset: 10, sort: "last_modified" },
         { ...actionContext, fetcher },
       ),
@@ -99,7 +99,7 @@ describe("Miro item actions", () => {
     };
 
     await expect(
-      miroActionHandlers.create_sticky_note(
+      miroActionHandlers.create_sticky_note!(
         {
           boardId: "board-123",
           data: { content: "Ship it", shape: "square" },
@@ -119,7 +119,7 @@ describe("Miro item actions", () => {
       throw new Error("fetch should not run");
     };
     await expect(
-      miroActionHandlers.create_sticky_note(
+      miroActionHandlers.create_sticky_note!(
         {
           boardId: "board-123",
           data: { content: "Ship it" },
@@ -128,5 +128,22 @@ describe("Miro item actions", () => {
         { ...actionContext, fetcher },
       ),
     ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("either width or height") });
+  });
+
+  it("rejects text-item height before making a request", async () => {
+    const fetcher: ProviderFetch = async () => {
+      throw new Error("fetch should not run");
+    };
+
+    await expect(
+      miroActionHandlers.create_text!(
+        {
+          boardId: "board-123",
+          data: { content: "Ship it" },
+          geometry: { width: 240, height: 120 },
+        },
+        { ...actionContext, fetcher },
+      ),
+    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("geometry.height") });
   });
 });
