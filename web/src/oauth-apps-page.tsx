@@ -1,4 +1,4 @@
-import type { AppData, AuthDefinition, OAuthConfig, ProviderDefinition } from "./model";
+import type { AppData, OAuthAuthDefinition, OAuthConfig, ProviderDefinition } from "./model";
 import type { ReactNode } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
@@ -16,7 +16,7 @@ interface OAuthAppsPageProps {
 
 interface OAuthProvider {
   provider: ProviderDefinition;
-  auth: Extract<AuthDefinition, { type: "oauth2" }>;
+  auth: OAuthAuthDefinition;
   config?: OAuthConfig;
 }
 
@@ -97,7 +97,7 @@ function oauthProviders(data: AppData): OAuthProvider[] {
   const configs = new Map(data.oauthConfigs.map((config) => [config.service, config]));
   return data.providers.flatMap((provider) => {
     const auth = provider.auth.find(
-      (candidate): candidate is Extract<AuthDefinition, { type: "oauth2" }> => candidate.type === "oauth2",
+      (candidate): candidate is OAuthAuthDefinition => candidate.type === "oauth1" || candidate.type === "oauth2",
     );
     return auth ? [{ provider, auth, config: configs.get(provider.service) }] : [];
   });

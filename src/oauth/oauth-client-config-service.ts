@@ -1,5 +1,5 @@
 import type { CatalogStore } from "../catalog-store.ts";
-import type { OAuth2AuthDefinition, OAuthClientConfigFieldDefinition } from "../core/types.ts";
+import type { OAuthAuthDefinition, OAuthClientConfigFieldDefinition } from "../core/types.ts";
 
 import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
@@ -36,7 +36,7 @@ export interface OAuthClientConfigSummary {
   customClientAvailable: boolean;
   clientId: string | null;
   expectedRedirectUri: string;
-  auth: OAuth2AuthDefinition;
+  auth: OAuthAuthDefinition;
   requestedScopes: string[] | null;
   effectiveScopes: string[];
   extra: Record<string, string>;
@@ -105,7 +105,7 @@ export class OAuthClientConfigService {
     if (!clientId) {
       throw new OAuthClientConfigError("invalid_input", "clientId is required.");
     }
-    if (!clientSecret && auth.tokenEndpointAuthMethod !== "none") {
+    if (!clientSecret && requiresOAuthClientSecret(auth)) {
       throw new OAuthClientConfigError("invalid_input", "clientSecret is required.");
     }
 
@@ -157,15 +157,15 @@ export class OAuthClientConfigService {
     return resolved;
   }
 
-  getOAuthDefinition(service: string): OAuth2AuthDefinition {
+  getOAuthDefinition(service: string): OAuthAuthDefinition {
     const provider = this.catalog.providers.find((provider) => provider.service === service);
     if (!provider) {
       throw new OAuthClientConfigError("unknown_service", `Unknown service: ${service}.`);
     }
 
-    const auth = provider.auth.find((auth) => auth.type === "oauth2");
-    if (!auth || auth.type !== "oauth2") {
-      throw new OAuthClientConfigError("unsupported_auth_type", `${service} does not support oauth2.`);
+    const auth = provider.auth.find((auth) => auth.type === "oauth1" || auth.type === "oauth2");
+    if (!auth || (auth.type !== "oauth1" && auth.type !== "oauth2")) {
+      throw new OAuthClientConfigError("unsupported_auth_type", `${service} does not support OAuth.`);
     }
 
     return auth;
@@ -177,16 +177,16 @@ export class OAuthClientConfigService {
     return filterDeclaredScopes(config.requestedScopes, auth.scopes) ?? [...auth.scopes];
   }
 
-  private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
+  private listOAuthProviders(): Array<{ service: string; auth: OAuthAuthDefinition }> {
     return this.catalog.providers.flatMap((provider) => {
-      const auth = provider.auth.find((auth) => auth.type === "oauth2");
-      return auth && auth.type === "oauth2" ? [{ service: provider.service, auth }] : [];
+      const auth = provider.auth.find((auth) => auth.type === "oauth1" || auth.type === "oauth2");
+      return auth && (auth.type === "oauth1" || auth.type === "oauth2") ? [{ service: provider.service, auth }] : [];
     });
   }
 
   private toSummary(
     service: string,
-    auth: OAuth2AuthDefinition,
+    auth: OAuthAuthDefinition,
     config: OAuthClientConfig | undefined,
   ): OAuthClientConfigSummary {
     return {
@@ -201,6 +201,10 @@ export class OAuthClientConfigService {
       extra: config?.extra ?? {},
     };
   }
+}
+
+function requiresOAuthClientSecret(auth: OAuthAuthDefinition): boolean {
+  return auth.type === "oauth1" || auth.tokenEndpointAuthMethod !== "none";
 }
 
 /** Read a connection-scoped OAuth client config stored in credential metadata. */

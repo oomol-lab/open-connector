@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { trelloReadScopes, trelloWriteScopes } from "./scopes.ts";
 
 const service = "trello";
 
@@ -199,7 +200,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_member",
     description: "Get a Trello member, defaulting to the authenticated member.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for retrieving a Trello member.",
       {
@@ -217,7 +218,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_member_boards",
     description: "List Trello boards visible to a member.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for listing boards for a Trello member.",
       {
@@ -244,7 +245,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_board",
     description: "Get a Trello board by ID.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for retrieving a Trello board.",
       {
@@ -262,7 +263,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_board",
     description: "Create a Trello board.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for creating a Trello board.", boardCreateInput, {
       optional: ["description", "defaultLists", "permissionLevel"],
     }),
@@ -273,7 +274,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_board_lists",
     description: "List Trello lists on a board.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for listing Trello lists on a board.",
       {
@@ -291,7 +292,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_list",
     description: "Create a Trello list on a board.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object(
       "Input parameters for creating a Trello list.",
       {
@@ -309,7 +310,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_list",
     description: "Update a Trello list name or position.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object(
       "Input parameters for updating a Trello list.",
       {
@@ -327,7 +328,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "archive_list",
     description: "Archive a Trello list.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for archiving a Trello list.", {
       listId: trelloId("Trello list ID."),
     }),
@@ -338,7 +339,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_board_cards",
     description: "List Trello cards on a board.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for listing Trello cards on a board.",
       {
@@ -357,7 +358,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_board_members",
     description: "List Trello members on a board.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for listing Trello board members.",
       {
@@ -375,7 +376,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_board_labels",
     description: "List Trello labels on a board.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object("Input parameters for listing Trello board labels.", {
       boardId: trelloId("Trello board ID."),
     }),
@@ -386,7 +387,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_card",
     description: "Get a Trello card by ID or short link.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for retrieving a Trello card.",
       {
@@ -404,7 +405,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_card",
     description: "Create a Trello card in a list.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object(
       "Input parameters for creating a Trello card.",
       {
@@ -422,7 +423,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "move_card",
     description: "Move a Trello card to another list.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object(
       "Input parameters for moving a Trello card.",
       {
@@ -441,7 +442,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "archive_card",
     description: "Archive a Trello card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for archiving a Trello card.", {
       cardId: trelloId("Trello card ID or short link."),
     }),
@@ -452,7 +453,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_card",
     description: "Update a Trello card by ID or short link.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: updateCardInputSchema,
     outputSchema: s.object("The updated Trello card.", {
       card: trelloCardSchema,
@@ -461,7 +462,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_card_comment",
     description: "Add a comment action to a Trello card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for adding a Trello card comment.", {
       cardId: trelloId("Trello card ID or short link."),
       text: nonEmptyString("Comment text to add to the card."),
@@ -473,7 +474,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_card_comments",
     description: "List comment actions on a Trello card.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for listing Trello card comments.",
       {
@@ -494,7 +495,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_card_member",
     description: "Assign a Trello member to a card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for assigning a Trello member to a card.", {
       cardId: trelloId("Trello card ID or short link."),
       memberId: trelloId("Trello member ID to assign."),
@@ -504,7 +505,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "remove_card_member",
     description: "Remove a Trello member from a card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for removing a Trello member from a card.", {
       cardId: trelloId("Trello card ID or short link."),
       memberId: trelloId("Trello member ID to remove."),
@@ -514,7 +515,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_card_label",
     description: "Add a Trello label to a card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for adding a Trello label to a card.", {
       cardId: trelloId("Trello card ID or short link."),
       labelId: trelloId("Trello label ID to add."),
@@ -524,7 +525,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "remove_card_label",
     description: "Remove a Trello label from a card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for removing a Trello label from a card.", {
       cardId: trelloId("Trello card ID or short link."),
       labelId: trelloId("Trello label ID to remove."),
@@ -534,7 +535,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_checklist",
     description: "Create a Trello checklist on a card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for creating a Trello checklist.", {
       cardId: trelloId("Trello card ID or short link."),
       name: nonEmptyString("Checklist name."),
@@ -546,7 +547,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_card_checklists",
     description: "List Trello checklists on a card.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object("Input parameters for listing Trello card checklists.", {
       cardId: trelloId("Trello card ID or short link."),
     }),
@@ -557,7 +558,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_checkitem",
     description: "Add a check item to a Trello checklist.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object(
       "Input parameters for adding a Trello checklist item.",
       {
@@ -577,7 +578,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_checkitem_state",
     description: "Update a Trello check item state on a card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object("Input parameters for updating a Trello check item state.", {
       cardId: trelloId("Trello card ID or short link."),
       checkItemId: trelloId("Trello check item ID."),
@@ -590,7 +591,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_card_attachment_url",
     description: "Attach an external URL to a Trello card.",
-    requiredScopes: [],
+    requiredScopes: trelloWriteScopes,
     inputSchema: s.object(
       "Input parameters for attaching a URL to a Trello card.",
       {
@@ -609,7 +610,7 @@ export const trelloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
     description: "Search Trello cards, boards, members, and organizations.",
-    requiredScopes: [],
+    requiredScopes: trelloReadScopes,
     inputSchema: s.object(
       "Input parameters for Trello search.",
       {

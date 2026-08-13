@@ -261,6 +261,17 @@ describe("resolveProviderConnectionStatus", () => {
     });
   });
 
+  it("keeps the OAuth client warning for an unconfigured OAuth 1.0 provider", () => {
+    const provider = oauthProvider("trello", "Trello");
+    provider.authTypes = ["oauth1"];
+    provider.auth = [{ type: "oauth1", scopes: ["read", "write"] }];
+
+    expect(resolveProviderConnectionStatus(provider, [], [])).toMatchObject({
+      connected: false,
+      oauthClientRequired: true,
+    });
+  });
+
   it("prefers a default credential connection when multiple records exist", () => {
     const status = resolveProviderConnectionStatus(
       oauthProvider("slack", "Slack"),

@@ -37,6 +37,7 @@ describe("shouldShowConnectionActions", () => {
 
   it("shows connection actions when credentials or OAuth are required", () => {
     expect(shouldShowConnectionActions({ type: "api_key" })).toBe(true);
+    expect(shouldShowConnectionActions({ type: "oauth1", scopes: [] })).toBe(true);
     expect(shouldShowConnectionActions({ type: "oauth2", scopes: [] })).toBe(true);
   });
 });
@@ -54,6 +55,7 @@ describe("shouldShowDisconnectAction", () => {
 describe("connectionSubmitLabel", () => {
   it("labels the OAuth action as a provider connection for new connections", () => {
     expect(connectionSubmitLabel({ type: "oauth2", scopes: [] }, false, "Gmail")).toBe("Connect Gmail");
+    expect(connectionSubmitLabel({ type: "oauth1", scopes: [] }, false, "Trello")).toBe("Connect Trello");
   });
 
   it("labels the OAuth action as reconnect for existing connections", () => {
@@ -120,6 +122,23 @@ describe("shouldEnableConnectionSubmit", () => {
       }),
     ).toBe(true);
   });
+
+  it("requires a consumer secret for a manually entered OAuth 1.0 client", () => {
+    expect(
+      shouldEnableConnectionSubmit({ type: "oauth1", scopes: [] }, undefined, {
+        clientId: "consumer-key",
+        clientSecret: "",
+        extraValues: {},
+      }),
+    ).toBe(false);
+    expect(
+      shouldEnableConnectionSubmit({ type: "oauth1", scopes: [] }, undefined, {
+        clientId: "consumer-key",
+        clientSecret: "consumer-secret",
+        extraValues: {},
+      }),
+    ).toBe(true);
+  });
 });
 
 describe("clientConfigFieldsFor", () => {
@@ -134,6 +153,12 @@ describe("clientConfigFieldsFor", () => {
 
   it("returns the oauth2 auth definition's clientConfigFields", () => {
     const auth: AuthDefinition = { type: "oauth2", scopes: [], clientConfigFields: [tenantField] };
+
+    expect(clientConfigFieldsFor(auth)).toEqual([tenantField]);
+  });
+
+  it("returns the oauth1 auth definition's clientConfigFields", () => {
+    const auth: AuthDefinition = { type: "oauth1", scopes: [], clientConfigFields: [tenantField] };
 
     expect(clientConfigFieldsFor(auth)).toEqual([tenantField]);
   });

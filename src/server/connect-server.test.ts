@@ -81,6 +81,24 @@ const oauthProvider: ProviderDefinition = {
   actions: [],
 };
 
+const oauth1Provider: ProviderDefinition = {
+  service: "oauth1_example",
+  displayName: "OAuth1 Example",
+  categories: ["Developer Tools"],
+  authTypes: ["oauth1"],
+  auth: [
+    {
+      type: "oauth1",
+      requestTokenUrl: "https://example.com/oauth/request-token",
+      authorizationUrl: "https://example.com/oauth/authorize",
+      accessTokenUrl: "https://example.com/oauth/access-token",
+      signatureMethod: "HMAC-SHA1",
+      scopes: ["read"],
+    },
+  ],
+  actions: [],
+};
+
 const echoAction: ActionDefinition = {
   id: "example.echo",
   service: "example",
@@ -1173,6 +1191,41 @@ describe("ConnectServer", () => {
         message: "OAuth state is missing or expired.",
       },
     });
+  });
+
+  it("accepts OAuth 1.0 token and verifier callback parameters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response("oauth_token=request-token&oauth_token_secret=request-secret&oauth_callback_confirmed=true"),
+        )
+        .mockResolvedValueOnce(new Response("oauth_token=access-token&oauth_token_secret=access-secret")),
+    );
+    const app = createTestServer([oauth1Provider]).createApp();
+    const config = await app.request("/api/oauth/configs/oauth1_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId: "consumer-key", clientSecret: "consumer-secret" }),
+    });
+    expect(config.status).toBe(200);
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth1_example" }),
+    });
+    const { state } = (await authorization.json()) as { state: string };
+
+    const callback = await app.request(
+      `/oauth/callback?state=${state}&oauth_token=request-token&oauth_verifier=verifier`,
+    );
+    expect(callback.status).toBe(200);
+
+    const connections = await app.request("/api/connections");
+    await expect(connections.json()).resolves.toMatchObject([
+      { service: "oauth1_example", authType: "oauth1", configured: true },
+    ]);
   });
 
   it("lists OAuth connections after the callback completes", async () => {

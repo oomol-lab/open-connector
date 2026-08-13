@@ -109,6 +109,9 @@ interface PreviousCredentialRuntimeData {
 
 type CredentialValidatorCall = () => Promise<CredentialValidationResult | void> | undefined;
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
+type StoredOAuthCredential =
+  | Extract<ResolvedCredential, { authType: "oauth1" }>
+  | Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 /**
  * Coordinates local provider connection state.
@@ -328,12 +331,12 @@ export class ConnectionService {
 
   async setOAuthCredential(
     service: string,
-    credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+    credential: StoredOAuthCredential,
     connectionNameInput?: string,
   ): Promise<ConnectionSummary> {
     const provider = this.getAvailableProvider(service);
-    if (!this.supportsAuth(provider, "oauth2")) {
-      throw new ConnectionError("unsupported_auth_type", `${service} does not support oauth2.`);
+    if (!this.supportsAuth(provider, credential.authType)) {
+      throw new ConnectionError("unsupported_auth_type", `${service} does not support ${credential.authType}.`);
     }
 
     const connectionName = normalizeConnectionName(connectionNameInput);
@@ -347,7 +350,7 @@ export class ConnectionService {
     }
     const storedCredential = {
       ...credential,
-      ...this.mergeCredentialRuntimeData(provider, "oauth2", credential, validation),
+      ...this.mergeCredentialRuntimeData(provider, credential.authType, credential, validation),
     };
     const stored = await this.store.set(service, connectionName, storedCredential);
     return this.createStoredConnectionSummary(provider, stored.id, connectionName, storedCredential);
@@ -480,10 +483,14 @@ export class ConnectionService {
 
   private async validateOAuthCredential(
     service: string,
-    credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+    credential: StoredOAuthCredential,
   ): Promise<CredentialValidationResult> {
     const validators = await this.providerLoader.loadCredentialValidators(service);
-    return this.runCredentialValidator(service, () => validators?.oauth2?.(credential, this.createValidatorOptions()));
+    return this.runCredentialValidator(service, () =>
+      credential.authType === "oauth1"
+        ? validators?.oauth1?.(credential, this.createValidatorOptions())
+        : validators?.oauth2?.(credential, this.createValidatorOptions()),
+    );
   }
 
   private createValidatorOptions() {
@@ -586,7 +593,7 @@ export class ConnectionService {
   private mergeCredentialRuntimeData(
     provider: ProviderDefinition,
     authType: Exclude<AuthType, "no_auth">,
-    credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+    credential: StoredOAuthCredential,
     validation: CredentialValidationResult,
   ): CredentialRuntimeData {
     return {

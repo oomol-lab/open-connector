@@ -39,6 +39,26 @@ const oauthProvider: ProviderDefinition = {
   actions: [],
 };
 
+const oauth1Provider: ProviderDefinition = {
+  service: "oauth1_example",
+  displayName: "OAuth1 Example",
+  categories: ["Developer Tools"],
+  authTypes: ["oauth1"],
+  auth: [
+    {
+      type: "oauth1",
+      requestTokenUrl: "https://example.com/oauth/request-token",
+      authorizationUrl: "https://example.com/oauth/authorize",
+      accessTokenUrl: "https://example.com/oauth/access-token",
+      signatureMethod: "HMAC-SHA1",
+      scopes: ["read", "write"],
+      scopeSeparator: ",",
+      authorizationParams: { expiration: "never" },
+    },
+  ],
+  actions: [],
+};
+
 const pkceOAuthProvider: ProviderDefinition = {
   ...oauthProvider,
   service: "pkce",
@@ -169,6 +189,58 @@ describe("OAuthFlowService", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+
+  it("completes an OAuth 1.0 request-token and verifier exchange", async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      const authorization = new Headers(init?.headers).get("authorization");
+      expect(init?.method).toBe("POST");
+      expect(authorization).toContain('oauth_signature_method="HMAC-SHA1"');
+      expect(authorization).toContain("oauth_signature=");
+
+      if (url.endsWith("/oauth/request-token")) {
+        expect(authorization).toContain("oauth_callback=");
+        return new Response(
+          "oauth_token=request-token&oauth_token_secret=request-secret&oauth_callback_confirmed=true",
+        );
+      }
+      expect(url).toBe("https://example.com/oauth/access-token");
+      expect(authorization).toContain('oauth_token="request-token"');
+      expect(authorization).toContain('oauth_verifier="verifier"');
+      return new Response("oauth_token=access-token&oauth_token_secret=access-secret");
+    });
+    vi.stubGlobal("fetch", fetcher);
+
+    const services = createServices([oauth1Provider]);
+    await services.clientConfigs.upsertConfig({
+      service: "oauth1_example",
+      clientId: "consumer-key",
+      clientSecret: "consumer-secret",
+    });
+
+    const started = await services.flow.startAuthorization({ service: "oauth1_example", connectionName: "work" });
+    const authorizationUrl = new URL(started.authorizationUrl);
+    expect(authorizationUrl.searchParams.get("oauth_token")).toBe("request-token");
+    expect(authorizationUrl.searchParams.get("scope")).toBe("read,write");
+    expect(authorizationUrl.searchParams.get("expiration")).toBe("never");
+
+    await expect(
+      services.flow.completeAuthorization({
+        state: started.state,
+        oauthToken: "request-token",
+        oauthVerifier: "verifier",
+      }),
+    ).resolves.toEqual({ service: "oauth1_example", connected: true });
+
+    await expect(services.connections.getCredential("oauth1_example", "work")).resolves.toMatchObject({
+      authType: "oauth1",
+      accessToken: "access-token",
+      providerSecret: { oauthTokenSecret: "access-secret" },
+      metadata: { oauthClientId: "consumer-key", scope: "read,write" },
+      profile: { grantedScopes: ["read", "write"] },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("builds an authorization URL from user-provided client config", async () => {

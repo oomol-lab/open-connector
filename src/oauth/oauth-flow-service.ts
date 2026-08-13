@@ -9,6 +9,7 @@ import type {
 import { createHash, randomBytes } from "node:crypto";
 import { normalizeSlackAuthorizationCredential } from "../providers/slack/oauth.ts";
 import { requestAuthorizationCodeToken } from "./oauth-token.ts";
+import { requestOAuth1AccessCredential, requestOAuth1TemporaryCredential } from "./oauth1-token.ts";
 
 /**
  * Started OAuth authorization flow returned to the local console.
@@ -26,7 +27,9 @@ export interface OAuthAuthorizationStartInput {
 
 export interface OAuthAuthorizationCompleteInput {
   state: string;
-  code: string;
+  code?: string;
+  oauthToken?: string;
+  oauthVerifier?: string;
 }
 
 /**
@@ -38,6 +41,9 @@ export interface OAuthAuthorizationState {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
+  oauth1RequestToken?: string;
+  oauth1RequestTokenSecret?: string;
+  oauth1Config?: OAuthClientConfig;
   clientConfig?: OAuthClientConfig;
 }
 
@@ -90,6 +96,39 @@ export class OAuthFlowService {
     }
 
     const state = crypto.randomUUID();
+    if (auth.type === "oauth1") {
+      const callbackUrl = new URL(this.clientConfigs.expectedRedirectUri(service));
+      callbackUrl.searchParams.set("state", state);
+      const temporaryCredential = await requestOAuth1TemporaryCredential({
+        requestTokenUrl: this.clientConfigs.resolveEndpointUrl(service, auth.requestTokenUrl, config),
+        callbackUrl: callbackUrl.toString(),
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
+      });
+      await this.states.set({
+        service,
+        connectionName,
+        state,
+        createdAt: new Date().toISOString(),
+        oauth1RequestToken: temporaryCredential.token,
+        oauth1RequestTokenSecret: temporaryCredential.tokenSecret,
+        oauth1Config: config,
+        clientConfig: input.clientConfig ? config : undefined,
+      });
+
+      const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));
+      for (const [key, value] of Object.entries(auth.authorizationParams ?? {})) {
+        authorizationUrl.searchParams.set(key, value);
+      }
+      authorizationUrl.searchParams.set("oauth_token", temporaryCredential.token);
+      const effectiveScopes = this.clientConfigs.getEffectiveScopes(service, config);
+      if (effectiveScopes.length > 0) {
+        authorizationUrl.searchParams.set("scope", effectiveScopes.join(auth.scopeSeparator ?? " "));
+      }
+      return { authorizationUrl: authorizationUrl.toString(), state };
+    }
+
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
     await this.states.set({
       service,
@@ -141,12 +180,55 @@ export class OAuthFlowService {
     }
 
     const auth = this.clientConfigs.getOAuthDefinition(pending.service);
-    const config = pending.clientConfig ?? (await this.clientConfigs.getConfig(pending.service));
+    const config =
+      pending.oauth1Config ?? pending.clientConfig ?? (await this.clientConfigs.getConfig(pending.service));
     if (!config) {
       throw new OAuthFlowError(
         "oauth_client_config_required",
         `Configure an OAuth client for ${pending.service} first.`,
       );
+    }
+
+    if (auth.type === "oauth1") {
+      const requestToken = pending.oauth1RequestToken;
+      const requestTokenSecret = pending.oauth1RequestTokenSecret;
+      if (!requestToken || !requestTokenSecret || !input.oauthToken || !input.oauthVerifier) {
+        throw new OAuthFlowError("invalid_oauth_callback", "OAuth 1.0 callback is missing its token or verifier.");
+      }
+      if (input.oauthToken !== requestToken) {
+        throw new OAuthFlowError("invalid_oauth_callback", "OAuth 1.0 callback token does not match the pending flow.");
+      }
+
+      const credential = await requestOAuth1AccessCredential({
+        accessTokenUrl: this.clientConfigs.resolveEndpointUrl(pending.service, auth.accessTokenUrl, config),
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        requestToken,
+        requestTokenSecret,
+        verifier: input.oauthVerifier,
+        createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
+      });
+      const effectiveScopes = this.clientConfigs.getEffectiveScopes(pending.service, config);
+      await this.connections.setOAuthCredential(
+        pending.service,
+        {
+          ...credential,
+          profile: { ...credential.profile, grantedScopes: effectiveScopes },
+          metadata: {
+            oauthClientId: config.clientId,
+            scope: effectiveScopes.join(auth.scopeSeparator ?? " "),
+            oauthClientExtra: config.extra,
+            oauthClientSecretExtra: config.secretExtra,
+            oauthClientConfig: pending.clientConfig ? config : undefined,
+          },
+        },
+        pending.connectionName,
+      );
+      return { service: pending.service, connected: true };
+    }
+
+    if (!input.code) {
+      throw new OAuthFlowError("invalid_oauth_callback", "OAuth 2.0 callback is missing its authorization code.");
     }
 
     let tokenResponse = await requestAuthorizationCodeToken({

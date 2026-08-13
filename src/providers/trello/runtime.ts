@@ -1,4 +1,4 @@
-import type { CredentialValidationResult } from "../../core/types.ts";
+import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,6 +11,10 @@ export interface TrelloActionContext {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }
+
+type TrelloCredential =
+  | Extract<ResolvedCredential, { authType: "custom_credential" }>
+  | Extract<ResolvedCredential, { authType: "oauth1" }>;
 
 type TrelloActionHandler = (input: Record<string, unknown>, context: TrelloActionContext) => Promise<unknown>;
 
@@ -467,6 +471,39 @@ export async function validateTrelloCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CredentialValidationResult> {
   const credential = resolveTrelloCredential(input.values);
+  return validateResolvedTrelloCredential(credential, [], options);
+}
+
+export async function validateTrelloOAuthCredential(
+  input: Extract<ResolvedCredential, { authType: "oauth1" }>,
+  options: { fetcher: typeof fetch; signal?: AbortSignal },
+): Promise<CredentialValidationResult> {
+  return validateResolvedTrelloCredential(
+    resolveTrelloOAuthCredential(input),
+    readTrelloScopes(input.metadata.scope),
+    options,
+  );
+}
+
+export function createTrelloContext(
+  credential: TrelloCredential,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): TrelloActionContext {
+  return {
+    ...(credential.authType === "oauth1"
+      ? resolveTrelloOAuthCredential(credential)
+      : resolveTrelloCredential(credential.values)),
+    fetcher,
+    signal,
+  };
+}
+
+async function validateResolvedTrelloCredential(
+  credential: Pick<TrelloActionContext, "apiKey" | "apiToken">,
+  grantedScopes: string[],
+  options: { fetcher: typeof fetch; signal?: AbortSignal },
+): Promise<CredentialValidationResult> {
   const member = await trelloRequest<Record<string, unknown>>({
     credential,
     fetcher: options.fetcher,
@@ -484,7 +521,7 @@ export async function validateTrelloCredential(
       accountId: memberId ?? username ?? "trello:member",
       displayName: fullName ?? fallbackLabel,
     },
-    grantedScopes: [],
+    grantedScopes,
     metadata: compactObject({
       apiBaseUrl: trelloApiBaseUrl,
       memberId,
@@ -492,6 +529,20 @@ export async function validateTrelloCredential(
       validationEndpoint: "/members/me",
     }),
   };
+}
+
+function resolveTrelloOAuthCredential(
+  input: Extract<ResolvedCredential, { authType: "oauth1" }>,
+): Pick<TrelloActionContext, "apiKey" | "apiToken"> {
+  return {
+    apiKey: readRequiredString(input.metadata.oauthClientId, "oauthClientId"),
+    apiToken: readRequiredString(input.accessToken, "accessToken"),
+  };
+}
+
+function readTrelloScopes(value: unknown): string[] {
+  const scopes = readOptionalString(value);
+  return scopes ? scopes.split(/[\s,]+/).filter(Boolean) : [];
 }
 
 function resolveTrelloCredential(
@@ -555,10 +606,10 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
 
 function normalizeTrelloAuthError(message: string) {
   if (message === "invalid key") {
-    return "Invalid Trello API key. Use the Key from https://trello.com/power-ups/admin, not the API Secret or an Atlassian API token.";
+    return "Invalid Trello API key. Use the Key from https://trello.com/apps/admin, not the API Secret or an Atlassian API token.";
   }
   if (message === "invalid token") {
-    return "Invalid Trello API token. Generate it from the Token link beside your API Key at https://trello.com/power-ups/admin.";
+    return "Invalid Trello API token. Generate it from the Token link beside your API Key at https://trello.com/apps/admin.";
   }
   return message;
 }

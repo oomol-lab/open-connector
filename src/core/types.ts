@@ -11,7 +11,7 @@ export type JsonSchema = {
 /**
  * Authentication models that a provider can advertise in the public catalog.
  */
-export type AuthType = "no_auth" | "api_key" | "custom_credential" | "oauth2";
+export type AuthType = "no_auth" | "api_key" | "custom_credential" | "oauth1" | "oauth2";
 
 /**
  * A single credential field that users can configure for a provider.
@@ -147,6 +147,31 @@ export type OAuth2AuthDefinition = {
   clientConfigFields?: OAuthClientConfigFieldDefinition[];
 };
 
+/** OAuth 1.0a endpoints and signing behavior for a provider. */
+export type OAuth1AuthDefinition = {
+  /** Auth discriminator used by catalog clients and connection routes. */
+  type: "oauth1";
+  /** Endpoint used to obtain a temporary request token. */
+  requestTokenUrl: string;
+  /** Browser endpoint where the user authorizes the temporary token. */
+  authorizationUrl: string;
+  /** Endpoint used to exchange the verified temporary token for an access token. */
+  accessTokenUrl: string;
+  /** OAuth 1.0 request signature method. */
+  signatureMethod: "HMAC-SHA1";
+  /** Provider-native scopes requested during authorization. */
+  scopes: string[];
+  /** Separator used when joining OAuth scopes. Defaults to a space. */
+  scopeSeparator?: " " | ",";
+  /** Extra static authorization URL parameters, such as Trello `expiration=never`. */
+  authorizationParams?: Record<string, string>;
+  /** Extra local OAuth app fields required before starting authorization. */
+  clientConfigFields?: OAuthClientConfigFieldDefinition[];
+};
+
+/** OAuth capability metadata shared by client configuration and flow services. */
+export type OAuthAuthDefinition = OAuth1AuthDefinition | OAuth2AuthDefinition;
+
 /**
  * Provider authentication capabilities advertised in the public catalog.
  */
@@ -154,6 +179,7 @@ export type ProviderAuthDefinition =
   | { type: "no_auth" }
   | ApiKeyAuthDefinition
   | CustomCredentialAuthDefinition
+  | OAuth1AuthDefinition
   | OAuth2AuthDefinition;
 
 /**
@@ -241,6 +267,18 @@ export type ResolvedCredential =
       /** Stable provider account identity safe to show in local APIs and MCP. */
       profile: CredentialProfile;
       /** Runtime-owned metadata that is not sent by catalog definitions. */
+      metadata: Record<string, unknown>;
+    }
+  | {
+      /** Stored OAuth 1.0 credential kind selected for execution. */
+      authType: "oauth1";
+      /** OAuth access token returned after the verifier exchange. */
+      accessToken: string;
+      /** Provider-owned secret state, including the OAuth token secret. */
+      providerSecret: Record<string, unknown>;
+      /** Stable provider account identity safe to show in local APIs and MCP. */
+      profile: CredentialProfile;
+      /** Runtime-owned OAuth and provider metadata. */
       metadata: Record<string, unknown>;
     }
   | {
@@ -387,6 +425,10 @@ export type CredentialValidators = {
   ) => Promise<CredentialValidationResult | void>;
   oauth2?: (
     input: Extract<ResolvedCredential, { authType: "oauth2" }>,
+    options: CredentialValidatorOptions,
+  ) => Promise<CredentialValidationResult | void>;
+  oauth1?: (
+    input: Extract<ResolvedCredential, { authType: "oauth1" }>,
     options: CredentialValidatorOptions,
   ) => Promise<CredentialValidationResult | void>;
 };

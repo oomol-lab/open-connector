@@ -2,6 +2,7 @@ import type {
   AppData,
   AuthDefinition,
   ConnectionRecord,
+  OAuthAuthDefinition,
   OAuthConfig,
   ProviderConnectionStatus,
   ProviderDefinition,
@@ -39,6 +40,7 @@ import {
 import {
   clientConfigFieldsFor,
   initialClientConfigFieldValues,
+  oauthClientSecretRequired,
   OAuthAppDialog,
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
@@ -118,7 +120,7 @@ export interface OAuthAuthorizationRequestBody {
 }
 
 export interface ManualOAuthAuthorizationInput {
-  auth: Extract<AuthDefinition, { type: "oauth2" }>;
+  auth: OAuthAuthDefinition;
   values: ManualOAuthClientValues;
 }
 
@@ -569,7 +571,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
   const [oauthClientMode, setOAuthClientMode] = useState<OAuthClientMode>("configured");
   const changeOAuthClientMode = useCallback((mode: OAuthClientMode) => setOAuthClientMode(mode), []);
   const selectedAuth = props.provider.auth.find((auth) => auth.type === selectedAuthType) ?? props.provider.auth[0];
-  const oauthAuth = props.provider.auth.find((auth) => auth.type === "oauth2");
+  const oauthAuth = props.provider.auth.find(isOAuthAuth);
   const hasMultipleAuthMethods = props.provider.auth.length > 1;
   const locallyAvailable = isProviderLocallyAvailable(props.provider);
   const supportsCredentialConnections = props.provider.auth.some((auth) => shouldShowConnectionActions(auth));
@@ -848,6 +850,10 @@ export function shouldShowConnectionActions(auth: AuthDefinition): boolean {
   return auth.type !== "no_auth";
 }
 
+function isOAuthAuth(auth: AuthDefinition): auth is OAuthAuthDefinition {
+  return auth.type === "oauth1" || auth.type === "oauth2";
+}
+
 export function shouldShowDisconnectAction(connection: AppData["connections"][number] | undefined): boolean {
   return connection != null;
 }
@@ -857,7 +863,7 @@ export function shouldEnableConnectionSubmit(
   oauthConfig: OAuthConfig | undefined,
   manualValues?: ManualOAuthClientValues,
 ): boolean {
-  if (auth.type !== "oauth2") {
+  if (!isOAuthAuth(auth)) {
     return true;
   }
   if (!manualValues) {
@@ -866,7 +872,7 @@ export function shouldEnableConnectionSubmit(
   if (!manualValues.clientId.trim()) {
     return false;
   }
-  if (auth.tokenEndpointAuthMethod !== "none" && !manualValues.clientSecret.trim()) {
+  if (oauthClientSecretRequired(auth) && !manualValues.clientSecret.trim()) {
     return false;
   }
   return clientConfigFieldsFor(auth).every(
@@ -875,7 +881,7 @@ export function shouldEnableConnectionSubmit(
 }
 
 export function connectionSubmitLabel(auth: AuthDefinition, connected: boolean, providerName: string): string {
-  if (auth.type === "oauth2") {
+  if (isOAuthAuth(auth)) {
     return `${connected ? "Reconnect" : "Connect"} ${providerName}`;
   }
   return "Save Connection";
@@ -937,7 +943,7 @@ function providerAuthTypeLabels(provider: ProviderDefinition, t: (key: string) =
 
 function authTypeLabel(authType: string, t: (key: string) => string): string {
   if (authType === "api_key") return t("providers.authLabels.apiKey");
-  if (authType === "oauth2") return t("providers.authLabels.oauth");
+  if (authType === "oauth1" || authType === "oauth2") return t("providers.authLabels.oauth");
   if (authType === "custom_credential") return t("providers.authLabels.custom");
   if (authType === "no_auth") return t("providers.authLabels.noAuth");
   return authType;
@@ -1153,15 +1159,14 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const fields = credentialFieldsFor(props.auth);
   const showActions = shouldShowConnectionActions(props.auth);
   const connected = props.connection != null;
-  const customOAuthClientAvailable =
-    props.auth.type === "oauth2" && (props.oauthConfig?.customClientAvailable ?? false);
+  const customOAuthClientAvailable = isOAuthAuth(props.auth) && (props.oauthConfig?.customClientAvailable ?? false);
   const manualValues: ManualOAuthClientValues = {
     clientId: manualClientId,
     clientSecret: manualClientSecret,
     extraValues: manualExtraValues,
   };
   const needsOAuthClient =
-    props.auth.type === "oauth2" && props.oauthClientMode === "configured" && !props.oauthConfig?.configured;
+    isOAuthAuth(props.auth) && props.oauthClientMode === "configured" && !props.oauthConfig?.configured;
   const canSubmit =
     props.connectionName.length > 0 &&
     props.connectionNameValid &&
@@ -1171,12 +1176,11 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
       props.oauthConfig,
       props.oauthClientMode === "manual" ? manualValues : undefined,
     );
-  const submitLabel =
-    props.auth.type === "oauth2"
-      ? t(connected ? "providers.buttons.reconnectProvider" : "providers.buttons.connectProvider", {
-          name: props.provider.displayName,
-        })
-      : t("providers.buttons.saveConnection");
+  const submitLabel = isOAuthAuth(props.auth)
+    ? t(connected ? "providers.buttons.reconnectProvider" : "providers.buttons.connectProvider", {
+        name: props.provider.displayName,
+      })
+    : t("providers.buttons.saveConnection");
 
   useEffect(
     () => () => {
@@ -1209,7 +1213,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
 
     const connectionName = props.connectionName.trim();
     setStatus(
-      props.auth.type === "oauth2"
+      isOAuthAuth(props.auth)
         ? t("providers.connectionMessages.openingOAuth")
         : t("providers.connectionMessages.saving"),
     );
@@ -1283,7 +1287,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           <AlertDescription>{t("providers.connectionMessages.noAuth")}</AlertDescription>
         </Alert>
       ) : null}
-      {props.auth.type === "oauth2" && customOAuthClientAvailable ? (
+      {isOAuthAuth(props.auth) && customOAuthClientAvailable ? (
         <ToggleGroup
           className="auth-method-control bg-muted p-[3px]"
           type="single"
@@ -1311,7 +1315,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           </ToggleGroupItem>
         </ToggleGroup>
       ) : null}
-      {props.auth.type === "oauth2" ? (
+      {isOAuthAuth(props.auth) ? (
         <Alert variant={needsOAuthClient ? "warning" : "default"}>
           {needsOAuthClient ? <Settings size={16} /> : <ExternalLink size={16} />}
           <AlertDescription>
@@ -1325,7 +1329,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           </AlertDescription>
         </Alert>
       ) : null}
-      {props.auth.type === "oauth2" && props.oauthClientMode === "manual" ? (
+      {isOAuthAuth(props.auth) && props.oauthClientMode === "manual" ? (
         <>
           {props.oauthConfig?.expectedRedirectUri ? (
             <Label className="field">
@@ -1343,7 +1347,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
               type="password"
               value={manualClientSecret}
               onChange={(event) => setManualClientSecret(event.target.value)}
-              required={props.auth.tokenEndpointAuthMethod !== "none"}
+              required={oauthClientSecretRequired(props.auth)}
             />
           </Label>
           {manualClientConfigFields.map((field) => (
@@ -1379,10 +1383,10 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           ) : (
             <>
               <Button type="submit" disabled={!canSubmit}>
-                {props.auth.type === "oauth2" ? <ExternalLink size={16} /> : <Check size={16} />}
+                {isOAuthAuth(props.auth) ? <ExternalLink size={16} /> : <Check size={16} />}
                 {submitLabel}
               </Button>
-              {props.auth.type === "oauth2" && props.oauthClientMode === "configured" ? (
+              {isOAuthAuth(props.auth) && props.oauthClientMode === "configured" ? (
                 <Button variant="outline" type="button" onClick={props.onConfigureOAuthClient}>
                   <Settings size={16} />
                   {t("providers.buttons.editOAuthClient")}

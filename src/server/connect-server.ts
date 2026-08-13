@@ -935,13 +935,17 @@ export class ConnectServer {
   private async completeOAuth(context: Context): Promise<Response> {
     const state = context.req.query("state");
     const code = context.req.query("code");
+    const oauthToken = context.req.query("oauth_token");
+    const oauthVerifier = context.req.query("oauth_verifier");
     const logContext = {
       path: context.req.path,
       hasState: Boolean(state),
       hasCode: Boolean(code),
+      hasOAuthToken: Boolean(oauthToken),
+      hasOAuthVerifier: Boolean(oauthVerifier),
     };
     this.options.logger?.info(logContext, "oauth callback received");
-    const providerError = context.req.query("error");
+    const providerError = context.req.query("error") ?? context.req.query("denied");
     if (providerError) {
       const providerErrorDescription = context.req.query("error_description");
       this.options.logger?.warn(
@@ -960,7 +964,7 @@ export class ConnectServer {
         `OAuth provider returned error "${providerError}"${providerErrorDescription ? `: ${providerErrorDescription}` : "."}`,
       );
     }
-    if (!state || !code) {
+    if (!state || (!code && !(oauthToken && oauthVerifier))) {
       this.options.logger?.warn(
         {
           ...logContext,
@@ -968,12 +972,18 @@ export class ConnectServer {
         },
         "oauth callback failed",
       );
-      return jsonError(context, 400, "invalid_oauth_callback", "OAuth callback requires state and code.");
+      return jsonError(
+        context,
+        400,
+        "invalid_oauth_callback",
+        "OAuth callback requires state plus an authorization code or OAuth 1.0 token and verifier.",
+      );
     }
 
     let service: string;
     try {
-      service = (await this.options.oauthFlow.completeAuthorization({ state, code })).service;
+      service = (await this.options.oauthFlow.completeAuthorization({ state, code, oauthToken, oauthVerifier }))
+        .service;
       this.options.logger?.info(
         {
           ...logContext,

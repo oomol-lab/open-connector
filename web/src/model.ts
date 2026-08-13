@@ -9,11 +9,18 @@ export type AuthDefinition =
     }
   | { type: "custom_credential"; fields: CredentialField[] }
   | {
+      type: "oauth1";
+      scopes: string[];
+      clientConfigFields?: CredentialField[];
+    }
+  | {
       type: "oauth2";
       scopes: string[];
       tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
       clientConfigFields?: CredentialField[];
     };
+
+export type OAuthAuthDefinition = Extract<AuthDefinition, { type: "oauth1" | "oauth2" }>;
 
 export interface CredentialField {
   key: string;
@@ -87,7 +94,7 @@ export interface OAuthConfig {
   customClientAvailable?: boolean;
   clientId: string | null;
   expectedRedirectUri?: string;
-  auth?: Extract<AuthDefinition, { type: "oauth2" }>;
+  auth?: OAuthAuthDefinition;
   requestedScopes?: string[] | null;
   effectiveScopes?: string[];
   extra?: Record<string, string>;
@@ -340,7 +347,10 @@ function isUsableCredentialConnection(connection: ConnectionRecord | undefined):
 
 function providerRequiresOAuth(provider: ProviderDefinition): boolean {
   const authTypes = provider.auth.length > 0 ? provider.auth.map((auth) => auth.type) : provider.authTypes;
-  return authTypes.includes("oauth2") && authTypes.every((authType) => authType === "oauth2");
+  return (
+    authTypes.some((authType) => authType === "oauth1" || authType === "oauth2") &&
+    authTypes.every((authType) => authType === "oauth1" || authType === "oauth2")
+  );
 }
 
 function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): boolean {

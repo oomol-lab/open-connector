@@ -1,4 +1,4 @@
-import type { AuthDefinition, CredentialField, OAuthConfig, ProviderDefinition } from "./model";
+import type { AuthDefinition, CredentialField, OAuthAuthDefinition, OAuthConfig, ProviderDefinition } from "./model";
 import type { ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 
 interface OAuthAppFormProps {
   provider: ProviderDefinition;
-  auth: Extract<AuthDefinition, { type: "oauth2" }>;
+  auth: OAuthAuthDefinition;
   config?: OAuthConfig;
   onRefresh(): void;
   onSaved?(): void;
@@ -115,7 +115,7 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
         <span>{t("providers.oauthClientSettings.clientId")}</span>
         <Input value={clientId} onChange={(event) => setClientId(event.target.value)} required />
       </Label>
-      {props.auth.tokenEndpointAuthMethod !== "none" ? (
+      {oauthClientSecretRequired(props.auth) ? (
         <Label className="field">
           <span>{t("providers.oauthClientSettings.clientSecret")}</span>
           <Input
@@ -153,7 +153,11 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
 }
 
 export function clientConfigFieldsFor(auth: AuthDefinition): CredentialField[] {
-  return auth.type === "oauth2" ? (auth.clientConfigFields ?? []) : [];
+  return auth.type === "oauth1" || auth.type === "oauth2" ? (auth.clientConfigFields ?? []) : [];
+}
+
+export function oauthClientSecretRequired(auth: OAuthAuthDefinition): boolean {
+  return auth.type === "oauth1" || auth.tokenEndpointAuthMethod !== "none";
 }
 
 export function initialClientConfigFieldValues(

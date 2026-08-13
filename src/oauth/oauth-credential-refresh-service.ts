@@ -24,6 +24,9 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
 
   async refresh(service: string, credential: OAuthCredential): Promise<OAuthCredential> {
     const auth = this.clientConfigs.getOAuthDefinition(service);
+    if (auth.type !== "oauth2") {
+      throw new ConnectionError("unsupported_auth_type", `${service} does not support OAuth 2.0 token refresh.`);
+    }
     const config =
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
     if (!config) {
