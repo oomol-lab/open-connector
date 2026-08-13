@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { webflowActions } from "./actions.ts";
+import { webflowOAuthScopes } from "./scopes.ts";
 
 const service = "webflow";
 
@@ -8,8 +9,15 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Webflow",
   categories: ["Design & Media", "Marketing"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://webflow.com/oauth/authorize",
+      tokenUrl: "https://api.webflow.com/oauth/access_token",
+      scopes: webflowOAuthScopes,
+      tokenEndpointAuthMethod: "client_secret_post",
+    },
     {
       type: "api_key",
       label: "API Token",
@@ -20,5 +28,6 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://webflow.com",
+  iconUrl: "/provider-icons/webflow.svg",
   actions: webflowActions,
 };
