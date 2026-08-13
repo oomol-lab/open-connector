@@ -40,6 +40,7 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://asana.com",
+  iconUrl: "/provider-icons/asana.svg",
   actions: [
     ...asanaWorkspaceActions,
     ...asanaUserActions,
