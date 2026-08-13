@@ -1,20 +1,15 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  ProviderRequestError,
-  providerUserAgent,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineBearerProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "attio";
 const attioApiBaseUrl = "https://api.attio.com";
 const attioSelfPath = "/v2/self";
 
 type AttioRequestPhase = "validate" | "execute";
-type AttioActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
+type AttioActionHandler = (input: Record<string, unknown>, context: BearerProviderContext) => Promise<unknown>;
 
 export const attioActionHandlers: Record<string, AttioActionHandler> = {
   identify(_input, context) {
@@ -49,59 +44,55 @@ export const attioActionHandlers: Record<string, AttioActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineProviderExecutors<ApiKeyProviderContext>({
-  service,
-  handlers: attioActionHandlers,
-  async createContext(context, fetcher): Promise<ApiKeyProviderContext> {
-    const credential = await requireApiKeyCredential(context, service);
-    return {
-      apiKey: credential.apiKey,
-      fetcher,
-      signal: context.signal,
-      transitFiles: context.transitFiles,
-    };
-  },
-});
+export const executors: ProviderExecutors = defineBearerProviderExecutors(service, attioActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const payload = await attioRequest(attioSelfPath, {
-      context: {
-        apiKey: input.apiKey,
-        fetcher,
-        signal,
-      },
-      method: "GET",
-      phase: "validate",
-    });
-    const meta = optionalRecord(payload) ?? {};
-    const active = meta.active === true;
-
-    if (!active) {
-      throw new ProviderRequestError(400, "Attio token is inactive");
-    }
-
-    const workspaceName = optionalString(meta.workspace_name);
-    const workspaceId = optionalString(meta.workspace_id);
-
-    return {
-      profile: {
-        accountId: workspaceId,
-        displayName: workspaceName ? `Attio ${workspaceName}` : "Attio Access Token",
-      },
-      grantedScopes: parseScopes(meta.scope),
-      metadata: compactObject({
-        apiBaseUrl: attioApiBaseUrl,
-        validationEndpoint: attioSelfPath,
-        workspaceId,
-        workspaceName,
-        workspaceSlug: optionalString(meta.workspace_slug),
-      }),
-    };
+    return validateAttioCredential(input.apiKey, fetcher, signal);
+  },
+  async oauth2(input, { fetcher, signal }) {
+    return validateAttioCredential(input.accessToken, fetcher, signal);
   },
 };
 
-async function executeIdentify(context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
+async function validateAttioCredential(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const payload = await attioRequest(attioSelfPath, {
+    context: {
+      accessToken,
+      fetcher,
+      signal,
+    },
+    method: "GET",
+    phase: "validate",
+  });
+  const meta = optionalRecord(payload) ?? {};
+  if (meta.active !== true) {
+    throw new ProviderRequestError(400, "Attio token is inactive");
+  }
+
+  const workspaceName = optionalString(meta.workspace_name);
+  const workspaceId = optionalString(meta.workspace_id);
+  return {
+    profile: {
+      accountId: workspaceId,
+      displayName: workspaceName ? `Attio ${workspaceName}` : "Attio Access Token",
+    },
+    grantedScopes: parseScopes(meta.scope),
+    metadata: compactObject({
+      apiBaseUrl: attioApiBaseUrl,
+      validationEndpoint: attioSelfPath,
+      workspaceId,
+      workspaceName,
+      workspaceSlug: optionalString(meta.workspace_slug),
+    }),
+  };
+}
+
+async function executeIdentify(context: BearerProviderContext): Promise<Record<string, unknown>> {
   const payload = await attioRequest(attioSelfPath, {
     context,
     method: "GET",
@@ -119,7 +110,7 @@ async function executeIdentify(context: ApiKeyProviderContext): Promise<Record<s
   };
 }
 
-async function executeListObjects(context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
+async function executeListObjects(context: BearerProviderContext): Promise<Record<string, unknown>> {
   const payload = await attioRequest("/v2/objects", {
     context,
     method: "GET",
@@ -131,7 +122,7 @@ async function executeListObjects(context: ApiKeyProviderContext): Promise<Recor
 
 async function executeGetObject(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await attioRequest(`/v2/objects/${encodePath(input.object)}`, {
     context,
@@ -144,7 +135,7 @@ async function executeGetObject(
 
 async function executeListAttributes(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const searchParams = paginationSearchParams(input);
   const showArchived = input.showArchived;
@@ -167,7 +158,7 @@ async function executeListAttributes(
 
 async function executeListRecords(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   if (input.filter !== undefined && input.filterViewId !== undefined) {
     throw new ProviderRequestError(400, "filter and filterViewId cannot be used together");
@@ -196,7 +187,7 @@ async function executeListRecords(
 
 async function executeGetRecord(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await attioRequest(recordPath(input), {
     context,
@@ -209,7 +200,7 @@ async function executeGetRecord(
 
 async function executeCreateRecord(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await attioRequest(`/v2/objects/${encodePath(input.object)}/records`, {
     context,
@@ -223,7 +214,7 @@ async function executeCreateRecord(
 
 async function executeUpsertRecord(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const searchParams = new URLSearchParams();
   searchParams.set("matching_attribute", String(input.matchingAttribute));
@@ -241,7 +232,7 @@ async function executeUpsertRecord(
 
 async function executeUpdateRecord(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const method = input.mode === "overwrite_multiselect" ? "PUT" : "PATCH";
   const payload = await attioRequest(recordPath(input), {
@@ -256,7 +247,7 @@ async function executeUpdateRecord(
 
 async function executeDeleteRecord(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await attioRequest(recordPath(input), {
     context,
@@ -270,7 +261,7 @@ async function executeDeleteRecord(
 async function attioRequest(
   path: string,
   input: {
-    context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+    context: Pick<BearerProviderContext, "accessToken" | "fetcher" | "signal">;
     method: string;
     phase: AttioRequestPhase;
     searchParams?: URLSearchParams;
@@ -289,7 +280,7 @@ async function attioRequest(
   try {
     response = await input.context.fetcher(url, {
       method: input.method,
-      headers: attioHeaders(input.context.apiKey, input.body !== undefined),
+      headers: attioHeaders(input.context.accessToken, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
       signal: input.context.signal,
     });
@@ -312,9 +303,9 @@ async function attioRequest(
   return payload;
 }
 
-function attioHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
+function attioHeaders(accessToken: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    Authorization: `Bearer ${apiKey}`,
+    Authorization: `Bearer ${accessToken}`,
     accept: "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,

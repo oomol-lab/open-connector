@@ -8,8 +8,18 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Attio",
   categories: ["Productivity", "Data"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://app.attio.com/authorize",
+      tokenUrl: "https://app.attio.com/oauth/token",
+      scopes: [],
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationRequestFields: {
+        scope: false,
+      },
+    },
     {
       type: "api_key",
       label: "Access Token",
@@ -20,5 +30,6 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://attio.com",
+  iconUrl: "/provider-icons/attio.svg",
   actions: attioActions,
 };
