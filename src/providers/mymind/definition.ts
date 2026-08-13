@@ -4,9 +4,6 @@ import { myMindActions } from "./actions.ts";
 
 const service = "mymind";
 
-const accessKeyHelp =
-  "Create an access key on the Extensions page at https://access.mymind.com/extensions. The key identifier and secret are shown together once, at creation.";
-
 /**
  * mymind provider backed by the official mymind API.
  *
@@ -31,7 +28,8 @@ export const provider: ProviderDefinition = {
           required: true,
           secret: false,
           placeholder: "MYMIND_ACCESS_KEY_ID",
-          description: `The access key identifier, sent as the kid header of every signed request. ${accessKeyHelp}`,
+          description:
+            "The access key identifier, sent as the kid header of every signed request. Create an access key on the Extensions page at https://access.mymind.com/extensions; the identifier and its secret are shown together once, at creation.",
         },
         {
           key: "keySecret",
@@ -40,7 +38,8 @@ export const provider: ProviderDefinition = {
           required: true,
           secret: true,
           placeholder: "MYMIND_ACCESS_KEY_SECRET",
-          description: `The base64 access key secret used to sign each request. It is never sent to mymind. ${accessKeyHelp}`,
+          description:
+            "The base64 secret shown beside that identifier. It signs each request locally and is never sent to mymind.",
         },
       ],
       testAction: {
