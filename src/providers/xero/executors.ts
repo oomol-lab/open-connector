@@ -1,12 +1,11 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalBoolean, optionalInteger, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
 import { arrayPayload, definedBody, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "xero";
-const providerName = "Xero";
 const apiBaseUrl = "https://api.xero.com/api.xro/2.0";
 const identityBaseUrl = "https://api.xero.com";
 const apiPackage = "OpenConnector";
@@ -26,7 +25,7 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
   async list_organisations(_input, context): Promise<unknown> {
     const connections = arrayPayload(
       await requestJson({
-        providerName,
+        providerName: service,
         baseUrl: identityBaseUrl,
         path: "/connections",
         fetcher: context.fetcher,
@@ -83,9 +82,6 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
         EmailAddress: optionalString(input.email_address),
         FirstName: optionalString(input.first_name),
         LastName: optionalString(input.last_name),
-        IsCustomer: optionalBoolean(input.is_customer),
-        IsSupplier: optionalBoolean(input.is_supplier),
-        Status: "ACTIVE",
       }),
     });
     const contacts = resourceList(payload, "Contacts");
@@ -127,7 +123,7 @@ export const xeroActionHandlers: Record<string, XeroHandler> = {
         Type: optionalString(input.type) ?? "ACCREC",
         Contact: { ContactID: requiredString(input.contact_id, "contact_id") },
         Date: invoiceDate,
-        DueDate: optionalString(input.due_date) ?? defaultDueDate(invoiceDate ?? utcToday()),
+        DueDate: optionalString(input.due_date) ?? defaultDueDate(invoiceDate),
         Reference: optionalString(input.reference),
         LineItems: lineItems,
         Status: "DRAFT",
@@ -208,7 +204,7 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(service
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {
     const payload = await requestJson({
-      providerName,
+      providerName: service,
       baseUrl: identityBaseUrl,
       path: "/connections",
       fetcher,
@@ -216,10 +212,13 @@ export const credentialValidators: CredentialValidators = {
     });
     const tenants = arrayPayload(payload, "connections");
     const first = tenants.length > 0 ? optionalRecordValue(tenants[0]) : undefined;
+    if (!first) {
+      return;
+    }
     return {
       profile: {
-        accountId: optionalString(first?.tenantId) ?? "xero",
-        displayName: optionalString(first?.tenantName) ?? "Xero",
+        accountId: optionalString(first.tenantId),
+        displayName: optionalString(first.tenantName),
       },
     };
   },
@@ -232,7 +231,7 @@ async function xeroRequest(
   try {
     return objectPayload(
       await requestJson({
-        providerName,
+        providerName: service,
         baseUrl: options.baseUrl ?? apiBaseUrl,
         path: options.path,
         fetcher: context.fetcher,
@@ -305,7 +304,7 @@ async function resolveTenantId(input: Record<string, unknown>, context: OAuthPro
   }
   const connections = arrayPayload(
     await requestJson({
-      providerName,
+      providerName: service,
       baseUrl: identityBaseUrl,
       path: "/connections",
       fetcher: context.fetcher,
@@ -418,8 +417,15 @@ function mapInvoiceDetail(raw: unknown): Record<string, unknown> {
 function mapBankTransactionSummary(raw: unknown): Record<string, unknown> {
   const record = optionalRecordValue(raw);
   const lineItems = Array.isArray(record.LineItems) ? record.LineItems : [];
+  const transactionId =
+    optionalString(record.BankTransactionID) ??
+    optionalString(record.OverpaymentID) ??
+    optionalString(record.PrepaymentID);
+  if (!transactionId) {
+    throw new ProviderRequestError(502, "Xero did not return a bank transaction identifier.");
+  }
   return {
-    bank_transaction_id: record.BankTransactionID ?? null,
+    transaction_id: transactionId,
     type: record.Type ?? "",
     status: record.Status ?? "",
     date: xeroDate(record.DateString ?? record.Date),
@@ -542,8 +548,4 @@ function xeroDate(value: unknown): string | null {
     return new Date(Number(epoch[1])).toISOString().slice(0, 10);
   }
   return /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
-}
-
-function utcToday(): string {
-  return new Date().toISOString().slice(0, 10);
 }

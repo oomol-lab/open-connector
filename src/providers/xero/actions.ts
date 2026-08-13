@@ -28,6 +28,19 @@ const pageOutput = s.integer({
   description: "The page number that was returned.",
 });
 const xeroId = s.uuid("A Xero resource ID.");
+const transactionId = s.uuid("The Xero identifier for a bank transaction, overpayment, or prepayment.");
+const accountStatuses = ["ACTIVE", "ARCHIVED", "DELETED"];
+const bankTransactionStatuses = ["AUTHORISED", "DELETED", "PAID", "VOIDED"];
+const bankTransactionTypes = [
+  "RECEIVE",
+  "RECEIVE-OVERPAYMENT",
+  "RECEIVE-PREPAYMENT",
+  "SPEND",
+  "SPEND-OVERPAYMENT",
+  "SPEND-PREPAYMENT",
+  "RECEIVE-TRANSFER",
+  "SPEND-TRANSFER",
+];
 const invoiceStatuses = ["DRAFT", "SUBMITTED", "AUTHORISED", "PAID", "VOIDED", "DELETED"];
 
 const lineItemInput = s.object(
@@ -144,9 +157,9 @@ const invoiceDetail = s.object(
 
 const bankTransactionSummary = s.object(
   {
-    bank_transaction_id: xeroId,
-    type: s.stringEnum(["RECEIVE", "SPEND"]),
-    status: s.stringEnum(["AUTHORISED", "DRAFT", "VOIDED"]),
+    transaction_id: transactionId,
+    type: s.stringEnum(bankTransactionTypes),
+    status: s.stringEnum(bankTransactionStatuses),
     date: s.nullableString("The transaction date (YYYY-MM-DD)."),
     total: money,
     currency_code: s.string(),
@@ -154,7 +167,7 @@ const bankTransactionSummary = s.object(
     line_item_count: s.integer(),
   },
   {
-    required: ["bank_transaction_id", "type", "status", "date", "total", "currency_code", "line_item_count"],
+    required: ["transaction_id", "type", "status", "date", "total", "currency_code", "line_item_count"],
     additionalProperties: true,
     description: "A bank transaction summary.",
   },
@@ -162,9 +175,9 @@ const bankTransactionSummary = s.object(
 
 const bankTransactionDetail = s.object(
   {
-    bank_transaction_id: xeroId,
-    type: s.stringEnum(["RECEIVE", "SPEND"]),
-    status: s.stringEnum(["AUTHORISED", "DRAFT", "VOIDED"]),
+    transaction_id: transactionId,
+    type: s.stringEnum(bankTransactionTypes),
+    status: s.stringEnum(bankTransactionStatuses),
     date: s.nullableString("The transaction date (YYYY-MM-DD)."),
     reference: s.nullableString("The transaction reference."),
     total: money,
@@ -173,7 +186,7 @@ const bankTransactionDetail = s.object(
     line_items: s.array(lineItemOutput, { description: "The transaction line items." }),
   },
   {
-    required: ["bank_transaction_id", "type", "status", "date", "total", "currency_code", "line_items"],
+    required: ["transaction_id", "type", "status", "date", "total", "currency_code", "line_items"],
     additionalProperties: true,
     description: "A bank transaction with line items.",
   },
@@ -185,7 +198,7 @@ const accountSummary = s.object(
     code: s.string(),
     name: s.string(),
     type: s.string(),
-    status: s.stringEnum(["ACTIVE", "ARCHIVED", "GONE"]),
+    status: s.stringEnum(accountStatuses),
     tax_type: s.nullableString("The default tax type."),
     currency_code: s.string(),
   },
@@ -332,8 +345,6 @@ export const xeroActions: ActionDefinition[] = [
         email_address: s.string({ description: "The contact email address." }),
         first_name: s.string({ description: "The contact first name." }),
         last_name: s.string({ description: "The contact last name." }),
-        is_customer: s.boolean({ default: false, description: "Whether this contact buys from you." }),
-        is_supplier: s.boolean({ default: true, description: "Whether this contact sells to you." }),
       },
       {
         required: ["name"],
@@ -382,7 +393,7 @@ export const xeroActions: ActionDefinition[] = [
         }),
         date: s.date("The invoice date. When omitted, Xero uses today in the organisation timezone."),
         due_date: s.date(
-          "The due date. Defaults to 30 days after the invoice date, or 30 days from today when the date is omitted.",
+          "The due date. When omitted, a 30-day term is applied only when date is provided; otherwise Xero determines the date.",
         ),
         reference: s.string({ description: "The invoice reference." }),
         line_items: s.array(lineItemInput, { description: "The invoice line items." }),
@@ -421,7 +432,7 @@ export const xeroActions: ActionDefinition[] = [
     inputSchema: s.object(
       {
         ...tenantField,
-        status: s.stringEnum(["ACTIVE", "ARCHIVED", "GONE"], { description: "Filter by account status." }),
+        status: s.stringEnum(accountStatuses, { description: "Filter by account status." }),
       },
       { description: "Account list input." },
     ),
@@ -448,11 +459,11 @@ export const xeroActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_bank_transactions",
     requiredScopes: [xeroBankTransactionsReadScope],
-    description: "Search bank transactions by status with pagination.",
+    description: "Search bank transactions, overpayments, prepayments, and transfers by status with pagination.",
     inputSchema: s.object(
       {
         ...tenantField,
-        status: s.stringEnum(["AUTHORISED", "DRAFT", "VOIDED"], { description: "Filter by transaction status." }),
+        status: s.stringEnum(bankTransactionStatuses, { description: "Filter by transaction status." }),
         page: pageInput,
       },
       {

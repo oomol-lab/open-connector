@@ -52,7 +52,7 @@ const contactsFixture = [
     IsCustomer: true,
     IsSupplier: false,
     AccountNumber: "AC-1001",
-    Status: "ACTIVE",
+    ContactStatus: "ACTIVE",
   },
 ];
 const invoiceFixture = {
@@ -94,7 +94,7 @@ describe("credentialValidators", () => {
     });
   });
 
-  it("falls back to a neutral profile when no organisation is connected", async () => {
+  it("leaves profile defaults to the connection service when no organisation is connected", async () => {
     const { fetcher } = createFetcher({ "https://api.xero.com/connections": [] });
     await expect(
       credentialValidators.oauth2?.(
@@ -103,9 +103,7 @@ describe("credentialValidators", () => {
           fetcher,
         } as never,
       ),
-    ).resolves.toEqual({
-      profile: { accountId: "xero", displayName: "Xero" },
-    });
+    ).resolves.toBeUndefined();
   });
 });
 
@@ -185,8 +183,33 @@ describe("get_contact", () => {
   });
 });
 
+describe("create_contact", () => {
+  it("posts only writable Xero contact fields", async () => {
+    const { fetcher, requests } = createFetcher({
+      "https://api.xero.com/api.xro/2.0/Contacts": { Contacts: contactsFixture },
+    });
+    await xeroActionHandlers.create_contact(
+      {
+        tenant_id: "tenant-123",
+        name: "Jane Doe",
+        email_address: "jane@example.com",
+        first_name: "Jane",
+        last_name: "Doe",
+      },
+      { accessToken, fetcher },
+    );
+    const postRequest = requests.find((request) => request.method === "POST");
+    expect(postRequest?.body).toEqual({
+      Name: "Jane Doe",
+      EmailAddress: "jane@example.com",
+      FirstName: "Jane",
+      LastName: "Doe",
+    });
+  });
+});
+
 describe("create_invoice", () => {
-  it("posts the Xero payload shape and returns the created invoice", async () => {
+  it("lets Xero determine both dates when the invoice date is omitted", async () => {
     const { fetcher, requests } = createFetcher({
       "https://api.xero.com/connections": connectionsFixture,
       "https://api.xero.com/api.xro/2.0/Invoices": { Invoices: [invoiceFixture] },
@@ -200,12 +223,9 @@ describe("create_invoice", () => {
       { accessToken, fetcher },
     );
     const postRequest = requests.find((request) => request.method === "POST");
-    const due = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
-    due.setUTCDate(due.getUTCDate() + 30);
     expect(postRequest?.body).toEqual({
       Type: "ACCREC",
       Contact: { ContactID: "contact-1" },
-      DueDate: due.toISOString().slice(0, 10),
       Status: "DRAFT",
       LineItems: [{ Description: "Consulting", Quantity: 2, UnitAmount: 500, AccountCode: "200" }],
     });
@@ -258,6 +278,101 @@ describe("search_invoices", () => {
     expect(invoicesRequest?.url).toContain("page=2");
     expect(invoicesRequest?.url).toContain("Statuses=DRAFT");
     expect(result).toMatchObject({ page: 2, returned: 1, items: [{ invoice_id: "invoice-1" }] });
+  });
+});
+
+describe("search_bank_transactions", () => {
+  it("normalises transaction, overpayment, and prepayment identifiers", async () => {
+    const bankTransactions = [
+      {
+        BankTransactionID: "bank-1",
+        Type: "RECEIVE-TRANSFER",
+        Status: "DELETED",
+        DateString: "2026-08-01",
+        Total: 100,
+        CurrencyCode: "NZD",
+        Contact: { Name: "Transfer account" },
+        LineItems: [],
+      },
+      {
+        OverpaymentID: "overpayment-1",
+        Type: "RECEIVE-OVERPAYMENT",
+        Status: "PAID",
+        DateString: "2026-08-02",
+        Total: 200,
+        CurrencyCode: "NZD",
+        Contact: { Name: "Jane Doe" },
+        LineItems: [],
+      },
+      {
+        PrepaymentID: "prepayment-1",
+        Type: "SPEND-PREPAYMENT",
+        Status: "VOIDED",
+        DateString: "2026-08-03",
+        Total: 300,
+        CurrencyCode: "NZD",
+        Contact: { Name: "Supplier" },
+        LineItems: [],
+      },
+    ];
+    const { fetcher, requests } = createFetcher({
+      "https://api.xero.com/api.xro/2.0/BankTransactions": { BankTransactions: bankTransactions },
+    });
+    const result = await xeroActionHandlers.search_bank_transactions(
+      { tenant_id: "tenant-123", status: "PAID", page: 2 },
+      { accessToken, fetcher },
+    );
+    const transactionRequest = requests.find((request) => request.url.includes("/BankTransactions"));
+    const query = new URL(transactionRequest?.url ?? "https://invalid.example").searchParams;
+    expect(query.get("where")).toBe('Status=="PAID"');
+    expect(query.get("page")).toBe("2");
+    expect(result).toEqual({
+      items: [
+        {
+          transaction_id: "bank-1",
+          type: "RECEIVE-TRANSFER",
+          status: "DELETED",
+          date: "2026-08-01",
+          total: 100,
+          currency_code: "NZD",
+          contact_name: "Transfer account",
+          line_item_count: 0,
+        },
+        {
+          transaction_id: "overpayment-1",
+          type: "RECEIVE-OVERPAYMENT",
+          status: "PAID",
+          date: "2026-08-02",
+          total: 200,
+          currency_code: "NZD",
+          contact_name: "Jane Doe",
+          line_item_count: 0,
+        },
+        {
+          transaction_id: "prepayment-1",
+          type: "SPEND-PREPAYMENT",
+          status: "VOIDED",
+          date: "2026-08-03",
+          total: 300,
+          currency_code: "NZD",
+          contact_name: "Supplier",
+          line_item_count: 0,
+        },
+      ],
+      page: 2,
+      returned: 3,
+    });
+  });
+
+  it("rejects a Xero transaction without any supported identifier", async () => {
+    const { fetcher } = createFetcher({
+      "https://api.xero.com/api.xro/2.0/BankTransactions": {
+        BankTransactions: [{ Type: "RECEIVE", Status: "AUTHORISED", LineItems: [] }],
+      },
+    });
+    await expect(
+      xeroActionHandlers.search_bank_transactions({ tenant_id: "tenant-123" }, { accessToken, fetcher }),
+    ).rejects.toMatchObject({ status: 502 });
   });
 });
 
