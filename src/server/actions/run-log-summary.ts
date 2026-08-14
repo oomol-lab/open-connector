@@ -97,19 +97,44 @@ function summarizeObject(value: object, path: string[], depth: number, state: Su
   }
 }
 
+function truncateString(value: string): string {
+  return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
+}
+
+function hasSensitiveQueryParam(value: string): boolean {
+  const query = value.split("?")[1];
+  if (!query) {
+    return false;
+  }
+  return query
+    .split("&")
+    .map((part) => part.split("=")[0])
+    .some((name) => sensitiveKeyPattern.test(name));
+}
+
 function summarizeString(value: string, path: string[]): string {
   if (credentialValuePattern.test(value)) {
     return "[redacted]";
   }
   if (/^https?:\/\//i.test(value)) {
-    const url = new URL(value);
-    if (
-      sensitiveUrlContextPattern.test(path.join(".")) ||
-      [...url.searchParams.keys()].some((name) => sensitiveKeyPattern.test(name))
-    ) {
-      return "[redacted-url]";
+    try {
+      const url = new URL(value);
+      if (
+        sensitiveUrlContextPattern.test(path.join(".")) ||
+        [...url.searchParams.keys()].some((name) => sensitiveKeyPattern.test(name))
+      ) {
+        return "[redacted-url]";
+      }
+      return url.origin;
+    } catch {
+      // The value only looks like a URL. Keep the rest of the summary alive
+      // instead of letting a single bad string collapse it to "[unavailable]".
+      // Redaction still applies when the context or the raw query says so.
+      if (sensitiveUrlContextPattern.test(path.join(".")) || hasSensitiveQueryParam(value)) {
+        return "[redacted-url]";
+      }
+      return truncateString(value);
     }
-    return url.origin;
   }
-  return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
+  return truncateString(value);
 }

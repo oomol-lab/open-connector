@@ -94,3 +94,31 @@ describe("safeRunLogError", () => {
     ).toEqual({ errorCode: "provider_error", errorMessage: "The provider request failed." });
   });
 });
+
+describe("summarizeForRunLog with malformed URL-like strings", () => {
+  it("keeps parseable values and sibling fields instead of collapsing to [unavailable]", () => {
+    expect(summarizeForRunLog({ url: "https://", items: ["https://ok.example/x"] })).toEqual({
+      url: "https://",
+      items: ["https://ok.example"],
+    });
+  });
+
+  it("keeps a URL containing a space as a plain string", () => {
+    expect(summarizeForRunLog({ url: "http://exa mple.com/x" })).toEqual({ url: "http://exa mple.com/x" });
+  });
+
+  it("redacts malformed URLs in sensitive contexts", () => {
+    expect(summarizeForRunLog({ webhookUrl: "http://exa mple.com/hooks" })).toEqual({ webhookUrl: "[redacted-url]" });
+  });
+
+  it("redacts malformed URLs carrying sensitive query params", () => {
+    expect(summarizeForRunLog({ url: "http://exa mple.com/x?token=abc" })).toEqual({ url: "[redacted-url]" });
+  });
+
+  it("truncates long malformed URL-like strings like any other long string", () => {
+    const long = "http://exa mple.com/" + "x".repeat(300);
+    expect(summarizeForRunLog({ url: long })).toEqual({
+      url: "http://exa mple.com/" + "x".repeat(236) + "[truncated]",
+    });
+  });
+});
