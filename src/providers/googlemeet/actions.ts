@@ -244,25 +244,25 @@ const transcriptEntryNameInput = resourceNameInput("The transcript entry resourc
 const smartNoteNameInput = resourceNameInput("The smart-note resource name ending in smartNotes/{smart_note}.");
 
 const actions: GoogleMeetActionSource[] = [
-  action(
-    "create_space",
-    "Create a Google Meet space and return its join URL.",
-    googleMeetCreateScopes,
-    s.actionInput({ space: spaceWrite }),
-    space,
-  ),
-  action(
-    "get_space",
-    "Retrieve a Google Meet space by resource name or meeting code.",
-    googleMeetReadScopes,
-    resourceNameInput("The space name, such as spaces/{space}, or a bare space ID or meeting code."),
-    space,
-  ),
-  action(
-    "update_space",
-    "Update the configuration of a Google Meet space.",
-    googleMeetSettingsScopes,
-    s.actionInput(
+  {
+    name: "create_space",
+    description: "Create a Google Meet space and return its join URL.",
+    requiredScopes: googleMeetCreateScopes,
+    inputSchema: s.actionInput({ space: spaceWrite }),
+    outputSchema: space,
+  },
+  {
+    name: "get_space",
+    description: "Retrieve a Google Meet space by resource name or meeting code.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: resourceNameInput("The space name, such as spaces/{space}, or a bare space ID or meeting code."),
+    outputSchema: space,
+  },
+  {
+    name: "update_space",
+    description: "Update the configuration of a Google Meet space.",
+    requiredScopes: googleMeetSettingsScopes,
+    inputSchema: s.actionInput(
       {
         name: s.nonEmptyString("The space resource name, in the form spaces/{space}."),
         space: spaceWrite,
@@ -270,43 +270,43 @@ const actions: GoogleMeetActionSource[] = [
       },
       ["name", "space"],
     ),
-    space,
-  ),
-  action(
-    "end_active_conference",
-    "End the active conference currently running in a Google Meet space.",
-    googleMeetCreateScopes,
-    resourceNameInput(
+    outputSchema: space,
+  },
+  {
+    name: "end_active_conference",
+    description: "End the active conference currently running in a Google Meet space.",
+    requiredScopes: googleMeetCreateScopes,
+    inputSchema: resourceNameInput(
       "The canonical space resource name, in the form spaces/{space}; bare IDs and meeting-code aliases are not accepted.",
     ),
-    s.requiredObject("The result of ending the active conference.", {
+    outputSchema: s.requiredObject("The result of ending the active conference.", {
       success: s.literal(true, { description: "Whether the request completed successfully." }),
     }),
-  ),
-  action(
-    "list_conference_records",
-    "List accessible Google Meet conference records with optional filtering and pagination.",
-    googleMeetReadScopes,
-    s.actionInput({
+  },
+  {
+    name: "list_conference_records",
+    description: "List accessible Google Meet conference records with optional filtering and pagination.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: s.actionInput({
       filter,
       pageSize: s.integer("The maximum number of conference records to return.", { minimum: 1, maximum: 100 }),
       pageToken,
     }),
-    listOutput("conferenceRecords", "Conference records in the requested page.", conferenceRecord),
-  ),
-  action(
-    "get_conference_record",
-    "Retrieve one Google Meet conference record.",
-    googleMeetReadScopes,
-    conferenceRecordNameInput,
-    conferenceRecord,
-  ),
-  action(
-    "list_participants",
-    "List participants in a Google Meet conference record.",
-    googleMeetReadScopes,
-    filteredListInput("The parent conference record, such as conferenceRecords/{conference_record}.", 250),
-    s.object(
+    outputSchema: listOutput("conferenceRecords", "Conference records in the requested page.", conferenceRecord),
+  },
+  {
+    name: "get_conference_record",
+    description: "Retrieve one Google Meet conference record.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: conferenceRecordNameInput,
+    outputSchema: conferenceRecord,
+  },
+  {
+    name: "list_participants",
+    description: "List participants in a Google Meet conference record.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: filteredListInput("The parent conference record, such as conferenceRecords/{conference_record}.", 250),
+    outputSchema: s.object(
       "A page of Google Meet participants.",
       {
         participants: s.array("Participants in the requested page.", participant),
@@ -315,81 +315,90 @@ const actions: GoogleMeetActionSource[] = [
       },
       { required: ["participants", "nextPageToken"] },
     ),
-  ),
-  action(
-    "get_participant",
-    "Retrieve one participant from a Google Meet conference record.",
-    googleMeetReadScopes,
-    participantNameInput,
-    participant,
-  ),
-  action(
-    "list_participant_sessions",
-    "List join-to-leave sessions for a Google Meet participant.",
-    googleMeetReadScopes,
-    filteredListInput(
+  },
+  {
+    name: "get_participant",
+    description: "Retrieve one participant from a Google Meet conference record.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: participantNameInput,
+    outputSchema: participant,
+  },
+  {
+    name: "list_participant_sessions",
+    description: "List join-to-leave sessions for a Google Meet participant.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: filteredListInput(
       "The parent participant, such as conferenceRecords/{conference_record}/participants/{participant}.",
       250,
     ),
-    listOutput("participantSessions", "Participant sessions in the requested page.", participantSession),
-  ),
-  action(
-    "get_participant_session",
-    "Retrieve one Google Meet participant session.",
-    googleMeetReadScopes,
-    participantSessionNameInput,
-    participantSession,
-  ),
-  action(
-    "list_recordings",
-    "List recordings generated for a Google Meet conference record.",
-    googleMeetReadScopes,
-    listInput("The parent conference record, such as conferenceRecords/{conference_record}.", 100),
-    listOutput("recordings", "Recordings in the requested page.", recording),
-  ),
-  action("get_recording", "Retrieve one Google Meet recording.", googleMeetReadScopes, recordingNameInput, recording),
-  action(
-    "list_transcripts",
-    "List transcripts generated for a Google Meet conference record.",
-    googleMeetReadScopes,
-    listInput("The parent conference record, such as conferenceRecords/{conference_record}.", 100),
-    listOutput("transcripts", "Transcripts in the requested page.", transcript),
-  ),
-  action(
-    "get_transcript",
-    "Retrieve one Google Meet transcript.",
-    googleMeetReadScopes,
-    transcriptNameInput,
-    transcript,
-  ),
-  action(
-    "list_transcript_entries",
-    "List speaker segments in a Google Meet transcript.",
-    googleMeetReadScopes,
-    listInput("The parent transcript, such as conferenceRecords/{conference_record}/transcripts/{transcript}.", 100),
-    listOutput("transcriptEntries", "Transcript entries in the requested page.", transcriptEntry),
-  ),
-  action(
-    "get_transcript_entry",
-    "Retrieve one speaker segment from a Google Meet transcript.",
-    googleMeetReadScopes,
-    transcriptEntryNameInput,
-    transcriptEntry,
-  ),
-  action(
-    "list_smart_notes",
-    "List smart notes generated for a Google Meet conference record.",
-    googleMeetReadScopes,
-    listInput("The parent conference record, such as conferenceRecords/{conference_record}.", 100),
-    listOutput("smartNotes", "Smart notes in the requested page.", smartNote),
-  ),
-  action(
-    "get_smart_note",
-    "Retrieve one Google Meet smart-note artifact.",
-    googleMeetReadScopes,
-    smartNoteNameInput,
-    smartNote,
-  ),
+    outputSchema: listOutput("participantSessions", "Participant sessions in the requested page.", participantSession),
+  },
+  {
+    name: "get_participant_session",
+    description: "Retrieve one Google Meet participant session.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: participantSessionNameInput,
+    outputSchema: participantSession,
+  },
+  {
+    name: "list_recordings",
+    description: "List recordings generated for a Google Meet conference record.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: listInput("The parent conference record, such as conferenceRecords/{conference_record}.", 100),
+    outputSchema: listOutput("recordings", "Recordings in the requested page.", recording),
+  },
+  {
+    name: "get_recording",
+    description: "Retrieve one Google Meet recording.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: recordingNameInput,
+    outputSchema: recording,
+  },
+  {
+    name: "list_transcripts",
+    description: "List transcripts generated for a Google Meet conference record.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: listInput("The parent conference record, such as conferenceRecords/{conference_record}.", 100),
+    outputSchema: listOutput("transcripts", "Transcripts in the requested page.", transcript),
+  },
+  {
+    name: "get_transcript",
+    description: "Retrieve one Google Meet transcript.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: transcriptNameInput,
+    outputSchema: transcript,
+  },
+  {
+    name: "list_transcript_entries",
+    description: "List speaker segments in a Google Meet transcript.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: listInput(
+      "The parent transcript, such as conferenceRecords/{conference_record}/transcripts/{transcript}.",
+      100,
+    ),
+    outputSchema: listOutput("transcriptEntries", "Transcript entries in the requested page.", transcriptEntry),
+  },
+  {
+    name: "get_transcript_entry",
+    description: "Retrieve one speaker segment from a Google Meet transcript.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: transcriptEntryNameInput,
+    outputSchema: transcriptEntry,
+  },
+  {
+    name: "list_smart_notes",
+    description: "List smart notes generated for a Google Meet conference record.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: listInput("The parent conference record, such as conferenceRecords/{conference_record}.", 100),
+    outputSchema: listOutput("smartNotes", "Smart notes in the requested page.", smartNote),
+  },
+  {
+    name: "get_smart_note",
+    description: "Retrieve one Google Meet smart-note artifact.",
+    requiredScopes: googleMeetReadScopes,
+    inputSchema: smartNoteNameInput,
+    outputSchema: smartNote,
+  },
 ];
 
 export const googleMeetActions: ActionDefinition[] = actions.map((source) =>
@@ -398,22 +407,6 @@ export const googleMeetActions: ActionDefinition[] = actions.map((source) =>
     providerPermissions: source.requiredScopes,
   }),
 );
-
-function action(
-  name: string,
-  description: string,
-  requiredScopes: string[],
-  inputSchema: JsonSchema,
-  outputSchema: JsonSchema,
-): GoogleMeetActionSource {
-  return {
-    name,
-    description,
-    requiredScopes,
-    inputSchema,
-    outputSchema,
-  };
-}
 
 function resourceNameInput(description: string): JsonSchema {
   return s.actionInput({ name: s.nonEmptyString(description) }, ["name"]);
