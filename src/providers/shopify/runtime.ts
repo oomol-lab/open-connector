@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { ShopifyActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -9,7 +9,6 @@ import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts"
 export const shopifyRestApiVersion = "2026-04";
 
 const credentialHelpUrl = "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens";
-const shopifyContentScope = "content";
 const shopPath = "/shop.json";
 const contentValidationPath = "/blogs/count.json";
 
@@ -26,8 +25,11 @@ interface ShopifyRestResult {
   pagination: ShopifyPagination;
 }
 
-export interface ShopifyActionContext extends ApiKeyProviderContext {
+export interface ShopifyActionContext {
+  accessToken: string;
   shopDomain: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
 }
 
 export const shopifyActionHandlers: Record<ShopifyActionName, ShopifyActionHandler> = {
@@ -176,13 +178,14 @@ export const shopifyActionHandlers: Record<ShopifyActionName, ShopifyActionHandl
 };
 
 export async function validateShopifyCredential(
-  input: { apiKey: string; values: Record<string, string> },
+  accessToken: string,
+  shopDomain: string,
+  grantedScopes: string[],
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const shopDomain = normalizeShopDomain(optionalString(input.values.shopDomain));
   const context: ShopifyActionContext = {
-    apiKey: input.apiKey,
+    accessToken,
     shopDomain,
     fetcher,
     signal,
@@ -204,7 +207,7 @@ export async function validateShopifyCredential(
       accountId: `shopify:${shopDomain}`,
       displayName: optionalString(shop.name) ?? shopDomain,
     },
-    grantedScopes: [shopifyContentScope],
+    grantedScopes,
     metadata: compactObject({
       shopDomain,
       apiBaseUrl: buildShopifyRestApiBaseUrl(shopDomain),
@@ -286,7 +289,7 @@ async function requestShopifyRest(input: {
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
-        "x-shopify-access-token": input.context.apiKey,
+        "x-shopify-access-token": input.context.accessToken,
       },
       signal: input.context.signal,
     });
