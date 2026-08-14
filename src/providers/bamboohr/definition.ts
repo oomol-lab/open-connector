@@ -1,6 +1,14 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { bamboohrActions } from "./actions.ts";
+import {
+  bamboohrCompanyInfoScope,
+  bamboohrEmployeeScope,
+  bamboohrFieldScope,
+  bamboohrOAuthAuthorizationUrl,
+  bamboohrOAuthTokenUrl,
+  bamboohrOfflineAccessScope,
+} from "./constants.ts";
 
 const service = "bamboohr";
 
@@ -12,10 +20,10 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://{companyDomain}.bamboohr.com/authorize.php",
-      tokenUrl: "https://{companyDomain}.bamboohr.com/token.php?request=token",
-      refreshTokenUrl: "https://{companyDomain}.bamboohr.com/token.php?request=token",
-      scopes: ["offline_access", "company:info", "employee", "field"],
+      authorizationUrl: bamboohrOAuthAuthorizationUrl,
+      tokenUrl: bamboohrOAuthTokenUrl,
+      refreshTokenUrl: bamboohrOAuthTokenUrl,
+      scopes: [bamboohrOfflineAccessScope, bamboohrCompanyInfoScope, bamboohrEmployeeScope, bamboohrFieldScope],
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         request: "authorize",
