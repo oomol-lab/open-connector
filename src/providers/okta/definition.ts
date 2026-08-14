@@ -9,8 +9,40 @@ export const provider: ProviderDefinition = {
   displayName: "Okta",
   description: "Manage Okta directory users, groups, memberships, and user lifecycle operations.",
   categories: ["Security"],
-  authTypes: ["custom_credential"],
+  authTypes: ["oauth2", "custom_credential"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://{subdomain}.okta.com/oauth2/v1/authorize",
+      tokenUrl: "https://{subdomain}.okta.com/oauth2/v1/token",
+      scopes: [
+        "openid",
+        "offline_access",
+        "okta.users.read",
+        "okta.users.manage",
+        "okta.groups.read",
+        "okta.groups.manage",
+      ],
+      tokenEndpointAuthMethod: "client_secret_post",
+      pkce: {
+        method: "S256",
+      },
+      authorizationParams: {
+        response_mode: "query",
+      },
+      clientConfigFields: [
+        {
+          key: "subdomain",
+          label: "Okta subdomain",
+          inputType: "text",
+          required: true,
+          secret: false,
+          placeholder: "dev-12345678",
+          description:
+            "The subdomain from your Okta organization URL. For https://dev-12345678.okta.com, enter dev-12345678.",
+        },
+      ],
+    },
     {
       type: "custom_credential",
       fields: [

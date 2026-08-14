@@ -18,7 +18,7 @@ import { assertPublicHttpUrl, queryParams } from "../../core/request.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const oktaRequestTimeoutMs = 30_000;
-const oktaCredentialHelpUrl = "https://developer.okta.com/docs/guides/create-an-api-token/main/";
+export const oktaApiTokenHelpUrl = "https://developer.okta.com/docs/guides/create-an-api-token/main/";
 const oktaLifecycleOperations: Set<string> = new Set([
   "activate",
   "reactivate",
@@ -42,9 +42,16 @@ type OktaLifecycleOperation =
 
 export interface OktaContext {
   orgUrl: string;
-  apiToken: string;
+  authorization: string;
   fetcher: ProviderFetch;
   signal?: AbortSignal;
+}
+
+export interface OktaCredentialValidationInput {
+  orgUrl: unknown;
+  authorization: string;
+  grantedScopes?: string[];
+  credentialHelpUrl?: string;
 }
 
 interface OktaRequestInput extends OktaContext {
@@ -310,15 +317,14 @@ export const oktaActionHandlers: Record<OktaActionName, ProviderRuntimeHandler<O
 };
 
 export async function validateOktaCredential(
-  values: Record<string, string>,
+  input: OktaCredentialValidationInput,
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const orgUrl = normalizeOktaOrgUrl(values.orgUrl);
-  const apiToken = requiredString(values.apiToken, "apiToken", inputError);
+  const orgUrl = normalizeOktaOrgUrl(input.orgUrl);
   const response = await requestOkta({
     orgUrl,
-    apiToken,
+    authorization: input.authorization,
     path: "/api/v1/users/me",
     method: "GET",
     phase: "validate",
@@ -334,11 +340,11 @@ export async function validateOktaCredential(
       accountId: `okta:${host}:${user.id}`,
       displayName: login ?? host,
     },
-    grantedScopes: [],
+    grantedScopes: input.grantedScopes ?? [],
     metadata: compactObject({
       orgUrl,
       validationEndpoint: "/api/v1/users/me",
-      credentialHelpUrl: oktaCredentialHelpUrl,
+      credentialHelpUrl: input.credentialHelpUrl,
       userId: user.id,
       userLogin: login,
     }),
@@ -373,7 +379,7 @@ async function requestOkta(input: OktaRequestInput): Promise<OktaResponse> {
   try {
     const response = await input.fetcher(buildOktaUrl(input), {
       method: input.method,
-      headers: buildOktaHeaders(input.apiToken, input.body !== undefined),
+      headers: buildOktaHeaders(input.authorization, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
       signal: timeout.signal,
     });
@@ -407,10 +413,10 @@ function buildOktaUrl(input: OktaRequestInput): URL {
   return url;
 }
 
-function buildOktaHeaders(apiToken: string, hasBody: boolean): Record<string, string> {
+function buildOktaHeaders(authorization: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
-    authorization: `SSWS ${apiToken}`,
+    authorization,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {
