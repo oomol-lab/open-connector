@@ -3,7 +3,7 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { GoogleSlidesActionName } from "./actions.ts";
 
 import { compactObject, objectArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 export const slidesApiBaseUrl = "https://slides.googleapis.com/v1";

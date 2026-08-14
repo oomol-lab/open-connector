@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest } from "../google-runtime.ts";
 import {
   defineOAuthProviderExecutors,
   defineProviderProxy,
@@ -80,6 +80,40 @@ interface GoogleMeetListPayload {
   nextPageToken?: unknown;
   totalSize?: unknown;
 }
+
+interface GoogleMeetChildListSpec {
+  parentRule: ResourceNameRule;
+  collection: string;
+  responseField: keyof GoogleMeetListPayload;
+  supportsFilter?: boolean;
+}
+
+const participantSessionsListSpec: GoogleMeetChildListSpec = {
+  parentRule: participantNameRule,
+  collection: "participantSessions",
+  responseField: "participantSessions",
+  supportsFilter: true,
+};
+const recordingsListSpec: GoogleMeetChildListSpec = {
+  parentRule: conferenceRecordNameRule,
+  collection: "recordings",
+  responseField: "recordings",
+};
+const transcriptsListSpec: GoogleMeetChildListSpec = {
+  parentRule: conferenceRecordNameRule,
+  collection: "transcripts",
+  responseField: "transcripts",
+};
+const transcriptEntriesListSpec: GoogleMeetChildListSpec = {
+  parentRule: transcriptNameRule,
+  collection: "entries",
+  responseField: "transcriptEntries",
+};
+const smartNotesListSpec: GoogleMeetChildListSpec = {
+  parentRule: conferenceRecordNameRule,
+  collection: "smartNotes",
+  responseField: "smartNotes",
+};
 
 export const googleMeetActionHandlers: Record<string, GoogleMeetActionHandler> = {
   create_space: createSpace,
@@ -217,22 +251,8 @@ async function getParticipant(input: Record<string, unknown>, context: GoogleMee
   return getResource(input.name, participantNameRule, context);
 }
 
-async function listParticipantSessions(
-  input: Record<string, unknown>,
-  context: GoogleMeetRuntimeContext,
-): Promise<unknown> {
-  const parent = resolveParent(input.parent, participantNameRule);
-  const payload = await googleMeetJsonRequest<GoogleMeetListPayload>(
-    `${googleMeetApiBaseUrl}/${encodeResourceName(parent)}/participantSessions`,
-    {
-      context,
-      query: listQuery(input, true),
-    },
-  );
-  return {
-    participantSessions: arrayOrEmpty(payload.participantSessions),
-    nextPageToken: optionalString(payload.nextPageToken) ?? null,
-  };
+function listParticipantSessions(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
+  return listChildResources(input, context, participantSessionsListSpec);
 }
 
 async function getParticipantSession(
@@ -242,79 +262,32 @@ async function getParticipantSession(
   return getResource(input.name, participantSessionNameRule, context);
 }
 
-async function listRecordings(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
-  const parent = resolveParent(input.parent, conferenceRecordNameRule);
-  const payload = await googleMeetJsonRequest<GoogleMeetListPayload>(
-    `${googleMeetApiBaseUrl}/${encodeResourceName(parent)}/recordings`,
-    {
-      context,
-      query: listQuery(input),
-    },
-  );
-  return {
-    recordings: arrayOrEmpty(payload.recordings),
-    nextPageToken: optionalString(payload.nextPageToken) ?? null,
-  };
+function listRecordings(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
+  return listChildResources(input, context, recordingsListSpec);
 }
 
 async function getRecording(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
   return getResource(input.name, recordingNameRule, context);
 }
 
-async function listTranscripts(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
-  const parent = resolveParent(input.parent, conferenceRecordNameRule);
-  const payload = await googleMeetJsonRequest<GoogleMeetListPayload>(
-    `${googleMeetApiBaseUrl}/${encodeResourceName(parent)}/transcripts`,
-    {
-      context,
-      query: listQuery(input),
-    },
-  );
-  return {
-    transcripts: arrayOrEmpty(payload.transcripts),
-    nextPageToken: optionalString(payload.nextPageToken) ?? null,
-  };
+function listTranscripts(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
+  return listChildResources(input, context, transcriptsListSpec);
 }
 
 async function getTranscript(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
   return getResource(input.name, transcriptNameRule, context);
 }
 
-async function listTranscriptEntries(
-  input: Record<string, unknown>,
-  context: GoogleMeetRuntimeContext,
-): Promise<unknown> {
-  const parent = resolveParent(input.parent, transcriptNameRule);
-  const payload = await googleMeetJsonRequest<GoogleMeetListPayload>(
-    `${googleMeetApiBaseUrl}/${encodeResourceName(parent)}/entries`,
-    {
-      context,
-      query: listQuery(input),
-    },
-  );
-  return {
-    transcriptEntries: arrayOrEmpty(payload.transcriptEntries),
-    nextPageToken: optionalString(payload.nextPageToken) ?? null,
-  };
+function listTranscriptEntries(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
+  return listChildResources(input, context, transcriptEntriesListSpec);
 }
 
 async function getTranscriptEntry(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
   return getResource(input.name, transcriptEntryNameRule, context);
 }
 
-async function listSmartNotes(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
-  const parent = resolveParent(input.parent, conferenceRecordNameRule);
-  const payload = await googleMeetJsonRequest<GoogleMeetListPayload>(
-    `${googleMeetApiBaseUrl}/${encodeResourceName(parent)}/smartNotes`,
-    {
-      context,
-      query: listQuery(input),
-    },
-  );
-  return {
-    smartNotes: arrayOrEmpty(payload.smartNotes),
-    nextPageToken: optionalString(payload.nextPageToken) ?? null,
-  };
+function listSmartNotes(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
+  return listChildResources(input, context, smartNotesListSpec);
 }
 
 async function getSmartNote(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
@@ -324,6 +297,25 @@ async function getSmartNote(input: Record<string, unknown>, context: GoogleMeetR
 function getResource(value: unknown, rule: ResourceNameRule, context: GoogleMeetRuntimeContext): Promise<unknown> {
   const name = resolveResourceName(value, rule);
   return googleMeetJsonRequest(`${googleMeetApiBaseUrl}/${encodeResourceName(name)}`, { context });
+}
+
+async function listChildResources(
+  input: Record<string, unknown>,
+  context: GoogleMeetRuntimeContext,
+  spec: GoogleMeetChildListSpec,
+): Promise<unknown> {
+  const parent = resolveParent(input.parent, spec.parentRule);
+  const payload = await googleMeetJsonRequest<GoogleMeetListPayload>(
+    `${googleMeetApiBaseUrl}/${encodeResourceName(parent)}/${spec.collection}`,
+    {
+      context,
+      query: listQuery(input, spec.supportsFilter),
+    },
+  );
+  return {
+    [spec.responseField]: arrayOrEmpty(payload[spec.responseField]),
+    nextPageToken: optionalString(payload.nextPageToken) ?? null,
+  };
 }
 
 function googleMeetJsonRequest<T = unknown>(url: string, input: GoogleMeetRequestOptions): Promise<T> {

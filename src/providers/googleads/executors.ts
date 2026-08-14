@@ -11,7 +11,7 @@ import {
   optionalScalarString,
   optionalString,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { defineProviderExecutors, ProviderRequestError, requireOAuthCredential } from "../provider-runtime.ts";
 import { googleAdsScope } from "./scopes.ts";
 

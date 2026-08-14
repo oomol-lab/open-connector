@@ -3,6 +3,7 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
 import { readBoundedResponseBytes } from "../../core/request.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import {
   defineOAuthProviderExecutors,
   defineProviderProxy,
@@ -42,8 +43,6 @@ import {
   asStringRecord,
   compactObject,
   compactUnknownObject,
-  googleJsonRequest,
-  googleRequest,
   optionalBoolean,
   optionalNestedString,
   optionalString,

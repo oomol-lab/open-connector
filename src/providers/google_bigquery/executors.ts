@@ -8,7 +8,7 @@ import {
   optionalInteger as asOptionalInteger,
   requiredRecord,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 const bigQueryApiBaseUrl = "https://bigquery.googleapis.com/bigquery/v2";

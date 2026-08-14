@@ -10,7 +10,7 @@ import {
   pickOptionalInteger,
   pickOptionalString,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleTasksApiBaseUrl = "https://tasks.googleapis.com/tasks/v1";

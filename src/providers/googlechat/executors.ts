@@ -9,7 +9,8 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { asObject, googleJsonRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest } from "../google-runtime.ts";
+import { asObject } from "../googledrive/runtime-shared.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleChatApiBaseUrl = "https://chat.googleapis.com/v1";

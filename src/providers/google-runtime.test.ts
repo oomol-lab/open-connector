@@ -1,8 +1,8 @@
-import type { ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderFetch } from "./provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
-import { ProviderRequestError } from "../provider-runtime.ts";
-import { googleRequest } from "./runtime-shared.ts";
+import { googleRequest } from "./google-runtime.ts";
+import { ProviderRequestError } from "./provider-runtime.ts";
 
 const accessToken = "test-token";
 const url = "https://example.googleapis.com/v1/resource";

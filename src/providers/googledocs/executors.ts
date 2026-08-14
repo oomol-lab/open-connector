@@ -9,12 +9,14 @@ import type { GoogledocsActionName } from "./actions.ts";
 import { Buffer } from "node:buffer";
 import { integer, objectArray } from "../../core/cast.ts";
 import {
+  googleJsonRequest as googleJsonRequestShared,
+  googleRequest as googleRequestShared,
+} from "../google-runtime.ts";
+import {
   asObject,
   asOptionalObject,
   asStringArray,
   compactObject,
-  googleJsonRequest as googleJsonRequestShared,
-  googleRequest as googleRequestShared,
   optionalBoolean,
 } from "../googledrive/runtime-shared.ts";
 import {

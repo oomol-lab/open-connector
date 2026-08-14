@@ -83,6 +83,67 @@ describe("Google Meet OAuth execution", () => {
       nextPageToken: null,
     });
   });
+
+  it("omits unsupported filters from transcript list requests", async () => {
+    const fetcher: ProviderFetch = vi.fn(async (url) => {
+      const target = new URL(url);
+      expect(target.origin + target.pathname).toBe(
+        "https://meet.googleapis.com/v2/conferenceRecords/record-1/transcripts",
+      );
+      expect(Object.fromEntries(target.searchParams)).toEqual({ pageSize: "10", pageToken: "next-1" });
+      return Response.json({ transcripts: [], nextPageToken: "next-2" });
+    });
+
+    await expect(
+      googleMeetActionHandlers.list_transcripts(
+        {
+          parent: "record-1",
+          filter: "start_time > 2026-01-01T00:00:00Z",
+          pageSize: 10,
+          pageToken: "next-1",
+        },
+        { accessToken, fetcher },
+      ),
+    ).resolves.toEqual({ transcripts: [], nextPageToken: "next-2" });
+  });
+
+  it("updates a meeting space with an update mask", async () => {
+    const fetcher: ProviderFetch = vi.fn(async (url, init) => {
+      const target = new URL(url);
+      expect(target.origin + target.pathname).toBe("https://meet.googleapis.com/v2/spaces/space-1");
+      expect(Object.fromEntries(target.searchParams)).toEqual({ updateMask: "config.accessType" });
+      expect(init?.method).toBe("PATCH");
+      expect(JSON.parse(String(init?.body))).toEqual({
+        name: "spaces/space-1",
+        config: { accessType: "OPEN" },
+      });
+      return Response.json({ name: "spaces/space-1", config: { accessType: "OPEN" } });
+    });
+
+    await expect(
+      googleMeetActionHandlers.update_space(
+        {
+          name: "space-1",
+          space: { config: { accessType: "OPEN" } },
+          updateMask: "config.accessType",
+        },
+        { accessToken, fetcher },
+      ),
+    ).resolves.toMatchObject({ name: "spaces/space-1", config: { accessType: "OPEN" } });
+  });
+
+  it("ends an active conference through the custom method", async () => {
+    const fetcher: ProviderFetch = vi.fn(async (url, init) => {
+      expect(url.toString()).toBe("https://meet.googleapis.com/v2/spaces/space-1:endActiveConference");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(String(init?.body))).toEqual({});
+      return Response.json({});
+    });
+
+    await expect(
+      googleMeetActionHandlers.end_active_conference({ name: "spaces/space-1" }, { accessToken, fetcher }),
+    ).resolves.toEqual({ success: true });
+  });
 });
 
 describe("Google Meet resource names", () => {

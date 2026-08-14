@@ -10,7 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleFormsApiBaseUrl = "https://forms.googleapis.com/v1/forms";
