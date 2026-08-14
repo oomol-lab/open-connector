@@ -228,12 +228,14 @@ describe("mymind error mapping", () => {
     stubProblem(
       429,
       { type: "TooManyRequests", detail: "Burst quota exhausted.", status: 429 },
-      { ratelimit: '"burst";r=0;t=42' },
+      { ratelimit: '"burst";r=0;t=42, "sustained";r=0;t=84' },
     );
 
     const result = await executors["mymind.list_tags"]!({}, context);
 
     expect(result.error?.code).toBe("rate_limited");
-    expect(result.error?.message).toBe('Burst quota exhausted. (RateLimit: "burst";r=0;t=42)');
+    expect(result.error?.message).toBe(
+      'Burst quota exhausted. Retry after approximately 84 seconds. (RateLimit: "burst";r=0;t=42, "sustained";r=0;t=84)',
+    );
   });
 });

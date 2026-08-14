@@ -287,8 +287,13 @@ export const myMindActionHandlers: Record<string, ActionHandler> = {
     return { noteId, acknowledged: true };
   },
 
-  async list_tags(_input, context) {
-    const payload = await requestJson("/tags", { method: "GET" }, context, "execute");
+  async list_tags(input, context) {
+    const payload = await requestJson(
+      "/tags",
+      { method: "GET", query: { limit: numberParam(input.limit) } },
+      context,
+      "execute",
+    );
     return { tags: optionalObjectArray(payload, "tag") };
   },
 
@@ -667,5 +672,19 @@ function readProblemErrors(problem: Record<string, unknown> | undefined): string
  */
 function describeRateLimit(response: Response, message: string): string {
   const policy = response.headers.get("ratelimit");
-  return policy ? `${message} (RateLimit: ${policy})` : message;
+  if (!policy) {
+    return message;
+  }
+
+  const retryAfterSeconds = Math.max(
+    0,
+    ...policy
+      .split(",")
+      .filter((entry) => /(?:^|;)\s*r=0(?:;|$)/u.test(entry))
+      .map((entry) => Number(/(?:^|;)\s*t=(\d+)(?:;|$)/u.exec(entry)?.[1]))
+      .filter(Number.isFinite),
+  );
+  return retryAfterSeconds > 0
+    ? `${message} Retry after approximately ${retryAfterSeconds} seconds. (RateLimit: ${policy})`
+    : `${message} (RateLimit: ${policy})`;
 }

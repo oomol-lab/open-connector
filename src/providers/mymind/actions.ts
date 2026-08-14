@@ -357,7 +357,11 @@ export const myMindActions: ActionDefinition[] = [
     name: "list_tags",
     description: "List the tags in a mind, most recently used first.",
     requiredScopes: [readOnly],
-    inputSchema: s.object("The input for listing tags.", {}),
+    inputSchema: s.object(
+      "The input for listing tags.",
+      { limit: s.integer("How many tags to return.", { minimum: 1, maximum: 10_000, default: 1000 }) },
+      { optional: ["limit"] },
+    ),
     outputSchema: s.object("The tags in the mind.", {
       tags: s.array(
         "The tags, most recently used first.",
