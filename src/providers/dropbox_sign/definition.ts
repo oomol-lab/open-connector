@@ -8,8 +8,19 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Dropbox Sign",
   categories: ["Productivity"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://app.hellosign.com/oauth/authorize",
+      tokenUrl: "https://app.hellosign.com/oauth/token",
+      refreshTokenUrl: "https://app.hellosign.com/oauth/token?refresh",
+      scopes: [],
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationRequestFields: {
+        scope: false,
+      },
+    },
     {
       type: "api_key",
       label: "API Key",
