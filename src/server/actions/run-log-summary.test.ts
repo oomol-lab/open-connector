@@ -114,6 +114,18 @@ describe("summarizeForRunLog", () => {
     const long = `https://exa mple.com/${"a".repeat(300)}`;
     expect(summarizeForRunLog({ url: long })).toEqual({ url: `${long.slice(0, 256)}[truncated]` });
   });
+
+  it("redacts unparseable URL-like strings with sensitive raw query keys", () => {
+    expect(
+      summarizeForRunLog({
+        url: "https://exa mple.com/?token=abc",
+        items: ["https://?api_key=SECRET", "https://exa mple.com/?safe=1"],
+      }),
+    ).toEqual({
+      url: "[redacted-url]",
+      items: ["[redacted-url]", "https://exa mple.com/?safe=1"],
+    });
+  });
 });
 
 describe("safeRunLogError", () => {

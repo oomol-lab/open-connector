@@ -114,11 +114,33 @@ function summarizeString(value: string, path: string[]): string {
     } catch {
       // Not a parseable URL. Keep the rest of the audit record intact instead
       // of letting one malformed value collapse the whole summary, but still
-      // redact when the value sits in a sensitive URL context.
-      if (sensitiveUrlContextPattern.test(path.join("."))) {
+      // redact when the value sits in a sensitive URL context or carries a
+      // sensitive query key.
+      if (sensitiveUrlContextPattern.test(path.join(".")) || hasSensitiveQueryKey(value)) {
         return "[redacted-url]";
       }
     }
   }
   return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
+}
+
+/** Whether the raw query of an unparseable URL-like value contains a sensitive key. */
+function hasSensitiveQueryKey(value: string): boolean {
+  const queryStart = value.indexOf("?");
+  if (queryStart === -1) {
+    return false;
+  }
+  return value
+    .slice(queryStart + 1)
+    .split("&")
+    .some((pair) => {
+      const [encodedName] = pair.split("=");
+      let name = encodedName;
+      try {
+        name = decodeURIComponent(encodedName);
+      } catch {
+        // Keep the raw name when the encoding is malformed.
+      }
+      return sensitiveKeyPattern.test(name);
+    });
 }
