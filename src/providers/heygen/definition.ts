@@ -11,8 +11,22 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "HeyGen",
   categories: ["AI", "Design & Media"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://app.heygen.com/oauth/authorize",
+      tokenUrl: "https://api2.heygen.com/v1/oauth/token",
+      refreshTokenUrl: "https://api2.heygen.com/v1/oauth/refresh_token",
+      scopes: [],
+      tokenEndpointAuthMethod: "none",
+      pkce: {
+        method: "S256",
+      },
+      authorizationRequestFields: {
+        scope: false,
+      },
+    },
     {
       type: "api_key",
       label: "API Key",
