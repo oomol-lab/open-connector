@@ -116,6 +116,8 @@ export type OAuth2AuthDefinition = {
       grantType?: string | false;
       code?: string;
       redirectUri?: string | false;
+      /** Provider-specific field name for forwarding the original OAuth state during code exchange. */
+      state?: string | false;
     };
     refresh?: {
       grantType?: string | false;

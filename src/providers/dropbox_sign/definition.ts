@@ -3,6 +3,9 @@ import type { ProviderDefinition } from "../../core/types.ts";
 import { dropboxSignActions } from "./actions.ts";
 
 const service = "dropbox_sign";
+const dropboxSignAuthorizationUrl = "https://app.hellosign.com/oauth/authorize";
+const dropboxSignTokenUrl = "https://app.hellosign.com/oauth/token";
+const dropboxSignRefreshTokenUrl = "https://app.hellosign.com/oauth/token?refresh";
 
 export const provider: ProviderDefinition = {
   service,
@@ -12,11 +15,16 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://app.hellosign.com/oauth/authorize",
-      tokenUrl: "https://app.hellosign.com/oauth/token",
-      refreshTokenUrl: "https://app.hellosign.com/oauth/token?refresh",
+      authorizationUrl: dropboxSignAuthorizationUrl,
+      tokenUrl: dropboxSignTokenUrl,
+      refreshTokenUrl: dropboxSignRefreshTokenUrl,
       scopes: [],
       tokenEndpointAuthMethod: "client_secret_post",
+      tokenRequestFields: {
+        authorizationCode: {
+          state: "state",
+        },
+      },
       authorizationRequestFields: {
         scope: false,
       },

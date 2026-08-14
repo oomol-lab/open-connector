@@ -90,6 +90,7 @@ const customOAuthProvider: ProviderDefinition = {
         authorizationCode: {
           grantType: false,
           redirectUri: false,
+          state: "state",
         },
       },
       tokenResponseEnvelope: {
@@ -587,6 +588,7 @@ describe("OAuthFlowService", () => {
       app_id: "client-id",
       auth_code: "code",
       secret: "client-secret",
+      state: started.state,
     });
     await expect(services.connections.getCredential("custom_oauth")).resolves.toMatchObject({
       authType: "oauth2",

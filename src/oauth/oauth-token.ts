@@ -23,6 +23,7 @@ export interface OAuthTokenRequestOptions {
 
 interface AuthorizationCodeTokenRequest extends OAuthTokenRequestOptions {
   code: string;
+  state?: string;
   redirectUri: string;
   extraFields?: Record<string, string>;
   createError: OAuthTokenErrorFactory;
@@ -253,6 +254,10 @@ function createAuthorizationCodeFields(input: AuthorizationCodeTokenRequest): Re
     "redirect_uri",
     input.redirectUri,
   );
+  const stateField = fieldMap?.authorizationCode?.state;
+  if (input.state !== undefined && stateField !== undefined) {
+    setMappedField(fields, stateField, "state", input.state);
+  }
   return {
     ...fields,
     ...(input.extraFields ?? {}),
