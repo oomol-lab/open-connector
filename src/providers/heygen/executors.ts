@@ -45,6 +45,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   auth: { type: "none" },
   async customizeRequest({ context, headers }) {
     const auth = await resolveHeygenAuth(context);
+    headers.delete("authorization");
     headers.delete("x-api-key");
     headers.set(auth.headerName, auth.headerValue);
   },

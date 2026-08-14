@@ -3,6 +3,9 @@ import type { ProviderDefinition } from "../../core/types.ts";
 import { heygenActions } from "./actions.ts";
 
 const service = "heygen";
+const heygenOAuthAuthorizationUrl = "https://app.heygen.com/oauth/authorize";
+const heygenOAuthTokenUrl = "https://api2.heygen.com/v1/oauth/token";
+const heygenOAuthRefreshTokenUrl = "https://api2.heygen.com/v1/oauth/refresh_token";
 
 /**
  * HeyGen provider backed by the HeyGen REST API.
@@ -15,9 +18,9 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://app.heygen.com/oauth/authorize",
-      tokenUrl: "https://api2.heygen.com/v1/oauth/token",
-      refreshTokenUrl: "https://api2.heygen.com/v1/oauth/refresh_token",
+      authorizationUrl: heygenOAuthAuthorizationUrl,
+      tokenUrl: heygenOAuthTokenUrl,
+      refreshTokenUrl: heygenOAuthRefreshTokenUrl,
       scopes: [],
       tokenEndpointAuthMethod: "none",
       pkce: {

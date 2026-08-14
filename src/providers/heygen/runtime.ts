@@ -376,7 +376,7 @@ async function heygenUploadAsset(input: Record<string, unknown>, context: Heygen
       auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
-      baseUrl: heygenUploadBaseUrl,
+      baseUrl: context.auth.headerName === "Authorization" ? context.auth.apiBaseUrl : heygenUploadBaseUrl,
       path: "/v1/asset",
       method: "POST",
       rawBody: toArrayBuffer(Buffer.from(readInputString(input.contentBase64, "contentBase64"), "base64")),
