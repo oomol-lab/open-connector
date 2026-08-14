@@ -4,7 +4,6 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 const heygenApiBaseUrl = "https://api.heygen.com";
-const heygenOAuthApiBaseUrl = "https://api2.heygen.com";
 const heygenUploadBaseUrl = "https://upload.heygen.com";
 
 export interface HeygenAuth {
@@ -97,12 +96,13 @@ export async function validateHeygenCredential(
   grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
+  const validationEndpoint = auth.headerName === "Authorization" ? "/v3/users/me" : "/v1/user/me";
   const data = await heygenRequest<Record<string, unknown>>(
     {
       auth,
       fetcher: options.fetcher,
       signal: options.signal,
-      path: "/v1/user/me",
+      path: validationEndpoint,
     },
     "validate",
   );
@@ -120,7 +120,7 @@ export async function validateHeygenCredential(
     metadata: {
       apiBaseUrl: auth.apiBaseUrl,
       authHeaderName: auth.headerName,
-      validationEndpoint: "/v1/user/me",
+      validationEndpoint,
     },
   };
 }
@@ -135,7 +135,7 @@ export function createHeygenApiKeyAuth(apiKey: string): HeygenAuth {
 
 export function createHeygenOAuthAuth(accessToken: string, tokenType: string): HeygenAuth {
   return {
-    apiBaseUrl: heygenOAuthApiBaseUrl,
+    apiBaseUrl: heygenApiBaseUrl,
     headerName: "Authorization",
     headerValue: `${tokenType} ${accessToken}`,
   };
@@ -147,7 +147,7 @@ async function heygenGetCurrentUser(context: HeygenActionContext): Promise<unkno
       auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
-      path: "/v1/user/me",
+      path: context.auth.headerName === "Authorization" ? "/v3/users/me" : "/v1/user/me",
     },
     "execute",
   );
@@ -371,18 +371,19 @@ async function heygenGetShareableVideoUrl(
 }
 
 async function heygenUploadAsset(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
+  const mimeType = readInputString(input.mimeType, "mimeType");
+  const content = toArrayBuffer(Buffer.from(readInputString(input.contentBase64, "contentBase64"), "base64"));
+  const isOAuth = context.auth.headerName === "Authorization";
   const data = await heygenRequest<Record<string, unknown>>(
     {
       auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
-      baseUrl: context.auth.headerName === "Authorization" ? context.auth.apiBaseUrl : heygenUploadBaseUrl,
-      path: "/v1/asset",
+      baseUrl: isOAuth ? context.auth.apiBaseUrl : heygenUploadBaseUrl,
+      path: isOAuth ? "/v3/assets" : "/v1/asset",
       method: "POST",
-      rawBody: toArrayBuffer(Buffer.from(readInputString(input.contentBase64, "contentBase64"), "base64")),
-      headers: {
-        "content-type": readInputString(input.mimeType, "mimeType"),
-      },
+      rawBody: isOAuth ? createHeygenOAuthAssetForm(content, mimeType) : content,
+      headers: isOAuth ? undefined : { "content-type": mimeType },
     },
     "execute",
   );
@@ -398,6 +399,12 @@ async function heygenUploadAsset(input: Record<string, unknown>, context: Heygen
     asset: data,
     raw: data,
   };
+}
+
+function createHeygenOAuthAssetForm(content: ArrayBuffer, mimeType: string): FormData {
+  const form = new FormData();
+  form.append("file", new Blob([content], { type: mimeType }), "asset");
+  return form;
 }
 
 async function heygenListAssets(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
