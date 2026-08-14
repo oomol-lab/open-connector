@@ -102,14 +102,23 @@ function summarizeString(value: string, path: string[]): string {
     return "[redacted]";
   }
   if (/^https?:\/\//i.test(value)) {
-    const url = new URL(value);
-    if (
-      sensitiveUrlContextPattern.test(path.join(".")) ||
-      [...url.searchParams.keys()].some((name) => sensitiveKeyPattern.test(name))
-    ) {
-      return "[redacted-url]";
+    try {
+      const url = new URL(value);
+      if (
+        sensitiveUrlContextPattern.test(path.join(".")) ||
+        [...url.searchParams.keys()].some((name) => sensitiveKeyPattern.test(name))
+      ) {
+        return "[redacted-url]";
+      }
+      return url.origin;
+    } catch {
+      // Not a parseable URL. Keep the rest of the audit record intact instead
+      // of letting one malformed value collapse the whole summary, but still
+      // redact when the value sits in a sensitive URL context.
+      if (sensitiveUrlContextPattern.test(path.join("."))) {
+        return "[redacted-url]";
+      }
     }
-    return url.origin;
   }
   return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
 }

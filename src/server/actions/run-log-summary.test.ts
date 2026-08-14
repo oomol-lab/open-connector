@@ -85,6 +85,35 @@ describe("summarizeForRunLog", () => {
   it("does not enumerate large typed arrays", () => {
     expect(summarizeForRunLog(new Uint8Array(1_000_000))).toBe("[unavailable]");
   });
+
+  it("keeps summarizing the rest of the value when a URL-like string cannot be parsed", () => {
+    expect(
+      summarizeForRunLog({
+        url: "https://",
+        items: ["https://ok.example/x", "http://exa mple.com/y"],
+      }),
+    ).toEqual({
+      url: "https://",
+      items: ["https://ok.example", "http://exa mple.com/y"],
+    });
+  });
+
+  it("redacts unparseable URL-like strings in sensitive contexts", () => {
+    expect(
+      summarizeForRunLog({
+        webhook: { url: "https://hooks.slack.com/services/T000/B000/ SECRET" },
+        downloadUrl: "https://",
+      }),
+    ).toEqual({
+      webhook: { url: "[redacted-url]" },
+      downloadUrl: "[redacted-url]",
+    });
+  });
+
+  it("truncates long unparseable URL-like strings", () => {
+    const long = `https://exa mple.com/${"a".repeat(300)}`;
+    expect(summarizeForRunLog({ url: long })).toEqual({ url: `${long.slice(0, 256)}[truncated]` });
+  });
 });
 
 describe("safeRunLogError", () => {
