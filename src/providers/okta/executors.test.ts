@@ -24,9 +24,10 @@ describe("Okta authentication", () => {
         profile: {
           accountId: "oauth2",
           displayName: "OAuth Credential",
-          grantedScopes: ["okta.users.read"],
+          grantedScopes: [],
         },
         metadata: {
+          scope: "okta.users.read okta.groups.read",
           oauthClientExtra: {
             subdomain: "dev-12345678",
           },
@@ -40,7 +41,7 @@ describe("Okta authentication", () => {
         accountId: "okta:dev-12345678.okta.com:user-1",
         displayName: "admin@example.com",
       },
-      grantedScopes: ["okta.users.read"],
+      grantedScopes: ["okta.users.read", "okta.groups.read"],
       metadata: {
         orgUrl: "https://dev-12345678.okta.com",
         validationEndpoint: "/api/v1/users/me",

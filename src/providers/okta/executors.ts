@@ -66,7 +66,7 @@ export const credentialValidators: CredentialValidators = {
       {
         orgUrl: resolveOktaOAuthOrgUrl(input.metadata),
         authorization: `${input.tokenType} ${input.accessToken}`,
-        grantedScopes: input.profile.grantedScopes,
+        grantedScopes: readOktaGrantedScopes(input.metadata.scope, input.profile.grantedScopes),
         credentialHelpUrl: oktaOAuthHelpUrl,
       },
       fetcher,
@@ -103,6 +103,11 @@ function resolveOktaOAuthOrgUrl(metadata: Record<string, unknown>): string {
     throw new ProviderRequestError(400, "subdomain must be a valid Okta organization subdomain");
   }
   return `https://${subdomain}.okta.com`;
+}
+
+function readOktaGrantedScopes(value: unknown, fallback: string[]): string[] {
+  const scope = optionalString(value);
+  return scope ? [...new Set(scope.split(/\s+/u).filter(Boolean))] : fallback;
 }
 
 function providerInputError(message: string): ProviderRequestError {
