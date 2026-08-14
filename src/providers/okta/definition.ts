@@ -1,6 +1,16 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { oktaActions } from "./actions.ts";
+import {
+  oktaGroupsManageScope,
+  oktaGroupsReadScope,
+  oktaOAuthAuthorizationUrl,
+  oktaOAuthTokenUrl,
+  oktaOfflineAccessScope,
+  oktaOpenIdScope,
+  oktaUsersManageScope,
+  oktaUsersReadScope,
+} from "./constants.ts";
 
 const service = "okta";
 
@@ -13,15 +23,15 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://{subdomain}.okta.com/oauth2/v1/authorize",
-      tokenUrl: "https://{subdomain}.okta.com/oauth2/v1/token",
+      authorizationUrl: oktaOAuthAuthorizationUrl,
+      tokenUrl: oktaOAuthTokenUrl,
       scopes: [
-        "openid",
-        "offline_access",
-        "okta.users.read",
-        "okta.users.manage",
-        "okta.groups.read",
-        "okta.groups.manage",
+        oktaOpenIdScope,
+        oktaOfflineAccessScope,
+        oktaUsersReadScope,
+        oktaUsersManageScope,
+        oktaGroupsReadScope,
+        oktaGroupsManageScope,
       ],
       tokenEndpointAuthMethod: "client_secret_post",
       pkce: {
