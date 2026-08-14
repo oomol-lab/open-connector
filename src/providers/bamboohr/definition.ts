@@ -8,8 +8,30 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "BambooHR",
   categories: ["Productivity", "Data"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://{companyDomain}.bamboohr.com/authorize.php",
+      tokenUrl: "https://{companyDomain}.bamboohr.com/token.php?request=token",
+      refreshTokenUrl: "https://{companyDomain}.bamboohr.com/token.php?request=token",
+      scopes: ["offline_access", "company:info", "employee", "field"],
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationParams: {
+        request: "authorize",
+      },
+      clientConfigFields: [
+        {
+          key: "companyDomain",
+          label: "Company Domain",
+          inputType: "text",
+          placeholder: "acme",
+          description: "The subdomain from your BambooHR company URL. For https://acme.bamboohr.com, enter acme.",
+          required: true,
+          secret: false,
+        },
+      ],
+    },
     {
       type: "api_key",
       label: "API Key",

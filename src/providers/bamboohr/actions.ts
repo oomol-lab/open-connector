@@ -62,7 +62,7 @@ export const bamboohrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company_information",
     description: "Retrieve basic BambooHR company profile information for the connected tenant.",
-    requiredScopes: [],
+    requiredScopes: ["company:info"],
     inputSchema: s.object("No input is required for this BambooHR action.", {}),
     outputSchema: s.object("BambooHR company information output.", {
       company: companySchema,
@@ -72,7 +72,7 @@ export const bamboohrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_fields",
     description: "List BambooHR employee fields available to the connected account.",
-    requiredScopes: [],
+    requiredScopes: ["employee", "field"],
     inputSchema: s.object("No input is required for this BambooHR action.", {}),
     outputSchema: s.object("BambooHR field list output.", {
       fields: s.array("BambooHR field definitions.", fieldSchema),
@@ -82,7 +82,7 @@ export const bamboohrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_employees",
     description: "List BambooHR employees with optional additional field aliases and cursor paging.",
-    requiredScopes: [],
+    requiredScopes: ["employee"],
     inputSchema: s.object(
       "Input for listing BambooHR employees.",
       {
@@ -103,7 +103,7 @@ export const bamboohrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_employee",
     description: "Retrieve one BambooHR employee by ID with optional field aliases.",
-    requiredScopes: [],
+    requiredScopes: ["employee"],
     inputSchema: s.object(
       "Input for retrieving one BambooHR employee.",
       {
