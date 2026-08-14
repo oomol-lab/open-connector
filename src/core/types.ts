@@ -46,6 +46,8 @@ export type OAuthClientConfigFieldDefinition = CredentialDefinition & {
   location?: OAuthClientConfigFieldLocation;
   /** Default local value used when the caller omits this OAuth client config field. */
   defaultValue?: string;
+  /** Exact provider-owned values accepted for this field before resolving OAuth endpoints. */
+  allowedValues?: string[];
 };
 
 /**

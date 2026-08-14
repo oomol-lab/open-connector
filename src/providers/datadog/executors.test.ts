@@ -14,7 +14,6 @@ describe("Datadog credentials", () => {
           scope: "monitors_read timeseries_query metrics_read",
           oauthClientExtra: {
             site: "datadoghq.eu",
-            authorizationHost: "app.datadoghq.eu",
           },
         },
       },
@@ -47,13 +46,12 @@ describe("Datadog credentials", () => {
       metadata: {
         site: "datadoghq.eu",
         baseUrl: "https://api.datadoghq.eu",
-        authorizationHost: "app.datadoghq.eu",
         userId: "user-123",
       },
     });
   });
 
-  it("rejects a mismatched OAuth authorization host", async () => {
+  it("rejects an unsupported OAuth site", async () => {
     await expect(
       credentialValidators.oauth2!(
         {
@@ -63,14 +61,13 @@ describe("Datadog credentials", () => {
           profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
           metadata: {
             oauthClientExtra: {
-              site: "datadoghq.eu",
-              authorizationHost: "app.datadoghq.com",
+              site: "attacker.example",
             },
           },
         },
         { fetcher: async () => Response.json({}) },
       ),
-    ).rejects.toThrow("authorizationHost does not match the selected Datadog site");
+    ).rejects.toThrow("site must be a supported Datadog domain");
   });
 
   it("uses the official US2-FED site without an app subdomain", async () => {
@@ -83,7 +80,6 @@ describe("Datadog credentials", () => {
         metadata: {
           oauthClientExtra: {
             site: "us2.ddog-gov.com",
-            authorizationHost: "us2.ddog-gov.com",
           },
         },
       },
@@ -98,7 +94,6 @@ describe("Datadog credentials", () => {
     expect(result).toMatchObject({
       metadata: {
         site: "us2.ddog-gov.com",
-        authorizationHost: "us2.ddog-gov.com",
         baseUrl: "https://api.us2.ddog-gov.com",
       },
     });

@@ -130,6 +130,7 @@ export class OAuthClientConfigService {
       }),
     };
     assertNoUnexpectedClientConfigFields(auth.clientConfigFields, submittedExtra, input.secretExtra ?? {});
+    assertAllowedClientConfigFieldValues(auth.clientConfigFields, config.extra, config.secretExtra);
     return config;
   }
 
@@ -145,7 +146,8 @@ export class OAuthClientConfigService {
   }
 
   resolveEndpointUrl(service: string, endpointUrl: string, config: OAuthClientConfig): string {
-    this.getOAuthDefinition(service);
+    const auth = this.getOAuthDefinition(service);
+    assertAllowedClientConfigFieldValues(auth.clientConfigFields, config.extra, config.secretExtra);
     const resolved = endpointUrl.replaceAll(/\{(\+?)([A-Za-z0-9_]+)\}/g, (_match, rawModifier: string, key: string) => {
       const value = config.extra[key];
       if (!value) {
@@ -264,6 +266,22 @@ function assertNoUnexpectedClientConfigFields(
   for (const key of [...Object.keys(extra), ...Object.keys(secretExtra)]) {
     if (!keys.has(key)) {
       throw new OAuthClientConfigError("invalid_input", `Unexpected credential field: ${key}.`);
+    }
+  }
+}
+
+function assertAllowedClientConfigFieldValues(
+  fields: OAuthClientConfigFieldDefinition[] | undefined,
+  extra: Record<string, string>,
+  secretExtra: Record<string, string>,
+): void {
+  for (const field of fields ?? []) {
+    const value = (field.location ?? "extra") === "secretExtra" ? secretExtra[field.key] : extra[field.key];
+    if (value && field.allowedValues && !field.allowedValues.includes(value)) {
+      throw new OAuthClientConfigError(
+        "invalid_input",
+        `${field.key} must be one of: ${field.allowedValues.join(", ")}.`,
+      );
     }
   }
 }

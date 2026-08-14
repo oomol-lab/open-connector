@@ -20,33 +20,11 @@ import {
   readProviderProxyResponse,
   toProviderProxyError,
 } from "../provider-runtime.ts";
+import { datadogApiKeySites, datadogOAuthSites } from "./sites.ts";
 
 const service = "datadog";
 const datadogDefaultRequestTimeoutMs = 30_000;
 const datadogCredentialHelpUrl = "https://docs.datadoghq.com/account_management/api-app-keys/";
-const datadogSites: Record<string, string> = {
-  us1: "https://api.datadoghq.com",
-  us3: "https://api.us3.datadoghq.com",
-  us5: "https://api.us5.datadoghq.com",
-  eu: "https://api.datadoghq.eu",
-  ap1: "https://api.ap1.datadoghq.com",
-  ap2: "https://api.ap2.datadoghq.com",
-  uk1: "https://api.uk1.datadoghq.com",
-  gov: "https://api.ddog-gov.com",
-  gov2: "https://api.us2.ddog-gov.com",
-};
-
-const datadogOAuthSites: Record<string, { authorizationHost: string; baseUrl: string }> = {
-  "datadoghq.com": { authorizationHost: "app.datadoghq.com", baseUrl: datadogSites.us1! },
-  "us3.datadoghq.com": { authorizationHost: "us3.datadoghq.com", baseUrl: datadogSites.us3! },
-  "us5.datadoghq.com": { authorizationHost: "us5.datadoghq.com", baseUrl: datadogSites.us5! },
-  "datadoghq.eu": { authorizationHost: "app.datadoghq.eu", baseUrl: datadogSites.eu! },
-  "ap1.datadoghq.com": { authorizationHost: "ap1.datadoghq.com", baseUrl: datadogSites.ap1! },
-  "ap2.datadoghq.com": { authorizationHost: "ap2.datadoghq.com", baseUrl: datadogSites.ap2! },
-  "uk1.datadoghq.com": { authorizationHost: "uk1.datadoghq.com", baseUrl: datadogSites.uk1! },
-  "ddog-gov.com": { authorizationHost: "app.ddog-gov.com", baseUrl: datadogSites.gov! },
-  "us2.ddog-gov.com": { authorizationHost: "us2.ddog-gov.com", baseUrl: datadogSites.gov2! },
-};
 
 type DatadogRequestPhase = "validate" | "execute";
 
@@ -248,7 +226,7 @@ async function validateDatadogCredential(
     "/api/v1/validate",
     { method: "GET" },
     {
-      baseUrl: datadogSites[site]!,
+      baseUrl: datadogApiKeySites[site]!,
       apiKey,
       fetcher,
       signal,
@@ -266,7 +244,7 @@ async function validateDatadogCredential(
     grantedScopes: [],
     metadata: {
       site,
-      baseUrl: datadogSites[site]!,
+      baseUrl: datadogApiKeySites[site]!,
       valid: record.valid === true,
       credentialHelpUrl: datadogCredentialHelpUrl,
     },
@@ -307,7 +285,6 @@ async function validateDatadogOAuthCredential(
     metadata: compactObject({
       site: site.site,
       baseUrl: site.baseUrl,
-      authorizationHost: site.authorizationHost,
       validationEndpoint: "/api/v2/current_user",
       userId,
       email,
@@ -345,24 +322,15 @@ async function resolveDatadogActionContext(
 
 interface DatadogOAuthSite {
   site: string;
-  authorizationHost: string;
   baseUrl: string;
 }
 
 function resolveDatadogOAuthSite(metadata: Record<string, unknown>): DatadogOAuthSite {
   const clientExtra = optionalRecord(metadata.oauthClientExtra);
   const site = normalizeDatadogOAuthSite(metadata.site ?? clientExtra?.site);
-  const config = datadogOAuthSites[site]!;
-  const authorizationHost = (
-    optionalString(metadata.authorizationHost) ?? optionalString(clientExtra?.authorizationHost)
-  )?.toLowerCase();
-  if (authorizationHost && authorizationHost !== config.authorizationHost) {
-    throw new ProviderRequestError(400, "authorizationHost does not match the selected Datadog site");
-  }
   return {
     site,
-    authorizationHost: config.authorizationHost,
-    baseUrl: config.baseUrl,
+    baseUrl: datadogOAuthSites[site]!,
   };
 }
 
@@ -485,14 +453,14 @@ function mapDatadogError(response: Response, payload: unknown, phase: DatadogReq
 
 function normalizeDatadogSite(value: unknown): string {
   const site = (optionalString(value) ?? "us1").trim().toLowerCase();
-  if (site in datadogSites) {
+  if (site in datadogApiKeySites) {
     return site;
   }
   throw new ProviderRequestError(400, "site must be one of us1, us3, us5, eu, ap1, ap2, uk1, gov, or gov2");
 }
 
 function requireStoredBaseUrl(providerMetadata: Record<string, unknown>, site: string): string {
-  const expectedBaseUrl = datadogSites[site]!;
+  const expectedBaseUrl = datadogApiKeySites[site]!;
   const storedBaseUrl = optionalString(providerMetadata.baseUrl);
   if (!storedBaseUrl) {
     throw new ProviderRequestError(401, "datadog baseUrl metadata is required");

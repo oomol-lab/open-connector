@@ -2,6 +2,7 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { datadogActions } from "./actions.ts";
 import { datadogOAuthScopes } from "./scopes.ts";
+import { datadogOAuthAuthorizationUrl, datadogOAuthSiteNames } from "./sites.ts";
 
 const service = "datadog";
 
@@ -16,7 +17,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://{authorizationHost}/oauth2/v1/authorize",
+      authorizationUrl: datadogOAuthAuthorizationUrl,
       tokenUrl: "https://api.{site}/oauth2/v1/token",
       scopes: datadogOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
@@ -35,17 +36,8 @@ export const provider: ProviderDefinition = {
           secret: false,
           defaultValue: "datadoghq.com",
           placeholder: "datadoghq.com",
+          allowedValues: datadogOAuthSiteNames,
           description: "The Datadog API site parameter, such as datadoghq.com, datadoghq.eu, or us3.datadoghq.com.",
-        },
-        {
-          key: "authorizationHost",
-          label: "Authorization host",
-          inputType: "text",
-          required: true,
-          secret: false,
-          defaultValue: "app.datadoghq.com",
-          placeholder: "app.datadoghq.com",
-          description: "The matching Datadog web application host, such as app.datadoghq.com or app.datadoghq.eu.",
         },
       ],
     },
