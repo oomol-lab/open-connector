@@ -140,7 +140,7 @@ export const credentialValidators: CredentialValidators = {
       {
         authorization: `${input.tokenType} ${input.accessToken}`,
         companyDomain: resolveBamboohrOAuthCompanyDomain(input.metadata),
-        grantedScopes: input.profile.grantedScopes,
+        grantedScopes: readBamboohrGrantedScopes(input.metadata.scope, input.profile.grantedScopes),
       },
       fetcher,
       signal,
@@ -201,6 +201,11 @@ function resolveBamboohrOAuthCompanyDomain(metadata: Record<string, unknown>): s
     return normalizeBamboohrCompanyDomain(storedCompanyDomain);
   }
   return readBamboohrCompanyDomain(optionalRecord(metadata.oauthClientExtra)?.companyDomain);
+}
+
+function readBamboohrGrantedScopes(value: unknown, fallback: string[]): string[] {
+  const scope = optionalString(value);
+  return scope ? [...new Set(scope.split(/\s+/u).filter(Boolean))] : fallback;
 }
 
 function readBamboohrCompanyDomain(value: unknown): string {

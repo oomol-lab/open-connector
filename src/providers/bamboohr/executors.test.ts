@@ -17,9 +17,10 @@ describe("BambooHR authentication", () => {
         profile: {
           accountId: "oauth2",
           displayName: "OAuth Credential",
-          grantedScopes: ["company:info", "employee"],
+          grantedScopes: [],
         },
         metadata: {
+          scope: "company:info employee",
           oauthClientExtra: {
             companyDomain: "acme",
           },
