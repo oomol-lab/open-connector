@@ -23,6 +23,3 @@ export const datadogOAuthSites: Record<string, string> = {
   "ddog-gov.com": datadogApiKeySites.gov!,
   "us2.ddog-gov.com": datadogApiKeySites.gov2!,
 };
-
-/** Datadog API domain values accepted before an OAuth endpoint is resolved. */
-export const datadogOAuthSiteNames: string[] = Object.keys(datadogOAuthSites);

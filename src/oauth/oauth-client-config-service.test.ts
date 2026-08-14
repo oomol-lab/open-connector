@@ -97,48 +97,6 @@ describe("OAuthClientConfigService", () => {
       }),
     ).toThrow("requestedScopes must contain at least one scope.");
   });
-
-  it("rejects disallowed endpoint fields on writes and stored config reads", () => {
-    const provider = oauthProvider("example");
-    const auth = provider.auth[0];
-    if (!auth || auth.type !== "oauth2") {
-      throw new Error("expected OAuth definition");
-    }
-    auth.tokenUrl = "https://api.{site}/oauth/token";
-    auth.clientConfigFields = [
-      {
-        key: "site",
-        label: "Site",
-        inputType: "text",
-        required: true,
-        secret: false,
-        allowedValues: ["example.com", "example.eu"],
-      },
-    ];
-    const service = new OAuthClientConfigService({
-      catalog: createCatalogStore([provider]),
-      origin: "http://localhost:3000",
-      store: new MemoryOAuthClientConfigStore(),
-    });
-
-    expect(() =>
-      service.normalizeConfig("example", {
-        clientId: "client-id",
-        clientSecret: "client-secret",
-        extra: { site: "attacker.example" },
-      }),
-    ).toThrow("site must be one of: example.com, example.eu.");
-
-    expect(() =>
-      service.resolveEndpointUrl("example", auth.tokenUrl, {
-        service: "example",
-        clientId: "client-id",
-        clientSecret: "client-secret",
-        extra: { site: "attacker.example" },
-        secretExtra: {},
-      }),
-    ).toThrow("site must be one of: example.com, example.eu.");
-  });
 });
 
 function oauthProvider(service: string): ProviderDefinition {

@@ -2,7 +2,7 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { datadogActions } from "./actions.ts";
 import { datadogOAuthScopes } from "./scopes.ts";
-import { datadogOAuthAuthorizationUrl, datadogOAuthSiteNames } from "./sites.ts";
+import { datadogOAuthAuthorizationUrl } from "./sites.ts";
 
 const service = "datadog";
 
@@ -36,7 +36,6 @@ export const provider: ProviderDefinition = {
           secret: false,
           defaultValue: "datadoghq.com",
           placeholder: "datadoghq.com",
-          allowedValues: datadogOAuthSiteNames,
           description: "The Datadog API site parameter, such as datadoghq.com, datadoghq.eu, or us3.datadoghq.com.",
         },
       ],
