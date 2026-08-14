@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { stripeActions } from "./actions.ts";
+import { stripeConnectOAuthScopes } from "./scopes.ts";
 
 const service = "stripe";
 
@@ -11,8 +12,18 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Stripe",
   categories: ["Finance", "Developer Tools"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://connect.stripe.com/oauth/authorize",
+      tokenUrl: "https://connect.stripe.com/oauth/token",
+      scopes: stripeConnectOAuthScopes,
+      tokenEndpointAuthMethod: "client_secret_post",
+      tokenRequestFields: {
+        clientId: false,
+      },
+    },
     {
       type: "api_key",
       label: "Secret API Key",

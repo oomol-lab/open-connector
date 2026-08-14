@@ -1,16 +1,16 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { BearerProviderContext } from "../provider-runtime.ts";
 import type { StripeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { ProviderRequestError, defineApiKeyProviderExecutors, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, defineBearerProviderExecutors, providerUserAgent } from "../provider-runtime.ts";
 
-type StripeActionContext = ApiKeyProviderContext;
+type StripeActionContext = BearerProviderContext;
 
 type StripeActionHandler = (input: Record<string, unknown>, context: StripeActionContext) => Promise<unknown>;
 
 interface StripeRequestInput {
-  apiKey: string;
+  accessToken: string;
   fetcher: typeof fetch;
   method: "GET" | "POST" | "DELETE";
   query?: Record<string, unknown>;
@@ -110,17 +110,20 @@ export const stripeActionHandlers: Record<StripeActionName, StripeActionHandler>
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, stripeActionHandlers);
+export const executors: ProviderExecutors = defineBearerProviderExecutors(service, stripeActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
-    const profile = await validateStripeCredential(input.apiKey, fetcher);
-    return profile;
+    return validateStripeCredential(input.apiKey, [], fetcher);
+  },
+  async oauth2(input, { fetcher }) {
+    return validateStripeCredential(input.accessToken, parseStripeScopes(input.metadata.scope), fetcher);
   },
 };
 
 async function validateStripeCredential(
-  apiKey: string,
+  accessToken: string,
+  grantedScopes: string[],
   fetcher: typeof fetch,
 ): Promise<{
   profile: {
@@ -132,7 +135,7 @@ async function validateStripeCredential(
 }> {
   const payload = readObject(
     await stripeRequest(stripeAccountPath, {
-      apiKey,
+      accessToken,
       fetcher,
       method: "GET",
     }),
@@ -148,7 +151,7 @@ async function validateStripeCredential(
       accountId,
       displayName: email ?? accountId ?? "Stripe API Key",
     },
-    grantedScopes: [],
+    grantedScopes,
     metadata: compactObject({
       apiBaseUrl: stripeApiBaseUrl,
       apiVersion: stripeApiVersion,
@@ -164,7 +167,7 @@ async function validateStripeCredential(
 async function executeIdentifyAccount(context: StripeActionContext) {
   const payload = readObject(
     await stripeRequest(stripeAccountPath, {
-      apiKey: context.apiKey,
+      accessToken: context.accessToken,
       fetcher: context.fetcher,
       method: "GET",
     }),
@@ -182,7 +185,7 @@ async function executeIdentifyAccount(context: StripeActionContext) {
 
 async function executeCustomerMutation(path: string, input: Record<string, unknown>, context: StripeActionContext) {
   const customer = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "POST",
     body: input,
@@ -192,7 +195,7 @@ async function executeCustomerMutation(path: string, input: Record<string, unkno
 
 async function executeCustomerRead(path: string, context: StripeActionContext) {
   const customer = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "GET",
   });
@@ -201,7 +204,7 @@ async function executeCustomerRead(path: string, context: StripeActionContext) {
 
 async function executeProductMutation(path: string, input: Record<string, unknown>, context: StripeActionContext) {
   const product = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "POST",
     body: input,
@@ -211,7 +214,7 @@ async function executeProductMutation(path: string, input: Record<string, unknow
 
 async function executeProductRead(path: string, context: StripeActionContext) {
   const product = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "GET",
   });
@@ -220,7 +223,7 @@ async function executeProductRead(path: string, context: StripeActionContext) {
 
 async function executePriceMutation(path: string, input: Record<string, unknown>, context: StripeActionContext) {
   const price = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "POST",
     body: input,
@@ -230,7 +233,7 @@ async function executePriceMutation(path: string, input: Record<string, unknown>
 
 async function executePriceRead(path: string, context: StripeActionContext) {
   const price = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "GET",
   });
@@ -244,7 +247,7 @@ async function executeStripeList(
   context: StripeActionContext,
 ) {
   const payload = await stripeRequest(path, {
-    apiKey: context.apiKey,
+    accessToken: context.accessToken,
     fetcher: context.fetcher,
     method: "GET",
     query: input,
@@ -255,7 +258,7 @@ async function executeStripeList(
 async function executeStripeDelete(path: string, context: StripeActionContext) {
   const payload = readObject(
     await stripeRequest(path, {
-      apiKey: context.apiKey,
+      accessToken: context.accessToken,
       fetcher: context.fetcher,
       method: "DELETE",
     }),
@@ -274,7 +277,7 @@ async function stripeRequest(path: string, input: StripeRequestInput): Promise<u
   appendStripeParams(url.searchParams, input.query);
 
   const headers: Record<string, string> = {
-    authorization: `Bearer ${input.apiKey}`,
+    authorization: `Bearer ${input.accessToken}`,
     "stripe-version": stripeApiVersion,
     "user-agent": providerUserAgent,
   };
@@ -372,6 +375,13 @@ function mapStripeError(status: number, message: string): ProviderRequestError {
   }
 
   return new ProviderRequestError(502, message, status);
+}
+
+function parseStripeScopes(value: unknown): string[] {
+  return (optionalString(value) ?? "")
+    .split(/[ ,]+/u)
+    .map((scope) => scope.trim())
+    .filter(Boolean);
 }
 
 function readObject(value: unknown, context: string): Record<string, unknown> {

@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { stripeConnectReadWriteScope } from "./scopes.ts";
 
 const service = "stripe";
 
@@ -392,8 +393,8 @@ export const stripeActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
     description: source.description,
-    requiredScopes: [],
-    providerPermissions: [],
+    requiredScopes: [stripeConnectReadWriteScope],
+    providerPermissions: [stripeConnectReadWriteScope],
     inputSchema: source.inputSchema,
     outputSchema: source.outputSchema,
   }),
