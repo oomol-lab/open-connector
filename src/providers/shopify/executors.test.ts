@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { provider } from "./definition.ts";
 import { credentialValidators } from "./executors.ts";
 
 function shopifyCredentialFetcher(expectedToken: string): typeof fetch {
@@ -30,7 +31,7 @@ describe("Shopify credentials", () => {
         profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
         metadata: {
           scope: "read_content",
-          oauthClientExtra: { shopDomain: "acme.myshopify.com" },
+          oauthClientExtra: { shopSubdomain: "acme" },
         },
       },
       { fetcher: shopifyCredentialFetcher("shopify-oauth-token") },
@@ -60,5 +61,19 @@ describe("Shopify credentials", () => {
       profile: { displayName: "Acme Store" },
       grantedScopes: ["read_content"],
     });
+  });
+
+  it("keeps every resolved OAuth endpoint under myshopify.com", () => {
+    const oauth = provider.auth.find((auth) => auth.type === "oauth2");
+    if (!oauth || oauth.type !== "oauth2") {
+      throw new Error("expected Shopify OAuth definition");
+    }
+
+    const attackerInput = encodeURIComponent("attacker.example");
+    const authorizationUrl = new URL(oauth.authorizationUrl.replace("{shopSubdomain}", attackerInput));
+    const tokenUrl = new URL(oauth.tokenUrl.replace("{shopSubdomain}", attackerInput));
+
+    expect(authorizationUrl.hostname).toBe("attacker.example.myshopify.com");
+    expect(tokenUrl.hostname).toBe("attacker.example.myshopify.com");
   });
 });

@@ -4,6 +4,8 @@ import { shopifyActions } from "./actions.ts";
 import { shopifyOAuthScopes } from "./scopes.ts";
 
 const service = "shopify";
+const shopifyAuthorizationUrl = "https://{shopSubdomain}.myshopify.com/admin/oauth/authorize";
+const shopifyTokenUrl = "https://{shopSubdomain}.myshopify.com/admin/oauth/access_token";
 
 export const provider: ProviderDefinition = {
   service,
@@ -13,20 +15,20 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://{shopDomain}/admin/oauth/authorize",
-      tokenUrl: "https://{shopDomain}/admin/oauth/access_token",
+      authorizationUrl: shopifyAuthorizationUrl,
+      tokenUrl: shopifyTokenUrl,
       scopes: shopifyOAuthScopes,
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {
-          key: "shopDomain",
-          label: "Shop domain",
+          key: "shopSubdomain",
+          label: "Shop subdomain",
           inputType: "text",
           required: true,
           secret: false,
-          placeholder: "acme.myshopify.com",
-          description: "The exact myshopify.com domain of the store to authorize, such as acme.myshopify.com.",
+          placeholder: "acme",
+          description: "The store-specific part before .myshopify.com, such as acme for acme.myshopify.com.",
         },
       ],
     },

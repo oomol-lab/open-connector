@@ -83,7 +83,12 @@ function shopifyCredentialDomain(credential: ShopifyCredential): string {
     return normalizeShopDomain(optionalString(credential.values.shopDomain));
   }
   const clientExtra = optionalRecord(credential.metadata.oauthClientExtra);
-  return normalizeShopDomain(optionalString(credential.metadata.shopDomain) ?? optionalString(clientExtra?.shopDomain));
+  const storedDomain = optionalString(credential.metadata.shopDomain);
+  if (storedDomain) {
+    return normalizeShopDomain(storedDomain);
+  }
+  const shopSubdomain = optionalString(clientExtra?.shopSubdomain);
+  return normalizeShopDomain(shopSubdomain ? `${shopSubdomain}.myshopify.com` : undefined);
 }
 
 function parseShopifyScopes(value: unknown): string[] {
