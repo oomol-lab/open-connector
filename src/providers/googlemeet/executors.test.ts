@@ -65,7 +65,10 @@ describe("Google Meet OAuth execution", () => {
         pageSize: "250",
         pageToken: "next-1",
       });
-      return Response.json({ participants: [{ name: "conferenceRecords/record-1/participants/person-1" }] });
+      return Response.json({
+        participants: [{ name: "conferenceRecords/record-1/participants/person-1" }],
+        totalSize: 1,
+      });
     });
 
     await expect(
@@ -81,6 +84,7 @@ describe("Google Meet OAuth execution", () => {
     ).resolves.toEqual({
       participants: [{ name: "conferenceRecords/record-1/participants/person-1" }],
       nextPageToken: null,
+      totalSize: 1,
     });
   });
 
@@ -154,6 +158,7 @@ describe("Google Meet resource names", () => {
 
   it.each([
     ["space traversal", "get_space", { name: "spaces/.." }],
+    ["bare space ID for end active conference", "end_active_conference", { name: "space-1" }],
     ["conference record traversal", "get_conference_record", { name: "conferenceRecords/%2e%2e" }],
     ["participant traversal", "get_participant", { name: "conferenceRecords/record-1/participants/.." }],
     [

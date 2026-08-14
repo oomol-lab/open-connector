@@ -276,7 +276,9 @@ const actions: GoogleMeetActionSource[] = [
     "end_active_conference",
     "End the active conference currently running in a Google Meet space.",
     googleMeetCreateScopes,
-    resourceNameInput("The space resource name, in the form spaces/{space}."),
+    resourceNameInput(
+      "The canonical space resource name, in the form spaces/{space}; bare IDs and meeting-code aliases are not accepted.",
+    ),
     s.requiredObject("The result of ending the active conference.", {
       success: s.literal(true, { description: "Whether the request completed successfully." }),
     }),
