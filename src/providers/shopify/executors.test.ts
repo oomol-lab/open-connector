@@ -1,6 +1,21 @@
+import type { IOAuthClientConfigStore } from "../../oauth/oauth-client-config-service.ts";
+
 import { describe, expect, it } from "vitest";
+import { createCatalogStore } from "../../catalog-store.ts";
+import { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
 import { provider } from "./definition.ts";
 import { credentialValidators } from "./executors.ts";
+
+const oauthConfigStore: IOAuthClientConfigStore = {
+  async get() {
+    return undefined;
+  },
+  async set() {},
+  async delete() {},
+  async list() {
+    return [];
+  },
+};
 
 function shopifyCredentialFetcher(expectedToken: string): typeof fetch {
   return async (url, init) => {
@@ -68,12 +83,29 @@ describe("Shopify credentials", () => {
     if (!oauth || oauth.type !== "oauth2") {
       throw new Error("expected Shopify OAuth definition");
     }
+    const clientConfigs = new OAuthClientConfigService({
+      catalog: createCatalogStore([provider]),
+      origin: "http://localhost:3000",
+      store: oauthConfigStore,
+    });
+    const config = clientConfigs.normalizeConfig("shopify", {
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { shopSubdomain: "acme" },
+    });
 
-    const attackerInput = encodeURIComponent("attacker.example");
-    const authorizationUrl = new URL(oauth.authorizationUrl.replace("{shopSubdomain}", attackerInput));
-    const tokenUrl = new URL(oauth.tokenUrl.replace("{shopSubdomain}", attackerInput));
+    expect(new URL(clientConfigs.resolveEndpointUrl("shopify", oauth.authorizationUrl, config)).origin).toBe(
+      "https://acme.myshopify.com",
+    );
+    expect(new URL(clientConfigs.resolveEndpointUrl("shopify", oauth.tokenUrl, config)).origin).toBe(
+      "https://acme.myshopify.com",
+    );
 
-    expect(authorizationUrl.hostname).toBe("attacker.example.myshopify.com");
-    expect(tokenUrl.hostname).toBe("attacker.example.myshopify.com");
+    expect(() =>
+      clientConfigs.resolveEndpointUrl("shopify", oauth.tokenUrl, {
+        ...config,
+        extra: { shopSubdomain: "attacker.example/evil" },
+      }),
+    ).toThrow();
   });
 });
