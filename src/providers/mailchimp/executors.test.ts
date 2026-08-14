@@ -1,6 +1,12 @@
+import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
+
 import { Buffer } from "node:buffer";
-import { describe, expect, it } from "vitest";
-import { credentialValidators } from "./executors.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { credentialValidators, executors } from "./executors.ts";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("Mailchimp credentials", () => {
   it("resolves OAuth account identity and data center from metadata", async () => {
@@ -64,5 +70,65 @@ describe("Mailchimp credentials", () => {
       profile: { accountId: "account-1", displayName: "Example Account" },
       metadata: { dataCenter: "us6" },
     });
+  });
+
+  it("executes OAuth actions with the stored token type and data center", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(input.toString()).toBe("https://us21.api.mailchimp.com/3.0/lists");
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer mailchimp-oauth-token");
+      return Response.json({ lists: [] });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const credential: ResolvedCredential = {
+      authType: "oauth2",
+      accessToken: "mailchimp-oauth-token",
+      tokenType: "Bearer",
+      profile: { accountId: "42", displayName: "Example Audience", grantedScopes: [] },
+      metadata: { dataCenter: "us21" },
+    };
+    const context: ExecutionContext = { getCredential: async () => credential };
+
+    const result = await executors["mailchimp.list_lists"]!({}, context);
+
+    expect(result).toMatchObject({ ok: true, output: { lists: [] } });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("rejects an OAuth metadata endpoint that disagrees with its data center", async () => {
+    await expect(
+      credentialValidators.oauth2!(
+        {
+          authType: "oauth2",
+          accessToken: "mailchimp-oauth-token",
+          tokenType: "Bearer",
+          profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
+          metadata: {},
+        },
+        {
+          fetcher: async () =>
+            Response.json({
+              dc: "us21",
+              api_endpoint: "https://us22.api.mailchimp.com/3.0",
+            }),
+        },
+      ),
+    ).rejects.toThrow("unexpected API endpoint");
+  });
+
+  it("rejects an invalid OAuth metadata data center", async () => {
+    await expect(
+      credentialValidators.oauth2!(
+        {
+          authType: "oauth2",
+          accessToken: "mailchimp-oauth-token",
+          tokenType: "Bearer",
+          profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
+          metadata: {},
+        },
+        {
+          fetcher: async () => Response.json({ dc: "us-21" }),
+        },
+      ),
+    ).rejects.toThrow("invalid data center");
   });
 });
