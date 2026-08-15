@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { coinbaseAccountReadScope } from "./scopes.ts";
 
 const service = "coinbase";
 
@@ -19,7 +20,8 @@ const getAccountOutputSchema = s.object("Single brokerage account payload return
 export const coinbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
-    description: "List Coinbase Advanced Trade brokerage accounts that the connected API key can access.",
+    description: "List Coinbase Advanced Trade brokerage accounts that the connected credential can access.",
+    requiredScopes: [coinbaseAccountReadScope],
     inputSchema: s.object(
       "Input parameters for listing Coinbase brokerage accounts.",
       {
@@ -33,6 +35,7 @@ export const coinbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
     description: "Get one Coinbase Advanced Trade brokerage account by UUID.",
+    requiredScopes: [coinbaseAccountReadScope],
     inputSchema: s.object(
       "Input parameters for retrieving one Coinbase brokerage account.",
       {
