@@ -4,9 +4,11 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
   ProxyExecutionResult,
+  ResolvedCredential,
 } from "../../core/types.ts";
 import type { ActionContext } from "./runtime.ts";
 
+import { optionalString } from "../../core/cast.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -115,11 +117,30 @@ async function resolveAlpacaActionContext(context: ExecutionContext, fetcher: ty
     };
   }
   if (credential?.authType === "oauth2") {
+    const environment = await resolveAlpacaOAuthEnvironment(credential, fetcher, context.signal);
     return {
-      credential: readAlpacaOAuthCredential(credential, credential.metadata.environment),
+      credential: readAlpacaOAuthCredential(credential, environment),
       fetcher,
       signal: context.signal,
     };
   }
   throw new ProviderRequestError(401, "Configure Alpaca credentials first.");
+}
+
+async function resolveAlpacaOAuthEnvironment(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<string> {
+  const storedEnvironment = optionalString(credential.metadata.environment);
+  if (storedEnvironment) {
+    return storedEnvironment;
+  }
+
+  const validation = await validateAlpacaOAuthCredential(credential, fetcher, signal);
+  const discoveredEnvironment = optionalString(validation.metadata?.environment);
+  if (!discoveredEnvironment) {
+    throw new ProviderRequestError(502, "Alpaca OAuth environment discovery returned no environment");
+  }
+  return discoveredEnvironment;
 }

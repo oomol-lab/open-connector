@@ -494,7 +494,7 @@ export function readAlpacaCredential(input: {
     authType: "api_key",
     apiSecretKey: requiredInputString(input.apiKey, "apiKey"),
     apiKeyId: requiredInputString(input.apiKeyId, "apiKeyId"),
-    environment: readEnvironment(input.environment),
+    environment: readEnvironment(input.environment, "paper"),
   };
 }
 
@@ -506,7 +506,7 @@ export function readAlpacaOAuthCredential(
     authType: "oauth2",
     accessToken: input.accessToken,
     tokenType: input.tokenType,
-    environment: readEnvironment(environment, "live"),
+    environment: readEnvironment(environment),
   };
 }
 
@@ -727,7 +727,7 @@ function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
-function readEnvironment(value: unknown, fallback: Environment = "paper"): Environment {
+function readEnvironment(value: unknown, fallback?: Environment): Environment {
   const normalized = optionalString(value) ?? fallback;
   if (normalized === "paper" || normalized === "live") {
     return normalized;

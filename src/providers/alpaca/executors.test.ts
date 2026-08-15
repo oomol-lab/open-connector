@@ -63,6 +63,32 @@ describe("Alpaca credentials", () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
+  it("retries OAuth environment discovery before execution when connection metadata is missing", async () => {
+    const requestedUrls: string[] = [];
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      requestedUrls.push(url);
+      if (url === "https://api.alpaca.markets/v2/account") {
+        return Response.json({ message: "not authorized" }, { status: 401 });
+      }
+      return Response.json({ id: "paper-account", account_number: "PA-PAPER" });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const context: ExecutionContext = { getCredential: async () => oauthCredential() };
+
+    const result = await executors["alpaca.get_account"]!({}, context);
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: { account: { id: "paper-account", account_number: "PA-PAPER" } },
+    });
+    expect(requestedUrls).toEqual([
+      "https://api.alpaca.markets/v2/account",
+      "https://paper-api.alpaca.markets/v2/account",
+      "https://paper-api.alpaca.markets/v2/account",
+    ]);
+  });
+
   it("uses OAuth bearer credentials for paper Trading API proxy requests", async () => {
     const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(input.toString()).toBe("https://paper-api.alpaca.markets/v2/account");
