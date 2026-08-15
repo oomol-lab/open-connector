@@ -5,6 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ActionContext } from "./runtime.ts";
 
 import {
   createProviderFetch,
@@ -12,13 +13,18 @@ import {
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
-import { alpacaActionHandlers, readAlpacaCredential, validateAlpacaCredential } from "./runtime.ts";
+import {
+  alpacaActionHandlers,
+  alpacaCredentialHeaders,
+  readAlpacaCredential,
+  readAlpacaOAuthCredential,
+  validateAlpacaCredential,
+  validateAlpacaOAuthCredential,
+} from "./runtime.ts";
 
 const service = "alpaca";
 const paperTradingBaseUrl = "https://paper-api.alpaca.markets";
@@ -31,37 +37,22 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   handlers: alpacaActionHandlers,
   skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
-    const credential = await requireApiKeyCredential(context, service);
-    return {
-      credential: readAlpacaCredential({
-        apiKey: credential.apiKey,
-        apiKeyId: credential.values.apiKeyId,
-        environment: credential.values.environment,
-      }),
-      fetcher,
-      signal: context.signal,
-    };
+    return resolveAlpacaActionContext(context, fetcher);
   },
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
-    const credential = await requireApiKeyCredential(context, service);
-    const alpacaCredential = readAlpacaCredential({
-      apiKey: credential.apiKey,
-      apiKeyId: credential.values.apiKeyId,
-      environment: credential.values.environment,
-    });
+    const providerContext = await resolveAlpacaActionContext(context, alpacaFetch);
     const url = createProviderProxyUrl(
-      resolveAlpacaProxyBaseUrl(input.endpoint, alpacaCredential.environment),
+      resolveAlpacaProxyBaseUrl(input.endpoint, providerContext.credential.environment),
       input.endpoint,
       input.query,
     );
     const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("accept", "application/json");
-    headers.set("apca-api-key-id", alpacaCredential.apiKeyId);
-    headers.set("apca-api-secret-key", alpacaCredential.apiSecretKey);
-    headers.set("user-agent", providerUserAgent);
+    for (const [name, value] of Object.entries(alpacaCredentialHeaders(providerContext.credential))) {
+      headers.set(name, value);
+    }
 
     const response = await alpacaFetch(url, {
       method: input.method,
@@ -105,4 +96,30 @@ export const credentialValidators: CredentialValidators = {
       signal,
     );
   },
+  async oauth2(input, { fetcher, signal }) {
+    return validateAlpacaOAuthCredential(input, fetcher, signal);
+  },
 };
+
+async function resolveAlpacaActionContext(context: ExecutionContext, fetcher: typeof fetch): Promise<ActionContext> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key") {
+    return {
+      credential: readAlpacaCredential({
+        apiKey: credential.apiKey,
+        apiKeyId: credential.values.apiKeyId,
+        environment: credential.values.environment,
+      }),
+      fetcher,
+      signal: context.signal,
+    };
+  }
+  if (credential?.authType === "oauth2") {
+    return {
+      credential: readAlpacaOAuthCredential(credential, credential.metadata.environment),
+      fetcher,
+      signal: context.signal,
+    };
+  }
+  throw new ProviderRequestError(401, "Configure Alpaca credentials first.");
+}

@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { alpacaDataScope } from "./scopes.ts";
 
 const service = "alpaca";
 
@@ -386,6 +387,7 @@ const getMarketCalendarAction = defineProviderAction(service, {
 const listCorporateActionsAction = defineProviderAction(service, {
   name: "list_corporate_actions",
   description: "List Alpaca corporate actions for symbols, CUSIPs, types, or IDs.",
+  requiredScopes: [alpacaDataScope],
   inputSchema: corporateActionFilterSchema,
   outputSchema: s.object(
     "Alpaca corporate actions response.",
@@ -400,6 +402,7 @@ const listCorporateActionsAction = defineProviderAction(service, {
 const getStockBarsAction = defineProviderAction(service, {
   name: "get_stock_bars",
   description: "Get historical OHLC stock bars from Alpaca Market Data API.",
+  requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
     "Input for getting Alpaca historical stock bars.",
     {
@@ -432,6 +435,7 @@ const getStockBarsAction = defineProviderAction(service, {
 const getCryptoBarsAction = defineProviderAction(service, {
   name: "get_crypto_bars",
   description: "Get historical OHLC crypto bars from Alpaca Market Data API.",
+  requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
     "Input for getting Alpaca historical crypto bars.",
     {
@@ -522,6 +526,7 @@ const getOptionContractAction = defineProviderAction(service, {
 const getStockSnapshotsAction = defineProviderAction(service, {
   name: "get_stock_snapshots",
   description: "Get latest stock snapshots from Alpaca Market Data API.",
+  requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
     "Input for getting Alpaca stock snapshots.",
     {
@@ -539,6 +544,7 @@ const getStockSnapshotsAction = defineProviderAction(service, {
 const getCryptoSnapshotsAction = defineProviderAction(service, {
   name: "get_crypto_snapshots",
   description: "Get latest crypto snapshots from Alpaca Market Data API.",
+  requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
     "Input for getting Alpaca crypto snapshots.",
     {
@@ -555,6 +561,7 @@ const getCryptoSnapshotsAction = defineProviderAction(service, {
 const listNewsAction = defineProviderAction(service, {
   name: "list_news",
   description: "List latest Alpaca news articles across stocks and crypto.",
+  requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
     "Input for listing Alpaca news articles.",
     {

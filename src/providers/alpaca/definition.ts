@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { alpacaActions } from "./actions.ts";
+import { alpacaOAuthScopes } from "./scopes.ts";
 
 const service = "alpaca";
 
@@ -8,8 +9,15 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Alpaca",
   categories: ["Finance", "Data"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://app.alpaca.markets/oauth/authorize",
+      tokenUrl: "https://api.alpaca.markets/oauth/token",
+      scopes: alpacaOAuthScopes,
+      tokenEndpointAuthMethod: "client_secret_post",
+    },
     {
       type: "api_key",
       label: "API Secret Key",
