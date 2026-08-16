@@ -3,8 +3,6 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "canva" as const;
-
 export const canvaProviderScopes = {
   designMetaRead: "design:meta:read",
   designContentRead: "design:content:read",
@@ -15,6 +13,17 @@ export const canvaProviderScopes = {
   folderWrite: "folder:write",
   profileRead: "profile:read",
 } as const;
+
+export const canvaOAuthScopes: string[] = [
+  canvaProviderScopes.designMetaRead,
+  canvaProviderScopes.designContentRead,
+  canvaProviderScopes.designContentWrite,
+  canvaProviderScopes.assetRead,
+  canvaProviderScopes.assetWrite,
+  canvaProviderScopes.folderRead,
+  canvaProviderScopes.folderWrite,
+  canvaProviderScopes.profileRead,
+];
 
 const emptyInputSchema = s.object("No input is required for this action.", {});
 
@@ -233,239 +242,244 @@ const folderItemSchema = s.object("A normalized Canva folder item.", {
   updatedAt: s.nullable(s.dateTime("The item update timestamp when returned.")),
 });
 
-export const canvaActions: ActionDefinition[] = [
-  defineProviderAction(service, {
-    name: "get_current_user",
-    description: "Get the Canva user and profile associated with the current OAuth token.",
-    requiredScopes: [canvaProviderScopes.profileRead],
-    providerPermissions: [canvaProviderScopes.profileRead],
-    inputSchema: emptyInputSchema,
-    outputSchema: s.object("The normalized Canva current user profile.", {
-      userId: s.string("The Canva user ID."),
-      teamId: s.nullable(s.string("The Canva team ID when returned.")),
-      displayName: s.nullable(s.string("The Canva display name when returned.")),
+/** Build the shared Canva action catalog for one regional service. */
+export function createCanvaActions(service: string): ActionDefinition[] {
+  return [
+    defineProviderAction(service, {
+      name: "get_current_user",
+      description: "Get the Canva user and profile associated with the current OAuth token.",
+      requiredScopes: [canvaProviderScopes.profileRead],
+      providerPermissions: [canvaProviderScopes.profileRead],
+      inputSchema: emptyInputSchema,
+      outputSchema: s.object("The normalized Canva current user profile.", {
+        userId: s.string("The Canva user ID."),
+        teamId: s.nullable(s.string("The Canva team ID when returned.")),
+        displayName: s.nullable(s.string("The Canva display name when returned.")),
+      }),
     }),
-  }),
-  defineProviderAction(service, {
-    name: "list_designs",
-    description:
-      "List metadata for the current Canva user's designs, with optional search, ownership, sorting, and pagination filters.",
-    requiredScopes: [canvaProviderScopes.designMetaRead],
-    providerPermissions: [canvaProviderScopes.designMetaRead],
-    inputSchema: s.object(
-      "Input parameters for listing Canva design metadata.",
-      {
-        query: s.string("A search term for filtering designs.", { minLength: 1, maxLength: 255 }),
-        continuation: s.string("The continuation token returned by a previous list_designs call.", {
-          minLength: 1,
-        }),
-        ownership: s.stringEnum("Filter designs by the current user's ownership.", ["any", "owned", "shared"]),
-        sortBy: s.stringEnum("The Canva sort order for the design list.", [
-          "relevance",
-          "modified_descending",
-          "modified_ascending",
-          "title_ascending",
-          "title_descending",
-        ]),
-        limit: s.integer("The maximum number of designs to return.", {
-          minimum: 1,
-          maximum: 100,
-        }),
-      },
-      { optional: ["query", "continuation", "ownership", "sortBy", "limit"] },
-    ),
-    outputSchema: s.object("A Canva design listing page.", {
-      designs: s.array("The normalized Canva designs returned in this page.", canvaDesignSchema),
-      continuation: s.nullable(s.string("The continuation token to request the next page when available.")),
+    defineProviderAction(service, {
+      name: "list_designs",
+      description:
+        "List metadata for the current Canva user's designs, with optional search, ownership, sorting, and pagination filters.",
+      requiredScopes: [canvaProviderScopes.designMetaRead],
+      providerPermissions: [canvaProviderScopes.designMetaRead],
+      inputSchema: s.object(
+        "Input parameters for listing Canva design metadata.",
+        {
+          query: s.string("A search term for filtering designs.", { minLength: 1, maxLength: 255 }),
+          continuation: s.string("The continuation token returned by a previous list_designs call.", {
+            minLength: 1,
+          }),
+          ownership: s.stringEnum("Filter designs by the current user's ownership.", ["any", "owned", "shared"]),
+          sortBy: s.stringEnum("The Canva sort order for the design list.", [
+            "relevance",
+            "modified_descending",
+            "modified_ascending",
+            "title_ascending",
+            "title_descending",
+          ]),
+          limit: s.integer("The maximum number of designs to return.", {
+            minimum: 1,
+            maximum: 100,
+          }),
+        },
+        { optional: ["query", "continuation", "ownership", "sortBy", "limit"] },
+      ),
+      outputSchema: s.object("A Canva design listing page.", {
+        designs: s.array("The normalized Canva designs returned in this page.", canvaDesignSchema),
+        continuation: s.nullable(s.string("The continuation token to request the next page when available.")),
+      }),
     }),
-  }),
-  defineProviderAction(service, {
-    name: "get_design",
-    description: "Get metadata for a Canva design, including owner, URLs, and thumbnail details.",
-    requiredScopes: [canvaProviderScopes.designMetaRead],
-    providerPermissions: [canvaProviderScopes.designMetaRead],
-    inputSchema: s.object("Input parameters for retrieving one Canva design.", {
-      designId: s.string("The Canva design ID.", { minLength: 1 }),
+    defineProviderAction(service, {
+      name: "get_design",
+      description: "Get metadata for a Canva design, including owner, URLs, and thumbnail details.",
+      requiredScopes: [canvaProviderScopes.designMetaRead],
+      providerPermissions: [canvaProviderScopes.designMetaRead],
+      inputSchema: s.object("Input parameters for retrieving one Canva design.", {
+        designId: s.string("The Canva design ID.", { minLength: 1 }),
+      }),
+      outputSchema: s.object("The normalized Canva design metadata response.", {
+        design: canvaDesignSchema,
+      }),
     }),
-    outputSchema: s.object("The normalized Canva design metadata response.", {
-      design: canvaDesignSchema,
+    defineProviderAction(service, {
+      name: "create_design",
+      description:
+        "Create a new Canva design from a preset type, custom dimensions, an optional image asset, an existing design, or a brand template.",
+      requiredScopes: [canvaProviderScopes.designContentWrite],
+      providerPermissions: [canvaProviderScopes.designContentWrite],
+      inputSchema: createDesignInputSchema,
+      outputSchema: s.object("The Canva design creation response.", {
+        design: canvaDesignSchema,
+      }),
     }),
-  }),
-  defineProviderAction(service, {
-    name: "create_design",
-    description:
-      "Create a new Canva design from a preset type, custom dimensions, an optional image asset, an existing design, or a brand template.",
-    requiredScopes: [canvaProviderScopes.designContentWrite],
-    providerPermissions: [canvaProviderScopes.designContentWrite],
-    inputSchema: createDesignInputSchema,
-    outputSchema: s.object("The Canva design creation response.", {
-      design: canvaDesignSchema,
+    defineProviderAction(service, {
+      name: "list_folder_items",
+      description:
+        "List Canva folder contents, including folders, designs, and image assets, with pagination and filtering options.",
+      requiredScopes: [canvaProviderScopes.folderRead],
+      providerPermissions: [canvaProviderScopes.folderRead],
+      inputSchema: s.object(
+        "Input parameters for listing Canva folder items.",
+        {
+          folderId: s.string("The Canva folder ID to list.", { minLength: 1, maxLength: 50 }),
+          continuation: s.string("The continuation token returned by a previous list_folder_items call.", {
+            minLength: 1,
+          }),
+          limit: s.integer("The maximum number of folder items to return.", {
+            minimum: 1,
+            maximum: 100,
+          }),
+          itemTypes: s.array(
+            "The Canva folder item types to include.",
+            s.stringEnum("One Canva folder item type.", ["design", "folder", "image"]),
+            { minItems: 1 },
+          ),
+          sortBy: s.stringEnum("The Canva sort order for folder items.", [
+            "created_ascending",
+            "created_descending",
+            "modified_ascending",
+            "modified_descending",
+            "title_ascending",
+            "title_descending",
+          ]),
+          pinStatus: s.stringEnum("Filter folder items by pinned status.", ["any", "pinned"]),
+        },
+        { optional: ["continuation", "limit", "itemTypes", "sortBy", "pinStatus"] },
+      ),
+      outputSchema: s.object("A Canva folder item listing page.", {
+        items: s.array("The normalized Canva folder items returned in this page.", folderItemSchema),
+        continuation: s.nullable(s.string("The continuation token to request the next page when available.")),
+      }),
     }),
-  }),
-  defineProviderAction(service, {
-    name: "list_folder_items",
-    description:
-      "List Canva folder contents, including folders, designs, and image assets, with pagination and filtering options.",
-    requiredScopes: [canvaProviderScopes.folderRead],
-    providerPermissions: [canvaProviderScopes.folderRead],
-    inputSchema: s.object(
-      "Input parameters for listing Canva folder items.",
-      {
-        folderId: s.string("The Canva folder ID to list.", { minLength: 1, maxLength: 50 }),
-        continuation: s.string("The continuation token returned by a previous list_folder_items call.", {
-          minLength: 1,
-        }),
-        limit: s.integer("The maximum number of folder items to return.", {
-          minimum: 1,
-          maximum: 100,
-        }),
-        itemTypes: s.array(
-          "The Canva folder item types to include.",
-          s.stringEnum("One Canva folder item type.", ["design", "folder", "image"]),
-          { minItems: 1 },
+    defineProviderAction(service, {
+      name: "create_folder",
+      description: "Create a Canva folder at the top level, in uploads, or inside another folder.",
+      requiredScopes: [canvaProviderScopes.folderWrite],
+      providerPermissions: [canvaProviderScopes.folderWrite],
+      inputSchema: s.object("Input parameters for creating a Canva folder.", {
+        name: s.string("The Canva folder name.", { minLength: 1, maxLength: 255 }),
+        parentFolderId: s.string(
+          "The parent folder ID, root for the top-level projects area, or uploads for the user's Uploads folder.",
+          { minLength: 1, maxLength: 50 },
         ),
-        sortBy: s.stringEnum("The Canva sort order for folder items.", [
-          "created_ascending",
-          "created_descending",
-          "modified_ascending",
-          "modified_descending",
-          "title_ascending",
-          "title_descending",
-        ]),
-        pinStatus: s.stringEnum("Filter folder items by pinned status.", ["any", "pinned"]),
+      }),
+      outputSchema: s.object("The Canva folder creation response.", {
+        folder: canvaFolderSchema,
+      }),
+    }),
+    defineProviderAction(service, {
+      name: "move_folder_item",
+      description: "Move a Canva folder item to another Canva folder.",
+      requiredScopes: [canvaProviderScopes.folderWrite],
+      providerPermissions: [canvaProviderScopes.folderWrite],
+      inputSchema: s.object("Input parameters for moving a Canva folder item.", {
+        itemId: s.string("The Canva item ID to move.", { minLength: 1, maxLength: 50 }),
+        toFolderId: s.string("The destination Canva folder ID, or root for the top-level projects area.", {
+          minLength: 1,
+          maxLength: 50,
+        }),
+      }),
+      outputSchema: s.object("A Canva folder item move acknowledgement.", {
+        moved: s.boolean("Whether Canva accepted the move request."),
+        itemId: s.string("The Canva item ID that was moved."),
+        toFolderId: s.string("The destination Canva folder ID."),
+      }),
+    }),
+    defineProviderAction(service, {
+      name: "get_asset",
+      description: "Get metadata for a Canva asset, including owner, thumbnail, and type-specific metadata.",
+      requiredScopes: [canvaProviderScopes.assetRead],
+      providerPermissions: [canvaProviderScopes.assetRead],
+      inputSchema: s.object("Input parameters for retrieving one Canva asset.", {
+        assetId: s.string("The Canva asset ID.", { minLength: 1, maxLength: 50 }),
+      }),
+      outputSchema: s.object("The normalized Canva asset metadata response.", {
+        asset: assetSchema,
+      }),
+    }),
+    defineProviderAction(service, {
+      name: "get_design_export_formats",
+      description: "List the file formats currently available for exporting a Canva design.",
+      requiredScopes: [canvaProviderScopes.designContentRead],
+      providerPermissions: [canvaProviderScopes.designContentRead],
+      inputSchema: s.object("Input parameters for listing Canva design export formats.", {
+        designId: s.string("The Canva design ID.", { minLength: 1 }),
+      }),
+      outputSchema: s.object("The Canva design export format response.", {
+        formats: s.array(
+          "The raw Canva export format objects supported by this design.",
+          s.looseObject("A Canva export format object."),
+        ),
+      }),
+    }),
+    defineProviderAction(service, {
+      name: "create_design_export_job",
+      description: "Start an asynchronous Canva export job for a design and return the job handle for polling.",
+      requiredScopes: [canvaProviderScopes.designContentRead],
+      providerPermissions: [canvaProviderScopes.designContentRead],
+      asyncLifecycle: {
+        startActionId: `${service}.create_design_export_job`,
+        statusActionId: `${service}.get_design_export_job`,
       },
-      { optional: ["continuation", "limit", "itemTypes", "sortBy", "pinStatus"] },
-    ),
-    outputSchema: s.object("A Canva folder item listing page.", {
-      items: s.array("The normalized Canva folder items returned in this page.", folderItemSchema),
-      continuation: s.nullable(s.string("The continuation token to request the next page when available.")),
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "create_folder",
-    description: "Create a Canva folder at the top level, in uploads, or inside another folder.",
-    requiredScopes: [canvaProviderScopes.folderWrite],
-    providerPermissions: [canvaProviderScopes.folderWrite],
-    inputSchema: s.object("Input parameters for creating a Canva folder.", {
-      name: s.string("The Canva folder name.", { minLength: 1, maxLength: 255 }),
-      parentFolderId: s.string(
-        "The parent folder ID, root for the top-level projects area, or uploads for the user's Uploads folder.",
-        { minLength: 1, maxLength: 50 },
-      ),
-    }),
-    outputSchema: s.object("The Canva folder creation response.", {
-      folder: canvaFolderSchema,
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "move_folder_item",
-    description: "Move a Canva folder item to another Canva folder.",
-    requiredScopes: [canvaProviderScopes.folderWrite],
-    providerPermissions: [canvaProviderScopes.folderWrite],
-    inputSchema: s.object("Input parameters for moving a Canva folder item.", {
-      itemId: s.string("The Canva item ID to move.", { minLength: 1, maxLength: 50 }),
-      toFolderId: s.string("The destination Canva folder ID, or root for the top-level projects area.", {
-        minLength: 1,
-        maxLength: 50,
+      inputSchema: s.object("Input parameters for creating a Canva design export job.", {
+        designId: s.string("The Canva design ID to export.", { minLength: 1 }),
+        format: exportFormatSchema,
+      }),
+      outputSchema: s.object("The Canva design export job creation response.", {
+        job: exportJobSchema,
       }),
     }),
-    outputSchema: s.object("A Canva folder item move acknowledgement.", {
-      moved: s.boolean("Whether Canva accepted the move request."),
-      itemId: s.string("The Canva item ID that was moved."),
-      toFolderId: s.string("The destination Canva folder ID."),
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "get_asset",
-    description: "Get metadata for a Canva asset, including owner, thumbnail, and type-specific metadata.",
-    requiredScopes: [canvaProviderScopes.assetRead],
-    providerPermissions: [canvaProviderScopes.assetRead],
-    inputSchema: s.object("Input parameters for retrieving one Canva asset.", {
-      assetId: s.string("The Canva asset ID.", { minLength: 1, maxLength: 50 }),
-    }),
-    outputSchema: s.object("The normalized Canva asset metadata response.", {
-      asset: assetSchema,
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "get_design_export_formats",
-    description: "List the file formats currently available for exporting a Canva design.",
-    requiredScopes: [canvaProviderScopes.designContentRead],
-    providerPermissions: [canvaProviderScopes.designContentRead],
-    inputSchema: s.object("Input parameters for listing Canva design export formats.", {
-      designId: s.string("The Canva design ID.", { minLength: 1 }),
-    }),
-    outputSchema: s.object("The Canva design export format response.", {
-      formats: s.array(
-        "The raw Canva export format objects supported by this design.",
-        s.looseObject("A Canva export format object."),
-      ),
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "create_design_export_job",
-    description: "Start an asynchronous Canva export job for a design and return the job handle for polling.",
-    requiredScopes: [canvaProviderScopes.designContentRead],
-    providerPermissions: [canvaProviderScopes.designContentRead],
-    asyncLifecycle: {
-      startActionId: "canva.create_design_export_job",
-      statusActionId: "canva.get_design_export_job",
-    },
-    inputSchema: s.object("Input parameters for creating a Canva design export job.", {
-      designId: s.string("The Canva design ID to export.", { minLength: 1 }),
-      format: exportFormatSchema,
-    }),
-    outputSchema: s.object("The Canva design export job creation response.", {
-      job: exportJobSchema,
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "get_design_export_job",
-    description:
-      "Get the current status and result URLs for a Canva design export job created by create_design_export_job.",
-    requiredScopes: [canvaProviderScopes.designContentRead],
-    providerPermissions: [canvaProviderScopes.designContentRead],
-    inputSchema: s.object("Input parameters for retrieving a Canva design export job.", {
-      exportId: s.string("The Canva export job ID.", { minLength: 1 }),
-    }),
-    outputSchema: s.object("The Canva design export job response.", {
-      job: exportJobSchema,
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "create_url_asset_upload_job",
-    description:
-      "Start an asynchronous Canva asset upload job from a publicly accessible URL and return the job handle for polling.",
-    requiredScopes: [canvaProviderScopes.assetWrite],
-    providerPermissions: [canvaProviderScopes.assetWrite],
-    asyncLifecycle: {
-      startActionId: "canva.create_url_asset_upload_job",
-      statusActionId: "canva.get_url_asset_upload_job",
-    },
-    inputSchema: s.object("Input parameters for uploading a Canva asset from a URL.", {
-      name: s.string("The asset name shown in Canva.", { minLength: 1, maxLength: 255 }),
-      url: s.string("The publicly accessible URL of the file to upload to Canva.", {
-        format: "uri",
-        maxLength: 2048,
+    defineProviderAction(service, {
+      name: "get_design_export_job",
+      description:
+        "Get the current status and result URLs for a Canva design export job created by create_design_export_job.",
+      requiredScopes: [canvaProviderScopes.designContentRead],
+      providerPermissions: [canvaProviderScopes.designContentRead],
+      inputSchema: s.object("Input parameters for retrieving a Canva design export job.", {
+        exportId: s.string("The Canva export job ID.", { minLength: 1 }),
+      }),
+      outputSchema: s.object("The Canva design export job response.", {
+        job: exportJobSchema,
       }),
     }),
-    outputSchema: s.object("The Canva URL asset upload job creation response.", {
-      job: assetUploadJobSchema,
+    defineProviderAction(service, {
+      name: "create_url_asset_upload_job",
+      description:
+        "Start an asynchronous Canva asset upload job from a publicly accessible URL and return the job handle for polling.",
+      requiredScopes: [canvaProviderScopes.assetWrite],
+      providerPermissions: [canvaProviderScopes.assetWrite],
+      asyncLifecycle: {
+        startActionId: `${service}.create_url_asset_upload_job`,
+        statusActionId: `${service}.get_url_asset_upload_job`,
+      },
+      inputSchema: s.object("Input parameters for uploading a Canva asset from a URL.", {
+        name: s.string("The asset name shown in Canva.", { minLength: 1, maxLength: 255 }),
+        url: s.string("The publicly accessible URL of the file to upload to Canva.", {
+          format: "uri",
+          maxLength: 2048,
+        }),
+      }),
+      outputSchema: s.object("The Canva URL asset upload job creation response.", {
+        job: assetUploadJobSchema,
+      }),
     }),
-  }),
-  defineProviderAction(service, {
-    name: "get_url_asset_upload_job",
-    description: "Get the current status and uploaded asset metadata for a Canva URL asset upload job.",
-    requiredScopes: [canvaProviderScopes.assetRead],
-    providerPermissions: [canvaProviderScopes.assetRead],
-    inputSchema: s.object("Input parameters for retrieving a Canva URL asset upload job.", {
-      jobId: s.string("The Canva asset upload job ID.", { minLength: 1 }),
+    defineProviderAction(service, {
+      name: "get_url_asset_upload_job",
+      description: "Get the current status and uploaded asset metadata for a Canva URL asset upload job.",
+      requiredScopes: [canvaProviderScopes.assetRead],
+      providerPermissions: [canvaProviderScopes.assetRead],
+      inputSchema: s.object("Input parameters for retrieving a Canva URL asset upload job.", {
+        jobId: s.string("The Canva asset upload job ID.", { minLength: 1 }),
+      }),
+      outputSchema: s.object("The Canva URL asset upload job response.", {
+        job: assetUploadJobSchema,
+      }),
     }),
-    outputSchema: s.object("The Canva URL asset upload job response.", {
-      job: assetUploadJobSchema,
-    }),
-  }),
-];
+  ];
+}
+
+export const canvaActions: ActionDefinition[] = createCanvaActions("canva");
 
 export const canvaActionByName: Map<string, ActionDefinition> = new Map(
   canvaActions.map((action) => [action.name, action] as const),
