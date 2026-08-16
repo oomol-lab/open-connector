@@ -114,9 +114,9 @@ function summarizeString(value: string, path: string[]): string {
     } catch {
       // Not a parseable URL. Keep the rest of the audit record intact instead
       // of letting one malformed value collapse the whole summary, but still
-      // redact when the value sits in a sensitive URL context or carries a
-      // sensitive query key.
-      if (sensitiveUrlContextPattern.test(path.join(".")) || hasSensitiveQueryKey(value)) {
+      // redact when the value sits in a sensitive URL context or carries
+      // credential material.
+      if (sensitiveUrlContextPattern.test(path.join(".")) || hasUrlPassword(value) || hasSensitiveQueryKey(value)) {
         return "[redacted-url]";
       }
     }
@@ -124,23 +124,32 @@ function summarizeString(value: string, path: string[]): string {
   return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
 }
 
-/** Whether the raw query of an unparseable URL-like value contains a sensitive key. */
+function hasUrlPassword(value: string): boolean {
+  const authorityStart = value.indexOf("://") + 3;
+  let hasPasswordSeparator = false;
+  for (let index = authorityStart; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === ":") {
+      hasPasswordSeparator = true;
+    } else if (character === "@") {
+      return hasPasswordSeparator;
+    } else if (character === "/" || character === "?" || character === "#") {
+      return false;
+    }
+  }
+  return false;
+}
+
 function hasSensitiveQueryKey(value: string): boolean {
-  const queryStart = value.indexOf("?");
+  const visible = value.slice(0, maxStringLength);
+  const queryStart = visible.indexOf("?");
   if (queryStart === -1) {
     return false;
   }
-  return value
-    .slice(queryStart + 1)
-    .split("&")
-    .some((pair) => {
-      const [encodedName] = pair.split("=");
-      let name = encodedName;
-      try {
-        name = decodeURIComponent(encodedName);
-      } catch {
-        // Keep the raw name when the encoding is malformed.
-      }
-      return sensitiveKeyPattern.test(name);
-    });
+  for (const name of new URLSearchParams(visible.slice(queryStart + 1)).keys()) {
+    if (sensitiveKeyPattern.test(name)) {
+      return true;
+    }
+  }
+  return false;
 }

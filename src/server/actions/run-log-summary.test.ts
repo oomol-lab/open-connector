@@ -110,8 +110,19 @@ describe("summarizeForRunLog", () => {
     });
   });
 
+  it("redacts credentials from unparseable URL-like strings", () => {
+    expect(summarizeForRunLog({ url: "https://user:super-secret@exa mple.com/path" })).toEqual({
+      url: "[redacted-url]",
+    });
+  });
+
   it("truncates long unparseable URL-like strings", () => {
     const long = `https://exa mple.com/${"a".repeat(300)}`;
+    expect(summarizeForRunLog({ url: long })).toEqual({ url: `${long.slice(0, 256)}[truncated]` });
+  });
+
+  it("only scans the retained prefix of long unparseable URL-like strings", () => {
+    const long = `https://exa mple.com/?safe=${"a".repeat(300)}&token=SECRET`;
     expect(summarizeForRunLog({ url: long })).toEqual({ url: `${long.slice(0, 256)}[truncated]` });
   });
 
@@ -124,6 +135,12 @@ describe("summarizeForRunLog", () => {
     ).toEqual({
       url: "[redacted-url]",
       items: ["[redacted-url]", "https://exa mple.com/?safe=1"],
+    });
+  });
+
+  it("redacts partially encoded sensitive query keys in unparseable URLs", () => {
+    expect(summarizeForRunLog({ url: "https://exa mple.com/?%74oken%ZZ=SECRET" })).toEqual({
+      url: "[redacted-url]",
     });
   });
 });
