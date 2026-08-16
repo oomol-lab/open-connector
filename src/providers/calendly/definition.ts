@@ -15,10 +15,12 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://calendly.com/oauth/authorize",
-      tokenUrl: "https://calendly.com/oauth/token",
+      authorizationUrl: "https://auth.calendly.com/oauth/authorize",
+      tokenUrl: "https://auth.calendly.com/oauth/token",
+      refreshTokenUrl: "https://auth.calendly.com/oauth/token",
       scopes: calendlyProviderScopes,
-      tokenEndpointAuthMethod: "client_secret_post",
+      tokenEndpointAuthMethod: "client_secret_basic",
+      pkce: { method: "S256" },
     },
     {
       type: "api_key",
