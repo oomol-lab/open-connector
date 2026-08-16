@@ -101,7 +101,10 @@ function summarizeString(value: string, path: string[]): string {
   if (credentialValuePattern.test(value)) {
     return "[redacted]";
   }
-  if (/^https?:\/\//i.test(value)) {
+  // Match http(s) URLs, other schemes with an authority (ftp, s3, ws, ...), and
+  // protocol-relative URLs. Credentials embedded in those forms would otherwise
+  // reach the audit log untouched.
+  if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(value)) {
     try {
       const url = new URL(value);
       if (
@@ -110,12 +113,14 @@ function summarizeString(value: string, path: string[]): string {
       ) {
         return "[redacted-url]";
       }
-      return url.origin;
+      // For non-special schemes URL.origin is "null"; fall back to scheme + host,
+      // which still strips userinfo, the path, and the query string.
+      return url.origin === "null" ? `${url.protocol}//${url.host}` : url.origin;
     } catch {
-      // Not a parseable URL. Keep the rest of the audit record intact instead
-      // of letting one malformed value collapse the whole summary, but still
-      // redact when the value sits in a sensitive URL context or carries
-      // credential material.
+      // Not a parseable URL (e.g. "https://" or a protocol-relative value without
+      // a base). Keep the rest of the audit record intact instead of letting one
+      // malformed value collapse the whole summary, but still redact when the
+      // value sits in a sensitive URL context or carries credential material.
       if (sensitiveUrlContextPattern.test(path.join(".")) || hasUrlPassword(value) || hasSensitiveQueryKey(value)) {
         return "[redacted-url]";
       }

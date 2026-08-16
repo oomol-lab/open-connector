@@ -143,6 +143,24 @@ describe("summarizeForRunLog", () => {
       url: "[redacted-url]",
     });
   });
+
+  it("redacts credentials from protocol-relative URLs", () => {
+    expect(summarizeForRunLog({ url: "//user:pass@example.com/path" })).toEqual({ url: "[redacted-url]" });
+    expect(summarizeForRunLog({ url: "//example.com/file?token=SECRET" })).toEqual({ url: "[redacted-url]" });
+  });
+
+  it("keeps only the origin of non-http URLs", () => {
+    expect(summarizeForRunLog({ url: "ftp://user:pass@example.com/file" })).toEqual({ url: "ftp://example.com" });
+    expect(summarizeForRunLog({ url: "wss://example.com/socket" })).toEqual({ url: "wss://example.com" });
+  });
+
+  it("redacts sensitive query keys in non-http URLs", () => {
+    expect(summarizeForRunLog({ url: "s3://bucket/key?token=SECRET" })).toEqual({ url: "[redacted-url]" });
+  });
+
+  it("keeps benign protocol-relative values intact", () => {
+    expect(summarizeForRunLog({ url: "//cdn.example.com/logo.png" })).toEqual({ url: "//cdn.example.com/logo.png" });
+  });
 });
 
 describe("safeRunLogError", () => {
