@@ -57,6 +57,40 @@ describe("OAuth token requests", () => {
     expect(String(init?.body)).toContain("code=authorization-code");
   });
 
+  it("keeps client_secret_basic credentials out of authorization-code and refresh bodies", async () => {
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      Response.json({ access_token: "access-token", refresh_token: "refresh-token" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const basicRequest = {
+      ...authorizationCodeRequest,
+      tokenEndpointAuthMethod: "client_secret_basic" as const,
+    };
+
+    await requestAuthorizationCodeToken(basicRequest);
+    await requestRefreshToken({ ...basicRequest, refreshToken: "stored-refresh-token" });
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    const authorizationCodeInit = fetcher.mock.calls[0]?.[1];
+    const refreshInit = fetcher.mock.calls[1]?.[1];
+    const expectedAuthorization = `Basic ${Buffer.from("client-id:client-secret").toString("base64")}`;
+
+    for (const init of [authorizationCodeInit, refreshInit]) {
+      expect(init?.headers).toMatchObject({ authorization: expectedAuthorization });
+      expect(init?.body).toBeInstanceOf(URLSearchParams);
+      if (!(init?.body instanceof URLSearchParams)) {
+        throw new Error("Expected OAuth token request body to use URLSearchParams");
+      }
+      expect(init.body.has("client_secret")).toBe(false);
+    }
+
+    if (!(authorizationCodeInit?.body instanceof URLSearchParams) || !(refreshInit?.body instanceof URLSearchParams)) {
+      throw new Error("Expected both OAuth token request bodies to use URLSearchParams");
+    }
+    expect(authorizationCodeInit.body.get("grant_type")).toBe("authorization_code");
+    expect(refreshInit.body.get("grant_type")).toBe("refresh_token");
+  });
+
   it("rejects a redirecting token endpoint without following it, on Workers too", async () => {
     const calls: string[] = [];
     // Mirrors the Cloudflare Workers runtime: `redirect: "error"` is not

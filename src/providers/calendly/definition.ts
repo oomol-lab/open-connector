@@ -3,6 +3,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 import { calendlyActions, calendlyProviderScopes } from "./actions.ts";
 
 const service = "calendly";
+const calendlyOAuthAuthorizationUrl = "https://auth.calendly.com/oauth/authorize";
+const calendlyOAuthTokenUrl = "https://auth.calendly.com/oauth/token";
 
 /**
  * Calendly provider backed by the Calendly API v2.
@@ -15,9 +17,9 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://auth.calendly.com/oauth/authorize",
-      tokenUrl: "https://auth.calendly.com/oauth/token",
-      refreshTokenUrl: "https://auth.calendly.com/oauth/token",
+      authorizationUrl: calendlyOAuthAuthorizationUrl,
+      tokenUrl: calendlyOAuthTokenUrl,
+      refreshTokenUrl: calendlyOAuthTokenUrl,
       scopes: calendlyProviderScopes,
       tokenEndpointAuthMethod: "client_secret_basic",
       pkce: { method: "S256" },
