@@ -149,6 +149,10 @@ describe("summarizeForRunLog", () => {
     expect(summarizeForRunLog({ url: "//example.com/file?token=SECRET" })).toEqual({ url: "[redacted-url]" });
   });
 
+  it("redacts username-only userinfo in protocol-relative URLs", () => {
+    expect(summarizeForRunLog({ url: "//user@example.com/path" })).toEqual({ url: "[redacted-url]" });
+  });
+
   it("keeps only the origin of non-http URLs", () => {
     expect(summarizeForRunLog({ url: "ftp://user:pass@example.com/file" })).toEqual({ url: "ftp://example.com" });
     expect(summarizeForRunLog({ url: "wss://example.com/socket" })).toEqual({ url: "wss://example.com" });

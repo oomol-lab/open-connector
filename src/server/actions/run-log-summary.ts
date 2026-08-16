@@ -121,7 +121,7 @@ function summarizeString(value: string, path: string[]): string {
       // a base). Keep the rest of the audit record intact instead of letting one
       // malformed value collapse the whole summary, but still redact when the
       // value sits in a sensitive URL context or carries credential material.
-      if (sensitiveUrlContextPattern.test(path.join(".")) || hasUrlPassword(value) || hasSensitiveQueryKey(value)) {
+      if (sensitiveUrlContextPattern.test(path.join(".")) || hasUrlUserinfo(value) || hasSensitiveQueryKey(value)) {
         return "[redacted-url]";
       }
     }
@@ -129,16 +129,16 @@ function summarizeString(value: string, path: string[]): string {
   return value.length > maxStringLength ? `${value.slice(0, maxStringLength)}[truncated]` : value;
 }
 
-function hasUrlPassword(value: string): boolean {
+function hasUrlUserinfo(value: string): boolean {
+  // Detects userinfo (user@ or user:pass@) inside the authority of a URL-like
+  // string, even when the value as a whole cannot be parsed as a URL.
   const authorityStart = value.indexOf("://") + 3;
-  let hasPasswordSeparator = false;
   for (let index = authorityStart; index < value.length; index += 1) {
     const character = value[index];
-    if (character === ":") {
-      hasPasswordSeparator = true;
-    } else if (character === "@") {
-      return hasPasswordSeparator;
-    } else if (character === "/" || character === "?" || character === "#") {
+    if (character === "@") {
+      return true;
+    }
+    if (character === "/" || character === "?" || character === "#") {
       return false;
     }
   }
