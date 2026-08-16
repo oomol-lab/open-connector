@@ -74,6 +74,11 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
 };
 
 function resolveAlpacaProxyBaseUrl(endpoint: string, environment: "paper" | "live"): string {
+  const tradingBaseUrl = environment === "live" ? liveTradingBaseUrl : paperTradingBaseUrl;
+  if (endpoint === "/v2/options/contracts" || endpoint.startsWith("/v2/options/contracts/")) {
+    return tradingBaseUrl;
+  }
+
   if (
     endpoint.startsWith("/v1/") ||
     endpoint.startsWith("/v1beta1/") ||
@@ -83,7 +88,7 @@ function resolveAlpacaProxyBaseUrl(endpoint: string, environment: "paper" | "liv
   ) {
     return dataBaseUrl;
   }
-  return environment === "live" ? liveTradingBaseUrl : paperTradingBaseUrl;
+  return tradingBaseUrl;
 }
 
 export const credentialValidators: CredentialValidators = {

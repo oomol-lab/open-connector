@@ -105,6 +105,27 @@ describe("Alpaca credentials", () => {
     expect(result).toMatchObject({ ok: true, response: { status: 200, data: { id: "paper-account" } } });
   });
 
+  it.each([
+    { endpoint: "/v2/options/contracts", data: { option_contracts: [] } },
+    { endpoint: "/v2/options/contracts/AAPL250117C00200000", data: { symbol: "AAPL250117C00200000" } },
+  ])("routes $endpoint proxy requests to the paper Trading API", async ({ endpoint, data }) => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(input.toString()).toBe(`https://paper-api.alpaca.markets${endpoint}`);
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer alpaca-oauth-token");
+      return Response.json(data);
+    });
+    vi.stubGlobal("fetch", fetch);
+    const context: ExecutionContext = { getCredential: async () => oauthCredential({ environment: "paper" }) };
+
+    const result = await proxy!({ endpoint, method: "GET" }, context);
+
+    expect(result).toMatchObject({
+      ok: true,
+      response: { status: 200, data },
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
   it("keeps API key validation on Alpaca's key-pair headers", async () => {
     await credentialValidators.apiKey!(
       { apiKey: "secret", values: { apiKeyId: "key-id", environment: "paper" } },

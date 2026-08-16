@@ -570,7 +570,7 @@ function buildAlpacaUrl(
 }
 
 /** Build authentication headers for either an Alpaca OAuth token or API key pair. */
-export function alpacaCredentialHeaders(credential: Credential): HeadersInit {
+export function alpacaCredentialHeaders(credential: Credential): Record<string, string> {
   if (credential.authType === "oauth2") {
     return {
       accept: "application/json",
