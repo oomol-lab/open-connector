@@ -20,8 +20,9 @@ const spaceNameRule: ResourceNameRule = {
 };
 const canonicalSpaceNameRule: ResourceNameRule = {
   pattern: spaceNameRule.pattern,
-  expected: spaceNameRule.expected,
+  expected: "canonical spaces/{space} resource ID",
 };
+const meetingCodePattern = /^[a-z]+-[a-z]+-[a-z]+$/iu;
 const conferenceRecordNameRule: ResourceNameRule = {
   pattern: /^conferenceRecords\/[^/]+$/u,
   expected: "conferenceRecords/{conference_record}",
@@ -195,7 +196,7 @@ async function getSpace(input: Record<string, unknown>, context: GoogleMeetRunti
 }
 
 async function updateSpace(input: Record<string, unknown>, context: GoogleMeetRuntimeContext): Promise<unknown> {
-  const name = resolveResourceName(input.name, spaceNameRule);
+  const name = resolveCanonicalSpaceName(input.name);
   const space = requiredRecord(input.space, "space", (message) => new ProviderRequestError(400, message));
   return googleMeetJsonRequest(`${googleMeetApiBaseUrl}/${encodeResourceName(name)}`, {
     context,
@@ -214,7 +215,7 @@ async function endActiveConference(
   input: Record<string, unknown>,
   context: GoogleMeetRuntimeContext,
 ): Promise<unknown> {
-  const name = resolveResourceName(input.name, canonicalSpaceNameRule);
+  const name = resolveCanonicalSpaceName(input.name);
   await googleMeetJsonRequest(`${googleMeetApiBaseUrl}/${encodeResourceName(name)}:endActiveConference`, {
     context,
     method: "POST",
@@ -324,6 +325,14 @@ function googleMeetJsonRequest<T = unknown>(url: string, input: GoogleMeetReques
 
 function resolveParent(value: unknown, rule: ResourceNameRule): string {
   return resolveResourceName(value, rule, "parent");
+}
+
+function resolveCanonicalSpaceName(value: unknown): string {
+  const name = resolveResourceName(value, canonicalSpaceNameRule);
+  if (meetingCodePattern.test(name.slice("spaces/".length))) {
+    throw new ProviderRequestError(400, "name must use the canonical spaces/{space} resource ID format");
+  }
+  return name;
 }
 
 function resolveResourceName(value: unknown, rule: ResourceNameRule, fieldName = "name"): string {

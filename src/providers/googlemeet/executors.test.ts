@@ -127,7 +127,7 @@ describe("Google Meet OAuth execution", () => {
     await expect(
       googleMeetActionHandlers.update_space(
         {
-          name: "space-1",
+          name: "spaces/space-1",
           space: { config: { accessType: "OPEN" } },
           updateMask: "config.accessType",
         },
@@ -158,7 +158,10 @@ describe("Google Meet resource names", () => {
 
   it.each([
     ["space traversal", "get_space", { name: "spaces/.." }],
+    ["bare space ID for update", "update_space", { name: "space-1" }],
+    ["meeting-code alias for update", "update_space", { name: "spaces/abc-mnop-xyz" }],
     ["bare space ID for end active conference", "end_active_conference", { name: "space-1" }],
+    ["meeting-code alias for end active conference", "end_active_conference", { name: "spaces/abc-mnop-xyz" }],
     ["conference record traversal", "get_conference_record", { name: "conferenceRecords/%2e%2e" }],
     ["participant traversal", "get_participant", { name: "conferenceRecords/record-1/participants/.." }],
     [
