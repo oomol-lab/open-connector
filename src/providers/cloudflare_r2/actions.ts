@@ -85,6 +85,20 @@ const corsRuleSchema = s.object(
   { required: ["allowed"], optional: ["id", "exposeHeaders", "maxAgeSeconds"] },
 );
 
+const downloadedObjectSchema = s.requiredObject("A downloaded R2 object stored in local transit storage.", {
+  fileId: s.nonEmptyString("The R2 object key."),
+  name: s.nonEmptyString("The filename used for the local transit file."),
+  mimeType: s.nonEmptyString("The downloaded object MIME type."),
+  sizeBytes: s.nonNegativeInteger("The downloaded object size in bytes."),
+  file: s.requiredObject("The downloaded object in local transit file storage.", {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored object."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: s.nonEmptyString("The stored transit file name."),
+    mimeType: s.nonEmptyString("The stored transit file MIME type."),
+  }),
+});
+
 const updateBucketInputSchema = s.object(
   "The input payload for this action.",
   {
@@ -101,6 +115,7 @@ export type CloudflareR2ActionName =
   | "list_accounts"
   | "list_buckets"
   | "get_bucket"
+  | "download_object"
   | "create_bucket"
   | "update_bucket"
   | "delete_bucket"
@@ -172,6 +187,24 @@ export const cloudflareR2Actions: ActionDefinition[] = [
       { required: ["bucketName"], optional: ["accountId", "jurisdiction"] },
     ),
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
+  }),
+  defineProviderAction(service, {
+    name: "download_object",
+    description: "Download one R2 object into local transit file storage.",
+    requiredScopes: [r2ReadScope],
+    providerPermissions: [r2ReadPermission],
+    inputSchema: s.object(
+      "The input payload for downloading one R2 object.",
+      {
+        accountId: accountIdSchema,
+        bucketName: bucketNameSchema,
+        objectKey: s.nonEmptyString("The complete R2 object key. Slashes are preserved as key delimiters."),
+        fileName: s.nonEmptyString("An optional filename override for the local transit file."),
+        jurisdiction: jurisdictionSchema,
+      },
+      { required: ["bucketName", "objectKey"], optional: ["accountId", "fileName", "jurisdiction"] },
+    ),
+    outputSchema: downloadedObjectSchema,
   }),
   defineProviderAction(service, {
     name: "create_bucket",

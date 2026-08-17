@@ -50,6 +50,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareR2
         ),
         metadata: credential.metadata,
         fetcher,
+        transitFiles: context.transitFiles,
         signal: context.signal,
       };
     }
@@ -60,6 +61,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareR2
         accountId: optionalString(credential.metadata.accountId),
         metadata: credential.metadata,
         fetcher,
+        transitFiles: context.transitFiles,
         signal: context.signal,
       };
     }

@@ -1,9 +1,9 @@
-import type { CredentialValidationResult } from "../../core/types.ts";
+import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { CloudflareR2ActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { queryParams } from "../../core/request.ts";
+import { queryParams, readBoundedResponseBytes } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface CloudflareR2Context {
@@ -12,6 +12,7 @@ export interface CloudflareR2Context {
   accountId?: string;
   metadata: Record<string, unknown>;
   fetcher: typeof fetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 }
 
@@ -48,6 +49,9 @@ export const cloudflareR2ActionHandlers: Record<CloudflareR2ActionName, Provider
   },
   get_bucket(input, context) {
     return getBucket(input, context);
+  },
+  download_object(input, context) {
+    return downloadObject(input, context);
   },
   create_bucket(input, context) {
     return createBucket(input, context);
@@ -172,6 +176,53 @@ async function getBucket(input: Record<string, unknown>, context: CloudflareR2Co
   );
   return {
     bucket: normalizeR2Bucket(envelope.result),
+  };
+}
+
+async function downloadObject(input: Record<string, unknown>, context: CloudflareR2Context): Promise<unknown> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(400, "cloudflare_r2 download_object requires local transit file storage");
+  }
+
+  const accountId = resolveAccountId(input, context);
+  const bucketName = requiredString(input.bucketName, "bucketName", providerInputError);
+  const objectKey = requiredString(input.objectKey, "objectKey", providerInputError);
+  const url = buildCloudflareR2Url(
+    `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeR2ObjectKey(objectKey)}`,
+  );
+  const headers: Record<string, string> = {
+    accept: "*/*",
+    authorization: `Bearer ${context.accessToken}`,
+    "user-agent": providerUserAgent,
+  };
+  const jurisdiction = optionalString(input.jurisdiction);
+  if (jurisdiction) {
+    headers["cf-r2-jurisdiction"] = jurisdiction;
+  }
+  const response = await context.fetcher(url, {
+    headers,
+    signal: context.signal,
+  });
+  if (!response.ok) {
+    const envelope = await readCloudflareR2Envelope(response);
+    throw normalizeCloudflareR2Error(response, envelope, "execute");
+  }
+
+  const name = optionalString(input.fileName) ?? defaultObjectFileName(objectKey);
+  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Cloudflare R2 download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+
+  return {
+    fileId: objectKey,
+    name,
+    mimeType,
+    sizeBytes: file.sizeBytes,
+    file,
   };
 }
 
@@ -333,6 +384,18 @@ function buildJurisdictionHeaders(input: Record<string, unknown>): Record<string
   return {
     "cf-r2-jurisdiction": optionalString(input.jurisdiction),
   };
+}
+
+function encodeR2ObjectKey(objectKey: string): string {
+  return objectKey.split("/").map(encodeURIComponent).join("/");
+}
+
+function defaultObjectFileName(objectKey: string): string {
+  return objectKey.split("/").findLast((segment) => segment.length > 0) ?? "r2-object";
+}
+
+function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
 }
 
 async function requestEnvelope(
