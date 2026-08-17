@@ -2,6 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
+import { requiredRawString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import {
@@ -98,6 +99,9 @@ const googledriveActionHandlers: Record<string, ActionHandler> = {
   },
   "files.get"(input, { accessToken, fetcher }) {
     return getFileMetadata(input, accessToken, fetcher);
+  },
+  "files.download"(input, context) {
+    return downloadFile(input, context);
   },
   "files.export"(input, context) {
     return exportFile(input, context);
@@ -494,6 +498,64 @@ async function getFileMetadata(input: Record<string, unknown>, accessToken: stri
   return normalizeDriveFile(payload);
 }
 
+async function downloadFile(input: Record<string, unknown>, context: ActionContext) {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(400, "files.download requires local transit file storage.");
+  }
+
+  const includeSharedDrives = resolveSupportsAllDrives(input);
+  const metadata = await fetchDriveFile(
+    resolveFileId(input),
+    context.accessToken,
+    context.fetcher,
+    includeSharedDrives,
+    context.signal,
+  );
+  const fileId = requiredString(metadata.id, "Google Drive file metadata id", providerMetadataError);
+  const name = requiredRawString(metadata.name, "Google Drive file metadata name", providerMetadataError);
+  if (name.length === 0) {
+    throw providerMetadataError("Google Drive file metadata name must not be empty");
+  }
+  const mimeType = requiredString(metadata.mimeType, "Google Drive file metadata MIME type", providerMetadataError);
+  if (mimeType.toLowerCase().startsWith("application/vnd.google-apps.")) {
+    throw new ProviderRequestError(400, "Google Workspace files must be downloaded with files.export.");
+  }
+
+  const reportedSizeBytes = parseSizeBytes(metadata.size);
+  if (reportedSizeBytes !== null && reportedSizeBytes > context.transitFiles.maxBytes) {
+    throw new ProviderRequestError(
+      413,
+      `Google Drive file exceeds local transit limit of ${context.transitFiles.maxBytes} bytes`,
+    );
+  }
+
+  const response = await googleRequest(`${driveApiBaseUrl}/files/${fileId}`, {
+    accessToken: context.accessToken,
+    fetcher: context.fetcher,
+    signal: context.signal,
+    query: compactObject({
+      alt: "media",
+      supportsAllDrives: String(includeSharedDrives),
+      acknowledgeAbuse: optionalBoolean(input.acknowledgeAbuse)?.toString(),
+    }),
+    timeoutMs: 300_000,
+  });
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Google Drive download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+
+  return {
+    fileId,
+    name,
+    mimeType,
+    sizeBytes: file.sizeBytes,
+    file,
+  };
+}
+
 async function exportFile(input: Record<string, unknown>, context: ActionContext) {
   if (!context.transitFiles) {
     throw new ProviderRequestError(400, "files.export requires local transit file storage.");
@@ -690,15 +752,21 @@ async function fetchDriveFile(
   accessToken: string,
   fetcher: typeof fetch,
   includeSharedDrives: boolean,
+  signal?: AbortSignal,
 ) {
   return googleJsonRequest<Record<string, unknown>>(`${driveApiBaseUrl}/files/${fileId}`, {
     accessToken,
     fetcher,
+    signal,
     query: {
       fields: driveFileFields,
       supportsAllDrives: String(includeSharedDrives),
     },
   });
+}
+
+function providerMetadataError(message: string): ProviderRequestError {
+  return new ProviderRequestError(502, message);
 }
 
 function extensionForExportMimeType(mimeType: string): string {

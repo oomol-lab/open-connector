@@ -1,5 +1,6 @@
 import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
+import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { googleDriveFullScope, googleDriveMetadataReadonlyScope, googleDriveReadonlyScope } from "./scopes.ts";
 
@@ -1416,6 +1417,36 @@ const actionSources: GoogledriveActionSource[] = [
       required: ["drives", "nextPageToken"],
       additionalProperties: false,
     },
+  },
+  {
+    name: "files.download",
+    description:
+      "Download an ordinary Google Drive blob file and store the complete content in local transit file storage.",
+    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
+    inputSchema: s.object(
+      "Input parameters for downloading a Google Drive blob file.",
+      {
+        fileId: s.nonEmptyString("The ID of the Google Drive file to download."),
+        includeSharedDrives: s.boolean("Whether the request supports files in shared drives."),
+        acknowledgeAbuse: s.boolean(
+          "Whether the caller acknowledges the risk of downloading a file marked as abusive or malicious.",
+        ),
+      },
+      { optional: ["includeSharedDrives", "acknowledgeAbuse"] },
+    ),
+    outputSchema: s.object("The downloaded Google Drive file stored in local transit storage.", {
+      fileId: s.nonEmptyString("The Google Drive file ID returned by the metadata request."),
+      name: s.nonEmptyString("The original Google Drive file name."),
+      mimeType: s.nonEmptyString("The Google Drive file MIME type."),
+      sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+      file: s.object("The downloaded content in local transit file storage.", {
+        fileId: s.nonEmptyString("The local transit file identifier."),
+        downloadUrl: s.url("The local transit URL for downloading the stored file."),
+        sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+        name: s.nonEmptyString("The stored transit file name."),
+        mimeType: s.nonEmptyString("The stored transit file MIME type."),
+      }),
+    }),
   },
   {
     name: "files.export",
