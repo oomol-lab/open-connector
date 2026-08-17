@@ -1,10 +1,10 @@
 import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { executeAction } from "../../core/execution.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { provider } from "./definition.ts";
 import { executors } from "./executors.ts";
-import { googleDriveMetadataReadonlyScope, googleDriveReadonlyScope } from "./scopes.ts";
 
 interface CapturedRequest {
   url: URL;
@@ -28,15 +28,30 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("Google Drive files.download", () => {
-  it("is registered in the catalog and executor map with read-only scopes", () => {
-    const action = provider.actions.find((candidate) => candidate.name === "files.download");
+describe("Google Drive files.get", () => {
+  it("returns metadata when alt is omitted", async () => {
+    const requests = stubGoogleResponses([
+      Response.json({ id: "drive-file-1", name: "notes.txt", mimeType: "text/plain", size: "6" }),
+    ]);
 
-    expect(action).toMatchObject({
-      id: "googledrive.files.download",
-      requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
+    const result = await executeGet({ fileId: "drive-file-1" });
+
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        id: "drive-file-1",
+        name: "notes.txt",
+        mimeType: "text/plain",
+        webViewLink: null,
+        createdTime: null,
+        modifiedTime: null,
+        sizeBytes: 6,
+        driveId: null,
+      },
     });
-    expect(executors["googledrive.files.download"]).toBeTypeOf("function");
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.url.pathname).toBe("/drive/v3/files/drive-file-1");
+    expect(requests[0]?.url.searchParams.get("alt")).toBeNull();
   });
 
   it("downloads a blob file with shared-drive and abuse acknowledgement parameters", async () => {
@@ -47,8 +62,8 @@ describe("Google Drive files.download", () => {
     ]);
     const { store, create } = createTransitFileStore(1024);
 
-    const result = await executeDownload(
-      { fileId: "requested-file-id", includeSharedDrives: true, acknowledgeAbuse: true },
+    const result = await executeGet(
+      { fileId: "requested-file-id", alt: "media", includeSharedDrives: true, acknowledgeAbuse: true },
       store,
     );
 
@@ -93,7 +108,7 @@ describe("Google Drive files.download", () => {
     ]);
     const { store, create } = createTransitFileStore(2);
 
-    const result = await executeDownload({ fileId: "drive-file-2" }, store);
+    const result = await executeGet({ fileId: "drive-file-2", alt: "media" }, store);
 
     expect(result).toMatchObject({
       ok: false,
@@ -107,6 +122,26 @@ describe("Google Drive files.download", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it("does not start the download when the reported size exceeds the transit limit", async () => {
+    const requests = stubGoogleResponses([
+      Response.json({ id: "drive-file-3", name: "large.bin", mimeType: "application/octet-stream", size: "3" }),
+    ]);
+    const { store, create } = createTransitFileStore(2);
+
+    const result = await executeGet({ fileId: "drive-file-3", alt: "media" }, store);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "Google Drive file exceeds local transit limit of 2 bytes",
+        details: { status: 413 },
+      },
+    });
+    expect(requests).toHaveLength(1);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it("rejects Google Workspace files and directs callers to files.export", async () => {
     const requests = stubGoogleResponses([
       Response.json({
@@ -117,13 +152,14 @@ describe("Google Drive files.download", () => {
     ]);
     const { store, create } = createTransitFileStore(1024);
 
-    const result = await executeDownload({ fileId: "workspace-file-1" }, store);
+    const result = await executeGet({ fileId: "workspace-file-1", alt: "media" }, store);
 
     expect(result).toMatchObject({
       ok: false,
       error: {
         code: "invalid_input",
-        message: "Google Workspace files must be downloaded with files.export.",
+        message:
+          "Google Workspace-native files cannot be downloaded with files.get alt=media. Use files.export when supported.",
       },
     });
     expect(requests).toHaveLength(1);
@@ -134,13 +170,13 @@ describe("Google Drive files.download", () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
 
-    const result = await executeDownload({ fileId: "drive-file-1" });
+    const result = await executeGet({ fileId: "drive-file-1", alt: "media" });
 
     expect(result).toMatchObject({
       ok: false,
       error: {
         code: "invalid_input",
-        message: "files.download requires local transit file storage.",
+        message: "files.get with alt=media requires local transit file storage.",
       },
     });
     expect(fetch).not.toHaveBeenCalled();
@@ -190,7 +226,7 @@ function createTransitFileStore(maxBytes: number): {
   };
 }
 
-async function executeDownload(input: Record<string, unknown>, transitFiles?: TransitFileStore) {
+async function executeGet(input: Record<string, unknown>, transitFiles?: TransitFileStore) {
   const context: ExecutionContext = {
     getCredential: async (service) => {
       expect(service).toBe("googledrive");
@@ -200,5 +236,10 @@ async function executeDownload(input: Record<string, unknown>, transitFiles?: Tr
   if (transitFiles) {
     context.transitFiles = transitFiles;
   }
-  return executors["googledrive.files.download"]!(input, context);
+  return executeAction(
+    provider.actions.find((action) => action.name === "files.get")!,
+    executors["googledrive.files.get"],
+    input,
+    context,
+  );
 }

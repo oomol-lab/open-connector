@@ -1419,36 +1419,6 @@ const actionSources: GoogledriveActionSource[] = [
     },
   },
   {
-    name: "files.download",
-    description:
-      "Download an ordinary Google Drive blob file and store the complete content in local transit file storage.",
-    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
-    inputSchema: s.object(
-      "Input parameters for downloading a Google Drive blob file.",
-      {
-        fileId: s.nonEmptyString("The ID of the Google Drive file to download."),
-        includeSharedDrives: s.boolean("Whether the request supports files in shared drives."),
-        acknowledgeAbuse: s.boolean(
-          "Whether the caller acknowledges the risk of downloading a file marked as abusive or malicious.",
-        ),
-      },
-      { optional: ["includeSharedDrives", "acknowledgeAbuse"] },
-    ),
-    outputSchema: s.object("The downloaded Google Drive file stored in local transit storage.", {
-      fileId: s.nonEmptyString("The Google Drive file ID returned by the metadata request."),
-      name: s.nonEmptyString("The original Google Drive file name."),
-      mimeType: s.nonEmptyString("The Google Drive file MIME type."),
-      sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
-      file: s.object("The downloaded content in local transit file storage.", {
-        fileId: s.nonEmptyString("The local transit file identifier."),
-        downloadUrl: s.url("The local transit URL for downloading the stored file."),
-        sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
-        name: s.nonEmptyString("The stored transit file name."),
-        mimeType: s.nonEmptyString("The stored transit file MIME type."),
-      }),
-    }),
-  },
-  {
     name: "files.export",
     description:
       "Export a Google Workspace file to the requested MIME type and return a transit URL for the exported content.",
@@ -1539,175 +1509,186 @@ const actionSources: GoogledriveActionSource[] = [
   },
   {
     name: "files.get",
-    description: "Get metadata for a Drive file by ID.",
+    description: "Get metadata for a Drive file by ID, or download stored file content with alt=media.",
     requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
-    inputSchema: {
-      $schema: "https://json-schema.org/draft/2020-12/schema",
-      type: "object",
-      properties: {
-        fileId: {
-          type: "string",
-          minLength: 1,
-          description: "The ID of the file.",
-        },
-        includeSharedDrives: {
-          type: "boolean",
-          description: "When true, includes files from shared drives.",
-        },
-      },
-      additionalProperties: false,
-    },
-    outputSchema: {
-      $schema: "https://json-schema.org/draft/2020-12/schema",
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "The unique identifier of the file.",
-        },
-        name: {
-          type: "string",
-          description: "The name of the file.",
-        },
-        mimeType: {
-          type: "string",
-          description: "The MIME type of the file.",
-        },
-        webViewLink: {
-          anyOf: [
-            {
-              type: "string",
-            },
-            {
-              type: "null",
-            },
-          ],
-          description: "A link for opening the file in a relevant Google editor or viewer in a browser.",
-        },
-        createdTime: {
-          anyOf: [
-            {
-              type: "string",
-            },
-            {
-              type: "null",
-            },
-          ],
-          description: "The time at which the file was created (RFC 3339 date-time).",
-        },
-        modifiedTime: {
-          anyOf: [
-            {
-              type: "string",
-            },
-            {
-              type: "null",
-            },
-          ],
-          description: "The last time the file was modified by anyone (RFC 3339 date-time).",
-        },
-        sizeBytes: {
-          anyOf: [
-            {
-              type: "integer",
-              minimum: -9007199254740991,
-              maximum: 9007199254740991,
-            },
-            {
-              type: "null",
-            },
-          ],
-          description: "The size of the file's content in bytes.",
-        },
-        driveId: {
-          anyOf: [
-            {
-              type: "string",
-            },
-            {
-              type: "null",
-            },
-          ],
-          description: "The ID of the shared drive the file belongs to.",
-        },
-        parents: {
-          type: "array",
-          items: {
+    inputSchema: s.object("Input parameters for getting Drive file metadata or content.", {
+      fileId: s.nonEmptyString("The ID of the Google Drive file to retrieve."),
+      includeSharedDrives: s.optional(s.boolean("Whether the request supports files in shared drives.")),
+      alt: s.optional(
+        s.literal("media", {
+          description: "Return stored file content instead of metadata.",
+        }),
+      ),
+      acknowledgeAbuse: s.optional(
+        s.boolean("Whether the caller acknowledges the risk of downloading known malware or other abusive files."),
+      ),
+    }),
+    outputSchema: s.anyOf("Drive file metadata or downloaded file content.", [
+      {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        type: "object",
+        properties: {
+          id: {
             type: "string",
+            description: "The unique identifier of the file.",
           },
-          description: "The IDs of the parent folders containing the file.",
-        },
-        owners: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              displayName: {
-                anyOf: [
-                  {
-                    type: "string",
-                  },
-                  {
-                    type: "null",
-                  },
-                ],
-                description: "The display name of the owner.",
+          name: {
+            type: "string",
+            description: "The name of the file.",
+          },
+          mimeType: {
+            type: "string",
+            description: "The MIME type of the file.",
+          },
+          webViewLink: {
+            anyOf: [
+              {
+                type: "string",
               },
-              emailAddress: {
-                anyOf: [
-                  {
-                    type: "string",
-                  },
-                  {
-                    type: "null",
-                  },
-                ],
-                description: "The email address of the owner.",
+              {
+                type: "null",
               },
-              permissionId: {
-                anyOf: [
-                  {
-                    type: "string",
-                  },
-                  {
-                    type: "null",
-                  },
-                ],
-                description: "The permission ID of the owner.",
+            ],
+            description: "A link for opening the file in a relevant Google editor or viewer in a browser.",
+          },
+          createdTime: {
+            anyOf: [
+              {
+                type: "string",
               },
-              photoLink: {
-                anyOf: [
-                  {
-                    type: "string",
-                  },
-                  {
-                    type: "null",
-                  },
-                ],
-                description: "A link to the owner's profile photo.",
+              {
+                type: "null",
               },
+            ],
+            description: "The time at which the file was created (RFC 3339 date-time).",
+          },
+          modifiedTime: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            description: "The last time the file was modified by anyone (RFC 3339 date-time).",
+          },
+          sizeBytes: {
+            anyOf: [
+              {
+                type: "integer",
+                minimum: -9007199254740991,
+                maximum: 9007199254740991,
+              },
+              {
+                type: "null",
+              },
+            ],
+            description: "The size of the file's content in bytes.",
+          },
+          driveId: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            description: "The ID of the shared drive the file belongs to.",
+          },
+          parents: {
+            type: "array",
+            items: {
+              type: "string",
             },
-            required: ["displayName", "emailAddress", "permissionId", "photoLink"],
-            additionalProperties: false,
+            description: "The IDs of the parent folders containing the file.",
           },
-          description: "The owners of the file.",
+          owners: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                displayName: {
+                  anyOf: [
+                    {
+                      type: "string",
+                    },
+                    {
+                      type: "null",
+                    },
+                  ],
+                  description: "The display name of the owner.",
+                },
+                emailAddress: {
+                  anyOf: [
+                    {
+                      type: "string",
+                    },
+                    {
+                      type: "null",
+                    },
+                  ],
+                  description: "The email address of the owner.",
+                },
+                permissionId: {
+                  anyOf: [
+                    {
+                      type: "string",
+                    },
+                    {
+                      type: "null",
+                    },
+                  ],
+                  description: "The permission ID of the owner.",
+                },
+                photoLink: {
+                  anyOf: [
+                    {
+                      type: "string",
+                    },
+                    {
+                      type: "null",
+                    },
+                  ],
+                  description: "A link to the owner's profile photo.",
+                },
+              },
+              required: ["displayName", "emailAddress", "permissionId", "photoLink"],
+              additionalProperties: false,
+            },
+            description: "The owners of the file.",
+          },
+          shared: {
+            type: "boolean",
+            description: "Whether the file has been shared.",
+          },
+          starred: {
+            type: "boolean",
+            description: "Whether the user has starred the file.",
+          },
+          trashed: {
+            type: "boolean",
+            description: "Whether the file has been trashed.",
+          },
         },
-        shared: {
-          type: "boolean",
-          description: "Whether the file has been shared.",
-        },
-        starred: {
-          type: "boolean",
-          description: "Whether the user has starred the file.",
-        },
-        trashed: {
-          type: "boolean",
-          description: "Whether the file has been trashed.",
-        },
+        required: ["id", "name", "mimeType", "webViewLink", "createdTime", "modifiedTime", "sizeBytes", "driveId"],
+        additionalProperties: false,
       },
-      required: ["id", "name", "mimeType", "webViewLink", "createdTime", "modifiedTime", "sizeBytes", "driveId"],
-      additionalProperties: false,
-    },
+      s.object("The downloaded Google Drive file stored in local transit storage.", {
+        fileId: s.nonEmptyString("The Google Drive file ID returned by the metadata request."),
+        name: s.nonEmptyString("The original Google Drive file name."),
+        mimeType: s.nonEmptyString("The Google Drive file MIME type."),
+        sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+        file: s.object("The downloaded content in local transit file storage.", {
+          fileId: s.nonEmptyString("The local transit file identifier."),
+          downloadUrl: s.url("The local transit URL for downloading the stored file."),
+          sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+          name: s.nonEmptyString("The stored transit file name."),
+          mimeType: s.nonEmptyString("The stored transit file MIME type."),
+        }),
+      }),
+    ]),
   },
   {
     name: "files.list",

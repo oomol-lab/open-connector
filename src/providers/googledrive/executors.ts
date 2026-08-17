@@ -97,11 +97,10 @@ const googledriveActionHandlers: Record<string, ActionHandler> = {
   "files.list"(input, { accessToken, fetcher }) {
     return listFiles(input, accessToken, fetcher);
   },
-  "files.get"(input, { accessToken, fetcher }) {
-    return getFileMetadata(input, accessToken, fetcher);
-  },
-  "files.download"(input, context) {
-    return downloadFile(input, context);
+  "files.get"(input, context) {
+    return input.alt === "media"
+      ? downloadFile(input, context)
+      : getFileMetadata(input, context.accessToken, context.fetcher);
   },
   "files.export"(input, context) {
     return exportFile(input, context);
@@ -500,7 +499,7 @@ async function getFileMetadata(input: Record<string, unknown>, accessToken: stri
 
 async function downloadFile(input: Record<string, unknown>, context: ActionContext) {
   if (!context.transitFiles) {
-    throw new ProviderRequestError(400, "files.download requires local transit file storage.");
+    throw new ProviderRequestError(400, "files.get with alt=media requires local transit file storage.");
   }
 
   const includeSharedDrives = resolveSupportsAllDrives(input);
@@ -518,7 +517,10 @@ async function downloadFile(input: Record<string, unknown>, context: ActionConte
   }
   const mimeType = requiredString(metadata.mimeType, "Google Drive file metadata MIME type", providerMetadataError);
   if (mimeType.toLowerCase().startsWith("application/vnd.google-apps.")) {
-    throw new ProviderRequestError(400, "Google Workspace files must be downloaded with files.export.");
+    throw new ProviderRequestError(
+      400,
+      "Google Workspace-native files cannot be downloaded with files.get alt=media. Use files.export when supported.",
+    );
   }
 
   const reportedSizeBytes = parseSizeBytes(metadata.size);
