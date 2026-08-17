@@ -1,10 +1,10 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
@@ -77,10 +77,13 @@ async function callTool(
   args: Record<string, unknown>,
 ) {
   return withClient(context, (client) =>
-    client.callTool({ name: toolName, arguments: args }, undefined, {
-      timeout: requestTimeoutMs,
-      signal: context.signal,
-    }),
+    client.callTool(
+      { name: toolName, arguments: args },
+      {
+        timeout: requestTimeoutMs,
+        signal: context.signal,
+      },
+    ),
   );
 }
 
@@ -103,12 +106,12 @@ async function withClient<T>(
 
 function mapSifMcpError(error: unknown): unknown {
   if (error instanceof UnauthorizedError) return new ProviderRequestError(401, "Sif MCP key is invalid or expired");
-  if (error instanceof StreamableHTTPError)
+  if (error instanceof SdkHttpError)
     return new ProviderRequestError(
-      error.code === 429 ? 429 : error.code === 401 || error.code === 403 ? 401 : 502,
+      error.status === 429 ? 429 : error.status === 401 || error.status === 403 ? 401 : 502,
       `Sif MCP request failed: ${error.message}`,
     );
-  if (error instanceof McpError) return new ProviderRequestError(502, `Sif MCP request failed: ${error.message}`);
+  if (error instanceof ProtocolError) return new ProviderRequestError(502, `Sif MCP request failed: ${error.message}`);
   return error;
 }
 

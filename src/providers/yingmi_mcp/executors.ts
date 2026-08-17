@@ -1,6 +1,6 @@
 import type { CredentialValidators } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
 import { withMcpClient } from "../mcp-client.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -52,7 +52,6 @@ export const executors: import("../../core/types.ts").ProviderExecutors = define
     const result = await withClient(context, "execute", (client) =>
       client.callTool(
         { name: String(input.toolName), arguments: input.arguments as Record<string, unknown> },
-        undefined,
         { timeout: timeoutMs },
       ),
     );

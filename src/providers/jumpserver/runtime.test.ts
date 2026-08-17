@@ -59,7 +59,7 @@ function createSseMcpFetch(requests: Array<{ method: string; pathname: string }>
         request.method === "initialize"
           ? {
               protocolVersion: "2024-11-05",
-              capabilities: {},
+              capabilities: { tools: {} },
               serverInfo: { name: "jumpserver", version: "1.0.0" },
             }
           : {

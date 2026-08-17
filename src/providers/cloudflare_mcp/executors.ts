@@ -1,10 +1,10 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
 import { defineBearerProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -84,10 +84,13 @@ async function callCloudflareMcpTool(
   argumentsInput: Record<string, unknown>,
 ): Promise<unknown> {
   return withCloudflareMcpClient(context, async (client) => {
-    const result = await client.callTool({ name: toolName, arguments: argumentsInput }, undefined, {
-      timeout: cloudflareMcpRequestTimeoutMs,
-      signal: context.signal,
-    });
+    const result = await client.callTool(
+      { name: toolName, arguments: argumentsInput },
+      {
+        timeout: cloudflareMcpRequestTimeoutMs,
+        signal: context.signal,
+      },
+    );
     return normalizeCloudflareMcpToolResult(toolName, result);
   });
 }
@@ -152,8 +155,8 @@ function mapCloudflareMcpError(error: unknown): ProviderRequestError {
   if (error instanceof UnauthorizedError) {
     return new ProviderRequestError(401, "Cloudflare MCP credential is invalid or expired", error);
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     return new ProviderRequestError(
       status === 401 || status === 403
         ? 401
@@ -166,7 +169,7 @@ function mapCloudflareMcpError(error: unknown): ProviderRequestError {
       error,
     );
   }
-  if (error instanceof McpError) {
+  if (error instanceof ProtocolError) {
     return new ProviderRequestError(502, `Cloudflare MCP request failed: ${error.message}`, error);
   }
   return new ProviderRequestError(

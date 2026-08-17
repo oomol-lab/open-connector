@@ -6,11 +6,11 @@ import type {
   ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { FlomoActionName, FlomoMcpToolName } from "./actions.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalString, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
@@ -414,7 +414,6 @@ async function callFlomoMcpTool(input: {
         name: input.toolName,
         arguments: input.arguments,
       },
-      undefined,
       {
         timeout: flomoRequestTimeoutMs,
       },
@@ -490,15 +489,15 @@ function mapFlomoMcpError(error: unknown): ProviderRequestError {
   if (error instanceof UnauthorizedError) {
     return new ProviderRequestError(401, "flomo MCP token is invalid or expired", error);
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     return new ProviderRequestError(
       status === 401 || status === 403 ? 401 : status && status >= 400 && status < 500 ? 400 : 502,
       `flomo MCP request failed: ${error.message}`,
       error,
     );
   }
-  if (error instanceof McpError) {
+  if (error instanceof ProtocolError) {
     return new ProviderRequestError(502, `flomo MCP request failed: ${error.message}`, error);
   }
 

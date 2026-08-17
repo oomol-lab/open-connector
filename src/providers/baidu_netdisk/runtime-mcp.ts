@@ -1,9 +1,9 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { SseError } from "@modelcontextprotocol/sdk/client/sse.js";
-import { CallToolResultSchema, ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SseError } from "@modelcontextprotocol/client";
+import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { posix } from "node:path";
 import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
@@ -226,14 +226,10 @@ async function callBaiduNetdiskMcpTool(
   context: BaiduNetdiskMcpContext,
 ) {
   return withBaiduNetdiskMcpClient(context.accessToken, context.fetcher, async (client) => {
-    const result = CallToolResultSchema.parse(
-      await client.callTool({ name, arguments: args }, undefined, {
-        timeout: requestTimeoutMs,
-      }),
-    );
+    const result = await client.callTool({ name, arguments: args }, { timeout: requestTimeoutMs });
     const payload =
       result.structuredContent && !hasUnsafeBaiduId(result.structuredContent)
-        ? result.structuredContent
+        ? requireObject(result.structuredContent)
         : parseMcpTextResult(result.content);
     const errno = readOptionalInteger(payload.errno ?? payload.error_no ?? payload.error_code);
     if (errno != null && errno !== 0) {
@@ -474,7 +470,7 @@ function normalizeBaiduNetdiskMcpTransportError(error: unknown): ProviderRequest
     }
     return new ProviderRequestError(502, "baidu_netdisk MCP connection failed");
   }
-  if (error instanceof McpError && error.code === ErrorCode.RequestTimeout) {
+  if (error instanceof SdkError && error.code === SdkErrorCode.RequestTimeout) {
     return new ProviderRequestError(504, "baidu_netdisk MCP request timed out");
   }
   return new ProviderRequestError(502, "baidu_netdisk MCP request failed");

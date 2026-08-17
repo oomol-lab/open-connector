@@ -26,6 +26,7 @@ import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./storage/runtime
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./storage/runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-token-service.ts";
 
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -1142,6 +1143,26 @@ describe("ConnectServer", () => {
         },
         id: null,
       });
+    }
+  });
+
+  it.each([
+    ["legacy", "legacy"],
+    ["auto", "modern"],
+  ] as const)("serves MCP clients using %s protocol negotiation", async (mode, expectedEra) => {
+    const app = createTestServer([apiKeyProvider]).createApp();
+    const fetcher: typeof fetch = async (input, init) => app.fetch(new Request(input, init));
+    const transport = new StreamableHTTPClientTransport(new URL("https://connect.test/mcp"), { fetch: fetcher });
+    const client = new Client({ name: "connect-server-test", version: "0.0.0" }, { versionNegotiation: { mode } });
+
+    try {
+      await client.connect(transport);
+      expect(client.getProtocolEra()).toBe(expectedEra);
+      await expect(client.listTools()).resolves.toMatchObject({
+        tools: expect.arrayContaining([expect.objectContaining({ name: "execute_action" })]),
+      });
+    } finally {
+      await client.close();
     }
   });
 

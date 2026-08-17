@@ -1,6 +1,4 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Client, SSEClientTransport, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { beforeEach, expect, test, vi } from "vitest";
 import { withMcpClient } from "./mcp-client.ts";
 
@@ -9,15 +7,11 @@ const mocks = vi.hoisted(() => ({
   close: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
+vi.mock("@modelcontextprotocol/client", () => ({
   Client: vi.fn(function Client() {
     return { connect: mocks.connect, close: mocks.close };
   }),
-}));
-vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
   SSEClientTransport: vi.fn(function SSEClientTransport() {}),
-}));
-vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
   StreamableHTTPClientTransport: vi.fn(function StreamableHTTPClientTransport() {}),
 }));
 
@@ -49,7 +43,7 @@ test("共享 MCP client 按显式配置选择 SSE transport 并保留连接参�
   expect(StreamableHTTPClientTransport).not.toHaveBeenCalled();
   expect(Client).toHaveBeenCalledWith(
     { name: "open-connector", version: "1.0.0" },
-    { jsonSchemaValidator: expect.anything() },
+    { jsonSchemaValidator: expect.anything(), versionNegotiation: { mode: "legacy" } },
   );
   expect(mocks.connect).toHaveBeenCalledWith(expect.anything(), { timeout: 60_000, signal });
   expect(mocks.close).toHaveBeenCalledOnce();
@@ -74,6 +68,10 @@ test("共享 MCP client 使用 Streamable HTTP 并保留调用方错误映射", 
 
   expect(StreamableHTTPClientTransport).toHaveBeenCalledOnce();
   expect(SSEClientTransport).not.toHaveBeenCalled();
+  expect(Client).toHaveBeenCalledWith(
+    { name: "open-connector", version: "1.0.0" },
+    { jsonSchemaValidator: expect.anything(), versionNegotiation: { mode: "auto" } },
+  );
   expect(mapError).toHaveBeenCalledWith(upstreamError);
   expect(mocks.close).toHaveBeenCalledOnce();
 });

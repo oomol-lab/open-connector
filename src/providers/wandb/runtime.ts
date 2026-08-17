@@ -1,10 +1,10 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError, SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -135,10 +135,13 @@ export async function callWandbMcpTool(
   args: Record<string, unknown>,
 ): Promise<unknown> {
   return withWandbMcpClient(context, async (client) => {
-    const result = await client.callTool({ name: toolName, arguments: args }, undefined, {
-      timeout: requestTimeoutMs,
-      signal: context.signal,
-    });
+    const result = await client.callTool(
+      { name: toolName, arguments: args },
+      {
+        timeout: requestTimeoutMs,
+        signal: context.signal,
+      },
+    );
     return normalizeWandbMcpToolResult(toolName, result);
   });
 }
@@ -254,8 +257,8 @@ function mapWandbMcpError(error: unknown): ProviderRequestError {
   if (error instanceof UnauthorizedError) {
     return new ProviderRequestError(401, "W&B API key is invalid or expired", error);
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     let providerStatus = 502;
     if (status === 401 || status === 403) {
       providerStatus = 401;
@@ -266,10 +269,11 @@ function mapWandbMcpError(error: unknown): ProviderRequestError {
     }
     return new ProviderRequestError(providerStatus, `W&B MCP request failed: ${error.message}`, error);
   }
-  if (error instanceof McpError) {
-    return error.code === ErrorCode.RequestTimeout
-      ? new ProviderRequestError(504, "W&B MCP request timed out", error)
-      : new ProviderRequestError(502, `W&B MCP request failed: ${error.message}`, error);
+  if (error instanceof SdkError && error.code === SdkErrorCode.RequestTimeout) {
+    return new ProviderRequestError(504, "W&B MCP request timed out", error);
+  }
+  if (error instanceof ProtocolError) {
+    return new ProviderRequestError(502, `W&B MCP request failed: ${error.message}`, error);
   }
   if (isAbortError(error)) {
     return new ProviderRequestError(504, "W&B MCP request timed out", error);

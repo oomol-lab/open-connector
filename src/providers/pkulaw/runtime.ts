@@ -1,6 +1,6 @@
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { PkulawMcpServerId } from "./actions.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
 import { withMcpClient } from "../mcp-client.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -39,7 +39,7 @@ export async function callTool(
   context: PkulawContext,
 ): Promise<unknown> {
   const result = await withClient(serverId, context, "execute", (client) =>
-    client.callTool({ name: toolName, arguments: arguments_ }, undefined, { timeout: timeoutMs }),
+    client.callTool({ name: toolName, arguments: arguments_ }, { timeout: timeoutMs }),
   );
   if (result.isError) throw new ProviderRequestError(502, `PKULaw MCP tool ${toolName} returned an error`, result);
   return result.structuredContent ?? result;

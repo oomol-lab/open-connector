@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
@@ -73,10 +73,13 @@ async function call(
         throw new ProviderRequestError(400, `SellerSpace MCP tool ${toolName} is not currently marked read-only`);
     }
     return normalize(
-      await client.callTool({ name: toolName, arguments: args }, undefined, {
-        timeout: timeoutMs,
-        signal: context.signal,
-      }),
+      await client.callTool(
+        { name: toolName, arguments: args },
+        {
+          timeout: timeoutMs,
+          signal: context.signal,
+        },
+      ),
     );
   });
 }

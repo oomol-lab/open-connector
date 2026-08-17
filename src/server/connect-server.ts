@@ -14,7 +14,7 @@ import type { RunLogCaller, RunLogListInput } from "./storage/runtime-store.ts";
 import type { RuntimeGrant, RuntimeTokenService } from "./storage/runtime-token-service.ts";
 import type { Context } from "hono";
 
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { createMcpHandler } from "@modelcontextprotocol/server";
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
@@ -680,26 +680,24 @@ export class ConnectServer {
   }
 
   private async handleMcp(context: Context): Promise<Response> {
-    const transport = new WebStandardStreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-      enableJsonResponse: true,
-    });
-    const server = createMcpServer({
-      catalog: this.options.catalog,
-      providerLoader: this.options.providerLoader,
-      connections: this.options.connections,
-      actions: this.options.actions,
-      actionPolicy: this.actionPolicy,
-      actionSearch: this.actionSearch,
-      getPolicySnapshot: () => this.getPolicySnapshot(context),
-      runtimeGrant: readRuntimeGrant(context),
-    });
-
-    await server.connect(transport);
+    const handler = createMcpHandler(
+      () =>
+        createMcpServer({
+          catalog: this.options.catalog,
+          providerLoader: this.options.providerLoader,
+          connections: this.options.connections,
+          actions: this.options.actions,
+          actionPolicy: this.actionPolicy,
+          actionSearch: this.actionSearch,
+          getPolicySnapshot: () => this.getPolicySnapshot(context),
+          runtimeGrant: readRuntimeGrant(context),
+        }),
+      { legacy: "stateless", responseMode: "json" },
+    );
     try {
-      return await transport.handleRequest(context.req.raw);
+      return await handler.fetch(context.req.raw);
     } finally {
-      await server.close();
+      await handler.close();
     }
   }
 

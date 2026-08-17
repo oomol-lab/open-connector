@@ -1,7 +1,7 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
+import { Client } from "@modelcontextprotocol/client";
+import { SSEClientTransport } from "@modelcontextprotocol/client";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/client/validators/cf-worker";
 
 const mcpConnectTimeoutMs = 60_000;
 const mcpJsonSchemaValidator = new CfWorkerJsonSchemaValidator();
@@ -33,7 +33,10 @@ export async function withMcpClient<T>(options: McpClientOptions, run: (client: 
       : new StreamableHTTPClientTransport(options.endpoint, transportOptions);
   const client = new Client(
     { name: "open-connector", version: "1.0.0" },
-    { jsonSchemaValidator: mcpJsonSchemaValidator },
+    {
+      jsonSchemaValidator: mcpJsonSchemaValidator,
+      versionNegotiation: { mode: options.transport === "streamable_http" ? "auto" : "legacy" },
+    },
   );
 
   try {
