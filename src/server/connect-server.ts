@@ -6,7 +6,7 @@ import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-servic
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
-import type { ITransitFileService } from "./files/transit-file-store.ts";
+import type { ITransitFileService, TransitFileUpload } from "./files/transit-file-store.ts";
 import type { Logger } from "./logger.ts";
 import type { IIdempotencyStore } from "./storage/idempotency-store.ts";
 import type { IRuntimePolicyStore } from "./storage/runtime-policy-store.ts";
@@ -69,6 +69,7 @@ export interface IConnectServerOptions {
   actions: ActionRunner;
   idempotency: IIdempotencyStore;
   transitFiles: ITransitFileService;
+  uploadTransitFile?: (request: Request) => Promise<TransitFileUpload>;
   staticRoot?: string;
   auth?: LocalAuthOptions;
   actionPolicy?: ActionPolicyService;
@@ -251,6 +252,10 @@ export class ConnectServer {
 
   private async createTransitFile(context: Context): Promise<Response> {
     try {
+      if (this.options.uploadTransitFile) {
+        return context.json(await this.options.uploadTransitFile(context.req.raw));
+      }
+
       const form = await context.req.raw.formData();
       const file = form.get("file");
       if (!(file instanceof File)) {

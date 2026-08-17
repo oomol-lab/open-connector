@@ -1,3 +1,6 @@
+import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
+
+import { S3Client } from "@aws-sdk/client-s3";
 import { serve } from "@hono/node-server";
 import { access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -14,6 +17,8 @@ import { executorModules } from "../providers/registry.generated.ts";
 import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectApp } from "./connect-app.ts";
+import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
+import { S3TransitFileService } from "./files/s3-transit-files.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
@@ -56,18 +61,16 @@ const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"
   secretCodec,
   runLimit,
 });
-const transitFiles = new TransitFileService({
-  rootDir: join(dataDir, "files"),
-  publicOrigin,
-  ttlSeconds: transitFileTtlSeconds,
-  maxBytes: transitFileMaxBytes,
-});
+const transitFiles = createTransitFileService();
+const transitFileTempDir = join(dataDir, "tmp", "transit-files");
 await transitFiles.cleanupExpired();
+await cleanupStagedTransitFiles(transitFileTempDir, transitFileTtlSeconds * 1000);
 const { app, runtimeAuthConfigured } = await createConnectApp({
   catalog,
   providerLoader,
   runtimeDatabase,
   transitFiles,
+  uploadTransitFile: createNodeTransitFileUpload({ transitFiles, tempDir: transitFileTempDir }),
   publicOrigin,
   secretCodec,
   adminToken,
@@ -133,4 +136,69 @@ function readPositiveIntegerEnv(name: string, fallback: number): number {
 
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function createTransitFileService(): IStagedTransitFileService {
+  const backend = process.env.OOMOL_CONNECT_TRANSIT_FILE_BACKEND ?? "local";
+  switch (backend) {
+    case "local":
+      return new TransitFileService({
+        rootDir: join(dataDir, "files"),
+        publicOrigin,
+        ttlSeconds: transitFileTtlSeconds,
+        maxBytes: transitFileMaxBytes,
+      });
+    case "s3": {
+      const accessKeyId = optionalEnv("OOMOL_CONNECT_S3_ACCESS_KEY_ID");
+      const secretAccessKey = optionalEnv("OOMOL_CONNECT_S3_SECRET_ACCESS_KEY");
+      if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) {
+        throw new Error(
+          "OOMOL_CONNECT_S3_ACCESS_KEY_ID and OOMOL_CONNECT_S3_SECRET_ACCESS_KEY must be configured together.",
+        );
+      }
+
+      const client = new S3Client({
+        region: optionalEnv("OOMOL_CONNECT_S3_REGION") ?? "us-east-1",
+        endpoint: optionalEnv("OOMOL_CONNECT_S3_ENDPOINT"),
+        forcePathStyle: parseBooleanEnv("OOMOL_CONNECT_S3_FORCE_PATH_STYLE"),
+        requestChecksumCalculation: "WHEN_REQUIRED",
+        responseChecksumValidation: "WHEN_REQUIRED",
+        credentials:
+          accessKeyId && secretAccessKey
+            ? {
+                accessKeyId,
+                secretAccessKey,
+                sessionToken: optionalEnv("OOMOL_CONNECT_S3_SESSION_TOKEN"),
+              }
+            : undefined,
+      });
+      return new S3TransitFileService({
+        client,
+        bucket: requiredEnv("OOMOL_CONNECT_S3_BUCKET"),
+        publicOrigin,
+        ttlSeconds: transitFileTtlSeconds,
+        maxBytes: transitFileMaxBytes,
+      });
+    }
+    default:
+      throw new Error(`Unsupported OOMOL_CONNECT_TRANSIT_FILE_BACKEND: ${backend}`);
+  }
+}
+
+function optionalEnv(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value || undefined;
+}
+
+function requiredEnv(name: string): string {
+  const value = optionalEnv(name);
+  if (!value) {
+    throw new Error(`${name} is required when OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3.`);
+  }
+  return value;
+}
+
+function parseBooleanEnv(name: string): boolean {
+  const value = process.env[name]?.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes" || value === "on";
 }

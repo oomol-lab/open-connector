@@ -7,7 +7,7 @@ OpenConnector is configured with environment variables.
 | `PORT`                                   | `3000`                    | Local HTTP server port.                                                                             |
 | `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                                          |
 | `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                                         |
-| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Directory containing `connect.sqlite`. Docker image sets `/app/data`.                               |
+| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Runtime database, local transit files, and Node upload staging. Docker uses `/app/data`.            |
 | `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, pending OAuth state, and completed idempotent Action responses. |
 | `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                                          |
 | `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.                              |
@@ -23,8 +23,16 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`    | `false`                   | Allow self-hosted provider connections to target private networks. See below.                       |
 | `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS`     | unset                     | Trusted hosts routed through a corporate VPN. See below.                                            |
 | `OOMOL_CONNECT_LOG_LEVEL`                | `info`                    | Pino log level for the local Node server.                                                           |
+| `OOMOL_CONNECT_TRANSIT_FILE_BACKEND`     | `local`                   | Node transit-file backend: `local` or `s3`.                                                         |
 | `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                                               |
 | `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                                                   |
+| `OOMOL_CONNECT_S3_BUCKET`                | unset                     | Bucket used when the Node transit-file backend is `s3`.                                             |
+| `OOMOL_CONNECT_S3_REGION`                | `us-east-1`               | S3 signing region. Use the value required by the storage service.                                   |
+| `OOMOL_CONNECT_S3_ENDPOINT`              | AWS S3                    | S3-compatible endpoint for MinIO, Cloudflare R2, Alibaba Cloud OSS, or another object store.        |
+| `OOMOL_CONNECT_S3_FORCE_PATH_STYLE`      | `false`                   | Use path-style S3 URLs. This is commonly required by local MinIO deployments.                       |
+| `OOMOL_CONNECT_S3_ACCESS_KEY_ID`         | SDK credential chain      | Explicit S3 access key ID. Configure it with the secret key, or omit both.                          |
+| `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`     | SDK credential chain      | Explicit S3 secret access key. Configure it with the access key ID, or omit both.                   |
+| `OOMOL_CONNECT_S3_SESSION_TOKEN`         | unset                     | Optional session token used with explicit S3 credentials.                                           |
 | `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                                        |
 
 Example:
@@ -74,6 +82,51 @@ before exposing those surfaces.
 OpenConnector acts only as a resource server. It does not implement OIDC discovery or login, accept
 ID tokens as API credentials, or map JWT claims to action and proxy policy. JWT verification is
 currently available only on the Node server, not Cloudflare Workers.
+
+## S3-compatible transit files
+
+The Node runtime stores transit files under `data/files` by default. Set
+`OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3` to share transit files across multiple Node or Docker
+instances through AWS S3 or an S3-compatible service such as MinIO, Cloudflare R2, or Alibaba Cloud
+OSS:
+
+```bash
+OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3 \
+OOMOL_CONNECT_S3_BUCKET=open-connector-transit-files \
+OOMOL_CONNECT_S3_REGION=us-east-1 \
+OOMOL_CONNECT_S3_ENDPOINT=http://minio:9000 \
+OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true \
+npm start
+```
+
+`OOMOL_CONNECT_S3_BUCKET` is required for the S3 backend. The endpoint is optional for AWS S3 and
+required for other S3-compatible services. Configure `OOMOL_CONNECT_S3_ACCESS_KEY_ID` and
+`OOMOL_CONNECT_S3_SECRET_ACCESS_KEY` together through a secret manager or deployment secret
+configuration, or omit both to use the AWS SDK credential chain. Instance, task, and pod roles
+therefore continue to work on AWS without explicit credentials.
+
+For Cloudflare R2, use the account S3 endpoint and set the region to `auto`. For Alibaba Cloud OSS,
+use its S3-compatible endpoint (`https://s3.oss-<region>.aliyuncs.com`), set the matching region, and
+leave path-style access disabled. MinIO commonly uses its server URL as the endpoint with
+`OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true`.
+
+Uploads and downloads continue to use `/api/files`; the bucket does not need to be public. All
+instances must use the same bucket and S3 settings. The runtime rejects expired files when they are
+read, but it does not scan the bucket. Configure a bucket lifecycle rule that deletes objects under
+the `transit/` prefix after the configured transit-file TTL so unread expired objects are also
+removed.
+
+Each S3 transit file uses one object. Its original file name is encoded in S3 user metadata, while
+the content type, size, and modification time come from the object's native S3 fields. There is no
+separate metadata sidecar object in the S3 backend.
+
+On Node, multipart uploads to `/api/files` are streamed into
+`OOMOL_CONNECT_DATA_DIR/tmp/transit-files` before they are moved into local storage or streamed to
+S3 with a known content length. The staging file is removed after success or failure, so upload
+memory stays bounded by stream buffers instead of file size. A hard process termination can leave a
+partial staging file; startup removes managed staging files older than the configured transit-file
+TTL. Ensure each instance has enough local disk for its concurrent in-progress uploads even when S3
+is the final backend.
 
 ## Private network access
 

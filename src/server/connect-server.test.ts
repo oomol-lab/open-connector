@@ -14,6 +14,7 @@ import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-f
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
+import type { TransitFileUpload } from "./files/transit-file-store.ts";
 import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type {
@@ -3017,6 +3018,25 @@ describe("ConnectServer", () => {
     }
   });
 
+  it("uses the injected Node transit upload handler", async () => {
+    const uploadTransitFile = vi.fn(
+      async (): Promise<TransitFileUpload> => ({
+        fileId: `${"a".repeat(32)}.txt`,
+        downloadUrl: `http://localhost:3000/api/files/${"a".repeat(32)}.txt`,
+        sizeBytes: 6,
+        name: "streamed.txt",
+        mimeType: "text/plain",
+      }),
+    );
+    const app = createTestServer([apiKeyProvider], { uploadTransitFile }).createApp();
+
+    const response = await app.request("/api/files", { method: "POST", body: "stream" });
+
+    expect(response.status).toBe(200);
+    expect(uploadTransitFile).toHaveBeenCalledOnce();
+    await expect(response.json()).resolves.toMatchObject({ name: "streamed.txt", sizeBytes: 6 });
+  });
+
   it("keeps transit file downloads public when admin auth is enabled", async () => {
     const rootDir = await createTempDir();
     try {
@@ -3177,6 +3197,7 @@ interface CreateTestServerOptions {
   runs?: MemoryRunLogStore;
   staticRoot?: string | false;
   transitFiles?: TransitFileService;
+  uploadTransitFile?: (request: Request) => Promise<TransitFileUpload>;
   secretCodec?: ISecretCodec;
   allowedCustomOAuth?: string[];
 }
@@ -3239,6 +3260,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     actions: actionRunner,
     idempotency,
     transitFiles,
+    uploadTransitFile: options.uploadTransitFile,
     runtimeTokens,
     runtimePolicyStore: options.runtimePolicyStore ?? new MemoryRuntimePolicyStore(),
     registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, staticRoot) : undefined,
