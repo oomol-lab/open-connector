@@ -66,6 +66,26 @@ describe("Cloudflare R2 download_object", () => {
     expect(new Uint8Array(await storedFile.arrayBuffer())).toEqual(content);
   });
 
+  it("preserves boundary whitespace and strictly encodes reserved key characters", async () => {
+    const objectKey = " reports/file!'()*.txt ";
+    const requests = stubResponses([new Response("ok")]);
+    const { store } = createTransitFileStore(1024);
+
+    const result = await executeDownload({ bucketName: "documents", objectKey, fileName: "report.txt" }, store);
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: {
+        fileId: objectKey,
+        name: "report.txt",
+        file: { name: "report.txt" },
+      },
+    });
+    expect(requests[0]?.url.pathname).toBe(
+      "/client/v4/accounts/account-1/r2/buckets/documents/objects/%20reports/file%21%27%28%29%2A.txt%20",
+    );
+  });
+
   it("honors the transit size limit without storing a partial object", async () => {
     const requests = stubResponses([new Response(new Uint8Array([1, 2, 3]))]);
     const { store, create } = createTransitFileStore(2);

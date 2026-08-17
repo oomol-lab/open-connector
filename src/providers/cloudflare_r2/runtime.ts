@@ -2,7 +2,14 @@ import type { CredentialValidationResult, TransitFileWriter } from "../../core/t
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { CloudflareR2ActionName } from "./actions.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredRawString,
+  requiredString,
+} from "../../core/cast.ts";
 import { queryParams, readBoundedResponseBytes } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
@@ -186,7 +193,10 @@ async function downloadObject(input: Record<string, unknown>, context: Cloudflar
 
   const accountId = resolveAccountId(input, context);
   const bucketName = requiredString(input.bucketName, "bucketName", providerInputError);
-  const objectKey = requiredString(input.objectKey, "objectKey", providerInputError);
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
+  if (objectKey.length === 0) {
+    throw providerInputError("objectKey must not be empty");
+  }
   const url = buildCloudflareR2Url(
     `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeR2ObjectKey(objectKey)}`,
   );
@@ -387,7 +397,13 @@ function buildJurisdictionHeaders(input: Record<string, unknown>): Record<string
 }
 
 function encodeR2ObjectKey(objectKey: string): string {
-  return objectKey.split("/").map(encodeURIComponent).join("/");
+  return objectKey.split("/").map(encodeR2ObjectKeySegment).join("/");
+}
+
+function encodeR2ObjectKeySegment(segment: string): string {
+  return encodeURIComponent(segment).replace(/[!'()*]/g, (character) => {
+    return `%${character.charCodeAt(0).toString(16).toUpperCase()}`;
+  });
 }
 
 function defaultObjectFileName(objectKey: string): string {
