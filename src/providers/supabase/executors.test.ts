@@ -102,6 +102,48 @@ describe("Supabase download_storage_object", () => {
     expect(requests[1]?.authorization).toBe("Bearer legacy-jwt");
   });
 
+  it("preserves boundary whitespace in the object path", async () => {
+    const requests = stubResponses([
+      Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
+      new Response("ok", { headers: { "content-type": "text/plain" } }),
+    ]);
+    const { store } = createTransitFileStore(1024);
+
+    const result = await executeDownload(
+      { projectRef, bucketId: "documents", objectPath: " reports/annual report.pdf " },
+      store,
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: {
+        fileId: "documents/ reports/annual report.pdf ",
+        name: "annual report.pdf ",
+        file: { name: "annual report.pdf " },
+      },
+    });
+    expect(requests[1]?.url.pathname).toBe(
+      "/storage/v1/object/authenticated/documents/%20reports/annual%20report.pdf%20",
+    );
+  });
+
+  it("rejects dot segments instead of normalizing the object path", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { store } = createTransitFileStore(1024);
+
+    const result = await executeDownload({ projectRef, bucketId: "documents", objectPath: "a/../secret" }, store);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "objectPath must not contain . or .. path segments",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("honors the transit size limit without storing a partial object", async () => {
     const requests = stubResponses([
       Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),

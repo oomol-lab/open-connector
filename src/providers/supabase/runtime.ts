@@ -10,6 +10,7 @@ import {
   optionalRecord,
   optionalString,
   requiredRecord,
+  requiredRawString,
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
@@ -511,9 +512,15 @@ async function supabaseDownloadStorageObject(
 
   const projectRef = readStorageProjectRef(input);
   const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
-  const objectPath = requiredString(input.objectPath, "objectPath", providerInputError);
+  const objectPath = requiredRawString(input.objectPath, "objectPath", providerInputError);
+  if (objectPath.length === 0) {
+    throw providerInputError("objectPath must not be empty");
+  }
   if (objectPath.startsWith("/")) {
     throw providerInputError("objectPath must not start with a slash");
+  }
+  if (objectPath.split("/").some((segment) => segment === "." || segment === "..")) {
+    throw providerInputError("objectPath must not contain . or .. path segments");
   }
 
   const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
