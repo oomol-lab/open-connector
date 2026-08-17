@@ -25,7 +25,7 @@ export const mqttActions: ActionDefinition[] = [
     outputSchema: s.object("The completed MQTT publish operation.", {
       topic: s.string("Topic the message was published to."),
       qos: qosSchema,
-      retain: s.boolean("Whether the published message was retained by the broker."),
+      retain: s.boolean("Whether the MQTT PUBLISH retain flag was requested."),
       protocolVersion: protocolVersionSchema,
       deliveryAcknowledged: s.boolean(
         "Whether the MQTT publish acknowledgement flow completed. This does not mean a consumer processed the message.",

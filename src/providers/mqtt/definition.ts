@@ -18,7 +18,7 @@ export const provider: ProviderDefinition = {
           label: "WebSocket URL",
           inputType: "text",
           required: true,
-          secret: false,
+          secret: true,
           placeholder: "wss://broker.example.com/mqtt",
           description:
             "The complete ws:// or wss:// URL of the broker's MQTT-over-WebSocket listener, including its path. Private targets require a self-hosted runtime with OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK enabled.",

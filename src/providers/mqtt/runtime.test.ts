@@ -3,20 +3,21 @@ import type { IClientOptions, MqttClient } from "mqtt";
 
 import { EventEmitter } from "node:events";
 import { describe, expect, it, vi } from "vitest";
-import { createMqttActionHandlers, createMqttContext, openMqttClient } from "./runtime.ts";
+import { createMqttActionHandlers, createMqttContext, openMqttClient, validateMqttCredential } from "./runtime.ts";
 
 class FakeMqttClient extends EventEmitter {
   public published?: { topic: string; payload: Buffer; options: unknown };
   public onSubscribe?: () => void;
+  public subscriptionGrants: Array<{ qos: 0 | 1 | 2 | 128; topic: string }> = [];
 
   public publishAsync(topic: string, payload: Buffer, options: unknown): Promise<undefined> {
     this.published = { topic, payload, options };
     return Promise.resolve(undefined);
   }
 
-  public subscribeAsync(): Promise<[]> {
+  public subscribeAsync(): Promise<Array<{ qos: 0 | 1 | 2 | 128; topic: string }>> {
     queueMicrotask(() => this.onSubscribe?.());
-    return Promise.resolve([]);
+    return Promise.resolve(this.subscriptionGrants);
   }
 
   public unsubscribeAsync(): Promise<undefined> {
@@ -50,6 +51,22 @@ describe("MQTT credential context", () => {
 
   it("rejects non-WebSocket transports", () => {
     expect(() => createMqttContext({ websocketUrl: "mqtts://broker.example.com:8883" })).toThrow(/must use ws or wss/);
+  });
+
+  it("omits signed query parameters from validation metadata", async () => {
+    const client = new FakeMqttClient();
+    await expect(
+      validateMqttCredential(
+        { websocketUrl: "wss://broker.example.com/mqtt?X-Amz-Signature=secret" },
+        undefined,
+        async () => client as unknown as MqttClient,
+      ),
+    ).resolves.toMatchObject({
+      metadata: {
+        websocketEndpoint: "wss://broker.example.com/mqtt",
+        protocolVersion: "3.1.1",
+      },
+    });
   });
 });
 
@@ -142,5 +159,37 @@ describe("MQTT receive action", () => {
       timedOut: false,
       protocolVersion: "3.1.1",
     });
+  });
+
+  it("rejects a broker-denied subscription", async () => {
+    const client = new FakeMqttClient();
+    client.subscriptionGrants = [{ topic: "private/#", qos: 128 }];
+    const handlers = createMqttActionHandlers({
+      openClient: async () => client as unknown as MqttClient,
+    });
+
+    await expect(
+      handlers.receive_messages?.(
+        { topicFilter: "private/#", timeoutSeconds: 1 },
+        { websocketUrl: "wss://broker.example.com/mqtt", protocolVersion: "3.1.1" },
+      ),
+    ).rejects.toThrow(/rejected subscription/);
+  });
+
+  it.each(["error", "close"])("fails when the client emits %s after subscribing", async (event) => {
+    const client = new FakeMqttClient();
+    client.subscriptionGrants = [{ topic: "devices/#", qos: 0 }];
+    const handlers = createMqttActionHandlers({
+      openClient: async () => client as unknown as MqttClient,
+    });
+    const result = handlers.receive_messages?.(
+      { topicFilter: "devices/#", timeoutSeconds: 1 },
+      { websocketUrl: "wss://broker.example.com/mqtt", protocolVersion: "3.1.1" },
+    );
+    await vi.waitFor(() => expect(client.listenerCount(event)).toBeGreaterThan(0));
+
+    client.emit(event, event === "error" ? new Error("socket failed") : undefined);
+
+    await expect(result).rejects.toThrow(event === "error" ? /socket failed/ : /closed while receiving/);
   });
 });

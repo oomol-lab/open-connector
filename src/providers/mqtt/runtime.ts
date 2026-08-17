@@ -131,9 +131,10 @@ export function createMqttContext(values: Record<string, string>, signal?: Abort
 export async function validateMqttCredential(
   values: Record<string, string>,
   signal?: AbortSignal,
+  openClient: MqttActionDependencies["openClient"] = openMqttClient,
 ): Promise<CredentialValidationResult> {
   const context = createMqttContext(values, signal);
-  const client = await openMqttClient(context, context.signal);
+  const client = await openClient(context, context.signal);
   await closeMqttClient(client);
   const url = new URL(context.websocketUrl);
   return {
@@ -143,7 +144,7 @@ export async function validateMqttCredential(
     },
     grantedScopes: [],
     metadata: {
-      websocketUrl: context.websocketUrl,
+      websocketEndpoint: `${url.origin}${url.pathname}`,
       protocolVersion: context.protocolVersion,
     },
   };
@@ -235,14 +236,21 @@ async function receiveMessages(client: MqttClient, options: ReceiveMessagesOptio
     }
   };
   const onAbort = (): void => failOnce(new ProviderRequestError(499, "MQTT receive was aborted"));
+  const onError = (error: Error): void => failOnce(toMqttError(error, "MQTT receive failed"));
+  const onClose = (): void => failOnce(new ProviderRequestError(502, "MQTT connection closed while receiving"));
   client.on("message", onMessage);
   try {
     const subscribeOptions: IClientSubscribeOptions = { qos: options.qos };
-    await withAbort(
+    const grants = await withAbort(
       client.subscribeAsync(options.topicFilter, subscribeOptions),
       options.signal,
       "MQTT subscription was aborted",
     );
+    if (grants.some((grant) => grant.qos === 128)) {
+      throw new ProviderRequestError(403, `MQTT broker rejected subscription to ${options.topicFilter}`);
+    }
+    client.on("error", onError);
+    client.on("close", onClose);
     options.signal?.addEventListener("abort", onAbort, { once: true });
     const timer = globalThis.setTimeout(() => complete({ messages, timedOut: true }), options.timeoutMs);
     try {
@@ -256,6 +264,8 @@ async function receiveMessages(client: MqttClient, options: ReceiveMessagesOptio
   } finally {
     options.signal?.removeEventListener("abort", onAbort);
     client.removeListener("message", onMessage);
+    client.removeListener("error", onError);
+    client.removeListener("close", onClose);
     await client.unsubscribeAsync(options.topicFilter).catch(() => undefined);
   }
 }
