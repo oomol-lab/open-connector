@@ -623,10 +623,11 @@ async function storeDropboxDownload(
   if (!fileId) {
     throw new ProviderRequestError(502, "dropbox download metadata is missing file id");
   }
-  const name = optionalString(input.fileName) ?? normalizedMetadata.name;
-  if (!name) {
+  const remoteName = normalizedMetadata.name;
+  if (!remoteName) {
     throw new ProviderRequestError(502, "dropbox download metadata is missing file name");
   }
+  const transitName = optionalString(input.fileName) ?? remoteName;
   if (normalizedMetadata.sizeBytes !== null && normalizedMetadata.sizeBytes > transitFiles.maxBytes) {
     throw new ProviderRequestError(413, `Dropbox download exceeds ${transitFiles.maxBytes} bytes`);
   }
@@ -637,11 +638,11 @@ async function storeDropboxDownload(
     fieldName: "Dropbox download",
     createError: (message) => new ProviderRequestError(413, message),
   });
-  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], transitName, { type: mimeType }));
 
   return {
     fileId,
-    name,
+    name: remoteName,
     mimeType,
     sizeBytes: file.sizeBytes,
     file,

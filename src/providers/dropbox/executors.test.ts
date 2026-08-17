@@ -87,7 +87,7 @@ describe("Dropbox transit downloads", () => {
       ok: true,
       output: {
         fileId: "id:shared-1",
-        name: "renamed.bin",
+        name: "source.bin",
         sizeBytes: content.length,
         file: { name: "renamed.bin", sizeBytes: content.length },
       },
