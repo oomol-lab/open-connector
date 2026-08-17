@@ -197,6 +197,9 @@ async function downloadObject(input: Record<string, unknown>, context: Cloudflar
   if (objectKey.length === 0) {
     throw providerInputError("objectKey must not be empty");
   }
+  if (objectKey.split("/").some((segment) => segment === "." || segment === "..")) {
+    throw providerInputError("objectKey must not contain . or .. path segments");
+  }
   const url = buildCloudflareR2Url(
     `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeR2ObjectKey(objectKey)}`,
   );

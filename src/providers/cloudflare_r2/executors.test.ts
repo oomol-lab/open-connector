@@ -86,6 +86,23 @@ describe("Cloudflare R2 download_object", () => {
     );
   });
 
+  it("rejects dot segments instead of normalizing the object key", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { store } = createTransitFileStore(1024);
+
+    const result = await executeDownload({ bucketName: "documents", objectKey: "a/../secret" }, store);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "objectKey must not contain . or .. path segments",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("honors the transit size limit without storing a partial object", async () => {
     const requests = stubResponses([new Response(new Uint8Array([1, 2, 3]))]);
     const { store, create } = createTransitFileStore(2);
