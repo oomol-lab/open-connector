@@ -48,6 +48,7 @@
     "mdast-util-to-markdown": "^2.1.2",
     "micromark-extension-gfm": "^3.0.0",
     "minisearch": "^7.2.0",
+    "mqtt": "^5.15.2",
     "nodemailer": "^9.0.3",
     "pino": "^10.3.1",
     "rss-parser": "^3.13.0",
