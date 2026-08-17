@@ -95,6 +95,20 @@ const managementOutputSchema = s.object("The result of one file operation.", {
   path: nullableString("The resulting absolute path, or null when Baidu omits it."),
 });
 
+const downloadedFileSchema = s.requiredObject("A downloaded Baidu Netdisk file stored in local transit storage.", {
+  fileId: s.nonEmptyString("The Baidu Netdisk fs_id decimal string."),
+  name: s.nonEmptyString("The original Baidu Netdisk file name."),
+  mimeType: s.nonEmptyString("The downloaded file MIME type."),
+  sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+  file: s.requiredObject("The downloaded content in local transit file storage.", {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored file."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: s.nonEmptyString("The stored transit file name."),
+    mimeType: s.nonEmptyString("The stored transit file MIME type."),
+  }),
+});
+
 const relocateInputSchema = (operation: string) =>
   s.object(
     `Input for ${operation}ing one Baidu Netdisk file or folder.`,
@@ -203,6 +217,20 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
       items: s.array("The normalized semantic matches.", semanticFileSchema),
       truncated: s.boolean("Whether Baidu reports that more matches may be available."),
     }),
+  }),
+  defineProviderAction("baidu_netdisk", {
+    name: "download_file",
+    description: "Download one Baidu Netdisk file by fs_id into local transit file storage.",
+    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
+    providerPermissions: [baiduNetdiskProviderScopes.netdisk],
+    inputSchema: s.requiredObject("Input for downloading one Baidu Netdisk file.", {
+      fsId: s.string({
+        minLength: 1,
+        pattern: "^[0-9]+$",
+        description: "The lossless Baidu Netdisk fs_id decimal string.",
+      }),
+    }),
+    outputSchema: downloadedFileSchema,
   }),
   defineProviderAction("baidu_netdisk", {
     name: "upload_file_from_url",

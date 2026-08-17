@@ -1,5 +1,8 @@
-import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import type { TransitFileWriter } from "../../core/types.ts";
+
+import { compactObject, optionalInteger, optionalString, requiredRawString, requiredString } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
+import { providerFetch, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
 
 const baiduPanBaseUrl = "https://pan.baidu.com";
 const losslessIntegerKeys = new Set(["fs_id", "fsid", "pid", "uk", "request_id", "cursor"]);
@@ -10,6 +13,10 @@ interface BaiduNetdiskRequestContext {
   accessToken: string;
   fetcher: typeof fetch;
   signal?: AbortSignal;
+}
+
+interface BaiduNetdiskDownloadContext extends BaiduNetdiskRequestContext {
+  transitFiles?: TransitFileWriter;
 }
 
 export interface BaiduNetdiskAccount {
@@ -72,6 +79,122 @@ export async function getBaiduNetdiskQuota(context: BaiduNetdiskRequestContext):
     freeQuotaBytes: requireInteger(payload.free, "free"),
     expiresWithinSevenDays: payload.expire === true,
   };
+}
+
+export async function downloadBaiduNetdiskFile(
+  input: Record<string, unknown>,
+  context: BaiduNetdiskDownloadContext,
+): Promise<Record<string, unknown>> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(400, "baidu_netdisk download_file requires local transit file storage");
+  }
+
+  const requestedFsId = requiredString(input.fsId, "fsId", (message) => new ProviderRequestError(400, message));
+  if (!/^\d+$/u.test(requestedFsId)) {
+    throw new ProviderRequestError(400, "fsId must be a decimal string");
+  }
+
+  const metadataUrl = new URL("/rest/2.0/xpan/multimedia", baiduPanBaseUrl);
+  metadataUrl.searchParams.set("method", "filemetas");
+  metadataUrl.searchParams.set("dlink", "1");
+  metadataUrl.searchParams.set("fsids", `[${requestedFsId}]`);
+  const metadataPayload = await requestBaiduNetdiskApi(metadataUrl, context.accessToken, context.fetcher, "read", {
+    signal: context.signal,
+  });
+  const metadata = readDownloadMetadata(metadataPayload, requestedFsId);
+  if (metadata.sizeBytes > context.transitFiles.maxBytes) {
+    throw new ProviderRequestError(
+      413,
+      `Baidu Netdisk file exceeds local transit limit of ${context.transitFiles.maxBytes} bytes`,
+    );
+  }
+
+  const downloadUrl = readBaiduDownloadUrl(metadata.downloadUrl);
+  downloadUrl.searchParams.set("access_token", context.accessToken);
+  const response = await providerFetch(downloadUrl, {
+    headers: {
+      accept: "*/*",
+      "user-agent": "pan.baidu.com",
+    },
+    signal: context.signal,
+  });
+  if (!response.ok) {
+    const message = await readProviderTextBody(response, "Baidu Netdisk download error", 1024 * 1024).catch(() => "");
+    throw new ProviderRequestError(
+      response.status >= 500 ? 502 : response.status,
+      message || `baidu_netdisk download failed with HTTP ${response.status}`,
+    );
+  }
+
+  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Baidu Netdisk download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], metadata.name, { type: mimeType }));
+
+  return {
+    fileId: metadata.fileId,
+    name: metadata.name,
+    mimeType,
+    sizeBytes: file.sizeBytes,
+    file,
+  };
+}
+
+interface BaiduDownloadMetadata {
+  fileId: string;
+  name: string;
+  sizeBytes: number;
+  downloadUrl: string;
+}
+
+function readDownloadMetadata(payload: Record<string, unknown>, requestedFsId: string): BaiduDownloadMetadata {
+  if (!Array.isArray(payload.list) || payload.list.length !== 1) {
+    throw new ProviderRequestError(502, "baidu_netdisk download metadata is missing the requested file");
+  }
+  const item = payload.list[0];
+  if (!item || typeof item !== "object" || Array.isArray(item)) {
+    throw new ProviderRequestError(502, "baidu_netdisk download metadata is malformed");
+  }
+  const metadata = item as Record<string, unknown>;
+  if (metadata.isdir === 1) {
+    throw new ProviderRequestError(400, "baidu_netdisk download_file requires a file fsId");
+  }
+  const fileId = requireLosslessId(metadata.fs_id, "list[0].fs_id");
+  if (fileId !== requestedFsId) {
+    throw new ProviderRequestError(502, "baidu_netdisk returned metadata for a different file");
+  }
+  const name = requiredRawString(metadata.filename, "filename", (message) => new ProviderRequestError(502, message));
+  if (name.length === 0) {
+    throw new ProviderRequestError(502, "baidu_netdisk download metadata filename must not be empty");
+  }
+  const sizeBytes = requireInteger(metadata.size, "list[0].size");
+  const downloadUrl = requiredString(metadata.dlink, "dlink", (message) => new ProviderRequestError(502, message));
+  return { fileId, name, sizeBytes, downloadUrl };
+}
+
+function readBaiduDownloadUrl(value: string): URL {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new ProviderRequestError(502, "baidu_netdisk returned an invalid download URL");
+  }
+  const hostname = url.hostname.toLowerCase();
+  if (
+    url.protocol !== "https:" ||
+    !(
+      hostname === "baidu.com" ||
+      hostname.endsWith(".baidu.com") ||
+      hostname === "baidupcs.com" ||
+      hostname.endsWith(".baidupcs.com")
+    )
+  ) {
+    throw new ProviderRequestError(502, "baidu_netdisk returned an untrusted download URL");
+  }
+  return url;
 }
 
 export function normalizeBaiduNetdiskError(
