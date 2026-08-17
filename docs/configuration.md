@@ -30,8 +30,8 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_S3_REGION`                | `us-east-1`               | S3 signing region. Use the value required by the storage service.                                   |
 | `OOMOL_CONNECT_S3_ENDPOINT`              | AWS S3                    | S3-compatible endpoint for MinIO, Cloudflare R2, Alibaba Cloud OSS, or another object store.        |
 | `OOMOL_CONNECT_S3_FORCE_PATH_STYLE`      | `false`                   | Use path-style S3 URLs. This is commonly required by local MinIO deployments.                       |
-| `OOMOL_CONNECT_S3_ACCESS_KEY_ID`         | SDK credential chain      | Optional explicit S3 access key ID.                                                                 |
-| `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`     | SDK credential chain      | Optional explicit S3 secret access key.                                                             |
+| `OOMOL_CONNECT_S3_ACCESS_KEY_ID`         | SDK credential chain      | Explicit S3 access key ID. Configure it with the secret key, or omit both.                          |
+| `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`     | SDK credential chain      | Explicit S3 secret access key. Configure it with the access key ID, or omit both.                   |
 | `OOMOL_CONNECT_S3_SESSION_TOKEN`         | unset                     | Optional session token used with explicit S3 credentials.                                           |
 | `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                                        |
 
@@ -96,15 +96,14 @@ OOMOL_CONNECT_S3_BUCKET=open-connector-transit-files \
 OOMOL_CONNECT_S3_REGION=us-east-1 \
 OOMOL_CONNECT_S3_ENDPOINT=http://minio:9000 \
 OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true \
-OOMOL_CONNECT_S3_ACCESS_KEY_ID=minioadmin \
-OOMOL_CONNECT_S3_SECRET_ACCESS_KEY=replace-with-a-secret \
 npm start
 ```
 
 `OOMOL_CONNECT_S3_BUCKET` is required for the S3 backend. The endpoint is optional for AWS S3 and
-required for other S3-compatible services. When the explicit access key variables are omitted, the
-AWS SDK credential chain is used, so instance, task, and pod roles continue to work on AWS. If an
-access key is configured, its matching secret access key is also required.
+required for other S3-compatible services. Configure `OOMOL_CONNECT_S3_ACCESS_KEY_ID` and
+`OOMOL_CONNECT_S3_SECRET_ACCESS_KEY` together through a secret manager or deployment secret
+configuration, or omit both to use the AWS SDK credential chain. Instance, task, and pod roles
+therefore continue to work on AWS without explicit credentials.
 
 For Cloudflare R2, use the account S3 endpoint and set the region to `auto`. For Alibaba Cloud OSS,
 use its S3-compatible endpoint (`https://s3.oss-<region>.aliyuncs.com`), set the matching region, and

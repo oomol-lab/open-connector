@@ -58,11 +58,19 @@ async function stageMultipartFile(request: Request, path: string, maxBytes: numb
     parser = Busboy({
       headers: { "content-type": contentType },
       defParamCharset: "utf8",
-      limits: { files: 1, fileSize: maxBytes },
+      limits: { fields: 0, files: 1, parts: 2, fileSize: maxBytes },
     });
   } catch {
     throw invalidInput();
   }
+
+  let limitError: TransitFileError | undefined;
+  const rejectExtraPart = () => {
+    limitError ??= invalidInput();
+  };
+  parser.on("fieldsLimit", rejectExtraPart);
+  parser.on("filesLimit", rejectExtraPart);
+  parser.on("partsLimit", rejectExtraPart);
 
   let staged: Promise<StagedTransitFile> | undefined;
   parser.on("file", (field, stream, info) => {
@@ -86,11 +94,19 @@ async function stageMultipartFile(request: Request, path: string, maxBytes: numb
     void staged.catch(() => undefined);
   });
 
-  await pipeline(Readable.from(request.body), parser);
-  if (!staged) {
+  try {
+    await pipeline(Readable.from(request.body), parser);
+  } catch (error) {
+    throw limitError ?? error;
+  }
+  const file = staged ? await staged : undefined;
+  if (limitError) {
+    throw limitError;
+  }
+  if (!file) {
     throw invalidInput();
   }
-  return await staged;
+  return file;
 }
 
 function invalidInput(): TransitFileError {

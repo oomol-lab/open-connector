@@ -60,6 +60,42 @@ describe("createNodeTransitFileUpload", () => {
     await expect(readdir(tempDir)).resolves.toEqual([]);
   });
 
+  it("rejects an extra non-file field and removes the staged file", async () => {
+    const { service, tempDir } = await createService();
+    const createFromPath = vi.spyOn(service, "createFromPath");
+    const upload = createNodeTransitFileUpload({ transitFiles: service, tempDir });
+    const form = new FormData();
+    form.set("file", new File(["payload"], "report.txt"));
+    form.set("message", "extra");
+
+    await expect(
+      upload(new Request("http://localhost/api/files", { method: "POST", body: form })),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: "invalid_input",
+    });
+    expect(createFromPath).not.toHaveBeenCalled();
+    await expect(readdir(tempDir)).resolves.toEqual([]);
+  });
+
+  it("rejects an extra file part and removes the staged file", async () => {
+    const { service, tempDir } = await createService();
+    const createFromPath = vi.spyOn(service, "createFromPath");
+    const upload = createNodeTransitFileUpload({ transitFiles: service, tempDir });
+    const form = new FormData();
+    form.append("file", new File(["first"], "first.txt"));
+    form.append("file", new File(["second"], "second.txt"));
+
+    await expect(
+      upload(new Request("http://localhost/api/files", { method: "POST", body: form })),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: "invalid_input",
+    });
+    expect(createFromPath).not.toHaveBeenCalled();
+    await expect(readdir(tempDir)).resolves.toEqual([]);
+  });
+
   it("removes the staged file when backend creation fails", async () => {
     const { service, tempDir } = await createService();
     vi.spyOn(service, "createFromPath").mockRejectedValue(new Error("storage unavailable"));
