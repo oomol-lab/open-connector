@@ -244,7 +244,7 @@ const actions: OneDriveActionSource[] = [
         format: s.stringEnum(["pdf", "html"], {
           description: "Optional format to convert the file into before download.",
         }),
-        fileName: nonEmptyString("Optional file name to use for the downloaded file."),
+        fileName: nonEmptyString("Optional file name to use for the local transit file."),
       },
       ["itemId"],
     ),
@@ -257,7 +257,7 @@ const actions: OneDriveActionSource[] = [
       {
         driveId,
         itemPath: flexibleItemPath,
-        fileName: nonEmptyString("Optional file name to use for the downloaded file."),
+        fileName: nonEmptyString("Optional file name to use for the local transit file."),
       },
       ["itemPath"],
     ),
@@ -272,7 +272,7 @@ const actions: OneDriveActionSource[] = [
         format: s.stringEnum(["pdf", "html"], { description: "Format to convert the drive item into." }),
         itemId,
         pathAndFilename: flexibleItemPath,
-        fileName: nonEmptyString("Optional file name to use for the downloaded file."),
+        fileName: nonEmptyString("Optional file name to use for the local transit file."),
       },
       ["format"],
     ),

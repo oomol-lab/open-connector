@@ -118,7 +118,7 @@ describe("OneDrive transit downloads", () => {
 
     expect(result).toMatchObject({
       ok: true,
-      output: { fileId: "item-3", name: "renamed.csv", file: { name: "renamed.csv" } },
+      output: { fileId: "item-3", name: "report.csv", file: { name: "renamed.csv" } },
     });
     expect(requests[0]?.url.pathname).toBe("/v1.0/me/drive/root:/reports/report.csv:");
     expect(requests[1]?.url.pathname).toBe("/v1.0/me/drive/root:/reports/report.csv:/content");

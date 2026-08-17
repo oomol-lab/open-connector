@@ -674,14 +674,15 @@ async function downloadDriveItem(input: {
     signal: input.deps.signal,
   });
 
-  const name = resolveDownloadFileName(metadata, input.fileName, input.format);
+  const name = resolveDownloadFileName(metadata, input.format);
+  const transitName = input.fileName ?? name;
   const mimeType = resolveDownloadMimeType(metadata, response, input.format);
   const bytes = await readBoundedResponseBytes(response, {
     maxBytes: transitFiles.maxBytes,
     fieldName: "OneDrive download",
     createError: (message) => new ProviderRequestError(413, message),
   });
-  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], transitName, { type: mimeType }));
 
   return {
     fileId,
@@ -1357,15 +1358,7 @@ function compactStringRecord(value: Record<string, string | undefined>) {
   return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => entry[1] !== undefined));
 }
 
-function resolveDownloadFileName(
-  metadata: Record<string, unknown>,
-  overrideName: string | undefined,
-  format: OneDriveDownloadFormat | undefined,
-) {
-  if (overrideName) {
-    return overrideName;
-  }
-
+function resolveDownloadFileName(metadata: Record<string, unknown>, format: OneDriveDownloadFormat | undefined) {
   const metadataName = readOptionalString(metadata.name) ?? "file";
   if (!format) {
     return metadataName;
