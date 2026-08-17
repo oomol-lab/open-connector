@@ -2,18 +2,9 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { supabaseScopes } from "./scopes.ts";
 
 const service = "supabase";
-
-export const supabaseProviderScopes: string[] = [
-  "organizations:read",
-  "projects:read",
-  "secrets:read",
-  "secrets:write",
-  "database:read",
-  "storage:read",
-  "edge_functions:read",
-];
 
 const projectStatuses = [
   "ACTIVE_HEALTHY",
@@ -241,7 +232,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
     description: "List the organizations available to the authenticated Supabase account.",
-    requiredScopes: ["organizations:read"],
+    requiredScopes: [supabaseScopes.organizationsRead],
     inputSchema: s.actionInput({}, [], "No input parameters are required for this action."),
     outputSchema: s.actionOutput({
       organizations: s.array(organizationSummary, { description: "The list of organizations." }),
@@ -250,7 +241,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",
     description: "Get details for a Supabase organization by slug.",
-    requiredScopes: ["organizations:read"],
+    requiredScopes: [supabaseScopes.organizationsRead],
     inputSchema: s.actionInput(
       { organizationSlug },
       ["organizationSlug"],
@@ -261,7 +252,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organization_members",
     description: "List members of a Supabase organization.",
-    requiredScopes: ["organizations:read"],
+    requiredScopes: [supabaseScopes.organizationsRead],
     inputSchema: s.actionInput(
       { organizationSlug },
       ["organizationSlug"],
@@ -274,7 +265,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organization_projects",
     description: "List projects in a Supabase organization with optional search and pagination.",
-    requiredScopes: ["projects:read"],
+    requiredScopes: [supabaseScopes.projectsRead],
     inputSchema: s.actionInput(
       {
         organizationSlug,
@@ -299,21 +290,21 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
     description: "List Supabase projects visible to the authenticated account.",
-    requiredScopes: ["projects:read"],
+    requiredScopes: [supabaseScopes.projectsRead],
     inputSchema: s.actionInput({}, [], "No input parameters are required for this action."),
     outputSchema: s.actionOutput({ projects: s.array(projectSummary, { description: "The list of projects." }) }),
   }),
   defineProviderAction(service, {
     name: "get_project",
     description: "Get detailed metadata for a Supabase project by project ref.",
-    requiredScopes: ["projects:read"],
+    requiredScopes: [supabaseScopes.projectsRead],
     inputSchema: projectRefInput,
     outputSchema: s.actionOutput({ project: projectDetail }),
   }),
   defineProviderAction(service, {
     name: "list_available_regions",
     description: "List Supabase regions available for creating projects in an organization.",
-    requiredScopes: ["organizations:read"],
+    requiredScopes: [supabaseScopes.organizationsRead],
     inputSchema: s.actionInput(
       {
         organizationSlug,
@@ -328,7 +319,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project_health",
     description: "Check health for selected services in a Supabase project.",
-    requiredScopes: ["projects:read"],
+    requiredScopes: [supabaseScopes.projectsRead],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -349,7 +340,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_project_api_keys",
     description: "List API keys for a Supabase project.",
-    requiredScopes: ["secrets:read"],
+    requiredScopes: [supabaseScopes.secretsRead],
     inputSchema: s.actionInput(
       { projectRef, reveal: s.boolean({ description: "Whether to reveal the full API key values." }) },
       ["projectRef"],
@@ -360,7 +351,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project_api_key",
     description: "Get one API key record from a Supabase project.",
-    requiredScopes: ["secrets:read"],
+    requiredScopes: [supabaseScopes.secretsRead],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -375,7 +366,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_project_api_key",
     description: "Create a publishable or secret API key for a Supabase project.",
-    requiredScopes: ["secrets:write"],
+    requiredScopes: [supabaseScopes.secretsWrite],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -393,7 +384,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_project_api_key",
     description: "Update the name, description, or JWT template for a Supabase project API key.",
-    requiredScopes: ["secrets:write"],
+    requiredScopes: [supabaseScopes.secretsWrite],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -411,7 +402,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "delete_project_api_key",
     description: "Delete a Supabase project API key.",
-    requiredScopes: ["secrets:write"],
+    requiredScopes: [supabaseScopes.secretsWrite],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -428,7 +419,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_project_secrets",
     description: "List secrets configured for a Supabase project.",
-    requiredScopes: ["secrets:read"],
+    requiredScopes: [supabaseScopes.secretsRead],
     inputSchema: projectRefInput,
     outputSchema: s.actionOutput({
       secrets: s.array(secretRecord, { description: "The project secrets returned by Supabase." }),
@@ -437,7 +428,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upsert_project_secrets",
     description: "Bulk create or update secrets for a Supabase project.",
-    requiredScopes: ["secrets:write"],
+    requiredScopes: [supabaseScopes.secretsWrite],
     inputSchema: s.actionInput(
       { projectRef, secrets: s.array(secretInput, { minItems: 1, description: "The secrets to create or update." }) },
       ["projectRef", "secrets"],
@@ -450,7 +441,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "delete_project_secrets",
     description: "Bulk delete secrets from a Supabase project.",
-    requiredScopes: ["secrets:write"],
+    requiredScopes: [supabaseScopes.secretsWrite],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -469,7 +460,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_typescript_types",
     description: "Generate TypeScript database types for a Supabase project.",
-    requiredScopes: ["database:read"],
+    requiredScopes: [supabaseScopes.databaseRead],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -485,7 +476,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_read_only_query",
     description: "Run a SQL query through Supabase as the read-only database user.",
-    requiredScopes: ["database:read"],
+    requiredScopes: [supabaseScopes.databaseRead],
     inputSchema: s.actionInput(
       {
         projectRef,
@@ -504,7 +495,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_storage_buckets",
     description: "List Storage buckets for a Supabase project.",
-    requiredScopes: ["storage:read"],
+    requiredScopes: [supabaseScopes.storageRead],
     inputSchema: projectRefInput,
     outputSchema: s.actionOutput({
       buckets: s.array(jsonRecord, { description: "The Storage buckets returned by Supabase." }),
@@ -513,7 +504,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "download_storage_object",
     description: "Download an object from Supabase Storage into local transit file storage.",
-    requiredScopes: ["storage:read", "secrets:read"],
+    requiredScopes: [supabaseScopes.storageRead, supabaseScopes.secretsRead],
     inputSchema: s.actionInput(
       {
         projectRef: s.string({
@@ -537,7 +528,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_edge_functions",
     description: "List Edge Functions in a Supabase project.",
-    requiredScopes: ["edge_functions:read"],
+    requiredScopes: [supabaseScopes.edgeFunctionsRead],
     inputSchema: projectRefInput,
     outputSchema: s.actionOutput({
       functions: s.array(jsonRecord, { description: "The Edge Functions returned by Supabase." }),
@@ -546,7 +537,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_edge_function",
     description: "Get metadata for one Supabase Edge Function by slug.",
-    requiredScopes: ["edge_functions:read"],
+    requiredScopes: [supabaseScopes.edgeFunctionsRead],
     inputSchema: s.actionInput(
       {
         projectRef,

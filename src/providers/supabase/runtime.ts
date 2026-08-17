@@ -15,8 +15,11 @@ import {
 } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { supabaseProviderScopes } from "./scopes.ts";
 
 const supabaseApiBaseUrl = "https://api.supabase.com/v1";
+const supabaseProjectHostSuffix = ".supabase.co";
+const supabaseStorageAuthenticatedObjectPath = "/storage/v1/object/authenticated";
 const projectStatuses = new Set([
   "ACTIVE_HEALTHY",
   "ACTIVE_UNHEALTHY",
@@ -35,16 +38,6 @@ const projectStatuses = new Set([
   "RESIZING",
 ]);
 const apiKeyTypes = new Set(["legacy", "publishable", "secret", "unknown"]);
-
-const grantedScopes = [
-  "organizations:read",
-  "projects:read",
-  "secrets:read",
-  "secrets:write",
-  "database:read",
-  "storage:read",
-  "edge_functions:read",
-];
 
 type SupabaseActionInput = Record<string, unknown>;
 type SupabaseActionHandler = (input: SupabaseActionInput, context: BearerProviderContext) => Promise<unknown>;
@@ -159,7 +152,7 @@ export async function validateSupabaseCredential(
     profile: {
       accountId: subject ?? buildSupabaseAccountFingerprint(organizations, accessToken),
       displayName: buildSupabaseAccountLabel(organizations),
-      grantedScopes,
+      grantedScopes: supabaseProviderScopes,
     },
     metadata: {
       validationEndpoint: "/organizations",
@@ -525,7 +518,7 @@ async function supabaseDownloadStorageObject(
 
   const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
   const url = new URL(
-    `https://${projectRef}.supabase.co/storage/v1/object/authenticated/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
+    `https://${projectRef}${supabaseProjectHostSuffix}${supabaseStorageAuthenticatedObjectPath}/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
   );
   const headers: Record<string, string> = {
     accept: "*/*",
