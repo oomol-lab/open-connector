@@ -6,6 +6,7 @@ import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent 
 
 const service = "orcarouter";
 const orcarouterApiBaseUrl = "https://api.orcarouter.ai/v1";
+const anthropicApiVersion = "2023-06-01";
 
 type QueryValue = string | number | boolean | undefined;
 type OrcarouterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -15,6 +16,7 @@ interface OrcarouterRequestInput {
   path: string;
   query?: Record<string, QueryValue>;
   body?: Record<string, unknown>;
+  anthropicVersion?: string;
   mode?: "validate" | "execute";
 }
 
@@ -39,6 +41,7 @@ export const orcarouterActionHandlers: Record<string, OrcarouterActionHandler> =
         method: "POST",
         path: "/messages",
         body: compactObject(input),
+        anthropicVersion: anthropicApiVersion,
       },
       context,
     );
@@ -103,7 +106,7 @@ async function orcarouterRequest(
   try {
     response = await context.fetcher(url, {
       method: input.method ?? "GET",
-      headers: buildOrcarouterHeaders(apiKey, input.body != null),
+      headers: buildOrcarouterHeaders(apiKey, input.body != null, input.anthropicVersion),
       body: input.body == null ? undefined : JSON.stringify(input.body),
       signal: context.signal,
     });
@@ -118,7 +121,7 @@ async function orcarouterRequest(
   return response.json() as Promise<unknown>;
 }
 
-function buildOrcarouterHeaders(apiKey: string, includeJsonContentType: boolean): Headers {
+function buildOrcarouterHeaders(apiKey: string, includeJsonContentType: boolean, anthropicVersion?: string): Headers {
   const headers = new Headers({
     authorization: `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
@@ -126,6 +129,9 @@ function buildOrcarouterHeaders(apiKey: string, includeJsonContentType: boolean)
 
   if (includeJsonContentType) {
     headers.set("content-type", "application/json");
+  }
+  if (anthropicVersion) {
+    headers.set("anthropic-version", anthropicVersion);
   }
 
   return headers;
