@@ -13,7 +13,7 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { jsonObject } from "../../core/request.ts";
+import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const supabaseApiBaseUrl = "https://api.supabase.com/v1";
@@ -120,6 +120,9 @@ export const supabaseActionHandlers: Record<string, SupabaseActionHandler> = {
   },
   list_storage_buckets(input, context) {
     return supabaseListStorageBuckets(input, context);
+  },
+  download_storage_object(input, context) {
+    return supabaseDownloadStorageObject(input, context);
   },
   list_edge_functions(input, context) {
     return supabaseListEdgeFunctions(input, context);
@@ -503,6 +506,128 @@ async function supabaseListStorageBuckets(
       "storage buckets",
     ),
   };
+}
+
+async function supabaseDownloadStorageObject(
+  input: SupabaseActionInput,
+  context: BearerProviderContext,
+): Promise<unknown> {
+  if (!context.transitFiles) {
+    throw providerInputError("supabase download_storage_object requires local transit file storage");
+  }
+
+  const projectRef = readStorageProjectRef(input);
+  const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
+  const objectPath = requiredString(input.objectPath, "objectPath", providerInputError);
+  if (objectPath.startsWith("/")) {
+    throw providerInputError("objectPath must not start with a slash");
+  }
+
+  const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
+  const url = new URL(
+    `https://${projectRef}.supabase.co/storage/v1/object/authenticated/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
+  );
+  const headers: Record<string, string> = {
+    accept: "*/*",
+    apikey: storageKey.value,
+    "user-agent": providerUserAgent,
+  };
+  if (storageKey.authorizationBearer) {
+    headers.authorization = `Bearer ${storageKey.value}`;
+  }
+
+  const response = await context.fetcher(url, { headers, signal: context.signal });
+  if (!response.ok) {
+    const bytes = await readBoundedResponseBytes(response, {
+      maxBytes: 64 * 1024,
+      fieldName: "Supabase Storage error response",
+      createError: (message) => new ProviderRequestError(413, message),
+    });
+    throw createSupabaseError(response, parseSupabaseStorageError(bytes), "execute");
+  }
+
+  const name = optionalString(input.fileName) ?? defaultStorageObjectName(objectPath);
+  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Supabase Storage download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+
+  return {
+    fileId: `${bucketId}/${objectPath}`,
+    name,
+    mimeType,
+    sizeBytes: file.sizeBytes,
+    file,
+  };
+}
+
+interface SupabaseStorageKey {
+  value: string;
+  authorizationBearer: boolean;
+}
+
+async function resolveSupabaseStorageKey(
+  input: SupabaseActionInput,
+  projectRef: string,
+  context: BearerProviderContext,
+): Promise<SupabaseStorageKey> {
+  const apiKeyId = optionalString(input.apiKeyId);
+  const payload = await requestSupabaseJson({
+    path: apiKeyId
+      ? `/projects/${encodeURIComponent(projectRef)}/api-keys/${encodeURIComponent(apiKeyId)}`
+      : `/projects/${encodeURIComponent(projectRef)}/api-keys`,
+    context,
+    query: { reveal: true },
+  });
+  const records = apiKeyId ? [normalizeApiKeyRecord(payload)] : normalizeApiKeyListPayload(payload);
+  for (const record of records) {
+    const value = optionalString(record.apiKey);
+    const type = optionalString(record.type);
+    const name = optionalString(record.name);
+    if (value && (type === "secret" || value.startsWith("sb_secret_"))) {
+      return { value, authorizationBearer: false };
+    }
+    if (value && type === "legacy" && name === "service_role") {
+      return { value, authorizationBearer: true };
+    }
+  }
+
+  throw providerInputError(
+    apiKeyId
+      ? "The selected Supabase API key is not an elevated secret or legacy service_role key."
+      : "Supabase Storage download requires a revealed secret or legacy service_role project API key.",
+  );
+}
+
+function readStorageProjectRef(input: SupabaseActionInput): string {
+  const projectRef = readProjectRef(input);
+  if (!/^[a-z0-9]+$/.test(projectRef)) {
+    throw providerInputError("projectRef must contain only lowercase letters and numbers");
+  }
+  return projectRef;
+}
+
+function encodeStorageObjectPath(objectPath: string): string {
+  return objectPath.split("/").map(encodeURIComponent).join("/");
+}
+
+function defaultStorageObjectName(objectPath: string): string {
+  return objectPath.split("/").findLast((segment) => segment.length > 0) ?? "supabase-object";
+}
+
+function parseSupabaseStorageError(bytes: Uint8Array): unknown {
+  const body = new TextDecoder().decode(bytes).trim();
+  if (!body) {
+    return null;
+  }
+  try {
+    return JSON.parse(body) as unknown;
+  } catch {
+    return { message: body };
+  }
 }
 
 async function supabaseListEdgeFunctions(input: SupabaseActionInput, context: BearerProviderContext): Promise<unknown> {

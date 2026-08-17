@@ -218,6 +218,19 @@ const healthRecord = s.object(
     description: "A Supabase service health result.",
   },
 );
+const downloadedStorageObject = s.requiredObject("A downloaded Supabase Storage object in local transit storage.", {
+  fileId: s.nonEmptyString("The bucket-qualified Supabase Storage object path."),
+  name: s.nonEmptyString("The filename used for the local transit file."),
+  mimeType: s.nonEmptyString("The downloaded object MIME type."),
+  sizeBytes: s.nonNegativeInteger("The downloaded object size in bytes."),
+  file: s.requiredObject("The downloaded object in local transit file storage.", {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored object."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: s.nonEmptyString("The stored transit file name."),
+    mimeType: s.nonEmptyString("The stored transit file MIME type."),
+  }),
+});
 const projectRefInput = s.actionInput(
   { projectRef },
   ["projectRef"],
@@ -496,6 +509,30 @@ export const supabaseActions: ActionDefinition[] = [
     outputSchema: s.actionOutput({
       buckets: s.array(jsonRecord, { description: "The Storage buckets returned by Supabase." }),
     }),
+  }),
+  defineProviderAction(service, {
+    name: "download_storage_object",
+    description: "Download an object from Supabase Storage into local transit file storage.",
+    requiredScopes: ["storage:read", "secrets:read"],
+    inputSchema: s.actionInput(
+      {
+        projectRef: s.string({
+          minLength: 1,
+          maxLength: 64,
+          pattern: "^[a-z0-9]+$",
+          description: "The lowercase Supabase project reference used by the project API hostname.",
+        }),
+        bucketId: s.nonEmptyString("The Storage bucket identifier."),
+        objectPath: s.nonEmptyString("The complete object path inside the bucket, without a leading slash."),
+        apiKeyId: s.nonEmptyString(
+          "An optional secret or legacy service_role API key ID. When omitted, the first revealed elevated key is used.",
+        ),
+        fileName: s.nonEmptyString("An optional filename override for the local transit file."),
+      },
+      ["projectRef", "bucketId", "objectPath"],
+      "Input parameters for downloading one Supabase Storage object.",
+    ),
+    outputSchema: downloadedStorageObject,
   }),
   defineProviderAction(service, {
     name: "list_edge_functions",
