@@ -115,21 +115,19 @@ const listDriveItemsOutput = s.object(
   },
   { required: ["items", "nextLink"], description: "OneDrive list response." },
 );
-const downloadedFile = s.object(
-  {
-    name: nonEmptyString("The downloaded file name."),
-    mimeType: nonEmptyString("The MIME type of the downloaded file."),
-    contentBase64: nonEmptyString("The downloaded file content encoded as base64."),
-  },
-  { required: ["name", "mimeType", "contentBase64"], description: "A downloaded OneDrive file." },
-);
-const downloadOutput = s.object(
-  {
-    content: s.nullable(downloadedFile),
-    notModified: s.boolean({ description: "Whether the OneDrive server returned HTTP 304 Not Modified." }),
-  },
-  { required: ["content", "notModified"], description: "OneDrive download response." },
-);
+const downloadOutput = s.requiredObject("A OneDrive file downloaded into local transit storage.", {
+  fileId: nonEmptyString("The unique identifier of the downloaded OneDrive item."),
+  name: nonEmptyString("The downloaded file name."),
+  mimeType: nonEmptyString("The MIME type of the downloaded file."),
+  sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+  file: s.requiredObject("The downloaded file in local transit storage.", {
+    fileId: nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored file."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: nonEmptyString("The stored transit file name."),
+    mimeType: nonEmptyString("The stored transit file MIME type."),
+  }),
+});
 const fileSystemInfo = s.object(
   {
     createdDateTime: s.dateTime("Client-side creation timestamp."),
@@ -238,7 +236,7 @@ const actions: OneDriveActionSource[] = [
   ),
   read(
     "download_file",
-    "Download one file from OneDrive by item ID and return its content encoded as base64.",
+    "Download one file from OneDrive by item ID into local transit file storage.",
     input(
       {
         driveId,
@@ -247,7 +245,6 @@ const actions: OneDriveActionSource[] = [
           description: "Optional format to convert the file into before download.",
         }),
         fileName: nonEmptyString("Optional file name to use for the downloaded file."),
-        ifNoneMatch: nonEmptyString("Optional eTag or cTag used for conditional download requests."),
       },
       ["itemId"],
     ),
@@ -255,13 +252,12 @@ const actions: OneDriveActionSource[] = [
   ),
   read(
     "download_file_by_path",
-    "Download one file from OneDrive by path and return its content encoded as base64.",
+    "Download one file from OneDrive by path into local transit file storage.",
     input(
       {
         driveId,
         itemPath: flexibleItemPath,
         fileName: nonEmptyString("Optional file name to use for the downloaded file."),
-        ifNoneMatch: nonEmptyString("Optional eTag or cTag used for conditional download requests."),
       },
       ["itemPath"],
     ),
@@ -269,7 +265,7 @@ const actions: OneDriveActionSource[] = [
   ),
   read(
     "download_item_as_format",
-    "Download one drive item after converting it to a supported Microsoft Graph format.",
+    "Download one drive item into local transit storage after converting it to a supported Microsoft Graph format.",
     input(
       {
         driveId,

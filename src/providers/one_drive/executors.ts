@@ -3,12 +3,13 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, requiredRecord } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError, readTransitFileInput } from "../provider-runtime.ts";
 
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";
 const graphOrigin = new URL(graphBaseUrl).origin;
 const oneDriveUploadChunkSizeBytes = 10 * 1024 * 1024;
-const oneDriveDownloadSelectFields = ["id", "name", "file", "folder"] as const;
+const oneDriveDownloadSelectFields = ["id", "name", "size", "file", "folder"] as const;
 const oneDriveDownloadFormatMimeTypes = {
   pdf: "application/pdf",
   html: "text/html",
@@ -32,6 +33,7 @@ type OneDriveRequestInput = {
   rawBody?: BodyInit;
   absoluteUrlPolicy?: "children" | "search";
   allowStatuses?: number[];
+  signal?: AbortSignal;
 };
 
 type OneDriveGraphCollection<T> = {
@@ -169,6 +171,7 @@ async function oneDriveRequest(pathOrUrl: string, input: OneDriveRequestInput) {
         : headers,
     ...(hasJsonBody ? { body: JSON.stringify(input.body) } : {}),
     ...(hasRawBody ? { body: input.rawBody } : {}),
+    signal: input.signal,
   });
 
   if (!response.ok && !input.allowStatuses?.includes(response.status)) {
@@ -501,7 +504,6 @@ async function downloadFile(input: Record<string, unknown>, deps: OneDriveRuntim
     contentPath: `${itemPath}/content`,
     format: readDownloadFormat(input),
     fileName: readOptionalString(input.fileName),
-    ifNoneMatch: readOptionalString(input.ifNoneMatch),
     deps,
   });
 }
@@ -515,7 +517,6 @@ async function downloadFileByPath(input: Record<string, unknown>, deps: OneDrive
     metadataPath: drivePath,
     contentPath: `${drivePath}/content`,
     fileName: readOptionalString(input.fileName),
-    ifNoneMatch: readOptionalString(input.ifNoneMatch),
     deps,
   });
 }
@@ -647,44 +648,47 @@ async function downloadDriveItem(input: {
   contentPath: string;
   fileName?: string;
   format?: OneDriveDownloadFormat;
-  ifNoneMatch?: string;
   deps: OneDriveRuntimeDeps;
 }) {
+  const transitFiles = input.deps.transitFiles;
+  if (!transitFiles) {
+    throw new ProviderRequestError(400, "one_drive downloads require local transit file storage");
+  }
+
   const metadata = await fetchDriveItemMetadata(input.metadataPath, input.deps);
   if (!isFileDriveItem(metadata)) {
     throw new ProviderRequestError(400, "drive item must be a file");
+  }
+  const fileId = requireString(metadata.id, "drive item id");
+  const reportedSizeBytes = readOptionalNumber(metadata.size);
+  if (!input.format && reportedSizeBytes != null && reportedSizeBytes > transitFiles.maxBytes) {
+    throw new ProviderRequestError(413, `OneDrive download exceeds ${transitFiles.maxBytes} bytes`);
   }
 
   const response = await oneDriveRequest(input.contentPath, {
     accessToken: input.deps.accessToken,
     fetcher: input.deps.fetcher,
-    headers: compactStringRecord({
-      "if-none-match": input.ifNoneMatch,
-    }),
     query: compactObject({
       format: input.format,
     }),
-    allowStatuses: [304],
+    signal: input.deps.signal,
   });
-
-  if (response.status === 304) {
-    return {
-      content: null,
-      notModified: true,
-    };
-  }
 
   const name = resolveDownloadFileName(metadata, input.fileName, input.format);
   const mimeType = resolveDownloadMimeType(metadata, response, input.format);
-  const bytes = Buffer.from(await response.arrayBuffer());
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: transitFiles.maxBytes,
+    fieldName: "OneDrive download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
 
   return {
-    content: {
-      name,
-      mimeType,
-      contentBase64: bytes.toString("base64"),
-    },
-    notModified: false,
+    fileId,
+    name,
+    mimeType,
+    sizeBytes: file.sizeBytes,
+    file,
   };
 }
 
@@ -696,6 +700,7 @@ async function fetchDriveItemMetadata(path: string, deps: OneDriveRuntimeDeps) {
       query: {
         $select: oneDriveDownloadSelectFields.join(","),
       },
+      signal: deps.signal,
     }),
   );
 }
