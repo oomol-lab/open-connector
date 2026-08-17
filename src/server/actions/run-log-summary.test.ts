@@ -144,13 +144,23 @@ describe("summarizeForRunLog", () => {
     });
   });
 
-  it("redacts credentials from protocol-relative URLs", () => {
-    expect(summarizeForRunLog({ url: "//user:pass@example.com/path" })).toEqual({ url: "[redacted-url]" });
-    expect(summarizeForRunLog({ url: "//example.com/file?token=SECRET" })).toEqual({ url: "[redacted-url]" });
+  it("keeps only the host of protocol-relative URLs", () => {
+    expect(summarizeForRunLog({ url: "//user:pass@example.com/path" })).toEqual({ url: "//example.com" });
+    expect(summarizeForRunLog({ url: "//user@example.com/path" })).toEqual({ url: "//example.com" });
+    expect(summarizeForRunLog({ url: "//cdn.example.com/logo.png" })).toEqual({ url: "//cdn.example.com" });
+    expect(summarizeForRunLog({ url: "//example.com:80/path" })).toEqual({ url: "//example.com:80" });
+    expect(summarizeForRunLog({ url: "//hooks.slack.com/services/T000/B000/SECRET" })).toEqual({
+      url: "//hooks.slack.com",
+    });
   });
 
-  it("redacts username-only userinfo in protocol-relative URLs", () => {
-    expect(summarizeForRunLog({ url: "//user@example.com/path" })).toEqual({ url: "[redacted-url]" });
+  it("redacts sensitive protocol-relative URLs", () => {
+    expect(summarizeForRunLog({ url: "//example.com/file?token=SECRET" })).toEqual({ url: "[redacted-url]" });
+    expect(summarizeForRunLog({ downloadUrl: "//example.com/file" })).toEqual({ downloadUrl: "[redacted-url]" });
+  });
+
+  it("redacts userinfo in malformed protocol-relative URLs", () => {
+    expect(summarizeForRunLog({ url: "//user@example .com/path" })).toEqual({ url: "[redacted-url]" });
   });
 
   it("keeps only the origin of non-http URLs", () => {
@@ -160,10 +170,6 @@ describe("summarizeForRunLog", () => {
 
   it("redacts sensitive query keys in non-http URLs", () => {
     expect(summarizeForRunLog({ url: "s3://bucket/key?token=SECRET" })).toEqual({ url: "[redacted-url]" });
-  });
-
-  it("keeps benign protocol-relative values intact", () => {
-    expect(summarizeForRunLog({ url: "//cdn.example.com/logo.png" })).toEqual({ url: "//cdn.example.com/logo.png" });
   });
 });
 
