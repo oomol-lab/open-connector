@@ -7,7 +7,7 @@ OpenConnector is configured with environment variables.
 | `PORT`                                   | `3000`                    | Local HTTP server port.                                                                             |
 | `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                                          |
 | `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                                         |
-| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Directory containing `connect.sqlite`. Docker image sets `/app/data`.                               |
+| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Runtime database, local transit files, and Node upload staging. Docker uses `/app/data`.            |
 | `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, pending OAuth state, and completed idempotent Action responses. |
 | `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                                          |
 | `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.                              |
@@ -116,6 +116,18 @@ instances must use the same bucket and S3 settings. The runtime rejects expired 
 read, but it does not scan the bucket. Configure a bucket lifecycle rule that deletes objects under
 the `transit/` prefix after the configured transit-file TTL so unread expired objects are also
 removed.
+
+Each S3 transit file uses one object. Its original file name is encoded in S3 user metadata, while
+the content type, size, and modification time come from the object's native S3 fields. There is no
+separate metadata sidecar object in the S3 backend.
+
+On Node, multipart uploads to `/api/files` are streamed into
+`OOMOL_CONNECT_DATA_DIR/tmp/transit-files` before they are moved into local storage or streamed to
+S3 with a known content length. The staging file is removed after success or failure, so upload
+memory stays bounded by stream buffers instead of file size. A hard process termination can leave a
+partial staging file; startup removes managed staging files older than the configured transit-file
+TTL. Ensure each instance has enough local disk for its concurrent in-progress uploads even when S3
+is the final backend.
 
 ## Private network access
 

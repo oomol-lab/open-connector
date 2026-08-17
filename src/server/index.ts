@@ -1,4 +1,4 @@
-import type { ITransitFileService } from "./files/transit-file-store.ts";
+import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
 
 import { S3Client } from "@aws-sdk/client-s3";
 import { serve } from "@hono/node-server";
@@ -17,6 +17,7 @@ import { executorModules } from "../providers/registry.generated.ts";
 import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectApp } from "./connect-app.ts";
+import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
 import { S3TransitFileService } from "./files/s3-transit-files.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
@@ -61,12 +62,15 @@ const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"
   runLimit,
 });
 const transitFiles = createTransitFileService();
+const transitFileTempDir = join(dataDir, "tmp", "transit-files");
 await transitFiles.cleanupExpired();
+await cleanupStagedTransitFiles(transitFileTempDir, transitFileTtlSeconds * 1000);
 const { app, runtimeAuthConfigured } = await createConnectApp({
   catalog,
   providerLoader,
   runtimeDatabase,
   transitFiles,
+  uploadTransitFile: createNodeTransitFileUpload({ transitFiles, tempDir: transitFileTempDir }),
   publicOrigin,
   secretCodec,
   adminToken,
@@ -134,7 +138,7 @@ function readPositiveIntegerEnv(name: string, fallback: number): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function createTransitFileService(): ITransitFileService {
+function createTransitFileService(): IStagedTransitFileService {
   const backend = process.env.OOMOL_CONNECT_TRANSIT_FILE_BACKEND ?? "local";
   switch (backend) {
     case "local":

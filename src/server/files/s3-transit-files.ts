@@ -1,4 +1,9 @@
-import type { ITransitFileService, TransitFileRead, TransitFileUpload } from "./transit-file-store.ts";
+import type {
+  IStagedTransitFileService,
+  StagedTransitFile,
+  TransitFileRead,
+  TransitFileUpload,
+} from "./transit-file-store.ts";
 import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 
 import {
@@ -10,6 +15,7 @@ import {
   S3ServiceException,
 } from "@aws-sdk/client-s3";
 import { randomBytes } from "node:crypto";
+import { createReadStream } from "node:fs";
 import { extname } from "node:path";
 import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
 
@@ -24,11 +30,10 @@ export interface S3TransitFileOptions {
 interface TransitFileMetadata {
   name: string;
   mimeType: string;
-  createdAt: string;
   sizeBytes: number;
 }
 
-export class S3TransitFileService implements ITransitFileService {
+export class S3TransitFileService implements IStagedTransitFileService {
   private readonly client: S3Client;
   private readonly bucket: string;
   private readonly publicOrigin: string;
@@ -49,7 +54,6 @@ export class S3TransitFileService implements ITransitFileService {
     const metadata = normalizeMetadata({
       name: file.name || fileId,
       mimeType: file.type || contentTypeFromFileId(fileId),
-      createdAt: new Date().toISOString(),
       sizeBytes: file.size,
     });
 
@@ -60,14 +64,36 @@ export class S3TransitFileService implements ITransitFileService {
         Body: new Uint8Array(await file.arrayBuffer()),
         ContentLength: file.size,
         ContentType: metadata.mimeType,
+        Metadata: { filename: encodeFileName(metadata.name) },
       }),
     );
+
+    return {
+      fileId,
+      downloadUrl: `${this.publicOrigin}/api/files/${encodeURIComponent(fileId)}`,
+      sizeBytes: metadata.sizeBytes,
+      name: metadata.name,
+      mimeType: metadata.mimeType,
+    };
+  }
+
+  async createFromPath(file: StagedTransitFile): Promise<TransitFileUpload> {
+    this.assertFileSize(file.sizeBytes);
+    const fileId = `${randomBytes(16).toString("hex")}${safeExtension(file.name)}`;
+    const metadata = normalizeMetadata({
+      name: file.name || fileId,
+      mimeType: file.mimeType || contentTypeFromFileId(fileId),
+      sizeBytes: file.sizeBytes,
+    });
+
     await this.client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
-        Key: metadataKey(fileId),
-        Body: JSON.stringify(metadata),
-        ContentType: "application/json",
+        Key: objectKey(fileId),
+        Body: createReadStream(file.path),
+        ContentLength: file.sizeBytes,
+        ContentType: metadata.mimeType,
+        Metadata: { filename: encodeFileName(metadata.name) },
       }),
     );
 
@@ -106,10 +132,7 @@ export class S3TransitFileService implements ITransitFileService {
   async delete(fileId: string): Promise<boolean> {
     assertSafeFileId(fileId);
     const existing = await this.objectExists(fileId);
-    await Promise.all([
-      this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: objectKey(fileId) })),
-      this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: metadataKey(fileId) })),
-    ]);
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: objectKey(fileId) }));
     return existing;
   }
 
@@ -120,26 +143,20 @@ export class S3TransitFileService implements ITransitFileService {
     metadata: TransitFileMetadata;
   }> {
     assertSafeFileId(fileId);
-    const [object, metadata] = await Promise.all([this.getObject(objectKey(fileId)), this.readMetadata(fileId)]);
-    if (!object?.Body || !metadata || this.isExpired(metadata)) {
+    const object = await this.getObject(objectKey(fileId));
+    if (!object?.Body || !object.LastModified || this.isExpired(object.LastModified)) {
       await this.delete(fileId);
       throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
     }
 
-    return { object, metadata };
-  }
-
-  private async readMetadata(fileId: string): Promise<TransitFileMetadata | undefined> {
-    const object = await this.getObject(metadataKey(fileId));
-    if (!object?.Body) {
-      return undefined;
-    }
-
-    try {
-      return normalizeMetadata(JSON.parse(await object.Body.transformToString()) as Partial<TransitFileMetadata>);
-    } catch {
-      return undefined;
-    }
+    return {
+      object,
+      metadata: normalizeMetadata({
+        name: decodeFileName(object.Metadata?.filename) ?? fileId,
+        mimeType: object.ContentType || contentTypeFromFileId(fileId),
+        sizeBytes: object.ContentLength ?? 0,
+      }),
+    };
   }
 
   private async getObject(key: string): Promise<GetObjectCommandOutput | undefined> {
@@ -171,8 +188,8 @@ export class S3TransitFileService implements ITransitFileService {
     }
   }
 
-  private isExpired(metadata: TransitFileMetadata): boolean {
-    return Date.now() - Date.parse(metadata.createdAt) > this.ttlMs;
+  private isExpired(lastModified: Date): boolean {
+    return Date.now() - lastModified.getTime() > this.ttlMs;
   }
 }
 
@@ -181,17 +198,12 @@ function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitFileMeta
     name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "file",
     mimeType:
       typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
-    createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
     sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
   };
 }
 
 function objectKey(fileId: string): string {
   return `transit/${fileId}`;
-}
-
-function metadataKey(fileId: string): string {
-  return `transit/${fileId}.meta.json`;
 }
 
 function assertSafeFileId(fileId: string): void {
@@ -203,6 +215,18 @@ function assertSafeFileId(fileId: string): void {
 function safeExtension(name: string): string {
   const extension = extname(name).toLowerCase();
   return /^\.[a-z0-9]{1,16}$/.test(extension) ? extension : "";
+}
+
+function encodeFileName(name: string): string {
+  return Buffer.from(name, "utf8").toString("base64url");
+}
+
+function decodeFileName(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const name = Buffer.from(value, "base64url").toString("utf8");
+  return name || undefined;
 }
 
 function isNotFound(error: unknown): boolean {

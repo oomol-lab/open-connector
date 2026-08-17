@@ -13,6 +13,13 @@ export interface TransitFileRead {
   mimeType: string;
 }
 
+export interface StagedTransitFile {
+  path: string;
+  sizeBytes: number;
+  name: string;
+  mimeType: string;
+}
+
 export interface ITransitFileService {
   readonly maxBytes: number;
   create(file: File): Promise<TransitFileUpload>;
@@ -20,6 +27,10 @@ export interface ITransitFileService {
   response?(fileId: string): Promise<Response>;
   delete(fileId: string): Promise<boolean>;
   cleanupExpired(): Promise<void>;
+}
+
+export interface IStagedTransitFileService extends ITransitFileService {
+  createFromPath(file: StagedTransitFile): Promise<TransitFileUpload>;
 }
 
 export class TransitFileError extends Error {
