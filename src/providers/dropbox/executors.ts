@@ -1,4 +1,9 @@
-import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -8,6 +13,7 @@ import {
   optionalString as asOptionalString,
   requiredRecord,
 } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -263,7 +269,10 @@ async function getMetadata(input: Record<string, unknown>, accessToken: string, 
 }
 
 async function downloadFile(input: Record<string, unknown>, context: ActionContext) {
-  const { accessToken, fetcher } = context;
+  const { accessToken, fetcher, transitFiles } = context;
+  if (!transitFiles) {
+    throw new ProviderRequestError(400, "dropbox download_file requires local transit file storage");
+  }
   const response = await fetcher(`${dropboxContentBaseUrl}/files/download`, {
     method: "POST",
     headers: {
@@ -272,33 +281,14 @@ async function downloadFile(input: Record<string, unknown>, context: ActionConte
         path: requireString(input.path, "dropbox download path"),
       }),
     },
+    signal: context.signal,
   });
 
   if (!response.ok) {
     throw await normalizeDropboxHttpError(response, "dropbox download failed");
   }
 
-  const metadata = parseDropboxApiResultHeader(response);
-  const normalizedMetadata = mapDropboxMetadata(metadata);
-  if (normalizedMetadata.tag !== "file") {
-    throw new ProviderRequestError(400, "dropbox download_file requires a file path");
-  }
-
-  const name = optionalString(input.fileName) ?? normalizedMetadata.name;
-  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
-  const fileId = normalizedMetadata.id;
-  if (!fileId) {
-    throw new ProviderRequestError(502, "dropbox download metadata is missing file id");
-  }
-  const bytes = Buffer.from(await response.arrayBuffer());
-
-  return {
-    fileId,
-    name,
-    mimeType,
-    sizeBytes: normalizedMetadata.sizeBytes,
-    contentBase64: bytes.toString("base64"),
-  };
+  return storeDropboxDownload(input, response, transitFiles, "download_file");
 }
 
 async function uploadFile(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
@@ -593,7 +583,10 @@ async function getSharedLinkMetadata(input: Record<string, unknown>, accessToken
 }
 
 async function getSharedLinkFile(input: Record<string, unknown>, context: ActionContext) {
-  const { accessToken, fetcher } = context;
+  const { accessToken, fetcher, transitFiles } = context;
+  if (!transitFiles) {
+    throw new ProviderRequestError(400, "dropbox get_shared_link_file requires local transit file storage");
+  }
 
   const arg = compactObject({
     url: requireString(input.url, "dropbox shared link url"),
@@ -605,32 +598,53 @@ async function getSharedLinkFile(input: Record<string, unknown>, context: Action
       ...dropboxAuthHeaders(accessToken),
       "Dropbox-API-Arg": JSON.stringify(arg),
     },
+    signal: context.signal,
   });
 
   if (!response.ok) {
     throw await normalizeDropboxHttpError(response, "dropbox shared link file download failed");
   }
 
-  const metadata = parseDropboxApiResultHeader(response);
-  const normalizedMetadata = mapDropboxMetadata(metadata);
+  return storeDropboxDownload(input, response, transitFiles, "get_shared_link_file");
+}
+
+async function storeDropboxDownload(
+  input: Record<string, unknown>,
+  response: Response,
+  transitFiles: TransitFileWriter,
+  actionName: "download_file" | "get_shared_link_file",
+): Promise<unknown> {
+  const normalizedMetadata = mapDropboxMetadata(parseDropboxApiResultHeader(response));
   if (normalizedMetadata.tag !== "file") {
-    throw new ProviderRequestError(400, "dropbox get_shared_link_file requires a file");
+    throw new ProviderRequestError(400, `dropbox ${actionName} requires a file`);
   }
 
-  const name = optionalString(input.fileName) ?? normalizedMetadata.name;
-  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
   const fileId = normalizedMetadata.id;
   if (!fileId) {
-    throw new ProviderRequestError(502, "dropbox shared-link metadata is missing file id");
+    throw new ProviderRequestError(502, "dropbox download metadata is missing file id");
   }
-  const bytes = Buffer.from(await response.arrayBuffer());
+  const name = optionalString(input.fileName) ?? normalizedMetadata.name;
+  if (!name) {
+    throw new ProviderRequestError(502, "dropbox download metadata is missing file name");
+  }
+  if (normalizedMetadata.sizeBytes !== null && normalizedMetadata.sizeBytes > transitFiles.maxBytes) {
+    throw new ProviderRequestError(413, `Dropbox download exceeds ${transitFiles.maxBytes} bytes`);
+  }
+
+  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: transitFiles.maxBytes,
+    fieldName: "Dropbox download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
 
   return {
     fileId,
     name,
     mimeType,
-    sizeBytes: normalizedMetadata.sizeBytes,
-    contentBase64: bytes.toString("base64"),
+    sizeBytes: file.sizeBytes,
+    file,
   };
 }
 

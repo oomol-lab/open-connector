@@ -235,7 +235,7 @@ const metadataResultSchema = s.object(
 const downloadFileInputSchema = s.object(
   {
     path: textSchema("The Dropbox file path, file ID, or revision ID to download."),
-    fileName: textSchema("Optional file name to use for the uploaded transit file."),
+    fileName: nonEmptyString("Optional file name to use for the local transit file."),
   },
   {
     description: "Input payload for downloading a Dropbox file into transit storage.",
@@ -243,19 +243,19 @@ const downloadFileInputSchema = s.object(
   },
 );
 
-const downloadFileOutputSchema = s.object(
-  {
-    fileId: textSchema("The unique identifier of the downloaded Dropbox file."),
-    name: textSchema("The name of the downloaded Dropbox file."),
-    mimeType: textSchema("The MIME type used for the transit upload."),
-    sizeBytes: nullableInteger("The size of the downloaded file content in bytes."),
-    contentBase64: textSchema("The downloaded file content encoded as base64."),
-  },
-  {
-    description: "A Dropbox file downloaded into transit storage.",
-    required: ["fileId", "name", "mimeType", "sizeBytes", "contentBase64"],
-  },
-);
+const downloadFileOutputSchema = s.requiredObject("A Dropbox file downloaded into local transit storage.", {
+  fileId: nonEmptyString("The unique identifier of the downloaded Dropbox file."),
+  name: nonEmptyString("The name of the downloaded Dropbox file."),
+  mimeType: nonEmptyString("The MIME type of the downloaded file."),
+  sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+  file: s.requiredObject("The downloaded file in local transit storage.", {
+    fileId: nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored file."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: nonEmptyString("The stored transit file name."),
+    mimeType: nonEmptyString("The stored transit file MIME type."),
+  }),
+});
 
 const uploadFileInputSchema = s.object(
   {
@@ -596,7 +596,7 @@ const getSharedLinkFileInputSchema = s.object(
   {
     url: nonEmptyString("The Dropbox shared link URL."),
     path: textSchema("Optional path inside the shared link when the link points to a folder."),
-    fileName: textSchema("Optional file name to use for the uploaded transit file."),
+    fileName: nonEmptyString("Optional file name to use for the local transit file."),
   },
   {
     description: "Input payload for downloading a Dropbox shared-link file into transit storage.",
@@ -737,7 +737,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_file",
-    description: "Download one Dropbox file and return its content encoded as base64.",
+    description: "Download one Dropbox file into local transit file storage.",
     requiredScopes: [dropboxProviderScopes.filesContentRead],
     providerPermissions: [dropboxProviderScopes.filesContentRead],
     inputSchema: downloadFileInputSchema,
@@ -865,7 +865,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shared_link_file",
-    description: "Download a Dropbox shared-link file and return its content encoded as base64.",
+    description: "Download a Dropbox shared-link file into local transit file storage.",
     requiredScopes: [dropboxProviderScopes.sharingRead],
     providerPermissions: [dropboxProviderScopes.sharingRead],
     inputSchema: getSharedLinkFileInputSchema,
