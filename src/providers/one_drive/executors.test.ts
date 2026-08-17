@@ -9,6 +9,7 @@ import { executors } from "./executors.ts";
 interface CapturedRequest {
   url: URL;
   authorization: string | null;
+  signal: AbortSignal | null;
 }
 
 const oauthCredential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
@@ -45,8 +46,9 @@ describe("OneDrive transit downloads", () => {
       new Response(Uint8Array.from(content), { headers: { "content-type": "text/plain; charset=utf-8" } }),
     ]);
     const { store, create } = createTransitFileStore(1024);
+    const controller = new AbortController();
 
-    const result = await executeOneDriveAction("download_file", { itemId: "item-1" }, store);
+    const result = await executeOneDriveAction("download_file", { itemId: "item-1" }, store, controller.signal);
 
     expect(result).toEqual({
       ok: true,
@@ -71,6 +73,8 @@ describe("OneDrive transit downloads", () => {
     expect(requests[0]?.authorization).toBe("Bearer onedrive-access-token");
     expect(requests[1]?.authorization).toBe("Bearer onedrive-access-token");
     expect(requests[2]?.authorization).toBeNull();
+    expect(requests[0]?.signal).toBe(controller.signal);
+    expect(requests[1]?.signal).toBe(controller.signal);
     expect(create).toHaveBeenCalledOnce();
     expect(new Uint8Array(await create.mock.calls[0]![0].arrayBuffer())).toEqual(content);
   });
@@ -188,6 +192,7 @@ function stubResponses(responses: Response[]): CapturedRequest[] {
     requests.push({
       url: new URL(request.url),
       authorization: request.headers.get("authorization"),
+      signal: init?.signal ?? (input instanceof Request ? input.signal : null),
     });
     const response = responses.shift();
     if (!response) {
@@ -230,6 +235,7 @@ async function executeOneDriveAction(
   actionName: OneDriveDownloadAction,
   input: Record<string, unknown>,
   transitFiles?: TransitFileStore,
+  signal?: AbortSignal,
 ) {
   const context: ExecutionContext = {
     getCredential: async (service) => {
@@ -239,6 +245,9 @@ async function executeOneDriveAction(
   };
   if (transitFiles) {
     context.transitFiles = transitFiles;
+  }
+  if (signal) {
+    context.signal = signal;
   }
   return executeAction(
     provider.actions.find((action) => action.name === actionName)!,

@@ -682,7 +682,7 @@ async function downloadDriveItem(input: {
     fieldName: "OneDrive download",
     createError: (message) => new ProviderRequestError(413, message),
   });
-  const file = await transitFiles.create(new File([Uint8Array.from(bytes)], transitName, { type: mimeType }));
+  const file = await transitFiles.create(new File([toArrayBuffer(bytes)], transitName, { type: mimeType }));
 
   return {
     fileId,
