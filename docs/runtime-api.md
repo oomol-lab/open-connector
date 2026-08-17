@@ -189,15 +189,17 @@ The Web Console also lets you copy cURL, TypeScript, and agent prompt examples f
 
 ## Transit Files
 
-Upload a temporary local transit file for Actions that accept a file URL:
+Upload a temporary transit file for Actions that accept a file URL:
 
 ```bash
 curl -s -X POST http://localhost:3000/api/files \
   -F "file=@./report.pdf"
 ```
 
-The response includes a `downloadUrl` under `/api/files/:fileId`. Local transit files are stored
-under `OOMOL_CONNECT_DATA_DIR/files` and are cleaned up by age.
+The response includes a `downloadUrl` under `/api/files/:fileId`. The Node runtime stores transit
+files under `OOMOL_CONNECT_DATA_DIR/files` by default and can use a shared S3-compatible backend;
+see [configuration.md](configuration.md#s3-compatible-transit-files). Transit files are cleaned up
+by age.
 
 ## Public Runtime Endpoints
 

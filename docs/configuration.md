@@ -23,8 +23,16 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`    | `false`                   | Allow self-hosted provider connections to target private networks. See below.                       |
 | `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS`     | unset                     | Trusted hosts routed through a corporate VPN. See below.                                            |
 | `OOMOL_CONNECT_LOG_LEVEL`                | `info`                    | Pino log level for the local Node server.                                                           |
+| `OOMOL_CONNECT_TRANSIT_FILE_BACKEND`     | `local`                   | Node transit-file backend: `local` or `s3`.                                                         |
 | `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                                               |
 | `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                                                   |
+| `OOMOL_CONNECT_S3_BUCKET`                | unset                     | Bucket used when the Node transit-file backend is `s3`.                                             |
+| `OOMOL_CONNECT_S3_REGION`                | `us-east-1`               | S3 signing region. Use the value required by the storage service.                                   |
+| `OOMOL_CONNECT_S3_ENDPOINT`              | AWS S3                    | S3-compatible endpoint for MinIO, Cloudflare R2, Alibaba Cloud OSS, or another object store.        |
+| `OOMOL_CONNECT_S3_FORCE_PATH_STYLE`      | `false`                   | Use path-style S3 URLs. This is commonly required by local MinIO deployments.                       |
+| `OOMOL_CONNECT_S3_ACCESS_KEY_ID`         | SDK credential chain      | Optional explicit S3 access key ID.                                                                 |
+| `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`     | SDK credential chain      | Optional explicit S3 secret access key.                                                             |
+| `OOMOL_CONNECT_S3_SESSION_TOKEN`         | unset                     | Optional session token used with explicit S3 credentials.                                           |
 | `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                                        |
 
 Example:
@@ -74,6 +82,40 @@ before exposing those surfaces.
 OpenConnector acts only as a resource server. It does not implement OIDC discovery or login, accept
 ID tokens as API credentials, or map JWT claims to action and proxy policy. JWT verification is
 currently available only on the Node server, not Cloudflare Workers.
+
+## S3-compatible transit files
+
+The Node runtime stores transit files under `data/files` by default. Set
+`OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3` to share transit files across multiple Node or Docker
+instances through AWS S3 or an S3-compatible service such as MinIO, Cloudflare R2, or Alibaba Cloud
+OSS:
+
+```bash
+OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3 \
+OOMOL_CONNECT_S3_BUCKET=open-connector-transit-files \
+OOMOL_CONNECT_S3_REGION=us-east-1 \
+OOMOL_CONNECT_S3_ENDPOINT=http://minio:9000 \
+OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true \
+OOMOL_CONNECT_S3_ACCESS_KEY_ID=minioadmin \
+OOMOL_CONNECT_S3_SECRET_ACCESS_KEY=replace-with-a-secret \
+npm start
+```
+
+`OOMOL_CONNECT_S3_BUCKET` is required for the S3 backend. The endpoint is optional for AWS S3 and
+required for other S3-compatible services. When the explicit access key variables are omitted, the
+AWS SDK credential chain is used, so instance, task, and pod roles continue to work on AWS. If an
+access key is configured, its matching secret access key is also required.
+
+For Cloudflare R2, use the account S3 endpoint and set the region to `auto`. For Alibaba Cloud OSS,
+use its S3-compatible endpoint (`https://s3.oss-<region>.aliyuncs.com`), set the matching region, and
+leave path-style access disabled. MinIO commonly uses its server URL as the endpoint with
+`OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true`.
+
+Uploads and downloads continue to use `/api/files`; the bucket does not need to be public. All
+instances must use the same bucket and S3 settings. The runtime rejects expired files when they are
+read, but it does not scan the bucket. Configure a bucket lifecycle rule that deletes objects under
+the `transit/` prefix after the configured transit-file TTL so unread expired objects are also
+removed.
 
 ## Private network access
 
