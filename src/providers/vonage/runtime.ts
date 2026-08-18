@@ -12,6 +12,7 @@ import {
 } from "../provider-runtime.ts";
 
 export const vonageApiBaseUrl = "https://rest.nexmo.com";
+export const vonageReportsApiBaseUrl = "https://api.nexmo.com";
 const vonageRequestTimeoutMs = 30_000;
 const invalidInputSmsStatuses = new Set(["2", "3", "6", "7", "12", "15", "17", "22", "23", "29", "33"]);
 
@@ -28,6 +29,8 @@ interface VonageRequestInput {
   phase: "validate" | "execute";
   method?: "GET" | "POST";
   body?: URLSearchParams;
+  baseUrl?: string;
+  query?: Record<string, string | number | boolean | undefined>;
 }
 
 type VonageHandler = (input: Record<string, unknown>, context: VonageContext) => Promise<unknown>;
@@ -47,6 +50,52 @@ export const vonageActionHandlers: Record<string, VonageHandler> = {
     appendOptionalFormField(body, "callback", optionalString(input.callback));
     appendOptionalFormField(body, "client-ref", optionalString(input.clientRef));
     return normalizeSms(await requestVonage({ path: "/sms/json", method: "POST", body, context, phase: "execute" }));
+  },
+  async list_sms_records(input, context) {
+    const direction = requiredString(input.direction, "direction", invalidInput);
+    const payload = await requestVonage({
+      baseUrl: vonageReportsApiBaseUrl,
+      path: "/v2/reports/records",
+      context,
+      phase: "execute",
+      query: {
+        product: "SMS",
+        account_id: context.apiKey,
+        direction,
+        date_start: optionalString(input.dateStart),
+        date_end: optionalString(input.dateEnd),
+        cursor: optionalString(input.cursor),
+        iv: optionalString(input.iv),
+        status: optionalString(input.status),
+        from: optionalString(input.from),
+        to: optionalString(input.to),
+        country: optionalString(input.country),
+        network: optionalString(input.network),
+        account_ref: optionalString(input.accountRef),
+        include_message: optionalBoolean(input.includeMessage),
+        show_concatenated: optionalBoolean(input.showConcatenated),
+      },
+    });
+    return normalizeSmsReport(payload);
+  },
+  async get_sms_record(input, context) {
+    const messageId = requiredString(input.messageId, "messageId", invalidInput);
+    const direction = requiredString(input.direction, "direction", invalidInput);
+    const payload = await requestVonage({
+      baseUrl: vonageReportsApiBaseUrl,
+      path: "/v2/reports/records",
+      context,
+      phase: "execute",
+      query: {
+        product: "SMS",
+        account_id: context.apiKey,
+        direction,
+        id: messageId,
+        include_message: optionalBoolean(input.includeMessage),
+        show_concatenated: optionalBoolean(input.showConcatenated),
+      },
+    });
+    return normalizeSmsReport(payload);
   },
 };
 
@@ -82,9 +131,13 @@ export async function validateVonageCredential(
 }
 
 async function requestVonage(input: VonageRequestInput): Promise<unknown> {
+  const url = new URL(`${input.baseUrl ?? vonageApiBaseUrl}${input.path}`);
+  for (const [key, value] of Object.entries(input.query ?? {})) {
+    if (value !== undefined) url.searchParams.set(key, String(value));
+  }
   const timeout = createProviderTimeout(input.context.signal, vonageRequestTimeoutMs);
   try {
-    const response = await input.context.fetcher(`${vonageApiBaseUrl}${input.path}`, {
+    const response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",
       headers: {
         accept: "application/json",
@@ -154,6 +207,46 @@ function normalizeSms(payload: unknown): unknown {
   return {
     messageCount: Number.isFinite(declaredCount) ? declaredCount : normalizedMessages.length,
     messages: normalizedMessages,
+  };
+}
+
+function normalizeSmsReport(payload: unknown): Record<string, unknown> {
+  const record = requireResponseRecord(payload, "Vonage SMS report response");
+  const records = Array.isArray(record.records) ? record.records : [];
+
+  return {
+    records: records.map((item) => normalizeSmsRecord(item)),
+    requestId: optionalString(record.request_id) ?? null,
+    requestStatus: optionalString(record.request_status) ?? null,
+    itemsCount: optionalInteger(record.items_count) ?? null,
+    idsNotFound: optionalString(record.ids_not_found) ?? null,
+    nextCursor: optionalString(record.cursor) ?? null,
+    iv: optionalString(record.iv) ?? null,
+  };
+}
+
+function normalizeSmsRecord(value: unknown): Record<string, unknown> {
+  const record = requireResponseRecord(value, "Vonage SMS report record");
+  return {
+    recordId: optionalString(record.id) ?? null,
+    messageId: optionalString(record.message_id) ?? null,
+    accountId: optionalString(record.account_id) ?? null,
+    direction: optionalString(record.direction) ?? null,
+    from: optionalString(record.from) ?? null,
+    to: optionalString(record.to) ?? null,
+    status: optionalString(record.status) ?? null,
+    dateReceived: optionalString(record.date_received) ?? null,
+    dateFinalized: optionalString(record.date_finalized) ?? null,
+    totalPrice: optionalString(record.total_price) ?? null,
+    currency: optionalString(record.currency) ?? null,
+    clientRef: optionalString(record.client_ref) ?? null,
+    network: optionalString(record.network) ?? null,
+    networkName: optionalString(record.network_name) ?? null,
+    country: optionalString(record.country) ?? null,
+    countryName: optionalString(record.country_name) ?? null,
+    messageBody: optionalString(record.message_body) ?? null,
+    errorCode: optionalString(record.error_code) ?? null,
+    errorCodeDescription: optionalString(record.error_code_description) ?? null,
   };
 }
 
