@@ -49,9 +49,7 @@ const reportOutputSchema = s.actionOutput(
 );
 
 const reportDirectionSchema = s.stringEnum("The communication direction.", ["inbound", "outbound"]);
-const reportDateSchema = s.nonEmptyString(
-  "An ISO-8601 timestamp used as an inclusive start or exclusive end boundary.",
-);
+const reportDateSchema = s.dateTime("An ISO-8601 timestamp used as an inclusive start or exclusive end boundary.");
 
 export const vonageActions: ActionDefinition[] = [
   defineProviderAction("vonage", {
