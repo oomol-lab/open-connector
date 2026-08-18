@@ -476,7 +476,7 @@ describe("MCP server", () => {
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
-      allowedConnections: ["secondary"],
+      allowedConnections: ["secondary", "ghost"],
     });
     await withAuthenticatedMcpClient(
       async (client) => {
@@ -552,6 +552,15 @@ describe("MCP server", () => {
           data: { accountId: "account-secondary" },
           connection: { connectionName: "secondary" },
         });
+
+        const grantedMissing = await client.callTool({
+          name: "execute_action",
+          arguments: { actionId: "example_auth.get_account", input: {}, connectionName: "ghost" },
+        });
+        expect(grantedMissing.structuredContent).toMatchObject({
+          ok: false,
+          error: { code: "connection_not_found" },
+        });
       },
       new MemoryRunLogStore(),
       {
@@ -561,7 +570,7 @@ describe("MCP server", () => {
           allowedActions: [],
           blockedActions: [],
           allowedProxies: [],
-          allowedConnections: ["secondary"],
+          allowedConnections: ["secondary", "ghost"],
         },
       },
     );

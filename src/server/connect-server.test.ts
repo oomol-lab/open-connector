@@ -1437,6 +1437,7 @@ describe("ConnectServer", () => {
       allowedActions: ["example.*"],
       blockedActions: ["example.delete"],
       allowedProxies: ["example"],
+      allowedConnections: [],
     });
     expect(JSON.stringify(createdBody.record)).not.toContain(createdBody.token);
 
@@ -1449,6 +1450,7 @@ describe("ConnectServer", () => {
         allowedActions: ["example.*"],
         blockedActions: ["example.delete"],
         allowedProxies: ["example"],
+        allowedConnections: [],
       },
     ]);
 
@@ -1462,6 +1464,7 @@ describe("ConnectServer", () => {
       allowedActions: ["example.echo"],
       blockedActions: [],
       allowedProxies: [],
+      allowedConnections: [],
     });
 
     const unauthorized = await app.request("/v1/actions");
@@ -1702,10 +1705,17 @@ describe("ConnectServer", () => {
       headers: { ...authorize, "content-type": "application/json" },
       body: JSON.stringify({ input: {}, connectionName: "default" }),
     });
+    const ungrantedMissing = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { ...authorize, "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, connectionName: "ghost" }),
+    });
     expect(omitted.status).toBe(403);
     expect(hidden.status).toBe(403);
+    expect(ungrantedMissing.status).toBe(403);
     await expect(omitted.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
     await expect(hidden.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
+    await expect(ungrantedMissing.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
 
     const allowed = await app.request("/v1/actions/example.echo", {
       method: "POST",
@@ -1749,6 +1759,33 @@ describe("ConnectServer", () => {
     const authenticated = await app.request("/v1/apps/authenticated?service=example", { headers: authorize });
     expect(authenticated.status).toBe(200);
     await expect(authenticated.json()).resolves.toMatchObject({ data: ["example"] });
+
+    const grantedMissingCreated = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Work and ghost",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["work", "ghost"],
+      }),
+    });
+    const grantedMissingToken = (await grantedMissingCreated.json()) as {
+      token: string;
+      record: { allowedConnections: string[] };
+    };
+    expect(grantedMissingToken.record.allowedConnections).toEqual(["work", "ghost"]);
+    const grantedMissing = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${grantedMissingToken.token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ input: {}, connectionName: "ghost" }),
+    });
+    expect(grantedMissing.status).toBe(404);
+    await expect(grantedMissing.json()).resolves.toMatchObject({ errorCode: "connection_not_found" });
 
     const adminConnections = await app.request("/api/connections");
     expect(adminConnections.status).toBe(200);

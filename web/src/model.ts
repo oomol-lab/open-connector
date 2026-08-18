@@ -99,7 +99,7 @@ export interface RuntimeTokenSummary {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
-  allowedConnections?: string[];
+  allowedConnections: string[];
   createdAt: string;
   lastUsedAt?: string;
 }

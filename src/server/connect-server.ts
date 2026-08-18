@@ -55,6 +55,7 @@ import {
 import { createTransitFileResponse, TransitFileError } from "./files/transit-file-store.ts";
 import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { decodeRunLogCursor } from "./storage/runtime-store.ts";
+import { summarizeRuntimeToken } from "./storage/runtime-token-service.ts";
 
 /**
  * Dependencies required to construct the local connector server.
@@ -912,14 +913,7 @@ export class ConnectServer {
     const created = await this.options.runtimeTokens.createToken(name, readTokenPolicy(body, true));
     return context.json({
       token: created.token,
-      record: {
-        id: created.record.id,
-        name: created.record.name,
-        allowedActions: created.record.allowedActions,
-        blockedActions: created.record.blockedActions,
-        allowedProxies: created.record.allowedProxies,
-        createdAt: created.record.createdAt,
-      },
+      record: summarizeRuntimeToken(created.record),
     });
   }
 
