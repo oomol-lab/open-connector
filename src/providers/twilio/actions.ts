@@ -65,6 +65,12 @@ const callStatusSchema = s.stringEnum("The Twilio call status to filter by.", [
   "failed",
 ]);
 const httpMethodSchema = s.stringEnum("The HTTP method Twilio should use.", ["GET", "POST"]);
+const callProgressEventSchema = s.stringEnum("One Twilio call progress event.", [
+  "initiated",
+  "ringing",
+  "answered",
+  "completed",
+]);
 
 const createCallInputSchema = s.actionInput(
   {
@@ -76,9 +82,7 @@ const createCallInputSchema = s.actionInput(
     fallbackUrl: s.url("The fallback URL to request when the primary TwiML URL fails."),
     fallbackMethod: httpMethodSchema,
     statusCallback: s.url("The URL that receives asynchronous call status callbacks."),
-    statusCallbackEvent: s.stringArray("Call progress events to send to the status callback.", {
-      itemDescription: "One Twilio call progress event.",
-    }),
+    statusCallbackEvent: s.array("Call progress events to send to the status callback.", callProgressEventSchema),
     statusCallbackMethod: httpMethodSchema,
   },
   ["to", "from"],
