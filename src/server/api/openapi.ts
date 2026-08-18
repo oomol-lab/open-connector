@@ -381,11 +381,22 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
+            allowedConnections: connectionNameArraySchema(
+              "Bare connection names granted to this stored runtime token. An empty list is unrestricted connection access. A non-empty list matches exact normalized connectionName values; include default when unnamed requests should succeed.",
+            ),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
           },
           {
-            required: ["id", "name", "allowedActions", "blockedActions", "allowedProxies", "createdAt"],
+            required: [
+              "id",
+              "name",
+              "allowedActions",
+              "blockedActions",
+              "allowedProxies",
+              "allowedConnections",
+              "createdAt",
+            ],
             description: "Runtime API token summary. Plaintext tokens and token hashes are not returned.",
           },
         ),
@@ -396,6 +407,9 @@ export function createOpenApiDocument(
             blockedActions: policyRuleArraySchema("Optional action block rules for the new token."),
             allowedProxies: policyRuleArraySchema(
               "Optional provider proxy grants for the new token. Omit or leave empty to deny proxy access.",
+            ),
+            allowedConnections: connectionNameArraySchema(
+              "Optional connection names granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact normalized bare connectionName values.",
             ),
           },
           {
@@ -410,10 +424,14 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
+            allowedConnections: connectionNameArraySchema(
+              "Connection names granted to this stored token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact normalized bare connectionName values; restricted tokens must include default for unnamed HTTP, MCP, and proxy requests.",
+            ),
           },
           {
             required: ["allowedActions", "blockedActions", "allowedProxies"],
-            description: "Complete replacement of one stored runtime token's action and proxy permissions.",
+            description:
+              "Complete replacement of one stored runtime token's action, proxy, and connection permissions.",
           },
         ),
         PolicyRules: policyRulesSchema(),
@@ -754,6 +772,22 @@ function policyRuleArraySchema(description: string): JsonSchema {
       maxLength: policyRuleMaxBytes,
       description: `Policy rule. The server enforces a ${policyRuleMaxBytes}-byte UTF-8 limit.`,
     },
+    description,
+  };
+}
+
+const connectionNameMaxLength = 64;
+
+function connectionNameArraySchema(description: string): JsonSchema {
+  return {
+    type: "array",
+    maxItems: policyRuleListMaxItems,
+    items: jsonSchema.string({
+      minLength: 1,
+      maxLength: connectionNameMaxLength,
+      pattern: "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+      description: "Exact normalized bare connectionName. Wildcards and service prefixes are not accepted.",
+    }),
     description,
   };
 }

@@ -22,9 +22,43 @@ persistent runtime token, or JWT access token as:
 Authorization: Bearer <runtime-token-or-jwt>
 ```
 
-Persistent runtime tokens carry independent Action rules and provider proxy grants. Their
-`allowedProxies` list is empty by default, so a persistent token cannot call `/v1/proxy/:service`
-until a provider service or `*` is explicitly granted.
+Persistent runtime tokens carry independent Action rules, provider proxy grants, and optional
+connection grants. Their `allowedProxies` list is empty by default, so a persistent token cannot call
+`/v1/proxy/:service` until a provider service or `*` is explicitly granted.
+
+`allowedConnections` belongs only to stored tokens, not to deployment or Runtime policy. Omit the
+field or send `[]` for unrestricted connection access. A non-empty list grants only those exact
+normalized bare `connectionName` values. Omitting `connectionName` on HTTP, MCP, or proxy requests
+uses `default`; a restricted token must include `default` for that unnamed path. Denied requests fail
+before credential lookup with HTTP `403` / MCP `connection_not_allowed`. Runtime discovery is filtered
+to granted connections; admin `GET /api/connections` and `GET /api/actions/:actionId/agent.md` stay
+unfiltered. Older create/update clients that omit `allowedConnections` keep the previous unrestricted
+default. Bootstrap runtime tokens and JWTs have no stored connection grant, so they remain
+unrestricted.
+
+Example: two GitHub connections (`default` and `work`) and two tokens:
+
+```bash
+curl -s -X PUT http://localhost:3000/api/connections/github \
+  -H 'content-type: application/json' \
+  -d '{"authType":"api_key","values":{"apiKey":"github_pat_default"}}'
+
+curl -s -X PUT http://localhost:3000/api/connections/github \
+  -H 'content-type: application/json' \
+  -d '{"authType":"api_key","connectionName":"work","values":{"apiKey":"github_pat_work"}}'
+
+curl -s -X POST http://localhost:3000/api/runtime-tokens \
+  -H 'content-type: application/json' \
+  -d '{"name":"unrestricted","allowedActions":[],"blockedActions":[],"allowedProxies":[]}'
+
+curl -s -X POST http://localhost:3000/api/runtime-tokens \
+  -H 'content-type: application/json' \
+  -d '{"name":"work-only","allowedActions":[],"blockedActions":[],"allowedProxies":[],"allowedConnections":["work"]}'
+```
+
+The unrestricted token can omit a connection name or send `work`. The work-only token succeeds only
+with `x-oo-connector-alias: work`, MCP `connectionName: "work"`, or the equivalent proxy alias; an
+omitted name or `default` returns `connection_not_allowed`.
 
 The Node server accepts JWT access tokens when `OOMOL_CONNECT_JWKS_URI`,
 `OOMOL_CONNECT_JWT_ISSUER`, and `OOMOL_CONNECT_JWT_AUDIENCE` are configured together. JWT
@@ -80,7 +114,10 @@ Use `list_connections` to discover configured accounts before selecting one. Bot
 
 Omitting `connectionName` uses the `default` connection. A requested named connection must exist;
 the runtime does not silently fall back to another account. Connection results expose only safe
-account identity fields and never include stored credentials.
+account identity fields and never include stored credentials. Persistent tokens with a non-empty
+`allowedConnections` list see only those connections in `list_connections` and related discovery;
+`list_apps` omits a default connection identity when `default` is not granted. `get_action_guide`
+and `execute_action` deny ungranted names, including omitted/`default`, before lookup.
 
 Preview MCP tool metadata:
 
@@ -133,6 +170,11 @@ curl -s -X POST "http://localhost:3000/v1/actions/github.get_current_user?alias=
   -H 'content-type: application/json' \
   -d '{"input":{}}'
 ```
+
+Persistent tokens with a non-empty `allowedConnections` list must be granted the selected name.
+Omitting the alias uses `default` and is denied unless that list includes `default`. The denial is
+HTTP `403` with `connection_not_allowed` and happens before credential lookup. `/v1/apps` discovery
+for that token is filtered to granted connections.
 
 ### Idempotent Action Retries
 
@@ -241,7 +283,10 @@ independent `allowedProxies` grant that can only narrow those rules. The request
 allowed by every configured proxy policy layer and explicitly granted to the persistent token.
 An empty token grant denies proxy access, and `OOMOL_CONNECT_BLOCKED_PROXIES="*"` disables provider
 proxies entirely. Bootstrap runtime tokens and JWTs have no stored token grant, so only the
-deployment and runtime proxy policy applies to them.
+deployment and runtime proxy policy applies to them. Persistent token `allowedConnections` is
+enforced on `/v1/proxy/:service` the same way as actions: omitted alias uses `default`, a non-empty
+grant is an exact-name allowlist, and ungranted names return `403 connection_not_allowed` before
+lookup.
 
 ## Local Admin Endpoints
 
@@ -266,6 +311,7 @@ These endpoints power the Web Console, examples, and setup scripts:
 - `GET /oauth/callback`
 - `GET /api/runtime-tokens`
 - `POST /api/runtime-tokens`
+- `PUT /api/runtime-tokens/:id`
 - `DELETE /api/runtime-tokens/:id`
 - `GET /api/runs`
 - `GET /api/runs/:id`

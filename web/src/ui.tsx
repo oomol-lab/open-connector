@@ -417,6 +417,7 @@ function AppShell(props: {
               element={
                 <AccessPage
                   providers={props.data.providers}
+                  connections={props.data.connections}
                   tokens={props.data.runtimeTokens}
                   policy={props.data.runtimePolicy ?? emptyData.runtimePolicy!}
                   onRefresh={props.onRefresh}

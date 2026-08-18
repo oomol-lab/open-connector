@@ -1,4 +1,5 @@
 import type {
+  ConnectionRecord,
   PolicyRules,
   ProviderDefinition,
   RuntimePolicyState,
@@ -21,6 +22,7 @@ import {
   Loader2,
   Pencil,
   Play,
+  Plus,
   RotateCcw,
   Save,
   ShieldCheck,
@@ -57,9 +59,15 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface AccessPageProps {
   providers: ProviderDefinition[];
+  connections: ConnectionRecord[];
   tokens: RuntimeTokenSummary[];
   policy: RuntimePolicyState;
   onRefresh(): void;
+}
+
+export interface ConnectionGrantDraft {
+  mode: "unrestricted" | "restricted";
+  names: string[];
 }
 
 interface CreateTokenDialogProps {
@@ -68,9 +76,12 @@ interface CreateTokenDialogProps {
   status: string | null;
   copied: boolean;
   draft: PolicyEditorDraft;
+  connections: ConnectionGrantDraft;
+  connectionSuggestions: string[];
   providers: ProviderDefinition[];
   onNameChange(name: string): void;
   onDraftChange(draft: PolicyEditorDraft): void;
+  onConnectionsChange(draft: ConnectionGrantDraft): void;
   onSubmit(event: SubmitEvent<HTMLFormElement>): Promise<void>;
   onCopy(token: string): void;
   onClose(): void;
@@ -91,9 +102,11 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   const t = useTranslate();
   const [name, setName] = useState("");
   const [createDraft, setCreateDraft] = useState(() => createPolicyEditorDraft(emptyPolicyRules()));
+  const [createConnections, setCreateConnections] = useState(() => createConnectionGrantDraft());
   const [created, setCreated] = useState<RuntimeTokenCreation | null>(null);
   const [editingToken, setEditingToken] = useState<RuntimeTokenSummary | null>(null);
   const [editTokenDraft, setEditTokenDraft] = useState(() => createPolicyEditorDraft(emptyPolicyRules()));
+  const [editConnections, setEditConnections] = useState(() => createConnectionGrantDraft());
   const [policy, setPolicy] = useState(props.policy);
   const [runtimeDraft, setRuntimeDraft] = useState(() => createPolicyEditorDraft(props.policy.runtime));
   const [policyExpanded, setPolicyExpanded] = useState(true);
@@ -113,6 +126,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
     [policy, runtimeRules],
   );
   const runtimeIssues = validatePolicyEditorDraft(runtimeDraft, true);
+  const connectionSuggestions = useMemo(() => connectionNameSuggestions(props.connections), [props.connections]);
   const runtimeRisk = useMemo(
     () => (runtimeEditing ? policyRisk(runtimeDraftState, props.providers) : null),
     [runtimeDraftState, props.providers, runtimeEditing],
@@ -137,13 +151,12 @@ export function AccessPage(props: AccessPageProps): ReactNode {
     try {
       const result = await apiPost<RuntimeTokenCreation>("/api/runtime-tokens", {
         name,
-        allowedActions: rules.allowedActions,
-        blockedActions: rules.blockedActions,
-        allowedProxies: rules.allowedProxies,
+        ...runtimeTokenPolicyBody(rules, createConnections),
       });
       setCreated(result);
       setName("");
       setCreateDraft(createPolicyEditorDraft(emptyPolicyRules()));
+      setCreateConnections(createConnectionGrantDraft());
       setTokenStatus(t("access.created"));
       props.onRefresh();
     } catch (error) {
@@ -187,11 +200,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
     const rules = policyRulesFromEditorDraft(editTokenDraft);
     setTokenStatus(t("access.policy.saving"));
     try {
-      await apiPut(`/api/runtime-tokens/${editingToken.id}`, {
-        allowedActions: rules.allowedActions,
-        blockedActions: rules.blockedActions,
-        allowedProxies: rules.allowedProxies,
-      });
+      await apiPut(`/api/runtime-tokens/${editingToken.id}`, runtimeTokenPolicyBody(rules, editConnections));
       setEditingToken(null);
       setTokenStatus(t("access.policy.saved"));
       props.onRefresh();
@@ -214,6 +223,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
   function openCreate(): void {
     setName("");
     setCreateDraft(createPolicyEditorDraft(emptyPolicyRules()));
+    setCreateConnections(createConnectionGrantDraft());
     setCreated(null);
     setTokenStatus(null);
     setCreateOpen(true);
@@ -223,6 +233,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
     setCreateOpen(false);
     setName("");
     setCreateDraft(createPolicyEditorDraft(emptyPolicyRules()));
+    setCreateConnections(createConnectionGrantDraft());
     setCreated(null);
     setTokenStatus(null);
   }
@@ -237,6 +248,7 @@ export function AccessPage(props: AccessPageProps): ReactNode {
         blockedProxies: [],
       }),
     );
+    setEditConnections(createConnectionGrantDraft(token.allowedConnections ?? []));
     setTokenStatus(null);
   }
 
@@ -323,7 +335,12 @@ export function AccessPage(props: AccessPageProps): ReactNode {
                   <TableCell>
                     <Badge tone="success">{t("common.active")}</Badge>
                   </TableCell>
-                  <TableCell>{tokenPolicySummary(token, t)}</TableCell>
+                  <TableCell>
+                    {tokenPolicySummary(token, t)}
+                    {(token.allowedConnections ?? []).map((name) => (
+                      <code key={name}>{name}</code>
+                    ))}
+                  </TableCell>
                   <TableCell>{formatDate(token.createdAt)}</TableCell>
                   <TableCell>{token.lastUsedAt ? formatDate(token.lastUsedAt) : ""}</TableCell>
                   <TableCell className="table-actions">
@@ -365,9 +382,12 @@ export function AccessPage(props: AccessPageProps): ReactNode {
           status={tokenStatus}
           copied={copied}
           draft={createDraft}
+          connections={createConnections}
+          connectionSuggestions={connectionSuggestions}
           providers={props.providers}
           onNameChange={setName}
           onDraftChange={setCreateDraft}
+          onConnectionsChange={setCreateConnections}
           onSubmit={submitToken}
           onCopy={(token) => void copy(token)}
           onClose={closeCreate}
@@ -377,9 +397,12 @@ export function AccessPage(props: AccessPageProps): ReactNode {
         <EditTokenPolicyDialog
           token={editingToken}
           draft={editTokenDraft}
+          connections={editConnections}
+          connectionSuggestions={connectionSuggestions}
           providers={props.providers}
           status={tokenStatus}
           onDraftChange={setEditTokenDraft}
+          onConnectionsChange={setEditConnections}
           onSubmit={saveTokenPolicy}
           onClose={() => setEditingToken(null)}
         />
@@ -733,6 +756,7 @@ function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
   const mode = createTokenDialogMode(props.created);
   const created = mode === "created" ? props.created : null;
   const issues = validatePolicyEditorDraft(props.draft, true);
+  const connectionIssue = connectionGrantIssue(props.connections);
 
   return (
     <Dialog open onOpenChange={(open) => (!open ? props.onClose() : undefined)}>
@@ -794,8 +818,13 @@ function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
                 proxyAccess="grant"
                 onChange={props.onDraftChange}
               />
+              <ConnectionGrantEditor
+                draft={props.connections}
+                suggestions={props.connectionSuggestions}
+                onChange={props.onConnectionsChange}
+              />
               <div className="button-row">
-                <Button type="submit" disabled={!props.name.trim() || issues.length > 0}>
+                <Button type="submit" disabled={!props.name.trim() || issues.length > 0 || connectionIssue != null}>
                   <KeyRound size={16} />
                   {t("access.createToken")}
                 </Button>
@@ -815,9 +844,12 @@ function CreateTokenDialog(props: CreateTokenDialogProps): ReactNode {
 interface EditTokenPolicyDialogProps {
   token: RuntimeTokenSummary;
   draft: PolicyEditorDraft;
+  connections: ConnectionGrantDraft;
+  connectionSuggestions: string[];
   providers: ProviderDefinition[];
   status: string | null;
   onDraftChange(draft: PolicyEditorDraft): void;
+  onConnectionsChange(draft: ConnectionGrantDraft): void;
   onSubmit(event: SubmitEvent<HTMLFormElement>): Promise<void>;
   onClose(): void;
 }
@@ -825,6 +857,7 @@ interface EditTokenPolicyDialogProps {
 function EditTokenPolicyDialog(props: EditTokenPolicyDialogProps): ReactNode {
   const t = useTranslate();
   const issues = validatePolicyEditorDraft(props.draft, true);
+  const connectionIssue = connectionGrantIssue(props.connections);
   return (
     <Dialog open onOpenChange={(open) => (!open ? props.onClose() : undefined)}>
       <DialogContent className="policy-token-dialog max-h-[calc(100svh-2rem)] max-w-[min(760px,calc(100vw-2rem))] overflow-y-auto sm:max-w-[min(760px,calc(100vw-2rem))]">
@@ -841,8 +874,13 @@ function EditTokenPolicyDialog(props: EditTokenPolicyDialogProps): ReactNode {
             proxyAccess="grant"
             onChange={props.onDraftChange}
           />
+          <ConnectionGrantEditor
+            draft={props.connections}
+            suggestions={props.connectionSuggestions}
+            onChange={props.onConnectionsChange}
+          />
           <div className="button-row">
-            <Button type="submit" disabled={issues.length > 0}>
+            <Button type="submit" disabled={issues.length > 0 || connectionIssue != null}>
               <Save size={16} />
               {t("access.policy.save")}
             </Button>
@@ -876,11 +914,16 @@ export function policyRulesFromDraft(draft: PolicyDraft): PolicyRules {
 }
 
 function tokenPolicySummary(token: RuntimeTokenSummary, t: NonNullable<ReturnType<typeof useTranslate>>): string {
-  return t("access.policy.tokenSummary", {
+  const allowedConnections = token.allowedConnections ?? [];
+  const connections =
+    allowedConnections.length === 0
+      ? t("access.policy.connectionsUnrestricted")
+      : t("access.policy.connectionsRestricted", { names: allowedConnections.join(", ") });
+  return `${t("access.policy.tokenSummary", {
     allowed: token.allowedActions.length,
     blocked: token.blockedActions.length,
     proxies: token.allowedProxies.length,
-  });
+  })} · ${connections}`;
 }
 
 function policyLayerSummary(rules: PolicyRules, t: NonNullable<ReturnType<typeof useTranslate>>): string {
@@ -918,4 +961,236 @@ function policyRisk(policy: RuntimePolicyState, providers: ProviderDefinition[])
 
 function emptyPolicyRules(): PolicyRules {
   return { allowedActions: [], blockedActions: [], allowedProxies: [], blockedProxies: [] };
+}
+
+const defaultConnectionName = "default";
+const connectionNamePattern = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
+const connectionListMaxItems = 128;
+
+export function createConnectionGrantDraft(names: string[] = []): ConnectionGrantDraft {
+  return {
+    mode: names.length > 0 ? "restricted" : "unrestricted",
+    names: [...names],
+  };
+}
+
+export function allowedConnectionsFromDraft(draft: ConnectionGrantDraft): string[] {
+  return draft.mode === "restricted" ? [...draft.names] : [];
+}
+
+export function runtimeTokenPolicyBody(
+  rules: Pick<PolicyRules, "allowedActions" | "blockedActions" | "allowedProxies">,
+  connections: ConnectionGrantDraft,
+): {
+  allowedActions: string[];
+  blockedActions: string[];
+  allowedProxies: string[];
+  allowedConnections: string[];
+} {
+  return {
+    allowedActions: rules.allowedActions,
+    blockedActions: rules.blockedActions,
+    allowedProxies: rules.allowedProxies,
+    allowedConnections: allowedConnectionsFromDraft(connections),
+  };
+}
+
+export function parseConnectionNames(value: string): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  for (const line of value.split("\n")) {
+    const name = line.trim();
+    if (!name || !connectionNamePattern.test(name) || seen.has(name)) {
+      continue;
+    }
+    seen.add(name);
+    names.push(name);
+    if (names.length >= connectionListMaxItems) {
+      break;
+    }
+  }
+  return names;
+}
+
+export function connectionNameSuggestions(connections: ConnectionRecord[]): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  for (const connection of [{ connectionName: defaultConnectionName }, ...connections]) {
+    const name = connection.connectionName?.trim() || defaultConnectionName;
+    if (seen.has(name)) {
+      continue;
+    }
+    seen.add(name);
+    names.push(name);
+  }
+  return names;
+}
+
+function connectionGrantIssue(draft: ConnectionGrantDraft): "required" | undefined {
+  return draft.mode === "restricted" && draft.names.length === 0 ? "required" : undefined;
+}
+
+interface ConnectionGrantEditorProps {
+  draft: ConnectionGrantDraft;
+  suggestions: string[];
+  onChange(draft: ConnectionGrantDraft): void;
+}
+
+export function ConnectionGrantEditor(props: ConnectionGrantEditorProps): ReactNode {
+  const t = useTranslate();
+  const listId = useId();
+  const [input, setInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const suggestions = useMemo(
+    () =>
+      input.trim()
+        ? filterPolicyRuleCandidates(
+            props.suggestions.filter((name) => !props.draft.names.includes(name)),
+            input,
+            6,
+          )
+        : [],
+    [input, props.draft.names, props.suggestions],
+  );
+
+  function setMode(mode: ConnectionGrantDraft["mode"]): void {
+    props.onChange({
+      mode,
+      names: mode === "unrestricted" ? [] : props.draft.names,
+    });
+    setError(null);
+  }
+
+  function addConnection(): boolean {
+    const name = input.trim();
+    if (!name) {
+      setError(t("access.policy.editor.connectionsRequired"));
+      return false;
+    }
+    if (!connectionNamePattern.test(name)) {
+      setError(t("access.policy.editor.connectionInvalid"));
+      return false;
+    }
+    if (props.draft.names.includes(name)) {
+      setError(t("access.policy.editor.connectionDuplicate"));
+      return false;
+    }
+    if (props.draft.names.length >= connectionListMaxItems) {
+      setError(t("access.policy.editor.tooManyConnections"));
+      return false;
+    }
+    props.onChange({ mode: "restricted", names: [...props.draft.names, name] });
+    setInput("");
+    setError(null);
+    setSuggestionsOpen(false);
+    return true;
+  }
+
+  return (
+    <div className="policy-resource-editor">
+      <fieldset className="policy-allow-mode">
+        <legend>{t("access.policy.editor.connectionsTitle")}</legend>
+        <label>
+          <input
+            type="radio"
+            name={`${listId}-connection-mode`}
+            value="unrestricted"
+            checked={props.draft.mode === "unrestricted"}
+            onChange={() => setMode("unrestricted")}
+          />
+          <span>
+            <strong>{t("access.policy.editor.unrestricted")}</strong>
+            <small>{t("access.policy.editor.connectionsUnrestrictedHint")}</small>
+          </span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name={`${listId}-connection-mode`}
+            value="restricted"
+            checked={props.draft.mode === "restricted"}
+            onChange={() => setMode("restricted")}
+          />
+          <span>
+            <strong>{t("access.policy.editor.restricted")}</strong>
+            <small>{t("access.policy.editor.connectionsRestrictedHint")}</small>
+          </span>
+        </label>
+      </fieldset>
+      {props.draft.mode === "restricted" ? (
+        <section className="policy-rule-section">
+          <div className="policy-rule-heading">
+            <div>
+              <h4>{t("access.policy.editor.connectionsList")}</h4>
+              <p>{t("access.policy.editor.connectionsHint")}</p>
+            </div>
+            <span>{t("access.policy.editor.connectionCount", { count: props.draft.names.length })}</span>
+          </div>
+          <p>{t("access.policy.editor.connectionsDefaultHint")}</p>
+          <div className="policy-rule-add">
+            <label className="sr-only" htmlFor={`${listId}-input`}>
+              {t("access.policy.editor.connectionsInput")}
+            </label>
+            <PolicySuggestionInput
+              id={`${listId}-input`}
+              value={input}
+              suggestions={suggestions}
+              invalid={Boolean(error)}
+              open={suggestionsOpen}
+              placeholder={t("access.policy.editor.connectionsInput")}
+              onChange={(value) => {
+                setInput(value);
+                setError(null);
+              }}
+              onOpenChange={setSuggestionsOpen}
+              onSubmit={addConnection}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={t("access.policy.editor.addRule")}
+              onClick={(event) => {
+                if (addConnection()) {
+                  event.currentTarget.focus();
+                }
+              }}
+            >
+              <Plus size={16} />
+            </Button>
+          </div>
+          {error ? <p className="policy-rule-error">{error}</p> : null}
+          {props.draft.names.length > 0 ? (
+            <div className="policy-rule-list">
+              {props.draft.names.map((name) => (
+                <div className="policy-rule-row" key={name}>
+                  <code>{name}</code>
+                  {!props.suggestions.includes(name) ? (
+                    <span className="policy-rule-unknown">{t("access.policy.editor.unknownRule")}</span>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={t("access.policy.editor.removeConnection", { name })}
+                    onClick={() =>
+                      props.onChange({
+                        mode: "restricted",
+                        names: props.draft.names.filter((value) => value !== name),
+                      })
+                    }
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="policy-rule-empty">{t("access.policy.editor.noConnections")}</p>
+          )}
+        </section>
+      ) : null}
+    </div>
+  );
 }
