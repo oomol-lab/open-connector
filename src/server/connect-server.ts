@@ -1,5 +1,5 @@
 import type { CatalogStore, RuntimeActionDefinition } from "../catalog-store.ts";
-import type { ConnectionService } from "../connection-service.ts";
+import type { ConnectionService, ConnectionSummary } from "../connection-service.ts";
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
 import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
@@ -472,7 +472,7 @@ export class ConnectServer {
         meta: { actionId },
       });
     }
-    if (!policy.evaluate(action).allowed) {
+    if (!policy.evaluate(action).allowed || !policy.evaluateConnection(connectionName).allowed) {
       return writeRuntimeActionHttpResult(
         context,
         await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
@@ -653,17 +653,31 @@ export class ConnectServer {
   }
 
   private async listRuntimeApps(context: Context): Promise<Response> {
-    return writeRuntimeSuccess(
-      context,
-      (await this.options.connections.listConnections()).map(serializeRuntimeConnectedApp),
-    );
+    try {
+      const policy = await this.getPolicySnapshot(context);
+      return writeRuntimeSuccess(
+        context,
+        this.filterAllowedConnections(policy, await this.options.connections.listConnections()).map(
+          serializeRuntimeConnectedApp,
+        ),
+      );
+    } catch {
+      return writeRuntimeFailure(context, {
+        status: 500,
+        errorCode: "internal_error",
+        message: "Runtime policy is unavailable.",
+      });
+    }
   }
 
   private async listRuntimeAppsByService(context: Context, service: string): Promise<Response> {
     try {
+      const policy = await this.getPolicySnapshot(context);
       return writeRuntimeSuccess(
         context,
-        (await this.options.connections.listConnectionsByService(service)).map(serializeRuntimeConnectedApp),
+        this.filterAllowedConnections(policy, await this.options.connections.listConnectionsByService(service)).map(
+          serializeRuntimeConnectedApp,
+        ),
       );
     } catch (error) {
       if (error instanceof ConnectionError) {
@@ -675,13 +689,42 @@ export class ConnectServer {
         });
       }
 
-      throw error;
+      return writeRuntimeFailure(context, {
+        status: 500,
+        errorCode: "internal_error",
+        message: "Runtime policy is unavailable.",
+        meta: { service },
+      });
     }
   }
 
   private async listAuthenticatedRuntimeApps(context: Context): Promise<Response> {
     const services = context.req.queries("service") ?? [];
-    return writeRuntimeSuccess(context, await this.options.connections.listAuthenticatedServices(services));
+    try {
+      const policy = await this.getPolicySnapshot(context);
+      const authenticated = new Set(
+        this.filterAllowedConnections(policy, await this.options.connections.listConnections())
+          .filter((connection) => connection.configured && connection.authType !== "no_auth")
+          .map((connection) => connection.service),
+      );
+      return writeRuntimeSuccess(
+        context,
+        services.filter((service) => authenticated.has(service)),
+      );
+    } catch {
+      return writeRuntimeFailure(context, {
+        status: 500,
+        errorCode: "internal_error",
+        message: "Runtime policy is unavailable.",
+      });
+    }
+  }
+
+  private filterAllowedConnections(
+    policy: ActionPolicySnapshot,
+    connections: ConnectionSummary[],
+  ): ConnectionSummary[] {
+    return connections.filter((connection) => policy.evaluateConnection(connection.connectionName).allowed);
   }
 
   private async handleMcp(context: Context): Promise<Response> {

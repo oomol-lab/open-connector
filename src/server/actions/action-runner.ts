@@ -70,9 +70,14 @@ export class ActionRunner {
     this.options.logger?.info(logContext, "action run started");
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();
-    const policy: ActionPolicyDecision = (input.policy ?? this.options.actionPolicy?.createSnapshot())?.evaluate(
-      action,
-    ) ?? { allowed: true, checks: [] };
+    const snapshot = input.policy ?? this.options.actionPolicy?.createSnapshot();
+    let policy: ActionPolicyDecision = snapshot?.evaluate(action) ?? { allowed: true, checks: [] };
+    if (policy.allowed) {
+      const connectionPolicy = snapshot?.evaluateConnection(input.connectionName);
+      if (connectionPolicy && !connectionPolicy.allowed) {
+        policy = connectionPolicy;
+      }
+    }
     let connection: ExecutionConnection | undefined;
     let result: ExecutionResult;
     if (!policy.allowed) {

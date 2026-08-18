@@ -68,6 +68,7 @@ describe("runtime action HTTP results", () => {
 
   it.each([
     ["authorization_failed", 403],
+    ["connection_not_allowed", 403],
     ["connection_not_found", 404],
     ["rate_limited", 429],
     ["provider_error", 500],

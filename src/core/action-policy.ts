@@ -2,7 +2,12 @@ import type { ActionDefinition } from "./types.ts";
 
 export type PolicySource = "deployment" | "runtime" | "token";
 
-export type PolicyErrorCode = "action_not_allowed" | "action_blocked" | "proxy_not_allowed" | "proxy_blocked";
+export type PolicyErrorCode =
+  | "action_not_allowed"
+  | "action_blocked"
+  | "proxy_not_allowed"
+  | "proxy_blocked"
+  | "connection_not_allowed";
 
 export interface PolicyCheck {
   source: PolicySource;
@@ -67,6 +72,7 @@ export class ActionPolicySnapshot {
   private readonly layers: CompiledLayer[];
   private readonly proxyLayers: CompiledLayer[];
   private readonly tokenProxyRules?: CompiledRule[];
+  private readonly allowedConnections: readonly string[];
 
   constructor(deployment: PolicyRules, runtime: PolicyRules, token?: TokenPolicy, updatedAt?: string) {
     const deploymentRules = immutablePolicyRules(deployment);
@@ -74,6 +80,7 @@ export class ActionPolicySnapshot {
     this.state = Object.freeze({ deployment: deploymentRules, runtime: runtimeRules, updatedAt });
     this.proxyLayers = [compileLayer("deployment", deploymentRules), compileLayer("runtime", runtimeRules)];
     this.layers = [...this.proxyLayers];
+    this.allowedConnections = Object.freeze([...(token?.allowedConnections ?? [])]);
     if (token) {
       const tokenRules = immutablePolicyRules({
         allowedActions: token.allowedActions,
@@ -165,6 +172,27 @@ export class ActionPolicySnapshot {
 
     return { allowed: true, checks };
   }
+
+  evaluateConnection(connectionName?: string): ActionPolicyDecision {
+    if (this.allowedConnections.length === 0) {
+      return { allowed: true, checks: [] };
+    }
+
+    const name = connectionName?.trim() || defaultPolicyConnectionName;
+    if (this.allowedConnections.includes(name)) {
+      return {
+        allowed: true,
+        checks: [{ source: "token", outcome: "allow_match", rule: name }],
+      };
+    }
+
+    return {
+      allowed: false,
+      code: "connection_not_allowed",
+      message: `${name} connection is not granted to this runtime token.`,
+      checks: [{ source: "token", outcome: "allow_miss" }],
+    };
+  }
 }
 
 /**
@@ -202,6 +230,8 @@ export function emptyPolicyRules(): PolicyRules {
     blockedProxies: [],
   };
 }
+
+const defaultPolicyConnectionName = "default";
 
 export function parseActionPolicyList(value: string | undefined): string[] {
   return (value ?? "")

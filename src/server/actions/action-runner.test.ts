@@ -148,6 +148,82 @@ describe("ActionRunner", () => {
       },
     });
   });
+
+  it("denies a restricted connection before resolving it", async () => {
+    const runs = new MemoryRunLogStore();
+    const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const actionPolicy = new ActionPolicyService();
+    const policy = actionPolicy.createSnapshot(undefined, {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["work"],
+    });
+    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader, actionPolicy });
+
+    const omitted = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      policy,
+      runtimeTokenId: "token-1",
+    });
+    const hidden = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      connectionName: "hidden",
+      policy,
+      runtimeTokenId: "token-1",
+    });
+
+    expect(omitted?.result).toMatchObject({ ok: false, error: { code: "connection_not_allowed" } });
+    expect(hidden?.result).toMatchObject({ ok: false, error: { code: "connection_not_allowed" } });
+    expect(resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(runs.items[0]).toMatchObject({
+      runtimeTokenId: "token-1",
+      policy: { allowed: false, code: "connection_not_allowed" },
+    });
+  });
+
+  it("executes an allowlisted connection and leaves unrestricted tokens unchanged", async () => {
+    const runs = new MemoryRunLogStore();
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const actionPolicy = new ActionPolicyService();
+    const runner = createRunner({ runs, logger: createTestLogger().logger, actionPolicy });
+
+    const allowed = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      connectionName: " work ",
+      policy: actionPolicy.createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["work"],
+      }),
+    });
+    const unrestricted = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "mcp",
+      connectionName: "personal",
+      policy: actionPolicy.createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      }),
+    });
+
+    expect(allowed?.result).toMatchObject({ ok: true });
+    expect(unrestricted?.result).toMatchObject({ ok: true });
+    expect(resolveConnection).toHaveBeenCalledTimes(2);
+  });
 });
 
 function createRunner(options: {

@@ -290,4 +290,79 @@ describe("ActionPolicyService", () => {
       code: "proxy_not_allowed",
     });
   });
+
+  it("treats omitted and empty allowedConnections as unrestricted connection access", () => {
+    const unrestricted = [
+      new ActionPolicyService().createSnapshot(),
+      new ActionPolicyService().createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+      }),
+      new ActionPolicyService().createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      }),
+    ];
+
+    for (const snapshot of unrestricted) {
+      expect(snapshot.evaluateConnection()).toEqual({ allowed: true, checks: [] });
+      expect(snapshot.evaluateConnection("work")).toEqual({ allowed: true, checks: [] });
+      expect(snapshot.evaluate(action)).toEqual({ allowed: true, checks: [] });
+    }
+  });
+
+  it("matches restricted connections by exact normalized bare names", () => {
+    const snapshot = new ActionPolicyService().createSnapshot(undefined, {
+      allowedActions: ["github.*"],
+      blockedActions: [],
+      allowedProxies: ["github"],
+      allowedConnections: ["work", "default"],
+    });
+
+    expect(snapshot.evaluateConnection("work")).toEqual({
+      allowed: true,
+      checks: [{ source: "token", outcome: "allow_match", rule: "work" }],
+    });
+    expect(snapshot.evaluateConnection(" work ")).toEqual({
+      allowed: true,
+      checks: [{ source: "token", outcome: "allow_match", rule: "work" }],
+    });
+    expect(snapshot.evaluateConnection()).toEqual({
+      allowed: true,
+      checks: [{ source: "token", outcome: "allow_match", rule: "default" }],
+    });
+    expect(snapshot.evaluateConnection("")).toEqual({
+      allowed: true,
+      checks: [{ source: "token", outcome: "allow_match", rule: "default" }],
+    });
+    expect(snapshot.evaluateConnection("personal")).toMatchObject({
+      allowed: false,
+      code: "connection_not_allowed",
+      checks: [{ source: "token", outcome: "allow_miss" }],
+    });
+    expect(snapshot.evaluate(action)).toMatchObject({ allowed: true });
+    expect(snapshot.evaluateProxy("github")).toMatchObject({ allowed: true });
+  });
+
+  it("requires restricted tokens to grant default for the unnamed connection path", () => {
+    const snapshot = new ActionPolicyService().createSnapshot(undefined, {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["work"],
+    });
+
+    expect(snapshot.evaluateConnection()).toMatchObject({
+      allowed: false,
+      code: "connection_not_allowed",
+    });
+    expect(snapshot.evaluateConnection("default")).toMatchObject({
+      allowed: false,
+      code: "connection_not_allowed",
+    });
+    expect(snapshot.evaluateConnection("work")).toMatchObject({ allowed: true });
+  });
 });

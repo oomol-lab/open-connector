@@ -117,7 +117,7 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
         query: z.string().optional().describe("Optional case-insensitive app name, service, category, or auth filter."),
       },
     },
-    async ({ query }) => toolResult(successPayload(await listApps(options, query))),
+    async ({ query }) => toolResult(await listApps(options, query)),
   );
 
   server.registerTool(
@@ -190,42 +190,62 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
 }
 
 async function listConnections(options: IMcpServerOptions, service: string | undefined): Promise<ToolPayload> {
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
   try {
     const connections = service
       ? await options.connections.listConnectionsByService(service)
       : await options.connections.listConnections();
-    return successPayload(connections.filter((connection) => !connection.virtual).map(serializeConnection));
+    return successPayload(
+      connections
+        .filter((connection) => !connection.virtual && policy.evaluateConnection(connection.connectionName).allowed)
+        .map(serializeConnection),
+    );
   } catch (error) {
     return connectionErrorPayload(error);
   }
 }
 
-async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<unknown> {
+async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<ToolPayload> {
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
   const normalized = query?.trim().toLowerCase();
-  const connections = await options.connections.listConnections();
+  const connections = (await options.connections.listConnections()).filter(
+    (connection) => policy.evaluateConnection(connection.connectionName).allowed,
+  );
   const defaultConnections = new Map(
     connections.filter((connection) => connection.default).map((connection) => [connection.service, connection]),
   );
-  return options.catalog.providers
-    .filter((provider) => {
-      if (!normalized) {
-        return true;
-      }
+  return successPayload(
+    options.catalog.providers
+      .filter((provider) => {
+        if (!normalized) {
+          return true;
+        }
 
-      return [provider.service, provider.displayName, provider.categories.join(" "), provider.authTypes.join(" ")]
-        .join(" ")
-        .toLowerCase()
-        .includes(normalized);
-    })
-    .map((provider) => ({
-      service: provider.service,
-      displayName: provider.displayName,
-      categories: provider.categories,
-      authTypes: provider.authTypes,
-      actionCount: provider.actions.length,
-      executableActionCount: provider.actions.filter((action) => action.execution.locallyExecutable).length,
-      connection: defaultConnections.get(provider.service),
-    }));
+        return [provider.service, provider.displayName, provider.categories.join(" "), provider.authTypes.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalized);
+      })
+      .map((provider) => ({
+        service: provider.service,
+        displayName: provider.displayName,
+        categories: provider.categories,
+        authTypes: provider.authTypes,
+        actionCount: provider.actions.length,
+        executableActionCount: provider.actions.filter((action) => action.execution.locallyExecutable).length,
+        connection: defaultConnections.get(provider.service),
+      })),
+  );
 }
 
 async function searchActions(
@@ -276,6 +296,10 @@ async function getActionGuide(
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
+    const connectionDecision = policy.evaluateConnection(connectionName);
+    if (!connectionDecision.allowed) {
+      return errorPayload(connectionDecision.code, connectionDecision.message);
+    }
     return successPayload({
       capability: await describeActionCapability(options, action, connectionName, policy),
       markdown: renderActionMarkdown(
@@ -305,7 +329,7 @@ async function executeAction(
   } catch {
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
-  if (connectionName && policy.evaluate(action).allowed) {
+  if (connectionName && policy.evaluate(action).allowed && policy.evaluateConnection(connectionName).allowed) {
     try {
       await getSelectedConnectionSummary(options, action.service, connectionName);
     } catch (error) {
@@ -371,14 +395,17 @@ async function describeActionCapability(
   connectionName?: string,
   policy?: ActionPolicySnapshot,
 ): Promise<ActionCapability> {
+  const snapshot = policy ?? (await getPolicySnapshot(options));
   const provider = options.catalog.providers.find((candidate) => candidate.service === action.service);
   return {
     execution: action.execution,
     authTypes: provider?.authTypes ?? [],
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
-    policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),
-    connection: await getSelectedConnectionSummary(options, action.service, connectionName),
+    policy: snapshot.evaluate(action),
+    connection: snapshot.evaluateConnection(connectionName).allowed
+      ? await getSelectedConnectionSummary(options, action.service, connectionName)
+      : undefined,
   };
 }
 
@@ -388,10 +415,13 @@ async function describeActionMarkdownContext(
   connectionName?: string,
   policy?: ActionPolicySnapshot,
 ): Promise<{ connection?: ConnectionSummary; providerPermissions: string[]; policy: ActionPolicyDecision }> {
+  const snapshot = policy ?? (await getPolicySnapshot(options));
   return {
-    connection: await getSelectedConnectionSummary(options, action.service, connectionName),
+    connection: snapshot.evaluateConnection(connectionName).allowed
+      ? await getSelectedConnectionSummary(options, action.service, connectionName)
+      : undefined,
     providerPermissions: action.providerPermissions,
-    policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),
+    policy: snapshot.evaluate(action),
   };
 }
 

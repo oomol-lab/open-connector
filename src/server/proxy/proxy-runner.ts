@@ -67,13 +67,24 @@ export class ProxyRunner {
       };
     }
 
-    const decision = (input.policy ?? this.options.actionPolicy?.createSnapshot())?.evaluateProxy(provider.service);
+    const snapshot = input.policy ?? this.options.actionPolicy?.createSnapshot();
+    const decision = snapshot?.evaluateProxy(provider.service);
     if (decision && !decision.allowed) {
       return {
         ok: false,
         status: 403,
         errorCode: decision.code,
         message: decision.message,
+        meta: { service: provider.service },
+      };
+    }
+    const connectionDecision = snapshot?.evaluateConnection(input.connectionName);
+    if (connectionDecision && !connectionDecision.allowed) {
+      return {
+        ok: false,
+        status: 403,
+        errorCode: connectionDecision.code,
+        message: connectionDecision.message,
         meta: { service: provider.service },
       };
     }

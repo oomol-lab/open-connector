@@ -1658,6 +1658,174 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("enforces stored token connection scope on HTTP actions, proxies, and runtime discovery", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      runtimeTokens,
+      providerLoader: new ProxyProviderLoader(),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "default-key" } }),
+    });
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        authType: "api_key",
+        connectionName: "work",
+        values: { apiKey: "work-key" },
+      }),
+    });
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Work only",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: ["example"],
+        allowedConnections: ["work"],
+      }),
+    });
+    const token = (await created.json()) as { token: string };
+    const authorize = { authorization: `Bearer ${token.token}` };
+
+    const omitted = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { ...authorize, "content-type": "application/json" },
+      body: JSON.stringify({ input: {} }),
+    });
+    const hidden = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: { ...authorize, "content-type": "application/json" },
+      body: JSON.stringify({ input: {}, connectionName: "default" }),
+    });
+    expect(omitted.status).toBe(403);
+    expect(hidden.status).toBe(403);
+    await expect(omitted.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
+    await expect(hidden.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
+
+    const allowed = await app.request("/v1/actions/example.echo", {
+      method: "POST",
+      headers: {
+        ...authorize,
+        "content-type": "application/json",
+        "x-oo-connector-alias": "work",
+      },
+      body: JSON.stringify({ input: { message: "hello" } }),
+    });
+    expect(allowed.status).toBe(200);
+
+    const omittedProxy = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: { ...authorize, "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    });
+    const allowedProxy = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: {
+        ...authorize,
+        "content-type": "application/json",
+        "x-oo-connector-alias": "work",
+      },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    });
+    expect(omittedProxy.status).toBe(403);
+    await expect(omittedProxy.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
+    expect(allowedProxy.status).toBe(200);
+
+    const apps = await app.request("/v1/apps", { headers: authorize });
+    expect(apps.status).toBe(200);
+    const appsBody = (await apps.json()) as { data: Array<{ alias: string }> };
+    expect(appsBody.data.map((app) => app.alias)).toEqual(["work"]);
+
+    const byService = await app.request("/v1/apps/services/example", { headers: authorize });
+    expect(byService.status).toBe(200);
+    const byServiceBody = (await byService.json()) as { data: Array<{ alias: string }> };
+    expect(byServiceBody.data.map((app) => app.alias)).toEqual(["work"]);
+
+    const authenticated = await app.request("/v1/apps/authenticated?service=example", { headers: authorize });
+    expect(authenticated.status).toBe(200);
+    await expect(authenticated.json()).resolves.toMatchObject({ data: ["example"] });
+
+    const adminConnections = await app.request("/api/connections");
+    expect(adminConnections.status).toBe(200);
+    const listed = (await adminConnections.json()) as Array<{ connectionName: string }>;
+    expect(listed.map((connection) => connection.connectionName).sort()).toEqual(["default", "work"]);
+
+    const guide = await app.request("/api/actions/example.echo/agent.md");
+    expect(guide.status).toBe(200);
+    expect(await guide.text()).toContain("## Current Connection");
+  });
+
+  it("preserves admin, bootstrap, JWT, and unrestricted token connection access", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const verifyRuntimeJwt = vi.fn(async (token: string) => token === "jwt-access-token");
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      auth: {
+        adminToken: "local-token",
+        runtimeToken: "bootstrap-token",
+        verifyRuntimeJwt,
+      },
+      runtimeTokens,
+      providerLoader: new EchoProviderLoader(),
+    }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: {
+        authorization: "Bearer local-token",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "default-key" } }),
+    });
+    const restricted = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer local-token",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "Work only",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["work"],
+      }),
+    });
+    const unrestricted = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer local-token",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "Unrestricted",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      }),
+    });
+    const restrictedToken = (await restricted.json()) as { token: string };
+    const unrestrictedToken = (await unrestricted.json()) as { token: string };
+    const runDefault = async (authorization: string): Promise<number> => {
+      const response = await app.request("/v1/actions/example.echo", {
+        method: "POST",
+        headers: { authorization, "content-type": "application/json" },
+        body: JSON.stringify({ input: {} }),
+      });
+      return response.status;
+    };
+
+    expect(await runDefault(`Bearer ${restrictedToken.token}`)).toBe(403);
+    expect(await runDefault("Bearer local-token")).toBe(200);
+    expect(await runDefault("Bearer bootstrap-token")).toBe(200);
+    expect(await runDefault("Bearer jwt-access-token")).toBe(200);
+    expect(await runDefault(`Bearer ${unrestrictedToken.token}`)).toBe(200);
+  });
+
   it("returns an idempotency conflict when different stored tokens reuse one key", async () => {
     let executions = 0;
     const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
