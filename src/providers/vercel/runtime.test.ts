@@ -102,4 +102,13 @@ describe("Vercel webhook actions", () => {
       },
     });
   });
+
+  it("rejects a blank 200 OK list response instead of returning an empty webhook list", async () => {
+    await expect(
+      vercelActionHandlers.list_webhooks(
+        {},
+        actionContext(async () => new Response("", { status: 200 })),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: "vercel returned an empty response" });
+  });
 });

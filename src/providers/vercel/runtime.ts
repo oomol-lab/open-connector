@@ -613,7 +613,7 @@ async function vercelCreateWebhook(input: VercelActionInput, context: VercelActi
 
 async function vercelDeleteWebhook(input: VercelActionInput, context: VercelActionContext) {
   const id = requireString(input.id, "id");
-  await requestVercelJson({
+  await requestVercelNoContent({
     path: `/v1/webhooks/${encodeURIComponent(id)}`,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
@@ -665,36 +665,53 @@ interface VercelTeamResponse {
 }
 
 async function requestVercelJson<T>(options: VercelRequestOptions): Promise<T> {
-  const url = buildVercelUrl(options.path, options.query);
-
-  let response: Response;
-  try {
-    response = await options.fetcher(url, {
-      method: options.method ?? "GET",
-      headers: vercelHeaders(options.apiKey, options.body !== undefined),
-      ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
-    });
-  } catch (error) {
-    throw new ProviderRequestError(502, error instanceof Error ? error.message : "vercel request failed");
-  }
+  const response = await requestVercel(options);
 
   if (!response.ok) {
     throw await mapVercelError(response, options.mode, options.notFoundAsInvalidInput ?? false);
   }
 
   if (response.status === 204) {
-    return undefined as T;
+    throw new ProviderRequestError(502, "vercel returned 204 No Content for a JSON request");
   }
 
   const text = await response.text();
   if (!text.trim()) {
-    return undefined as T;
+    throw new ProviderRequestError(502, "vercel returned an empty response");
   }
 
   try {
     return JSON.parse(text) as T;
   } catch {
     throw new ProviderRequestError(502, "vercel returned an invalid JSON response");
+  }
+}
+
+async function requestVercelNoContent(options: VercelRequestOptions & { method: "DELETE" }): Promise<void> {
+  const response = await requestVercel(options);
+
+  if (response.status === 204) {
+    return;
+  }
+
+  if (!response.ok) {
+    throw await mapVercelError(response, options.mode, options.notFoundAsInvalidInput ?? false);
+  }
+
+  throw new ProviderRequestError(502, "vercel returned a response body for a no-content request");
+}
+
+async function requestVercel(options: VercelRequestOptions): Promise<Response> {
+  const url = buildVercelUrl(options.path, options.query);
+
+  try {
+    return await options.fetcher(url, {
+      method: options.method ?? "GET",
+      headers: vercelHeaders(options.apiKey, options.body !== undefined),
+      ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
+    });
+  } catch (error) {
+    throw new ProviderRequestError(502, error instanceof Error ? error.message : "vercel request failed");
   }
 }
 
