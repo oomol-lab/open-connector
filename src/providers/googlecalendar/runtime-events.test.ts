@@ -8,6 +8,7 @@ import { googlecalendarEventActionHandlers } from "./runtime-events.ts";
 const accessToken = "google-calendar-access-token";
 const createdEvent = {
   id: "evt-1",
+  etag: '"etag-1"',
   status: "confirmed",
   summary: "Standup",
 };
@@ -22,6 +23,7 @@ interface CapturedRequest {
   method: string;
   url: URL;
   body: unknown;
+  headers: Headers;
 }
 
 describe("googlecalendar event write sendUpdates", () => {
@@ -111,7 +113,67 @@ describe("googlecalendar event write sendUpdates", () => {
     expect(requests[1]?.method).toBe("PUT");
     expect(requests[1]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1");
     expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("externalOnly");
+    expect(requests[1]?.headers.get("if-match")).toBe('"etag-1"');
     expect(requests[1]?.body).toMatchObject({ summary: "Retro" });
+  });
+
+  it("refuses update_event when the GET payload has no ETag", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json({
+        id: "evt-1",
+        status: "confirmed",
+        summary: "Standup",
+      }),
+    ]);
+
+    await expect(
+      updateEvent(
+        {
+          calendarId: "cal-1",
+          eventId: "evt-1",
+          event: { summary: "Retro" },
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(
+      new ProviderRequestError(409, "cannot update event because Google Calendar did not provide an event ETag"),
+    );
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.method).toBe("GET");
+  });
+
+  it("re-GETs and retries update_event PUT after an If-Match 412", async () => {
+    const concurrentEvent = {
+      ...createdEvent,
+      etag: '"etag-2"',
+      attendees: [{ email: "cara@example.com" }],
+    };
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(createdEvent),
+      new Response(JSON.stringify({ error: { message: "Precondition Failed" } }), { status: 412 }),
+      Response.json(concurrentEvent),
+      Response.json({ ...concurrentEvent, summary: "Retro" }),
+    ]);
+
+    await updateEvent(
+      {
+        calendarId: "cal-1",
+        eventId: "evt-1",
+        sendUpdates: "all",
+        event: { summary: "Retro" },
+      },
+      fetcher,
+    );
+
+    expect(requests.map((request) => request.method)).toEqual(["GET", "PUT", "GET", "PUT"]);
+    expect(requests[1]?.headers.get("if-match")).toBe('"etag-1"');
+    expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("all");
+    expect(requests[3]?.headers.get("if-match")).toBe('"etag-2"');
+    expect(requests[3]?.url.searchParams.get("sendUpdates")).toBe("all");
+    expect(requests[3]?.body).toMatchObject({
+      summary: "Retro",
+      attendees: [{ email: "cara@example.com" }],
+    });
   });
 
   it("forwards sendUpdates on patch_event", async () => {
@@ -227,6 +289,7 @@ function stubCalendarResponses(responses: Response[]): { fetcher: ProviderFetch;
     requests.push({
       method: request.method,
       url: new URL(request.url),
+      headers: request.headers,
       body:
         request.method === "GET" || request.method === "HEAD" || request.method === "DELETE"
           ? undefined
