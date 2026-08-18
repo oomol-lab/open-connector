@@ -30,6 +30,7 @@ export interface TokenPolicy {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
+  allowedConnections?: string[];
 }
 
 export interface RuntimePolicyState {

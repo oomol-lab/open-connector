@@ -26,6 +26,7 @@ export function readTokenPolicy(body: JsonRequestBody, allowOmitted = false): To
     allowedActions: readRules(body.allowedActions, "allowedActions", "action", allowOmitted),
     blockedActions: readRules(body.blockedActions, "blockedActions", "action", allowOmitted),
     allowedProxies: readRules(body.allowedProxies, "allowedProxies", "proxy", allowOmitted),
+    allowedConnections: readConnectionNames(body.allowedConnections, "allowedConnections"),
   };
 }
 
@@ -54,6 +55,35 @@ function readRules(value: unknown, fieldName: string, kind: "action" | "proxy", 
     throw invalidInput(`${fieldName} must not contain more than ${policyRuleListMaxItems} rules.`);
   }
   return rules;
+}
+
+function readConnectionNames(value: unknown, fieldName: string): string[] {
+  if (value === undefined) {
+    return [];
+  }
+  const values = requiredStringArray(value, fieldName, invalidInput);
+  const names: string[] = [];
+  const seen = new Set<string>();
+  for (const item of values) {
+    const name = item.trim();
+    if (!name) {
+      throw invalidInput(`${fieldName} must not contain empty connection names.`);
+    }
+    if (Buffer.byteLength(name, "utf8") > policyRuleMaxBytes) {
+      throw invalidInput(`${fieldName} rules must not exceed ${policyRuleMaxBytes} UTF-8 bytes.`);
+    }
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(name)) {
+      throw invalidInput(`${fieldName} contains an invalid connection name: ${name}.`);
+    }
+    if (!seen.has(name)) {
+      seen.add(name);
+      names.push(name);
+    }
+  }
+  if (names.length > policyRuleListMaxItems) {
+    throw invalidInput(`${fieldName} must not contain more than ${policyRuleListMaxItems} rules.`);
+  }
+  return names;
 }
 
 function assertRuleSyntax(rule: string, fieldName: string, kind: "action" | "proxy"): void {

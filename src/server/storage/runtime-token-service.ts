@@ -10,6 +10,7 @@ export interface RuntimeTokenRecord {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
+  allowedConnections: string[];
   createdAt: string;
   lastUsedAt?: string;
 }
@@ -20,6 +21,7 @@ export interface RuntimeTokenSummary {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
+  allowedConnections: string[];
   createdAt: string;
   lastUsedAt?: string;
 }
@@ -55,7 +57,12 @@ export class RuntimeTokenService {
 
   async createToken(
     name: string,
-    policy: TokenPolicy = { allowedActions: [], blockedActions: [], allowedProxies: [] },
+    policy: TokenPolicy = {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    },
   ): Promise<RuntimeTokenCreation> {
     const token = `${tokenPrefix}${randomBytes(32).toString("base64url")}`;
     const now = new Date().toISOString();
@@ -66,6 +73,7 @@ export class RuntimeTokenService {
       allowedActions: policy.allowedActions,
       blockedActions: policy.blockedActions,
       allowedProxies: policy.allowedProxies,
+      allowedConnections: policy.allowedConnections ?? [],
       createdAt: now,
     };
     await this.store.add(record);
@@ -101,6 +109,7 @@ export class RuntimeTokenService {
       allowedActions: matched.allowedActions,
       blockedActions: matched.blockedActions,
       allowedProxies: matched.allowedProxies,
+      allowedConnections: matched.allowedConnections ?? [],
     };
   }
 
@@ -132,6 +141,7 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
     allowedActions: record.allowedActions,
     blockedActions: record.blockedActions,
     allowedProxies: record.allowedProxies,
+    allowedConnections: record.allowedConnections,
     createdAt: record.createdAt,
     lastUsedAt: record.lastUsedAt,
   };

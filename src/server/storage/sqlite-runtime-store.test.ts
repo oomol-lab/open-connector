@@ -49,6 +49,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0008_runtime_token_policy.sql",
       "0009_runtime_token_proxy.sql",
       "0010_connection_revision.sql",
+      "0011_runtime_token_connection_scope.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -450,6 +451,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0008_runtime_token_policy.sql",
       "0009_runtime_token_proxy.sql",
       "0010_connection_revision.sql",
+      "0011_runtime_token_connection_scope.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
@@ -520,7 +522,13 @@ describe("SqliteRuntimeDatabase", () => {
       connectionId: migratedConnection?.id,
     });
     await expect(migrated.runtimeTokenStore.list()).resolves.toMatchObject([
-      { id: "legacy-token", allowedActions: [], blockedActions: [], allowedProxies: [] },
+      {
+        id: "legacy-token",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      },
     ]);
     await expect(migrated.runtimePolicyStore.get()).resolves.toBeUndefined();
     await expect(
@@ -556,6 +564,11 @@ describe("SqliteRuntimeDatabase", () => {
     ).toBeDefined();
     expect(
       inspected.prepare("select name from runtime_migrations where name = ?").get("0010_connection_revision.sql"),
+    ).toBeDefined();
+    expect(
+      inspected
+        .prepare("select name from runtime_migrations where name = ?")
+        .get("0011_runtime_token_connection_scope.sql"),
     ).toBeDefined();
     expect(inspected.prepare("pragma table_info(connections)").all()).toContainEqual(
       expect.objectContaining({ name: "id", notnull: 1 }),
@@ -675,10 +688,12 @@ describe("SqliteRuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
+      allowedConnections: ["work"],
     });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.name).toBe("Claude Desktop");
     expect(created.record.tokenHash).not.toBe(created.token);
+    expect(created.record.allowedConnections).toEqual(["work"]);
     await expectDatabaseDirectoryNotToContain(databasePath, created.token);
 
     await expect(tokens.verifyToken(created.token)).resolves.toBe(true);
@@ -689,26 +704,47 @@ describe("SqliteRuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
+      allowedConnections: ["work"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
     expect(JSON.stringify(listed)).not.toContain(created.token);
+    await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
+      tokenId: created.record.id,
+      allowedConnections: ["work"],
+    });
 
     await expect(
       tokens.updateTokenPolicy(created.record.id, {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
         allowedProxies: ["slack"],
+        allowedConnections: ["personal"],
       }),
     ).resolves.toMatchObject({
       allowedActions: ["github.get_current_user"],
       blockedActions: [],
       allowedProxies: ["slack"],
+      allowedConnections: ["personal"],
+    });
+    await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
+      allowedConnections: ["personal"],
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
     await expect(tokens.listTokens()).resolves.toEqual([]);
     await expect(tokens.verifyToken(created.token)).resolves.toBe(false);
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(false);
+    database.close();
+  });
+
+  it("defaults omitted allowedConnections to an unrestricted empty list", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath);
+    const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+    const created = await tokens.createToken("Open token");
+    expect(created.record.allowedConnections).toEqual([]);
+    await expect(tokens.listTokens()).resolves.toMatchObject([{ allowedConnections: [] }]);
+    await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({ allowedConnections: [] });
     database.close();
   });
 

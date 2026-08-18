@@ -137,7 +137,7 @@ describe("ActionPolicyService", () => {
         allowedProxies: [],
         blockedProxies: [],
       },
-      { allowedActions: ["github.*"], blockedActions: [], allowedProxies: [] },
+      { allowedActions: ["github.*"], blockedActions: [], allowedProxies: [], allowedConnections: [] },
     );
 
     expect(snapshot.evaluate(action)).toEqual({
@@ -189,7 +189,12 @@ describe("ActionPolicyService", () => {
         allowedProxies: [],
         blockedProxies: [],
       },
-      { allowedActions: ["github.*"], blockedActions: ["github.create_issue"], allowedProxies: [] },
+      {
+        allowedActions: ["github.*"],
+        blockedActions: ["github.create_issue"],
+        allowedProxies: [],
+        allowedConnections: [],
+      },
     );
     expect(tokenBlocked.evaluate(action)).toMatchObject({
       allowed: false,
@@ -231,6 +236,7 @@ describe("ActionPolicyService", () => {
           allowedActions: ["*"],
           blockedActions: [],
           allowedProxies: [],
+          allowedConnections: [],
         })
         .evaluateProxy("github"),
     ).toMatchObject({
@@ -248,6 +254,7 @@ describe("ActionPolicyService", () => {
           allowedActions: ["gmail.send_email"],
           blockedActions: ["github.create_issue"],
           allowedProxies: ["github"],
+          allowedConnections: ["work"],
         })
         .evaluateProxy("github"),
     ).toEqual({
@@ -256,6 +263,31 @@ describe("ActionPolicyService", () => {
         { source: "deployment", outcome: "allow_match", rule: "github" },
         { source: "token", outcome: "allow_match", rule: "github" },
       ],
+    });
+  });
+
+  it("keeps allowedConnections on the token policy without changing deployment rules", () => {
+    const snapshot = new ActionPolicyService().createSnapshot(
+      {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        blockedProxies: [],
+      },
+      {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["work"],
+      },
+    );
+
+    expect(snapshot.state.deployment).not.toHaveProperty("allowedConnections");
+    expect(snapshot.state.runtime).not.toHaveProperty("allowedConnections");
+    expect(snapshot.evaluate(action)).toEqual({ allowed: true, checks: [] });
+    expect(snapshot.evaluateProxy("github")).toMatchObject({
+      allowed: false,
+      code: "proxy_not_allowed",
     });
   });
 });

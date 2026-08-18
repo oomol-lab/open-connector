@@ -19,8 +19,70 @@ describe("policy input", () => {
   });
 
   it("allows omitted token rules only during creation", () => {
-    expect(readTokenPolicy({}, true)).toEqual({ allowedActions: [], blockedActions: [], allowedProxies: [] });
+    expect(readTokenPolicy({}, true)).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    });
     expect(() => readTokenPolicy({})).toThrow("allowedActions must be an array of strings");
+  });
+
+  it("treats omitted and empty allowedConnections as unrestricted on create and update", () => {
+    expect(readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [] })).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    });
+    expect(
+      readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: [] }),
+    ).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    });
+  });
+
+  it("trims and stably deduplicates allowedConnections", () => {
+    expect(
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [" work ", "work", "personal"],
+      }),
+    ).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["work", "personal"],
+    });
+  });
+
+  it.each(["", " ", "*", "work*", "github:work", "service:connectionName", "work connection", "-lead", "work:prod"])(
+    "rejects invalid allowedConnections value %s",
+    (name) => {
+      expect(() =>
+        readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: [name] }),
+      ).toThrow(/empty|invalid/);
+    },
+  );
+
+  it("enforces allowedConnections item and UTF-8 byte limits", () => {
+    const names = Array.from({ length: policyRuleListMaxItems + 1 }, (_, index) => `c${index}`);
+    expect(() =>
+      readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: names }),
+    ).toThrow(`more than ${policyRuleListMaxItems}`);
+    expect(() =>
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["a".repeat(policyRuleMaxBytes + 1)],
+      }),
+    ).toThrow(`${policyRuleMaxBytes} UTF-8 bytes`);
   });
 
   it.each(["github*", "github.*.issues", "github.", ".create_issue", "github create_issue"])(
