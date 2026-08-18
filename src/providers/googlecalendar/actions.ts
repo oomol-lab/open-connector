@@ -611,7 +611,7 @@ const actions: GooglecalendarActionSource[] = [
       {
         eventId,
         attendeeEmail: nonEmptyStringWithDescription("Attendee email address to add."),
-        calendarId,
+        calendarId: s.withDefault(calendarId, "primary"),
         sendUpdates: s.withDefault(
           s.stringEnum(
             "Who should receive invitation or update emails. Defaults to all so the new guest is notified.",

@@ -439,48 +439,50 @@ async function addAttendee(input: Record<string, unknown>, deps: GooglecalendarE
   if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
     throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
   }
+  const addedAttendee = compactObject({
+    email: attendeeEmail,
+    displayName: pickOptionalString(input, "displayName"),
+    optional: pickOptionalBoolean(input, "optional"),
+  });
 
-  const event = (await getEvent(
-    {
-      calendarId,
-      eventId,
-    },
-    deps,
-  )) as Record<string, unknown>;
-  const attendees = readEventAttendees(event);
-  if (attendees.some((attendee) => optionalString(attendee.email)?.toLowerCase() === attendeeEmail.toLowerCase())) {
-    return event;
+  let event = await fetchCalendarEvent(calendarId, eventId, deps);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    assertCompleteAttendeeList(event);
+    const attendees = readEventAttendees(event);
+    if (attendees.some((attendee) => optionalString(attendee.email)?.toLowerCase() === attendeeEmail.toLowerCase())) {
+      return event;
+    }
+
+    try {
+      return await googlecalendarJsonRequest(eventUrl(calendarId, eventId), {
+        accessToken: deps.accessToken,
+        fetcher: deps.fetcher,
+        method: "PATCH",
+        query: { sendUpdates },
+        headers: compactObject({
+          "if-match": optionalString(event.etag),
+        }),
+        body: {
+          attendees: [...attendees, addedAttendee],
+        },
+      });
+    } catch (error) {
+      if (attempt > 0 || !(error instanceof ProviderRequestError) || error.status !== 412) {
+        throw error;
+      }
+      event = await fetchCalendarEvent(calendarId, eventId, deps);
+    }
   }
 
-  return googlecalendarJsonRequest(eventUrl(calendarId, eventId), {
-    accessToken: deps.accessToken,
-    fetcher: deps.fetcher,
-    method: "PATCH",
-    query: { sendUpdates },
-    body: {
-      attendees: [
-        ...attendees,
-        compactObject({
-          email: attendeeEmail,
-          displayName: pickOptionalString(input, "displayName"),
-          optional: pickOptionalBoolean(input, "optional"),
-        }),
-      ],
-    },
-  });
+  throw new ProviderRequestError(412, "event changed while adding attendee");
 }
 
 async function removeAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
   const calendarId = pickOptionalString(input, "calendarId") ?? "primary";
   const eventId = resolveEventId(input);
   const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail").toLowerCase();
-  const event = (await getEvent(
-    {
-      calendarId,
-      eventId,
-    },
-    deps,
-  )) as Record<string, unknown>;
+  const event = await fetchCalendarEvent(calendarId, eventId, deps);
+  assertCompleteAttendeeList(event);
   const attendees = readEventAttendees(event);
   const remaining = attendees.filter((attendee) => optionalString(attendee.email)?.toLowerCase() !== attendeeEmail);
 
@@ -509,6 +511,24 @@ function readEventAttendees(event: Record<string, unknown>) {
         .filter((attendee): attendee is Record<string, unknown> => !!attendee && typeof attendee === "object")
         .map((attendee) => pickKnownFields(attendee, attendeeKeys))
     : [];
+}
+
+async function fetchCalendarEvent(
+  calendarId: string,
+  eventId: string,
+  deps: GooglecalendarEventRuntimeDeps,
+): Promise<Record<string, unknown>> {
+  return (await getEvent({ calendarId, eventId }, deps)) as Record<string, unknown>;
+}
+
+function assertCompleteAttendeeList(event: Record<string, unknown>): void {
+  // events.patch replaces the whole attendees array, so refuse when Google omitted guests.
+  if (event.attendeesOmitted === true) {
+    throw new ProviderRequestError(
+      409,
+      "cannot update attendees because Google Calendar omitted some guests from this event",
+    );
+  }
 }
 
 function buildListEventsQuery(input: Record<string, unknown>, options?: { syncMode?: boolean }) {

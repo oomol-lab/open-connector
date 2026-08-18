@@ -20,6 +20,7 @@ const eventPayload = {
 };
 const existingEvent = {
   id: "evt-1",
+  etag: '"etag-1"',
   status: "confirmed",
   summary: "Standup",
   attendees: [
@@ -433,6 +434,7 @@ describe("googlecalendar.add_attendee", () => {
     expect(requests[1]?.method).toBe("PATCH");
     expect(requests[1]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1");
     expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("all");
+    expect(requests[1]?.headers.get("if-match")).toBe('"etag-1"');
     expect(requests[1]?.body).toEqual({
       attendees: [
         { email: "alice@example.com", displayName: "Alice", responseStatus: "accepted" },
@@ -545,6 +547,72 @@ describe("googlecalendar.add_attendee", () => {
 
     expect(requests[1]?.body).toEqual({
       attendees: [{ email: "cara@example.com" }],
+    });
+    expect(requests[1]?.headers.get("if-match")).toBeNull();
+  });
+
+  it("refuses to PATCH when Google omitted attendees from the GET payload", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json({
+        ...existingEvent,
+        attendeesOmitted: true,
+      }),
+    ]);
+
+    await expect(
+      addAttendee(
+        {
+          eventId: "evt-1",
+          calendarId: "cal-1",
+          attendeeEmail: "cara@example.com",
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(
+      new ProviderRequestError(
+        409,
+        "cannot update attendees because Google Calendar omitted some guests from this event",
+      ),
+    );
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.method).toBe("GET");
+  });
+
+  it("re-fetches, merges, and retries PATCH after an If-Match 412", async () => {
+    const concurrentEvent = {
+      ...existingEvent,
+      etag: '"etag-2"',
+      attendees: [...existingEvent.attendees, { email: "dan@example.com", responseStatus: "needsAction" }],
+    };
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(existingEvent),
+      new Response(JSON.stringify({ error: { message: "Precondition Failed" } }), { status: 412 }),
+      Response.json(concurrentEvent),
+      Response.json({
+        ...concurrentEvent,
+        attendees: [...concurrentEvent.attendees, { email: "cara@example.com" }],
+      }),
+    ]);
+
+    await addAttendee(
+      {
+        eventId: "evt-1",
+        calendarId: "cal-1",
+        attendeeEmail: "cara@example.com",
+      },
+      fetcher,
+    );
+
+    expect(requests.map((request) => request.method)).toEqual(["GET", "PATCH", "GET", "PATCH"]);
+    expect(requests[1]?.headers.get("if-match")).toBe('"etag-1"');
+    expect(requests[3]?.headers.get("if-match")).toBe('"etag-2"');
+    expect(requests[3]?.body).toEqual({
+      attendees: [
+        { email: "alice@example.com", displayName: "Alice", responseStatus: "accepted" },
+        { email: "bob@example.com", responseStatus: "tentative" },
+        { email: "dan@example.com", responseStatus: "needsAction" },
+        { email: "cara@example.com" },
+      ],
     });
   });
 
