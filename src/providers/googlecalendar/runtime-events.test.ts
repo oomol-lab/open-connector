@@ -168,6 +168,39 @@ describe("googlecalendar event write sendUpdates", () => {
     ).rejects.toEqual(new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none"));
     expect(requests).toHaveLength(0);
   });
+
+  it("rejects invalid update_event sendUpdates before reading the event", async () => {
+    const { fetcher, requests } = stubCalendarResponses([]);
+
+    await expect(
+      updateEvent(
+        {
+          calendarId: "cal-1",
+          eventId: "evt-1",
+          sendUpdates: "guests",
+          event: { summary: "Retro" },
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none"));
+    expect(requests).toHaveLength(0);
+  });
+
+  it("rejects a supplied empty sendUpdates instead of treating it as omitted", async () => {
+    const { fetcher, requests } = stubCalendarResponses([]);
+
+    await expect(
+      createEvent(
+        {
+          calendarId: "cal-1",
+          sendUpdates: "",
+          event: eventPayload,
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none"));
+    expect(requests).toHaveLength(0);
+  });
 });
 
 function createEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {

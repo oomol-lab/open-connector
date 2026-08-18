@@ -160,16 +160,18 @@ async function getEvent(input: Record<string, unknown>, { accessToken, fetcher }
 }
 
 async function createEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   const event = pickEventWritableFields(asObject(input.event));
   return googlecalendarJsonRequest(eventsUrl(resolveCalendarId(input)), {
     accessToken,
     fetcher,
-    query: buildEventWriteQuery(event, input),
+    query: buildEventWriteQuery(event, sendUpdates),
     body: event,
   });
 }
 
 async function updateEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   const url = eventUrl(resolveCalendarId(input), resolveEventId(input));
   const current = await googlecalendarJsonRequest<Record<string, unknown>>(url, {
     accessToken,
@@ -194,18 +196,19 @@ async function updateEvent(input: Record<string, unknown>, { accessToken, fetche
     accessToken,
     fetcher,
     method: "PUT",
-    query: buildEventWriteQuery(body, input),
+    query: buildEventWriteQuery(body, sendUpdates),
     body,
   });
 }
 
 async function patchEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   const event = pickEventWritableFields(asObject(input.event));
   return googlecalendarJsonRequest(eventUrl(resolveCalendarId(input), resolveEventId(input)), {
     accessToken,
     fetcher,
     method: "PATCH",
-    query: buildEventWriteQuery(event, input),
+    query: buildEventWriteQuery(event, sendUpdates),
     body: event,
   });
 }
@@ -488,16 +491,16 @@ function buildListEventsQuery(input: Record<string, unknown>, options?: { syncMo
   });
 }
 
-function buildEventWriteQuery(event: Record<string, unknown>, input: Record<string, unknown>) {
+function buildEventWriteQuery(event: Record<string, unknown>, sendUpdates: string | undefined) {
   return compactObject({
     conferenceDataVersion: event.conferenceData === undefined ? undefined : "1",
     supportsAttachments: event.attachments === undefined ? undefined : "true",
-    sendUpdates: pickSendUpdates(input),
+    sendUpdates,
   });
 }
 
 function pickSendUpdates(input: Record<string, unknown>) {
-  const sendUpdates = pickOptionalString(input, "sendUpdates");
+  const sendUpdates = input.sendUpdates;
   if (sendUpdates === undefined) {
     return undefined;
   }

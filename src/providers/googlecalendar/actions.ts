@@ -38,11 +38,10 @@ const calendarId = nonEmptyStringWithDescription(
 );
 const eventId = nonEmptyStringWithDescription("Google Calendar event ID.");
 const ruleId = nonEmptyStringWithDescription("Google Calendar ACL rule ID.");
-const sendUpdates = s.stringEnum("Who should receive update notifications about this change.", [
-  "all",
-  "externalOnly",
-  "none",
-]);
+const sendUpdates = s.stringEnum(
+  "Who should receive update notifications about this change. none can prevent sync to external calendars; use import_event for migrations.",
+  ["all", "externalOnly", "none"],
+);
 
 const eventDateTime = s.object(
   {
