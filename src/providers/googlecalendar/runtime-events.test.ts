@@ -527,7 +527,7 @@ describe("googlecalendar.add_attendee", () => {
   });
 
   it("adds the first attendee when the event has no attendees array", async () => {
-    const eventWithoutGuests = { id: "evt-1", status: "confirmed", summary: "Standup" };
+    const eventWithoutGuests = { id: "evt-1", etag: '"etag-empty"', status: "confirmed", summary: "Standup" };
     const { fetcher, requests } = stubCalendarResponses([
       Response.json(eventWithoutGuests),
       Response.json({
@@ -548,7 +548,32 @@ describe("googlecalendar.add_attendee", () => {
     expect(requests[1]?.body).toEqual({
       attendees: [{ email: "cara@example.com" }],
     });
-    expect(requests[1]?.headers.get("if-match")).toBeNull();
+    expect(requests[1]?.headers.get("if-match")).toBe('"etag-empty"');
+  });
+
+  it("refuses to PATCH when the GET payload has no ETag", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json({
+        id: "evt-1",
+        status: "confirmed",
+        summary: "Standup",
+      }),
+    ]);
+
+    await expect(
+      addAttendee(
+        {
+          eventId: "evt-1",
+          calendarId: "cal-1",
+          attendeeEmail: "cara@example.com",
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(
+      new ProviderRequestError(409, "cannot update attendees because Google Calendar did not provide an event ETag"),
+    );
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.method).toBe("GET");
   });
 
   it("refuses to PATCH when Google omitted attendees from the GET payload", async () => {

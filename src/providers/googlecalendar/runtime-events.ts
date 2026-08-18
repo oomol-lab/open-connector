@@ -453,15 +453,21 @@ async function addAttendee(input: Record<string, unknown>, deps: GooglecalendarE
       return event;
     }
 
+    const etag = optionalString(event.etag);
+    if (!etag) {
+      throw new ProviderRequestError(
+        409,
+        "cannot update attendees because Google Calendar did not provide an event ETag",
+      );
+    }
+
     try {
       return await googlecalendarJsonRequest(eventUrl(calendarId, eventId), {
         accessToken: deps.accessToken,
         fetcher: deps.fetcher,
         method: "PATCH",
         query: { sendUpdates },
-        headers: compactObject({
-          "if-match": optionalString(event.etag),
-        }),
+        headers: { "if-match": etag },
         body: {
           attendees: [...attendees, addedAttendee],
         },
