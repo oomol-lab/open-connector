@@ -217,9 +217,17 @@ const envWriteFields = {
   customEnvironmentIds: s.stringArray("Custom environment IDs that should receive this environment variable."),
 };
 
-const emptyInput = s.object({}, { description: "Vercel action input." });
-const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
+const teamScopeFields = {
+  teamId: s.nonEmptyString("The Team identifier to perform the request on behalf of."),
+  slug: s.nonEmptyString("The Team slug to perform the request on behalf of."),
+};
+
+const unscopedInput = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
   s.actionInput(properties, required, "Vercel action input.");
+
+const emptyInput = unscopedInput({});
+const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
+  unscopedInput({ ...teamScopeFields, ...properties }, required);
 
 const actionSources: readonly VercelActionSource[] = [
   {
@@ -231,7 +239,7 @@ const actionSources: readonly VercelActionSource[] = [
   {
     name: "list_teams",
     description: "List Vercel teams available to the authenticated user.",
-    inputSchema: input({ limit: pageSize, since }),
+    inputSchema: unscopedInput({ limit: pageSize, since }),
     outputSchema: s.object({
       teams: s.array(team, { description: "Vercel teams available to the authenticated user." }),
       pagination: pagination,
@@ -240,7 +248,7 @@ const actionSources: readonly VercelActionSource[] = [
   {
     name: "get_team",
     description: "Get a Vercel team by id or slug.",
-    inputSchema: input({ teamId: s.nonEmptyString("Vercel team ID or team slug.") }, ["teamId"]),
+    inputSchema: unscopedInput({ teamId: s.nonEmptyString("Vercel team ID or team slug.") }, ["teamId"]),
     outputSchema: s.object({ team }, { required: ["team"] }),
   },
   {
@@ -422,7 +430,7 @@ const actionSources: readonly VercelActionSource[] = [
   {
     name: "list_webhooks",
     description: "List Vercel webhooks.",
-    inputSchema: emptyInput,
+    inputSchema: input({}),
     outputSchema: s.object({ webhooks: s.array(webhook, { description: "Vercel webhooks." }) }),
   },
   {
