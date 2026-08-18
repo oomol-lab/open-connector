@@ -432,24 +432,74 @@ async function listEventsAllCalendars(input: Record<string, unknown>, deps: Goog
 }
 
 async function addAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
-  const calendarId = pickOptionalString(input, "calendarId") ?? "primary";
-  const eventId = resolveEventId(input);
   const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail");
-  const sendUpdates = pickOptionalString(input, "sendUpdates") ?? "all";
-  if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
-    throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
-  }
   const addedAttendee = compactObject({
     email: attendeeEmail,
     displayName: pickOptionalString(input, "displayName"),
     optional: pickOptionalBoolean(input, "optional"),
   });
 
-  let event = await fetchCalendarEvent(calendarId, eventId, deps);
+  return patchEventAttendees(
+    {
+      calendarId: pickOptionalString(input, "calendarId") ?? "primary",
+      eventId: resolveEventId(input),
+      sendUpdates: pickSendUpdates(input, "all"),
+      conflictMessage: "event changed while adding attendee",
+      apply(attendees) {
+        if (
+          attendees.some((attendee) => optionalString(attendee.email)?.toLowerCase() === attendeeEmail.toLowerCase())
+        ) {
+          return { kind: "skip" };
+        }
+        return { kind: "patch", attendees: [...attendees, addedAttendee] };
+      },
+    },
+    deps,
+  );
+}
+
+async function removeAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
+  const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail");
+
+  return patchEventAttendees(
+    {
+      calendarId: pickOptionalString(input, "calendarId") ?? "primary",
+      eventId: resolveEventId(input),
+      sendUpdates: pickSendUpdates(input, "all"),
+      conflictMessage: "event changed while removing attendee",
+      apply(attendees) {
+        const remaining = attendees.filter(
+          (attendee) => optionalString(attendee.email)?.toLowerCase() !== attendeeEmail.toLowerCase(),
+        );
+        if (remaining.length === attendees.length) {
+          throw new ProviderRequestError(400, `attendee not found: ${attendeeEmail}`);
+        }
+        return { kind: "patch", attendees: remaining };
+      },
+    },
+    deps,
+  );
+}
+
+interface PatchEventAttendeesInput {
+  calendarId: string;
+  eventId: string;
+  sendUpdates: string;
+  conflictMessage: string;
+  apply(
+    attendees: Array<Record<string, unknown>>,
+  ): { kind: "skip" } | { kind: "patch"; attendees: Array<Record<string, unknown>> };
+}
+
+async function patchEventAttendees(
+  input: PatchEventAttendeesInput,
+  deps: GooglecalendarEventRuntimeDeps,
+): Promise<Record<string, unknown>> {
+  let event = await fetchCalendarEvent(input.calendarId, input.eventId, deps);
   for (let attempt = 0; attempt < 2; attempt += 1) {
     assertCompleteAttendeeList(event);
-    const attendees = readEventAttendees(event);
-    if (attendees.some((attendee) => optionalString(attendee.email)?.toLowerCase() === attendeeEmail.toLowerCase())) {
+    const decision = input.apply(readEventAttendees(event));
+    if (decision.kind === "skip") {
       return event;
     }
 
@@ -462,53 +512,25 @@ async function addAttendee(input: Record<string, unknown>, deps: GooglecalendarE
     }
 
     try {
-      return await googlecalendarJsonRequest(eventUrl(calendarId, eventId), {
+      return await googlecalendarJsonRequest(eventUrl(input.calendarId, input.eventId), {
         accessToken: deps.accessToken,
         fetcher: deps.fetcher,
         method: "PATCH",
-        query: { sendUpdates },
-        headers: { "if-match": etag },
+        query: { sendUpdates: input.sendUpdates },
+        headers: { "If-Match": etag },
         body: {
-          attendees: [...attendees, addedAttendee],
+          attendees: decision.attendees,
         },
       });
     } catch (error) {
       if (attempt > 0 || !(error instanceof ProviderRequestError) || error.status !== 412) {
         throw error;
       }
-      event = await fetchCalendarEvent(calendarId, eventId, deps);
+      event = await fetchCalendarEvent(input.calendarId, input.eventId, deps);
     }
   }
 
-  throw new ProviderRequestError(412, "event changed while adding attendee");
-}
-
-async function removeAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
-  const calendarId = pickOptionalString(input, "calendarId") ?? "primary";
-  const eventId = resolveEventId(input);
-  const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail").toLowerCase();
-  const event = await fetchCalendarEvent(calendarId, eventId, deps);
-  assertCompleteAttendeeList(event);
-  const attendees = readEventAttendees(event);
-  const remaining = attendees.filter((attendee) => optionalString(attendee.email)?.toLowerCase() !== attendeeEmail);
-
-  if (remaining.length === attendees.length) {
-    throw new ProviderRequestError(
-      400,
-      `attendee not found: ${requireInputString(input, "attendeeEmail", "attendeeEmail")}`,
-    );
-  }
-
-  return patchEvent(
-    {
-      calendarId,
-      eventId,
-      event: {
-        attendees: remaining,
-      },
-    },
-    deps,
-  );
+  throw new ProviderRequestError(412, input.conflictMessage);
 }
 
 function readEventAttendees(event: Record<string, unknown>) {
@@ -583,15 +605,15 @@ function buildEventWriteQuery(event: Record<string, unknown>, sendUpdates: strin
   });
 }
 
-function pickSendUpdates(input: Record<string, unknown>) {
+function pickSendUpdates(input: Record<string, unknown>, fallback?: string): string | undefined {
+  if (!Object.hasOwn(input, "sendUpdates")) {
+    return fallback;
+  }
   const sendUpdates = input.sendUpdates;
-  if (sendUpdates === undefined) {
-    return undefined;
+  if (sendUpdates === "all" || sendUpdates === "externalOnly" || sendUpdates === "none") {
+    return sendUpdates;
   }
-  if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
-    throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
-  }
-  return sendUpdates;
+  throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
 }
 
 function pickEventWritableFields(input: Record<string, unknown>) {

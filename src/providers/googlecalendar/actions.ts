@@ -628,13 +628,20 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "remove_attendee",
-    "Remove one attendee email from a Google Calendar event.",
+    "Remove one attendee from a Google Calendar event without replacing the remaining guests.",
     googlecalendarEventsWriteScopes,
     input(
       {
         eventId,
         attendeeEmail: nonEmptyStringWithDescription("Attendee email address to remove."),
-        calendarId,
+        calendarId: s.withDefault(calendarId, "primary"),
+        sendUpdates: s.withDefault(
+          s.stringEnum(
+            "Who should receive cancellation or update emails. Defaults to all so remaining guests are notified.",
+            ["all", "externalOnly", "none"],
+          ),
+          "all",
+        ),
       },
       ["eventId", "attendeeEmail"],
     ),
