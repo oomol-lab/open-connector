@@ -33,6 +33,7 @@ const smsRecordSchema = s.object("One normalized Vonage SMS report record.", {
   messageBody: s.nullableString("The message body when requested with includeMessage."),
   errorCode: s.nullableString("The Vonage delivery or handoff error code."),
   errorCodeDescription: s.nullableString("The description of the delivery or handoff error."),
+  concatenated: s.nullableString("Whether the outbound SMS was split into multiple parts when requested."),
 });
 
 const reportOutputSchema = s.actionOutput(

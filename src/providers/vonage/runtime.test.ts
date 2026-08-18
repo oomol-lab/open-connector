@@ -33,6 +33,7 @@ describe("Vonage SMS report actions", () => {
               message_body: "Hello",
               error_code: "0",
               error_code_description: "Delivered",
+              concatenated: "FALSE",
             },
           ],
         }),
@@ -63,6 +64,7 @@ describe("Vonage SMS report actions", () => {
           messageId: "message-1",
           status: "delivered",
           messageBody: "Hello",
+          concatenated: "FALSE",
         },
       ],
     });
@@ -95,5 +97,25 @@ describe("Vonage SMS report actions", () => {
     expect(url.searchParams.get("product")).toBe("SMS");
     expect(url.searchParams.get("id")).toBe("message-404");
     expect(url.searchParams.get("direction")).toBe("inbound");
+  });
+
+  it("rejects showConcatenated for inbound SMS records", async () => {
+    const fetcher: ProviderFetch = async () => {
+      throw new Error("the invalid request must not be fetched");
+    };
+    const context = createVonageContext({ apiKey: "api-key", apiSecret: "api-secret" }, fetcher);
+
+    await expect(
+      vonageActionHandlers.list_sms_records({ direction: "inbound", showConcatenated: true }, context),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("rejects malformed report responses without a records array", async () => {
+    const fetcher: ProviderFetch = async () => new Response(JSON.stringify({ records: {} }));
+    const context = createVonageContext({ apiKey: "api-key", apiSecret: "api-secret" }, fetcher);
+
+    await expect(vonageActionHandlers.list_sms_records({ direction: "outbound" }, context)).rejects.toMatchObject({
+      status: 502,
+    });
   });
 });

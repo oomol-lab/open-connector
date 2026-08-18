@@ -53,6 +53,7 @@ export const vonageActionHandlers: Record<string, VonageHandler> = {
   },
   async list_sms_records(input, context) {
     const direction = requiredString(input.direction, "direction", invalidInput);
+    validateShowConcatenated(direction, input.showConcatenated);
     const payload = await requestVonage({
       baseUrl: vonageReportsApiBaseUrl,
       path: "/v2/reports/records",
@@ -81,6 +82,7 @@ export const vonageActionHandlers: Record<string, VonageHandler> = {
   async get_sms_record(input, context) {
     const messageId = requiredString(input.messageId, "messageId", invalidInput);
     const direction = requiredString(input.direction, "direction", invalidInput);
+    validateShowConcatenated(direction, input.showConcatenated);
     const payload = await requestVonage({
       baseUrl: vonageReportsApiBaseUrl,
       path: "/v2/reports/records",
@@ -212,7 +214,10 @@ function normalizeSms(payload: unknown): unknown {
 
 function normalizeSmsReport(payload: unknown): Record<string, unknown> {
   const record = requireResponseRecord(payload, "Vonage SMS report response");
-  const records = Array.isArray(record.records) ? record.records : [];
+  if (!Array.isArray(record.records)) {
+    throw new ProviderRequestError(502, "Vonage SMS report response records must be an array", payload);
+  }
+  const records = record.records;
 
   return {
     records: records.map((item) => normalizeSmsRecord(item)),
@@ -247,7 +252,14 @@ function normalizeSmsRecord(value: unknown): Record<string, unknown> {
     messageBody: optionalString(record.message_body) ?? null,
     errorCode: optionalString(record.error_code) ?? null,
     errorCodeDescription: optionalString(record.error_code_description) ?? null,
+    concatenated: optionalString(record.concatenated) ?? null,
   };
+}
+
+function validateShowConcatenated(direction: string, value: unknown): void {
+  if (optionalBoolean(value) === true && direction === "inbound") {
+    throw new ProviderRequestError(400, "showConcatenated is only supported for outbound SMS records");
+  }
 }
 
 function mapSmsError(status: string, message?: string): ProviderRequestError {
