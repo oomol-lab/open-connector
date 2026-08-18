@@ -425,11 +425,11 @@ export function createOpenApiDocument(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
             allowedConnections: connectionNameArraySchema(
-              "Connection names granted to this stored token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact normalized bare connectionName values; restricted tokens must include default for unnamed HTTP, MCP, and proxy requests.",
+              "Connection names granted to this stored token. An empty list is unrestricted connection access. A non-empty list matches exact normalized bare connectionName values; restricted tokens must include default for unnamed HTTP, MCP, and proxy requests.",
             ),
           },
           {
-            required: ["allowedActions", "blockedActions", "allowedProxies"],
+            required: ["allowedActions", "blockedActions", "allowedProxies", "allowedConnections"],
             description:
               "Complete replacement of one stored runtime token's action, proxy, and connection permissions.",
           },
@@ -462,7 +462,13 @@ export function createOpenApiDocument(
             allowed: jsonSchema.boolean({ description: "Whether policy permits execution." }),
             code: {
               type: "string",
-              enum: ["action_not_allowed", "action_blocked", "proxy_not_allowed", "proxy_blocked"],
+              enum: [
+                "action_not_allowed",
+                "action_blocked",
+                "proxy_not_allowed",
+                "proxy_blocked",
+                "connection_not_allowed",
+              ],
             },
             message: jsonSchema.string({ description: "Policy denial message." }),
             checks: {

@@ -325,11 +325,11 @@ Create runtime tokens for `/v1` and `/mcp` callers from the web console Access t
 Runtime clients should send `Authorization: Bearer oct_...`. Persistent tokens configure Action
 rules, provider proxy grants, and optional connection grants independently. Their `allowedProxies`
 list is empty by default, which denies `/v1/proxy/:service`; add a provider service or `*` only when
-that client needs proxy access. Omit `allowedConnections` or send `[]` for unrestricted connection
-access. A non-empty list is an exact `connectionName` allowlist; unnamed requests use `default` and
-are denied unless that name is listed. HTTP, MCP, and proxy callers receive `connection_not_allowed`
-before lookup. Runtime discovery is filtered; `GET /api/connections` and Action `agent.md` guides
-are not.
+that client needs proxy access. Omit `allowedConnections` or send `[]` on create for unrestricted
+connection access. Updates must send the field so a PUT cannot drop an existing restriction. A
+non-empty list is an exact `connectionName` allowlist; unnamed requests use `default` and are denied
+unless that name is listed. HTTP, MCP, and proxy callers receive `connection_not_allowed` before
+lookup. Runtime discovery is filtered; `GET /api/connections` and Action `agent.md` guides are not.
 
 `OOMOL_CONNECT_RUNTIME_TOKEN` is still accepted for bootstrap scripts and backward compatibility.
 

@@ -27,14 +27,13 @@ connection grants. Their `allowedProxies` list is empty by default, so a persist
 `/v1/proxy/:service` until a provider service or `*` is explicitly granted.
 
 `allowedConnections` belongs only to stored tokens, not to deployment or Runtime policy. Omit the
-field or send `[]` for unrestricted connection access. A non-empty list grants only those exact
-normalized bare `connectionName` values. Omitting `connectionName` on HTTP, MCP, or proxy requests
-uses `default`; a restricted token must include `default` for that unnamed path. Denied requests fail
-before credential lookup with HTTP `403` / MCP `connection_not_allowed`. Runtime discovery is filtered
-to granted connections; admin `GET /api/connections` and `GET /api/actions/:actionId/agent.md` stay
-unfiltered. Older create/update clients that omit `allowedConnections` keep the previous unrestricted
-default. Bootstrap runtime tokens and JWTs have no stored connection grant, so they remain
-unrestricted.
+field on create, or send `[]`, for unrestricted connection access. Updates must send the field so a
+PUT cannot drop an existing restriction. A non-empty list grants only those exact normalized bare
+`connectionName` values. Omitting `connectionName` on HTTP, MCP, or proxy requests uses `default`; a
+restricted token must include `default` for that unnamed path. Denied requests fail before credential
+lookup with HTTP `403` / MCP `connection_not_allowed`. Runtime discovery is filtered to granted
+connections; admin `GET /api/connections` and `GET /api/actions/:actionId/agent.md` stay unfiltered.
+Bootstrap runtime tokens and JWTs have no stored connection grant, so they remain unrestricted.
 
 Example: two GitHub connections (`default` and `work`) and two tokens:
 

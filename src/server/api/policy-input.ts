@@ -26,7 +26,7 @@ export function readTokenPolicy(body: JsonRequestBody, allowOmitted = false): To
     allowedActions: readRules(body.allowedActions, "allowedActions", "action", allowOmitted),
     blockedActions: readRules(body.blockedActions, "blockedActions", "action", allowOmitted),
     allowedProxies: readRules(body.allowedProxies, "allowedProxies", "proxy", allowOmitted),
-    allowedConnections: readConnectionNames(body.allowedConnections, "allowedConnections"),
+    allowedConnections: readConnectionNames(body.allowedConnections, "allowedConnections", allowOmitted),
   };
 }
 
@@ -57,8 +57,8 @@ function readRules(value: unknown, fieldName: string, kind: "action" | "proxy", 
   return rules;
 }
 
-function readConnectionNames(value: unknown, fieldName: string): string[] {
-  if (value === undefined) {
+function readConnectionNames(value: unknown, fieldName: string, allowOmitted = false): string[] {
+  if (value === undefined && allowOmitted) {
     return [];
   }
   const values = requiredStringArray(value, fieldName, invalidInput);
@@ -70,7 +70,7 @@ function readConnectionNames(value: unknown, fieldName: string): string[] {
       throw invalidInput(`${fieldName} must not contain empty connection names.`);
     }
     if (Buffer.byteLength(name, "utf8") > policyRuleMaxBytes) {
-      throw invalidInput(`${fieldName} rules must not exceed ${policyRuleMaxBytes} UTF-8 bytes.`);
+      throw invalidInput(`${fieldName} names must not exceed ${policyRuleMaxBytes} UTF-8 bytes.`);
     }
     if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(name)) {
       throw invalidInput(`${fieldName} contains an invalid connection name: ${name}.`);

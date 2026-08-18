@@ -153,7 +153,11 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
     if (!token) {
       return undefined;
     }
-    const updated = { ...token, ...policy };
+    const updated = {
+      ...token,
+      ...policy,
+      allowedConnections: policy.allowedConnections ?? [],
+    };
     this.tokens.set(id, updated);
     return updated;
   }

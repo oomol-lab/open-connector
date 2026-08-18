@@ -1457,7 +1457,12 @@ describe("ConnectServer", () => {
     const updated = await app.request(`/api/runtime-tokens/${createdBody.record.id}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ allowedActions: ["example.echo"], blockedActions: [], allowedProxies: [] }),
+      body: JSON.stringify({
+        allowedActions: ["example.echo"],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      }),
     });
     expect(updated.status).toBe(200);
     await expect(updated.json()).resolves.toMatchObject({
@@ -1861,6 +1866,33 @@ describe("ConnectServer", () => {
     expect(await runDefault("Bearer bootstrap-token")).toBe(200);
     expect(await runDefault("Bearer jwt-access-token")).toBe(200);
     expect(await runDefault(`Bearer ${unrestrictedToken.token}`)).toBe(200);
+  });
+
+  it("rejects token policy updates that omit allowedConnections", async () => {
+    const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
+    const app = createTestServer([apiKeyProvider], { runtimeTokens }).createApp();
+    const created = await app.request("/api/runtime-tokens", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Work only",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["work"],
+      }),
+    });
+    const token = (await created.json()) as { record: { id: string } };
+    const omitted = await app.request(`/api/runtime-tokens/${token.record.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ allowedActions: [], blockedActions: [], allowedProxies: [] }),
+    });
+    expect(omitted.status).toBe(400);
+    await expect(omitted.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+    const listed = await app.request("/api/runtime-tokens");
+    expect(listed.status).toBe(200);
+    await expect(listed.json()).resolves.toMatchObject([{ allowedConnections: ["work"] }]);
   });
 
   it("returns an idempotency conflict when different stored tokens reuse one key", async () => {
@@ -3730,7 +3762,7 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
     if (!token) {
       return undefined;
     }
-    const updated = { ...token, ...policy };
+    const updated = { ...token, ...policy, allowedConnections: policy.allowedConnections ?? [] };
     this.tokens.set(id, updated);
     return updated;
   }

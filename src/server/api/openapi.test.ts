@@ -95,6 +95,9 @@ describe("action execution OpenAPI", () => {
       required: string[];
       properties: Record<string, unknown>;
     };
+    const policyDecision = document.components.schemas.PolicyDecision as {
+      properties: { code: { enum: string[] } };
+    };
 
     expect(runtimePolicyPath.get.responses["200"]).toBeDefined();
     expect(runtimePolicyPath.put.responses["413"]).toBeDefined();
@@ -107,7 +110,14 @@ describe("action execution OpenAPI", () => {
     expect(tokenSummary.required).toEqual(
       expect.arrayContaining(["allowedActions", "blockedActions", "allowedProxies", "allowedConnections"]),
     );
-    expect(tokenPolicy.required).toEqual(["allowedActions", "blockedActions", "allowedProxies"]);
+    expect(tokenPolicy.required).toEqual(["allowedActions", "blockedActions", "allowedProxies", "allowedConnections"]);
+    expect(policyDecision.properties.code.enum).toEqual([
+      "action_not_allowed",
+      "action_blocked",
+      "proxy_not_allowed",
+      "proxy_blocked",
+      "connection_not_allowed",
+    ]);
     expect(runLog.properties).toHaveProperty("policy");
     expect(runLog.properties).toHaveProperty("runtimeTokenId");
   });
@@ -143,7 +153,7 @@ describe("action execution OpenAPI", () => {
     expect(policyRules.properties).not.toHaveProperty("allowedConnections");
     expect(tokenSummary.required).toContain("allowedConnections");
     expect(createRequest.required).not.toContain("allowedConnections");
-    expect(tokenPolicy.required).not.toContain("allowedConnections");
+    expect(tokenPolicy.required).toContain("allowedConnections");
     expect(tokenSummary.properties.allowedConnections).toMatchObject(expectedGrant);
     expect(createRequest.properties.allowedConnections).toMatchObject(expectedGrant);
     expect(tokenPolicy.properties.allowedConnections).toMatchObject(expectedGrant);
@@ -152,6 +162,7 @@ describe("action execution OpenAPI", () => {
     expect(createRequest.properties.allowedConnections.description).toMatch(/omit/i);
     expect(createRequest.properties.allowedConnections.description).toMatch(/exact/i);
     expect(tokenPolicy.properties.allowedConnections.description).toMatch(/default/i);
+    expect(tokenPolicy.properties.allowedConnections.description).not.toMatch(/omit/i);
   });
 });
 

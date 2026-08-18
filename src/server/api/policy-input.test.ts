@@ -28,8 +28,8 @@ describe("policy input", () => {
     expect(() => readTokenPolicy({})).toThrow("allowedActions must be an array of strings");
   });
 
-  it("treats omitted and empty allowedConnections as unrestricted on create and update", () => {
-    expect(readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [] })).toEqual({
+  it("treats omitted and empty allowedConnections as unrestricted on create", () => {
+    expect(readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [] }, true)).toEqual({
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
@@ -43,6 +43,12 @@ describe("policy input", () => {
       allowedProxies: [],
       allowedConnections: [],
     });
+  });
+
+  it("requires allowedConnections on update so a PUT cannot drop an existing grant", () => {
+    expect(() => readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [] })).toThrow(
+      "allowedConnections must be an array of strings",
+    );
   });
 
   it("trims and stably deduplicates allowedConnections", () => {
