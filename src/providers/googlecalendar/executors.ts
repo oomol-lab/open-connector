@@ -157,6 +157,7 @@ export const googlecalendarActionHandlers: Record<GooglecalendarActionName, Goog
     return deleteAclRule(input, deps);
   },
   find_event: googlecalendarEventActionHandlers.find_event,
+  add_attendee: googlecalendarEventActionHandlers.add_attendee,
   remove_attendee: googlecalendarEventActionHandlers.remove_attendee,
 };
 

@@ -604,6 +604,29 @@ const actions: GooglecalendarActionSource[] = [
     eventPage,
   ),
   action(
+    "add_attendee",
+    "Add one attendee to a Google Calendar event without replacing existing guests.",
+    googlecalendarEventsWriteScopes,
+    input(
+      {
+        eventId,
+        attendeeEmail: nonEmptyStringWithDescription("Attendee email address to add."),
+        calendarId,
+        sendUpdates: s.withDefault(
+          s.stringEnum(
+            "Who should receive invitation or update emails. Defaults to all so the new guest is notified.",
+            ["all", "externalOnly", "none"],
+          ),
+          "all",
+        ),
+        displayName: schemaProperties(attendee).displayName,
+        optional: schemaProperties(attendee).optional,
+      },
+      ["eventId", "attendeeEmail"],
+    ),
+    eventOutput,
+  ),
+  action(
     "remove_attendee",
     "Remove one attendee email from a Google Calendar event.",
     googlecalendarEventsWriteScopes,
@@ -656,6 +679,7 @@ export type GooglecalendarActionName =
   | "patch_acl_rule"
   | "delete_acl_rule"
   | "find_event"
+  | "add_attendee"
   | "remove_attendee";
 
 export const googlecalendarActions: ActionDefinition[] = actions.map((source) =>

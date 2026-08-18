@@ -92,6 +92,7 @@ export type GooglecalendarEventActionName =
   | "sync_events"
   | "list_events_all_calendars"
   | "find_event"
+  | "add_attendee"
   | "remove_attendee";
 
 export const googlecalendarEventActionHandlers: Record<
@@ -136,6 +137,9 @@ export const googlecalendarEventActionHandlers: Record<
   },
   find_event(input, deps) {
     return findEvent(input, deps);
+  },
+  add_attendee(input, deps) {
+    return addAttendee(input, deps);
   },
   remove_attendee(input, deps) {
     return removeAttendee(input, deps);
@@ -427,6 +431,45 @@ async function listEventsAllCalendars(input: Record<string, unknown>, deps: Goog
   };
 }
 
+async function addAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
+  const calendarId = pickOptionalString(input, "calendarId") ?? "primary";
+  const eventId = resolveEventId(input);
+  const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail");
+  const sendUpdates = pickOptionalString(input, "sendUpdates") ?? "all";
+  if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
+    throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
+  }
+
+  const event = (await getEvent(
+    {
+      calendarId,
+      eventId,
+    },
+    deps,
+  )) as Record<string, unknown>;
+  const attendees = readEventAttendees(event);
+  if (attendees.some((attendee) => optionalString(attendee.email)?.toLowerCase() === attendeeEmail.toLowerCase())) {
+    return event;
+  }
+
+  return googlecalendarJsonRequest(eventUrl(calendarId, eventId), {
+    accessToken: deps.accessToken,
+    fetcher: deps.fetcher,
+    method: "PATCH",
+    query: { sendUpdates },
+    body: {
+      attendees: [
+        ...attendees,
+        compactObject({
+          email: attendeeEmail,
+          displayName: pickOptionalString(input, "displayName"),
+          optional: pickOptionalBoolean(input, "optional"),
+        }),
+      ],
+    },
+  });
+}
+
 async function removeAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
   const calendarId = pickOptionalString(input, "calendarId") ?? "primary";
   const eventId = resolveEventId(input);
@@ -438,11 +481,7 @@ async function removeAttendee(input: Record<string, unknown>, deps: Googlecalend
     },
     deps,
   )) as Record<string, unknown>;
-  const attendees = Array.isArray(event.attendees)
-    ? event.attendees
-        .filter((attendee): attendee is Record<string, unknown> => !!attendee && typeof attendee === "object")
-        .map((attendee) => pickKnownFields(attendee, attendeeKeys))
-    : [];
+  const attendees = readEventAttendees(event);
   const remaining = attendees.filter((attendee) => optionalString(attendee.email)?.toLowerCase() !== attendeeEmail);
 
   if (remaining.length === attendees.length) {
@@ -462,6 +501,14 @@ async function removeAttendee(input: Record<string, unknown>, deps: Googlecalend
     },
     deps,
   );
+}
+
+function readEventAttendees(event: Record<string, unknown>) {
+  return Array.isArray(event.attendees)
+    ? event.attendees
+        .filter((attendee): attendee is Record<string, unknown> => !!attendee && typeof attendee === "object")
+        .map((attendee) => pickKnownFields(attendee, attendeeKeys))
+    : [];
 }
 
 function buildListEventsQuery(input: Record<string, unknown>, options?: { syncMode?: boolean }) {

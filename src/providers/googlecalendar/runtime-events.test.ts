@@ -18,6 +18,16 @@ const eventPayload = {
   end: { dateTime: "2026-08-19T09:30:00Z" },
   attendees: [{ email: "alice@example.com" }],
 };
+const existingEvent = {
+  id: "evt-1",
+  status: "confirmed",
+  summary: "Standup",
+  attendees: [
+    { email: "alice@example.com", displayName: "Alice", responseStatus: "accepted" },
+    { email: "bob@example.com", responseStatus: "tentative" },
+  ],
+};
+
 
 interface CapturedRequest {
   method: string;
@@ -391,6 +401,178 @@ describe("googlecalendar event write sendUpdates", () => {
     expect(requests).toHaveLength(0);
   });
 });
+
+describe("googlecalendar.add_attendee", () => {
+  it("GETs the event then PATCHes a merged attendees array that keeps existing guests", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(existingEvent),
+      Response.json({
+        ...existingEvent,
+        attendees: [
+          ...existingEvent.attendees,
+          { email: "cara@example.com", displayName: "Cara", optional: true, responseStatus: "needsAction" },
+        ],
+      }),
+    ]);
+
+    const output = await addAttendee(
+      {
+        eventId: "evt-1",
+        calendarId: "cal-1",
+        attendeeEmail: "cara@example.com",
+        displayName: "Cara",
+        optional: true,
+      },
+      fetcher,
+    );
+
+    expect(requests).toHaveLength(2);
+    expect(requests[0]?.method).toBe("GET");
+    expect(requests[0]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1");
+    expect(requests[0]?.url.searchParams.get("sendUpdates")).toBeNull();
+    expect(requests[1]?.method).toBe("PATCH");
+    expect(requests[1]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1");
+    expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("all");
+    expect(requests[1]?.body).toEqual({
+      attendees: [
+        { email: "alice@example.com", displayName: "Alice", responseStatus: "accepted" },
+        { email: "bob@example.com", responseStatus: "tentative" },
+        { email: "cara@example.com", displayName: "Cara", optional: true },
+      ],
+    });
+    expect(output).toMatchObject({
+      id: "evt-1",
+      attendees: expect.arrayContaining([
+        expect.objectContaining({ email: "cara@example.com", displayName: "Cara", optional: true }),
+      ]),
+    });
+  });
+
+  it("returns the GET payload and skips PATCH when the email is already on the event", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(existingEvent)]);
+
+    const output = await addAttendee(
+      {
+        eventId: "evt-1",
+        calendarId: "cal-1",
+        attendeeEmail: "Alice@Example.com",
+      },
+      fetcher,
+    );
+
+    expect(output).toEqual(existingEvent);
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.method).toBe("GET");
+  });
+
+  it("sends sendUpdates=none on the PATCH URL when requested", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(existingEvent), Response.json(existingEvent)]);
+
+    await addAttendee(
+      {
+        eventId: "evt-1",
+        calendarId: "cal-1",
+        attendeeEmail: "cara@example.com",
+        sendUpdates: "none",
+      },
+      fetcher,
+    );
+
+    expect(requests).toHaveLength(2);
+    expect(requests[1]?.method).toBe("PATCH");
+    expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("none");
+  });
+
+  it("uses the primary calendar when calendarId is omitted", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(existingEvent), Response.json(existingEvent)]);
+
+    await addAttendee(
+      {
+        eventId: "evt-1",
+        attendeeEmail: "cara@example.com",
+      },
+      fetcher,
+    );
+
+    expect(requests).toHaveLength(2);
+    expect(requests[0]?.url.pathname).toBe("/calendar/v3/calendars/primary/events/evt-1");
+    expect(requests[1]?.url.pathname).toBe("/calendar/v3/calendars/primary/events/evt-1");
+  });
+
+  it("returns 400 when attendeeEmail is missing", async () => {
+    const { fetcher, requests } = stubCalendarResponses([]);
+
+    await expect(addAttendee({ eventId: "evt-1" }, fetcher)).rejects.toEqual(
+      new ProviderRequestError(400, "attendeeEmail is required"),
+    );
+    expect(requests).toHaveLength(0);
+  });
+
+  it("returns 400 before fetching when sendUpdates is invalid", async () => {
+    const { fetcher, requests } = stubCalendarResponses([]);
+
+    await expect(
+      addAttendee(
+        {
+          eventId: "evt-1",
+          attendeeEmail: "cara@example.com",
+          sendUpdates: "everyone",
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none"));
+    expect(requests).toHaveLength(0);
+  });
+
+  it("adds the first attendee when the event has no attendees array", async () => {
+    const eventWithoutGuests = { id: "evt-1", status: "confirmed", summary: "Standup" };
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(eventWithoutGuests),
+      Response.json({
+        ...eventWithoutGuests,
+        attendees: [{ email: "cara@example.com" }],
+      }),
+    ]);
+
+    await addAttendee(
+      {
+        eventId: "evt-1",
+        calendarId: "cal-1",
+        attendeeEmail: "cara@example.com",
+      },
+      fetcher,
+    );
+
+    expect(requests[1]?.body).toEqual({
+      attendees: [{ email: "cara@example.com" }],
+    });
+  });
+
+  it("preserves existing attendees' responseStatus and displayName in the PATCH body", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(existingEvent), Response.json(existingEvent)]);
+
+    await addAttendee(
+      {
+        eventId: "evt-1",
+        calendarId: "cal-1",
+        attendeeEmail: "cara@example.com",
+      },
+      fetcher,
+    );
+
+    expect(requests[1]?.body).toEqual({
+      attendees: [
+        { email: "alice@example.com", displayName: "Alice", responseStatus: "accepted" },
+        { email: "bob@example.com", responseStatus: "tentative" },
+        { email: "cara@example.com" },
+      ],
+    });
+  });
+});
+
+function addAttendee(input: Record<string, unknown>, fetcher: ProviderFetch) {
+  return googlecalendarEventActionHandlers.add_attendee(input, { accessToken, fetcher });
+}
 
 function createEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
   return googlecalendarEventActionHandlers.create_event(input, { accessToken, fetcher });
