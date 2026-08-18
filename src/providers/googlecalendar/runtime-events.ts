@@ -164,7 +164,7 @@ async function createEvent(input: Record<string, unknown>, { accessToken, fetche
   return googlecalendarJsonRequest(eventsUrl(resolveCalendarId(input)), {
     accessToken,
     fetcher,
-    query: buildEventWriteQuery(event),
+    query: buildEventWriteQuery(event, input),
     body: event,
   });
 }
@@ -194,7 +194,7 @@ async function updateEvent(input: Record<string, unknown>, { accessToken, fetche
     accessToken,
     fetcher,
     method: "PUT",
-    query: buildEventWriteQuery(body),
+    query: buildEventWriteQuery(body, input),
     body,
   });
 }
@@ -205,7 +205,7 @@ async function patchEvent(input: Record<string, unknown>, { accessToken, fetcher
     accessToken,
     fetcher,
     method: "PATCH",
-    query: buildEventWriteQuery(event),
+    query: buildEventWriteQuery(event, input),
     body: event,
   });
 }
@@ -216,6 +216,9 @@ async function deleteEvent(input: Record<string, unknown>, { accessToken, fetche
       accessToken,
       fetcher,
       method: "DELETE",
+      query: compactObject({
+        sendUpdates: pickSendUpdates(input),
+      }),
     });
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status === 404) {
@@ -485,11 +488,23 @@ function buildListEventsQuery(input: Record<string, unknown>, options?: { syncMo
   });
 }
 
-function buildEventWriteQuery(event: Record<string, unknown>) {
+function buildEventWriteQuery(event: Record<string, unknown>, input: Record<string, unknown>) {
   return compactObject({
     conferenceDataVersion: event.conferenceData === undefined ? undefined : "1",
     supportsAttachments: event.attachments === undefined ? undefined : "true",
+    sendUpdates: pickSendUpdates(input),
   });
+}
+
+function pickSendUpdates(input: Record<string, unknown>) {
+  const sendUpdates = pickOptionalString(input, "sendUpdates");
+  if (sendUpdates === undefined) {
+    return undefined;
+  }
+  if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
+    throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
+  }
+  return sendUpdates;
 }
 
 function pickEventWritableFields(input: Record<string, unknown>) {

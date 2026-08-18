@@ -38,6 +38,11 @@ const calendarId = nonEmptyStringWithDescription(
 );
 const eventId = nonEmptyStringWithDescription("Google Calendar event ID.");
 const ruleId = nonEmptyStringWithDescription("Google Calendar ACL rule ID.");
+const sendUpdates = s.stringEnum("Who should receive update notifications about this change.", [
+  "all",
+  "externalOnly",
+  "none",
+]);
 
 const eventDateTime = s.object(
   {
@@ -398,28 +403,28 @@ const actions: GooglecalendarActionSource[] = [
     "create_event",
     "Create a Google Calendar event.",
     googlecalendarEventsWriteScopes,
-    input({ calendarId, event: eventCreate }, ["calendarId", "event"]),
+    input({ calendarId, event: eventCreate, sendUpdates }, ["calendarId", "event"]),
     eventOutput,
   ),
   action(
     "update_event",
     "Replace writable fields on a Google Calendar event.",
     googlecalendarEventsWriteScopes,
-    input({ calendarId, eventId, event: eventWritable }, ["calendarId", "eventId", "event"]),
+    input({ calendarId, eventId, event: eventWritable, sendUpdates }, ["calendarId", "eventId", "event"]),
     eventOutput,
   ),
   action(
     "patch_event",
     "Patch writable fields on a Google Calendar event.",
     googlecalendarEventsWriteScopes,
-    input({ calendarId, eventId, event: eventWritable }, ["calendarId", "eventId", "event"]),
+    input({ calendarId, eventId, event: eventWritable, sendUpdates }, ["calendarId", "eventId", "event"]),
     eventOutput,
   ),
   action(
     "delete_event",
     "Delete a Google Calendar event.",
     googlecalendarEventsWriteScopes,
-    calendarEventIdInput(),
+    input({ calendarId, eventId, sendUpdates }, ["calendarId", "eventId"]),
     success,
   ),
   action(
