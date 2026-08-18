@@ -100,6 +100,9 @@ export const vercelActionHandlers: Record<VercelActionName, VercelActionHandler>
   create_webhook(input: VercelActionInput, context: VercelActionContext): Promise<unknown> {
     return vercelCreateWebhook(input, context);
   },
+  delete_webhook(input: VercelActionInput, context: VercelActionContext): Promise<unknown> {
+    return vercelDeleteWebhook(input, context);
+  },
 };
 
 export async function validateVercelCredential(
@@ -608,6 +611,20 @@ async function vercelCreateWebhook(input: VercelActionInput, context: VercelActi
   };
 }
 
+async function vercelDeleteWebhook(input: VercelActionInput, context: VercelActionContext) {
+  const id = requireString(input.id, "id");
+  await requestVercelJson({
+    path: `/v1/webhooks/${encodeURIComponent(id)}`,
+    apiKey: context.apiKey,
+    fetcher: context.fetcher,
+    mode: "execute",
+    method: "DELETE",
+    notFoundAsInvalidInput: true,
+  });
+
+  return { deleted: true };
+}
+
 interface VercelRequestOptions {
   path: string;
   apiKey: string;
@@ -665,7 +682,20 @@ async function requestVercelJson<T>(options: VercelRequestOptions): Promise<T> {
     throw await mapVercelError(response, options.mode, options.notFoundAsInvalidInput ?? false);
   }
 
-  return response.json() as Promise<T>;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  if (!text.trim()) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ProviderRequestError(502, "vercel returned an invalid JSON response");
+  }
 }
 
 function buildVercelUrl(path: string, query?: Record<string, string>): string {
@@ -699,7 +729,7 @@ async function mapVercelError(
   if (response.status === 401) {
     return new ProviderRequestError(mode === "validate" ? 400 : 401, error.message, error);
   }
-  if (response.status === 404 && notFoundAsInvalidInput) {
+  if ((response.status === 404 || response.status === 410) && notFoundAsInvalidInput) {
     return new ProviderRequestError(400, error.message, error);
   }
   if (response.status === 429) {

@@ -28,7 +28,8 @@ export type VercelActionName =
   | "get_domain_config"
   | "list_webhooks"
   | "get_webhook"
-  | "create_webhook";
+  | "create_webhook"
+  | "delete_webhook";
 
 interface VercelActionSource {
   name: VercelActionName;
@@ -444,6 +445,20 @@ const actionSources: readonly VercelActionSource[] = [
       ["url", "events"],
     ),
     outputSchema: s.object({ webhook }, { required: ["webhook"] }),
+  },
+  {
+    name: "delete_webhook",
+    description:
+      "Delete a Vercel webhook. The returned acknowledgement is generated locally because Vercel responds with 204 No Content.",
+    inputSchema: input({ id: s.nonEmptyString("Vercel webhook ID.") }, ["id"]),
+    outputSchema: s.object(
+      {
+        deleted: s.boolean({
+          description: "Whether Vercel accepted the deletion request. True when the API returns 204 No Content.",
+        }),
+      },
+      { required: ["deleted"], description: "A normalized Vercel webhook deletion response." },
+    ),
   },
 ];
 
