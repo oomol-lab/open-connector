@@ -226,8 +226,14 @@ const unscopedInput = (properties: Record<string, JsonSchema>, required: string[
   s.actionInput(properties, required, "Vercel action input.");
 
 const emptyInput = unscopedInput({});
-const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
-  unscopedInput({ ...teamScopeFields, ...properties }, required);
+const getTeamInput = unscopedInput(teamScopeFields);
+getTeamInput.oneOf = [{ required: ["teamId"] }, { required: ["slug"] }];
+
+const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema => {
+  const schema = unscopedInput({ ...teamScopeFields, ...properties }, required);
+  schema.not = { required: ["teamId", "slug"] };
+  return schema;
+};
 
 const actionSources: readonly VercelActionSource[] = [
   {
@@ -248,10 +254,7 @@ const actionSources: readonly VercelActionSource[] = [
   {
     name: "get_team",
     description: "Get a Vercel team by team ID or slug.",
-    inputSchema: unscopedInput({
-      teamId: s.nonEmptyString("The Team identifier to perform the request on behalf of."),
-      slug: s.nonEmptyString("The Team slug to perform the request on behalf of."),
-    }),
+    inputSchema: getTeamInput,
     outputSchema: s.object({ team }, { required: ["team"] }),
   },
   {

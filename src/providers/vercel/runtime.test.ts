@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { vercelActions } from "./actions.ts";
 import { credentialValidators } from "./executors.ts";
 import { readVercelTeamScope, validateVercelCredential, vercelActionHandlers } from "./runtime.ts";
 
@@ -18,6 +20,26 @@ function jsonFetcher(handler: (url: URL, init?: RequestInit) => unknown): typeof
 function vercelError(status: number, message: string): Response {
   return Response.json({ error: { code: "not_found", message } }, { status });
 }
+
+describe("Vercel team scope schemas", () => {
+  it("requires exactly one team selector for get_team", () => {
+    const action = vercelActions.find(({ name }) => name === "get_team")!;
+
+    expect(validateActionInput(action, {}).valid).toBe(false);
+    expect(validateActionInput(action, { teamId: "team_123" }).valid).toBe(true);
+    expect(validateActionInput(action, { slug: "acme" }).valid).toBe(true);
+    expect(validateActionInput(action, { teamId: "team_123", slug: "acme" }).valid).toBe(false);
+  });
+
+  it("allows at most one team selector for team-scoped actions", () => {
+    const action = vercelActions.find(({ name }) => name === "list_projects")!;
+
+    expect(validateActionInput(action, {}).valid).toBe(true);
+    expect(validateActionInput(action, { teamId: "team_123" }).valid).toBe(true);
+    expect(validateActionInput(action, { slug: "acme" }).valid).toBe(true);
+    expect(validateActionInput(action, { teamId: "team_123", slug: "acme" }).valid).toBe(false);
+  });
+});
 
 describe("Vercel team scope", () => {
   it("rejects credential extra fields that set both teamId and slug", () => {
