@@ -86,15 +86,26 @@ describe("action execution OpenAPI", () => {
       properties: { alias?: { description?: string } };
     };
 
-    const health = document.paths["/health"] as {
+    const health = document.paths["/v1/health"] as {
       get: {
         responses: Record<
           string,
-          { content?: { "application/json"?: { schema?: { type?: string; required?: string[] } } } }
+          {
+            content?: {
+              "application/json"?: {
+                schema?: {
+                  type?: string;
+                  required?: string[];
+                  properties?: { data?: { type?: string; required?: string[] } };
+                };
+              };
+            };
+          }
         >;
       };
     };
     const healthSchema = health.get.responses["200"]?.content?.["application/json"]?.schema;
+    const healthDataSchema = healthSchema?.properties?.data;
 
     expect(document.paths["/v1/health"]).toBeDefined();
     expect(document.paths["/v1/providers"]).toBeDefined();
@@ -103,7 +114,9 @@ describe("action execution OpenAPI", () => {
     expect(actionPath.get).toBeDefined();
     expect(actionPath.post).toBeDefined();
     expect(healthSchema?.type).toBe("object");
-    expect(healthSchema?.required).toEqual(expect.arrayContaining(["ok"]));
+    expect(healthSchema?.required).toEqual(expect.arrayContaining(["success", "message", "data", "meta"]));
+    expect(healthDataSchema?.type).toBe("object");
+    expect(healthDataSchema?.required).toEqual(expect.arrayContaining(["ok", "runtime"]));
     expect(document.components.schemas.ActionSearchRuntimeResult).toEqual({
       $ref: "#/components/schemas/ActionSearchResult",
     });

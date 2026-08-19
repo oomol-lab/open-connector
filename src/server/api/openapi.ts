@@ -225,7 +225,10 @@ export function createOpenApiDocument(
       description: "Closest HTTP analog of MCP list_apps. Categories are objects; MCP list_apps returns strings.",
       parameters: [
         queryParameter("q", "Optional case-insensitive filter over service, display name, category, or auth type."),
-        queryParameter("service", "Optional provider service id. Repeat to include multiple providers."),
+        queryParameter("service", "Optional provider service id. Repeat to include multiple providers.", {
+          type: "array",
+          items: jsonSchema.string(),
+        }),
       ],
       data: jsonSchema.array({ $ref: "#/components/schemas/RuntimeProviderMetadata" }),
     }),
@@ -239,7 +242,8 @@ export function createOpenApiDocument(
     }),
     "/v1/actions/search": runtimeGetOperation("Catalog", "Fuzzy keyword search over the action catalog.", {
       parameters: [
-        queryParameter("q", "Required search text. query is accepted as an alias."),
+        queryParameter("q", "Search text. Provide either q or query."),
+        queryParameter("query", "Alias for q. Provide either q or query."),
         queryParameter("service", "Optional provider service id."),
         queryParameter("limit", "Maximum actions to return. Defaults to 10. Maximum 50.", {
           type: "integer",
@@ -257,7 +261,12 @@ export function createOpenApiDocument(
       data: jsonSchema.array({ $ref: "#/components/schemas/RuntimeConnectedApp" }),
     }),
     "/v1/apps/authenticated": runtimeGetOperation("Connections", "List authenticated provider service ids.", {
-      parameters: [queryParameter("service", "Optional service id filter. Repeat to include multiple services.")],
+      parameters: [
+        queryParameter("service", "Optional service id filter. Repeat to include multiple services.", {
+          type: "array",
+          items: jsonSchema.string(),
+        }),
+      ],
       data: jsonSchema.array(jsonSchema.string(), { description: "Authenticated provider service ids." }),
     }),
     "/v1/apps/services/{service}": runtimeGetOperation("Connections", "List connected accounts for one provider.", {
