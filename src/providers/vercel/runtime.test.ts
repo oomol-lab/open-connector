@@ -74,20 +74,42 @@ describe("Vercel team scope", () => {
     });
   });
 
-  it("validates an optional team slug through the teams path", async () => {
+  it("validates an optional team slug with the slug query parameter", async () => {
     const result = await validateVercelCredential(
       { apiKey, values: { slug: "acme" } },
       jsonFetcher((url) => {
         if (url.pathname === "/v2/user") {
           return { user: { id: "usr_1", name: "Alice" } };
         }
-        expect(url.pathname).toBe("/v2/teams/acme");
+        expect(url.pathname).toBe("/v2/teams");
+        expect(url.searchParams.get("slug")).toBe("acme");
         return { id: "team_123", slug: "acme", name: "Acme" };
       }),
     );
 
     expect(result.profile).toEqual({ accountId: "team_123", displayName: "Acme" });
     expect(result.metadata.teamSlug).toBe("acme");
+  });
+
+  it("selects the matching team when slug lookup returns a team list", async () => {
+    const result = await validateVercelCredential(
+      { apiKey, values: { slug: "acme" } },
+      jsonFetcher((url) => {
+        if (url.pathname === "/v2/user") {
+          return { user: { id: "usr_1", name: "Alice" } };
+        }
+        expect(url.pathname).toBe("/v2/teams");
+        expect(url.searchParams.get("slug")).toBe("acme");
+        return {
+          teams: [
+            { id: "team_other", slug: "other", name: "Other" },
+            { id: "team_123", slug: "acme", name: "Acme" },
+          ],
+        };
+      }),
+    );
+
+    expect(result.profile).toEqual({ accountId: "team_123", displayName: "Acme" });
   });
 });
 
