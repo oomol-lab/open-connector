@@ -635,13 +635,7 @@ const actions: GooglecalendarActionSource[] = [
         eventId,
         attendeeEmail: nonEmptyStringWithDescription("Attendee email address to remove."),
         calendarId: s.withDefault(calendarId, "primary"),
-        sendUpdates: s.withDefault(
-          s.stringEnum(
-            "Who should receive cancellation or update emails. Defaults to all so remaining guests are notified.",
-            ["all", "externalOnly", "none"],
-          ),
-          "all",
-        ),
+        sendUpdates,
       },
       ["eventId", "attendeeEmail"],
     ),

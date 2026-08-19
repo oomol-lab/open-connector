@@ -465,7 +465,7 @@ async function removeAttendee(input: Record<string, unknown>, deps: Googlecalend
     {
       calendarId: pickOptionalString(input, "calendarId") ?? "primary",
       eventId: resolveEventId(input),
-      sendUpdates: pickSendUpdates(input, "all"),
+      sendUpdates: pickSendUpdates(input),
       conflictMessage: "event changed while removing attendee",
       apply(attendees) {
         const remaining = attendees.filter(
@@ -484,7 +484,7 @@ async function removeAttendee(input: Record<string, unknown>, deps: Googlecalend
 interface PatchEventAttendeesInput {
   calendarId: string;
   eventId: string;
-  sendUpdates: string;
+  sendUpdates: string | undefined;
   conflictMessage: string;
   apply(
     attendees: Array<Record<string, unknown>>,
@@ -505,10 +505,7 @@ async function patchEventAttendees(
 
     const etag = optionalString(event.etag);
     if (!etag) {
-      throw new ProviderRequestError(
-        409,
-        "cannot update attendees because Google Calendar did not provide an event ETag",
-      );
+      throw new ProviderRequestError(502, "googlecalendar returned an event without an etag");
     }
 
     try {
@@ -552,10 +549,7 @@ async function fetchCalendarEvent(
 function assertCompleteAttendeeList(event: Record<string, unknown>): void {
   // events.patch replaces the whole attendees array, so refuse when Google omitted guests.
   if (event.attendeesOmitted === true) {
-    throw new ProviderRequestError(
-      409,
-      "cannot update attendees because Google Calendar omitted some guests from this event",
-    );
+    throw new ProviderRequestError(502, "googlecalendar returned an event with some attendees omitted");
   }
 }
 
@@ -605,17 +599,15 @@ function buildEventWriteQuery(event: Record<string, unknown>, sendUpdates: strin
   });
 }
 
-function pickSendUpdates(input: Record<string, unknown>, fallback: string): string;
-function pickSendUpdates(input: Record<string, unknown>, fallback?: string): string | undefined;
 function pickSendUpdates(input: Record<string, unknown>, fallback?: string): string | undefined {
-  if (!Object.hasOwn(input, "sendUpdates")) {
+  const sendUpdates = input.sendUpdates;
+  if (sendUpdates === undefined) {
     return fallback;
   }
-  const sendUpdates = input.sendUpdates;
-  if (sendUpdates === "all" || sendUpdates === "externalOnly" || sendUpdates === "none") {
-    return sendUpdates;
+  if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
+    throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
   }
-  throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
+  return sendUpdates;
 }
 
 function pickEventWritableFields(input: Record<string, unknown>) {
