@@ -36,6 +36,20 @@ const objectSchema = s.object("An OSS object summary.", {
   owner: s.nullable(ownerSchema),
 });
 
+const downloadedObjectSchema = s.requiredObject("A downloaded OSS object stored in local transit storage.", {
+  fileId: s.nonEmptyString("The OSS object key."),
+  name: s.nonEmptyString("The filename used for the local transit file."),
+  mimeType: s.nonEmptyString("The downloaded object MIME type."),
+  sizeBytes: s.nonNegativeInteger("The downloaded object size in bytes."),
+  file: s.requiredObject("The downloaded object in local transit file storage.", {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored object."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: s.nonEmptyString("The stored transit file name."),
+    mimeType: s.nonEmptyString("The stored transit file MIME type."),
+  }),
+});
+
 const objectMetadataSchema = s.object("Structured OSS object metadata.", {
   bucket: s.string("The bucket that stores the object."),
   objectKey: s.string("The object key."),
@@ -123,6 +137,22 @@ export const aliyunOssActions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", {
       object: { ...objectMetadataSchema, description: "The normalized OSS object metadata." },
     }),
+  }),
+  defineProviderAction(service, {
+    name: "download_object",
+    description: "Download one OSS object into local transit file storage.",
+    inputSchema: s.object(
+      "The input payload for downloading one OSS object.",
+      {
+        bucket: bucketNameSchema,
+        objectKey: s.nonEmptyString("The complete OSS object key. Slashes are preserved as key delimiters."),
+        endpoint: endpointSchema,
+        versionId: s.string("The optional object version ID."),
+        fileName: s.nonEmptyString("An optional filename override for the local transit file."),
+      },
+      { optional: ["bucket", "endpoint", "versionId", "fileName"] },
+    ),
+    outputSchema: downloadedObjectSchema,
   }),
   defineProviderAction(service, {
     name: "put_object",

@@ -4,12 +4,13 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
+  TransitFileWriter,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { compactObject, optionalRecord, optionalString, requiredRawString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderProxyUrl,
   createProviderTimeout,
@@ -26,6 +27,7 @@ type AwsActionContext = {
   values: Record<string, string>;
   metadata: Record<string, unknown>;
   fetcher: typeof fetch;
+  transitFiles?: TransitFileWriter;
   signal?: AbortSignal;
 };
 
@@ -98,6 +100,9 @@ export const awsActionHandlers: ProviderActionHandlers<"aws_s3", AwsActionHandle
   head_object(input, context) {
     return awsHeadObject(input, context);
   },
+  download_object(input, context) {
+    return awsDownloadObject(input, context);
+  },
   put_object(input, context) {
     return awsPutObject(input, context);
   },
@@ -121,6 +126,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<AwsActionCon
       values: credential.values,
       metadata: credential.metadata,
       fetcher,
+      transitFiles: context.transitFiles,
       signal: context.signal,
     };
   },
@@ -337,6 +343,45 @@ async function awsHeadObject(input: Record<string, unknown>, context: AwsActionC
       headers,
     },
   };
+}
+
+async function awsDownloadObject(input: Record<string, unknown>, context: AwsActionContext) {
+  try {
+    if (!context.transitFiles) {
+      throw new ProviderRequestError(400, "aws_s3 download_object requires local transit file storage");
+    }
+
+    const bucket = resolveBucket(input, context);
+    const objectKey = readObjectKey(input);
+    const response = await awsS3Request(createClientForAction(input, context), {
+      method: "GET",
+      bucket,
+      objectKey,
+      query: compactObject({
+        versionId: optionalString(input.versionId),
+      }),
+      signal: context.signal,
+    });
+
+    const name = optionalString(input.fileName) ?? defaultObjectFileName(objectKey);
+    const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
+    const bytes = await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "AWS S3 download",
+      createError: (message) => new ProviderRequestError(413, message),
+    });
+    const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+
+    return {
+      fileId: objectKey,
+      name,
+      mimeType,
+      sizeBytes: file.sizeBytes,
+      file,
+    };
+  } catch (error) {
+    throw normalizeAwsError(error, "execute");
+  }
 }
 
 async function awsPutObject(input: Record<string, unknown>, context: AwsActionContext) {
@@ -663,6 +708,25 @@ function encodeS3Key(value: string) {
     .split("/")
     .map((segment) => encodeRfc3986(segment))
     .join("/");
+}
+
+function readObjectKey(input: Record<string, unknown>): string {
+  const objectKey = requiredRawString(
+    input.objectKey,
+    "objectKey",
+    (message) => new ProviderRequestError(400, message),
+  );
+  if (objectKey.length === 0) {
+    throw new ProviderRequestError(400, "objectKey must not be empty");
+  }
+  if (objectKey.split("/").some((segment) => segment === "." || segment === "..")) {
+    throw new ProviderRequestError(400, "objectKey must not contain . or .. path segments");
+  }
+  return objectKey;
+}
+
+function defaultObjectFileName(objectKey: string): string {
+  return objectKey.split("/").findLast((segment) => segment.length > 0) ?? "s3-object";
 }
 
 function encodeRfc3986(value: string) {
