@@ -74,41 +74,68 @@ describe("Vercel team scope", () => {
     });
   });
 
-  it("validates an optional team slug with the slug query parameter", async () => {
+  it("resolves a credential slug through the team list before GET /v2/teams/{teamId}", async () => {
+    const urls: string[] = [];
     const result = await validateVercelCredential(
       { apiKey, values: { slug: "acme" } },
       jsonFetcher((url) => {
+        urls.push(`${url.pathname}${url.search}`);
         if (url.pathname === "/v2/user") {
           return { user: { id: "usr_1", name: "Alice" } };
         }
-        expect(url.pathname).toBe("/v2/teams");
-        expect(url.searchParams.get("slug")).toBe("acme");
+        if (url.pathname === "/v2/teams") {
+          expect(url.searchParams.has("slug")).toBe(false);
+          return {
+            teams: [
+              { id: "team_other", slug: "other", name: "Other" },
+              { id: "team_123", slug: "acme", name: "Acme" },
+            ],
+            pagination: { count: 2, next: null, prev: null },
+          };
+        }
+        expect(url.pathname).toBe("/v2/teams/team_123");
+        expect(url.search).toBe("");
         return { id: "team_123", slug: "acme", name: "Acme" };
       }),
     );
 
+    expect(urls).toEqual(["/v2/user", "/v2/teams?limit=100", "/v2/teams/team_123"]);
     expect(result.profile).toEqual({ accountId: "team_123", displayName: "Acme" });
     expect(result.metadata.teamSlug).toBe("acme");
   });
 
-  it("selects the matching team when slug lookup returns a team list", async () => {
+  it("paginates the team list until the credential slug is found", async () => {
+    const urls: string[] = [];
     const result = await validateVercelCredential(
       { apiKey, values: { slug: "acme" } },
       jsonFetcher((url) => {
+        urls.push(`${url.pathname}${url.search}`);
         if (url.pathname === "/v2/user") {
           return { user: { id: "usr_1", name: "Alice" } };
         }
-        expect(url.pathname).toBe("/v2/teams");
-        expect(url.searchParams.get("slug")).toBe("acme");
-        return {
-          teams: [
-            { id: "team_other", slug: "other", name: "Other" },
-            { id: "team_123", slug: "acme", name: "Acme" },
-          ],
-        };
+        if (url.pathname === "/v2/teams" && !url.searchParams.get("until")) {
+          return {
+            teams: [{ id: "team_other", slug: "other", name: "Other" }],
+            pagination: { count: 1, next: 1_700_000_000_000, prev: null },
+          };
+        }
+        if (url.pathname === "/v2/teams") {
+          expect(url.searchParams.get("until")).toBe("1700000000000");
+          return {
+            teams: [{ id: "team_123", slug: "acme", name: "Acme" }],
+            pagination: { count: 1, next: null, prev: null },
+          };
+        }
+        return { id: "team_123", slug: "acme", name: "Acme" };
       }),
     );
 
+    expect(urls).toEqual([
+      "/v2/user",
+      "/v2/teams?limit=100",
+      "/v2/teams?limit=100&until=1700000000000",
+      "/v2/teams/team_123",
+    ]);
     expect(result.profile).toEqual({ accountId: "team_123", displayName: "Acme" });
   });
 });
@@ -244,10 +271,10 @@ describe("Vercel team-scoped REST queries", () => {
     expect(urls).toEqual(["/v2/user", "/v2/teams?limit=2"]);
   });
 
-  it("looks up get_team by path and leaves team query parameters off", async () => {
+  it("looks up get_team by team ID path and leaves query parameters off", async () => {
     let requestUrl = "";
     const result = await vercelActionHandlers.get_team(
-      { teamId: "acme" },
+      { teamId: "team_123" },
       actionContext(
         jsonFetcher((url) => {
           requestUrl = url.toString();
@@ -258,8 +285,30 @@ describe("Vercel team-scoped REST queries", () => {
     );
 
     const url = new URL(requestUrl);
-    expect(url.pathname).toBe("/v2/teams/acme");
+    expect(url.pathname).toBe("/v2/teams/team_123");
     expect(url.search).toBe("");
+    expect(result).toEqual({
+      team: { id: "team_123", slug: "acme", name: "Acme" },
+    });
+  });
+
+  it("resolves get_team slug through the team list before GET /v2/teams/{teamId}", async () => {
+    const urls: string[] = [];
+    const result = await vercelActionHandlers.get_team(
+      { slug: "acme" },
+      actionContext(
+        jsonFetcher((url) => {
+          urls.push(`${url.pathname}${url.search}`);
+          if (url.pathname === "/v2/teams") {
+            return { teams: [{ id: "team_123", slug: "acme", name: "Acme" }] };
+          }
+          expect(url.pathname).toBe("/v2/teams/team_123");
+          return { id: "team_123", slug: "acme", name: "Acme" };
+        }),
+      ),
+    );
+
+    expect(urls).toEqual(["/v2/teams?limit=100", "/v2/teams/team_123"]);
     expect(result).toEqual({
       team: { id: "team_123", slug: "acme", name: "Acme" },
     });

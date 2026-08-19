@@ -247,8 +247,11 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_team",
-    description: "Get a Vercel team by id or slug.",
-    inputSchema: unscopedInput({ teamId: s.nonEmptyString("Vercel team ID or team slug.") }, ["teamId"]),
+    description: "Get a Vercel team by team ID or slug.",
+    inputSchema: unscopedInput({
+      teamId: s.nonEmptyString("The Team identifier to perform the request on behalf of."),
+      slug: s.nonEmptyString("The Team slug to perform the request on behalf of."),
+    }),
     outputSchema: s.object({ team }, { required: ["team"] }),
   },
   {

@@ -178,51 +178,108 @@ export function readVercelTeamScope(source: Record<string, unknown> | undefined)
   return compactObject({ teamId, slug });
 }
 
+const vercelTeamListPageSize = 100;
+const vercelTeamListMaxPages = 20;
+
 async function validateVercelTeam(
   apiKey: string,
   fetcher: typeof fetch,
   teamScope: VercelTeamScope,
 ): Promise<VercelTeam> {
-  if (teamScope.teamId) {
-    const payload = await requestVercelJson<VercelTeamResponse>({
-      path: `/v2/teams/${encodeURIComponent(teamScope.teamId)}`,
-      apiKey,
-      fetcher,
-      mode: "validate",
-      notFoundAsInvalidInput: true,
-    });
-    return normalizeVercelTeam(payload);
-  }
-
-  const slug = teamScope.slug;
-  if (!slug) {
-    throw new ProviderRequestError(400, "teamId or slug is required");
-  }
-
-  const payload = await requestVercelJson<VercelTeamResponse | { teams?: unknown[] }>({
-    path: "/v2/teams",
+  const teamId = await resolveVercelTeamId({
+    teamScope,
     apiKey,
     fetcher,
     mode: "validate",
-    query: queryParams({ slug }),
-    notFoundAsInvalidInput: true,
   });
-
-  return readTeamFromSlugLookup(payload, slug);
+  return requestVercelTeamById({
+    teamId,
+    apiKey,
+    fetcher,
+    mode: "validate",
+  });
 }
 
-function readTeamFromSlugLookup(payload: VercelTeamResponse | { teams?: unknown[] }, slug: string): VercelTeam {
-  const record = optionalRecord(payload);
-  const teams = Array.isArray(record?.teams) ? record.teams : undefined;
-  if (teams) {
-    const match = teams.find((item) => optionalString(optionalRecord(item)?.slug) === slug);
-    if (!match) {
-      throw new ProviderRequestError(400, "vercel team slug was not found");
+async function resolveVercelTeamId(options: {
+  teamScope: VercelTeamScope;
+  apiKey: string;
+  fetcher: typeof fetch;
+  mode: "validate" | "execute";
+}): Promise<string> {
+  if (options.teamScope.teamId) {
+    return options.teamScope.teamId;
+  }
+  if (!options.teamScope.slug) {
+    throw new ProviderRequestError(400, "teamId or slug is required");
+  }
+  return findTeamIdBySlug({
+    slug: options.teamScope.slug,
+    apiKey: options.apiKey,
+    fetcher: options.fetcher,
+    mode: options.mode,
+  });
+}
+
+async function findTeamIdBySlug(options: {
+  slug: string;
+  apiKey: string;
+  fetcher: typeof fetch;
+  mode: "validate" | "execute";
+}): Promise<string> {
+  let until: number | undefined;
+
+  for (let page = 0; page < vercelTeamListMaxPages; page += 1) {
+    const payload = await requestVercelJson<{
+      teams?: unknown[];
+      pagination?: { next?: unknown };
+    }>({
+      path: "/v2/teams",
+      apiKey: options.apiKey,
+      fetcher: options.fetcher,
+      mode: options.mode,
+      query: queryParams({
+        limit: vercelTeamListPageSize,
+        until,
+      }),
+    });
+
+    const teams = normalizeArray(payload.teams);
+    for (const item of teams) {
+      const team = optionalRecord(item);
+      if (optionalString(team?.slug) !== options.slug) {
+        continue;
+      }
+      const teamId = optionalString(team?.id);
+      if (!teamId) {
+        throw new ProviderRequestError(502, "vercel team response is missing id");
+      }
+      return teamId;
     }
-    return normalizeVercelTeam(match as VercelTeamResponse);
+
+    const next = optionalNumber(optionalRecord(payload.pagination)?.next);
+    if (next == null || teams.length === 0) {
+      break;
+    }
+    until = next;
   }
 
-  return normalizeVercelTeam(payload as VercelTeamResponse);
+  throw new ProviderRequestError(400, "vercel team slug was not found");
+}
+
+async function requestVercelTeamById(options: {
+  teamId: string;
+  apiKey: string;
+  fetcher: typeof fetch;
+  mode: "validate" | "execute";
+}): Promise<VercelTeam> {
+  const payload = await requestVercelJson<VercelTeamResponse>({
+    path: `/v2/teams/${encodeURIComponent(options.teamId)}`,
+    apiKey: options.apiKey,
+    fetcher: options.fetcher,
+    mode: options.mode,
+    notFoundAsInvalidInput: true,
+  });
+  return normalizeVercelTeam(payload);
 }
 
 function resolveTeamScope(input: VercelActionInput, context: VercelActionContext): VercelTeamScope {
@@ -284,17 +341,20 @@ async function vercelListTeams(input: VercelActionInput, context: VercelActionCo
 }
 
 async function vercelGetTeam(input: VercelActionInput, context: VercelActionContext) {
-  const teamId = requireString(input.teamId, "teamId");
-  const payload = await requestVercelJson<VercelTeamResponse>({
-    path: `/v2/teams/${encodeURIComponent(teamId)}`,
+  const teamId = await resolveVercelTeamId({
+    teamScope: readVercelTeamScope(input),
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    notFoundAsInvalidInput: true,
   });
 
   return {
-    team: normalizeVercelTeam(payload),
+    team: await requestVercelTeamById({
+      teamId,
+      apiKey: context.apiKey,
+      fetcher: context.fetcher,
+      mode: "execute",
+    }),
   };
 }
 
