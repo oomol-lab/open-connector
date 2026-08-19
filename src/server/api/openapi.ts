@@ -119,6 +119,31 @@ const actionIdParameter = {
   schema: jsonSchema.string({ description: "Action id, usually <service>.<name>." }),
 };
 
+const namedConnectionDescription =
+  "Named connection. Same fact as MCP connectionName; HTTP alias, connectionName, and x-oo-connector-alias are equivalent. Defaults to default.";
+
+const namedConnectionParameters = [
+  {
+    name: "x-oo-connector-alias",
+    in: "header",
+    required: false,
+    schema: jsonSchema.string(),
+    description: namedConnectionDescription,
+  },
+  {
+    name: "alias",
+    in: "query",
+    required: false,
+    schema: jsonSchema.string(),
+    description: namedConnectionDescription,
+  },
+];
+
+const namedConnectionProperties = {
+  connectionName: jsonSchema.string({ description: namedConnectionDescription }),
+  alias: jsonSchema.string({ description: namedConnectionDescription }),
+};
+
 const idempotencyKeyParameter = {
   name: "Idempotency-Key",
   in: "header",
@@ -150,7 +175,16 @@ export function createOpenApiDocument(
   }
 
   const paths: Record<string, unknown> = {
-    "/health": getOperation("System", "Runtime health check.", { ok: jsonSchema.boolean() }),
+    "/health": getOperation("System", "Unauthenticated process health check.", { ok: jsonSchema.boolean() }),
+    "/v1/health": runtimeGetOperation("System", "Runtime health check.", {
+      data: jsonSchema.object(
+        {
+          ok: jsonSchema.boolean(),
+          runtime: jsonSchema.string({ description: "Runtime identifier." }),
+        },
+        { required: ["ok", "runtime"], description: "Runtime health payload." },
+      ),
+    }),
     "/api/auth/session": getOperation("System", "Read local admin auth session state.", {
       $ref: "#/components/schemas/LocalAuthSession",
     }),
@@ -183,15 +217,56 @@ export function createOpenApiDocument(
       type: "array",
       items: { $ref: "#/components/schemas/ActionSearchResult" },
     }),
-    "/v1/actions/search": getOperation("Catalog", "Fuzzy keyword search over the action catalog.", {
-      type: "object",
-      properties: {
-        success: { type: "boolean" },
-        message: { type: "string" },
-        data: { type: "array", items: { $ref: "#/components/schemas/ActionSearchRuntimeResult" } },
-        meta: { type: "object", additionalProperties: true },
-      },
-      required: ["success", "message", "data", "meta"],
+    "/v1/providers": runtimeGetOperation("Catalog", "List public provider catalog entries.", {
+      description: "Closest HTTP analog of MCP list_apps. Categories are objects; MCP list_apps returns strings.",
+      parameters: [
+        queryParameter("q", "Optional case-insensitive filter over service, display name, category, or auth type."),
+        queryParameter("service", "Optional provider service id. Repeat to include multiple providers."),
+      ],
+      data: jsonSchema.array({ $ref: "#/components/schemas/RuntimeProviderMetadata" }),
+    }),
+    "/v1/actions": runtimeGetOperation("Catalog", "List action services, or actions for one service.", {
+      description: "Without service, data is [{service}]. With service, data is RuntimeActionMetadata.",
+      parameters: [queryParameter("service", "Provider service id. Omit to list services instead of actions.")],
+      data: jsonSchema.anyOf("Runtime action index payload.", [
+        jsonSchema.array({ $ref: "#/components/schemas/RuntimeActionService" }),
+        jsonSchema.array({ $ref: "#/components/schemas/RuntimeActionMetadata" }),
+      ]),
+    }),
+    "/v1/actions/search": runtimeGetOperation("Catalog", "Fuzzy keyword search over the action catalog.", {
+      parameters: [
+        queryParameter("q", "Required search text. query is accepted as an alias."),
+        queryParameter("service", "Optional provider service id."),
+        queryParameter("limit", "Maximum actions to return. Defaults to 10. Maximum 50.", {
+          type: "integer",
+          minimum: 1,
+          maximum: 50,
+          default: 10,
+        }),
+      ],
+      data: jsonSchema.array({ $ref: "#/components/schemas/ActionSearchResult" }),
+      errorStatuses: [400],
+    }),
+    "/v1/apps": runtimeGetOperation("Connections", "List connected accounts.", {
+      description:
+        "RuntimeConnectedApp rows, not the provider catalog. Use GET /v1/providers or MCP list_apps for providers.",
+      data: jsonSchema.array({ $ref: "#/components/schemas/RuntimeConnectedApp" }),
+    }),
+    "/v1/apps/authenticated": runtimeGetOperation("Connections", "List authenticated provider service ids.", {
+      parameters: [queryParameter("service", "Optional service id filter. Repeat to include multiple services.")],
+      data: jsonSchema.array(jsonSchema.string(), { description: "Authenticated provider service ids." }),
+    }),
+    "/v1/apps/services/{service}": runtimeGetOperation("Connections", "List connected accounts for one provider.", {
+      parameters: [
+        {
+          name: "service",
+          in: "path",
+          required: true,
+          schema: jsonSchema.string({ description: "Provider service identifier." }),
+        },
+      ],
+      data: jsonSchema.array({ $ref: "#/components/schemas/RuntimeConnectedApp" }),
+      errorStatuses: [400, 404],
     }),
     "/api/actions/{actionId}": getOperation("Catalog", "Get one catalog action.", {
       $ref: "#/components/schemas/ActionDefinition",
@@ -282,20 +357,123 @@ export function createOpenApiDocument(
             description: "A single action returned by fuzzy keyword search.",
           },
         ),
-        ActionSearchRuntimeResult: jsonSchema.object(
+        ActionSearchRuntimeResult: { $ref: "#/components/schemas/ActionSearchResult" },
+        RuntimeProviderMetadata: jsonSchema.object(
           {
-            service: jsonSchema.string({ description: "The provider service that owns the action." }),
-            name: jsonSchema.string({ description: "The provider-scoped action name." }),
-            description: jsonSchema.string({ description: "The action description." }),
-            authenticated: jsonSchema.boolean({
-              description: "Whether the provider service has an authenticated local connection.",
-            }),
-            inputSchema: jsonSchema.unknownObject("The normalized JSON Schema for the action input."),
-            outputSchema: jsonSchema.unknownObject("The normalized JSON Schema for the action output."),
+            service: jsonSchema.string({ description: "Provider service identifier." }),
+            displayName: jsonSchema.string({ description: "Human-readable provider name." }),
+            iconUrl: jsonSchema.nullable(jsonSchema.string({ description: "Provider icon URL." })),
+            homepageUrl: jsonSchema.nullable(jsonSchema.string({ description: "Provider homepage URL." })),
+            categories: jsonSchema.array(
+              jsonSchema.object(
+                {
+                  id: jsonSchema.string(),
+                  displayName: jsonSchema.string(),
+                },
+                { required: ["id", "displayName"], description: "Catalog category." },
+              ),
+            ),
+            authTypes: jsonSchema.array(jsonSchema.string(), { description: "Supported authentication types." }),
           },
           {
-            required: ["service", "name", "description", "authenticated", "inputSchema", "outputSchema"],
-            description: "A single action returned by the /v1 keyword search endpoint.",
+            required: ["service", "displayName", "iconUrl", "homepageUrl", "categories", "authTypes"],
+            description: "Public provider catalog row from GET /v1/providers.",
+          },
+        ),
+        RuntimeActionService: jsonSchema.object(
+          {
+            service: jsonSchema.string({ description: "Provider service identifier." }),
+          },
+          {
+            required: ["service"],
+            description: "Service index row from GET /v1/actions when service is omitted.",
+          },
+        ),
+        RuntimeActionMetadata: jsonSchema.object(
+          {
+            id: jsonSchema.string({ description: "Full action id, usually <service>.<name>." }),
+            service: jsonSchema.string({ description: "Provider service that owns the action." }),
+            name: jsonSchema.string({ description: "Provider-scoped action name." }),
+            description: jsonSchema.string({ description: "Action description." }),
+            requiredScopes: jsonSchema.array(jsonSchema.string()),
+            providerPermissions: jsonSchema.array(jsonSchema.string()),
+            inputSchema: jsonSchema.unknownObject("Normalized JSON Schema for the action input."),
+            outputSchema: jsonSchema.unknownObject("Normalized JSON Schema for the action output."),
+            followUpActions: jsonSchema.array(
+              jsonSchema.object(
+                { actionId: jsonSchema.string() },
+                { required: ["actionId"], description: "Follow-up action." },
+              ),
+            ),
+            asyncLifecycle: jsonSchema.nullable(jsonSchema.unknownObject("Start/status/cancel action ids.")),
+            execution: jsonSchema.object(
+              {
+                locallyExecutable: jsonSchema.boolean(),
+                catalogOnly: jsonSchema.boolean(),
+                requiredAuthTypes: jsonSchema.array(jsonSchema.string()),
+                noAuthRunnable: jsonSchema.boolean(),
+                needsCredential: jsonSchema.boolean(),
+              },
+              {
+                required: [
+                  "locallyExecutable",
+                  "catalogOnly",
+                  "requiredAuthTypes",
+                  "noAuthRunnable",
+                  "needsCredential",
+                ],
+                description: "Runtime execution status.",
+              },
+            ),
+          },
+          {
+            required: [
+              "id",
+              "service",
+              "name",
+              "description",
+              "requiredScopes",
+              "providerPermissions",
+              "inputSchema",
+              "outputSchema",
+              "followUpActions",
+              "asyncLifecycle",
+              "execution",
+            ],
+            description: "Public runtime action metadata.",
+          },
+        ),
+        RuntimeConnectedApp: jsonSchema.object(
+          {
+            id: jsonSchema.string({ description: "Stable local connection identifier." }),
+            service: jsonSchema.string({ description: "Provider service identifier." }),
+            status: { type: "string", enum: ["active", "disconnected"] },
+            alias: jsonSchema.string({ description: namedConnectionDescription }),
+            authType: jsonSchema.string({ description: "Connection authentication type." }),
+            displayName: jsonSchema.string({ description: "Human-readable account label." }),
+            accountLabel: jsonSchema.string({
+              description: "Same value as displayName. Kept for existing /v1 clients.",
+            }),
+            isDefault: jsonSchema.boolean({
+              description: "Whether this is the default connection. Same fact as MCP default.",
+            }),
+            scopes: jsonSchema.array(jsonSchema.string(), {
+              description: "Granted scopes. Same fact as MCP profile.grantedScopes.",
+            }),
+          },
+          {
+            required: [
+              "id",
+              "service",
+              "status",
+              "alias",
+              "authType",
+              "displayName",
+              "accountLabel",
+              "isDefault",
+              "scopes",
+            ],
+            description: "Connected account from GET /v1/apps.",
           },
         ),
         ConnectionSummary: jsonSchema.object(
@@ -894,43 +1072,27 @@ function createRunDetailPath(): Record<string, unknown> {
 
 function createRunPath(): Record<string, unknown> {
   return {
+    get: {
+      tags: ["Catalog"],
+      summary: "Get one runtime action.",
+      parameters: [actionIdParameter],
+      responses: {
+        200: jsonResponse(runtimeSuccessSchema({ $ref: "#/components/schemas/RuntimeActionMetadata" })),
+        404: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema), "unknown_action."),
+      },
+    },
     post: {
       tags: ["Runs"],
       summary: "Execute a runtime action.",
       description:
         "Use the action catalog to discover provider-specific input and output schemas. For a compact strongly typed OpenAPI document for one action, request /openapi.json?actionId=<actionId>. " +
         actionIdempotencyDescription,
-      parameters: [actionIdParameter, idempotencyKeyParameter],
-      requestBody: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: jsonSchema.object(
-              {
-                input: jsonSchema.unknownObject("Action input matching the catalog schema."),
-              },
-              {
-                required: ["input"],
-                description: "Generic action run creation request.",
-              },
-            ),
-          },
-        },
-      },
-      responses: {
-        200: jsonResponse(
-          runtimeSuccessSchema(
-            jsonSchema.unknown("Action output matching the catalog schema."),
-            actionResultMetaSchema,
-          ),
-        ),
-        400: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-        403: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-        404: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-        409: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema), idempotencyConflictDescription),
-        429: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-        500: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-      },
+      parameters: [actionIdParameter, idempotencyKeyParameter, ...namedConnectionParameters],
+      requestBody: actionRunBody(
+        jsonSchema.unknownObject("Action input matching the catalog schema. Omitted input is treated as {}."),
+        "Generic action run creation request.",
+      ),
+      responses: actionRunResponses(jsonSchema.unknown("Action output matching the catalog schema.")),
     },
   };
 }
@@ -949,6 +1111,7 @@ function createProxyPath(): Record<string, unknown> {
           required: true,
           schema: jsonSchema.string({ description: "Provider service identifier." }),
         },
+        ...namedConnectionParameters,
       ],
       requestBody: {
         required: true,
@@ -971,9 +1134,7 @@ function createProxyPath(): Record<string, unknown> {
                   description: "Provider request headers. Hop-by-hop and auth headers are not forwarded.",
                 },
                 body: jsonSchema.unknown("Provider request body."),
-                connectionName: jsonSchema.string({
-                  description: "Optional local connection name. Defaults to default.",
-                }),
+                ...namedConnectionProperties,
               },
               {
                 required: ["endpoint", "method"],
@@ -1186,6 +1347,73 @@ function getOperation(tag: string, summary: string, schema: JsonSchema): Record<
   };
 }
 
+function runtimeGetOperation(
+  tag: string,
+  summary: string,
+  options: {
+    data: JsonSchema;
+    description?: string;
+    parameters?: unknown[];
+    errorStatuses?: Array<400 | 404>;
+  },
+): Record<string, unknown> {
+  const responses: Record<string, unknown> = {
+    200: jsonResponse(runtimeSuccessSchema(options.data)),
+  };
+  for (const status of options.errorStatuses ?? []) {
+    responses[String(status)] = jsonResponse(runtimeFailureSchema());
+  }
+  return {
+    get: {
+      tags: [tag],
+      summary,
+      description: options.description,
+      parameters: options.parameters,
+      responses,
+    },
+  };
+}
+
+function queryParameter(name: string, description: string, schema: JsonSchema = jsonSchema.string()): unknown {
+  return {
+    name,
+    in: "query",
+    required: false,
+    schema,
+    description,
+  };
+}
+
+function actionRunBody(input: JsonSchema, description: string): Record<string, unknown> {
+  return {
+    required: true,
+    content: {
+      "application/json": {
+        schema: jsonSchema.object(
+          {
+            input,
+            ...namedConnectionProperties,
+          },
+          { description },
+        ),
+      },
+    },
+  };
+}
+
+function actionRunResponses(output: JsonSchema): Record<string, unknown> {
+  const failure = runtimeFailureSchema(actionFailureMetaSchema);
+  return {
+    200: jsonResponse(runtimeSuccessSchema(output, actionResultMetaSchema)),
+    400: jsonResponse(failure, "invalid_input, action_blocked, or action_not_allowed."),
+    403: jsonResponse(failure, "authorization_failed."),
+    404: jsonResponse(failure, "unknown_action or connection_not_found."),
+    409: jsonResponse(failure, idempotencyConflictDescription),
+    429: jsonResponse(failure),
+    500: jsonResponse(failure),
+  };
+}
+
 function createConnectionUpsertRequestSchema(): JsonSchema {
   return jsonSchema.object(
     {
@@ -1213,32 +1441,12 @@ function createConcreteRunOperation(action: ActionDefinition): Record<string, un
     tags: ["Runs"],
     summary: `Execute ${action.id}.`,
     description: `${action.description} ${actionIdempotencyDescription}`,
-    parameters: [actionIdParameter, idempotencyKeyParameter],
-    requestBody: {
-      required: true,
-      content: {
-        "application/json": {
-          schema: jsonSchema.object(
-            {
-              input: action.inputSchema,
-            },
-            {
-              required: ["input"],
-              description: `Run creation request for ${action.id}.`,
-            },
-          ),
-        },
-      },
-    },
-    responses: {
-      200: jsonResponse(runtimeSuccessSchema(action.outputSchema, actionResultMetaSchema)),
-      400: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-      403: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-      404: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-      409: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema), idempotencyConflictDescription),
-      429: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-      500: jsonResponse(runtimeFailureSchema(actionFailureMetaSchema)),
-    },
+    parameters: [actionIdParameter, idempotencyKeyParameter, ...namedConnectionParameters],
+    requestBody: actionRunBody(
+      action.inputSchema,
+      `Run creation request for ${action.id}. Omitted input is treated as {}.`,
+    ),
+    responses: actionRunResponses(action.outputSchema),
   };
 }
 

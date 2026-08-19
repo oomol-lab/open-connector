@@ -48,6 +48,7 @@ import {
   serializeRuntimeConnectedApp,
   serializeRuntimeFailure,
   serializeRuntimeProvider,
+  unknownActionFailure,
   writeRuntimeActionHttpResult,
   writeRuntimeFailure,
   writeRuntimeSuccess,
@@ -217,6 +218,13 @@ export class ConnectServer {
     this.options.registerStaticRoutes?.(app);
     app.onError((error, context) => {
       if (error instanceof HttpRequestError) {
+        if (context.req.path.startsWith("/v1/")) {
+          return writeRuntimeFailure(context, {
+            status: error.status,
+            errorCode: error.code,
+            message: error.message,
+          });
+        }
         return jsonError(context, error.status, error.code, error.message);
       }
       this.options.logger?.error(
@@ -436,12 +444,7 @@ export class ConnectServer {
   private getRuntimeAction(context: Context, actionId: string): Response {
     const action = this.options.catalog.actionsById.get(actionId);
     if (!action) {
-      return writeRuntimeFailure(context, {
-        status: 404,
-        errorCode: "invalid_input",
-        message: `unknown action: ${actionId}`,
-        meta: { actionId },
-      });
+      return writeRuntimeFailure(context, unknownActionFailure(actionId));
     }
 
     return writeRuntimeSuccess(context, serializeRuntimeAction(action));
@@ -450,12 +453,7 @@ export class ConnectServer {
   private async createRuntimeActionRun(context: Context, actionId: string): Promise<Response> {
     const action = this.options.catalog.actionsById.get(actionId);
     if (!action) {
-      return writeRuntimeFailure(context, {
-        status: 404,
-        errorCode: "invalid_input",
-        message: `unknown action: ${actionId}`,
-        meta: { actionId },
-      });
+      return writeRuntimeFailure(context, unknownActionFailure(actionId));
     }
 
     const body = await readJsonBody(context);
@@ -578,12 +576,7 @@ export class ConnectServer {
         runtimeTokenId: runtimeGrant?.tokenId,
       });
       if (!run) {
-        return serializeRuntimeFailure({
-          status: 404,
-          errorCode: "invalid_input",
-          message: `unknown action: ${actionId}`,
-          meta: { actionId },
-        });
+        return serializeRuntimeFailure(unknownActionFailure(actionId));
       }
 
       return serializeRuntimeActionResult({

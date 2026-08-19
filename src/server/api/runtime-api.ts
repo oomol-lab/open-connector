@@ -157,6 +157,16 @@ export function writeRuntimeFailure(context: Context, input: RuntimeFailureInput
   return writeRuntimeActionHttpResult(context, serializeRuntimeFailure(input));
 }
 
+/** Public 404 used when an action id is missing from the catalog. */
+export function unknownActionFailure(actionId: string): RuntimeFailureInput {
+  return {
+    status: 404,
+    errorCode: "unknown_action",
+    message: `Unknown action: ${actionId}`,
+    meta: { actionId },
+  };
+}
+
 /** Build a runtime failure response without writing it to the HTTP context. */
 export function serializeRuntimeFailure(input: RuntimeFailureInput): RuntimeActionHttpResult {
   const body: RuntimeFailureEnvelope = {
@@ -239,7 +249,7 @@ function mapExecutionErrorStatus(code: string | undefined): RuntimeStatus {
   if (code === "oauth_token_expired" || code === "oauth_refresh_unavailable") {
     return 409;
   }
-  if (code === "connection_not_found" || code === "unknown_service") {
+  if (code === "connection_not_found" || code === "unknown_service" || code === "unknown_action") {
     return 404;
   }
   if (code === "authorization_failed" || code === "connection_not_allowed") {

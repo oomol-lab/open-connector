@@ -73,6 +73,36 @@ describe("action execution OpenAPI", () => {
     },
   );
 
+  it("documents public /v1 catalog routes with the runtime envelope", () => {
+    const document = createOpenApiDocument([provider]);
+    const search = document.paths["/v1/actions/search"] as {
+      get: {
+        responses: Record<string, { content?: { "application/json"?: { schema?: { required?: string[] } } } }>;
+      };
+    };
+    const actionPath = document.paths["/v1/actions/{actionId}"] as { get?: unknown; post?: unknown };
+    const connectedApp = document.components.schemas.RuntimeConnectedApp as {
+      required: string[];
+      properties: { alias?: { description?: string } };
+    };
+
+    expect(document.paths["/v1/health"]).toBeDefined();
+    expect(document.paths["/v1/providers"]).toBeDefined();
+    expect(document.paths["/v1/actions"]).toBeDefined();
+    expect(document.paths["/v1/apps"]).toBeDefined();
+    expect(actionPath.get).toBeDefined();
+    expect(actionPath.post).toBeDefined();
+    expect(document.components.schemas.ActionSearchRuntimeResult).toEqual({
+      $ref: "#/components/schemas/ActionSearchResult",
+    });
+    expect(search.get.responses["400"]?.content?.["application/json"]?.schema?.required).toEqual(
+      expect.arrayContaining(["success", "errorCode"]),
+    );
+    expect(search.get.responses["404"]).toBeUndefined();
+    expect(connectedApp.required).toEqual(expect.arrayContaining(["alias", "isDefault"]));
+    expect(connectedApp.properties.alias?.description).toContain("connectionName");
+  });
+
   it("documents Runtime and token policy management and run audit metadata", () => {
     const document = createOpenApiDocument([provider]);
     const runtimePolicyPath = document.paths["/api/runtime-policy"] as {

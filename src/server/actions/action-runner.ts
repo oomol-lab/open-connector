@@ -53,7 +53,7 @@ export class ActionRunner {
         {
           actionId: input.actionId,
           caller: input.caller,
-          errorCode: "invalid_input",
+          errorCode: "unknown_action",
         },
         "action run rejected",
       );
