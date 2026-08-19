@@ -34,6 +34,23 @@ export interface VercelActionContext extends VercelTeamScope {
   fetcher: typeof fetch;
 }
 
+/**
+ * Stored credential values passed to the Vercel credential validator.
+ */
+export interface VercelCredentialValidationInput {
+  apiKey: string;
+  values: Record<string, string>;
+}
+
+/**
+ * Transport fields shared by the team-resolution helpers.
+ */
+interface VercelTeamLookupOptions {
+  apiKey: string;
+  fetcher: typeof fetch;
+  mode: "validate" | "execute";
+}
+
 type VercelActionInput = Record<string, unknown>;
 
 export const vercelActionHandlers: Record<VercelActionName, VercelActionHandler> = {
@@ -112,7 +129,7 @@ export const vercelActionHandlers: Record<VercelActionName, VercelActionHandler>
 };
 
 export async function validateVercelCredential(
-  input: { apiKey: string; values: Record<string, string> },
+  input: VercelCredentialValidationInput,
   fetcher: typeof fetch,
 ): Promise<{
   profile: {
@@ -167,7 +184,9 @@ export async function executeVercelAction(
 
 /**
  * Read optional Vercel `teamId` or `slug` from credential extra fields or action input.
- * Official REST APIs accept one of these query parameters, not both.
+ *
+ * Vercel accepts either query parameter, so this connector requires exactly one to keep a
+ * contradictory pair from silently resolving to whichever team the API happens to prefer.
  */
 export function readVercelTeamScope(source: Record<string, unknown> | undefined): VercelTeamScope {
   const teamId = optionalString(source?.teamId);
@@ -200,12 +219,11 @@ async function validateVercelTeam(
   });
 }
 
-async function resolveVercelTeamId(options: {
+interface VercelTeamIdResolutionOptions extends VercelTeamLookupOptions {
   teamScope: VercelTeamScope;
-  apiKey: string;
-  fetcher: typeof fetch;
-  mode: "validate" | "execute";
-}): Promise<string> {
+}
+
+async function resolveVercelTeamId(options: VercelTeamIdResolutionOptions): Promise<string> {
   if (options.teamScope.teamId) {
     return options.teamScope.teamId;
   }
@@ -220,12 +238,11 @@ async function resolveVercelTeamId(options: {
   });
 }
 
-async function findTeamIdBySlug(options: {
+interface VercelTeamSlugLookupOptions extends VercelTeamLookupOptions {
   slug: string;
-  apiKey: string;
-  fetcher: typeof fetch;
-  mode: "validate" | "execute";
-}): Promise<string> {
+}
+
+async function findTeamIdBySlug(options: VercelTeamSlugLookupOptions): Promise<string> {
   let until: number | undefined;
 
   for (let page = 0; page < vercelTeamListMaxPages; page += 1) {
@@ -243,8 +260,11 @@ async function findTeamIdBySlug(options: {
       }),
     });
 
-    const teams = normalizeArray(payload.teams);
-    for (const item of teams) {
+    if (!Array.isArray(payload.teams)) {
+      throw new ProviderRequestError(502, "vercel team list response is missing teams");
+    }
+
+    for (const item of payload.teams) {
       const team = optionalRecord(item);
       if (optionalString(team?.slug) !== options.slug) {
         continue;
@@ -257,21 +277,25 @@ async function findTeamIdBySlug(options: {
     }
 
     const next = optionalNumber(optionalRecord(payload.pagination)?.next);
-    if (next == null || teams.length === 0) {
-      break;
+    if (next == null || payload.teams.length === 0) {
+      throw new ProviderRequestError(400, "vercel team slug was not found");
     }
     until = next;
   }
 
-  throw new ProviderRequestError(400, "vercel team slug was not found");
+  // A non-null `pagination.next` after the last page means the scan stopped short of the
+  // whole team list, so the slug may well exist; do not report it as a bad slug.
+  throw new ProviderRequestError(
+    400,
+    `vercel team list was not fully scanned within ${vercelTeamListMaxPages} pages; set teamId instead of slug`,
+  );
 }
 
-async function requestVercelTeamById(options: {
+interface VercelTeamByIdOptions extends VercelTeamLookupOptions {
   teamId: string;
-  apiKey: string;
-  fetcher: typeof fetch;
-  mode: "validate" | "execute";
-}): Promise<VercelTeam> {
+}
+
+async function requestVercelTeamById(options: VercelTeamByIdOptions): Promise<VercelTeam> {
   const payload = await requestVercelJson<VercelTeamResponse>({
     path: `/v2/teams/${encodeURIComponent(options.teamId)}`,
     apiKey: options.apiKey,
@@ -339,7 +363,7 @@ async function vercelListTeams(input: VercelActionInput, context: VercelActionCo
 
 async function vercelGetTeam(input: VercelActionInput, context: VercelActionContext) {
   const teamId = await resolveVercelTeamId({
-    teamScope: readVercelTeamScope(input),
+    teamScope: resolveTeamScope(input, context),
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",

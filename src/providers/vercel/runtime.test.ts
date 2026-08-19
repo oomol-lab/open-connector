@@ -1,7 +1,11 @@
-import { describe, expect, it } from "vitest";
+import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
+import type { VercelActionName } from "./actions.ts";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { optionalRecord } from "../../core/cast.ts";
 import { validateActionInput } from "../../core/validation.ts";
 import { vercelActions } from "./actions.ts";
-import { credentialValidators } from "./executors.ts";
+import { credentialValidators, executors } from "./executors.ts";
 import { readVercelTeamScope, validateVercelCredential, vercelActionHandlers } from "./runtime.ts";
 
 const apiKey = "vercel-token";
@@ -22,10 +26,11 @@ function vercelError(status: number, message: string): Response {
 }
 
 describe("Vercel team scope schemas", () => {
-  it("requires exactly one team selector for get_team", () => {
+  it("allows at most one team selector for get_team", () => {
     const action = vercelActions.find(({ name }) => name === "get_team")!;
 
-    expect(validateActionInput(action, {}).valid).toBe(false);
+    // An empty input is valid because the handler falls back to the connection team scope.
+    expect(validateActionInput(action, {}).valid).toBe(true);
     expect(validateActionInput(action, { teamId: "team_123" }).valid).toBe(true);
     expect(validateActionInput(action, { slug: "acme" }).valid).toBe(true);
     expect(validateActionInput(action, { teamId: "team_123", slug: "acme" }).valid).toBe(false);
@@ -385,6 +390,323 @@ describe("Vercel team-scoped REST queries", () => {
     expect(url.pathname).toBe("/v1/webhooks/account_hook_abc");
     expect(url.searchParams.get("teamId")).toBe("team_123");
     expect(deleted).toEqual({ deleted: true });
+  });
+
+  it("falls back to the credential team ID when get_team input omits both fields", async () => {
+    const urls: string[] = [];
+    const result = await vercelActionHandlers.get_team(
+      {},
+      actionContext(
+        jsonFetcher((url) => {
+          urls.push(`${url.pathname}${url.search}`);
+          return { id: "team_123", slug: "acme", name: "Acme" };
+        }),
+        { teamId: "team_123" },
+      ),
+    );
+
+    expect(urls).toEqual(["/v2/teams/team_123"]);
+    expect(result).toEqual({ team: { id: "team_123", slug: "acme", name: "Acme" } });
+  });
+
+  it("falls back to the credential slug when get_team input omits both fields", async () => {
+    const urls: string[] = [];
+    const result = await vercelActionHandlers.get_team(
+      {},
+      actionContext(
+        jsonFetcher((url) => {
+          urls.push(`${url.pathname}${url.search}`);
+          if (url.pathname === "/v2/teams") {
+            return { teams: [{ id: "team_123", slug: "acme", name: "Acme" }], pagination: { next: null } };
+          }
+          return { id: "team_123", slug: "acme", name: "Acme" };
+        }),
+        { slug: "acme" },
+      ),
+    );
+
+    expect(urls).toEqual(["/v2/teams?limit=100", "/v2/teams/team_123"]);
+    expect(result).toEqual({ team: { id: "team_123", slug: "acme", name: "Acme" } });
+  });
+
+  it("rejects get_team when neither the action input nor the credential names a team", async () => {
+    await expect(
+      vercelActionHandlers.get_team(
+        {},
+        actionContext(async () => {
+          throw new Error("fetch should not run");
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "teamId or slug is required" });
+  });
+});
+
+describe("Vercel team scope coverage", () => {
+  interface TeamScopeCase {
+    name: VercelActionName;
+    input: Record<string, unknown>;
+    path: string;
+    method?: string;
+    response?: unknown;
+    noContent?: boolean;
+  }
+
+  // Minimal inputs that satisfy each handler's required-field guards while contributing no
+  // query parameters of their own, so the expected query is exactly the team scope or nothing.
+  const scopeCases: TeamScopeCase[] = [
+    { name: "list_projects", input: {}, path: "/v10/projects", response: {} },
+    {
+      name: "get_project",
+      input: { idOrName: "app" },
+      path: "/v9/projects/app",
+      response: { id: "prj_1", name: "app" },
+    },
+    {
+      name: "create_project",
+      input: { name: "docs" },
+      method: "POST",
+      path: "/v11/projects",
+      response: { id: "prj_1", name: "docs" },
+    },
+    {
+      name: "update_project",
+      input: { idOrName: "app" },
+      method: "PATCH",
+      path: "/v9/projects/app",
+      response: { id: "prj_1", name: "app" },
+    },
+    { name: "list_deployments", input: {}, path: "/v6/deployments", response: {} },
+    { name: "get_deployment", input: { idOrUrl: "dpl_1" }, path: "/v13/deployments/dpl_1", response: { id: "dpl_1" } },
+    { name: "get_deployment_events", input: { idOrUrl: "dpl_1" }, path: "/v3/deployments/dpl_1/events", response: [] },
+    {
+      name: "get_runtime_logs",
+      input: { projectId: "prj_1", deploymentId: "dpl_1" },
+      path: "/v1/projects/prj_1/deployments/dpl_1/runtime-logs",
+      response: [],
+    },
+    { name: "list_project_envs", input: { idOrName: "app" }, path: "/v10/projects/app/env", response: {} },
+    {
+      name: "create_project_env",
+      input: { idOrName: "app", key: "API_URL", value: "https://example.com", type: "plain", target: ["production"] },
+      method: "POST",
+      path: "/v10/projects/app/env",
+      response: { id: "env_1", key: "API_URL", type: "plain" },
+    },
+    {
+      name: "update_project_env",
+      input: { idOrName: "app", id: "env_1", value: "https://example.com" },
+      method: "PATCH",
+      path: "/v9/projects/app/env/env_1",
+      response: { id: "env_1", key: "API_URL", type: "plain" },
+    },
+    {
+      name: "delete_project_env",
+      input: { idOrName: "app", id: "env_1" },
+      method: "DELETE",
+      path: "/v9/projects/app/env/env_1",
+      response: {},
+    },
+    { name: "list_project_domains", input: { idOrName: "app" }, path: "/v9/projects/app/domains", response: {} },
+    {
+      name: "get_project_domain",
+      input: { idOrName: "app", domain: "example.com" },
+      path: "/v9/projects/app/domains/example.com",
+      response: { name: "example.com" },
+    },
+    {
+      name: "add_project_domain",
+      input: { idOrName: "app", name: "example.com" },
+      method: "POST",
+      path: "/v10/projects/app/domains",
+      response: { name: "example.com" },
+    },
+    {
+      name: "verify_project_domain",
+      input: { idOrName: "app", domain: "example.com" },
+      method: "POST",
+      path: "/v9/projects/app/domains/example.com/verify",
+      response: { name: "example.com" },
+    },
+    {
+      name: "get_domain_config",
+      input: { domain: "example.com" },
+      path: "/v6/domains/example.com/config",
+      response: {},
+    },
+    { name: "list_webhooks", input: {}, path: "/v1/webhooks", response: [] },
+    {
+      name: "get_webhook",
+      input: { id: "hook_1" },
+      path: "/v1/webhooks/hook_1",
+      response: { id: "hook_1", url: "https://example.com/hook" },
+    },
+    {
+      name: "create_webhook",
+      input: { url: "https://example.com/hook", events: ["deployment.created"] },
+      method: "POST",
+      path: "/v1/webhooks",
+      response: { id: "hook_1", url: "https://example.com/hook" },
+    },
+    { name: "delete_webhook", input: { id: "hook_1" }, method: "DELETE", path: "/v1/webhooks/hook_1", noContent: true },
+  ];
+
+  for (const scopeCase of scopeCases) {
+    it(`applies the credential team scope to ${scopeCase.name}`, async () => {
+      let requestUrl = "";
+      const fetcher: typeof fetch = async (url, init) => {
+        requestUrl = String(url);
+        expect(init?.method ?? "GET").toBe(scopeCase.method ?? "GET");
+        return scopeCase.noContent ? new Response(null, { status: 204 }) : Response.json(scopeCase.response);
+      };
+
+      await vercelActionHandlers[scopeCase.name](scopeCase.input, actionContext(fetcher, { teamId: "team_123" }));
+      const scoped = new URL(requestUrl);
+      expect(scoped.pathname).toBe(scopeCase.path);
+      expect(Object.fromEntries(scoped.searchParams)).toEqual({ teamId: "team_123" });
+
+      await vercelActionHandlers[scopeCase.name](scopeCase.input, actionContext(fetcher));
+      expect(Object.fromEntries(new URL(requestUrl).searchParams)).toEqual({});
+    });
+  }
+
+  it("keeps the team-scope input schema and the request wiring in sync", () => {
+    const declared = vercelActions
+      .filter((action) => {
+        const properties = optionalRecord(action.inputSchema.properties);
+        return properties?.teamId !== undefined && properties.slug !== undefined;
+      })
+      .map((action) => action.name.replace("vercel.", ""))
+      .sort();
+
+    // get_team also declares the fields, but resolves them into the request path rather than the query.
+    expect(declared).toEqual([...scopeCases.map((scopeCase) => scopeCase.name), "get_team"].sort());
+  });
+});
+
+describe("Vercel executor credential wiring", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function apiKeyCredential(values: Record<string, string>): ResolvedCredential {
+    return {
+      authType: "api_key",
+      apiKey,
+      values: { apiKey, ...values },
+      profile: { accountId: "team_123", displayName: "Acme", grantedScopes: [] },
+      metadata: {},
+    };
+  }
+
+  function executionContext(values: Record<string, string>): ExecutionContext {
+    return { getCredential: async () => apiKeyCredential(values) };
+  }
+
+  function stubProjectList(): () => string {
+    let requestUrl = "";
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+      requestUrl = String(input);
+      return Response.json({ projects: [] });
+    });
+    return () => requestUrl;
+  }
+
+  it("sends the credential team ID as a query parameter when the action input omits it", async () => {
+    const requestUrl = stubProjectList();
+
+    const result = await executors["vercel.list_projects"]!({}, executionContext({ teamId: "team_123" }));
+
+    expect(result).toMatchObject({ ok: true });
+    expect(Object.fromEntries(new URL(requestUrl()).searchParams)).toEqual({ teamId: "team_123" });
+  });
+
+  it("sends the credential slug as a query parameter when the action input omits it", async () => {
+    const requestUrl = stubProjectList();
+
+    const result = await executors["vercel.list_projects"]!({}, executionContext({ slug: "acme" }));
+
+    expect(result).toMatchObject({ ok: true });
+    expect(Object.fromEntries(new URL(requestUrl()).searchParams)).toEqual({ slug: "acme" });
+  });
+
+  it("leaves the request unscoped for a personal credential", async () => {
+    const requestUrl = stubProjectList();
+
+    const result = await executors["vercel.list_projects"]!({}, executionContext({}));
+
+    expect(result).toMatchObject({ ok: true });
+    expect(Object.fromEntries(new URL(requestUrl()).searchParams)).toEqual({});
+  });
+
+  it("reports a credential that sets both teamId and slug as invalid input", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executors["vercel.list_projects"]!({}, executionContext({ teamId: "team_123", slug: "acme" }));
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", message: "teamId and slug cannot both be provided" },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("Vercel team slug resolution failures", () => {
+  it("reports a slug that is absent from the full team list as invalid input", async () => {
+    const urls: string[] = [];
+    await expect(
+      validateVercelCredential(
+        { apiKey, values: { slug: "missing" } },
+        jsonFetcher((url) => {
+          urls.push(`${url.pathname}${url.search}`);
+          if (url.pathname === "/v2/user") {
+            return { user: { id: "usr_1", name: "Alice" } };
+          }
+          return { teams: [{ id: "team_123", slug: "acme" }], pagination: { count: 1, next: null, prev: null } };
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "vercel team slug was not found" });
+
+    expect(urls).toEqual(["/v2/user", "/v2/teams?limit=100"]);
+  });
+
+  it("distinguishes a truncated team-list scan from a missing slug", async () => {
+    let listCalls = 0;
+    await expect(
+      validateVercelCredential(
+        { apiKey, values: { slug: "missing" } },
+        jsonFetcher((url) => {
+          if (url.pathname === "/v2/user") {
+            return { user: { id: "usr_1", name: "Alice" } };
+          }
+          listCalls += 1;
+          return {
+            teams: [{ id: `team_${listCalls}`, slug: `team-${listCalls}` }],
+            pagination: { count: 1, next: 1_700_000_000_000 + listCalls, prev: null },
+          };
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "vercel team list was not fully scanned within 20 pages; set teamId instead of slug",
+    });
+
+    expect(listCalls).toBe(20);
+  });
+
+  it("rejects a team list response whose teams field is not an array", async () => {
+    await expect(
+      validateVercelCredential(
+        { apiKey, values: { slug: "acme" } },
+        jsonFetcher((url) => {
+          if (url.pathname === "/v2/user") {
+            return { user: { id: "usr_1", name: "Alice" } };
+          }
+          return { pagination: { count: 0, next: null, prev: null } };
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 502, message: "vercel team list response is missing teams" });
   });
 });
 

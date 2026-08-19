@@ -218,17 +218,23 @@ const envWriteFields = {
 };
 
 const teamScopeFields = {
-  teamId: s.nonEmptyString("The Team identifier to perform the request on behalf of."),
-  slug: s.nonEmptyString("The Team slug to perform the request on behalf of."),
+  teamId: s.nonEmptyString(
+    "The Team identifier to perform the request on behalf of. Provide this or slug, not both. Defaults to the team configured on the connection.",
+  ),
+  slug: s.nonEmptyString(
+    "The Team slug to perform the request on behalf of. Provide this or teamId, not both. Defaults to the team configured on the connection.",
+  ),
 };
 
 const unscopedInput = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
   s.actionInput(properties, required, "Vercel action input.");
 
 const emptyInput = unscopedInput({});
-const getTeamInput = unscopedInput(teamScopeFields);
-getTeamInput.oneOf = [{ required: ["teamId"] }, { required: ["slug"] }];
 
+/**
+ * Action input with the optional team scope. The `not` clause rejects a contradictory
+ * `teamId` + `slug` pair during input validation instead of at request time.
+ */
 const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema => {
   const schema = unscopedInput({ ...teamScopeFields, ...properties }, required);
   schema.not = { required: ["teamId", "slug"] };
@@ -253,8 +259,8 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_team",
-    description: "Get a Vercel team by team ID or slug.",
-    inputSchema: getTeamInput,
+    description: "Get a Vercel team by team ID or slug, defaulting to the team configured on the connection.",
+    inputSchema: input({}),
     outputSchema: s.object({ team }, { required: ["team"] }),
   },
   {
