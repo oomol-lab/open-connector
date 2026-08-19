@@ -13,7 +13,7 @@ import {
   setPrivateNetworkAccessAllowed,
 } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executorModules } from "../providers/registry.generated.ts";
+import { executableActionIds, executorModules } from "../providers/registry.generated.ts";
 import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectApp } from "./connect-app.ts";
@@ -53,7 +53,7 @@ const builtRoot = join(process.cwd(), "dist/web");
 const staticRoot = await resolveStaticRoot(builtRoot);
 await mkdir(dataDir, { recursive: true });
 const catalog = await loadCatalog(undefined, {
-  executableServices: Object.keys(executorModules),
+  executableActionIds,
 });
 const providerLoader = new ProviderLoader(executorModules);
 const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"), {

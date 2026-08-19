@@ -74,7 +74,12 @@ export interface CreateCatalogStoreOptions {
 }
 
 export interface LoadCatalogOptions extends CreateCatalogStoreOptions {
-  /** Mark every catalog action owned by these locally loaded provider services as executable. */
+  /**
+   * Mark every catalog action owned by these services as executable.
+   *
+   * Production bootstraps pass {@link CreateCatalogStoreOptions.executableActionIds}
+   * generated from the executor registry instead of expanding a whole service.
+   */
   executableServices?: Iterable<string>;
 }
 

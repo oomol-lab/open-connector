@@ -63,6 +63,7 @@
 ## Verification
 
 - Before finishing code changes, run `npm run fix-check`. It runs lint fixes, formatting fixes, and the `src` typecheck.
+- Run `npm run check:conformance` when changing provider definitions, executors, catalog generation, or shared provider runtime. It compares catalog action ids to executor keys, scans provider sources for unguarded egress, rejects `skipDnsValidation` unless every egress host is a code-controlled literal, and ratchets `allowPrivateNetwork` providers that still lack `assertPublicHttpUrl` / `assertGuardedEgressUrl`.
 - Run `npm run build` only when you need a separate no-fix typecheck, for example after generated files changed or for CI parity.
 - Run `npm run generate:catalog` when provider definitions or actions change.
 - Run provider examples manually when the task changes user-facing example behavior.

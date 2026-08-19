@@ -73,6 +73,18 @@ describe("catalog store", () => {
     });
   });
 
+  it("marks only listed action ids as locally executable", () => {
+    const catalog = createCatalogStore([providerFixture("example", ["ping", "pong"])], {
+      executableActionIds: ["example.ping"],
+    });
+
+    expect(catalog.actionsById.get("example.ping")?.execution.locallyExecutable).toBe(true);
+    expect(catalog.actionsById.get("example.pong")?.execution).toMatchObject({
+      locallyExecutable: false,
+      catalogOnly: true,
+    });
+  });
+
   it("resolves every action from executable services alongside explicit action ids", () => {
     const providers = [providerFixture("example", ["ping", "pong"]), providerFixture("remote", ["ping"])];
 

@@ -107,7 +107,7 @@ function normalizeSize(value: unknown, fieldName: string): Record<string, number
 }
 
 function paginatedPath(path: string, input: Record<string, unknown>): string {
-  const url = new URL(`https://placeholder.invalid${path}`);
+  const url = new URL(path, "https://placeholder.invalid");
   const limit = optionalInteger(input.limit);
   const offset = optionalInteger(input.offset);
   if (limit !== undefined) url.searchParams.set("limit", String(limit));

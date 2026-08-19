@@ -14,5 +14,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["dist", "node_modules", "catalog/apps"]
+  "ignorePatterns": ["dist", "node_modules", "catalog/apps", "src/providers/registry*.generated.ts"]
 }

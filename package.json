@@ -22,6 +22,7 @@
     "export:feishu-permissions": "node scripts/export-feishu-permissions.ts",
     "generate:provider": "node scripts/generate-provider.ts",
     "runtime:data": "node scripts/runtime-data.ts",
+    "check:conformance": "node scripts/check-provider-conformance.ts",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --check .",

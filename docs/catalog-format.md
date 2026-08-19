@@ -13,12 +13,18 @@ Do not hand-edit generated catalog files as source. Update provider definitions 
 npm run generate:catalog
 ```
 
-At runtime, catalog responses add execution status that is not stored in generated catalog JSON:
+At runtime, catalog responses add execution status that is not stored in generated catalog JSON.
+The Node and Cloudflare servers pass `executableActionIds` from the generated executor registry:
 
-- `locallyExecutable`: the open-source runtime has a local executor for the action.
-- `catalogOnly`: schemas and metadata are available, but no local executor is wired yet.
+- `locallyExecutable`: the action id is in that generated list, so the open-source runtime has a local executor.
+- `catalogOnly`: schemas and metadata are available, but the action id is not in the generated executor list.
 - `needsCredential`: the provider needs a configured local connection before execution.
 - `noAuthRunnable`: the action belongs to a provider that can run without stored credentials.
+
+This repository requires every catalog action to have a matching executor key. `npm run check:conformance`
+compares those sets, scans provider sources for unguarded `fetch` / `WebSocket` usage, rejects
+`skipDnsValidation` unless every egress host is a code-controlled literal, and ratchets
+`allowPrivateNetwork` providers that still lack `assertPublicHttpUrl` / `assertGuardedEgressUrl`.
 
 Action definitions also declare provider-native `requiredScopes` and `providerPermissions`. The
 runtime exposes those fields through HTTP and MCP discovery together with the current connection

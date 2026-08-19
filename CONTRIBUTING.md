@@ -16,6 +16,7 @@ Run:
 ```bash
 npm run fix-check
 npm test
+npm run check:conformance
 ```
 
 ## Adding Providers
@@ -27,8 +28,9 @@ Generated files are updated through:
 npm run generate:catalog
 ```
 
-Generated `src/providers/registry.generated.ts` and `catalog/apps/*.json` files are local runtime
-data and are ignored by git.
+Generated `src/providers/registry*.generated.ts` files include lazy executor imports and the
+`executableActionIds` list used to mark actions as locally executable at runtime. Do not hand-edit
+them. `catalog/apps/*.json` files are local runtime data and are ignored by git.
 
 If you use an agent to add providers, the optional workflow in
 [.codex/skills/add-provider/SKILL.md](.codex/skills/add-provider/SKILL.md) follows the same rules.

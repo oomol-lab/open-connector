@@ -111,6 +111,7 @@ Create or update `executors.ts` with `ProviderExecutors`:
 - Keep action handlers keyed by provider action names.
 - Preserve provider request semantics: endpoint paths, methods, auth headers, request bodies, query params, pagination, status handling, error mapping, and output normalization.
 - Use `ProviderRequestError` for provider API failures that should become stable execution errors.
+- Use `context.fetcher` / `providerFetch`; add `skipDnsValidation: true` only when every egress host is a hardcoded code-controlled literal.
 - Use shared request helpers such as `setSearchParams`, `readProviderJson`, and `readProviderText` when they fit existing patterns.
 - Pass `context.signal` and transit file support through provider contexts when the provider needs cancellation or file output.
 
@@ -143,9 +144,10 @@ Do not add tests that only mirror static declarations such as provider labels, a
 4. Move genuinely generic helper behavior to shared helper modules only after checking existing APIs and downstream call sites.
 5. Run `npm run generate:catalog`.
 6. Run `npm run fix-check`.
-7. Run targeted tests when you changed shared helpers or added provider logic that is not covered by existing loader tests.
-8. Run `npm run build` when you need CI-parity no-fix typechecking or when the task asks for it.
-9. Review diffs for generated noise, non-public wording, copied assets, placeholder fields, and non-lazy imports.
+7. Run `npm run check:conformance` when action lists, executor wiring, or shared provider runtime changed.
+8. Run targeted tests when you changed shared helpers or added provider logic that is not covered by existing loader tests.
+9. Run `npm run build` when you need CI-parity no-fix typechecking or when the task asks for it.
+10. Review diffs for generated noise, non-public wording, copied assets, placeholder fields, and non-lazy imports.
 
 ## Quality Gate
 
@@ -159,6 +161,7 @@ Before finishing, inspect the result against these checks:
 - Generic helper code has a single owner.
 - Provider-local helper code has provider-specific meaning.
 - No generated files were hand-edited.
+- `npm run check:conformance` passes when action ids or executor modules changed.
 - No third-party rights issue was introduced.
 - No non-public product behavior is mentioned.
 

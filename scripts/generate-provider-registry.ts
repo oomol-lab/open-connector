@@ -2,6 +2,10 @@ import type { ProviderSource } from "./provider-source.ts";
 
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  assertProviderActionIdentity,
+  executableActionIdsFromProviders,
+} from "../src/providers/provider-conformance.ts";
 import { loadProviderSources } from "./provider-source.ts";
 
 const providersDir = join(process.cwd(), "src/providers");
@@ -10,6 +14,10 @@ const providersDir = join(process.cwd(), "src/providers");
  * Generate provider registries from definitions already loaded by the caller.
  */
 export async function generateProviderRegistries(providerSources: ProviderSource[]): Promise<void> {
+  for (const source of providerSources) {
+    assertProviderActionIdentity(source.definition);
+  }
+
   await Promise.all([
     writeRegistry("registry.generated.ts", providerSources),
     writeRegistry(
@@ -29,6 +37,7 @@ function propertyName(service: string): string {
 
 async function writeRegistry(filename: string, sources: ProviderSource[]): Promise<void> {
   const services = sources.map((source) => source.service);
+  const actionIds = executableActionIdsFromProviders(sources.map((source) => source.definition));
   const lines = [
     'import type { ExecutorModule } from "./provider-loader.ts";',
     "",
@@ -38,6 +47,11 @@ async function writeRegistry(filename: string, sources: ProviderSource[]): Promi
       (service) => `  ${propertyName(service)}: (): Promise<ExecutorModule> => import("./${service}/executors.ts"),`,
     ),
     "};",
+    "",
+    "/** Catalog action ids that have a local executor in this runtime. Do not hand-edit. */",
+    "export const executableActionIds: readonly string[] = [",
+    ...actionIds.map((actionId) => `  ${JSON.stringify(actionId)},`),
+    "];",
   ];
 
   const path = join(providersDir, filename);

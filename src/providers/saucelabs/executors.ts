@@ -32,7 +32,6 @@ const handlers: Record<string, (input: Record<string, unknown>, context: Saucela
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "saucelabs",
   handlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<SaucelabsContext> {
     const credential = await requireApiKeyCredential(context, "saucelabs");
     return { credential: resolveSaucelabsCredential({ apiKey: credential.apiKey, ...credential.values }), fetcher };
@@ -53,7 +52,6 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     if (!headers.has("accept")) headers.set("accept", "application/json");
     if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
   },
-  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {

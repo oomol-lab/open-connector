@@ -13,7 +13,7 @@ import {
   setPrivateNetworkAccessAllowed,
 } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executorModules } from "../providers/registry.cloudflare.generated.ts";
+import { executableActionIds, executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
 import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
@@ -126,7 +126,7 @@ function loadCatalogOnce(assets: AssetsBinding): Promise<CatalogStore> {
   // under a constant key covers every request.
   return catalogCache.get("", () =>
     loadCatalogFromAssets(assets, {
-      executableServices: Object.keys(executorModules),
+      executableActionIds,
     }),
   );
 }

@@ -2,11 +2,15 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { aliyunOssActions } from "./actions.ts";
 
+export const nodeOnly = true;
+
 const service = "aliyun_oss";
 
 export const provider: ProviderDefinition = {
   service,
   displayName: "Alibaba Cloud OSS",
+  description:
+    "Unavailable on Cloudflare Workers. Alibaba Cloud OSS uses the Node.js ali-oss SDK, so run this provider from the Node.js runtime.",
   categories: ["Storage", "Developer Tools"],
   authTypes: ["custom_credential"],
   auth: [
