@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { isIP } from "node:net";
@@ -85,7 +86,7 @@ const maxSourceBytes = 20 * 1024 * 1024;
 const awsServiceName = "s3";
 const service = "aws_s3";
 
-export const awsActionHandlers: Record<string, AwsActionHandler> = {
+export const awsActionHandlers: ProviderActionHandlers<"aws_s3", AwsActionHandler> = {
   list_buckets(input, context) {
     return awsListBuckets(input, context);
   },

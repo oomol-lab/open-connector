@@ -1,6 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { KeepaActionName, keepaDealPriceTypes, keepaHistoryTypes, keepaMarketplaces } from "./actions.ts";
+import type { keepaDealPriceTypes, keepaHistoryTypes, keepaMarketplaces } from "./actions.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -103,7 +104,7 @@ const dealSortTypeByName = {
   percentage_delta: 4,
 } as const;
 
-export const keepaActionHandlers: Record<KeepaActionName, KeepaActionHandler> = {
+export const keepaActionHandlers: ProviderActionHandlers<"keepa", KeepaActionHandler> = {
   async get_token_status(_input, context) {
     const payload = await requestKeepa({
       path: "/token",

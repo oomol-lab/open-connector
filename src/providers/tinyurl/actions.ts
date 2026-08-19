@@ -19,8 +19,6 @@ const tinyurlListItem = s.object(
   { optional: ["url"] },
 );
 
-export type TinyurlActionName = "create_short_url" | "list_urls";
-
 export const tinyurlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_short_url",

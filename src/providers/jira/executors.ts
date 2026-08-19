@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { JiraActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -84,7 +84,7 @@ const defaultIssueFieldIds = [
   "duedate",
 ];
 
-export const jiraActionHandlers: Record<JiraActionName, JiraActionHandler> = {
+export const jiraActionHandlers: ProviderActionHandlers<"jira", JiraActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },

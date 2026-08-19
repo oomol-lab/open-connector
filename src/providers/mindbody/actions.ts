@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mindbody";
 
-export type MindbodyActionName = "list_businesses";
-
 const businessIdSchema = s.nonEmptyString("A Mindbody business ID to filter the Business Directory.");
 
 const businessLocationSchema = s.looseObject("One Mindbody business location.", {

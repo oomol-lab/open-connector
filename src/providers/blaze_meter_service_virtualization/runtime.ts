@@ -3,7 +3,7 @@ import type {
   BlazeMeterContext,
   BlazeMeterRequestInput,
 } from "../blaze_meter_performance/shared-runtime.ts";
-import type { BlazeMeterServiceVirtualizationActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
 import {
@@ -15,8 +15,8 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 
 const blazeMeterJsonHeaders = { "content-type": "application/json" };
 
-export const blazeMeterServiceVirtualizationActionHandlers: Record<
-  BlazeMeterServiceVirtualizationActionName,
+export const blazeMeterServiceVirtualizationActionHandlers: ProviderActionHandlers<
+  "blaze_meter_service_virtualization",
   BlazeMeterActionHandler
 > = {
   list_service_mock_templates(input, context) {

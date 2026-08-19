@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -28,24 +29,22 @@ interface QaseRequestInput {
   signal?: AbortSignal;
 }
 
-const qaseActionNames = [
-  "list_projects",
-  "get_project",
-  "list_cases",
-  "get_case",
-  "create_case",
-  "list_runs",
-  "get_run",
-  "create_run",
-  "complete_run",
-];
-export const qaseActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = Object.fromEntries(
-  qaseActionNames.map((actionName) => [
-    actionName,
-    (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
-      executeQaseAction({ apiKey: context.apiKey, actionName, input, signal: context.signal }, context.fetcher),
-  ]),
-);
+export const qaseActionHandlers: ProviderActionHandlers<"qase", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  list_projects: handler("list_projects"),
+  get_project: handler("get_project"),
+  list_cases: handler("list_cases"),
+  get_case: handler("get_case"),
+  create_case: handler("create_case"),
+  list_runs: handler("list_runs"),
+  get_run: handler("get_run"),
+  create_run: handler("create_run"),
+  complete_run: handler("complete_run"),
+};
+
+function handler(actionName: string): ProviderRuntimeHandler<ApiKeyProviderContext> {
+  return (input, context) =>
+    executeQaseAction({ apiKey: context.apiKey, actionName, input, signal: context.signal }, context.fetcher);
+}
 
 export async function validateQaseCredential(
   apiKey: string,

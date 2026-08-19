@@ -366,28 +366,3 @@ function functionInput(kind: string) {
     { required: ["path"], optional: ["args", "format", "deployment_url"] },
   );
 }
-
-export type ConvexActionName =
-  | "get_token_details"
-  | "list_projects"
-  | "create_project"
-  | "get_project_by_id"
-  | "get_project_by_slug"
-  | "delete_project"
-  | "list_deployments"
-  | "get_deployment"
-  | "create_deployment"
-  | "update_deployment"
-  | "delete_deployment"
-  | "list_deployment_classes"
-  | "list_deployment_regions"
-  | "create_deploy_key"
-  | "list_deploy_keys"
-  | "delete_deploy_key"
-  | "list_custom_domains"
-  | "delete_custom_domain"
-  | "run_query"
-  | "run_mutation"
-  | "run_action"
-  | "run_function"
-  | "execute_query_batch";

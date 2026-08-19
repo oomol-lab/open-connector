@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "bugsnag";
 
-export type BugsnagActionName =
-  | "list_organizations"
-  | "get_organization"
-  | "list_organization_projects"
-  | "list_project_errors"
-  | "list_error_events"
-  | "get_latest_error_event"
-  | "list_project_releases";
-
 const paginationSchema = s.object(
   "Pagination metadata normalized from Bugsnag response headers.",
   {

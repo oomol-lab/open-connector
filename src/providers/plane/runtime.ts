@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -12,7 +14,7 @@ interface PlaneContext {
 
 type PlaneHandler = (input: Record<string, unknown>, context: PlaneContext) => Promise<unknown>;
 
-export const planeActionHandlers: Record<string, PlaneHandler> = {
+export const planeActionHandlers: ProviderActionHandlers<"plane", PlaneHandler> = {
   get_current_user(input, context) {
     return requestSingleItem(input, context, "/api/v1/users/me/");
   },

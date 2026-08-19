@@ -48,15 +48,6 @@ const segmentSchema = s.looseRequiredObject("One Conductor Monitoring segment.",
   shortcode: s.nullableString("The segment shortcode when available."),
 });
 
-export type ConductorActionName =
-  | "list_websites"
-  | "list_segments"
-  | "get_statistics"
-  | "list_pages"
-  | "get_page"
-  | "list_issues"
-  | "list_affected_pages";
-
 export const conductorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_websites",

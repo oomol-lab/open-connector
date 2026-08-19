@@ -1,5 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ const apiBaseUrl = "https://api.chatwork.com/v2";
 
 type Handler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const chatworkActionHandlers: Record<string, Handler> = {
+export const chatworkActionHandlers: ProviderActionHandlers<"chatwork", Handler> = {
   async get_me(_input, context) {
     return { profile: await requestObject(context, "/me") };
   },

@@ -202,8 +202,6 @@ const sendMessageInputSchema = withAllOf(
   ],
 );
 
-export type UserlistActionName = "push_user" | "push_company" | "push_relationship" | "create_event" | "send_message";
-
 export const userlistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "push_user",

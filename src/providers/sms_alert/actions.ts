@@ -56,14 +56,6 @@ const batchOperationOutputSchema = s.actionOutput(
   "The normalized SMS Alert batch operation response.",
 );
 
-export type SmsAlertActionName =
-  | "get_credit_balance"
-  | "list_sender_ids"
-  | "list_templates"
-  | "send_sms"
-  | "generate_otp"
-  | "validate_otp";
-
 export const smsAlertActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credit_balance",

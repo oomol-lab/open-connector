@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { KaleidoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -17,7 +17,7 @@ const membershipsValidationPath = "/memberships";
 
 type KaleidoActionHandler = (input: Record<string, unknown>, context: KaleidoActionContext) => Promise<unknown>;
 
-export const kaleidoActionHandlers: Record<KaleidoActionName, KaleidoActionHandler> = {
+export const kaleidoActionHandlers: ProviderActionHandlers<"kaleido", KaleidoActionHandler> = {
   list_memberships(_input, context) {
     return kaleidoGet(context, membershipsValidationPath);
   },

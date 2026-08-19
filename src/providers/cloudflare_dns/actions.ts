@@ -196,16 +196,6 @@ const updateDnsRecordInputSchema = s.object(
 ) as JsonSchema;
 updateDnsRecordInputSchema.anyOf = Object.keys(dnsRecordMutationFields).map((field) => ({ required: [field] }));
 
-export type CloudflareDnsActionName =
-  | "list_accounts"
-  | "list_zones"
-  | "get_zone"
-  | "list_dns_records"
-  | "get_dns_record"
-  | "create_dns_record"
-  | "update_dns_record"
-  | "delete_dns_record";
-
 export const cloudflareDnsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",

@@ -50,8 +50,6 @@ const stringOrStringArray = (description: string, itemDescription: string, optio
     s.array(itemDescription, s.nonEmptyString(itemDescription), { minItems: 1, maxItems: options.maxItems }),
   ]);
 
-export type PerplexityActionName = "list_models" | "search" | "create_chat_completion" | "create_embeddings";
-
 export const perplexityActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",

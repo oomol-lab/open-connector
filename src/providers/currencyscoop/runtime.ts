@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CurrencyscoopActionName } from "./actions.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ type CurrencyscoopActionHandler = (input: Record<string, unknown>, context: ApiK
 
 export const currencyscoopApiBaseUrl = "https://api.currencybeacon.com/v1";
 
-export const currencyscoopActionHandlers: Record<CurrencyscoopActionName, CurrencyscoopActionHandler> = {
+export const currencyscoopActionHandlers: ProviderActionHandlers<"currencyscoop", CurrencyscoopActionHandler> = {
   get_currencies(_input, context) {
     return executeGetCurrencies(context);
   },

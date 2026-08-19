@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { isIP } from "node:net";
@@ -19,7 +20,7 @@ interface IplocateRequestInput {
   body?: unknown;
 }
 
-export const iplocateActionHandlers: Record<string, IplocateActionHandler> = {
+export const iplocateActionHandlers: ProviderActionHandlers<"iplocate", IplocateActionHandler> = {
   async lookup_ip(input, context): Promise<unknown> {
     const ip = readIpAddress(input.ip, "ip");
     return {

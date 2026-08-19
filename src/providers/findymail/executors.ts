@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FindymailActionName } from "./actions.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -16,7 +16,7 @@ const findymailApiBaseUrl = "https://app.findymail.com";
 type FindymailActionContext = ApiKeyProviderContext;
 type FindymailActionHandler = (input: Record<string, unknown>, context: FindymailActionContext) => Promise<unknown>;
 
-export const findymailActionHandlers: Record<FindymailActionName, FindymailActionHandler> = {
+export const findymailActionHandlers: ProviderActionHandlers<"findymail", FindymailActionHandler> = {
   get_credits(_input, context) {
     return getCredits(context);
   },

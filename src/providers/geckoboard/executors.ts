@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GeckoboardActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { compactJson, jsonObject } from "../../core/request.ts";
@@ -14,7 +14,7 @@ type GeckoboardPhase = "validate" | "execute";
 type GeckoboardActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type GeckoboardActionHandler = (input: Record<string, unknown>, context: GeckoboardActionContext) => Promise<unknown>;
 
-export const geckoboardActionHandlers: Record<GeckoboardActionName, GeckoboardActionHandler> = {
+export const geckoboardActionHandlers: ProviderActionHandlers<"geckoboard", GeckoboardActionHandler> = {
   async find_or_create_dataset(input, context) {
     const datasetId = readInputString(input.datasetId, "datasetId");
     const payload = await requestGeckoboardJson({

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CallrailActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ const requestTimeoutMs = 30_000;
 type CallrailRequestPhase = "validate" | "execute";
 type CallrailActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const callrailActionHandlers: Record<CallrailActionName, CallrailActionHandler> = {
+const callrailActionHandlers: ProviderActionHandlers<"callrail", CallrailActionHandler> = {
   async list_accounts(input, context) {
     const payload = await requestCallrailJson({
       context,

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OptimorouteActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ type OptimoroutePhase = "validate" | "execute";
 type OptimorouteActionContext = ApiKeyProviderContext;
 type OptimorouteActionHandler = (input: Record<string, unknown>, context: OptimorouteActionContext) => Promise<unknown>;
 
-export const optimorouteActionHandlers: Record<OptimorouteActionName, OptimorouteActionHandler> = {
+export const optimorouteActionHandlers: ProviderActionHandlers<"optimoroute", OptimorouteActionHandler> = {
   create_or_update_orders(input, context) {
     return createOrUpdateOrders(input, context);
   },

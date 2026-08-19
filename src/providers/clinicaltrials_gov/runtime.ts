@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const clinicalTrialsGovApiBaseUrl = "https://clinicaltrials.gov/api/v2";
@@ -24,7 +26,7 @@ const studySummaryFields = [
 type ActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch) => Promise<unknown>;
 type ResponseBudget = { consumedBytes: number; maxBytes: number };
 
-export const clinicalTrialsGovActionHandlers: Record<string, ActionHandler> = {
+export const clinicalTrialsGovActionHandlers: ProviderActionHandlers<"clinicaltrials_gov", ActionHandler> = {
   search_studies(input, fetcher) {
     return searchStudies(input, fetcher);
   },

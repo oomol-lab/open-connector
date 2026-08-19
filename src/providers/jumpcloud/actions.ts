@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "jumpcloud";
 
-export type JumpcloudActionName = "list_system_users" | "get_system_user" | "list_systems" | "get_system";
-
 const idField = s.string("The JumpCloud object identifier.", { minLength: 1 });
 const fieldsField = s.string("Space-separated fields to include in the returned JumpCloud records.", {
   minLength: 1,

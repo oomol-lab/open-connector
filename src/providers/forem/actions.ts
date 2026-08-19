@@ -317,16 +317,4 @@ export const foremActions: ActionDefinition[] = [
   }),
 ];
 
-export type ForemActionName =
-  | "get_current_user"
-  | "list_articles"
-  | "list_my_articles"
-  | "get_article"
-  | "get_article_by_path"
-  | "create_article"
-  | "update_article"
-  | "list_comments"
-  | "get_comment"
-  | "list_tags";
-
 export const foremArticleMutableKeys: readonly string[] = articleMutableKeys;

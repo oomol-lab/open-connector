@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
-import type { ImaActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash, createHmac } from "node:crypto";
@@ -151,7 +151,7 @@ interface ImaRepeatedNameResult {
 
 type ImaActionHandler = (input: Record<string, unknown>, context: ImaRuntimeContext) => Promise<unknown>;
 
-export const imaActionHandlers: Record<ImaActionName, ImaActionHandler> = {
+export const imaActionHandlers: ProviderActionHandlers<"ima", ImaActionHandler> = {
   search_notes(input, context) {
     return searchImaNotes(input, context);
   },

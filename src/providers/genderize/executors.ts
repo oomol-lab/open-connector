@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GenderizeActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ type GenderizeRequestPhase = "validate" | "execute";
 type GenderizeActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type GenderizeActionHandler = (input: Record<string, unknown>, context: GenderizeActionContext) => Promise<unknown>;
 
-export const genderizeActionHandlers: Record<GenderizeActionName, GenderizeActionHandler> = {
+export const genderizeActionHandlers: ProviderActionHandlers<"genderize", GenderizeActionHandler> = {
   async predict_gender(input, context) {
     const { payload } = await requestGenderize({
       context,

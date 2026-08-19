@@ -150,14 +150,6 @@ const clickSchema = s.object(
   },
 );
 
-export type ShortenRestActionName =
-  | "create_alias"
-  | "get_alias"
-  | "update_alias"
-  | "delete_alias"
-  | "list_aliases"
-  | "list_clicks";
-
 export const shortenRestActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_alias",

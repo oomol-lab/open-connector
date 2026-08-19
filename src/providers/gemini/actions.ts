@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gemini";
 
-export type GeminiActionName =
-  | "list_models"
-  | "generate_content"
-  | "embed_content"
-  | "count_tokens"
-  | "generate_image"
-  | "generate_videos"
-  | "get_videos_operation"
-  | "wait_for_video";
-
 const jsonObjectSchema = s.looseObject("A JSON-like object with arbitrary string keys.");
 
 const modelSummarySchema = s.object(

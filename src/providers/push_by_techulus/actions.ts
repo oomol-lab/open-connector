@@ -74,8 +74,6 @@ const successOutputSchema = s.object(
   { required: ["success"], optional: ["message", "responses"] },
 );
 
-export type PushByTechulusActionName = "send_notification" | "send_group_notification";
-
 export const pushByTechulusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_notification",

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -13,7 +14,7 @@ interface TabapiRequestInput {
 
 const baseUrl = "https://tabapi.com/api/v1/";
 
-export const tabapiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const tabapiActionHandlers: ProviderActionHandlers<"tabapi", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   get_domain_traffic(input, context) {
     return request(context, {
       path: `domains/${encodeURIComponent(readInput(input, "domain"))}/traffic`,

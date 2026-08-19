@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -30,7 +31,7 @@ interface CommpeakRequestOptions {
   readonly signal?: AbortSignal;
 }
 
-const commpeakActionHandlers: Record<string, CommpeakActionHandler> = {
+const commpeakActionHandlers: ProviderActionHandlers<"commpeak", CommpeakActionHandler> = {
   list_streams(input, context) {
     return executeListStreams(input, context);
   },

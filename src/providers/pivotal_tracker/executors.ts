@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ const apiBaseUrl = "https://www.pivotaltracker.com/services/v5";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const pivotalTrackerActionHandlers: Record<string, Handler> = {
+export const pivotalTrackerActionHandlers: ProviderActionHandlers<"pivotal_tracker", Handler> = {
   async get_current_user(_input, context) {
     return { user: await trackerRequest("/me", context) };
   },

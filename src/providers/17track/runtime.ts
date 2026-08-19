@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -13,7 +14,10 @@ export const seventeenTrackApiBaseUrl = "https://api.17track.net/track/v2.4";
 const seventeenTrackRequestTimeoutMs = 30_000;
 const seventeenTrackMaxResponseBytes = 1_048_576;
 
-export const seventeenTrackActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const seventeenTrackActionHandlers: ProviderActionHandlers<
+  "17track",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   register_trackings: async (input, context) =>
     normalizeBatchResponse(
       await requestSeventeenTrack("register", input.trackings, context.apiKey, context, "execute"),

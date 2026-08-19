@@ -257,20 +257,6 @@ const createTimeEntryInputSchema = s.object(
   { optional: ["end", "tagIds", "taskId", "billable", "projectId", "description", "customFieldValues"] },
 );
 
-export type ClockifyActionName =
-  | "get_current_user"
-  | "list_workspaces"
-  | "get_workspace"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "delete_project"
-  | "list_tasks"
-  | "create_task"
-  | "list_time_entries"
-  | "create_time_entry";
-
 export const clockifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

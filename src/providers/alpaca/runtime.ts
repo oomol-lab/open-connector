@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -37,7 +38,7 @@ export interface ActionContext {
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
 
-export const alpacaActionHandlers: Record<string, ActionHandler> = {
+export const alpacaActionHandlers: ProviderActionHandlers<"alpaca", ActionHandler> = {
   async get_account(_input, context) {
     return {
       account: await requestAlpacaJson({

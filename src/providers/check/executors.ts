@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -38,7 +39,7 @@ interface CheckContext {
 
 type CheckHandler = (input: Record<string, unknown>, context: CheckContext) => Promise<unknown>;
 
-export const checkActionHandlers: Record<string, CheckHandler> = {
+export const checkActionHandlers: ProviderActionHandlers<"check", CheckHandler> = {
   async validate_address(input, context) {
     const payload = await requestCheckJson({
       context,

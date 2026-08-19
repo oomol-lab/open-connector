@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { L2sActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -34,7 +34,7 @@ interface L2sEnvelope {
   };
 }
 
-export const l2sActionHandlers: Record<L2sActionName, L2sActionHandler> = {
+export const l2sActionHandlers: ProviderActionHandlers<"l2s", L2sActionHandler> = {
   shorten_url(input, context) {
     return l2sRequest(context, {
       method: "POST",

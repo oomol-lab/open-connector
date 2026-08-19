@@ -63,13 +63,6 @@ const usageAdditionalInfoSchema = s.looseObject("Additional monthly pricing meta
   PricePerPage: s.number("The in-contract price per page when returned."),
 });
 
-export type EagleDocActionName =
-  | "process_finance_document"
-  | "get_current_usage"
-  | "list_monthly_usage"
-  | "list_usage_logs"
-  | "get_quota";
-
 export const eagleDocActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "process_finance_document",

@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MotionActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
 import { jsonObject, queryParams } from "../../core/request.ts";
@@ -39,7 +39,7 @@ type MotionPhase = "validate" | "execute";
 type MotionMethod = "GET" | "POST" | "PATCH" | "DELETE";
 type MotionActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const motionActionHandlers: Record<MotionActionName, MotionActionHandler> = {
+export const motionActionHandlers: ProviderActionHandlers<"motion", MotionActionHandler> = {
   async list_workspaces(_input, context): Promise<unknown> {
     const payload = await requestMotionJson({
       context,

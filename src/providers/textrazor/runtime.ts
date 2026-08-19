@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TextrazorActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ const defaultAnalyzeExtractors = [
 type TextrazorContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type TextrazorActionHandler = (input: Record<string, unknown>, context: TextrazorContext) => Promise<unknown>;
 
-export const textrazorActionHandlers: Record<TextrazorActionName, TextrazorActionHandler> = {
+export const textrazorActionHandlers: ProviderActionHandlers<"textrazor", TextrazorActionHandler> = {
   account_info(_input, context) {
     return textrazorAccountInfo(context);
   },

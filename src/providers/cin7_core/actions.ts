@@ -151,10 +151,3 @@ export const cin7CoreActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type Cin7CoreActionName =
-  | "get_current_account"
-  | "list_customers"
-  | "get_customer"
-  | "list_products"
-  | "get_product";

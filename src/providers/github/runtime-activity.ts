@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { optionalInteger, optionalString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ import {
   readJsonResponse,
 } from "./runtime-shared.ts";
 
-export const activityActionHandlers: Record<string, GitHubActionHandler> = {
+export const activityActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
   list_public_events(input, { accessToken, fetcher }) {
     return listActivityEvents("/events", input, accessToken, fetcher);
   },

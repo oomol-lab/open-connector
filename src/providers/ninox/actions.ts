@@ -378,17 +378,3 @@ export const ninoxActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type NinoxActionName =
-  | "list_workspaces"
-  | "get_workspace"
-  | "list_databases"
-  | "get_database"
-  | "list_tables"
-  | "get_table"
-  | "list_records"
-  | "get_record"
-  | "search_record"
-  | "save_records"
-  | "delete_record"
-  | "delete_records";

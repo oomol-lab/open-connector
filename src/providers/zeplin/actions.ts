@@ -108,14 +108,6 @@ const projectIdSchema = s.nonEmptyString("The project ID.");
 const projectInputSchema = (description: string): JsonSchema =>
   s.actionInput({ ...paginationProperties, projectId: projectIdSchema }, ["projectId"], description);
 
-export type ZeplinActionName =
-  | "get_current_user"
-  | "list_personal_projects"
-  | "get_project"
-  | "list_project_colors"
-  | "list_project_text_styles"
-  | "list_screen_versions";
-
 export const zeplinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

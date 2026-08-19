@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import {
   compactObject,
   pickOptionalBoolean,
@@ -78,25 +80,8 @@ const attendeeKeys = [
 ] as const;
 const timeZoneFormatterById = new Map<string, Intl.DateTimeFormat>();
 
-export type GooglecalendarEventActionName =
-  | "list_events"
-  | "get_event"
-  | "create_event"
-  | "update_event"
-  | "patch_event"
-  | "delete_event"
-  | "import_event"
-  | "move_event"
-  | "list_event_instances"
-  | "quick_add_event"
-  | "sync_events"
-  | "list_events_all_calendars"
-  | "find_event"
-  | "add_attendee"
-  | "remove_attendee";
-
-export const googlecalendarEventActionHandlers: Record<
-  GooglecalendarEventActionName,
+export const googlecalendarEventActionHandlers: ProviderActionHandlerSubset<
+  "googlecalendar",
   GooglecalendarEventActionHandler
 > = {
   list_events(input, deps) {

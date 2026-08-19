@@ -67,15 +67,6 @@ const needleFileToAddSchema = s.requiredObject("A file reference to add into a N
   url: s.url("The public or signed URL that Needle should import."),
 });
 
-export type NeedleActionName =
-  | "list_collections"
-  | "create_collection"
-  | "get_collection"
-  | "get_collection_stats"
-  | "list_collection_files"
-  | "add_files_to_collection"
-  | "search_collection";
-
 export const needleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collections",

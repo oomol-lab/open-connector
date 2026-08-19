@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ClickhouseActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -56,7 +56,7 @@ export interface ClickhouseActionContext {
   signal?: AbortSignal;
 }
 
-export const clickhouseActionHandlers: Record<ClickhouseActionName, ClickhouseActionHandler> = {
+export const clickhouseActionHandlers: ProviderActionHandlers<"clickhouse", ClickhouseActionHandler> = {
   execute_query(input, context) {
     return executeQuery(input, context);
   },

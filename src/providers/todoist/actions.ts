@@ -231,27 +231,6 @@ const listLabelsInput = s.object(
   { optional: ["cursor", "limit"] },
 );
 
-export type TodoistActionName =
-  | "get_current_user"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "list_sections"
-  | "get_section"
-  | "create_section"
-  | "update_section"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "close_task"
-  | "list_comments"
-  | "get_comment"
-  | "create_comment"
-  | "update_comment"
-  | "list_labels";
-
 export const todoistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

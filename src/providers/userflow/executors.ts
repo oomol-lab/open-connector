@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -10,7 +11,7 @@ const userflowApiVersion = "2020-01-03";
 
 type UserflowActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const userflowActionHandlers: Record<string, UserflowActionHandler> = {
+export const userflowActionHandlers: ProviderActionHandlers<"userflow", UserflowActionHandler> = {
   async list_users(input, context) {
     return requestUserflow(context, buildListUsersUrl(input));
   },

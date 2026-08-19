@@ -187,12 +187,3 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type RebrandlyActionName =
-  | "get_account"
-  | "list_domains"
-  | "list_links"
-  | "get_link"
-  | "create_link"
-  | "update_link"
-  | "delete_link";

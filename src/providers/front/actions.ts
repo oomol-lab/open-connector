@@ -154,5 +154,3 @@ export const frontActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FrontActionName = "list_contacts" | "get_contact" | "create_contact" | "update_contact" | "list_teammates";

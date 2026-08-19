@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { VatlayerActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ export const vatlayerApiBaseUrl = "https://apilayer.net/api";
 type VatlayerQueryValue = boolean | number | string | undefined;
 type VatlayerActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const vatlayerActionHandlers: Record<VatlayerActionName, VatlayerActionHandler> = {
+export const vatlayerActionHandlers: ProviderActionHandlers<"vatlayer", VatlayerActionHandler> = {
   validate_vat_number(input, context) {
     return vatlayerRequest(
       {

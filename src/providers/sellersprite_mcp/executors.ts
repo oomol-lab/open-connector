@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -7,24 +8,34 @@ import { SdkHttpError } from "@modelcontextprotocol/client";
 import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { sellerSpriteMcpOfficialActions } from "./official-actions.ts";
+import {
+  defineApiKeyProviderExecutors,
+  mapProviderActionHandlers,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
+import { sellerspriteMcpActions } from "./actions.ts";
 
 const service = "sellersprite_mcp";
 const endpoint = "https://mcp.sellersprite.com/mcp";
 const timeoutMs = 60_000;
 type Context = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ToolResult = Awaited<ReturnType<Client["callTool"]>>;
-const handlers: Record<string, (input: Record<string, unknown>, context: Context) => Promise<unknown>> = {
-  async list_tools(_input, context) {
-    return { tools: await discover(context) };
+type SellerSpriteMcpHandler = (input: Record<string, unknown>, context: Context) => Promise<unknown>;
+
+const handlers: ProviderActionHandlers<"sellersprite_mcp", SellerSpriteMcpHandler> = mapProviderActionHandlers(
+  service,
+  sellerspriteMcpActions,
+  (_action, name): SellerSpriteMcpHandler => {
+    if (name === "list_tools") {
+      return async (_input, context) => ({ tools: await discover(context) });
+    }
+    if (name === "call_tool") {
+      return (input, context) => call(context, required(input.toolName, "toolName"), object(input.arguments));
+    }
+    return (input, context) => call(context, name, input);
   },
-  call_tool(input, context) {
-    return call(context, required(input.toolName, "toolName"), object(input.arguments));
-  },
-};
-for (const action of sellerSpriteMcpOfficialActions)
-  handlers[action.name] = (input, context) => call(context, action.name, input);
+);
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {
   skipDnsValidation: true,
 });

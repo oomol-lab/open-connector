@@ -25,17 +25,6 @@ const contactIdField = s.nonEmptyString("EmailOctopus contact identifier.");
 const campaignIdField = s.nonEmptyString("EmailOctopus campaign identifier.");
 const contactFieldsSchema = s.looseObject("Custom contact fields object accepted by the official EmailOctopus API.");
 
-export type EmailoctopusActionName =
-  | "list_lists"
-  | "get_list"
-  | "list_list_contacts"
-  | "get_list_contact"
-  | "create_list_contact"
-  | "update_list_contact"
-  | "delete_list_contact"
-  | "list_campaigns"
-  | "get_campaign";
-
 export const emailoctopusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_lists",

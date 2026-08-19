@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -36,7 +37,7 @@ interface PinboardRequestInput {
 type PinboardRequestPhase = "validate" | "execute";
 type PinboardActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const pinboardActionHandlers: Record<string, PinboardActionHandler> = {
+const pinboardActionHandlers: ProviderActionHandlers<"pinboard", PinboardActionHandler> = {
   async get_last_update(_input, context) {
     const payload = await requestPinboardJson({ path: "/posts/update" }, context, "execute");
     return { updateTime: readUpdateTime(payload) };

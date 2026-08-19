@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { objectArray, optionalRawString, optionalRecord, positiveInteger, requiredString } from "../../core/cast.ts";
@@ -16,7 +17,10 @@ interface HrPartnerRequestOptions {
   readonly signal?: AbortSignal;
 }
 
-export const hrPartnerActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const hrPartnerActionHandlers: ProviderActionHandlers<
+  "hr_partner",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   get_company: getCompany,
   list_employees: listEmployees,
   get_employee: getEmployee,

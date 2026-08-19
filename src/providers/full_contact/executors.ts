@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -41,7 +42,7 @@ interface FullContactRequestContext {
   signal?: AbortSignal;
 }
 
-export const fullContactActionHandlers: Record<string, FullContactActionHandler> = {
+export const fullContactActionHandlers: ProviderActionHandlers<"full_contact", FullContactActionHandler> = {
   async enrich_person(input, context) {
     const payload = await requestFullContactJson(
       {

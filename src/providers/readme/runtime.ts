@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ReadMeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, requiredRecord } from "../../core/cast.ts";
@@ -34,7 +35,7 @@ interface ReadMeRequestOptions {
   expectNoContent?: boolean;
 }
 
-export const readmeActionHandlers: Record<ReadMeActionName, ReadMeActionHandler> = {
+export const readmeActionHandlers: ProviderActionHandlers<"readme", ReadMeActionHandler> = {
   get_project: async (context) => ({
     project: await requestReadMeObject({
       apiKey: context.apiKey,

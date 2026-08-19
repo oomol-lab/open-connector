@@ -856,27 +856,3 @@ export const firefliesActions: ActionDefinition[] = [
     outputSchema: executeGraphqlQueryOutputSchema,
   }),
 ];
-
-export type FirefliesActionName =
-  | "get_current_user"
-  | "get_user"
-  | "list_users"
-  | "list_channels"
-  | "list_user_groups"
-  | "list_transcripts"
-  | "get_transcript"
-  | "list_bites"
-  | "get_bite"
-  | "create_bite"
-  | "list_ai_app_outputs"
-  | "list_askfred_threads"
-  | "get_askfred_thread"
-  | "create_askfred_thread"
-  | "continue_askfred_thread"
-  | "delete_askfred_thread"
-  | "set_user_role"
-  | "update_meeting_channel"
-  | "update_meeting_privacy"
-  | "update_meeting_title"
-  | "delete_transcript"
-  | "execute_graphql_query";

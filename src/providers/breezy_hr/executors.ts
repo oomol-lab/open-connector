@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -28,7 +29,7 @@ interface BreezyHrRequestInput {
   readonly phase: BreezyHrPhase;
 }
 
-export const breezyHrActionHandlers: Record<string, BreezyHrActionHandler> = {
+export const breezyHrActionHandlers: ProviderActionHandlers<"breezy_hr", BreezyHrActionHandler> = {
   async get_current_user(_input, context) {
     const raw = await requestBreezyHrJson({
       path: "/user",

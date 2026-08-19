@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -44,7 +45,7 @@ interface OcrWebServiceContext extends OcrWebServiceCredential {
 
 type OcrWebServiceActionHandler = (input: Record<string, unknown>, context: OcrWebServiceContext) => Promise<unknown>;
 
-export const ocrWebServiceActionHandlers: Record<string, OcrWebServiceActionHandler> = {
+export const ocrWebServiceActionHandlers: ProviderActionHandlers<"ocr_web_service", OcrWebServiceActionHandler> = {
   async get_account_information(_input, context) {
     return normalizeAccountInformation(await requestAccountInformation(context, "execute"));
   },

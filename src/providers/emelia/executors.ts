@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ type EmeliaRequestPhase = "validate" | "execute";
 
 type EmeliaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const emeliaActionHandlers: Record<string, EmeliaActionHandler> = {
+export const emeliaActionHandlers: ProviderActionHandlers<"emelia", EmeliaActionHandler> = {
   list_campaigns(input, context) {
     return requestEmeliaList(
       "/emails/campaigns",

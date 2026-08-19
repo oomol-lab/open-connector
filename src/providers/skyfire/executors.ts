@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SkyfireActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ const skyfireValidationPath = "/api/v1/tokens/00000000-0000-0000-0000-0000000000
 type SkyfireRequestPhase = "validate" | "execute";
 type SkyfireActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const skyfireActionHandlers: Record<SkyfireActionName, SkyfireActionHandler> = {
+export const skyfireActionHandlers: ProviderActionHandlers<"skyfire", SkyfireActionHandler> = {
   get_all_services(_input, context) {
     return listServices("/api/v1/directory/services", context);
   },

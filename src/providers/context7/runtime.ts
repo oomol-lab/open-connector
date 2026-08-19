@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { Context7ActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -49,8 +49,8 @@ export async function validateContext7Credential(input: {
   };
 }
 
-export const context7ActionHandlers: Record<
-  Context7ActionName,
+export const context7ActionHandlers: ProviderActionHandlers<
+  "context7",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   search_libraries(input, context) {

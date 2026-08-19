@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler, ProviderTransitFile } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -8,7 +9,10 @@ const apiBaseUrl = "https://api.archiveapi.com";
 const maxExtractionResponseBytes = 512 * 1024 * 1024;
 const maxExtractedFiles = 1_000;
 
-export const zipArchiveApiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const zipArchiveApiActionHandlers: ProviderActionHandlers<
+  "zip_archive_api",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   compress_files(input, context) {
     return compressFiles(input, context);
   },

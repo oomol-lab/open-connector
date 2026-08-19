@@ -154,5 +154,3 @@ export const ip2locationActions: ActionDefinition[] = [
     outputSchema: hostedDomainsOutputSchema,
   }),
 ];
-
-export type Ip2locationActionName = "get_ip_geolocation" | "get_domain_whois" | "list_hosted_domains";

@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HotspotsystemActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -27,7 +27,7 @@ interface HotspotsystemResponse {
   response: Response;
 }
 
-export const hotspotsystemActionHandlers: Record<HotspotsystemActionName, HotspotsystemActionHandler> = {
+export const hotspotsystemActionHandlers: ProviderActionHandlers<"hotspotsystem", HotspotsystemActionHandler> = {
   async get_current_owner(_input, context) {
     const response = await hotspotsystemRequestJson(
       {

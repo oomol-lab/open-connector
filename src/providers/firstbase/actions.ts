@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "firstbase";
 
-export type FirstbaseActionName =
-  | "list_inventory"
-  | "get_inventory"
-  | "list_catalog_skus"
-  | "get_catalog_sku"
-  | "list_brands"
-  | "list_categories";
-
 const pageSchema = s.positiveInteger("The 1-based page number to request.");
 const sizeSchema = s.positiveInteger("The number of results to return in a page.");
 const cappedSizeSchema = s.integer("The number of results to return in a page, from 1 to 100.", {

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailersendActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface MailersendRequestOptions {
   body?: unknown;
 }
 
-export const mailersendActionHandlers: Record<MailersendActionName, MailersendActionHandler> = {
+export const mailersendActionHandlers: ProviderActionHandlers<"mailersend", MailersendActionHandler> = {
   async send_email(input, context) {
     if (!optionalString(input.text) && !optionalString(input.html)) {
       throw new ProviderRequestError(400, "text or html is required");

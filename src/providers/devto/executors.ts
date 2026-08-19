@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DevtoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -17,7 +17,7 @@ const devtoApiBaseUrl = "https://dev.to/api";
 type QueryValue = string | number | boolean | undefined;
 type DevtoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const devtoActionHandlers: Record<DevtoActionName, DevtoActionHandler> = {
+export const devtoActionHandlers: ProviderActionHandlers<"devto", DevtoActionHandler> = {
   list_articles(input, context) {
     return devtoGet("/articles", mapListArticlesQuery(input), context);
   },

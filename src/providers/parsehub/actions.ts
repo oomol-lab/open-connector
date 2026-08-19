@@ -64,8 +64,6 @@ const projectDetailSchema = s.looseRequiredObject(
   },
 );
 
-export type ParsehubActionName = "list_projects" | "get_project";
-
 export const parsehubActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",

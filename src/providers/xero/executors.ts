@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
@@ -21,7 +22,7 @@ interface XeroRequestOptions {
   tenantId?: string;
 }
 
-export const xeroActionHandlers: Record<string, XeroHandler> = {
+export const xeroActionHandlers: ProviderActionHandlers<"xero", XeroHandler> = {
   async list_organisations(_input, context): Promise<unknown> {
     const connections = arrayPayload(
       await requestJson({

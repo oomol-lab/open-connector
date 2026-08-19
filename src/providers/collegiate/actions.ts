@@ -9,8 +9,6 @@ const looseEntrySchema = s.looseObject(
   "A Merriam-Webster Collegiate Dictionary entry modeled from the official JSON documentation. Entries include upstream rich JSON fields and may include derived audio_url, image_url, and page_url helpers.",
 );
 
-export type CollegiateActionName = "lookup_word";
-
 export const collegiateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_word",

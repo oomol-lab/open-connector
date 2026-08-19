@@ -561,16 +561,6 @@ const getSellerSnapshotAction = defineProviderAction(service, {
   ),
 });
 
-export type KeepaActionName =
-  | "get_token_status"
-  | "get_product_snapshot"
-  | "get_product_history"
-  | "find_products"
-  | "search_categories"
-  | "get_best_sellers"
-  | "find_deals"
-  | "get_seller_snapshot";
-
 export const keepaActions: ActionDefinition[] = [
   getTokenStatusAction,
   getProductSnapshotAction,

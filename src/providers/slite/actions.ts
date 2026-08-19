@@ -152,16 +152,6 @@ const searchNotesInputSchema = s.object(
   },
 );
 
-export type SliteActionName =
-  | "list_notes"
-  | "get_note"
-  | "create_note"
-  | "update_note"
-  | "delete_note"
-  | "search_notes"
-  | "search_groups"
-  | "get_group";
-
 export const sliteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_notes",

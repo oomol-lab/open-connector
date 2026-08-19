@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -18,7 +19,7 @@ const requestTimeoutMs = 30_000;
 type RequestPhase = "validate" | "execute";
 type SportsdataActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const sportsdataActionHandlers: Record<string, SportsdataActionHandler> = {
+export const sportsdataActionHandlers: ProviderActionHandlers<"sportsdata", SportsdataActionHandler> = {
   list_sports(_input, context) {
     return executeList("/sports", "sports", context);
   },

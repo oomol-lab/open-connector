@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "glyphic";
 
-export type GlyphicActionName =
-  | "list_calls"
-  | "get_call"
-  | "get_call_media"
-  | "get_call_snippets"
-  | "list_call_tags"
-  | "list_playbooks"
-  | "get_playbook"
-  | "list_playbook_versions"
-  | "get_playbook_version";
-
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const objectIdString = (description: string) =>
   s.string({

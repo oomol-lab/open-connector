@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
-import type { TikTokBusinessActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -37,7 +37,7 @@ type TikTokBusinessQueryValue =
 
 type TikTokBusinessApiVersion = "v1.3" | "v2.0";
 
-export const tiktokBusinessActionHandlers: Record<TikTokBusinessActionName, TikTokBusinessActionHandler> = {
+export const tiktokBusinessActionHandlers: ProviderActionHandlers<"tiktok_business", TikTokBusinessActionHandler> = {
   list_advertisers(input, context) {
     return listAdvertisers(input, context);
   },

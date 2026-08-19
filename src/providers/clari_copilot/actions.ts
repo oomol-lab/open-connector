@@ -375,10 +375,3 @@ export const clariCopilotActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type ClariCopilotActionName =
-  | "list_users"
-  | "list_topics"
-  | "list_calls"
-  | "get_call_details"
-  | "list_scorecards";

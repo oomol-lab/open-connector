@@ -1,6 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BrazeActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -58,7 +58,7 @@ const brazeValidationCandidates: BrazeValidationCandidate[] = [
 
 type BrazeActionHandler = ProviderRuntimeHandler<BrazeActionContext>;
 
-export const brazeActionHandlers: Record<BrazeActionName, BrazeActionHandler> = {
+export const brazeActionHandlers: ProviderActionHandlers<"braze", BrazeActionHandler> = {
   async list_campaigns(input, context) {
     const payload = await requestBrazeJson({
       context,

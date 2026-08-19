@@ -1,5 +1,5 @@
 import type { CredentialValidators } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { withMcpClient } from "../mcp-client.ts";
@@ -43,7 +43,7 @@ function mapYingmiMcpError(error: unknown, phase: "validate" | "execute"): Provi
   );
 }
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors("yingmi_mcp", {
+const handlers: ProviderActionHandlers<"yingmi_mcp", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_tools(_input, context) {
     const result = await withClient(context, "execute", (client) => client.listTools({}, { timeout: timeoutMs }));
     return { tools: result.tools };
@@ -59,7 +59,12 @@ export const executors: import("../../core/types.ts").ProviderExecutors = define
       throw new ProviderRequestError(502, `Yingmi MCP tool ${String(input.toolName)} returned an error`, result);
     return { result };
   },
-});
+};
+
+export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
+  "yingmi_mcp",
+  handlers,
+);
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const tools = await withClient({ apiKey: input.apiKey, fetcher, signal }, "validate", (client) =>

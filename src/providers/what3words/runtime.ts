@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { What3wordsActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type What3wordsPhase = "validate" | "execute";
 type What3wordsQueryValue = string | number | boolean | undefined;
 type What3wordsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const what3wordsActionHandlers: Record<What3wordsActionName, What3wordsActionHandler> = {
+export const what3wordsActionHandlers: ProviderActionHandlers<"what3words", What3wordsActionHandler> = {
   convert_to_coordinates(input, context) {
     return what3wordsGet("/convert-to-coordinates", buildConvertToCoordinatesQuery(input), context);
   },

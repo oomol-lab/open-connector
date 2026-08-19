@@ -298,11 +298,3 @@ export const freshserviceActions: ActionDefinition[] = [
     outputSchema: freshserviceCreateServiceRequestOutputSchema,
   }),
 ];
-
-export type FreshserviceActionName =
-  | "list_tickets"
-  | "get_ticket"
-  | "create_ticket"
-  | "list_locations"
-  | "list_service_catalog_items"
-  | "create_service_request";

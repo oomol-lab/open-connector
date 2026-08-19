@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -34,7 +35,7 @@ export const leonardoAiValidationPath = "/models";
 const leonardoAiV1ApiBaseUrl = `${leonardoAiApiRootUrl}/v1`;
 const leonardoAiRequestTimeoutMs = 60_000;
 
-export const leonardoAiActionHandlers: Record<string, LeonardoAiActionHandler> = {
+export const leonardoAiActionHandlers: ProviderActionHandlers<"leonardo_ai", LeonardoAiActionHandler> = {
   list_models(_input, context) {
     return listModels(context);
   },

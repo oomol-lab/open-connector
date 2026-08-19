@@ -5,21 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "motion";
 
-export type MotionActionName =
-  | "list_workspaces"
-  | "list_users"
-  | "get_my_user"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "delete_task"
-  | "list_statuses"
-  | "list_schedules";
-
 const idSchema = s.nonEmptyString("The Motion resource ID.");
 const cursorSchema = s.nonEmptyString("The pagination cursor returned by a previous Motion response.");
 const workspaceIdSchema = s.nonEmptyString("The Motion workspace ID.");

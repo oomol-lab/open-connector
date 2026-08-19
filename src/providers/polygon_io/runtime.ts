@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -19,7 +20,7 @@ type PolygonIoPhase = "validate" | "execute";
 type PolygonIoQueryValue = string | number | boolean | undefined;
 type PolygonIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const polygonIoActionHandlers: Record<string, PolygonIoActionHandler> = {
+export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", PolygonIoActionHandler> = {
   async list_tickers(input, context) {
     const response = optionalRecord(
       await requestPolygonIoJson(context, "/v3/reference/tickers", {

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -43,7 +44,7 @@ interface OpenGraphIoSiteResult {
   tags?: Record<string, unknown>[];
 }
 
-export const opengraphIoActionHandlers: Record<string, OpenGraphIoActionHandler> = {
+export const opengraphIoActionHandlers: ProviderActionHandlers<"opengraph_io", OpenGraphIoActionHandler> = {
   extract_site(input, context) {
     return opengraphIoExtractSite(input, context);
   },

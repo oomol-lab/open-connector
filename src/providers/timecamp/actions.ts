@@ -198,17 +198,6 @@ const updateTimeEntryInputSchema = withAnyOfRequired(
   ],
 );
 
-export type TimecampActionName =
-  | "get_current_user"
-  | "list_users"
-  | "list_tasks"
-  | "list_time_entries"
-  | "create_time_entry"
-  | "update_time_entry"
-  | "get_timer_status"
-  | "start_timer"
-  | "stop_timer";
-
 export const timecampActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ScrapeGraphAiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -33,7 +33,7 @@ interface ScrapeGraphAiRequestInput {
   phase: ScrapeGraphAiRequestPhase;
 }
 
-export const scrapeGraphAiActionHandlers: Record<ScrapeGraphAiActionName, ScrapeGraphAiActionHandler> = {
+export const scrapeGraphAiActionHandlers: ProviderActionHandlers<"scrape_graph_ai", ScrapeGraphAiActionHandler> = {
   scrape(input, context) {
     return requestScrapeGraphAiJson({
       apiKey: context.apiKey,

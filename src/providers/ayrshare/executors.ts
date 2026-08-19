@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -28,7 +29,7 @@ type AyrshareRequestPhase = "validate" | "execute";
 type AyrshareMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
 type AyrshareActionHandler = (input: Record<string, unknown>, context: AyrshareContext) => Promise<unknown>;
 
-export const ayrshareActionHandlers: Record<string, AyrshareActionHandler> = {
+export const ayrshareActionHandlers: ProviderActionHandlers<"ayrshare", AyrshareActionHandler> = {
   get_user_profile(input, context) {
     return getUserProfile(input, context);
   },

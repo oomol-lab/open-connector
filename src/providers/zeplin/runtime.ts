@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZeplinActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -21,7 +21,7 @@ const zeplinApiBaseUrl = "https://api.zeplin.dev/v1";
 type ZeplinRequestPhase = "validate" | "execute";
 type ZeplinActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
 
-export const zeplinActionHandlers: Record<ZeplinActionName, ZeplinActionHandler> = {
+export const zeplinActionHandlers: ProviderActionHandlers<"zeplin", ZeplinActionHandler> = {
   get_current_user(_input, context) {
     return zeplinGetCurrentUser(context);
   },

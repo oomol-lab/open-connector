@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WiseActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, setSearchParams } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ interface WiseRequestOptions {
   query?: Record<string, string | undefined>;
 }
 
-export const wiseActionHandlers: Record<WiseActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const wiseActionHandlers: ProviderActionHandlers<"wise", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_profiles(_input, context) {
     const payload = await requestWiseJson({
       path: wiseValidationPath,

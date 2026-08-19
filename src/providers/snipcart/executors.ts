@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
@@ -6,7 +7,10 @@ import { executeSnipcartAction, validateSnipcartCredential } from "./runtime.ts"
 
 const service = "snipcart";
 
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "snipcart",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   list_orders: (input, context) => executeSnipcartAction("list_orders", input, context.apiKey, context.fetcher),
   get_order: (input, context) => executeSnipcartAction("get_order", input, context.apiKey, context.fetcher),
   list_customers: (input, context) => executeSnipcartAction("list_customers", input, context.apiKey, context.fetcher),

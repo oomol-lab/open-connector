@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -47,7 +48,7 @@ interface MiroRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const miroActionHandlers: Record<string, MiroActionHandler> = {
+export const miroActionHandlers: ProviderActionHandlers<"miro", MiroActionHandler> = {
   async list_boards(input, context): Promise<unknown> {
     const limit = optionalInteger(input.limit) ?? defaultBoardLimit;
     const offset = optionalInteger(input.offset) ?? 0;

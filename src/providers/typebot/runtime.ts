@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -29,7 +30,7 @@ const get =
   (input, context) =>
     requestTypebot(path(input), query?.(input), context, "execute");
 
-export const typebotActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const typebotActionHandlers: ProviderActionHandlers<"typebot", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_workspaces: get(() => validationPath),
   get_workspace: get(
     (input) => `/v1/workspaces/${encodeURIComponent(requiredString(input.workspaceId, "workspaceId"))}`,

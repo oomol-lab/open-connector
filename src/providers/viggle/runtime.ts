@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ViggleActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -21,7 +21,7 @@ interface ViggleRequestInput {
   auth?: boolean;
 }
 
-export const viggleActionHandlers: Record<ViggleActionName, ViggleActionHandler> = {
+export const viggleActionHandlers: ProviderActionHandlers<"viggle", ViggleActionHandler> = {
   get_credit_balance(_input, context) {
     return getCreditBalance(context, "execute");
   },

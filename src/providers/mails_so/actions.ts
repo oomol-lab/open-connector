@@ -57,8 +57,6 @@ const batchMetadataSchema = {
   size: s.nonNegativeInteger("The number of emails in the batch job."),
 };
 
-export type MailsSoActionName = "validate_email" | "create_validation_batch" | "get_validation_batch";
-
 export const mailsSoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_email",

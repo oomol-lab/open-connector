@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { MoreTreesActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -37,12 +38,12 @@ type MoreTreesActionInput = ApiKeyProviderActionInput & {
 };
 type MoreTreesActionHandler = (input: MoreTreesActionInput, fetcher: typeof fetch) => Promise<unknown>;
 
-export const moreTreesActionHandlers: Record<MoreTreesActionName, MoreTreesActionHandler> = {
+export const moreTreesActionHandlers: ProviderActionHandlers<"more_trees", MoreTreesActionHandler> = {
   get_account: executeGetAccount,
   get_forest: executeGetForest,
   list_projects: executeListProjects,
   plant_trees: executePlantTrees,
-} satisfies Record<MoreTreesActionName, MoreTreesActionHandler>;
+};
 
 export async function validateMoreTreesCredential(
   input: Record<string, string>,

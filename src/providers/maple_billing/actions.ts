@@ -260,20 +260,6 @@ const checkoutSessionCreateInputSchema = s.object(
   },
 );
 
-export type MapleBillingActionName =
-  | "create_customer"
-  | "update_customer"
-  | "find_customers"
-  | "get_customer"
-  | "find_products"
-  | "get_product"
-  | "find_product_pricing"
-  | "get_product_pricing"
-  | "find_subscriptions"
-  | "get_subscription"
-  | "create_checkout_session"
-  | "get_checkout_session";
-
 export const mapleBillingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_customer",

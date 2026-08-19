@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -15,7 +16,7 @@ const unsplashTimeoutMs = 30_000;
 
 type UnsplashActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const unsplashActionHandlers: Record<string, UnsplashActionHandler> = {
+export const unsplashActionHandlers: ProviderActionHandlers<"unsplash", UnsplashActionHandler> = {
   async list_photos(input, context) {
     const payload = await requestUnsplashJson({
       context,

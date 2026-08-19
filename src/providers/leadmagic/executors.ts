@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LeadmagicActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -40,7 +40,7 @@ interface LeadmagicRequestInput {
   mode: LeadmagicMode;
 }
 
-export const leadmagicActionHandlers: Record<LeadmagicActionName, LeadmagicActionHandler> = {
+export const leadmagicActionHandlers: ProviderActionHandlers<"leadmagic", LeadmagicActionHandler> = {
   async get_credits(_input, context) {
     return normalizeCredits(
       await requestLeadmagicJson(

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HereActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -23,7 +23,7 @@ type HereRequestPhase = "validate" | "execute";
 type HereActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type HereActionHandler = (input: Record<string, unknown>, context: HereActionContext) => Promise<unknown>;
 
-export const hereActionHandlers: Record<HereActionName, HereActionHandler> = {
+export const hereActionHandlers: ProviderActionHandlers<"here", HereActionHandler> = {
   geocode(input, context) {
     return hereGetJson(
       buildHereUrl(hereGeocodeBaseUrl, "/geocode", context.apiKey, {

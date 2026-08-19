@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { KlipfolioActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ export interface KlipfolioActionContext {
   signal?: AbortSignal;
 }
 
-export const klipfolioActionHandlers: Record<KlipfolioActionName, KlipfolioActionHandler> = {
+export const klipfolioActionHandlers: ProviderActionHandlers<"klipfolio", KlipfolioActionHandler> = {
   list_clients(input, context) {
     return listKlipfolioAssets({ input, context, path: "/clients", outputKey: "clients" });
   },

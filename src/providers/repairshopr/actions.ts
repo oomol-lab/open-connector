@@ -76,13 +76,6 @@ const ticketListInputSchema = s.object(
   },
 );
 
-export type RepairshoprActionName =
-  | "get_current_user"
-  | "list_customers"
-  | "get_customer"
-  | "list_tickets"
-  | "get_ticket";
-
 export const repairshoprActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

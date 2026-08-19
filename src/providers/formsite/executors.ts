@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { FormsiteActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -42,7 +42,7 @@ interface FormsiteRequestInput {
 type FormsiteJsonRecord = Record<string, unknown>;
 type FormsiteActionHandler = (input: Record<string, unknown>, context: FormsiteActionContext) => Promise<unknown>;
 
-export const formsiteActionHandlers: Record<FormsiteActionName, FormsiteActionHandler> = {
+export const formsiteActionHandlers: ProviderActionHandlers<"formsite", FormsiteActionHandler> = {
   list_forms(input, context) {
     return listForms(input, context);
   },

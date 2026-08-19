@@ -86,5 +86,3 @@ export const fixerActions: ActionDefinition[] = [
     outputSchema: historicalRatesOutputSchema,
   }),
 ];
-
-export type FixerActionName = "get_supported_symbols" | "get_latest_rates" | "get_historical_rates";

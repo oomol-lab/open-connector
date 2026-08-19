@@ -67,13 +67,6 @@ const fieldValueSchema = s.anyOf("Value to store in the Landbot customer field."
   s.nullable(s.string("Null field value.")),
 ]);
 
-export type LandbotActionName =
-  | "list_channels"
-  | "list_customers"
-  | "get_customer_messages"
-  | "send_text"
-  | "set_customer_field";
-
 export const landbotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_channels",

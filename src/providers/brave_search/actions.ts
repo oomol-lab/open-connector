@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "brave_search";
 
-export type BraveSearchActionName = "web_search" | "news_search" | "video_search" | "image_search";
-
 const queryField = s.string({
   description: "The user's search query term. Maximum of 400 characters.",
   minLength: 1,

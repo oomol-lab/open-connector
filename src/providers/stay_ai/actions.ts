@@ -186,5 +186,3 @@ export const stayAiActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type StayAiActionName = "get_account_settings" | "list_subscriptions" | "get_subscription" | "list_orders";

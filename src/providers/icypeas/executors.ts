@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IcypeasActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -21,7 +21,7 @@ type IcypeasRequestMode = "validate" | "execute";
 type IcypeasActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type IcypeasActionHandler = (input: Record<string, unknown>, context: IcypeasActionContext) => Promise<unknown>;
 
-export const icypeasActionHandlers: Record<IcypeasActionName, IcypeasActionHandler> = {
+export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasActionHandler> = {
   async get_subscription_information(input, context) {
     const payload = await requestIcypeasJson(
       {

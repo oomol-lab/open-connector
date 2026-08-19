@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "lattice";
 
-export type LatticeActionName =
-  | "get_current_user"
-  | "list_users"
-  | "get_user"
-  | "list_departments"
-  | "get_department"
-  | "list_tags"
-  | "list_goals"
-  | "get_goal";
-
 const rawSchema = s.unknownObject("The raw Lattice API response payload.");
 const latticeUserSchema = s.unknownObject("A Lattice user object.");
 const latticeDepartmentSchema = s.unknownObject("A Lattice department object.");

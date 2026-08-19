@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { DiscourseActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
@@ -47,7 +47,7 @@ interface DiscourseActionContext {
 
 type DiscourseActionHandler = (input: Record<string, unknown>, context: DiscourseActionContext) => Promise<unknown>;
 
-export const discourseActionHandlers: Record<DiscourseActionName, DiscourseActionHandler> = {
+export const discourseActionHandlers: ProviderActionHandlers<"discourse", DiscourseActionHandler> = {
   async list_latest_topics(input: Record<string, unknown>, context: DiscourseActionContext): Promise<unknown> {
     const payload = await requestDiscourseJson({
       credential: context.credential,

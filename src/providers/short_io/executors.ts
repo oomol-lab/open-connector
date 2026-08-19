@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShortIoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -44,7 +44,7 @@ interface ShortIoRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const shortIoActionHandlers: Record<ShortIoActionName, ShortIoActionHandler> = {
+export const shortIoActionHandlers: ProviderActionHandlers<"short_io", ShortIoActionHandler> = {
   list_domains(_input, context) {
     return listDomains(context);
   },

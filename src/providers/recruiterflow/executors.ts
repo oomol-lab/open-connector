@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ const validationPath = "/api/external/user/list";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const recruiterflowActionHandlers: Record<string, Handler> = {
+export const recruiterflowActionHandlers: ProviderActionHandlers<"recruiterflow", Handler> = {
   async list_jobs(input, context) {
     const raw = objectPayload(
       await recruiterflowRequest("/api/external/job/list", context, {

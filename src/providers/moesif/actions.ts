@@ -44,8 +44,6 @@ const workspaceSchema = s.object("A normalized Moesif workspace.", {
   raw: s.unknownObject("The raw workspace object returned by Moesif."),
 });
 
-export type MoesifActionName = "list_apps" | "list_workspaces" | "get_workspace" | "list_workspace_templates";
-
 export const moesifActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_apps",

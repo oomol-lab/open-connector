@@ -320,24 +320,6 @@ const updateOpportunityInputSchema = withAnyOf(
   [["contactId"], ["userId"], ["statusId"], ["confidence"], ["note"], ["value"], ["valuePeriod"], ["dateWon"]],
 );
 
-export type CloseActionName =
-  | "list_leads"
-  | "get_lead"
-  | "create_lead"
-  | "update_lead"
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "list_opportunities"
-  | "get_opportunity"
-  | "create_opportunity"
-  | "update_opportunity";
-
 export const closeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_leads",

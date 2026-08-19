@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BigCommerceActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -38,7 +38,7 @@ interface BigCommerceRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const bigCommerceActionHandlers: Record<BigCommerceActionName, BigCommerceActionHandler> = {
+export const bigCommerceActionHandlers: ProviderActionHandlers<"big_commerce", BigCommerceActionHandler> = {
   list_products(input, context) {
     return listProducts(input, context);
   },

@@ -325,17 +325,6 @@ const updateHttpMonitorInputSchema = s.object(
 );
 updateHttpMonitorInputSchema.anyOf = updateHttpMonitorFieldNames.map((field) => ({ required: [field] }));
 
-export type OpenstatusActionName =
-  | "list_monitors"
-  | "get_monitor"
-  | "get_monitor_status"
-  | "get_monitor_summary"
-  | "list_http_response_logs"
-  | "trigger_monitor"
-  | "create_http_monitor"
-  | "update_http_monitor"
-  | "delete_monitor";
-
 export const openstatusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_monitors",

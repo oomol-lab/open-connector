@@ -81,32 +81,6 @@ const v3QueryOptions = {
   linksAsLtar: s.boolean("Whether Links fields should return full linked record data."),
 };
 
-export type NocodbActionName =
-  | "get_current_user"
-  | "list_bases"
-  | "get_base_schema"
-  | "list_tables"
-  | "create_table"
-  | "get_table_metadata"
-  | "update_table"
-  | "delete_table"
-  | "list_table_views"
-  | "create_table_view"
-  | "create_table_field"
-  | "list_records"
-  | "count_records"
-  | "read_record"
-  | "create_records"
-  | "update_records"
-  | "delete_records"
-  | "list_table_records"
-  | "count_table_records"
-  | "read_table_record"
-  | "create_table_records"
-  | "update_table_records"
-  | "delete_table_records"
-  | "upsert_table_records";
-
 export const nocodbActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

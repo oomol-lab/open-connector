@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NylasActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -32,7 +32,7 @@ interface NylasRequestOptions {
 export const nylasApiBaseUrl = "https://api.us.nylas.com/v3";
 const nylasDefaultRequestTimeoutMs = 30_000;
 
-export const nylasActionHandlers: Record<NylasActionName, NylasActionHandler> = {
+export const nylasActionHandlers: ProviderActionHandlers<"nylas", NylasActionHandler> = {
   async list_grants(input, context) {
     const payload = await requestNylasJson({
       path: "/grants",

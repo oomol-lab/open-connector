@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CloudflareDocsActionName } from "./actions.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
@@ -12,8 +12,8 @@ export interface CloudflareDocsActionContext {
   signal?: AbortSignal;
 }
 
-export const cloudflareDocsActionHandlers: Record<
-  CloudflareDocsActionName,
+export const cloudflareDocsActionHandlers: ProviderActionHandlers<
+  "cloudflare_docs",
   ProviderRuntimeHandler<CloudflareDocsActionContext>
 > = {
   search_cloudflare_documentation(input, context) {

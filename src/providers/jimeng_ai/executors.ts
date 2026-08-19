@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { JimengAiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -76,7 +76,7 @@ type JimengRequestInput = {
   signal?: AbortSignal;
 };
 
-export const jimengAiActionHandlers: Record<JimengAiActionName, JimengActionHandler> = {
+export const jimengAiActionHandlers: ProviderActionHandlers<"jimeng_ai", JimengActionHandler> = {
   submit_image_generation_4_0(input, context) {
     return submitImageTask(input, context, reqKeys.imageGeneration40);
   },

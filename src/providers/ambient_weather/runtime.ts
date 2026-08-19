@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -23,7 +24,7 @@ type AmbientWeatherDevice = {
 
 type AmbientWeatherActionHandler = (input: Record<string, unknown>, context: AmbientWeatherContext) => Promise<unknown>;
 
-export const ambientWeatherActionHandlers: Record<string, AmbientWeatherActionHandler> = {
+export const ambientWeatherActionHandlers: ProviderActionHandlers<"ambient_weather", AmbientWeatherActionHandler> = {
   list_devices(_input, context) {
     return listAmbientWeatherDevices(context);
   },

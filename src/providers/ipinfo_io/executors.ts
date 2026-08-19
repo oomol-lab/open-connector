@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IpinfoIoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -51,7 +51,7 @@ type IpinfoIoRequestPhase = "validate" | "execute";
 type IpinfoIoActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type IpinfoIoActionHandler = (input: Record<string, unknown>, context: IpinfoIoActionContext) => Promise<unknown>;
 
-export const ipinfoIoActionHandlers: Record<IpinfoIoActionName, IpinfoIoActionHandler> = {
+export const ipinfoIoActionHandlers: ProviderActionHandlers<"ipinfo_io", IpinfoIoActionHandler> = {
   get_ip_info(input, context) {
     return getLiteIpInfo(input, context);
   },

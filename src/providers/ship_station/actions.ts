@@ -28,12 +28,6 @@ const purchaseOrderStatusSchema = s.stringEnum("The purchase order status filter
   "cancelled",
 ]);
 
-export type ShipStationActionName =
-  | "list_inventory_levels"
-  | "list_inventory_warehouses"
-  | "list_purchase_orders"
-  | "get_purchase_order";
-
 export const shipStationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_inventory_levels",

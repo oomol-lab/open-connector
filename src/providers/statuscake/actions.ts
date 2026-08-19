@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "statuscake";
 
-export type StatusCakeActionName =
-  | "list_uptime_tests"
-  | "get_uptime_test"
-  | "create_uptime_test"
-  | "update_uptime_test"
-  | "delete_uptime_test"
-  | "list_uptime_test_history"
-  | "list_uptime_test_periods"
-  | "list_uptime_test_alerts"
-  | "list_uptime_locations";
-
 const checkRateSchema: JsonSchema = {
   type: "integer",
   enum: [0, 30, 60, 300, 900, 1800, 3600, 86400],

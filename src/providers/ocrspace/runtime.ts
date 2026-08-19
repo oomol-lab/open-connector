@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OcrspaceActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalIntegerLike, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -15,7 +15,7 @@ const ocrspaceValidationProbeUrl = "https://dl.a9t9.com/ocr/solarcell.jpg";
 const ocrspaceMyApiBaseUrl = "https://myapi.ocr.space";
 const ocrspaceConversionsPath = "/conversions";
 
-export const ocrspaceActionHandlers: Record<OcrspaceActionName, OcrspaceActionHandler> = {
+export const ocrspaceActionHandlers: ProviderActionHandlers<"ocrspace", OcrspaceActionHandler> = {
   async extract_text(input, context) {
     const payload = await requestOcrspaceParse(await buildOcrspaceParseFormData(input, context), context, "execute");
     return normalizeOcrspaceParsePayload(payload);

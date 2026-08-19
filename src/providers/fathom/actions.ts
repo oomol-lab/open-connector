@@ -384,20 +384,3 @@ export const fathomActions: ActionDefinition[] = [
     outputSchema: currentVisitorsOutputSchema,
   }),
 ];
-
-export type FathomActionName =
-  | "get_account"
-  | "list_sites"
-  | "get_site"
-  | "create_site"
-  | "update_site"
-  | "list_events"
-  | "get_event"
-  | "create_event"
-  | "update_event"
-  | "list_milestones"
-  | "get_milestone"
-  | "create_milestone"
-  | "update_milestone"
-  | "run_aggregation"
-  | "get_current_visitors";

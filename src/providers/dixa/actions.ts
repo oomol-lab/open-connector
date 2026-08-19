@@ -93,15 +93,6 @@ const conversationIdInputSchema = s.object("Input for retrieving a Dixa conversa
 
 const looseDixaDataSchema = s.looseObject("A Dixa response object.");
 
-export type DixaActionName =
-  | "list_agents"
-  | "get_agent"
-  | "list_presence"
-  | "list_end_users"
-  | "get_end_user"
-  | "get_conversation"
-  | "list_conversation_messages";
-
 export const dixaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_agents",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GetProspectActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ const validationEmail = "support@getprospect.com";
 type GetProspectActionContext = ApiKeyProviderContext;
 type GetProspectActionHandler = (input: Record<string, unknown>, context: GetProspectActionContext) => Promise<unknown>;
 
-export const getprospectActionHandlers: Record<GetProspectActionName, GetProspectActionHandler> = {
+export const getprospectActionHandlers: ProviderActionHandlers<"getprospect", GetProspectActionHandler> = {
   find_email(input, context) {
     return findEmail(input, context);
   },

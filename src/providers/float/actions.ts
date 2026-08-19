@@ -250,5 +250,3 @@ export const floatActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FloatActionName = "list_accounts" | "list_people" | "list_clients" | "list_projects" | "list_allocations";

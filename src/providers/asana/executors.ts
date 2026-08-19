@@ -1,7 +1,12 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { AsanaActionHandler } from "./runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { defineBearerProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  combineProviderActionHandlers,
+  defineBearerProviderExecutors,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { attachmentActionHandlers } from "./runtime-attachments.ts";
 import { customFieldActionHandlers } from "./runtime-custom-fields.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";
@@ -16,8 +21,8 @@ const asanaValidationPath = "/users/me";
 
 export const executors: ProviderExecutors = defineBearerProviderExecutors(
   service,
-  Object.assign(
-    {},
+  combineProviderActionHandlers<"asana", AsanaActionHandler>(
+    service,
     workspaceUserTeamActionHandlers,
     projectSectionActionHandlers,
     taskActionHandlers,

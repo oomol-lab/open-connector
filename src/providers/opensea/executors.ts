@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -11,7 +12,7 @@ const openseaApiBaseUrl = "https://api.opensea.io";
 type OpenseaRequestPhase = "validate" | "execute";
 type OpenseaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const openseaActionHandlers: Record<string, OpenseaActionHandler> = {
+export const openseaActionHandlers: ProviderActionHandlers<"opensea", OpenseaActionHandler> = {
   async search(input, context) {
     const payload = await requestOpensea({
       path: "/api/v2/search",

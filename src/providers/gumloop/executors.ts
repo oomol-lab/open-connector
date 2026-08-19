@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { GumloopActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -50,7 +50,7 @@ interface GumloopContext {
   projectId?: string;
 }
 
-export const gumloopActionHandlers: Record<GumloopActionName, GumloopActionHandler> = {
+export const gumloopActionHandlers: ProviderActionHandlers<"gumloop", GumloopActionHandler> = {
   list_saved_flows(input, context) {
     return listGumloopSavedFlows(input, context);
   },

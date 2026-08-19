@@ -61,13 +61,6 @@ const ratesOutputSchema = s.object(
   { required: ["meta", "base", "date", "rates"], description: "Exchange rate snapshot returned by CurrencyBeacon." },
 );
 
-export type CurrencyscoopActionName =
-  | "get_currencies"
-  | "get_latest_rates"
-  | "get_historical_rates"
-  | "get_timeseries_rates"
-  | "convert_currency";
-
 export const currencyscoopActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_currencies",

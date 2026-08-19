@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZoomActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -27,7 +27,7 @@ interface ZoomRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const zoomActionHandlers: Record<ZoomActionName, ZoomActionHandler> = {
+export const zoomActionHandlers: ProviderActionHandlers<"zoom", ZoomActionHandler> = {
   async get_user(input, context) {
     const payload = await requestZoomJson({
       context,

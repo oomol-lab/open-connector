@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { AircallActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalInteger, optionalRecord, optionalString, pickOptionalInteger } from "../../core/cast.ts";
@@ -34,7 +34,7 @@ interface AircallListRequest {
 
 type AircallActionHandler = (input: Record<string, unknown>, context: AircallActionContext) => Promise<unknown>;
 
-export const aircallActionHandlers: Record<AircallActionName, AircallActionHandler> = {
+export const aircallActionHandlers: ProviderActionHandlers<"aircall", AircallActionHandler> = {
   list_users(input, context) {
     return executeListResources(context, {
       path: "/v2/users",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NeverBounceActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -25,7 +25,7 @@ const neverbounceDefaultRequestTimeoutMs = 30_000;
 type NeverBouncePhase = "validate" | "execute";
 type NeverBounceActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const neverbounceActionHandlers: Record<NeverBounceActionName, NeverBounceActionHandler> = {
+export const neverbounceActionHandlers: ProviderActionHandlers<"neverbounce", NeverBounceActionHandler> = {
   get_account_info(_input, context) {
     return requestNeverBounceJson("/account/info", context, "validate", {});
   },

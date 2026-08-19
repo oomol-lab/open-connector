@@ -166,17 +166,3 @@ export const givebutterActions: ActionDefinition[] = [
     outputSchema: itemOutputSchema("The normalized Givebutter chapter response.", "chapter"),
   }),
 ];
-
-export type GivebutterActionName =
-  | "list_campaigns"
-  | "get_campaign"
-  | "list_contacts"
-  | "get_contact"
-  | "list_transactions"
-  | "get_transaction"
-  | "list_funds"
-  | "get_fund"
-  | "list_recurring_plans"
-  | "get_recurring_plan"
-  | "list_chapters"
-  | "get_chapter";

@@ -181,14 +181,6 @@ const getSurveyStatisticsInputSchema = s.object(
   { optional: ["startDate", "endDate"] },
 );
 
-export type SatismeterActionName =
-  | "get_project"
-  | "list_surveys"
-  | "get_survey"
-  | "list_project_responses"
-  | "list_survey_responses"
-  | "get_survey_statistics";
-
 export const satismeterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",

@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "open_hands";
 
-export type OpenHandsActionName =
-  | "start_conversation"
-  | "get_start_task"
-  | "get_conversation"
-  | "list_conversations"
-  | "send_message";
-
 const trimmedString = (description: string) => s.string(description, { minLength: 1 });
 const nullableTrimmedString = (description: string) => s.nullable(trimmedString(description));
 

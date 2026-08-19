@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SerpdogActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -23,7 +23,7 @@ interface SerpdogAccountInfo {
   billing_history?: Array<Record<string, unknown>>;
 }
 
-export const serpdogActionHandlers: Record<SerpdogActionName, SerpdogActionHandler> = {
+export const serpdogActionHandlers: ProviderActionHandlers<"serpdog", SerpdogActionHandler> = {
   async get_account_info(_input, context) {
     return requestSerpdogAccountInfo(context, "execute");
   },

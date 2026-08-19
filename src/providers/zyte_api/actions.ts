@@ -79,8 +79,6 @@ const pageContentOutputSchema = s.object(
   { required: ["url", "pageContent"], optional: ["statusCode"] },
 );
 
-export type ZyteApiActionName = "fetch_browser_html" | "extract_product" | "extract_article" | "extract_page_content";
-
 export const zyteApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_browser_html",

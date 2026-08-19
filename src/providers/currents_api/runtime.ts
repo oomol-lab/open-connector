@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CurrentsApiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ type CurrentsApiActionHandler = (input: Record<string, unknown>, context: ApiKey
 
 export const currentsApiBaseUrl = "https://api.currentsapi.services";
 
-export const currentsApiActionHandlers: Record<CurrentsApiActionName, CurrentsApiActionHandler> = {
+export const currentsApiActionHandlers: ProviderActionHandlers<"currents_api", CurrentsApiActionHandler> = {
   get_latest_news(input, context) {
     return currentsApiRequest(
       {

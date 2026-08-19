@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -29,7 +30,10 @@ const cryptoApisApiVersion = "2024-12-12";
 
 type CryptoApisPhase = "validate" | "execute";
 
-export const cryptoApisActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const cryptoApisActionHandlers: ProviderActionHandlers<
+  "crypto_apis",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_supported_assets(input, context) {
     return listSupportedAssets(input, context, "execute");
   },

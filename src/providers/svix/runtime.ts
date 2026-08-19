@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SvixActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -43,7 +43,7 @@ interface SvixRequestOptions extends SvixActionContext {
 
 type SvixActionHandler = ProviderRuntimeHandler<SvixActionContext>;
 
-export const svixActionHandlers: Record<SvixActionName, SvixActionHandler> = {
+export const svixActionHandlers: ProviderActionHandlers<"svix", SvixActionHandler> = {
   async list_event_types(input, context) {
     const list = normalizeListPayload(
       await requestSvixJson({

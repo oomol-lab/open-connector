@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { AgentyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
@@ -20,7 +20,7 @@ export type AgentyRuntimeContext = {
 
 type AgentyActionHandler = (input: Record<string, unknown>, context: AgentyRuntimeContext) => Promise<unknown>;
 
-export const agentyActionHandlers: Record<AgentyActionName, AgentyActionHandler> = {
+export const agentyActionHandlers: ProviderActionHandlers<"agenty", AgentyActionHandler> = {
   get_page_content(input, context) {
     return getPageContent(input, context);
   },

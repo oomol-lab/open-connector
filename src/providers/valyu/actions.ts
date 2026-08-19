@@ -194,5 +194,3 @@ export const valyuActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type ValyuActionName = "search";

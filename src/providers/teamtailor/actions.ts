@@ -51,8 +51,6 @@ const resourceOutputSchema = s.actionOutput(
   "A Teamtailor JSON:API single-resource response.",
 );
 
-export type TeamtailorActionName = "list_jobs" | "retrieve_job" | "list_departments" | "list_locations";
-
 export const teamtailorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",

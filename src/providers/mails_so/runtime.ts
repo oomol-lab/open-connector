@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailsSoActionName } from "./actions.ts";
 
 import {
   optionalBoolean,
@@ -23,7 +23,7 @@ const mailsSoDefaultRequestTimeoutMs = 30_000;
 type MailsSoRequestPhase = "validate" | "execute";
 type MailsSoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const mailsSoActionHandlers: Record<MailsSoActionName, MailsSoActionHandler> = {
+export const mailsSoActionHandlers: ProviderActionHandlers<"mails_so", MailsSoActionHandler> = {
   validate_email(input, context) {
     return requestSingleValidation({
       context,

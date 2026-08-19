@@ -1,4 +1,4 @@
-import type { ClickupActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -114,7 +114,7 @@ export async function fetchClickupCurrentAccount(
   };
 }
 
-export const clickupActionHandlers: Record<ClickupActionName, ClickupActionHandler> = {
+export const clickupActionHandlers: ProviderActionHandlers<"clickup", ClickupActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestClickupJson({
       path: "/user",

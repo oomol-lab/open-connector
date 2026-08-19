@@ -298,17 +298,6 @@ const getRelatedPodcastsOutputSchema = s.object("Normalized output payload for L
   recommendations: s.array("The normalized related podcast recommendations.", podcastListItemSchema),
 });
 
-export type ListennotesActionName =
-  | "search"
-  | "typeahead"
-  | "get_podcast"
-  | "get_episode"
-  | "get_best_podcasts"
-  | "get_genres"
-  | "get_regions"
-  | "get_languages"
-  | "get_related_podcasts";
-
 export const listennotesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",

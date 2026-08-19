@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WhatsAppActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -34,7 +34,7 @@ interface WhatsAppRequestInput {
   rawBody?: BodyInit;
 }
 
-export const whatsappActionHandlers: Record<WhatsAppActionName, WhatsAppActionHandler> = {
+export const whatsappActionHandlers: ProviderActionHandlers<"whatsapp", WhatsAppActionHandler> = {
   get_phone_numbers(input, context) {
     return whatsappGetPhoneNumbers(input, context);
   },

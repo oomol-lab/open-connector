@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -40,7 +41,7 @@ interface SevenShiftsRequestOptions {
   signal?: AbortSignal;
 }
 
-export const sevenShiftsActionHandlers: Record<string, SevenShiftsActionHandler> = {
+export const sevenShiftsActionHandlers: ProviderActionHandlers<"7_shifts", SevenShiftsActionHandler> = {
   async retrieve_identity(input, context) {
     return {
       identity: normalizeIdentityResponse(

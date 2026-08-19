@@ -261,18 +261,3 @@ export const tremendousActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type TremendousActionName =
-  | "list_products"
-  | "get_product"
-  | "list_campaigns"
-  | "get_campaign"
-  | "list_funding_sources"
-  | "get_funding_source"
-  | "list_organizations"
-  | "list_orders"
-  | "get_order"
-  | "create_order"
-  | "list_rewards"
-  | "get_reward"
-  | "generate_reward_link";

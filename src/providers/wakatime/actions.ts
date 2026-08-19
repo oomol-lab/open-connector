@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "wakatime";
 
-export type WakatimeActionName =
-  | "get_current_user"
-  | "get_all_time_since_today"
-  | "list_projects"
-  | "get_stats"
-  | "get_summaries"
-  | "get_status_bar_today";
-
 const summariesRanges = [
   "Today",
   "Yesterday",

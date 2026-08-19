@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gong";
 
-export type GongActionName =
-  | "list_users"
-  | "get_user"
-  | "list_calls"
-  | "get_call"
-  | "get_call_transcripts"
-  | "list_call_outcomes";
-
 const gongId = (description: string) => s.nonEmptyString(description);
 const cursorSchema = s.nonEmptyString("The Gong cursor value returned by the previous page response.");
 const requestIdSchema = s.string("The Gong request reference ID.");

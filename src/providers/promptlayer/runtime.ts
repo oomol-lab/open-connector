@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -42,7 +43,10 @@ interface PromptLayerRequestInput {
   phase: PromptLayerPhase;
 }
 
-export const promptLayerActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const promptLayerActionHandlers: ProviderActionHandlers<
+  "promptlayer",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_request(input, context) {
     const payload = await requestPromptLayerJson({
       method: "GET",

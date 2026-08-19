@@ -5,30 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "fuxin";
 
-export type FuxinActionName =
-  | "upload_file"
-  | "get_task"
-  | "download_file"
-  | "get_user_stock"
-  | "create_pdf_from_document"
-  | "create_pdf_from_html"
-  | "convert_document"
-  | "compare_documents"
-  | "protect_document"
-  | "manipulate_document_pages"
-  | "merge_documents"
-  | "split_document"
-  | "compress_document"
-  | "remove_password_from_document"
-  | "linearize_document"
-  | "flatten_document"
-  | "extract_document"
-  | "get_pages_basic_info"
-  | "check_pages_are_scanned"
-  | "ocr_document"
-  | "convert_office_document_to_images"
-  | "watermark_document";
-
 const uploadableFileSchema: JsonSchema = {
   ...s.object(
     "A file source provided as a public URL or Base64 payload.",

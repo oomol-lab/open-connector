@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -90,7 +91,7 @@ interface NormalizedOktaGroup {
   raw: Record<string, unknown>;
 }
 
-export const oktaActionHandlers: Record<string, ProviderRuntimeHandler<OktaContext>> = {
+export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeHandler<OktaContext>> = {
   async list_users(input, context) {
     const response = await requestOkta({
       ...context,

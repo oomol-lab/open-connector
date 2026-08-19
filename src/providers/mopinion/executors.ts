@@ -5,8 +5,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { MopinionActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { createHmac } from "node:crypto";
@@ -50,7 +50,7 @@ interface MopinionCollectionPayload {
   meta: Record<string, unknown> | null;
 }
 
-export const mopinionActionHandlers: Record<MopinionActionName, MopinionActionHandler> = {
+export const mopinionActionHandlers: ProviderActionHandlers<"mopinion", MopinionActionHandler> = {
   async get_account(_input, context): Promise<unknown> {
     return {
       account: await requestMopinionJson({

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ParseurActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,8 +19,8 @@ export const parseurApiBaseUrl = "https://api.parseur.com";
 type ParseurContext = ApiKeyProviderContext;
 type QueryValue = string | number | boolean | undefined;
 
-export const parseurActionHandlers: Record<
-  ParseurActionName,
+export const parseurActionHandlers: ProviderActionHandlers<
+  "parseur",
   (input: Record<string, unknown>, context: ParseurContext) => Promise<unknown>
 > = {
   list_mailboxes(input, context) {

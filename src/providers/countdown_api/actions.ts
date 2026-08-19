@@ -157,5 +157,3 @@ export const countdownApiActions: ActionDefinition[] = [
     outputSchema: actionResultSchema,
   }),
 ];
-
-export type CountdownApiActionName = "get_account" | "autocomplete" | "search_products" | "get_product";

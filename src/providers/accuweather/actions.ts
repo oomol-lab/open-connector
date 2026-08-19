@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "accuweather";
 
-export type AccuweatherActionName =
-  | "search_locations"
-  | "get_location_by_geoposition"
-  | "get_current_conditions"
-  | "get_daily_forecast"
-  | "get_hourly_forecast";
-
 const languageSchema = s.string({
   minLength: 2,
   description: "The AccuWeather language code used to localize results.",

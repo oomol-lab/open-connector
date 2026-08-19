@@ -178,17 +178,3 @@ export const everhourActions: ActionDefinition[] = [
     outputSchema: s.object("Everhour timer response wrapper.", { timer: timerSchema }),
   }),
 ];
-
-export type EverhourActionName =
-  | "get_current_user"
-  | "list_users"
-  | "list_projects"
-  | "get_project"
-  | "list_project_tasks"
-  | "get_task"
-  | "search_tasks"
-  | "list_time_records"
-  | "create_time_record"
-  | "start_timer"
-  | "get_current_timer"
-  | "stop_timer";

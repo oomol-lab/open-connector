@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CurrencyapiActionName } from "./actions.ts";
 
 import { compactObject, optionalString, requiredRecord, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const currencyapiApiBaseUrl = "https://api.currencyapi.com";
 type QueryValue = string | number | undefined;
 type CurrencyapiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const currencyapiActionHandlers: Record<CurrencyapiActionName, CurrencyapiActionHandler> = {
+export const currencyapiActionHandlers: ProviderActionHandlers<"currencyapi", CurrencyapiActionHandler> = {
   get_api_status(_input, context) {
     return executeGetApiStatus(context);
   },

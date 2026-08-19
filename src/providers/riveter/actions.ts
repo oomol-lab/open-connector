@@ -30,8 +30,6 @@ const apiKeyInfoSchema = s.object("Details about the Riveter API key used for th
   created_by: userSchema,
 });
 
-export type RiveterActionName = "get_account" | "scrape";
-
 export const riveterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

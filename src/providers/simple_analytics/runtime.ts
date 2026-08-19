@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SimpleAnalyticsActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -38,7 +38,7 @@ type SimpleAnalyticsActionHandler = (
   context: SimpleAnalyticsContext,
 ) => Promise<unknown>;
 
-export const simpleAnalyticsActionHandlers: Record<SimpleAnalyticsActionName, SimpleAnalyticsActionHandler> = {
+export const simpleAnalyticsActionHandlers: ProviderActionHandlers<"simple_analytics", SimpleAnalyticsActionHandler> = {
   list_websites(_input, context) {
     return listSimpleAnalyticsWebsites(context);
   },

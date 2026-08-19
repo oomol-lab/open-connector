@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ const apiVersion = "v1alpha1";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const tldvActionHandlers: Record<string, Handler> = {
+export const tldvActionHandlers: ProviderActionHandlers<"tldv", Handler> = {
   list_meetings(input, context) {
     return tldvRequest("/meetings", context, {
       query: compactObject({

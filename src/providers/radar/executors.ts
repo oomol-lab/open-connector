@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RadarActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ const radarValidationPath = "/v1/geocode/ip";
 type RadarRequestPhase = "validate" | "execute";
 type RadarActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const radarActionHandlers: Record<RadarActionName, RadarActionHandler> = {
+export const radarActionHandlers: ProviderActionHandlers<"radar", RadarActionHandler> = {
   async forward_geocode(input, context) {
     const payload = await requestRadarJson({
       path: "/v1/geocode/forward",

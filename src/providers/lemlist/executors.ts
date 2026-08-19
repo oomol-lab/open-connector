@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LemlistActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -33,7 +33,7 @@ const lemlistFetch = createProviderFetch({ skipDnsValidation: true });
 type LemlistRequestPhase = "validate" | "execute";
 type LemlistActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lemlistActionHandlers: Record<LemlistActionName, LemlistActionHandler> = {
+export const lemlistActionHandlers: ProviderActionHandlers<"lemlist", LemlistActionHandler> = {
   async get_team(_input, context) {
     const payload = await requestLemlistJson({
       context,

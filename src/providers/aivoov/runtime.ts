@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
@@ -8,7 +9,7 @@ const aivoovApiBaseUrl = "https://aivoov.com/api/v8";
 
 type AivoovActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const aivoovActionHandlers: Record<string, AivoovActionHandler> = {
+export const aivoovActionHandlers: ProviderActionHandlers<"aivoov", AivoovActionHandler> = {
   list_voices(input, context) {
     return listVoices(input, context);
   },

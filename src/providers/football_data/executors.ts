@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FootballDataActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface FootballDataRequestInput {
   phase: FootballDataPhase;
 }
 
-export const footballDataActionHandlers: Record<FootballDataActionName, FootballDataActionHandler> = {
+export const footballDataActionHandlers: ProviderActionHandlers<"football_data", FootballDataActionHandler> = {
   async list_competitions(_input, context) {
     const payload = await footballDataRequestJson(context, {
       path: "/competitions",

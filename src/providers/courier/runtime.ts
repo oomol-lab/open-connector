@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CourierActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -40,7 +40,7 @@ interface CourierResponse {
   payload: unknown;
 }
 
-export const courierActionHandlers: Record<CourierActionName, CourierActionHandler> = {
+export const courierActionHandlers: ProviderActionHandlers<"courier", CourierActionHandler> = {
   async send_message(input, context) {
     const idempotencyKey = readOptionalTrimmedString(input.idempotencyKey);
     const response = await requestCourierJson({

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EnergyPerformanceCertificatesActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -23,8 +23,8 @@ interface RequestJsonResult {
   response: Response;
 }
 
-export const energyPerformanceCertificatesActionHandlers: Record<
-  EnergyPerformanceCertificatesActionName,
+export const energyPerformanceCertificatesActionHandlers: ProviderActionHandlers<
+  "energy_performance_certificates",
   EnergyPerformanceCertificatesActionHandler
 > = {
   search_domestic_certificates(input, context) {

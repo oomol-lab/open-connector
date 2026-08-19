@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -9,8 +11,8 @@ interface DiffyContext {
   signal?: AbortSignal;
 }
 
-export const diffyActionHandlers: Record<
-  string,
+export const diffyActionHandlers: ProviderActionHandlers<
+  "diffy",
   (input: Record<string, unknown>, context: DiffyContext) => Promise<unknown>
 > = {
   async list_projects(_input, context) {

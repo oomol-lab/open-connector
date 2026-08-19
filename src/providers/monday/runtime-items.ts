@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
@@ -13,7 +14,7 @@ import {
   serializeJsonInput,
 } from "./runtime-common.ts";
 
-export const mondayItemActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayItemActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   find_items_by_column_values(input, fetcher) {
     return mondayFindItemsByColumnValues(input, fetcher);
   },

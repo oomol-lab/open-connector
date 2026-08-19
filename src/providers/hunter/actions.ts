@@ -364,23 +364,3 @@ export const hunterActions: ActionDefinition[] = [
     outputSchema: hunterLooseObjectSchema,
   }),
 ];
-
-export type HunterActionName =
-  | "account_information"
-  | "combined_enrichment"
-  | "company_enrichment"
-  | "create_lead"
-  | "create_leads_list"
-  | "delete_lead"
-  | "discover_companies"
-  | "domain_search"
-  | "email_count"
-  | "email_finder"
-  | "email_verifier"
-  | "get_lead"
-  | "list_custom_attributes"
-  | "list_leads"
-  | "list_leads_lists"
-  | "people_enrichment"
-  | "update_lead"
-  | "upsert_lead";

@@ -5,8 +5,8 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { GooglePhotosActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -54,7 +54,7 @@ type GooglePhotosActionHandler = (
   context: GooglePhotosRuntimeContext,
 ) => Promise<unknown>;
 
-export const googlePhotosActionHandlers: Record<GooglePhotosActionName, GooglePhotosActionHandler> = {
+export const googlePhotosActionHandlers: ProviderActionHandlers<"googlephotos", GooglePhotosActionHandler> = {
   list_albums: listAlbums,
   get_album: getAlbum,
   create_album: createAlbum,

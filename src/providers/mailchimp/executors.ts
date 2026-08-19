@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -51,7 +52,10 @@ const service = "mailchimp";
 const mailchimpValidationPath = "/";
 const mailchimpOAuthMetadataUrl = "https://login.mailchimp.com/oauth2/metadata";
 
-export const mailchimpActionHandlers: Record<string, ProviderRuntimeHandler<MailchimpActionContext>> = {
+export const mailchimpActionHandlers: ProviderActionHandlers<
+  "mailchimp",
+  ProviderRuntimeHandler<MailchimpActionContext>
+> = {
   list_lists(input, context) {
     return requestMailchimpJson({
       context,

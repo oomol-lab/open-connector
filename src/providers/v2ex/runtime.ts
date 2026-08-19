@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { V2exActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ const v2exRequestTimeoutMs = 30_000;
 type V2exRequestPhase = "validate" | "execute";
 type V2exActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const v2exActionHandlers: Record<V2exActionName, V2exActionHandler> = {
+export const v2exActionHandlers: ProviderActionHandlers<"v2ex", V2exActionHandler> = {
   async list_notifications(input, context) {
     const payload = await requestV2exJson({
       path: "/notifications",

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -36,7 +37,7 @@ interface EsaRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const esaActionHandlers: Record<string, EsaActionHandler> = {
+export const esaActionHandlers: ProviderActionHandlers<"esa", EsaActionHandler> = {
   get_teams: getTeams,
   get_team_stats: getTeamStats,
   get_team_tags: getTeamTags,

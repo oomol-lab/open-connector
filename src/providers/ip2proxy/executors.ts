@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Ip2proxyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -14,7 +14,7 @@ type Ip2proxyRequestPhase = "validate" | "execute";
 type Ip2proxyActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type Ip2proxyActionHandler = (input: Record<string, unknown>, context: Ip2proxyActionContext) => Promise<unknown>;
 
-export const ip2proxyActionHandlers: Record<Ip2proxyActionName, Ip2proxyActionHandler> = {
+export const ip2proxyActionHandlers: ProviderActionHandlers<"ip2proxy", Ip2proxyActionHandler> = {
   lookup_ip(input, context) {
     return requestIp2proxyJson(
       {

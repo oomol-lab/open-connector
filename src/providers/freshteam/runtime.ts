@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FreshteamActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -43,7 +43,10 @@ interface FreshteamResponse {
   headers: Headers;
 }
 
-export const freshteamActionHandlers: Record<FreshteamActionName, ProviderRuntimeHandler<FreshteamActionContext>> = {
+export const freshteamActionHandlers: ProviderActionHandlers<
+  "freshteam",
+  ProviderRuntimeHandler<FreshteamActionContext>
+> = {
   async list_employees(input, context) {
     const page = readPage(input.page);
     const response = await requestFreshteamJson({

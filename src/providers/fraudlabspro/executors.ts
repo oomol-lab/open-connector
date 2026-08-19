@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FraudlabsproActionName } from "./actions.ts";
 
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -27,7 +27,7 @@ type FraudlabsproActionHandler = (
   context: FraudlabsproActionContext,
 ) => Promise<unknown>;
 
-export const fraudlabsproActionHandlers: Record<FraudlabsproActionName, FraudlabsproActionHandler> = {
+export const fraudlabsproActionHandlers: ProviderActionHandlers<"fraudlabspro", FraudlabsproActionHandler> = {
   async screen_order(input, context) {
     return fraudlabsproRequest(
       context.apiKey,

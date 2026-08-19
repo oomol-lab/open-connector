@@ -4,7 +4,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
-import type { ClassmarkerActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -28,7 +28,7 @@ interface ClassmarkerContext {
 
 type ClassmarkerActionHandler = (input: Record<string, unknown>, context: ClassmarkerContext) => Promise<unknown>;
 
-export const classmarkerActionHandlers: Record<ClassmarkerActionName, ClassmarkerActionHandler> = {
+export const classmarkerActionHandlers: ProviderActionHandlers<"classmarker", ClassmarkerActionHandler> = {
   list_groups_links_and_tests(_input, context) {
     return requestClassmarkerAction({
       context,

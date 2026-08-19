@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FilesComActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -41,7 +41,7 @@ interface FilesComRequestInput {
   signal?: AbortSignal;
 }
 
-export const filesComActionHandlers: Record<FilesComActionName, FilesComActionHandler> = {
+export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesComActionHandler> = {
   list_folder(input, context) {
     const page = optionalInteger(input.page);
     const perPage = optionalInteger(input.perPage);

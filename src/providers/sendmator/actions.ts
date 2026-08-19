@@ -101,13 +101,6 @@ const deleteContactOutputSchema = s.object("The Sendmator delete contact respons
   id: s.string("The deleted Sendmator contact ID."),
 });
 
-export type SendmatorActionName =
-  | "list_contacts"
-  | "create_contact"
-  | "get_contact"
-  | "update_contact"
-  | "delete_contact";
-
 export const sendmatorActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

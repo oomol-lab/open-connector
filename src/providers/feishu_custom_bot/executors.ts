@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { FeishuCustomBotActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash, createHmac } from "node:crypto";
@@ -79,61 +79,62 @@ type FeishuCustomBotActionHandler = (
   context: FeishuCustomBotActionContext,
 ) => Promise<unknown>;
 
-export const feishuCustomBotActionHandlers: Record<FeishuCustomBotActionName, FeishuCustomBotActionHandler> = {
-  send_text_message(input, context) {
-    return sendFeishuCustomBotMessage(
-      {
-        msg_type: "text",
-        content: {
-          text: requiredFeishuCustomBotString(input.text, "text"),
+export const feishuCustomBotActionHandlers: ProviderActionHandlers<"feishu_custom_bot", FeishuCustomBotActionHandler> =
+  {
+    send_text_message(input, context) {
+      return sendFeishuCustomBotMessage(
+        {
+          msg_type: "text",
+          content: {
+            text: requiredFeishuCustomBotString(input.text, "text"),
+          },
         },
-      },
-      context,
-    );
-  },
-  send_post_message(input, context) {
-    return sendFeishuCustomBotMessage(
-      {
-        msg_type: "post",
-        content: {
-          post: requiredFeishuCustomBotObject(input.post, "post"),
+        context,
+      );
+    },
+    send_post_message(input, context) {
+      return sendFeishuCustomBotMessage(
+        {
+          msg_type: "post",
+          content: {
+            post: requiredFeishuCustomBotObject(input.post, "post"),
+          },
         },
-      },
-      context,
-    );
-  },
-  send_image_message(input, context) {
-    return sendFeishuCustomBotMessage(
-      {
-        msg_type: "image",
-        content: {
-          image_key: requiredFeishuCustomBotString(input.imageKey, "imageKey"),
+        context,
+      );
+    },
+    send_image_message(input, context) {
+      return sendFeishuCustomBotMessage(
+        {
+          msg_type: "image",
+          content: {
+            image_key: requiredFeishuCustomBotString(input.imageKey, "imageKey"),
+          },
         },
-      },
-      context,
-    );
-  },
-  send_share_chat_message(input, context) {
-    return sendFeishuCustomBotMessage(
-      {
-        msg_type: "share_chat",
-        content: {
-          share_chat_id: requiredFeishuCustomBotString(input.shareChatId, "shareChatId"),
+        context,
+      );
+    },
+    send_share_chat_message(input, context) {
+      return sendFeishuCustomBotMessage(
+        {
+          msg_type: "share_chat",
+          content: {
+            share_chat_id: requiredFeishuCustomBotString(input.shareChatId, "shareChatId"),
+          },
         },
-      },
-      context,
-    );
-  },
-  send_interactive_message(input, context) {
-    return sendFeishuCustomBotMessage(
-      {
-        msg_type: "interactive",
-        card: requiredFeishuCustomBotObject(input.card, "card"),
-      },
-      context,
-    );
-  },
-};
+        context,
+      );
+    },
+    send_interactive_message(input, context) {
+      return sendFeishuCustomBotMessage(
+        {
+          msg_type: "interactive",
+          card: requiredFeishuCustomBotObject(input.card, "card"),
+        },
+        context,
+      );
+    },
+  };
 
 export const executors: ProviderExecutors = defineProviderExecutors<FeishuCustomBotActionContext>({
   service,

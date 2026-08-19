@@ -1,4 +1,4 @@
-import type { DockerHubActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, nullableString, optionalInteger, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -27,7 +27,7 @@ export type DockerHubActionHandler = (
   context: DockerHubActionContext,
 ) => Promise<unknown>;
 
-export const dockerHubActionHandlers: Record<DockerHubActionName, DockerHubActionHandler> = {
+export const dockerHubActionHandlers: ProviderActionHandlers<"docker_hub", DockerHubActionHandler> = {
   list_repositories: listDockerHubRepositories,
   get_repository: getDockerHubRepository,
   create_repository: createDockerHubRepository,

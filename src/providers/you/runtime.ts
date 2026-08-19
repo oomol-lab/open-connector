@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { YouActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const youIndexOrigin = "https://ydc-index.io";
 
 type YouActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const youActionHandlers: Record<YouActionName, YouActionHandler> = {
+export const youActionHandlers: ProviderActionHandlers<"you", YouActionHandler> = {
   search,
   fetch_contents: fetchContents,
   research,

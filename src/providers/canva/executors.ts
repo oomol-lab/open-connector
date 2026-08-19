@@ -1,4 +1,5 @@
 import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -14,11 +15,12 @@ export function createCanvaExecutors(service: string, apiBaseUrl: string): Provi
   return defineOAuthProviderExecutors(service, createCanvaActionHandlers(apiBaseUrl));
 }
 
-export const canvaActionHandlers: Record<string, CanvaActionHandler> = createCanvaActionHandlers(canvaApiBaseUrl);
+export const canvaActionHandlers: ProviderActionHandlers<"canva", CanvaActionHandler> =
+  createCanvaActionHandlers(canvaApiBaseUrl);
 
 export const executors: ProviderExecutors = createCanvaExecutors(service, canvaApiBaseUrl);
 
-function createCanvaActionHandlers(apiBaseUrl: string): Record<string, CanvaActionHandler> {
+function createCanvaActionHandlers(apiBaseUrl: string): ProviderActionHandlers<"canva", CanvaActionHandler> {
   return {
     get_current_user(_input, context) {
       return getCurrentUser(context, apiBaseUrl);

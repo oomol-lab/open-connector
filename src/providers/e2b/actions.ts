@@ -151,8 +151,6 @@ const sandboxIdInputSchema = s.object("The input payload for selecting an E2B sa
   sandboxID: sandboxIdSchema,
 });
 
-export type E2bActionName = "create_sandbox" | "list_sandboxes" | "get_sandbox" | "delete_sandbox";
-
 export const e2bActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_sandbox",

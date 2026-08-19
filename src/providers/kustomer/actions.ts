@@ -448,13 +448,3 @@ export const kustomerActions: ActionDefinition[] = [
     outputSchema: singleCustomerOutputSchema,
   }),
 ];
-
-export type KustomerActionName =
-  | "list_customers"
-  | "get_customer"
-  | "get_customer_by_email"
-  | "get_customer_by_external_id"
-  | "get_customer_by_phone"
-  | "search_customers"
-  | "create_customer"
-  | "update_customer";

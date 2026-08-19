@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WappalyzerActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -23,7 +23,10 @@ interface WappalyzerJsonResponse {
   };
 }
 
-export const wappalyzerActionHandlers: Record<WappalyzerActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const wappalyzerActionHandlers: ProviderActionHandlers<
+  "wappalyzer",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   get_credits_balance(_input, context) {
     return getCreditsBalance(context);
   },

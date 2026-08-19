@@ -288,16 +288,3 @@ export const featurebaseActions: ActionDefinition[] = [
     outputSchema: deleteOutputSchema,
   }),
 ];
-
-export type FeaturebaseActionName =
-  | "list_boards"
-  | "get_board"
-  | "list_posts"
-  | "create_post"
-  | "get_post"
-  | "update_post"
-  | "delete_post"
-  | "list_contacts"
-  | "upsert_contact"
-  | "get_contact"
-  | "delete_contact";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ScrapflyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -23,7 +23,7 @@ type ScrapflyPhase = "validate" | "execute";
 type ScrapflyQueryValue = string | number | boolean | undefined;
 type ScrapflyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const scrapflyActionHandlers: Record<ScrapflyActionName, ScrapflyActionHandler> = {
+export const scrapflyActionHandlers: ProviderActionHandlers<"scrapfly", ScrapflyActionHandler> = {
   async scrape(input, context) {
     const response = await requestScrapflyJson(
       scrapflyScrapeApiUrl,

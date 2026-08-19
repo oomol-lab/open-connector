@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -23,7 +24,7 @@ interface ChecklyContext {
 
 type ChecklyHandler = (input: Record<string, unknown>, context: ChecklyContext) => Promise<unknown>;
 
-export const checklyActionHandlers: Record<string, ChecklyHandler> = {
+export const checklyActionHandlers: ProviderActionHandlers<"checkly", ChecklyHandler> = {
   async get_current_account(_input, context) {
     return { account: await requestChecklyJson({ context, path: "/v1/accounts/me", phase: "execute" }) };
   },

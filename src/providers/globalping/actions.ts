@@ -363,5 +363,3 @@ export const globalpingActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type GlobalpingActionName = "get_limits" | "list_probes" | "create_measurement" | "get_measurement";

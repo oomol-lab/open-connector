@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -41,7 +42,7 @@ interface BrowserlessBinaryResponse {
   contentType: string;
 }
 
-export const browserlessActionHandlers: Record<string, BrowserlessActionHandler> = {
+export const browserlessActionHandlers: ProviderActionHandlers<"browserless", BrowserlessActionHandler> = {
   fetch_content(input, context) {
     return fetchBrowserlessContent(input, context);
   },

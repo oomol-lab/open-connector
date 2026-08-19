@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SafetycultureActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -22,7 +22,7 @@ type SafetycultureRequestPhase = "validate" | "execute";
 type SafetycultureQueryValue = string | number | boolean | readonly string[] | undefined;
 type SafetycultureActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const safetycultureActionHandlers: Record<SafetycultureActionName, SafetycultureActionHandler> = {
+export const safetycultureActionHandlers: ProviderActionHandlers<"safetyculture", SafetycultureActionHandler> = {
   search_inspections(input, context) {
     return searchInspections(input, context);
   },

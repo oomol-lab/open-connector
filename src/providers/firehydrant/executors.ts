@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FirehydrantActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -31,7 +31,7 @@ interface FirehydrantRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const firehydrantActionHandlers: Record<FirehydrantActionName, FirehydrantHandler> = {
+export const firehydrantActionHandlers: ProviderActionHandlers<"firehydrant", FirehydrantHandler> = {
   list_incidents(input, context) {
     return listCollection("incidents", "/incidents", input, context, normalizeIncident);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -60,6 +61,48 @@ function page(output: { payload: unknown; backendIdentifier: string | null }, ke
     backendIdentifier: output.backendIdentifier,
   };
 }
+const handlers: ProviderActionHandlers<"favro", ProviderRuntimeHandler<Context>> = {
+  async list_organizations(input, context) {
+    return page(await request("organizations", input, context), "organizations");
+  },
+  async get_organization(_input, context) {
+    return entity(
+      await request(`organizations/${encodeURIComponent(context.organizationId)}`, {}, context),
+      "organization",
+    );
+  },
+  async list_collections(input, context) {
+    return page(await request("collections", input, context), "collections");
+  },
+  async list_widgets(input, context) {
+    return page(await request("widgets", input, context), "widgets");
+  },
+  async get_widget(input, context) {
+    return entity(await request(`widgets/${encodeURIComponent(String(input.widgetCommonId))}`, {}, context), "widget");
+  },
+  async list_cards(input, context) {
+    if (
+      !["todoList", "cardCommonId", "cardSequentialId", "widgetCommonId", "columnId", "collectionId"].some(
+        (key) => input[key] !== undefined,
+      )
+    )
+      throw new ProviderRequestError(400, "At least one Favro card filter is required");
+    return page(await request("cards", input, context), "cards");
+  },
+  async get_card(input, context) {
+    const { cardId, ...query } = input;
+    return entity(await request(`cards/${encodeURIComponent(String(cardId))}`, query, context), "card");
+  },
+  async create_card(input, context) {
+    return entity(await request("cards", input, context, "POST"), "card");
+  },
+  async update_card(input, context) {
+    const { cardId, ...body } = input;
+    if (Object.keys(body).length === 0) throw new ProviderRequestError(400, "update_card requires a field to update");
+    return entity(await request(`cards/${encodeURIComponent(String(cardId))}`, body, context, "PUT"), "card");
+  },
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
   service: "favro",
   skipDnsValidation: true,
@@ -76,50 +119,7 @@ export const executors: import("../../core/types.ts").ProviderExecutors = define
       signal: context.signal,
     };
   },
-  handlers: {
-    async list_organizations(input, context) {
-      return page(await request("organizations", input, context), "organizations");
-    },
-    async get_organization(_input, context) {
-      return entity(
-        await request(`organizations/${encodeURIComponent(context.organizationId)}`, {}, context),
-        "organization",
-      );
-    },
-    async list_collections(input, context) {
-      return page(await request("collections", input, context), "collections");
-    },
-    async list_widgets(input, context) {
-      return page(await request("widgets", input, context), "widgets");
-    },
-    async get_widget(input, context) {
-      return entity(
-        await request(`widgets/${encodeURIComponent(String(input.widgetCommonId))}`, {}, context),
-        "widget",
-      );
-    },
-    async list_cards(input, context) {
-      if (
-        !["todoList", "cardCommonId", "cardSequentialId", "widgetCommonId", "columnId", "collectionId"].some(
-          (key) => input[key] !== undefined,
-        )
-      )
-        throw new ProviderRequestError(400, "At least one Favro card filter is required");
-      return page(await request("cards", input, context), "cards");
-    },
-    async get_card(input, context) {
-      const { cardId, ...query } = input;
-      return entity(await request(`cards/${encodeURIComponent(String(cardId))}`, query, context), "card");
-    },
-    async create_card(input, context) {
-      return entity(await request("cards", input, context, "POST"), "card");
-    },
-    async update_card(input, context) {
-      const { cardId, ...body } = input;
-      if (Object.keys(body).length === 0) throw new ProviderRequestError(400, "update_card requires a field to update");
-      return entity(await request(`cards/${encodeURIComponent(String(cardId))}`, body, context, "PUT"), "card");
-    },
-  },
+  handlers,
 });
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "favro",

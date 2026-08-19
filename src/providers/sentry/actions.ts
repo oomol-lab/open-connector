@@ -36,27 +36,6 @@ const release = looseItem("A Sentry release payload.");
 const replay = looseItem("A Sentry replay payload.");
 const alert = looseItem("A Sentry alert workflow payload.");
 
-export type SentryActionName =
-  | "list_organization_integrations"
-  | "get_organization_integration"
-  | "get_organization_integration_config"
-  | "list_organization_sentry_apps"
-  | "get_sentry_app"
-  | "list_organization_projects"
-  | "get_project"
-  | "list_organization_issues"
-  | "get_issue"
-  | "get_issue_event"
-  | "list_issue_events"
-  | "update_issue"
-  | "list_organization_releases"
-  | "get_organization_release"
-  | "get_release_health_stats"
-  | "list_organization_replays"
-  | "get_replay"
-  | "list_alerts"
-  | "get_alert";
-
 export const sentryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organization_integrations",

@@ -151,8 +151,6 @@ const chatCompletionOutputSchema = s.looseRequiredObject(
   { optional: ["usage", "system_fingerprint"] },
 );
 
-export type XAiActionName = "list_models" | "get_model" | "create_chat_completion";
-
 export const xAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",

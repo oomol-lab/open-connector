@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
@@ -5,7 +6,10 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 
 export const deutschlandgptApiBaseUrl = "https://api.deutschlandgpt.de/v2";
 
-export const deutschlandgptActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const deutschlandgptActionHandlers: ProviderActionHandlers<
+  "deutschlandgpt",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_models(_input, context) {
     return request("/models", "GET", undefined, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import {
@@ -43,48 +44,48 @@ async function request(
 function record(payload: unknown): Record<string, unknown> {
   return payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : {};
 }
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  "simplelocalize",
-  {
-    async get_project(input, context) {
-      return { data: record(await request("/api/v2/project", "GET", input, context)).data };
-    },
-    async list_translations(input, context) {
-      const payload = record(await request("/api/v2/translations", "GET", input, context));
-      return { translations: payload.data ?? [], pageDetails: payload.pageDetails ?? null };
-    },
-    async update_translation(input, context) {
-      await request("/api/v2/translations", "PATCH", input, context);
-      return { success: true };
-    },
-    async list_translation_keys(input, context) {
-      const payload = record(await request("/api/v1/translation-keys", "GET", input, context));
-      return { translationKeys: payload.data ?? [], pageDetails: payload.pageDetails ?? null };
-    },
-    async create_translation_key(input, context) {
-      await request("/api/v1/translation-keys", "POST", input, context);
-      return { success: true };
-    },
-    async list_languages(input, context) {
-      return { languages: record(await request("/api/v1/languages", "GET", input, context)).data ?? [] };
-    },
-    async create_language(input, context) {
-      return { language: record(await request("/api/v1/languages", "POST", input, context)).data };
-    },
-    async update_language(input, context) {
-      const { languageKey, ...body } = input;
-      if (body.key === undefined && body.name === undefined)
-        throw new ProviderRequestError(400, "key or name is required");
-      await request(`/api/v1/languages/${encodeURIComponent(String(languageKey))}`, "PATCH", body, context);
-      return { success: true };
-    },
-    async delete_language(input, context) {
-      await request(`/api/v1/languages/${encodeURIComponent(String(input.languageKey))}`, "DELETE", {}, context);
-      return { success: true };
-    },
+const handlers: ProviderActionHandlers<"simplelocalize", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async get_project(input, context) {
+    return { data: record(await request("/api/v2/project", "GET", input, context)).data };
   },
-  { skipDnsValidation: true },
-);
+  async list_translations(input, context) {
+    const payload = record(await request("/api/v2/translations", "GET", input, context));
+    return { translations: payload.data ?? [], pageDetails: payload.pageDetails ?? null };
+  },
+  async update_translation(input, context) {
+    await request("/api/v2/translations", "PATCH", input, context);
+    return { success: true };
+  },
+  async list_translation_keys(input, context) {
+    const payload = record(await request("/api/v1/translation-keys", "GET", input, context));
+    return { translationKeys: payload.data ?? [], pageDetails: payload.pageDetails ?? null };
+  },
+  async create_translation_key(input, context) {
+    await request("/api/v1/translation-keys", "POST", input, context);
+    return { success: true };
+  },
+  async list_languages(input, context) {
+    return { languages: record(await request("/api/v1/languages", "GET", input, context)).data ?? [] };
+  },
+  async create_language(input, context) {
+    return { language: record(await request("/api/v1/languages", "POST", input, context)).data };
+  },
+  async update_language(input, context) {
+    const { languageKey, ...body } = input;
+    if (body.key === undefined && body.name === undefined)
+      throw new ProviderRequestError(400, "key or name is required");
+    await request(`/api/v1/languages/${encodeURIComponent(String(languageKey))}`, "PATCH", body, context);
+    return { success: true };
+  },
+  async delete_language(input, context) {
+    await request(`/api/v1/languages/${encodeURIComponent(String(input.languageKey))}`, "DELETE", {}, context);
+    return { success: true };
+  },
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("simplelocalize", handlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "simplelocalize",

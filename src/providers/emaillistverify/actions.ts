@@ -36,16 +36,6 @@ const nullableIntegerSchema = s.nullableInteger("The provider integer value, or 
   minimum: 0,
 });
 
-export type EmailListVerifyActionName =
-  | "verify_email"
-  | "verify_email_detailed"
-  | "get_credits"
-  | "upload_email_list"
-  | "check_disposable"
-  | "get_email_list_progress"
-  | "download_email_list"
-  | "delete_email_list";
-
 export const emailListVerifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "verify_email",

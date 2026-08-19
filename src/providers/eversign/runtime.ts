@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -27,7 +28,10 @@ interface EversignCredentialSummary {
   };
   businessCount: number;
 }
-export const eversignActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const eversignActionHandlers: ProviderActionHandlers<
+  "eversign",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_businesses(_input, context) {
     const payload = await requestEversignJson({
       path: "/business",

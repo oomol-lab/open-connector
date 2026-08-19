@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ type BeehiivPhase = "validate" | "execute";
 type BeehiivContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type BeehiivActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const beehiivActionHandlers: Record<string, BeehiivActionHandler> = {
+export const beehiivActionHandlers: ProviderActionHandlers<"beehiiv", BeehiivActionHandler> = {
   list_publications(input, context) {
     return requestBeehiiv(buildListPublicationsUrl(input), context, "execute");
   },

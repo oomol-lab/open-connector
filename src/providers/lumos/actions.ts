@@ -71,8 +71,6 @@ const pagedAccessRequestsOutputSchema = s.object("A normalized page of Lumos acc
   raw: s.looseObject("The raw Lumos response payload."),
 });
 
-export type LumosActionName = "list_appstore_apps" | "get_appstore_app" | "list_access_requests" | "get_access_request";
-
 export const lumosActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_appstore_apps",

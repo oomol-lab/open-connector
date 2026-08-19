@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { WriterActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -18,7 +18,7 @@ interface WriterRequestInput {
   mode: WriterRequestMode;
 }
 
-export const writerActionHandlers: Record<WriterActionName, WriterActionHandler> = {
+export const writerActionHandlers: ProviderActionHandlers<"writer", WriterActionHandler> = {
   list_models(_input, context) {
     return writerRequest(context, {
       path: "/v1/models",

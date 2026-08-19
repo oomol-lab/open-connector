@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { TencentDocsActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ type TencentDocsEnvelope = {
 
 type TencentDocsActionHandler = (input: Record<string, unknown>, context: TencentDocsActionContext) => Promise<unknown>;
 
-export const tencentDocsActionHandlers: Record<TencentDocsActionName, TencentDocsActionHandler> = {
+export const tencentDocsActionHandlers: ProviderActionHandlers<"tencent_docs", TencentDocsActionHandler> = {
   get_current_user(_input, { accessToken, fetcher }) {
     return tencentDocsGetCurrentUser(accessToken, fetcher);
   },

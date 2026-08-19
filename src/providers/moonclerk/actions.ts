@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "moonclerk";
 
-export type MoonclerkActionName =
-  | "list_forms"
-  | "get_form"
-  | "list_customers"
-  | "get_customer"
-  | "list_payments"
-  | "get_payment";
-
 const moonclerkDateSchema = s.date("The date in YYYY-MM-DD format required by MoonClerk.");
 const moonclerkPositiveIdSchema = s.positiveInteger("The MoonClerk numeric identifier.");
 const paginationCountSchema = s.integer("The number of rows to return. MoonClerk accepts values from 1 to 100.", {

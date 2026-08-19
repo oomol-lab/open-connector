@@ -218,13 +218,3 @@ export const twilioActions: ActionDefinition[] = [
     outputSchema: callSchema,
   }),
 ];
-
-export type TwilioActionName =
-  | "get_account"
-  | "list_usage_records"
-  | "list_messages"
-  | "get_message"
-  | "send_message"
-  | "list_calls"
-  | "get_call"
-  | "create_call";

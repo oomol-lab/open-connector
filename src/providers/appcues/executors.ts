@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -29,6 +30,21 @@ async function request(suffix: string, method: string, context: Context): Promis
     throw new ProviderRequestError(response.status, `Appcues request failed with ${response.status}`, payload);
   return payload;
 }
+const handlers: ProviderActionHandlers<"appcues", ProviderRuntimeHandler<Context>> = {
+  async list_flows(_input, context) {
+    return { flows: await request("flows-v2", "GET", context) };
+  },
+  get_flow: (input, context) => request(`flows-v2/${encodeURIComponent(String(input.flow_id))}`, "GET", context),
+  publish_flow: (input, context) =>
+    request(`flows-v2/${encodeURIComponent(String(input.flow_id))}/publish`, "POST", context),
+  unpublish_flow: (input, context) =>
+    request(`flows-v2/${encodeURIComponent(String(input.flow_id))}/unpublish`, "POST", context),
+  async list_tags(_input, context) {
+    return { tags: await request("tags", "GET", context) };
+  },
+  get_tag: (input, context) => request(`tags/${encodeURIComponent(String(input.tag_id))}`, "GET", context),
+};
+
 export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "appcues",
   skipDnsValidation: true,
@@ -47,20 +63,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<Context>({
       signal: context.signal,
     };
   },
-  handlers: {
-    async list_flows(_input, context) {
-      return { flows: await request("flows-v2", "GET", context) };
-    },
-    get_flow: (input, context) => request(`flows-v2/${encodeURIComponent(String(input.flow_id))}`, "GET", context),
-    publish_flow: (input, context) =>
-      request(`flows-v2/${encodeURIComponent(String(input.flow_id))}/publish`, "POST", context),
-    unpublish_flow: (input, context) =>
-      request(`flows-v2/${encodeURIComponent(String(input.flow_id))}/unpublish`, "POST", context),
-    async list_tags(_input, context) {
-      return { tags: await request("tags", "GET", context) };
-    },
-    get_tag: (input, context) => request(`tags/${encodeURIComponent(String(input.tag_id))}`, "GET", context),
-  },
+  handlers,
 });
 
 function credentials(input: { apiKey: string; values: Record<string, string> }): {

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   optionalNumber,
@@ -42,7 +43,7 @@ const answerReservedKeys = new Set([
   "assign_location_code",
 ]);
 
-export const datascopeActionHandlers: Record<string, DatascopeActionHandler> = {
+export const datascopeActionHandlers: ProviderActionHandlers<"datascope", DatascopeActionHandler> = {
   async list_answers(input, context) {
     const payload = await requestDatascopeJson({
       apiKey: context.apiKey,

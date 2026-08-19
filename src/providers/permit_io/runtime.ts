@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ interface PermitIoEnvironmentContext {
   environmentId: string;
 }
 
-export const permitIoActionHandlers: Record<string, ProviderRuntimeHandler<PermitIoContext>> = {
+export const permitIoActionHandlers: ProviderActionHandlers<"permit_io", ProviderRuntimeHandler<PermitIoContext>> = {
   list_users(input, context) {
     return requestEnvironment(context, input, "GET", "/users", undefined, listQuery(input, ["search", "role"]));
   },

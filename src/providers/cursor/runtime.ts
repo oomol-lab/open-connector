@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CursorActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -10,7 +10,7 @@ type CursorActionHandler = (input: Record<string, unknown>, context: ApiKeyProvi
 
 export const cursorApiBaseUrl = "https://api.cursor.com";
 
-export const cursorActionHandlers: Record<CursorActionName, CursorActionHandler> = {
+export const cursorActionHandlers: ProviderActionHandlers<"cursor", CursorActionHandler> = {
   async list_team_members(_input, context) {
     const payload = await requestCursor({ method: "GET", path: "/teams/members" }, context, "execute");
     return {

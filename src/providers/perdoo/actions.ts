@@ -236,8 +236,6 @@ const commitSchema = s.object(
   { optional: ["description", "keyResult", "kpi", "goal", "user"], additionalProperties: true },
 );
 
-export type PerdooActionName = "list_goals" | "get_goal" | "upsert_commit" | "execute_graphql";
-
 export const perdooActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_goals",

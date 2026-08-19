@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GrafanaActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -47,7 +47,7 @@ export interface GrafanaContext {
   signal?: AbortSignal;
 }
 
-export const grafanaActionHandlers: Record<GrafanaActionName, GrafanaActionHandler> = {
+export const grafanaActionHandlers: ProviderActionHandlers<"grafana", GrafanaActionHandler> = {
   list_folders(input, context) {
     return executeListFolders(input, context);
   },

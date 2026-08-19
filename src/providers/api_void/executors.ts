@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ApiVoidActionName } from "./actions.ts";
 
 import { isIP } from "node:net";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -48,7 +48,7 @@ type ApiVoidActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<ApiVoidActionOutput>;
 
-export const apiVoidActionHandlers: Record<ApiVoidActionName, ApiVoidActionHandler> = {
+export const apiVoidActionHandlers: ProviderActionHandlers<"api_void", ApiVoidActionHandler> = {
   get_account_info(_input, context) {
     return requestApiVoidForAction(context, "/v2/account-info");
   },

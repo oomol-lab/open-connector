@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GenderApiActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -14,7 +14,7 @@ type GenderApiPhase = "validate" | "execute";
 type GenderApiActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type GenderApiActionHandler = (input: Record<string, unknown>, context: GenderApiActionContext) => Promise<unknown>;
 
-export const genderApiActionHandlers: Record<GenderApiActionName, GenderApiActionHandler> = {
+export const genderApiActionHandlers: ProviderActionHandlers<"gender_api", GenderApiActionHandler> = {
   query_gender_by_first_name(input, context) {
     return requestGenderApi({
       path: "/gender/by-first-name",

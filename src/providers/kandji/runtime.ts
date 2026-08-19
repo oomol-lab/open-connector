@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { KandjiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -22,7 +22,7 @@ export interface KandjiActionContext {
   signal?: AbortSignal;
 }
 
-export const kandjiActionHandlers: Record<KandjiActionName, KandjiActionHandler> = {
+export const kandjiActionHandlers: ProviderActionHandlers<"kandji", KandjiActionHandler> = {
   async list_blueprints(input, context) {
     const payload = await requestKandjiJson({
       apiUrl: context.apiUrl,

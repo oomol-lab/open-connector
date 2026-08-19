@@ -5,6 +5,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ interface PrecoroContext {
 
 type PrecoroActionHandler = (input: Record<string, unknown>, context: PrecoroContext) => Promise<unknown>;
 
-export const precoroActionHandlers: Record<string, PrecoroActionHandler> = {
+export const precoroActionHandlers: ProviderActionHandlers<"precoro", PrecoroActionHandler> = {
   list_purchase_orders: (input: Record<string, unknown>, context: PrecoroContext) =>
     listPrecoroCollection("/purchaseorders", input, context, addPurchaseOrderFilters),
   get_purchase_order: (input: Record<string, unknown>, context: PrecoroContext) =>

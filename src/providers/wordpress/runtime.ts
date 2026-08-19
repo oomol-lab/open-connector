@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WordpressActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -50,7 +50,7 @@ type WordpressCredential =
   | Extract<ResolvedCredential, { authType: "api_key" }>
   | Extract<ResolvedCredential, { authType: "oauth2" }>;
 
-export const wordpressActionHandlers: Record<WordpressActionName, WordpressActionHandler> = {
+export const wordpressActionHandlers: ProviderActionHandlers<"wordpress", WordpressActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

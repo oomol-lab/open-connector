@@ -251,15 +251,6 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
 ];
 
-export type LaGrowthMachineActionName =
-  | "list_members"
-  | "list_audiences"
-  | "create_audience"
-  | "get_audience_detail"
-  | "get_audience_leads"
-  | "search_leads"
-  | "create_or_update_lead";
-
 function leadProfileString(description: string): JsonSchema {
   return s.string({ description, minLength: 1, maxLength: 255 });
 }

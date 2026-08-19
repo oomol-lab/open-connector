@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DocmosisActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -42,7 +42,7 @@ interface DocmosisEnvironmentSummary {
 
 type DocmosisActionHandler = (input: Record<string, unknown>, context: DocmosisActionContext) => Promise<unknown>;
 
-export const docmosisActionHandlers: Record<DocmosisActionName, DocmosisActionHandler> = {
+export const docmosisActionHandlers: ProviderActionHandlers<"docmosis", DocmosisActionHandler> = {
   get_environment_summary(_input, context) {
     return getEnvironmentSummary(context);
   },

@@ -55,11 +55,6 @@ updateServiceMockTemplateInputSchema.anyOf = [
   "noMatchingRequestPreference",
 ].map((field) => ({ required: [field] }));
 
-export type BlazeMeterServiceVirtualizationActionName =
-  | "list_service_mock_templates"
-  | "get_service_mock_template"
-  | "update_service_mock_template";
-
 export const blazeMeterServiceVirtualizationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_service_mock_templates",

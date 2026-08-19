@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HookdeckActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -14,7 +14,7 @@ const hookdeckRequestTimeoutMs = 30_000;
 type HookdeckActionContext = ApiKeyProviderContext;
 type HookdeckActionHandler = (input: Record<string, unknown>, context: HookdeckActionContext) => Promise<unknown>;
 
-export const hookdeckActionHandlers: Record<HookdeckActionName, HookdeckActionHandler> = {
+export const hookdeckActionHandlers: ProviderActionHandlers<"hookdeck", HookdeckActionHandler> = {
   async list_connections(input, context) {
     return normalizeListOutput(
       "connections",

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalString, positiveInteger } from "../../core/cast.ts";
@@ -18,7 +19,7 @@ type StreamtimeMethod = "GET" | "POST" | "PUT";
 type StreamtimeActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type StreamtimeActionHandler = (input: Record<string, unknown>, context: StreamtimeActionContext) => Promise<unknown>;
 
-export const streamtimeActionHandlers: Record<string, StreamtimeActionHandler> = {
+export const streamtimeActionHandlers: ProviderActionHandlers<"streamtime", StreamtimeActionHandler> = {
   get_organisation(_input, context) {
     return getWrappedObject("/organisation", "organisation", context);
   },

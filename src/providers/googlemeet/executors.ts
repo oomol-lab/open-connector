@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -129,7 +130,7 @@ const smartNotesListSpec: GoogleMeetListSpec = {
   responseField: "smartNotes",
 };
 
-export const googleMeetActionHandlers: Record<string, GoogleMeetActionHandler> = {
+export const googleMeetActionHandlers: ProviderActionHandlers<"googlemeet", GoogleMeetActionHandler> = {
   create_space: createSpace,
   get_space: getSpace,
   update_space: updateSpace,

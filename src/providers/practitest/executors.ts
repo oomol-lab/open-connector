@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
@@ -6,7 +7,10 @@ import { executePractitestAction, validatePractitestCredential } from "./runtime
 
 const service = "practitest";
 
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "practitest",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   list_projects: (input, context) =>
     executePractitestAction(
       { apiKey: context.apiKey, values: {}, actionName: "list_projects", input },

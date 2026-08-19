@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TodoistActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ interface TodoistRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const todoistActionHandlers: Record<TodoistActionName, ProviderRuntimeHandler<BearerProviderContext>> = {
+export const todoistActionHandlers: ProviderActionHandlers<"todoist", ProviderRuntimeHandler<BearerProviderContext>> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "fullenrich";
 
-export type FullenrichActionName = "get_credit_balance" | "lookup_person" | "lookup_company";
-
 const rawObjectSchema = s.unknownObject("A JSON object returned by FullEnrich.");
 const lookupMetadataSchema = s.object(
   "The lookup metadata returned by FullEnrich.",

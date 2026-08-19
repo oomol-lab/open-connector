@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TheirStackActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ export const theirstackApiBaseUrl = "https://api.theirstack.com";
 
 type TheirStackHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const theirstackActionHandlers: Record<TheirStackActionName, TheirStackHandler> = {
+export const theirstackActionHandlers: ProviderActionHandlers<"theirstack", TheirStackHandler> = {
   async search_jobs(input, context) {
     assertJobSearchWindow(input);
     const payload = await theirstackRequestJson("POST", "/v1/jobs/search", input, context);

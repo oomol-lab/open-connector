@@ -1,11 +1,15 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { executeHamsaAction, validateHamsaCredential } from "./runtime.ts";
 
 const service = "hamsa";
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "hamsa",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   get_project: (input, context) => executeHamsaAction("get_project", input, context.apiKey, context.fetcher),
   list_voice_agents: (input, context) =>
     executeHamsaAction("list_voice_agents", input, context.apiKey, context.fetcher),

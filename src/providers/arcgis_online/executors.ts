@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -20,7 +21,7 @@ const arcgisOnlineRequestTimeoutMs = 30_000;
 type ArcgisOnlineQueryValue = string | number | boolean | undefined;
 type ArcgisOnlineActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const arcgisOnlineActionHandlers: Record<string, ArcgisOnlineActionHandler> = {
+export const arcgisOnlineActionHandlers: ProviderActionHandlers<"arcgis_online", ArcgisOnlineActionHandler> = {
   suggest(input, context) {
     return requestArcgisOnline({
       path: "/suggest",

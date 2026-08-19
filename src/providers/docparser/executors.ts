@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DocparserActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -44,7 +44,7 @@ type DocparserRequestInput = {
 };
 type DocparserActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const docparserActionHandlers: Record<DocparserActionName, DocparserActionHandler> = {
+export const docparserActionHandlers: ProviderActionHandlers<"docparser", DocparserActionHandler> = {
   ping(_input, context) {
     return docparserPing(context, "execute");
   },

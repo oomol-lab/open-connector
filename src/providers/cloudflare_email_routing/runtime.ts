@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -45,8 +46,8 @@ interface CloudflareAuthContext {
 
 const apiBaseUrl = "https://api.cloudflare.com/client/v4";
 
-export const cloudflareEmailRoutingActionHandlers: Record<
-  string,
+export const cloudflareEmailRoutingActionHandlers: ProviderActionHandlers<
+  "cloudflare_email_routing",
   ProviderRuntimeHandler<CloudflareEmailRoutingContext>
 > = {
   list_routing_rules(input, context) {

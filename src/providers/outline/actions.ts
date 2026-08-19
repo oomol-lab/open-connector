@@ -207,14 +207,6 @@ const getDocumentInputSchema = {
   anyOf: [{ required: ["id"] }, { required: ["shareId"] }],
 } satisfies JsonSchema;
 
-export type OutlineActionName =
-  | "list_collections"
-  | "get_collection"
-  | "list_collection_documents"
-  | "list_documents"
-  | "search_documents"
-  | "get_document";
-
 export const outlineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collections",

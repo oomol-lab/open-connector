@@ -111,18 +111,6 @@ const updateBucketInputSchema = s.object(
 ) as JsonSchema;
 updateBucketInputSchema.anyOf = [{ required: ["storageClass"] }, { required: ["jurisdiction"] }];
 
-export type CloudflareR2ActionName =
-  | "list_accounts"
-  | "list_buckets"
-  | "get_bucket"
-  | "download_object"
-  | "create_bucket"
-  | "update_bucket"
-  | "delete_bucket"
-  | "get_bucket_cors_policy"
-  | "update_bucket_cors_policy"
-  | "delete_bucket_cors_policy";
-
 export const cloudflareR2Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",

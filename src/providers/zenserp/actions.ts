@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "zenserp";
 
-export type ZenserpActionName = "search" | "google_news_search" | "google_maps_search" | "google_image_search";
-
 const commonSearchInputProperties = {
   q: s.nonEmptyString("Search query sent to Zenserp."),
   searchEngine: s.nonEmptyString("Search engine domain sent as the search_engine query parameter."),

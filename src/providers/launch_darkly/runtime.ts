@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LaunchDarklyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -30,7 +30,7 @@ interface LaunchDarklyRequestInput {
   expectEmpty?: boolean;
 }
 
-export const launchDarklyActionHandlers: Record<LaunchDarklyActionName, LaunchDarklyActionHandler> = {
+export const launchDarklyActionHandlers: ProviderActionHandlers<"launch_darkly", LaunchDarklyActionHandler> = {
   get_caller_identity(_input, context) {
     return fetchCallerIdentity(context.apiKey, context.fetcher, "execute", context.signal);
   },

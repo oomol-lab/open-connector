@@ -112,17 +112,6 @@ const licenseInputSchema = s.object("Request parameters for a Payhip license key
   licenseKey: licenseKeySchema,
 });
 
-export type PayhipActionName =
-  | "create_coupon"
-  | "get_coupon"
-  | "list_coupons"
-  | "update_coupon"
-  | "delete_coupon"
-  | "verify_license"
-  | "enable_license"
-  | "disable_license"
-  | "decrease_license_uses";
-
 export const payhipActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_coupon",

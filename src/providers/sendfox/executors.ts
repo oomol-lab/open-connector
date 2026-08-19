@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { SendfoxActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ type SendfoxRequestPhase = "validate" | "execute";
 type SendfoxActionContext = { apiKey: string; fetcher: typeof fetch };
 type SendfoxActionHandler = (input: Record<string, unknown>, context: SendfoxActionContext) => Promise<unknown>;
 
-export const sendfoxActionHandlers: Record<SendfoxActionName, SendfoxActionHandler> = {
+export const sendfoxActionHandlers: ProviderActionHandlers<"sendfox", SendfoxActionHandler> = {
   list_contacts(input, context) {
     return executeListContacts(input, context);
   },
@@ -105,7 +105,7 @@ export const sendfoxActionHandlers: Record<SendfoxActionName, SendfoxActionHandl
       method: "DELETE",
     });
   },
-} satisfies Record<SendfoxActionName, SendfoxActionHandler>;
+};
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("sendfox", sendfoxActionHandlers);
 

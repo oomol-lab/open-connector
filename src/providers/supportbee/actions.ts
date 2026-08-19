@@ -5,25 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "supportbee" as const;
 
-export type SupportbeeActionName =
-  | "list_tickets"
-  | "search_tickets"
-  | "get_ticket"
-  | "create_ticket"
-  | "list_ticket_replies"
-  | "get_ticket_reply"
-  | "create_ticket_reply"
-  | "list_ticket_comments"
-  | "create_ticket_comment"
-  | "list_labels"
-  | "add_label_to_ticket"
-  | "remove_label_from_ticket"
-  | "list_users"
-  | "get_user"
-  | "create_user"
-  | "update_user"
-  | "list_teams";
-
 const positiveIdSchema = s.positiveInteger("A positive SupportBee numeric identifier.");
 const perPageSchema = s.integer("The number of records to retrieve. SupportBee requires this to be less than 100.", {
   minimum: 1,

@@ -1,14 +1,14 @@
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const samcartApiBaseUrl = "https://api.samcart.com/v1";
 interface RequestShape {
   path: string;
   list: boolean;
 }
-const requests: Record<string, RequestShape> = {
+const requests: ProviderActionSources<"samcart", RequestShape> = {
   list_customers: { path: "/customers", list: true },
   get_customer: { path: "/customers/:id", list: false },
   list_products: { path: "/products", list: true },
@@ -19,13 +19,14 @@ const requests: Record<string, RequestShape> = {
   get_subscription: { path: "/subscriptions/:id", list: false },
 };
 
-export const samcartActionHandlers: Record<
-  string,
+export const samcartActionHandlers: ProviderActionHandlers<
+  "samcart",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
-> = Object.fromEntries(
-  Object.entries(requests).map(([name, requestShape]) => [
-    name,
-    async (input: Record<string, unknown>, context: ApiKeyProviderContext) => {
+> = mapProviderActionSources(
+  "samcart",
+  requests,
+  (name, requestShape): ((input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>) =>
+    async (input, context) => {
       const path = requestShape.path.includes(":id")
         ? requestShape.path.replace(
             ":id",
@@ -35,7 +36,6 @@ export const samcartActionHandlers: Record<
       const payload = await request(path, requestShape.list ? input : {}, context, "execute");
       return requestShape.list ? readList(payload, name) : readObject(payload, name);
     },
-  ]),
 );
 
 export async function validateSamcartApiKey(context: ApiKeyProviderContext): Promise<{

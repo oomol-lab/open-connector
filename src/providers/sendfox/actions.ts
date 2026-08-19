@@ -135,22 +135,6 @@ const listMembershipInputSchema = s.object("Path parameters and body for adding 
   contact_id: contactIdSchema,
 });
 
-export type SendfoxActionName =
-  | "list_contacts"
-  | "create_contact"
-  | "get_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "unsubscribe_contact"
-  | "list_contact_lists"
-  | "create_contact_list"
-  | "get_contact_list"
-  | "update_contact_list"
-  | "delete_contact_list"
-  | "list_contacts_in_list"
-  | "add_contact_to_list"
-  | "remove_contact_from_list";
-
 export const sendfoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

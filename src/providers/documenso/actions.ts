@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "documenso";
 
-export type DocumensoActionName = "list_envelopes" | "get_envelope" | "list_templates" | "get_template";
-
 const nullableStringSchema = s.nullable(s.string("The string value returned by Documenso."));
 const nullableIntegerSchema = s.nullable(s.integer("The integer value returned by Documenso."));
 const loosePayloadSchema = s.looseObject("The raw Documenso object payload.");

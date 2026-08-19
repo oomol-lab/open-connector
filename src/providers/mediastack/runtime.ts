@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MediastackActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -33,7 +33,7 @@ interface MediastackRequestInput extends MediastackActionContext {
   phase: MediastackPhase;
 }
 
-export const mediastackActionHandlers: Record<MediastackActionName, MediastackActionHandler> = {
+export const mediastackActionHandlers: ProviderActionHandlers<"mediastack", MediastackActionHandler> = {
   search_news_sources(input, context) {
     return searchNewsSources(input, context);
   },

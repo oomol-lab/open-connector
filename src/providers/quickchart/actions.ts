@@ -126,5 +126,3 @@ export const quickchartActions: ProviderActionDefinition[] = [
     outputSchema: qrUrlOutputSchema,
   }),
 ];
-
-export type QuickchartActionName = "build_chart_url" | "create_chart_short_url" | "build_qr_url";

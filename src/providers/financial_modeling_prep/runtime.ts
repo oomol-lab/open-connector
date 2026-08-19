@@ -1,4 +1,4 @@
-import type { FinancialModelingPrepActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -24,8 +24,8 @@ type FinancialModelingPrepActionHandler = (
 
 export const financialModelingPrepApiBaseUrl = "https://financialmodelingprep.com/stable";
 
-export const financialModelingPrepActionHandlers: Record<
-  FinancialModelingPrepActionName,
+export const financialModelingPrepActionHandlers: ProviderActionHandlers<
+  "financial_modeling_prep",
   FinancialModelingPrepActionHandler
 > = {
   async search_symbols(input, context) {

@@ -84,20 +84,6 @@ const messageListOutputSchema = s.object("The response returned for Mailosaur me
   messages: s.array("The messages returned by Mailosaur.", messageSummarySchema),
 });
 
-export type MailosaurActionName =
-  | "list_servers"
-  | "get_server"
-  | "create_server"
-  | "update_server"
-  | "delete_server"
-  | "list_messages"
-  | "search_messages"
-  | "get_message"
-  | "delete_message"
-  | "delete_all_messages"
-  | "get_usage_limits"
-  | "list_usage_transactions";
-
 export const mailosaurActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_servers",

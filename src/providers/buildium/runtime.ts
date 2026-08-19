@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BuildiumActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ export interface BuildiumActionContext {
   signal?: AbortSignal;
 }
 
-export const buildiumActionHandlers: Record<BuildiumActionName, BuildiumActionHandler> = {
+export const buildiumActionHandlers: ProviderActionHandlers<"buildium", BuildiumActionHandler> = {
   async list_properties(input, context) {
     const payload = await buildiumRequestJson({
       path: rentalsPath,

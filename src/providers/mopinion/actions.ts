@@ -5,19 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mopinion";
 
-export type MopinionActionName =
-  | "get_account"
-  | "get_report"
-  | "get_dataset"
-  | "list_deployments"
-  | "get_deployment"
-  | "list_dataset_feedback"
-  | "get_dataset_feedback"
-  | "list_report_feedback"
-  | "get_report_feedback"
-  | "list_dataset_fields"
-  | "list_report_fields";
-
 const emptyInputSchema = s.actionInput({}, [], "No input is required for this action.");
 const optionalPositiveIntegerSchema = s.positiveInteger("The collection page number to retrieve.");
 const limitSchema = s.integer("The maximum number of items to return in one page.", { minimum: 1, maximum: 1000 });

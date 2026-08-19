@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -35,7 +36,7 @@ interface ResendRequestOptions {
   headers?: Record<string, string>;
 }
 
-export const resendActionHandlers: Record<string, ResendActionHandler> = {
+export const resendActionHandlers: ProviderActionHandlers<"resend", ResendActionHandler> = {
   send_email: sendEmail,
   send_batch_emails: sendBatchEmails,
   list_sent_emails: listSentEmails,

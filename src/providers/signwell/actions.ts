@@ -175,11 +175,3 @@ export const signwellActions: ActionDefinition[] = [
     outputSchema: rawObjectSchema,
   }),
 ];
-
-export type SignwellActionName =
-  | "get_me"
-  | "get_template"
-  | "create_document_from_template"
-  | "get_document"
-  | "send_document"
-  | "send_document_reminder";

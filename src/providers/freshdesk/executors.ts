@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { FreshdeskActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -37,7 +37,7 @@ interface FreshdeskRequestInput {
 
 type FreshdeskActionHandler = (input: Record<string, unknown>, context: FreshdeskActionContext) => Promise<unknown>;
 
-export const freshdeskActionHandlers: Record<FreshdeskActionName, FreshdeskActionHandler> = {
+export const freshdeskActionHandlers: ProviderActionHandlers<"freshdesk", FreshdeskActionHandler> = {
   async get_account(_input, context) {
     return {
       account: await requestFreshdeskJson({

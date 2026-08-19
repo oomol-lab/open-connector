@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FixerActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -17,7 +17,7 @@ interface FixerRequestInput {
   query?: Record<string, FixerQueryValue>;
 }
 
-export const fixerActionHandlers: Record<FixerActionName, FixerActionHandler> = {
+export const fixerActionHandlers: ProviderActionHandlers<"fixer", FixerActionHandler> = {
   get_supported_symbols(_input, context) {
     return fixerRequest(context, {
       path: "/symbols",

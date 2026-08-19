@@ -254,5 +254,3 @@ export const northflankActions: ActionDefinition[] = [
     outputSchema: getServiceOutputSchema,
   }),
 ];
-
-export type NorthflankActionName = "list_projects" | "get_project" | "list_services" | "get_service";

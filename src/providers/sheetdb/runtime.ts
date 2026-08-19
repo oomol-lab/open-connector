@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -21,7 +22,7 @@ interface SheetDbRequestInput extends SheetDbContext {
   phase: "validate" | "execute";
 }
 
-export const sheetDbActionHandlers: Record<string, ProviderRuntimeHandler<SheetDbContext>> = {
+export const sheetDbActionHandlers: ProviderActionHandlers<"sheetdb", ProviderRuntimeHandler<SheetDbContext>> = {
   list_rows(input, context) {
     return listRows(input, context);
   },

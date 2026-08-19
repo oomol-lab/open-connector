@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -13,7 +14,7 @@ interface AmplemarketContext {
 
 type AmplemarketActionHandler = (input: Record<string, unknown>, context: AmplemarketContext) => Promise<unknown>;
 
-export const amplemarketActionHandlers: Record<string, AmplemarketActionHandler> = {
+export const amplemarketActionHandlers: ProviderActionHandlers<"amplemarket", AmplemarketActionHandler> = {
   get_account_details(_input, context) {
     return requestAmplemarket({ path: "/account-info" }, context).then((account) => ({ account }));
   },

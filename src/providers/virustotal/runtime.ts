@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { VirustotalActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -26,7 +26,7 @@ interface VirustotalRequestOptions {
   body?: BodyInit | Record<string, unknown>;
 }
 
-export const virustotalActionHandlers: Record<VirustotalActionName, VirustotalActionHandler> = {
+export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", VirustotalActionHandler> = {
   search(input, context) {
     return virustotalJsonRequest(
       "/search",

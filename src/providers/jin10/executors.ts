@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { Jin10ActionName } from "./actions.ts";
 import type { Client } from "@modelcontextprotocol/client";
@@ -30,7 +31,7 @@ interface Jin10McpToolSummary {
   description?: string;
 }
 
-export const jin10ActionHandlers: Record<Jin10ActionName, Jin10ActionHandler> = {
+export const jin10ActionHandlers: ProviderActionHandlers<"jin10", Jin10ActionHandler> = {
   list_quote_codes(_input, context) {
     return readJin10QuoteCodes(context);
   },

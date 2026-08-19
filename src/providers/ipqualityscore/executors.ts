@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IpqualityscoreActionName } from "./actions.ts";
 
 import { isIP } from "node:net";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -29,7 +29,7 @@ type IpqualityscoreActionHandler = (
   context: IpqualityscoreActionContext,
 ) => Promise<unknown>;
 
-export const ipqualityscoreActionHandlers: Record<IpqualityscoreActionName, IpqualityscoreActionHandler> = {
+export const ipqualityscoreActionHandlers: ProviderActionHandlers<"ipqualityscore", IpqualityscoreActionHandler> = {
   check_ip_reputation(input, context) {
     const ipAddress = readRequiredString(input.ipAddress, "ipAddress");
     if (isIP(ipAddress) === 0) {

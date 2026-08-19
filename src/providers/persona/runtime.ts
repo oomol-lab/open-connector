@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PersonaActionName } from "./actions.ts";
 
 import { nullableString, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -30,7 +30,7 @@ const personaAttributeParams: Record<string, string> = {
 
 type PersonaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const personaActionHandlers: Record<PersonaActionName, PersonaActionHandler> = {
+export const personaActionHandlers: ProviderActionHandlers<"persona", PersonaActionHandler> = {
   list_inquiries(input, context) {
     return listInquiries(input, context);
   },

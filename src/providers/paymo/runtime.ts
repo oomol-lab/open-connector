@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PaymoActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -29,7 +29,7 @@ interface PaymoRequestInput {
 type PaymoActionContext = ApiKeyProviderContext;
 type PaymoActionHandler = (input: Record<string, unknown>, context: PaymoActionContext) => Promise<unknown>;
 
-export const paymoActionHandlers: Record<PaymoActionName, PaymoActionHandler> = {
+export const paymoActionHandlers: ProviderActionHandlers<"paymo", PaymoActionHandler> = {
   get_current_user(_input, context) {
     return requestSinglePaymoResource({
       apiKey: context.apiKey,

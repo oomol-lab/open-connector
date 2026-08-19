@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SalesflareActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -28,7 +28,7 @@ interface SalesflareRequestInput {
   body?: unknown;
 }
 
-export const salesflareActionHandlers: Record<SalesflareActionName, SalesflareActionHandler> = {
+export const salesflareActionHandlers: ProviderActionHandlers<"salesflare", SalesflareActionHandler> = {
   async get_current_user(_input, context) {
     return { user: await salesflareRequestJson({ method: "GET", path: "/me", context }) };
   },

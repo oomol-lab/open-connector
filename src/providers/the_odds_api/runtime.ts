@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TheOddsApiActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, isAbortLikeError, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const defaultRequestTimeoutMs = 30_000;
 
 type TheOddsApiHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const theOddsApiActionHandlers: Record<TheOddsApiActionName, TheOddsApiHandler> = {
+export const theOddsApiActionHandlers: ProviderActionHandlers<"the_odds_api", TheOddsApiHandler> = {
   async list_sports(input, context) {
     const response = await theOddsApiRequestJson("sports", context, compactObject({ all: booleanParam(input.all) }));
     return { sports: arrayPayload(response.payload, "The Odds API sports response"), quota: response.quota };

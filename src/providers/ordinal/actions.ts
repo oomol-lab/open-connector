@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "ordinal";
 
-export type OrdinalActionName =
-  | "get_workspace"
-  | "list_scheduling_profiles"
-  | "list_engagement_profiles"
-  | "list_users"
-  | "list_labels"
-  | "list_posts"
-  | "get_post"
-  | "list_ideas"
-  | "get_idea";
-
 const uuidSchema = s.uuid("An Ordinal UUID.");
 const paginationLimitSchema = s.integer("The maximum number of items to return, from 1 to 100.", {
   minimum: 1,

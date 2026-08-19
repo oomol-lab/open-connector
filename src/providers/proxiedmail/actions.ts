@@ -249,10 +249,3 @@ export const proxiedmailActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type ProxiedmailActionName =
-  | "list_proxy_bindings"
-  | "create_proxy_binding"
-  | "update_proxy_binding"
-  | "list_received_email_links"
-  | "get_received_email";

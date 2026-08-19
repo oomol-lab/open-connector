@@ -38,8 +38,6 @@ const commonMessageFields = {
 
 const commonOptionalFields = ["userId", "anonymousId", "context", "integrations", "timestamp", "sentAt", "messageId"];
 
-export type SegmentActionName = "identify" | "track" | "page" | "screen" | "group" | "alias" | "batch";
-
 function requireUserIdOrAnonymousId(schema: JsonSchema): JsonSchema {
   return {
     ...schema,

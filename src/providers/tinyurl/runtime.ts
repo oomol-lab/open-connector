@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TinyurlActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -17,7 +17,7 @@ const tinyurlValidationPath = "/urls/available?page=1&limit=1";
 
 type TinyurlRequestPhase = "validate" | "execute";
 
-export const tinyurlActionHandlers: Record<TinyurlActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const tinyurlActionHandlers: ProviderActionHandlers<"tinyurl", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   create_short_url(input, context) {
     return createShortUrl(input, context);
   },

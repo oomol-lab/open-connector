@@ -122,5 +122,3 @@ export const formcarryActions: ActionDefinition[] = [
     outputSchema: listSubmissionsOutputSchema,
   }),
 ];
-
-export type FormcarryActionName = "create_form" | "delete_form" | "list_submissions";

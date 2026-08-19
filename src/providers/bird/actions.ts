@@ -88,20 +88,6 @@ const createMessageSchema = s.object(
   },
 );
 
-export type BirdActionName =
-  | "list_channels"
-  | "get_channel"
-  | "get_message"
-  | "list_message_interactions"
-  | "send_message"
-  | "send_batch_messages"
-  | "list_contacts"
-  | "get_contact"
-  | "search_contact_by_identifier"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact";
-
 export const birdActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_channels",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CloudinaryActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -18,7 +18,10 @@ type CloudinaryRequestPhase = "validate" | "execute";
 
 const cloudinaryApiBaseUrl = "https://api.cloudinary.com/v1_1";
 
-export const cloudinaryActionHandlers: Record<CloudinaryActionName, ProviderRuntimeHandler<CloudinaryContext>> = {
+export const cloudinaryActionHandlers: ProviderActionHandlers<
+  "cloudinary",
+  ProviderRuntimeHandler<CloudinaryContext>
+> = {
   upload_asset(input, context) {
     return uploadAsset(input, context);
   },

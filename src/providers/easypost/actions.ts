@@ -77,14 +77,6 @@ const trackerListInputSchema = s.object(
   },
 );
 
-export type EasypostActionName =
-  | "create_address"
-  | "get_address"
-  | "create_tracker"
-  | "get_tracker"
-  | "list_trackers"
-  | "list_carrier_types";
-
 export const easypostActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_address",

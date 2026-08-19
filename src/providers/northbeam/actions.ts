@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "northbeam";
 
-export type NorthbeamActionName =
-  | "list_metrics"
-  | "list_attribution_models"
-  | "list_breakdowns"
-  | "list_spend"
-  | "list_hourly_spend";
-
 const nonEmptyStringSchema = (description: string): JsonSchema =>
   s.string(description, { minLength: 1, pattern: "\\S" });
 

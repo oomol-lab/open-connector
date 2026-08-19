@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   optionalBoolean,
@@ -55,7 +56,7 @@ interface WriteEntityOptions {
   entity: Record<string, unknown>;
 }
 
-export const datalustActionHandlers: Record<string, DatalustActionHandler> = {
+export const datalustActionHandlers: ProviderActionHandlers<"datalust", DatalustActionHandler> = {
   search_events: searchEvents,
   get_event: getEvent,
   execute_query: executeQuery,

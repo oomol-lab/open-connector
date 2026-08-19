@@ -227,17 +227,3 @@ const faradayActionSources = [
 export const faradayActions: ActionDefinition[] = faradayActionSources.map((action) =>
   defineProviderAction(service, action),
 );
-
-export type FaradayActionName =
-  | "get_current_account"
-  | "list_accounts"
-  | "get_account"
-  | "list_scopes"
-  | "get_scope"
-  | "list_datasets"
-  | "get_dataset"
-  | "list_traits"
-  | "get_trait"
-  | "list_targets"
-  | "get_target"
-  | "list_usages";

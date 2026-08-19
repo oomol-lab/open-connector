@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CodemagicActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ type CodemagicQueryValue = string | number | boolean | string[] | undefined;
 type CodemagicRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CodemagicActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const codemagicActionHandlers: Record<CodemagicActionName, CodemagicActionHandler> = {
+export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", CodemagicActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestCodemagicV3Json<{ data?: unknown }>({
       context,

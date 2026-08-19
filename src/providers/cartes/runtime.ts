@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CartesActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -40,7 +40,7 @@ interface CartesRequestContext {
   signal?: AbortSignal;
 }
 
-export const cartesActionHandlers: Record<CartesActionName, CartesActionHandler> = {
+export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesActionHandler> = {
   async get_current_user(_input, context) {
     return {
       user: requireResponseObject(await cartesRequest("user", context, { phase: "execute" }), "Cartes.io user"),

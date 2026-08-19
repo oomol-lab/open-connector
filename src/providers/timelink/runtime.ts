@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TimelinkActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -32,7 +32,7 @@ type TimelinkPagination = {
   total: number;
 };
 
-export const timelinkActionHandlers: Record<TimelinkActionName, TimelinkActionHandler> = {
+export const timelinkActionHandlers: ProviderActionHandlers<"timelink", TimelinkActionHandler> = {
   async list_clients(input, context) {
     const payload = await requestTimelinkJson({
       path: "/clients",
@@ -273,7 +273,7 @@ export const timelinkActionHandlers: Record<TimelinkActionName, TimelinkActionHa
       token: normalizeToken(readDataObject(payload)),
     };
   },
-} satisfies Record<TimelinkActionName, TimelinkActionHandler>;
+};
 
 export async function validateTimelinkCredential(
   input: Record<string, string>,

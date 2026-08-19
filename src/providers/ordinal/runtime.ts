@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OrdinalActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -20,7 +20,7 @@ type OrdinalRequestPhase = "validate" | "execute";
 type OrdinalActionContext = ApiKeyProviderContext;
 type OrdinalActionHandler = (input: Record<string, unknown>, context: OrdinalActionContext) => Promise<unknown>;
 
-export const ordinalActionHandlers: Record<OrdinalActionName, OrdinalActionHandler> = {
+export const ordinalActionHandlers: ProviderActionHandlers<"ordinal", OrdinalActionHandler> = {
   async get_workspace(_input, context) {
     const workspace = await requestOrdinalJson({
       context,

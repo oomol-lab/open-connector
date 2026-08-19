@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -35,7 +36,10 @@ const balldontlieListEndpoints = {
 type BalldontlieActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type BalldontliePhase = "validate" | "execute";
 
-export const balldontlieWorldcupActionHandlers: Record<string, BalldontlieActionHandler> = {
+export const balldontlieWorldcupActionHandlers: ProviderActionHandlers<
+  "balldontlie_worldcup",
+  BalldontlieActionHandler
+> = {
   async list_teams(input, context) {
     const payload = await balldontlieRequestJson({
       path: "/teams",

@@ -1,6 +1,13 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  getProviderActionHandler,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;
@@ -15,7 +22,7 @@ const requestTimeoutMs = 30_000;
 type RequestPhase = "validate" | "execute";
 type ActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch, apiKey: string) => Promise<unknown>;
 
-const happyScribeActionHandlers: Record<string, ActionHandler> = {
+const happyScribeActionHandlers: ProviderActionHandlers<"happy_scribe", ActionHandler> = {
   async list_organizations(_input, fetcher, apiKey) {
     const payload = await requestHappyScribe({
       path: "/organizations",
@@ -213,7 +220,10 @@ export async function executeHappyScribeAction(
   },
   fetcher: typeof fetch,
 ): Promise<unknown> {
-  const handler = happyScribeActionHandlers[input.actionName];
+  const handler = getProviderActionHandler(happyScribeActionHandlers, input.actionName);
+  if (!handler) {
+    throw new ProviderRequestError(400, `unknown happy_scribe action: ${input.actionName}`);
+  }
   return handler(input.input, fetcher, input.apiKey);
 }
 

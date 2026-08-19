@@ -183,14 +183,6 @@ const listOutputSchema = (description: string, itemDescription: string, itemSche
     totalItems: s.nonNegativeInteger("The total number of matching items."),
   });
 
-export type TypeformActionName =
-  | "get_current_user"
-  | "list_forms"
-  | "get_form"
-  | "list_form_responses"
-  | "list_workspaces"
-  | "get_workspace";
-
 export const typeformActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

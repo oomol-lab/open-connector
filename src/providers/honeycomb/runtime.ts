@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HoneycombActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -23,7 +23,7 @@ export interface HoneycombActionContext extends ApiKeyProviderContext {
 type HoneycombRequestPhase = "validate" | "execute";
 type HoneycombActionHandler = (input: Record<string, unknown>, context: HoneycombActionContext) => Promise<unknown>;
 
-export const honeycombActionHandlers: Record<HoneycombActionName, HoneycombActionHandler> = {
+export const honeycombActionHandlers: ProviderActionHandlers<"honeycomb", HoneycombActionHandler> = {
   get_auth(_input, context) {
     return getHoneycombAuth(context);
   },

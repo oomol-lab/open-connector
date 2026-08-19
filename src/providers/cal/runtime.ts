@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CalActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -24,7 +24,7 @@ interface CalEnvelope<T> {
   message?: string;
 }
 
-export const calActionHandlers: Record<CalActionName, CalActionHandler> = {
+export const calActionHandlers: ProviderActionHandlers<"cal", CalActionHandler> = {
   get_my_profile(_input, context) {
     return calGetMyProfile(context);
   },

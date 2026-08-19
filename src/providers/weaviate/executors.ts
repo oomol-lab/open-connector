@@ -4,6 +4,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -27,7 +28,7 @@ interface WeaviateActionContext {
 
 type WeaviateActionHandler = ProviderRuntimeHandler<WeaviateActionContext>;
 
-const weaviateActionHandlers: Record<string, WeaviateActionHandler> = {
+const weaviateActionHandlers: ProviderActionHandlers<"weaviate", WeaviateActionHandler> = {
   async get_instance_metadata(_input, context): Promise<unknown> {
     const payload = await requestWeaviateJson({
       baseUrl: context.baseUrl,

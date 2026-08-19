@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -16,7 +17,10 @@ const expectedTools = ["docs", "execute", "search"];
 
 type CloudflareMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
-export const cloudflareMcpActionHandlers: Record<string, ProviderRuntimeHandler<BearerProviderContext>> = {
+export const cloudflareMcpActionHandlers: ProviderActionHandlers<
+  "cloudflare_mcp",
+  ProviderRuntimeHandler<BearerProviderContext>
+> = {
   docs(input: Record<string, unknown>, context: BearerProviderContext) {
     return callCloudflareMcpTool(context, "docs", input);
   },

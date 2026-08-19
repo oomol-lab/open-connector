@@ -36,5 +36,3 @@ export const turbotPipesActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type TurbotPipesActionName = "execute_query";

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GraphhopperActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -13,7 +13,7 @@ type GraphhopperRequestPhase = "validate" | "execute";
 type GraphhopperActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type GraphhopperQuery = Record<string, string | number | boolean | readonly string[] | undefined>;
 
-export const graphhopperActionHandlers: Record<GraphhopperActionName, GraphhopperActionHandler> = {
+export const graphhopperActionHandlers: ProviderActionHandlers<"graphhopper", GraphhopperActionHandler> = {
   calculate_route(input, context) {
     return graphhopperGetJson("/route", buildRouteQuery(input), context, "execute");
   },

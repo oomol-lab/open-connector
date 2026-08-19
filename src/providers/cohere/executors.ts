@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -9,7 +10,7 @@ const cohereApiBaseUrl = "https://api.cohere.com";
 
 type CohereActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const cohereActionHandlers: Record<string, CohereActionHandler> = {
+export const cohereActionHandlers: ProviderActionHandlers<"cohere", CohereActionHandler> = {
   chat(input, context) {
     assertStreamingDisabled(input);
     return coherePost(context, "/v2/chat", input);

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NewsdataIoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const newsdataIoApiBaseUrl = "https://newsdata.io";
 type NewsdataIoPhase = "validate" | "execute";
 type NewsdataIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const newsdataIoActionHandlers: Record<NewsdataIoActionName, NewsdataIoActionHandler> = {
+export const newsdataIoActionHandlers: ProviderActionHandlers<"newsdata_io", NewsdataIoActionHandler> = {
   get_latest_news(input, context) {
     return requestNewsdataIoJson("/api/1/latest", buildNewsdataIoQuery(input), context, "execute");
   },

@@ -89,8 +89,6 @@ const organicCompetitorsAction = defineProviderAction(service, {
   outputSchema: semrushCsvReportOutputSchema,
 });
 
-export type SemrushActionName = "get_domain_overview" | "list_domain_organic_keywords" | "list_organic_competitors";
-
 export const semrushActions: ActionDefinition[] = [
   domainRankAction,
   domainOrganicKeywordsAction,

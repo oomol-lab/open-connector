@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -57,7 +58,10 @@ interface MediaMetadataUpdateResult {
   metadataError: string | null;
 }
 
-export const woocommerceActionHandlers: Record<string, ProviderRuntimeHandler<WooCommerceCredentialContext>> = {
+export const woocommerceActionHandlers: ProviderActionHandlers<
+  "woocommerce",
+  ProviderRuntimeHandler<WooCommerceCredentialContext>
+> = {
   list_products: listProducts,
   get_product: getProduct,
   create_product: createProduct,

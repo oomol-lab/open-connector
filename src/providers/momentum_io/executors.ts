@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MomentumIoActionName } from "./actions.ts";
 
 import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ const momentumIoValidationPath = "/v1/users?pageSize=1";
 type MomentumIoRequestPhase = "validate" | "execute";
 type MomentumIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const momentumIoActionHandlers: Record<MomentumIoActionName, MomentumIoActionHandler> = {
+export const momentumIoActionHandlers: ProviderActionHandlers<"momentum_io", MomentumIoActionHandler> = {
   list_users(input, context) {
     return requestMomentumIoJson(buildListUsersPath(input), context, "execute");
   },

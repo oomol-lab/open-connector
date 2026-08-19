@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "guru";
 
-export type GuruActionName =
-  | "get_current_identity"
-  | "search_cards"
-  | "get_card"
-  | "list_collections"
-  | "get_team_stats";
-
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const upstreamObjectSchema = s.looseObject("A Guru object returned by the API.");
 const linkSchema = s.looseObject("Pagination links parsed from the Guru Link response header.", {

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -38,7 +39,7 @@ function toPage(response: MicrosoftTodoGraphPage): MicrosoftTodoPage {
   return nextLink ? { value, nextLink } : { value };
 }
 
-export const microsoftTodoActionHandlers: Record<string, MicrosoftTodoActionHandler> = {
+export const microsoftTodoActionHandlers: ProviderActionHandlers<"microsoft_todo", MicrosoftTodoActionHandler> = {
   list_task_lists: listTaskLists,
   get_task_list: getTaskList,
   create_task_list: createTaskList,

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { DocumensoActionName } from "./actions.ts";
 
 import {
   nullableInteger,
@@ -26,7 +26,7 @@ interface DocumensoRequestContext {
   signal?: AbortSignal;
 }
 
-export const documensoActionHandlers: Record<DocumensoActionName, DocumensoActionHandler> = {
+export const documensoActionHandlers: ProviderActionHandlers<"documenso", DocumensoActionHandler> = {
   list_envelopes(input, context) {
     return executeListEnvelopes(input, context);
   },

@@ -6,6 +6,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -39,7 +40,7 @@ interface CoinbaseActionContext {
 }
 type CoinbaseActionHandler = (input: Record<string, unknown>, context: CoinbaseActionContext) => Promise<unknown>;
 
-export const coinbaseActionHandlers: Record<string, CoinbaseActionHandler> = {
+export const coinbaseActionHandlers: ProviderActionHandlers<"coinbase", CoinbaseActionHandler> = {
   list_accounts(input, context) {
     return coinbaseGetJson(
       accountsPath,

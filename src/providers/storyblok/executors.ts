@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { StoryblokActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, optionalStringArray, requiredString } from "../../core/cast.ts";
 import {
@@ -44,7 +44,7 @@ const storyblokRegionLabels = {
   cn: "China",
 } satisfies Record<StoryblokRegion, string>;
 
-const storyblokActionHandlers: Record<StoryblokActionName, StoryblokActionHandler> = {
+const storyblokActionHandlers: ProviderActionHandlers<"storyblok", StoryblokActionHandler> = {
   get_space(_input, context) {
     return storyblokRequestJson({ path: "/spaces/me" }, context, "execute");
   },

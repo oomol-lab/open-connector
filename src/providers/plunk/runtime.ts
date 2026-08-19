@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -18,7 +19,7 @@ interface PlunkRequestInput {
 
 export const plunkApiBaseUrl = "https://next-api.useplunk.com";
 
-export const plunkActionHandlers: Record<string, PlunkActionHandler> = {
+export const plunkActionHandlers: ProviderActionHandlers<"plunk", PlunkActionHandler> = {
   send_email(input, context) {
     return sendEmail(input, context);
   },

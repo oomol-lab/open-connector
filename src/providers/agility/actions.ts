@@ -160,11 +160,3 @@ export const agilityActions: ActionDefinition[] = [
     outputSchema: getNestedSitemapOutputSchema,
   }),
 ];
-
-export type AgilityActionName =
-  | "list_content_models"
-  | "get_content_list"
-  | "get_content_item"
-  | "get_page"
-  | "get_flat_sitemap"
-  | "get_nested_sitemap";

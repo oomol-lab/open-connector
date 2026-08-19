@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, readObject } from "./runtime.shared.ts";
@@ -9,7 +11,7 @@ interface DopplerLogActionContext {
 
 type DopplerLogActionHandler = (input: Record<string, unknown>, context: DopplerLogActionContext) => Promise<unknown>;
 
-export const dopplerLogActionHandlers: Record<"list_config_logs" | "get_config_log", DopplerLogActionHandler> = {
+export const dopplerLogActionHandlers: ProviderActionHandlerSubset<"doppler", DopplerLogActionHandler> = {
   list_config_logs(input, context) {
     return dopplerListConfigLogs(input, context.accessToken, context.fetcher);
   },

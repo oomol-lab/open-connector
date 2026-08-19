@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { JigsawstackActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,10 @@ interface JigsawstackRequest {
   phase?: JigsawstackRequestPhase;
 }
 
-export const jigsawstackActionHandlers: Record<JigsawstackActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const jigsawstackActionHandlers: ProviderActionHandlers<
+  "jigsawstack",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async search_web(input, context) {
     return normalizeSearchWebResponse(
       await requestJigsawstackJson(context, {

@@ -151,16 +151,6 @@ const sendEventInputSchema: JsonSchema = {
   anyOf: [{ required: ["email"] }, { required: ["userId"] }],
 };
 
-export type LoopsActionName =
-  | "create_contact"
-  | "update_contact"
-  | "find_contact"
-  | "delete_contact"
-  | "create_contact_property"
-  | "list_contact_properties"
-  | "list_mailing_lists"
-  | "send_event";
-
 export const loopsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_contact",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CloudflareDnsActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
@@ -29,8 +29,8 @@ interface CloudflareAccount {
 
 const cloudflareApiBaseUrl = "https://api.cloudflare.com/client/v4";
 
-export const cloudflareDnsActionHandlers: Record<
-  CloudflareDnsActionName,
+export const cloudflareDnsActionHandlers: ProviderActionHandlers<
+  "cloudflare_dns",
   ProviderRuntimeHandler<BearerProviderContext>
 > = {
   list_accounts(input, context) {

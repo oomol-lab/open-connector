@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -20,7 +21,7 @@ interface MissiveRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const missiveActionHandlers: Record<string, MissiveActionHandler> = {
+export const missiveActionHandlers: ProviderActionHandlers<"missive", MissiveActionHandler> = {
   list_users(_input, context) {
     return requestMissiveJson({
       path: missiveValidationPath,

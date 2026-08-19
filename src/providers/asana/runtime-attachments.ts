@@ -1,4 +1,5 @@
 import type { TransitFileRead } from "../../core/types.ts";
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ const defaultAttachmentFields = [
   "view_url",
 ];
 
-export const attachmentActionHandlers: Record<string, AsanaActionHandler> = {
+export const attachmentActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActionHandler> = {
   get_attachment(input, context) {
     return getAsanaResource(
       `/attachments/${asanaPathGid(input.attachmentId, "attachmentId")}`,

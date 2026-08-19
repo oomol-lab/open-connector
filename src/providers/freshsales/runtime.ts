@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FreshsalesActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
 import {
@@ -35,7 +35,10 @@ interface FreshsalesRequestInput {
   signal?: AbortSignal;
 }
 
-export const freshsalesActionHandlers: Record<FreshsalesActionName, ProviderRuntimeHandler<FreshsalesActionContext>> = {
+export const freshsalesActionHandlers: ProviderActionHandlers<
+  "freshsales",
+  ProviderRuntimeHandler<FreshsalesActionContext>
+> = {
   async list_contact_filters(_input, context) {
     const payload = await requestFreshsalesJson({
       ...context,

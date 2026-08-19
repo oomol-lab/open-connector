@@ -1,6 +1,11 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { createProviderFetch, defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import {
+  combineProviderActionHandlers,
+  createProviderFetch,
+  defineApiKeyProviderExecutors,
+} from "../provider-runtime.ts";
 import { pixellabCharacterActionHandlers } from "./runtime-character.ts";
 import { pixellabImageExtraActionHandlers } from "./runtime-image-extra.ts";
 import { pixellabImageActionHandlers } from "./runtime-image.ts";
@@ -12,14 +17,15 @@ const service = "pixellab";
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   service,
-  {
-    ...pixellabActionHandlers,
-    ...pixellabImageActionHandlers,
-    ...pixellabImageExtraActionHandlers,
-    ...pixellabUiActionHandlers,
-    ...pixellabCharacterActionHandlers,
-    ...pixellabObjectActionHandlers,
-  },
+  combineProviderActionHandlers<"pixellab", ProviderRuntimeHandler<ApiKeyProviderContext>>(
+    service,
+    pixellabActionHandlers,
+    pixellabImageActionHandlers,
+    pixellabImageExtraActionHandlers,
+    pixellabUiActionHandlers,
+    pixellabCharacterActionHandlers,
+    pixellabObjectActionHandlers,
+  ),
   { skipDnsValidation: true },
 );
 

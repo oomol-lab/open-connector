@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GistActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { GistActionContext, GistActionHandler } from "./runtime-shared.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -13,7 +13,7 @@ import {
   optionalInteger,
 } from "./runtime-shared.ts";
 
-export const gistActionHandlers: Record<GistActionName, GistActionHandler> = {
+export const gistActionHandlers: ProviderActionHandlers<"gist", GistActionHandler> = {
   list_my_gists(input, context) {
     return listGists("/gists", input, context);
   },

@@ -123,11 +123,3 @@ export const shortpixelActions: ActionDefinition[] = [
   purgeDomainStorageAction,
   purgeDomainCacheAction,
 ];
-
-export type ShortpixelActionName =
-  | "get_domain_cdn_usage"
-  | "add_domain"
-  | "set_domain"
-  | "revoke_domain"
-  | "purge_domain_storage"
-  | "purge_domain_cache";

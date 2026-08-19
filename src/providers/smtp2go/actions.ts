@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "smtp2go";
 
-export type Smtp2goActionName =
-  | "send_email"
-  | "search_activity"
-  | "get_email_summary"
-  | "view_api_key_permissions"
-  | "list_sender_domains"
-  | "list_single_sender_emails"
-  | "search_email_templates"
-  | "get_email_template";
-
 const emailAddressListSchema = (description: string) =>
   s.array(description, s.nonWhitespaceString("One email address or name/address pair accepted by SMTP2GO."), {
     minItems: 1,

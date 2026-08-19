@@ -317,10 +317,3 @@ export const getprospectActions: ActionDefinition[] = [
     outputSchema: searchCompaniesOutputSchema,
   }),
 ];
-
-export type GetProspectActionName =
-  | "find_email"
-  | "verify_email"
-  | "lookup_email"
-  | "search_leads"
-  | "search_companies";

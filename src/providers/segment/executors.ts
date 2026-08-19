@@ -4,8 +4,8 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SegmentActionName } from "./actions.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredRecord } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ const segmentFetch = createProviderFetch({ skipDnsValidation: true });
 type SegmentActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type SegmentActionHandler = (input: Record<string, unknown>, context: SegmentActionContext) => Promise<unknown>;
 
-export const segmentActionHandlers: Record<SegmentActionName, SegmentActionHandler> = {
+export const segmentActionHandlers: ProviderActionHandlers<"segment", SegmentActionHandler> = {
   identify(input, context) {
     return requestSegment("identify", withWriteKey(input, context.apiKey), context);
   },

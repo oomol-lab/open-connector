@@ -1,10 +1,11 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import { compactObject, optionalRecord as asOptionalObject } from "../../core/cast.ts";
 import { asArray, mondayGraphqlRequest, mondayProviderError } from "./runtime-common.ts";
 
-export const mondayFormsActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayFormsActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   get_form(input, fetcher) {
     return mondayGetForm(input, fetcher);
   },

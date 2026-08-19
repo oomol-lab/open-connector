@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -34,7 +35,7 @@ interface OctopusDeployContext {
 
 type OctopusDeployActionHandler = (input: Record<string, unknown>, context: OctopusDeployContext) => Promise<unknown>;
 
-export const octopusDeployActionHandlers: Record<string, OctopusDeployActionHandler> = {
+export const octopusDeployActionHandlers: ProviderActionHandlers<"octopus_deploy", OctopusDeployActionHandler> = {
   async get_current_user(_input, context) {
     const raw = await requestOctopusDeployObject(context, validationPath, "execute");
     return { user: raw, raw };

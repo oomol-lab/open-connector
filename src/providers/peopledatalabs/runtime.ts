@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PeopledatalabsActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ interface PdlRequestInput {
   phase: PdlPhase;
 }
 
-export const peopledatalabsActionHandlers: Record<PeopledatalabsActionName, PdlActionHandler> = {
+export const peopledatalabsActionHandlers: ProviderActionHandlers<"peopledatalabs", PdlActionHandler> = {
   enrich_person(input, context) {
     validatePersonEnrichInput(input);
     return enrichPdlRecord("/v5/person/enrich", input, context);

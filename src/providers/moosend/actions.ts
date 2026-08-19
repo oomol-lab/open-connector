@@ -5,12 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "moosend";
 
-export type MoosendActionName =
-  | "list_mailing_lists"
-  | "list_subscribers"
-  | "get_subscriber_by_email"
-  | "add_subscriber";
-
 const formatSchema = s.literal("json", {
   description: "Moosend response format. Connector actions always request JSON.",
 });

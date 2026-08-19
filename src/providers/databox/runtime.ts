@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DataboxActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -19,7 +19,7 @@ type DataboxPhase = "validate" | "execute";
 type DataboxMethod = "GET" | "POST" | "DELETE";
 type DataboxHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const databoxActionHandlers: Record<DataboxActionName, DataboxHandler> = {
+export const databoxActionHandlers: ProviderActionHandlers<"databox", DataboxHandler> = {
   list_accounts(_input, context) {
     return databoxRequestJson({ method: "GET", path: "/v1/accounts", context, phase: "execute" });
   },

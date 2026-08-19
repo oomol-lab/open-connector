@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { NetlifyActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
@@ -18,7 +19,7 @@ export interface NetlifyActionContext {
 
 type NetlifyActionHandler = (input: Record<string, unknown>, context: NetlifyActionContext) => Promise<unknown>;
 
-export const netlifyActionHandlers: Record<NetlifyActionName, NetlifyActionHandler> = {
+export const netlifyActionHandlers: ProviderActionHandlers<"netlify", NetlifyActionHandler> = {
   async get_current_user(_input: Record<string, unknown>, context: NetlifyActionContext): Promise<unknown> {
     return {
       user: objectPayload(

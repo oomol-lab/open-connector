@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailosaurActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -18,7 +18,7 @@ export const mailosaurApiBaseUrl = "https://mailosaur.com";
 type MailosaurRequestPhase = "validate" | "execute";
 type MailosaurActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const mailosaurActionHandlers: Record<MailosaurActionName, MailosaurActionHandler> = {
+export const mailosaurActionHandlers: ProviderActionHandlers<"mailosaur", MailosaurActionHandler> = {
   list_servers(_input, context) {
     return listServers(context);
   },

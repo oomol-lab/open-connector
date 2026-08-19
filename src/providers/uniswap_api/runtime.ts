@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ interface UniswapRequestInput {
   body: Record<string, unknown>;
 }
 
-export const uniswapApiActionHandlers: Record<string, UniswapActionHandler> = {
+export const uniswapApiActionHandlers: ProviderActionHandlers<"uniswap_api", UniswapActionHandler> = {
   get_quote(input, context) {
     return executeGetQuote(input, context);
   },

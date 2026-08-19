@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "netsuite";
 
-export type NetsuiteActionName = "run_suiteql" | "list_records" | "get_record" | "create_record" | "update_record";
-
 const recordTypeSchema = s.nonEmptyString(
   "The NetSuite record type path segment, such as customer, vendor, salesOrder, or invoice.",
 );

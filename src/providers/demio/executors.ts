@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -31,7 +32,7 @@ interface DemioContext {
 }
 type DemioActionHandler = (input: Record<string, unknown>, context: DemioContext) => Promise<unknown>;
 
-export const demioActionHandlers: Record<string, DemioActionHandler> = {
+export const demioActionHandlers: ProviderActionHandlers<"demio", DemioActionHandler> = {
   list_events(input, context) {
     return requestDemioAction(context, {
       method: "GET",

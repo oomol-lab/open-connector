@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { NeutrinoActionName } from "./actions.ts";
 
@@ -28,7 +29,10 @@ const neutrinoActionPathByName = {
   check_ip_blocklist: "/ip-blocklist",
 } satisfies Record<NeutrinoActionName, string>;
 
-export const neutrinoActionHandlers: Record<NeutrinoActionName, ProviderRuntimeHandler<NeutrinoActionContext>> = {
+export const neutrinoActionHandlers: ProviderActionHandlers<
+  "neutrino",
+  ProviderRuntimeHandler<NeutrinoActionContext>
+> = {
   validate_email(input: Record<string, unknown>, context: NeutrinoActionContext): Promise<unknown> {
     return requestNeutrinoJsonForAction(context, "validate_email", [
       ["email", requiredString(input.email, "email", invalidInput)],

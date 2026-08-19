@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalObjectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -32,7 +33,7 @@ interface FeishuApiRequestInput {
   context: FeishuActionContext;
 }
 
-export const feishuActionHandlers: Record<string, FeishuActionHandler> = {
+export const feishuActionHandlers: ProviderActionHandlerSubset<"feishu", FeishuActionHandler> = {
   get_current_user(_input, context) {
     return feishuGetCurrentUser(context);
   },

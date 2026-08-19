@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Mem0ActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -26,7 +26,7 @@ interface Mem0RequestInput {
   mode?: "validate" | "execute";
 }
 
-export const mem0ActionHandlers: Record<Mem0ActionName, Mem0ActionHandler> = {
+export const mem0ActionHandlers: ProviderActionHandlers<"mem0", Mem0ActionHandler> = {
   add_memories(input, context) {
     return addMem0Memories(input, context);
   },

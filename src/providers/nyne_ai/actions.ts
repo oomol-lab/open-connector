@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "nyne_ai";
 
-export type NyneAiActionName =
-  | "get_usage"
-  | "submit_person_search"
-  | "get_person_search"
-  | "submit_person_enrichment"
-  | "get_person_enrichment"
-  | "submit_company_search"
-  | "get_company_search"
-  | "submit_company_enrichment"
-  | "get_company_enrichment";
-
 const statusSchema = s.string("The Nyne.ai request status.");
 const rawObjectSchema = s.looseObject("The raw object returned by Nyne.ai.");
 const rawArraySchema = s.array("Raw objects returned by Nyne.ai.", rawObjectSchema);

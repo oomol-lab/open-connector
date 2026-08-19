@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -7,6 +8,7 @@ import { withMcpClient } from "../mcp-client.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -15,11 +17,13 @@ import { wpsMcpActions } from "./actions.ts";
 export const wpsMcpEndpoint = "https://mcp-center.wps.cn/skill_hub/mcp";
 const requestTimeoutMs = 55_000;
 
-const handlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = Object.fromEntries(
-  wpsMcpActions.map((action) => [
-    action.name,
-    (input: Record<string, unknown>, context: ApiKeyProviderContext) => executeWpsAction(action.name, input, context),
-  ]),
+const handlers: ProviderActionHandlers<
+  "wps_mcp",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = mapProviderActionHandlers(
+  "wps_mcp",
+  wpsMcpActions,
+  (_action, name) => (input, context) => executeWpsAction(name, input, context),
 );
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("wps_mcp", handlers, {

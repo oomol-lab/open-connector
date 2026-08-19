@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -48,7 +49,7 @@ interface AltiriaWrappedPayload {
   error?: unknown;
 }
 
-export const altiriaActionHandlers: Record<string, AltiriaActionHandler> = {
+export const altiriaActionHandlers: ProviderActionHandlers<"altiria", AltiriaActionHandler> = {
   send_sms(input, context) {
     return sendAltiriaSms(input, context);
   },

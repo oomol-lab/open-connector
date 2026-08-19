@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WrikeActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -36,7 +36,7 @@ interface WrikeRequestOptions {
   signal?: AbortSignal;
 }
 
-export const wrikeActionHandlers: Record<WrikeActionName, WrikeActionHandler> = {
+export const wrikeActionHandlers: ProviderActionHandlers<"wrike", WrikeActionHandler> = {
   list_contacts(input, context) {
     return executeListContacts(input, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RiveterActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ const requestTimeoutMs = 30_000;
 
 type RiveterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const riveterActionHandlers: Record<RiveterActionName, RiveterActionHandler> = {
+export const riveterActionHandlers: ProviderActionHandlers<"riveter", RiveterActionHandler> = {
   get_account(_input, context) {
     return requestRiveterObject({
       method: "GET",

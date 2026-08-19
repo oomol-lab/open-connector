@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -19,7 +20,10 @@ interface SaucelabsContext {
   fetcher: typeof fetch;
 }
 
-const handlers: Record<string, (input: Record<string, unknown>, context: SaucelabsContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "saucelabs",
+  (input: Record<string, unknown>, context: SaucelabsContext) => Promise<unknown>
+> = {
   list_jobs: (input, context) => executeSaucelabsAction({ actionName: "list_jobs", input, ...context }),
   get_job: (input, context) => executeSaucelabsAction({ actionName: "get_job", input, ...context }),
   update_job: (input, context) => executeSaucelabsAction({ actionName: "update_job", input, ...context }),

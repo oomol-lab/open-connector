@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SimilarwebDigitalRankApiActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,8 +11,8 @@ type SimilarwebQueryValue = string | number | boolean | undefined;
 type SimilarwebRequestPhase = "validate" | "execute";
 type SimilarwebActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const similarwebDigitalRankApiActionHandlers: Record<
-  SimilarwebDigitalRankApiActionName,
+export const similarwebDigitalRankApiActionHandlers: ProviderActionHandlers<
+  "similarweb_digitalrank_api",
   SimilarwebActionHandler
 > = {
   get_subscription_status(_input, context) {

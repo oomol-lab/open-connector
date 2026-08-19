@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { AgilityActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -17,7 +17,7 @@ interface AgilityActionContext {
 
 type AgilityActionHandler = (input: Record<string, unknown>, context: AgilityActionContext) => Promise<unknown>;
 
-export const agilityActionHandlers: Record<AgilityActionName, AgilityActionHandler> = {
+export const agilityActionHandlers: ProviderActionHandlers<"agility", AgilityActionHandler> = {
   async list_content_models(input, context) {
     const payload = await requestAgilityJson({
       path: buildAgilityPath(input.guid, input.apiType, "contentmodels"),

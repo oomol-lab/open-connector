@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -43,7 +44,7 @@ interface QuriiriResponseBody {
 
 type QuriiriActionHandler = (input: Record<string, unknown>, context: QuriiriContext) => Promise<unknown>;
 
-export const quriiriActionHandlers: Record<string, QuriiriActionHandler> = {
+export const quriiriActionHandlers: ProviderActionHandlers<"quriiri", QuriiriActionHandler> = {
   send_sms(input, context) {
     return quriiriRequest(context, {
       method: "POST",

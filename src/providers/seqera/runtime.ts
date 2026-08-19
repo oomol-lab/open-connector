@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderExecutorDefinition, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SeqeraActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -48,7 +48,7 @@ interface SeqeraUserInfoResponse {
   user?: unknown;
 }
 
-export const seqeraActionHandlers: Record<SeqeraActionName, SeqeraActionHandler> = {
+export const seqeraActionHandlers: ProviderActionHandlers<"seqera", SeqeraActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

@@ -122,23 +122,6 @@ const tagSchema = s.object("A CompanyCam tag.", {
   raw: rawObjectSchema,
 });
 
-export type CompanycamActionName =
-  | "get_company"
-  | "get_current_user"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "archive_project"
-  | "restore_project"
-  | "list_users"
-  | "get_user"
-  | "list_tags"
-  | "get_tag"
-  | "create_tag"
-  | "update_tag"
-  | "delete_tag";
-
 export const companycamActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company",

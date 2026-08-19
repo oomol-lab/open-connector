@@ -633,36 +633,6 @@ const unmuteUser = defineSendbirdAction(
   moderationResultSchema,
 );
 
-export type SendbirdActionName =
-  | "list_users"
-  | "view_user"
-  | "create_user"
-  | "update_user"
-  | "delete_user"
-  | "issue_session_token"
-  | "revoke_all_session_tokens"
-  | "get_number_of_unread_items"
-  | "get_number_of_channels_by_join_status"
-  | "mark_all_user_messages_as_read"
-  | "leave_group_channels"
-  | "list_group_channels"
-  | "view_group_channel"
-  | "create_channel"
-  | "update_group_channel"
-  | "delete_channel"
-  | "list_members_group_channel"
-  | "add_members_group_channel"
-  | "list_group_channel_messages"
-  | "view_message"
-  | "send_message"
-  | "update_message"
-  | "delete_message"
-  | "list_banned_members"
-  | "ban_user_from_group_channel"
-  | "unban_user"
-  | "mute_user"
-  | "unmute_user";
-
 export const sendbirdActions: ActionDefinition[] = [
   listUsers,
   viewUser,

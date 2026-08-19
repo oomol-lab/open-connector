@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -19,7 +20,7 @@ const validationPath = "/v1/users/me";
 type LeadfeederPhase = "validate" | "execute";
 type LeadfeederActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const leadfeederActionHandlers: Record<string, LeadfeederActionHandler> = {
+export const leadfeederActionHandlers: ProviderActionHandlers<"leadfeeder", LeadfeederActionHandler> = {
   list_accounts(input, context) {
     return requestLeadfeederJson({
       apiKey: context.apiKey,

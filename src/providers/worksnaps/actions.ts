@@ -123,18 +123,6 @@ const currentUserSchema = s.looseRequiredObject(
   { optional: ["firstName", "lastName", "email", "timezoneId", "timezoneName", "isInDaylightTime"] },
 );
 
-export type WorksnapsActionName =
-  | "get_current_user"
-  | "list_projects"
-  | "get_project"
-  | "list_project_tasks"
-  | "get_task"
-  | "list_project_user_assignments"
-  | "list_project_task_assignments"
-  | "list_project_time_entries"
-  | "get_project_time_entry"
-  | "get_project_time_report";
-
 export const worksnapsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

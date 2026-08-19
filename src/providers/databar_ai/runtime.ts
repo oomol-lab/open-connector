@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DatabarAiActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -10,7 +10,7 @@ const databarAiApiBaseUrl = "https://api.databar.ai";
 
 type DatabarAiHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const databarAiActionHandlers: Record<DatabarAiActionName, DatabarAiHandler> = {
+export const databarAiActionHandlers: ProviderActionHandlers<"databar_ai", DatabarAiHandler> = {
   async get_user_info(_input, context) {
     return { user: normalizeUser(asRecord(await requestDatabarAi({ path: "/v1/user/me", context }))) };
   },

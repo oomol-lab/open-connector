@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LightfieldActionName } from "./actions.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ const lightfieldApiVersion = "2026-03-01";
 type LightfieldRequestMode = "validate" | "execute";
 type LightfieldActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lightfieldActionHandlers: Record<LightfieldActionName, LightfieldActionHandler> = {
+export const lightfieldActionHandlers: ProviderActionHandlers<"lightfield", LightfieldActionHandler> = {
   get_api_key_metadata(_input, context) {
     return executeGetApiKeyMetadata(context);
   },

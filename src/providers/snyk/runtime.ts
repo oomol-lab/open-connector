@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ export const snykApiBaseUrl = "https://api.snyk.io/rest";
 const apiVersion = "2024-10-15";
 const timeoutMs = 30_000;
 
-export const snykActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const snykActionHandlers: ProviderActionHandlers<"snyk", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_self(_input, context) {
     const response = await requestJson({ context, path: "/self", phase: "execute" });
     return { principal: requireResource(response.data, "Snyk principal"), raw: response };

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -15,7 +16,7 @@ export interface KeenIoContext {
   signal?: AbortSignal;
 }
 
-export const keenIoActionHandlers: Record<string, KeenIoActionHandler> = {
+export const keenIoActionHandlers: ProviderActionHandlers<"keen_io", KeenIoActionHandler> = {
   add_event(input, context) {
     return addEvent(input, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { OrttoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -31,7 +31,7 @@ type OrttoRegion = "default" | "au" | "eu";
 type OrttoRequestPhase = "validate" | "execute";
 type OrttoActionHandler = ProviderRuntimeHandler<OrttoContext>;
 
-export const orttoActionHandlers: Record<OrttoActionName, OrttoActionHandler> = {
+export const orttoActionHandlers: ProviderActionHandlers<"ortto", OrttoActionHandler> = {
   async list_people(input, context) {
     const payload = await orttoPostJson(orttoListPeoplePath, input, context, "execute");
     return normalizeOrttoPeopleListPayload(payload);

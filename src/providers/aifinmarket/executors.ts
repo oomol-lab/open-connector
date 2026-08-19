@@ -1,39 +1,25 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionHandlers } from "../provider-runtime.ts";
+import { aifinMarketActions } from "./actions.ts";
 import { callTool, discoverAccessibleTools, listTools } from "./runtime.ts";
 
 const service = "aifinmarket";
-const namedActions = [
-  "get_stock_price_indicators",
-  "get_stock_kline",
-  "search_stocks",
-  "get_stock_fundamentals",
-  "get_fund_price_indicators",
-  "get_fund_kline",
-  "search_funds",
-  "get_fund_performance",
-  "get_index_price_indicators",
-  "get_index_kline",
-  "get_company_announcements",
-  "get_financial_news",
-  "natural_language_get_edb_data",
-];
+type AifinMarketHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, {
-  async list_tools(input, context) {
-    return listTools(String(input.serverType) as Parameters<typeof listTools>[0], context);
+const handlers: ProviderActionHandlers<"aifinmarket", AifinMarketHandler> = mapProviderActionHandlers(
+  service,
+  aifinMarketActions,
+  (_action, name): AifinMarketHandler => {
+    if (name === "list_tools") {
+      return (input, context) => listTools(String(input.serverType) as Parameters<typeof listTools>[0], context);
+    }
+    return (input, context) => callTool(name, input, context);
   },
-  async call_tool(input, context) {
-    return callTool("call_tool", input, context);
-  },
-  ...Object.fromEntries(
-    namedActions.map((actionName) => [
-      actionName,
-      (input: Record<string, unknown>, context: Parameters<typeof callTool>[2]) => callTool(actionName, input, context),
-    ]),
-  ),
-});
+);
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers);
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

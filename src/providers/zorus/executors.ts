@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { arrayPayload, requestJson } from "../http-json-runtime.ts";
@@ -33,7 +34,7 @@ const paths: Record<string, string> = {
   search_active_unblock_requests: "/api/unblock-requests/active/search",
 };
 
-export const zorusActionHandlers: Record<string, Handler> = {
+export const zorusActionHandlers: ProviderActionHandlers<"zorus", Handler> = {
   search_customers(input, context) {
     return searchZorus(paths.search_customers, input, context);
   },

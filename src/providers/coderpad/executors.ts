@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
@@ -6,7 +7,10 @@ import { executeCoderpadAction, validateCoderpadCredential } from "./runtime.ts"
 
 const service = "coderpad";
 
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "coderpad",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   list_pads: (input, context) => executeCoderpadAction("list_pads", input, context.apiKey, context.fetcher),
   get_pad: (input, context) => executeCoderpadAction("get_pad", input, context.apiKey, context.fetcher),
   create_pad: (input, context) => executeCoderpadAction("create_pad", input, context.apiKey, context.fetcher),

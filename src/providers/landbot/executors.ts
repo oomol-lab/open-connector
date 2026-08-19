@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LandbotActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type LandbotPhase = "execute" | "validate";
 type LandbotQueryValue = boolean | number | string | undefined;
 type LandbotActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const landbotActionHandlers: Record<LandbotActionName, LandbotActionHandler> = {
+export const landbotActionHandlers: ProviderActionHandlers<"landbot", LandbotActionHandler> = {
   list_channels(input, context) {
     return landbotRequest({
       path: "channels/",

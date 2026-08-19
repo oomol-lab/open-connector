@@ -36,18 +36,6 @@ function output(properties: Record<string, JsonSchema>, description: string): Js
   return s.actionOutput(properties, description);
 }
 
-export type DailybotActionName =
-  | "get_me"
-  | "get_organization"
-  | "list_users"
-  | "get_user"
-  | "list_teams"
-  | "get_team"
-  | "list_team_members"
-  | "send_message"
-  | "send_email"
-  | "open_conversation";
-
 export const dailybotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",

@@ -123,5 +123,3 @@ export const ipstackActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type IpstackActionName = "lookup_current_ip" | "lookup_ip" | "bulk_lookup";

@@ -219,31 +219,6 @@ const mutationOutputSchema = s.object("SureContact mutation response.", {
   raw: s.unknown("Raw SureContact mutation response."),
 });
 
-export type SureContactActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "get_contact_by_email"
-  | "create_contact"
-  | "upsert_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "attach_contact_tags"
-  | "detach_contact_tags"
-  | "attach_contact_lists"
-  | "detach_contact_lists"
-  | "list_lists"
-  | "get_list"
-  | "create_list"
-  | "update_list"
-  | "delete_list"
-  | "add_contacts_to_list"
-  | "remove_contacts_from_list"
-  | "list_tags"
-  | "get_tag"
-  | "create_tag"
-  | "update_tag"
-  | "delete_tag";
-
 export const surecontactActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

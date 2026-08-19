@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { WacheteActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -34,7 +34,7 @@ export interface WacheteContext {
   readonly signal?: AbortSignal;
 }
 
-export const wacheteActionHandlers: Record<WacheteActionName, WacheteActionHandler> = {
+export const wacheteActionHandlers: ProviderActionHandlers<"wachete", WacheteActionHandler> = {
   async create_or_update_monitor(input, context) {
     const payload = await requestWacheteJson({
       context,

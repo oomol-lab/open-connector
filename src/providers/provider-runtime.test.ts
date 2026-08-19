@@ -1,4 +1,5 @@
 import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
+import type { ProviderActionHandlers, ProviderActionSources } from "./provider-runtime.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
@@ -7,6 +8,7 @@ import {
   defineOAuthProviderExecutors,
   defineProviderExecutors,
   defineProviderProxy,
+  mapProviderActionSources,
   providerFetch,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
@@ -77,6 +79,23 @@ describe("defineProviderExecutors", () => {
       ok: true,
       output: { userGrant: { accessToken: "user-access" } },
     });
+  });
+});
+
+describe("provider action contracts", () => {
+  it("maps every configured action to a handler", async () => {
+    const sources: ProviderActionSources<"mqtt", number> = {
+      publish_message: 1,
+      receive_messages: 2,
+    };
+    const handlers: ProviderActionHandlers<"mqtt", () => Promise<number>> = mapProviderActionSources(
+      "mqtt",
+      sources,
+      (_name, value) => async () => value,
+    );
+
+    await expect(handlers.publish_message()).resolves.toBe(1);
+    await expect(handlers.receive_messages()).resolves.toBe(2);
   });
 });
 

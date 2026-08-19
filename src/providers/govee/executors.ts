@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
@@ -27,7 +28,7 @@ interface GoveeRequestInput {
   body?: Record<string, unknown>;
 }
 
-const handlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+const handlers: ProviderActionHandlers<"govee", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_devices(_input, context) {
     const payload = await requestGovee({
       path: "/router/api/v1/user/devices",

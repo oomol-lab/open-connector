@@ -283,24 +283,6 @@ const successOutputSchema = s.object("A Salesflare success response.", {
   success: s.boolean("Whether the Salesflare operation succeeded."),
 });
 
-export type SalesflareActionName =
-  | "get_current_user"
-  | "list_accounts"
-  | "create_account"
-  | "get_account"
-  | "update_account"
-  | "list_contacts"
-  | "create_contact"
-  | "get_contact"
-  | "update_contact"
-  | "list_opportunities"
-  | "get_opportunity"
-  | "create_opportunity"
-  | "update_opportunity"
-  | "list_tasks"
-  | "create_task"
-  | "update_task";
-
 export const salesflareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

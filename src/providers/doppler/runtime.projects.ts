@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
 import { nullableString, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -14,27 +15,7 @@ type DopplerProjectActionHandler = (
   context: DopplerProjectActionContext,
 ) => Promise<unknown>;
 
-export const dopplerProjectActionHandlers: Record<
-  | "get_auth_me"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "delete_project"
-  | "list_environments"
-  | "get_environment"
-  | "create_environment"
-  | "update_environment"
-  | "delete_environment"
-  | "list_configs"
-  | "get_config"
-  | "create_config"
-  | "update_config"
-  | "delete_config"
-  | "clone_config"
-  | "set_config_inheritable",
-  DopplerProjectActionHandler
-> = {
+export const dopplerProjectActionHandlers: ProviderActionHandlerSubset<"doppler", DopplerProjectActionHandler> = {
   get_auth_me(_input, context) {
     return dopplerGetAuthMe(context.accessToken, context.fetcher);
   },

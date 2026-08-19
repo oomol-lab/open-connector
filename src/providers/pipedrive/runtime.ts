@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -9,7 +9,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  mapProviderActionSources,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "pipedrive";
 const apiOrigin = "https://api.pipedrive.com";
@@ -28,7 +33,7 @@ interface Operation {
   search?: boolean;
 }
 
-const operations: Record<string, Operation> = {
+const operations: ProviderActionSources<"pipedrive", Operation> = {
   list_persons: { method: "GET", path: "/api/v2/persons", listKey: "persons" },
   get_person: { method: "GET", path: "/api/v2/persons/{id}", idField: "personId", itemKey: "person" },
   create_person: { method: "POST", path: "/api/v2/persons", itemKey: "person" },
@@ -68,9 +73,12 @@ const operations: Record<string, Operation> = {
   get_stage: { method: "GET", path: "/api/v2/stages/{id}", idField: "stageId", itemKey: "stage" },
 };
 
-export const pipedriveActionHandlers: Record<string, PipedriveActionHandler> = Object.fromEntries(
-  Object.entries(operations).map(([name, operation]) => [name, executeOperation(operation)]),
-);
+export const pipedriveActionHandlers: ProviderActionHandlers<"pipedrive", PipedriveActionHandler> =
+  mapProviderActionSources(
+    service,
+    operations,
+    (_name, operation): PipedriveActionHandler => executeOperation(operation),
+  );
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, pipedriveActionHandlers);
 

@@ -19,8 +19,6 @@ const paginationMetaSchema = s.object("Jam pagination metadata for a data-export
 
 const dataExportRecordSchema = s.looseObject("One Jam data-export record.");
 
-export type WejamAiActionName = "export_data";
-
 export const wejamAiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "export_data",

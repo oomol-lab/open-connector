@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ImagekitActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -30,7 +30,7 @@ interface ImagekitRequestInput {
 
 type ImagekitActionHandler = (input: Record<string, unknown>, context: ImagekitActionContext) => Promise<unknown>;
 
-export const imagekitActionHandlers: Record<ImagekitActionName, ImagekitActionHandler> = {
+export const imagekitActionHandlers: ProviderActionHandlers<"imagekit", ImagekitActionHandler> = {
   list_assets(input, context) {
     return listImagekitAssets(input, context);
   },

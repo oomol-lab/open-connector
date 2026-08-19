@@ -366,14 +366,3 @@ export const kitActions: ActionDefinition[] = [
   listFormSubscribersAction,
   listTagSubscribersAction,
 ];
-
-export type KitActionName =
-  | "get_current_account"
-  | "list_subscribers"
-  | "get_subscriber"
-  | "create_subscriber"
-  | "update_subscriber"
-  | "list_forms"
-  | "list_tags"
-  | "list_form_subscribers"
-  | "list_tag_subscribers";

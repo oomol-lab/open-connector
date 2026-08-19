@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PerplexityActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const perplexityApiBaseUrl = "https://api.perplexity.ai";
 type PerplexityMode = "validate" | "execute";
 type PerplexityActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const perplexityActionHandlers: Record<PerplexityActionName, PerplexityActionHandler> = {
+export const perplexityActionHandlers: ProviderActionHandlers<"perplexity", PerplexityActionHandler> = {
   list_models(_input, context) {
     return perplexityRequest("/v1/models", "GET", {}, context, "execute");
   },

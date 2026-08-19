@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
@@ -20,7 +21,7 @@ interface BreezeActionContext {
 
 type BreezeActionHandler = (input: Record<string, unknown>, context: BreezeActionContext) => Promise<unknown>;
 
-export const breezeActionHandlers: Record<string, BreezeActionHandler> = {
+export const breezeActionHandlers: ProviderActionHandlers<"breeze", BreezeActionHandler> = {
   list_people(input, context) {
     return executeListPeople(input, context);
   },

@@ -108,5 +108,3 @@ export const reversecontactActions: ActionDefinition[] = [
     outputSchema: enrichCompanyOutputSchema,
   }),
 ];
-
-export type ReversecontactActionName = "enrich_person" | "enrich_company";

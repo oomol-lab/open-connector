@@ -73,14 +73,6 @@ const partialAddressSchema = s.object(
 
 const rawObjectSchema = s.looseObject("The raw object returned by ShipEngine.");
 
-export type ShipengineActionName =
-  | "validate_addresses"
-  | "parse_address"
-  | "list_carriers"
-  | "get_rate"
-  | "calculate_rates"
-  | "estimate_rates";
-
 export const shipengineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_addresses",

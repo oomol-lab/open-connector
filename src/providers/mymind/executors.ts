@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { SignJWT } from "jose";
 import {
@@ -64,7 +65,7 @@ type ActionHandler = (input: Record<string, unknown>, context: MyMindContext) =>
 
 const badRequest = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
 
-export const myMindActionHandlers: Record<string, ActionHandler> = {
+export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandler> = {
   async search_objects(input, context) {
     const limit = optionalInteger(input.limit) ?? defaultSearchLimit;
     const payload = await requestJson(

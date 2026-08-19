@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ const carboneStatusPath = "/status";
 type CarboneRequestPhase = "validate" | "execute";
 type CarboneActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const carboneActionHandlers: Record<string, CarboneActionHandler> = {
+export const carboneActionHandlers: ProviderActionHandlers<"carbone", CarboneActionHandler> = {
   list_templates(input, context) {
     return listTemplates(input, context);
   },

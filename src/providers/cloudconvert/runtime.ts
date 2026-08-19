@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CloudconvertActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalIntegerLike, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -44,7 +44,7 @@ interface CloudconvertRequestInput {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const cloudconvertActionHandlers: Record<CloudconvertActionName, CloudconvertActionHandler> = {
+export const cloudconvertActionHandlers: ProviderActionHandlers<"cloudconvert", CloudconvertActionHandler> = {
   get_current_user(input, context) {
     return getCurrentUser(input, context);
   },

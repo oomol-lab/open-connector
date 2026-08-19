@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CertSpotterActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ const certSpotterDefaultRequestTimeoutMs = 30_000;
 type CertSpotterRequestPhase = "validate" | "execute";
 type CertSpotterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const certSpotterActionHandlers: Record<CertSpotterActionName, CertSpotterActionHandler> = {
+export const certSpotterActionHandlers: ProviderActionHandlers<"sslmate_cert_spotter_api", CertSpotterActionHandler> = {
   list_certificate_issuances(input, context) {
     return executeListCertificateIssuances(input, context);
   },

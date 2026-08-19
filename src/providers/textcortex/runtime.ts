@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TextcortexActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -41,7 +41,7 @@ export async function validateTextcortexCredential(context: TextcortexContext): 
   };
 }
 
-export const textcortexActionHandlers: Record<TextcortexActionName, TextcortexActionHandler> = {
+export const textcortexActionHandlers: ProviderActionHandlers<"textcortex", TextcortexActionHandler> = {
   list_models(_input, context) {
     return listModels(context);
   },

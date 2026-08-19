@@ -308,25 +308,3 @@ export const witAiActions: ActionDefinition[] = [
     outputSchema: queueMutationOutput,
   }),
 ];
-
-export type WitAiActionName =
-  | "analyze_message"
-  | "detect_language"
-  | "list_apps"
-  | "get_app"
-  | "list_intents"
-  | "create_intent"
-  | "get_intent"
-  | "list_entities"
-  | "create_entity"
-  | "get_entity"
-  | "update_entity"
-  | "add_entity_keyword"
-  | "add_keyword_synonym"
-  | "list_traits"
-  | "create_trait"
-  | "get_trait"
-  | "add_trait_value"
-  | "list_utterances"
-  | "create_utterances"
-  | "delete_utterances";

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -26,7 +27,7 @@ const concordRequestTimeoutMs = 30_000;
 type ConcordPhase = "validate" | "execute";
 type ConcordActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const concordActionHandlers: Record<string, ConcordActionHandler> = {
+export const concordActionHandlers: ProviderActionHandlers<"concord", ConcordActionHandler> = {
   async get_current_user(_input, context) {
     return { user: await requestConcordObject("/user/me", context, "execute", "current user") };
   },

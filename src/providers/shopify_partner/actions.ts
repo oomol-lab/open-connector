@@ -208,13 +208,6 @@ const listAppEventsInputSchema = s.object(
   { optional: ["first", "after", "chargeId", "occurredAtMin", "occurredAtMax", "shopId", "types"] },
 );
 
-export type ShopifyPartnerActionName =
-  | "get_app"
-  | "list_app_events"
-  | "list_partner_events"
-  | "list_transactions"
-  | "execute_graphql";
-
 export const shopifyPartnerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app",

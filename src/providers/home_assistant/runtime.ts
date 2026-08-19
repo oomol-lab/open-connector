@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import {
   compactObject,
   optionalBoolean,
@@ -35,7 +37,7 @@ export type HomeAssistantActionHandler = (
   context: HomeAssistantActionContext,
 ) => Promise<unknown>;
 
-export const homeAssistantActionHandlers: Record<string, HomeAssistantActionHandler> = {
+export const homeAssistantActionHandlers: ProviderActionHandlerSubset<"home_assistant", HomeAssistantActionHandler> = {
   async get_config(_input, context) {
     return {
       config: await requestHomeAssistantJson({

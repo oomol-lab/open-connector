@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { ShopifyPartnerActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
@@ -174,7 +174,7 @@ interface ShopifyPartnerContext {
 
 type ShopifyPartnerActionHandler = (input: Record<string, unknown>, context: ShopifyPartnerContext) => Promise<unknown>;
 
-export const shopifyPartnerActionHandlers: Record<ShopifyPartnerActionName, ShopifyPartnerActionHandler> = {
+export const shopifyPartnerActionHandlers: ProviderActionHandlers<"shopify_partner", ShopifyPartnerActionHandler> = {
   async get_app(input, context) {
     const payload = await requestShopifyPartnerGraphQL(context, {
       query: getAppQuery,

@@ -51,15 +51,6 @@ const profileIdentifierSchema = s.object(
   { optional: ["id", "email", "phoneNumber", "externalId", "anonymousId"] },
 );
 
-export type KlaviyoActionName =
-  | "validate_account"
-  | "list_profiles"
-  | "get_profile"
-  | "list_campaigns"
-  | "get_campaign"
-  | "list_events"
-  | "create_event";
-
 export const klaviyoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_account",

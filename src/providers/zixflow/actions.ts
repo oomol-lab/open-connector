@@ -5,24 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "zixflow";
 
-export type ZixflowActionName =
-  | "list_collections"
-  | "get_collection"
-  | "query_collection_records"
-  | "get_collection_record"
-  | "create_collection_record"
-  | "update_collection_record"
-  | "delete_collection_record"
-  | "list_lists"
-  | "get_list"
-  | "query_list_entries"
-  | "get_list_entry"
-  | "create_list_entry"
-  | "update_list_entry"
-  | "delete_list_entry"
-  | "list_workspace_members"
-  | "get_workspace_member";
-
 const queryBodySchema = {
   filter: s.looseObject("Filter criteria accepted by Zixflow."),
   sort: s.array("Sort criteria accepted by Zixflow.", s.looseObject("One Zixflow sort item.")),

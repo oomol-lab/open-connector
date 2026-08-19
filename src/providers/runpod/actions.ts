@@ -94,15 +94,6 @@ const lifecycleResultSchema = (action: string, description: string) =>
     success: s.boolean("Whether the lifecycle request completed successfully."),
   });
 
-export type RunpodActionName =
-  | "list_pods"
-  | "get_pod"
-  | "start_pod"
-  | "stop_pod"
-  | "restart_pod"
-  | "reset_pod"
-  | "delete_pod";
-
 export const runpodActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pods",

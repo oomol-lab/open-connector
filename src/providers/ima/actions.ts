@@ -402,22 +402,3 @@ export const imaActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ImaActionName =
-  | "search_notes"
-  | "list_notebooks"
-  | "list_notes"
-  | "get_note_content"
-  | "create_note"
-  | "append_note"
-  | "search_knowledge_bases"
-  | "get_knowledge_bases"
-  | "list_addable_knowledge_bases"
-  | "list_knowledge_items"
-  | "search_knowledge_items"
-  | "import_urls"
-  | "add_note_to_knowledge_base"
-  | "check_repeated_names"
-  | "upload_file_to_knowledge_base"
-  | "get_media_info"
-  | "get_knowledge_item_original";

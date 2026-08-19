@@ -67,8 +67,6 @@ const countSummarySchema = s.looseObject(
   "Summary counts grouped by verification state or provider reason for the Emailable batch.",
 );
 
-export type EmailableActionName = "get_account_info" | "verify_email" | "verify_batch_emails" | "get_batch_status";
-
 export const emailableActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

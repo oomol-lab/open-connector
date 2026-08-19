@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TwentyCrmActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -18,7 +18,10 @@ interface TwentyCrmRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const twentyCrmActionHandlers: Record<TwentyCrmActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const twentyCrmActionHandlers: ProviderActionHandlers<
+  "twenty_crm",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_metadata_objects(_input, context) {
     return listMetadataObjects(context);
   },

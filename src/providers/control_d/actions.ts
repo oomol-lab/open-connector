@@ -206,13 +206,3 @@ export const controlDActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type ControlDActionName =
-  | "get_current_ip"
-  | "list_profiles"
-  | "get_profile"
-  | "list_service_categories"
-  | "list_services_by_category"
-  | "list_profile_rules"
-  | "upsert_profile_rule"
-  | "delete_profile_rule";

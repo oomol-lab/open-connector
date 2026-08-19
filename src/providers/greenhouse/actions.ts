@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "greenhouse";
 
-export type GreenhouseActionName =
-  | "list_jobs"
-  | "get_job"
-  | "list_candidates"
-  | "get_candidate"
-  | "list_applications"
-  | "get_application"
-  | "add_candidate_note";
-
 const trimmedString = (description: string) => s.nonEmptyString(description);
 const idSchema = (description: string) =>
   s.anyOf(description, [

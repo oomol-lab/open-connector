@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -38,7 +39,7 @@ type UrlInspectionPayload = {
   inspectionResult?: unknown;
 };
 
-export const googleSearchConsoleActionHandlers: Record<string, ActionHandler> = {
+export const googleSearchConsoleActionHandlers: ProviderActionHandlers<"google_search_console", ActionHandler> = {
   list_sites(input, deps) {
     return listSites(input, deps);
   },

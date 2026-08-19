@@ -140,12 +140,6 @@ const simpleSearchInputSchema = s.object(
   { optional: ["size"] },
 );
 
-export type StatistaActionName =
-  | "search_statistics"
-  | "get_statistic"
-  | "search_market_insights_indicators"
-  | "search_consumer_insights";
-
 export const statistaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_statistics",

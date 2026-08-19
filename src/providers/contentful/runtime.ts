@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ContentfulActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -38,7 +38,7 @@ interface ContentfulCollectionShape {
 
 type ContentfulActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const contentfulActionHandlers: Record<ContentfulActionName, ContentfulActionHandler> = {
+export const contentfulActionHandlers: ProviderActionHandlers<"contentful", ContentfulActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

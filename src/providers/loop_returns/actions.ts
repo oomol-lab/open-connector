@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "loop_returns";
 
-export type LoopReturnsActionName = "list_returns" | "get_return_details" | "list_destinations" | "get_destination";
-
 const rawObjectSchema = s.unknownObject("The raw object returned by Loop Returns.");
 
 const pageInfoSchema = {

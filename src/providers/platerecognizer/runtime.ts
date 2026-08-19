@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -27,7 +28,7 @@ type PlateRecognizerActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const platerecognizerActionHandlers: Record<string, PlateRecognizerActionHandler> = {
+export const platerecognizerActionHandlers: ProviderActionHandlers<"platerecognizer", PlateRecognizerActionHandler> = {
   async read_number_plates(input, context) {
     return normalizePlateReaderPayload(
       await requestPlateRecognizerJson({

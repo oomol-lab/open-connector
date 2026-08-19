@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "aftership";
 
-export type AftershipActionName =
-  | "create_tracking"
-  | "get_tracking"
-  | "update_tracking"
-  | "delete_tracking"
-  | "list_trackings"
-  | "retrack_tracking"
-  | "mark_tracking_completed"
-  | "list_couriers"
-  | "detect_couriers";
-
 const rawObjectSchema = s.unknownObject("A JSON object returned by AfterShip.");
 const aftershipIdSchema = s.nonEmptyString("The AfterShip tracking ID.");
 const courierSlugSchema = s.nonEmptyString("The AfterShip courier slug, such as dhl, ups, or usps.");

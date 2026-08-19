@@ -12,15 +12,6 @@ const looseObjectArraySchema = s.array("List of raw JSON objects returned by Sho
 const nonEmptyStringArray = (itemDescription: string, description: string) =>
   s.array(description, nonEmptyString(itemDescription), { minItems: 1 });
 
-export type ShodanActionName =
-  | "get_api_info"
-  | "search_hosts"
-  | "count_search_results"
-  | "get_host"
-  | "get_domain_info"
-  | "resolve_hostnames"
-  | "reverse_dns_lookup";
-
 export const shodanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_info",

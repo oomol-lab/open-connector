@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -23,7 +24,7 @@ type LuckinActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "s
 type LuckinActionHandler = (input: Record<string, unknown>, context: LuckinActionContext) => Promise<unknown>;
 type LuckinMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
-export const luckinActionHandlers: Record<string, LuckinActionHandler> = {
+export const luckinActionHandlers: ProviderActionHandlers<"luckin_coffee", LuckinActionHandler> = {
   queryShopList(input, context) {
     return callLuckinMcpTool(context, "queryShopList", input);
   },

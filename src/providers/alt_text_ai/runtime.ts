@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -21,7 +22,7 @@ interface RequestOptions {
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
 
-export const altTextAiActionHandlers: Record<string, ActionHandler> = {
+export const altTextAiActionHandlers: ProviderActionHandlers<"alt_text_ai", ActionHandler> = {
   get_account(_input, context) {
     return fetchJson("/account", { method: "GET" }, context);
   },

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
 import {
@@ -57,7 +58,7 @@ const defaultTaskJobFields = [
   "new_task.created_by",
 ];
 
-export const taskActionHandlers: Record<string, AsanaActionHandler> = {
+export const taskActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActionHandler> = {
   list_tasks(input, context) {
     assertGeneralTaskListFilters(input);
     return listAsanaResources(

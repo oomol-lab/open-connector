@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -9,8 +10,8 @@ function action(path: string) {
   return (input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> =>
     request(path, input, context, "execute");
 }
-export const myOtpAppActionHandlers: Record<
-  string,
+export const myOtpAppActionHandlers: ProviderActionHandlers<
+  "myotp_app",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   generate_otp: action("/generate_otp"),

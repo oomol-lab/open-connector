@@ -1,11 +1,18 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { sellerspaceToolNameByAction } from "./actions.ts";
+import {
+  defineApiKeyProviderExecutors,
+  getProviderActionHandler,
+  mapProviderActionHandlers,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
+import { sellerspaceActions, sellerspaceToolNameByAction } from "./actions.ts";
 
 const service = "sellerspace";
 const endpoint = "https://www.sellerspace.com/mcp/";
@@ -84,26 +91,43 @@ async function call(
   });
 }
 
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> =
-  {};
-for (const [action, tool] of Object.entries(sellerspaceToolNameByAction))
-  handlers[action] = async (input, context) => ({ result: await call(context, tool, input) });
-handlers.list_tools = async (_input, context) => ({
-  tools: (await listTools(context)).filter(
-    (tool) =>
-      approved.has(tool.name) && tool.annotations?.readOnlyHint === true && tool.annotations.destructiveHint !== true,
-  ),
-});
-handlers.call_tool = async (input, context) => {
-  const toolName = typeof input.toolName === "string" ? input.toolName.trim() : "";
-  if (!approved.has(toolName))
-    throw new ProviderRequestError(400, `SellerSpace MCP tool ${toolName} is not approved for read-only dynamic calls`);
-  const args =
-    input.arguments && typeof input.arguments === "object" && !Array.isArray(input.arguments)
-      ? (input.arguments as Record<string, unknown>)
-      : {};
-  return { result: await call(context, toolName, args, true) };
-};
+type SellerspaceHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
+
+const handlers: ProviderActionHandlers<"sellerspace", SellerspaceHandler> = mapProviderActionHandlers(
+  service,
+  sellerspaceActions,
+  (_action, name): SellerspaceHandler => {
+    if (name === "list_tools") {
+      return async (_input, context) => ({
+        tools: (await listTools(context)).filter(
+          (tool) =>
+            approved.has(tool.name) &&
+            tool.annotations?.readOnlyHint === true &&
+            tool.annotations.destructiveHint !== true,
+        ),
+      });
+    }
+    if (name === "call_tool") {
+      return async (input, context) => {
+        const toolName = typeof input.toolName === "string" ? input.toolName.trim() : "";
+        if (!approved.has(toolName)) {
+          throw new ProviderRequestError(
+            400,
+            `SellerSpace MCP tool ${toolName} is not approved for read-only dynamic calls`,
+          );
+        }
+        const args =
+          input.arguments && typeof input.arguments === "object" && !Array.isArray(input.arguments)
+            ? (input.arguments as Record<string, unknown>)
+            : {};
+        return { result: await call(context, toolName, args, true) };
+      };
+    }
+
+    const toolName = getProviderActionHandler(sellerspaceToolNameByAction, name);
+    return async (input, context) => ({ result: await call(context, toolName!, input) });
+  },
+);
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {
   skipDnsValidation: true,

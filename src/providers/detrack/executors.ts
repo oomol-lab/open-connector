@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -40,7 +41,7 @@ interface DetrackActionContext {
 
 type DetrackActionHandler = (input: Record<string, unknown>, context: DetrackActionContext) => Promise<unknown>;
 
-export const detrackActionHandlers: Record<string, DetrackActionHandler> = {
+export const detrackActionHandlers: ProviderActionHandlers<"detrack", DetrackActionHandler> = {
   list_jobs(input, context) {
     return listJobs(input, context);
   },

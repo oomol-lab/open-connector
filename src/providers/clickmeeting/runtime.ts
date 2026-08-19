@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ClickMeetingActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -31,7 +31,7 @@ interface ClickMeetingRequestContext {
   signal?: AbortSignal;
 }
 
-export const clickMeetingActionHandlers: Record<ClickMeetingActionName, ClickMeetingActionHandler> = {
+export const clickMeetingActionHandlers: ProviderActionHandlers<"clickmeeting", ClickMeetingActionHandler> = {
   async ping(_input, context) {
     const payload = await requestClickMeetingJson(
       {

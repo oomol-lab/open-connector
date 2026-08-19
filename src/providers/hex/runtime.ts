@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HexActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -28,7 +28,7 @@ interface HexRequestOptions {
   headers?: Record<string, string | undefined>;
 }
 
-export const hexActionHandlers: Record<HexActionName, HexActionHandler> = {
+export const hexActionHandlers: ProviderActionHandlers<"hex", HexActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },

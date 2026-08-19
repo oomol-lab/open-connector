@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ModjoAiActionName } from "./actions.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const modjoAiApiBaseUrl = "https://api.modjo.ai/v2";
 type ModjoRequestMode = "validate" | "execute";
 type ModjoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const modjoAiActionHandlers: Record<ModjoAiActionName, ModjoActionHandler> = {
+export const modjoAiActionHandlers: ProviderActionHandlers<"modjo_ai", ModjoActionHandler> = {
   list_users(input, context) {
     return requestModjo("/users", context, { query: pickQuery(input, ["page", "size", "email"]) });
   },

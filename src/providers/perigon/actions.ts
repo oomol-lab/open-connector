@@ -557,20 +557,6 @@ export const perigonActions: ActionDefinition[] = [
   }),
 ];
 
-export type PerigonActionName =
-  | "search_articles"
-  | "search_stories"
-  | "search_sources"
-  | "search_topics"
-  | "search_journalists"
-  | "get_journalist"
-  | "search_people"
-  | "search_companies"
-  | "search_wikipedia"
-  | "summarize_news"
-  | "vector_search_news"
-  | "vector_search_wikipedia";
-
 function requireOneFilter(schema: JsonSchema, keys: string[], description: string): JsonSchema {
   return {
     ...schema,

@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { DiffbotActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -23,7 +23,7 @@ interface DiffbotContext {
 
 type DiffbotActionHandler = (input: Record<string, unknown>, context: DiffbotContext) => Promise<unknown>;
 
-export const diffbotActionHandlers: Record<DiffbotActionName, DiffbotActionHandler> = {
+export const diffbotActionHandlers: ProviderActionHandlers<"diffbot", DiffbotActionHandler> = {
   extract_article(input, context) {
     return requestDiffbotArticle(input, context, "execute");
   },

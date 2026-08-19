@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -26,7 +27,7 @@ type PixellabImageActionHandler = (input: Record<string, unknown>, context: ApiK
 
 type SizedImageLayout = "flat" | "nested";
 
-export const pixellabImageActionHandlers: Record<string, PixellabImageActionHandler> = {
+export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabImageActionHandler> = {
   async get_balance(_input, context) {
     const record = requireResponseRecord(await pixellabRequestJson("GET", "/balance", undefined, context), "balance");
     const credits = requiredRecord(record.credits, "PixelLab balance credits", invalidResponseError);

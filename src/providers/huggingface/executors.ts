@@ -5,8 +5,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { HuggingfaceActionName } from "./actions.ts";
 import type { HuggingfaceActionContext, HuggingfaceCurrentUser } from "./runtime.shared.ts";
 
 import { compactObject } from "../../core/cast.ts";
@@ -31,7 +31,7 @@ const service = "huggingface";
 
 type HuggingfaceActionHandler = (input: Record<string, unknown>, context: HuggingfaceActionContext) => Promise<unknown>;
 
-export const huggingfaceActionHandlers: Record<HuggingfaceActionName, HuggingfaceActionHandler> = {
+export const huggingfaceActionHandlers: ProviderActionHandlers<"huggingface", HuggingfaceActionHandler> = {
   get_current_user(_input, context) {
     return readHuggingfaceCurrentUser(context);
   },

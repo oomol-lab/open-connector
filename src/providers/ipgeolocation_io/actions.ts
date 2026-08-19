@@ -164,5 +164,3 @@ export const ipgeolocationIoActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type IpgeolocationIoActionName = "lookup_ip" | "get_timezone" | "get_astronomy";

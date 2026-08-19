@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FoursquareActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const requiredPlaceFields = ["fsq_id", "name"];
 
 type FoursquareActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const foursquareActionHandlers: Record<FoursquareActionName, FoursquareActionHandler> = {
+export const foursquareActionHandlers: ProviderActionHandlers<"foursquare", FoursquareActionHandler> = {
   async search_places(input, context) {
     validateSearchPlacesInput(input);
     const payload = await requestFoursquareJson({

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -33,7 +34,7 @@ interface ListMessagesPayload {
   nextPageToken?: string | null;
 }
 
-export const googleChatActionHandlers: Record<string, GoogleChatActionHandler> = {
+export const googleChatActionHandlers: ProviderActionHandlers<"googlechat", GoogleChatActionHandler> = {
   list_spaces: listSpaces,
   get_space: getSpace,
   list_messages: listMessages,

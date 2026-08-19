@@ -66,14 +66,6 @@ const inputSchema = s.object(
   { required: ["season"] },
 );
 
-export type OpenfootballWorldcupActionName =
-  | "list_matches"
-  | "list_groups"
-  | "list_teams"
-  | "list_stadiums"
-  | "list_squads"
-  | "list_qualification_playoffs";
-
 export const openfootballWorldcupActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_matches",

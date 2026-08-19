@@ -1,9 +1,14 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { ManusActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionSources, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  mapProviderActionSources,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const manusApiBaseUrl = "https://api.manus.ai";
 const validationEndpoint = "/v2/project.list";
@@ -19,7 +24,7 @@ interface ManusOperation {
   bodyBuilder?: (input: Record<string, unknown>) => Record<string, unknown>;
 }
 
-const manusOperations = {
+const manusOperations: ProviderActionSources<"manus", ManusOperation> = {
   create_task: {
     method: "POST",
     path: "/v2/task.create",
@@ -95,12 +100,13 @@ const manusOperations = {
     method: "GET",
     path: "/v2/browser.onlineList",
   },
-} satisfies Record<ManusActionName, ManusOperation>;
+};
 
-export const manusActionHandlers: Record<ManusActionName, ManusActionHandler> = Object.fromEntries(
-  Object.entries(manusOperations).map(([name, operation]) => [
-    name,
-    (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
+export const manusActionHandlers: ProviderActionHandlers<"manus", ManusActionHandler> = mapProviderActionSources(
+  "manus",
+  manusOperations,
+  (_name, operation): ManusActionHandler =>
+    (input, context) =>
       requestManusJson({
         apiKey: context.apiKey,
         fetcher: context.fetcher,
@@ -109,8 +115,7 @@ export const manusActionHandlers: Record<ManusActionName, ManusActionHandler> = 
         input,
         phase: "execute",
       }),
-  ]),
-) as Record<ManusActionName, ManusActionHandler>;
+);
 
 export async function validateManusCredential(
   apiKey: string,

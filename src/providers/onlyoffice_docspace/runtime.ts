@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -39,7 +40,10 @@ export function createOnlyofficeContext(
   return { apiKey, portalUrl, apiBaseUrl: `${portalUrl}/api/2.0/`, fetcher, signal };
 }
 
-export const onlyofficeActionHandlers: Record<string, ProviderRuntimeHandler<OnlyofficeContext>> = {
+export const onlyofficeActionHandlers: ProviderActionHandlers<
+  "onlyoffice_docspace",
+  ProviderRuntimeHandler<OnlyofficeContext>
+> = {
   async get_current_user(_input, context) {
     return { user: requireResponseObject(await request(context, "people/@self")) };
   },

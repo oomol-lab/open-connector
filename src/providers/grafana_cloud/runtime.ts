@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GrafanaCloudActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -21,7 +21,7 @@ export interface GrafanaCloudContext {
   signal?: AbortSignal;
 }
 
-export const grafanaCloudActionHandlers: Record<GrafanaCloudActionName, GrafanaCloudActionHandler> = {
+export const grafanaCloudActionHandlers: ProviderActionHandlers<"grafana_cloud", GrafanaCloudActionHandler> = {
   async list_regions(_input, context) {
     const payload = await requestGrafanaCloud(context, buildGrafanaCloudUrl("/stack-regions"), "execute");
     const record = requireRecord(payload, "Grafana Cloud regions response");

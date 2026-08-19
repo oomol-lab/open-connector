@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ type ApolloQueryValue = boolean | number | string | string[] | undefined;
 type ApolloRequestPhase = "validate" | "execute";
 type ApolloActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const apolloActionHandlers: Record<string, ApolloActionHandler> = {
+export const apolloActionHandlers: ProviderActionHandlers<"apollo", ApolloActionHandler> = {
   get_api_usage_stats(_input, context) {
     return getApiUsageStats(context);
   },

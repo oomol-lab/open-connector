@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FiberAiActionName } from "./actions.ts";
 
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -45,7 +45,10 @@ const fiberAiEnumPathByType: Record<FiberAiEnumType, string> = {
   time_zones: "/v1/enums/time-zones",
 };
 
-export const fiberAiActionHandlers: Record<FiberAiActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const fiberAiActionHandlers: ProviderActionHandlers<
+  "fiber_ai",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_org_credits(_input, context) {
     const payload = await fiberAiGetJson({
       path: getOrgCreditsPath,

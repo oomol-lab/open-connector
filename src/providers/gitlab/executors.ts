@@ -6,6 +6,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -44,7 +45,7 @@ interface GitlabRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const gitlabActionHandlers: Record<string, GitlabActionHandler> = {
+export const gitlabActionHandlers: ProviderActionHandlers<"gitlab", GitlabActionHandler> = {
   get_current_user(_input, context) {
     return gitlabRequestJson("/user", context);
   },

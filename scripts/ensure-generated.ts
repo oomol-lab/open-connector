@@ -6,6 +6,7 @@ const rootDir = process.cwd();
 const registryPaths = [
   join(process.cwd(), "src/providers/registry.generated.ts"),
   join(process.cwd(), "src/providers/registry.cloudflare.generated.ts"),
+  join(process.cwd(), "src/providers/action-contracts.generated.ts"),
 ];
 const catalogDir = join(process.cwd(), "catalog/apps");
 const sourcePaths = [

@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { AirbrakeActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -73,7 +73,7 @@ interface AirbrakeListResponse<T> {
   raw: Record<string, unknown>;
 }
 
-export const airbrakeActionHandlers: Record<AirbrakeActionName, AirbrakeActionHandler> = {
+export const airbrakeActionHandlers: ProviderActionHandlers<"airbrake", AirbrakeActionHandler> = {
   async list_projects(input, context) {
     const payload = await requestAirbrakeForAction(context, "/api/v4/projects", {
       page: readOptionalInteger(input.page, "page"),

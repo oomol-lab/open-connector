@@ -177,8 +177,6 @@ const getUserActivityOutputSchema = s.object("The normalized Amplitude user acti
   raw: rawResponseSchema,
 });
 
-export type AmplitudeActionName = "list_events" | "get_event_segmentation" | "search_user" | "get_user_activity";
-
 export const amplitudeActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",

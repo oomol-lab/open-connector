@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { FalAiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import {
@@ -45,7 +45,7 @@ interface FalAiSseEvent {
 type FalAiRequestMode = "validate" | "execute";
 type FalAiActionHandler = (input: Record<string, unknown>, context: FalAiActionContext) => Promise<unknown>;
 
-export const falAiActionHandlers: Record<FalAiActionName, FalAiActionHandler> = {
+export const falAiActionHandlers: ProviderActionHandlers<"fal_ai", FalAiActionHandler> = {
   get_models(input, context) {
     return falAiGetModels(input, context);
   },

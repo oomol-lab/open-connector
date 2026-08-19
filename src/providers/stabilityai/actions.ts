@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "stabilityai";
 
-export type StabilityAiActionName = "text_to_audio";
-
 const outputFormatSchema = s.stringEnum("The output audio format returned by Stability AI.", ["mp3", "wav"]);
 const modelSchema = s.stringEnum("The Stable Audio model to use for generation.", [
   "stable-audio-2",

@@ -209,13 +209,3 @@ export const intelliprintActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type IntelliprintActionName =
-  | "list_prints"
-  | "get_print"
-  | "list_backgrounds"
-  | "get_background"
-  | "list_mailing_lists"
-  | "get_mailing_list"
-  | "list_mailing_list_recipients"
-  | "get_mailing_list_recipient";

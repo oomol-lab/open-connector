@@ -222,15 +222,3 @@ export const heyreachActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type HeyreachActionName =
-  | "list_campaigns"
-  | "get_campaign"
-  | "list_lists"
-  | "create_empty_list"
-  | "list_leads"
-  | "get_lead"
-  | "get_lead_tags"
-  | "list_linkedin_accounts"
-  | "get_overall_stats"
-  | "get_overall_stats_by_campaign";

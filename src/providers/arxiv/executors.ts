@@ -1,4 +1,5 @@
 import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { defineProviderExecutors, providerFetch, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -54,7 +55,7 @@ interface ArxivActionContext {
 
 type ArxivActionHandler = (input: Record<string, unknown>, context: ArxivActionContext) => Promise<unknown>;
 
-export const arxivActionHandlers: Record<string, ArxivActionHandler> = {
+export const arxivActionHandlers: ProviderActionHandlers<"arxiv", ArxivActionHandler> = {
   search_papers(input, context) {
     return searchPapers(input, context);
   },

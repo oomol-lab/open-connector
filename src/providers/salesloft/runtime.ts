@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SalesloftActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, readProviderTextBody } from "../provider-runtime.ts";
@@ -23,7 +23,7 @@ interface SalesloftPayload {
   [key: string]: unknown;
 }
 
-export const salesloftActionHandlers: Record<SalesloftActionName, SalesloftActionHandler> = {
+export const salesloftActionHandlers: ProviderActionHandlers<"salesloft", SalesloftActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestSalesloft({
       path: "/v2/me",

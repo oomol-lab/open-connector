@@ -156,16 +156,6 @@ const baseEnrichmentOutputSchema = s.object(
   },
 );
 
-export type KlazifyActionName =
-  | "categorize_url"
-  | "get_iab_categories"
-  | "get_company_data"
-  | "get_tech_stack"
-  | "get_domain_logo"
-  | "get_domain_expiration"
-  | "get_social_media_links"
-  | "get_similar_domains";
-
 export const klazifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "categorize_url",

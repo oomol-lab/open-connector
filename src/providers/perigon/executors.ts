@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PerigonActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -170,7 +170,7 @@ const summarizeTrimmedBodyKeys = new Set(["model"]);
 const vectorNewsTrimmedBodyKeys = new Set(["prompt", "pubDateFrom", "pubDateTo"]);
 const vectorWikipediaTrimmedBodyKeys = new Set(["prompt", "wikiRevisionFrom", "wikiRevisionTo"]);
 
-export const perigonActionHandlers: Record<PerigonActionName, PerigonActionHandler> = {
+export const perigonActionHandlers: ProviderActionHandlers<"perigon", PerigonActionHandler> = {
   async search_articles(input, context) {
     return normalizeListResponse(
       await requestPerigonJson(

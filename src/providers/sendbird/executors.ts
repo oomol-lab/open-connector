@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { SendbirdActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRawString, pickOptionalString } from "../../core/cast.ts";
 import {
@@ -40,7 +40,7 @@ interface SendbirdRequestOptions {
   allowEmptyResponse?: boolean;
 }
 
-export const sendbirdActionHandlers: Record<SendbirdActionName, SendbirdActionHandler> = {
+export const sendbirdActionHandlers: ProviderActionHandlers<"sendbird", SendbirdActionHandler> = {
   list_users(input, context) {
     return sendbirdListUsers(input, context);
   },
@@ -125,7 +125,7 @@ export const sendbirdActionHandlers: Record<SendbirdActionName, SendbirdActionHa
   unmute_user(input, context) {
     return sendbirdUnmuteUser(input, context);
   },
-} satisfies Record<SendbirdActionName, SendbirdActionHandler>;
+};
 
 export const executors: ProviderExecutors = defineProviderExecutors<SendbirdActionContext>({
   service: "sendbird",

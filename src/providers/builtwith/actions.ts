@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "builtwith";
 
-export type BuiltwithActionName =
-  | "lookup_domain_profile"
-  | "lookup_domain_summary"
-  | "lookup_redirect_history"
-  | "lookup_social_profiles"
-  | "get_domain_recommendations";
-
 const builtwithErrorSchema = s.object(
   "One error entry returned by BuiltWith.",
   {

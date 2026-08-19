@@ -78,27 +78,6 @@ const moveOperation = s.object("A single Dida365 task move operation.", {
   taskId: s.nonEmptyString("The Dida365 task ID to move."),
 });
 
-export type Dida365ActionName =
-  | "get_user_project"
-  | "get_project_by_id"
-  | "get_project_with_data"
-  | "create_project"
-  | "update_project"
-  | "delete_project"
-  | "get_task_by_project_and_id"
-  | "create_task"
-  | "update_task"
-  | "complete_task"
-  | "delete_task"
-  | "list_all_tasks"
-  | "list_completed_tasks"
-  | "filter_tasks"
-  | "move_tasks"
-  | "list_habits"
-  | "get_habit"
-  | "create_or_update_habit_checkin"
-  | "list_habit_checkins";
-
 export const dida365Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_project",

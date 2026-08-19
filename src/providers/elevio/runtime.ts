@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ExecutionContext } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ElevioActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
@@ -21,7 +21,7 @@ interface ElevioContext {
 
 type ElevioRequestPhase = "validate" | "execute";
 
-export const elevioActionHandlers: Record<ElevioActionName, ProviderRuntimeHandler<ElevioContext>> = {
+export const elevioActionHandlers: ProviderActionHandlers<"elevio", ProviderRuntimeHandler<ElevioContext>> = {
   list_categories(_input, context) {
     return listCategories(context);
   },

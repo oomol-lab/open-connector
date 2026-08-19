@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KernelActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ interface KernelRequestInput {
 
 type KernelActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const kernelActionHandlers: Record<KernelActionName, KernelActionHandler> = {
+export const kernelActionHandlers: ProviderActionHandlers<"kernel", KernelActionHandler> = {
   async list_browser_sessions(input, context): Promise<unknown> {
     const result = await requestKernelJson({
       method: "GET",

@@ -143,5 +143,3 @@ export const holdedActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HoldedActionName = "list_contacts" | "get_contact" | "create_contact" | "list_products" | "get_product";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { HiggsfieldAiActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -34,7 +34,10 @@ interface HiggsfieldAiRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const higgsfieldAiActionHandlers: Record<HiggsfieldAiActionName, ProviderRuntimeHandler<HiggsfieldAiContext>> = {
+export const higgsfieldAiActionHandlers: ProviderActionHandlers<
+  "higgsfield_ai",
+  ProviderRuntimeHandler<HiggsfieldAiContext>
+> = {
   submit_image_generation(input, context) {
     return submitGenerationRequest(input, context, {
       defaultModelId: higgsfieldAiDefaultImageModelId,

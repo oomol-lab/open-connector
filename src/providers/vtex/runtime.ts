@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { VtexActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, positiveInteger, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -25,7 +25,7 @@ interface VtexRequestInput {
   query?: Record<string, VtexQueryValue>;
 }
 
-export const vtexActionHandlers: Record<VtexActionName, VtexActionHandler> = {
+export const vtexActionHandlers: ProviderActionHandlers<"vtex", VtexActionHandler> = {
   list_product_and_sku_ids(input, context) {
     return listProductAndSkuIds(input, context);
   },

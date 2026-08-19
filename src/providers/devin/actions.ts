@@ -81,14 +81,6 @@ const sessionOutput = s.object("The response returned with a Devin session.", {
   raw,
 });
 
-export type DevinActionName =
-  | "get_self"
-  | "create_session"
-  | "list_sessions"
-  | "get_session"
-  | "send_message"
-  | "terminate_session";
-
 export const devinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_self",

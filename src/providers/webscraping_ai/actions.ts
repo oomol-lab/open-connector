@@ -86,13 +86,6 @@ const accountSchema = s.looseObject("The WebScraping.AI account limits payload."
   remaining_concurrency: s.integer("Remaining concurrent requests for the account."),
 });
 
-export type WebscrapingAiActionName =
-  | "get_account_info"
-  | "fetch_html"
-  | "extract_text"
-  | "select_html"
-  | "select_multiple_html";
-
 export const webscrapingAiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

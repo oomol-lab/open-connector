@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ZhihuActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ type ZhihuRequestPhase = "validate" | "execute";
 type ZhihuActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ZhihuActionHandler = (input: Record<string, unknown>, context: ZhihuActionContext) => Promise<unknown>;
 
-export const zhihuActionHandlers: Record<ZhihuActionName, ZhihuActionHandler> = {
+export const zhihuActionHandlers: ProviderActionHandlers<"zhihu", ZhihuActionHandler> = {
   zhihu_search(input, context) {
     return requestZhihuJson(
       {

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { RipplingActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ interface RipplingRequestOptions {
   mode?: RipplingMode;
 }
 
-export const ripplingActionHandlers: Record<RipplingActionName, RipplingActionHandler> = {
+export const ripplingActionHandlers: ProviderActionHandlers<"rippling", RipplingActionHandler> = {
   async list_companies(input, context) {
     return normalizeListResponse(
       await requestRippling({

@@ -71,16 +71,6 @@ const updateCustomerInputSchema = {
   ],
 };
 
-export type PaystackActionName =
-  | "create_customer"
-  | "list_customers"
-  | "get_customer"
-  | "update_customer"
-  | "initialize_transaction"
-  | "list_transactions"
-  | "get_transaction"
-  | "verify_transaction";
-
 export const paystackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_customer",

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
 import {
@@ -75,7 +76,7 @@ const defaultTaskCountFields = [
 ];
 const defaultSectionFields = ["name", "created_at", "project", "project.name"];
 
-export const projectSectionActionHandlers: Record<string, AsanaActionHandler> = {
+export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActionHandler> = {
   list_projects(input, context) {
     const location = readExclusiveProjectLocation(input);
     return listAsanaResources(

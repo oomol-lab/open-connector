@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "meta";
 
-export type MetaActionName = "get_current_user" | "list_ad_accounts" | "list_campaigns" | "get_insights";
-
 const idSchema = s.nonEmptyString("A Meta Graph API object identifier.");
 const adAccountIdSchema = s.nonEmptyString("The Meta ad account ID, with or without the act_ prefix.");
 const afterSchema = s.nonEmptyString("The Graph API after cursor for requesting the next page.");

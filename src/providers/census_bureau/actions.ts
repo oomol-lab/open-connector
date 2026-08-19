@@ -65,8 +65,6 @@ const queryRowsSchema = s.array(
   s.array("A raw Census response row.", s.nullable(s.string("One Census response cell."))),
 );
 
-export type CensusBureauActionName = "list_datasets" | "list_variables" | "list_groups" | "get_group" | "query_dataset";
-
 export const censusBureauActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_datasets",

@@ -121,8 +121,6 @@ const chatCompletionOutputSchema = s.looseRequiredObject(
   { optional: ["usage", "system_fingerprint", "service_tier"] },
 );
 
-export type WriterActionName = "list_models" | "create_chat_completion";
-
 export const writerActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",

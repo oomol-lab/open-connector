@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -25,7 +26,7 @@ const requestTimeoutMs = 30_000;
 
 type VultrRequestPhase = "validate" | "execute";
 
-export const vultrActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const vultrActionHandlers: ProviderActionHandlers<"vultr", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_account(_input, context) {
     return { account: await getAccount(context, "execute") };
   },

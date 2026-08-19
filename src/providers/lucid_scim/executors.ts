@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LucidScimActionName } from "./actions.ts";
 
 import { optionalInteger, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ const lucidScimConfigPath = "/ServiceProviderConfig";
 type RequestPhase = "validate" | "execute";
 type LucidScimActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lucidScimActionHandlers: Record<LucidScimActionName, LucidScimActionHandler> = {
+export const lucidScimActionHandlers: ProviderActionHandlers<"lucid_scim", LucidScimActionHandler> = {
   async get_service_provider_config(_input, context) {
     const payload = await requestLucidScimJson({
       path: lucidScimConfigPath,

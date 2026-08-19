@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -18,10 +19,9 @@ interface ALeadsActionContext {
   signal?: AbortSignal;
 }
 
-type ALeadsActionName = "find_email" | "find_personal_email" | "find_phone" | "verify_email";
 type ALeadsActionHandler = (input: Record<string, unknown>, context: ALeadsActionContext) => Promise<unknown>;
 
-export const aLeadsActionHandlers: Record<ALeadsActionName, ALeadsActionHandler> = {
+export const aLeadsActionHandlers: ProviderActionHandlers<"a_leads", ALeadsActionHandler> = {
   async find_email(input, context): Promise<unknown> {
     const payload = await aLeadsRequest(context, "/find-email", buildDataBody(input));
     return {

@@ -89,10 +89,3 @@ export const feishuCustomBotActions: ActionDefinition[] = [
     outputSchema: sendResultSchema,
   }),
 ];
-
-export type FeishuCustomBotActionName =
-  | "send_text_message"
-  | "send_post_message"
-  | "send_image_message"
-  | "send_share_chat_message"
-  | "send_interactive_message";

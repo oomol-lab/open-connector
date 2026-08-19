@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -19,7 +20,7 @@ type AlphaVantageActionHandler = (
   context: AlphaVantageActionContext,
 ) => Promise<unknown>;
 
-export const alphaVantageActionHandlers: Record<string, AlphaVantageActionHandler> = {
+export const alphaVantageActionHandlers: ProviderActionHandlers<"alpha_vantage", AlphaVantageActionHandler> = {
   search_symbols(input, context) {
     return executeSearchSymbols(input, context);
   },

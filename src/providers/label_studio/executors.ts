@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { LabelStudioActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -43,7 +43,7 @@ interface LabelStudioContext {
 
 type LabelStudioActionHandler = (input: Record<string, unknown>, context: LabelStudioContext) => Promise<unknown>;
 
-export const labelStudioActionHandlers: Record<LabelStudioActionName, LabelStudioActionHandler> = {
+export const labelStudioActionHandlers: ProviderActionHandlers<"label_studio", LabelStudioActionHandler> = {
   async get_current_user(_input, context) {
     const user = requiredRecord(
       await requestLabelStudioJson({

@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "lusha";
 
-export type LushaActionName =
-  | "get_account_usage"
-  | "search_contacts"
-  | "enrich_contacts"
-  | "search_companies"
-  | "enrich_companies";
-
 const revealContactFieldSchema = s.stringEnum("The contact data fields to reveal.", ["emails", "phones"]);
 const revealCompanyFieldSchema = s.stringEnum("The company data fields to reveal.", [
   "employeesByDepartment",

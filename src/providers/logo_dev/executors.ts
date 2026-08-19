@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { LogoDevActionName } from "./actions.ts";
 
@@ -32,7 +33,7 @@ interface LogoDevImageRequest {
 
 type LogoDevActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const logoDevActionHandlers: Record<LogoDevActionName, LogoDevActionHandler> = {
+export const logoDevActionHandlers: ProviderActionHandlers<"logo_dev", LogoDevActionHandler> = {
   get_logo_by_domain(input) {
     return Promise.resolve(buildLogoImageLookup("get_logo_by_domain", input));
   },

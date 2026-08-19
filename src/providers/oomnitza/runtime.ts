@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { OomnitzaActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -37,7 +37,7 @@ interface OomnitzaRequestInput extends OomnitzaActionContext {
 
 type OomnitzaActionHandler = (input: Record<string, unknown>, context: OomnitzaActionContext) => Promise<unknown>;
 
-export const oomnitzaActionHandlers: Record<OomnitzaActionName, OomnitzaActionHandler> = {
+export const oomnitzaActionHandlers: ProviderActionHandlers<"oomnitza", OomnitzaActionHandler> = {
   async identify(_input, context) {
     return {
       baseUrl: context.baseUrl,

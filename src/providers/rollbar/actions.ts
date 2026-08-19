@@ -74,16 +74,6 @@ const projectSchema = s.object("A normalized Rollbar project.", {
   raw: rawObjectSchema,
 });
 
-export type RollbarActionName =
-  | "get_project"
-  | "list_items"
-  | "get_item"
-  | "list_item_occurrences"
-  | "get_occurrence"
-  | "list_environments"
-  | "list_deploys"
-  | "get_deploy";
-
 export const rollbarActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",

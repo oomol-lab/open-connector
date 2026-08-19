@@ -1,10 +1,11 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { SemrushActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalIntegerLike, optionalRawString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  mapProviderActionSources,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -24,7 +25,7 @@ interface SemrushActionContext {
   signal?: AbortSignal;
 }
 
-export const semrushActionHandlers: Record<SemrushActionName, SemrushActionHandler> = {
+export const semrushActionHandlers: ProviderActionHandlers<"semrush", SemrushActionHandler> = {
   async get_domain_overview(input, fetcher, apiKey) {
     return requestSemrushReport({
       apiKey,
@@ -70,14 +71,14 @@ export const semrushActionHandlers: Record<SemrushActionName, SemrushActionHandl
       phase: "execute",
     });
   },
-} satisfies Record<SemrushActionName, SemrushActionHandler>;
+};
 
-const semrushExecutorHandlers = Object.fromEntries(
-  Object.entries(semrushActionHandlers).map(([name, handler]) => [
-    name,
-    (input: Record<string, unknown>, context: SemrushActionContext) => handler(input, context.fetcher, context.apiKey),
-  ]),
-) as Record<SemrushActionName, (input: Record<string, unknown>, context: SemrushActionContext) => Promise<unknown>>;
+const semrushExecutorHandlers = mapProviderActionSources(
+  "semrush",
+  semrushActionHandlers,
+  (_name, handler) => (input: Record<string, unknown>, context: SemrushActionContext) =>
+    handler(input, context.fetcher, context.apiKey),
+);
 
 export const executors: ProviderExecutors = defineProviderExecutors<SemrushActionContext>({
   service: "semrush",

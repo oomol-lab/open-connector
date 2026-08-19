@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BugsnagActionName } from "./actions.ts";
 
 import { optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ interface BugsnagJsonResponse {
   headers: Headers;
 }
 
-export const bugsnagActionHandlers: Record<BugsnagActionName, BugsnagActionHandler> = {
+export const bugsnagActionHandlers: ProviderActionHandlers<"bugsnag", BugsnagActionHandler> = {
   list_organizations(input, context) {
     return listOrganizations(input, context);
   },

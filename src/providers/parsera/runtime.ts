@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ParseraActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type ParseraRequestPhase = "validate" | "execute";
 type ParseraActionContext = ApiKeyProviderContext;
 type ParseraActionHandler = (input: Record<string, unknown>, context: ParseraActionContext) => Promise<unknown>;
 
-export const parseraActionHandlers: Record<ParseraActionName, ParseraActionHandler> = {
+export const parseraActionHandlers: ProviderActionHandlers<"parsera", ParseraActionHandler> = {
   extract: parseraPostAction("/v1/extractor/extract", buildExtractorBody),
   parse: parseraPostAction("/v1/extractor/parse", buildExtractorBody),
   async extract_markdown(input, context) {

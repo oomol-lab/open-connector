@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ const extendedFilterKeys = ["category", "exchange", "marketcap", "volume", "fdv"
 const paginationKeys = ["page", "limit"];
 const dateRangeKeys = ["startDate", "endDate"];
 
-export const tokenMetricsActionHandlers: Record<string, TokenMetricsActionHandler> = {
+export const tokenMetricsActionHandlers: ProviderActionHandlers<"token_metrics", TokenMetricsActionHandler> = {
   list_tokens(input, context) {
     return tokenMetricsGet(
       "/tokens",

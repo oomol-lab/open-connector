@@ -60,17 +60,6 @@ const leadIdInputSchema = s.requiredObject("Input containing one noCRM.io lead i
   leadId: identifierField("The identifier of the target noCRM.io lead."),
 });
 
-export type NocrmIoActionName =
-  | "list_teams"
-  | "create_lead"
-  | "duplicate_lead"
-  | "change_lead_status_to_standby"
-  | "change_lead_status_to_cancelled"
-  | "assign_lead_to_user"
-  | "add_tag_to_lead"
-  | "append_to_lead_description"
-  | "delete_lead";
-
 export const nocrmIoActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_teams",

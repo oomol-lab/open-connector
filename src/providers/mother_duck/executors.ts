@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MotherDuckActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -30,7 +30,7 @@ interface MotherDuckRequestInput {
   allowEmpty?: boolean;
 }
 
-export const motherDuckActionHandlers: Record<MotherDuckActionName, MotherDuckActionHandler> = {
+export const motherDuckActionHandlers: ProviderActionHandlers<"mother_duck", MotherDuckActionHandler> = {
   list_active_accounts(_input, context) {
     return listActiveAccounts(context);
   },

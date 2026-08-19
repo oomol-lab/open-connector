@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KitActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -23,7 +23,7 @@ export interface KitRequestContext {
   signal?: AbortSignal;
 }
 
-export const kitActionHandlers: Record<KitActionName, KitActionHandler> = {
+export const kitActionHandlers: ProviderActionHandlers<"kit", KitActionHandler> = {
   async get_current_account(_input, context) {
     return normalizeAccountResponse(
       await requestKitJson({

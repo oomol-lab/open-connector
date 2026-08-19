@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ExecutionContext } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -18,130 +19,112 @@ interface RequestInput {
 }
 
 const baseUrl = "https://api.fundz.net";
-const publicCohorts: Record<string, { path: string; field: string }> = {
-  get_funded_and_hiring: { path: "/v1/funded_hiring", field: "funded_hiring" },
-  get_renewal_radar: { path: "/v1/renewal_radar", field: "renewal_radar" },
-  get_stacked_borrowers: { path: "/v1/stacked_borrowers", field: "stacked_borrowers" },
-  get_benefit_plans: { path: "/v1/benefit_plans", field: "benefit_plans" },
-  get_money_in_motion: { path: "/v1/money_in_motion", field: "money_in_motion" },
-};
+type FundzwatchActionHandler = (input: Record<string, unknown>, context: FundzwatchContext) => Promise<unknown>;
 
-export const fundzwatchActionHandlers: Record<
-  string,
-  (input: Record<string, unknown>, context: FundzwatchContext) => Promise<unknown>
-> = {};
-
-for (const [name, cohort] of Object.entries(publicCohorts)) {
-  fundzwatchActionHandlers[name] = async (input, context) => {
+export const fundzwatchActionHandlers: ProviderActionHandlers<"fundzwatch", FundzwatchActionHandler> = {
+  get_funded_and_hiring: cohort("/v1/funded_hiring", "funded_hiring"),
+  get_renewal_radar: cohort("/v1/renewal_radar", "renewal_radar"),
+  get_stacked_borrowers: cohort("/v1/stacked_borrowers", "stacked_borrowers"),
+  get_benefit_plans: cohort("/v1/benefit_plans", "benefit_plans"),
+  get_money_in_motion: cohort("/v1/money_in_motion", "money_in_motion"),
+  async get_lenders(input, context) {
     const payload = await request(context, {
-      path: cohort.path,
-      query: { query: optionalString(input.query), state: optionalString(input.state)?.toUpperCase() },
+      path: "/v1/lenders",
+      query: { q: optionalString(input.query), page: optionalInteger(input.page) },
+    });
+    return attributed(payload, { lenders: array(payload.lenders, "lenders"), meta: record(payload.meta, "meta") });
+  },
+  async get_brokers(input, context) {
+    const payload = await request(context, {
+      path: "/v1/brokers",
+      query: {
+        q: optionalString(input.query),
+        state: optionalString(input.state)?.toUpperCase(),
+        page: optionalInteger(input.page),
+      },
+    });
+    return attributed(payload, { brokers: array(payload.brokers, "brokers"), meta: record(payload.meta, "meta") });
+  },
+  async get_scored_leads(input, context) {
+    const payload = await request(context, {
+      path: "/v1/watch/signals",
+      method: "POST",
+      requireApiKey: true,
+      body: {
+        min_score: optionalInteger(input.minScore),
+        max_results: optionalInteger(input.maxResults),
+        buying_stages: stringArray(input.buyingStages),
+        industries: stringArray(input.industries),
+      },
     });
     return attributed(payload, {
-      companies: array(payload[cohort.field], cohort.field),
-      summary: record(payload.summary, "summary"),
-      meta: record(payload.meta, "meta"),
+      signalsFound: integer(payload.signals_found, "signals_found"),
+      signals: array(payload.signals, "signals"),
     });
-  };
-}
-
-fundzwatchActionHandlers.get_lenders = async (input, context) => {
-  const payload = await request(context, {
-    path: "/v1/lenders",
-    query: { q: optionalString(input.query), page: optionalInteger(input.page) },
-  });
-  return attributed(payload, { lenders: array(payload.lenders, "lenders"), meta: record(payload.meta, "meta") });
-};
-fundzwatchActionHandlers.get_brokers = async (input, context) => {
-  const payload = await request(context, {
-    path: "/v1/brokers",
-    query: {
-      q: optionalString(input.query),
-      state: optionalString(input.state)?.toUpperCase(),
-      page: optionalInteger(input.page),
-    },
-  });
-  return attributed(payload, { brokers: array(payload.brokers, "brokers"), meta: record(payload.meta, "meta") });
-};
-fundzwatchActionHandlers.get_scored_leads = async (input, context) => {
-  const payload = await request(context, {
-    path: "/v1/watch/signals",
-    method: "POST",
-    requireApiKey: true,
-    body: {
-      min_score: optionalInteger(input.minScore),
-      max_results: optionalInteger(input.maxResults),
-      buying_stages: stringArray(input.buyingStages),
-      industries: stringArray(input.industries),
-    },
-  });
-  return attributed(payload, {
-    signalsFound: integer(payload.signals_found, "signals_found"),
-    signals: array(payload.signals, "signals"),
-  });
-};
-fundzwatchActionHandlers.get_events = async (input, context) => {
-  const payload = await request(context, {
-    path: "/v1/watch/events",
-    requireApiKey: true,
-    query: {
-      types: join(input.types),
-      days: optionalInteger(input.days),
-      limit: optionalInteger(input.limit),
-      offset: optionalInteger(input.offset),
-      industries: join(input.industries),
-      locations: join(input.locations),
-    },
-  });
-  return attributed(payload, { total: integer(payload.total, "total"), events: array(payload.events, "events") });
-};
-fundzwatchActionHandlers.get_market_pulse = wrapper("/v1/watch/market/pulse", "pulse");
-fundzwatchActionHandlers.get_market_brief = wrapper("/v1/watch/market/brief", "brief");
-fundzwatchActionHandlers.get_usage = async (_input, context) => {
-  const payload = await request(context, { path: "/v1/watch/usage", requireApiKey: true });
-  return attributed(payload, {
-    tier: requiredString(payload.tier, "tier", invalidResponse),
-    currentPeriod: requiredString(payload.current_period, "current_period", invalidResponse),
-    apiCallsUsed: integer(payload.api_calls_used, "api_calls_used"),
-    aiScoreCallsUsed: integer(payload.ai_score_calls_used, "ai_score_calls_used"),
-    limits: record(payload.limits, "limits"),
-    lastApiCall: optionalString(payload.last_api_call) ?? null,
-  });
-};
-fundzwatchActionHandlers.get_watchlist = async (_input, context) => {
-  const payload = await request(context, { path: "/v1/watch/watchlist", requireApiKey: true });
-  return attributed(payload, {
-    companies: array(payload.companies, "companies"),
-    total: integer(payload.total, "total"),
-    limit: integer(payload.limit, "limit"),
-  });
-};
-fundzwatchActionHandlers.add_to_watchlist = async (input, context) => {
-  const payload = await request(context, {
-    path: "/v1/watch/watchlist",
-    method: "POST",
-    requireApiKey: true,
-    body: { domains: requiredStringArray(input.domains, "domains") },
-  });
-  return attributed(payload, {
-    added: integer(payload.added, "added"),
-    alreadyTracked: integer(payload.already_tracked, "already_tracked"),
-    notFound: integer(payload.not_found, "not_found"),
-    totalTracked: integer(payload.total_tracked, "total_tracked"),
-  });
-};
-fundzwatchActionHandlers.get_watchlist_events = async (input, context) => {
-  const payload = await request(context, {
-    path: "/v1/watch/watchlist/events",
-    requireApiKey: true,
-    query: { days: optionalInteger(input.days), types: join(input.types) },
-  });
-  return attributed(payload, {
-    events: array(payload.events, "events"),
-    total: integer(payload.total, "total"),
-    trackedCompanies: integer(payload.tracked_companies, "tracked_companies"),
-    periodDays: integer(payload.period_days, "period_days"),
-  });
+  },
+  async get_events(input, context) {
+    const payload = await request(context, {
+      path: "/v1/watch/events",
+      requireApiKey: true,
+      query: {
+        types: join(input.types),
+        days: optionalInteger(input.days),
+        limit: optionalInteger(input.limit),
+        offset: optionalInteger(input.offset),
+        industries: join(input.industries),
+        locations: join(input.locations),
+      },
+    });
+    return attributed(payload, { total: integer(payload.total, "total"), events: array(payload.events, "events") });
+  },
+  get_market_pulse: wrapper("/v1/watch/market/pulse", "pulse"),
+  get_market_brief: wrapper("/v1/watch/market/brief", "brief"),
+  async get_usage(_input, context) {
+    const payload = await request(context, { path: "/v1/watch/usage", requireApiKey: true });
+    return attributed(payload, {
+      tier: requiredString(payload.tier, "tier", invalidResponse),
+      currentPeriod: requiredString(payload.current_period, "current_period", invalidResponse),
+      apiCallsUsed: integer(payload.api_calls_used, "api_calls_used"),
+      aiScoreCallsUsed: integer(payload.ai_score_calls_used, "ai_score_calls_used"),
+      limits: record(payload.limits, "limits"),
+      lastApiCall: optionalString(payload.last_api_call) ?? null,
+    });
+  },
+  async get_watchlist(_input, context) {
+    const payload = await request(context, { path: "/v1/watch/watchlist", requireApiKey: true });
+    return attributed(payload, {
+      companies: array(payload.companies, "companies"),
+      total: integer(payload.total, "total"),
+      limit: integer(payload.limit, "limit"),
+    });
+  },
+  async add_to_watchlist(input, context) {
+    const payload = await request(context, {
+      path: "/v1/watch/watchlist",
+      method: "POST",
+      requireApiKey: true,
+      body: { domains: requiredStringArray(input.domains, "domains") },
+    });
+    return attributed(payload, {
+      added: integer(payload.added, "added"),
+      alreadyTracked: integer(payload.already_tracked, "already_tracked"),
+      notFound: integer(payload.not_found, "not_found"),
+      totalTracked: integer(payload.total_tracked, "total_tracked"),
+    });
+  },
+  async get_watchlist_events(input, context) {
+    const payload = await request(context, {
+      path: "/v1/watch/watchlist/events",
+      requireApiKey: true,
+      query: { days: optionalInteger(input.days), types: join(input.types) },
+    });
+    return attributed(payload, {
+      events: array(payload.events, "events"),
+      total: integer(payload.total, "total"),
+      trackedCompanies: integer(payload.tracked_companies, "tracked_companies"),
+      periodDays: integer(payload.period_days, "period_days"),
+    });
+  },
 };
 
 export async function createFundzwatchContext(
@@ -176,7 +159,21 @@ export async function validateFundzwatchCredential(
   };
 }
 
-function wrapper(path: string, field: string) {
+function cohort(path: string, field: string): FundzwatchActionHandler {
+  return async (input, context) => {
+    const payload = await request(context, {
+      path,
+      query: { query: optionalString(input.query), state: optionalString(input.state)?.toUpperCase() },
+    });
+    return attributed(payload, {
+      companies: array(payload[field], field),
+      summary: record(payload.summary, "summary"),
+      meta: record(payload.meta, "meta"),
+    });
+  };
+}
+
+function wrapper(path: string, field: string): FundzwatchActionHandler {
   return async (_input: Record<string, unknown>, context: FundzwatchContext): Promise<unknown> => {
     const payload = await request(context, { path, requireApiKey: true });
     return attributed(payload, { [field]: record(payload[field], field) });

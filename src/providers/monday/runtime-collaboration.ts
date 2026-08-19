@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
@@ -14,7 +15,7 @@ import {
   mondayProviderError,
 } from "./runtime-common.ts";
 
-export const mondayCollaborationActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayCollaborationActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   list_updates(input, fetcher) {
     return mondayListUpdates(input, fetcher);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -8,7 +9,7 @@ import { createHash } from "node:crypto";
 import { requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionNames, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { jumpServerMcpToolNames } from "./actions.ts";
 
 type JumpServerActionHandler = (input: Record<string, unknown>, context: JumpServerMcpContext) => Promise<unknown>;
@@ -23,11 +24,14 @@ export interface JumpServerMcpContext {
 
 const requestTimeoutMs = 60_000;
 
-export const jumpServerActionHandlers: Record<string, JumpServerActionHandler> = {};
-for (const toolName of jumpServerMcpToolNames) {
-  jumpServerActionHandlers[toolName] = (input: Record<string, unknown>, context: JumpServerMcpContext) =>
-    callJumpServerMcpTool(context, toolName, input);
-}
+export const jumpServerActionHandlers: ProviderActionHandlers<"jumpserver", JumpServerActionHandler> =
+  mapProviderActionNames(
+    "jumpserver",
+    jumpServerMcpToolNames,
+    (toolName): JumpServerActionHandler =>
+      (input, context) =>
+        callJumpServerMcpTool(context, toolName, input),
+  );
 
 export function createJumpServerMcpContext(
   values: Record<string, string>,

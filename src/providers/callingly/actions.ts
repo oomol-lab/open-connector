@@ -324,20 +324,6 @@ const getAgentScheduleInputSchema = s.object("Path parameters for retrieving one
   agentId: agentIdSchema,
 });
 
-export type CallinglyActionName =
-  | "get_call"
-  | "list_calls"
-  | "create_call"
-  | "list_leads"
-  | "get_lead"
-  | "update_lead"
-  | "delete_lead"
-  | "list_teams"
-  | "get_team"
-  | "list_team_agents"
-  | "list_agents"
-  | "get_agent_schedule";
-
 export const callinglyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_call",

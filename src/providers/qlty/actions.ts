@@ -102,16 +102,6 @@ const metricSchema = s.looseObject("A Qlty metric value.", {
 });
 const rateLimitResourcesSchema = s.looseObject("The Qlty rate-limit resources object.");
 
-export type QltyActionName =
-  | "get_authenticated_user"
-  | "list_workspaces"
-  | "get_workspace"
-  | "list_projects"
-  | "get_project"
-  | "list_issues"
-  | "get_project_metrics"
-  | "get_rate_limit_status";
-
 export const qltyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_authenticated_user",

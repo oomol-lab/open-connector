@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ShipdayActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -30,7 +30,7 @@ interface ShipdayRequestInput {
 
 type ShipdayActionHandler = (input: Record<string, unknown>, context: ShipdayActionContext) => Promise<unknown>;
 
-export const shipdayActionHandlers: Record<ShipdayActionName, ShipdayActionHandler> = {
+export const shipdayActionHandlers: ProviderActionHandlers<"shipday", ShipdayActionHandler> = {
   list_active_orders(_input, context) {
     return listActiveOrders(context);
   },

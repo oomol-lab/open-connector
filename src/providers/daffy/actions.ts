@@ -22,18 +22,6 @@ function output(properties: Record<string, JsonSchema>, description: string): Js
   return s.actionOutput(properties, description);
 }
 
-export type DaffyActionName =
-  | "get_current_user"
-  | "get_user"
-  | "get_balance"
-  | "list_user_causes"
-  | "search_nonprofits"
-  | "get_nonprofit"
-  | "list_contributions"
-  | "list_donations"
-  | "list_user_donations"
-  | "get_user_donation";
-
 export const daffyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

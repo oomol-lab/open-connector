@@ -1,6 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { TalentlmsActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, jsonObject, queryParams } from "../../core/request.ts";
@@ -34,7 +34,7 @@ export interface TalentlmsActionContext {
   signal?: AbortSignal;
 }
 
-export const talentlmsActionHandlers: Record<TalentlmsActionName, TalentlmsActionHandler> = {
+export const talentlmsActionHandlers: ProviderActionHandlers<"talentlms", TalentlmsActionHandler> = {
   health_check(_input, context) {
     return runHealthCheck(context);
   },

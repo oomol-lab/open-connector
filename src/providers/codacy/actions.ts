@@ -203,16 +203,6 @@ const getToolPatternInputSchema = s.object(
   { required: ["toolUuid", "patternId"] },
 );
 
-export type CodacyActionName =
-  | "get_current_user"
-  | "list_user_organizations"
-  | "list_repository_analyses"
-  | "get_repository_analysis"
-  | "list_tools"
-  | "list_languages"
-  | "list_tool_patterns"
-  | "get_tool_pattern";
-
 export const codacyActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

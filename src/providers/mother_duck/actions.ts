@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mother_duck";
 
-export type MotherDuckActionName =
-  | "list_active_accounts"
-  | "create_user"
-  | "delete_user"
-  | "list_tokens"
-  | "create_token"
-  | "delete_token"
-  | "get_user_duckling_config"
-  | "set_user_duckling_config";
-
 const usernameSchema = s.string("The MotherDuck username within the organization.", { minLength: 1, maxLength: 255 });
 const tokenIdSchema = s.nonEmptyString("The MotherDuck access token identifier.");
 const tokenTypeSchema = s.stringEnum("The MotherDuck token type.", ["read_write", "read_scaling"]);

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -57,7 +58,7 @@ interface SupabaseRequestOptions {
   responseMode?: "json" | "optional_json";
 }
 
-export const supabaseActionHandlers: Record<string, SupabaseActionHandler> = {
+export const supabaseActionHandlers: ProviderActionHandlers<"supabase", SupabaseActionHandler> = {
   list_organizations(_input, context) {
     return supabaseListOrganizations(context);
   },

@@ -5,21 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "polar";
 
-export type PolarActionName =
-  | "list_organizations"
-  | "get_organization"
-  | "list_products"
-  | "get_product"
-  | "list_customers"
-  | "get_customer"
-  | "get_customer_by_external_id"
-  | "get_customer_state"
-  | "get_customer_state_by_external_id"
-  | "list_orders"
-  | "get_order"
-  | "list_subscriptions"
-  | "get_subscription";
-
 const metadataValueSchema = s.anyOf("A Polar metadata filter value.", [
   s.string("A string metadata value."),
   s.integer("An integer metadata value."),

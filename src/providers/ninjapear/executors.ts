@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { NinjapearActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -31,7 +31,7 @@ type NinjapearQueryValue = string | number | boolean | undefined;
 type NinjapearContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type NinjapearActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const ninjapearActionHandlers: Record<NinjapearActionName, NinjapearActionHandler> = {
+export const ninjapearActionHandlers: ProviderActionHandlers<"ninjapear", NinjapearActionHandler> = {
   get_credit_balance(_, context) {
     return requestNinjapear("/api/v1/meta/credit-balance", {}, context, "execute");
   },

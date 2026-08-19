@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Ip2whoisActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface Ip2whoisRequestInput {
   phase: Ip2whoisRequestPhase;
 }
 
-export const ip2whoisActionHandlers: Record<Ip2whoisActionName, Ip2whoisActionHandler> = {
+export const ip2whoisActionHandlers: ProviderActionHandlers<"ip2whois", Ip2whoisActionHandler> = {
   lookup_domain(input, context) {
     return requestIp2whoisJson(
       {

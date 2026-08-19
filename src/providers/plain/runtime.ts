@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -94,7 +95,7 @@ interface PlainGraphqlPayload {
 
 type PlainHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const plainActionHandlers: Record<string, PlainHandler> = {
+export const plainActionHandlers: ProviderActionHandlers<"plain", PlainHandler> = {
   get_customer_by_email(input, context) {
     return getCustomerByEmail(input, context);
   },

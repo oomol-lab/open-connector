@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LinguapopActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ type LinguapopActionContext = ApiKeyProviderContext;
 type LinguapopActionHandler = (input: Record<string, unknown>, context: LinguapopActionContext) => Promise<unknown>;
 type LinguapopRequestPhase = "validate" | "execute";
 
-export const linguapopActionHandlers: Record<LinguapopActionName, LinguapopActionHandler> = {
+export const linguapopActionHandlers: ProviderActionHandlers<"linguapop", LinguapopActionHandler> = {
   async list_available_languages(_input, context) {
     return {
       languages: await fetchAvailableLanguages(context.fetcher, "execute", context.signal),

@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "genderize";
 
-export type GenderizeActionName = "predict_gender" | "predict_gender_batch";
-
 const countryIdSchema = s.string({
   description: "The optional ISO 3166-1 alpha-2 country code used to localize the prediction.",
   minLength: 2,

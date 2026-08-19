@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { PubmedActionName } from "./actions.ts";
 import type { PubmedArticle } from "./runtime-xml.ts";
 
 import { createHash } from "node:crypto";
@@ -245,7 +245,7 @@ function createAbortError(): Error {
   return error;
 }
 
-export const pubmedActionHandlers: Record<PubmedActionName, ProviderRuntimeHandler<PubmedActionContext>> = {
+export const pubmedActionHandlers: ProviderActionHandlers<"pubmed", ProviderRuntimeHandler<PubmedActionContext>> = {
   async search_articles(input, context) {
     const query = requiredString(input.query, "query", invalidInput);
     const offset = optionalInteger(input.offset) ?? 0;

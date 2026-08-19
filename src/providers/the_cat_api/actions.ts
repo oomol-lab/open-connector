@@ -172,8 +172,6 @@ export const theCatApiActions: ActionDefinition[] = [
   }),
 ];
 
-export type TheCatApiActionName = "search_images" | "get_image" | "list_breeds" | "search_breeds" | "get_breed";
-
 export const theCatApiActionByName: Map<string, ActionDefinition> = new Map(
   theCatApiActions.map((action) => [action.name, action] as const),
 );

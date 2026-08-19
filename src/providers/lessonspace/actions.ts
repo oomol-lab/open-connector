@@ -77,12 +77,6 @@ const launchResponseSchema = s.object("A normalized Lessonspace launch response.
   raw: s.looseObject("The raw launch payload returned by Lessonspace."),
 });
 
-export type LessonspaceActionName =
-  | "list_organisation_sessions"
-  | "get_organisation_session"
-  | "get_session_recording_url"
-  | "create_unified_space";
-
 export const lessonspaceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organisation_sessions",

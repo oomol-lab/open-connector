@@ -171,8 +171,6 @@ const domainPayloadSchema = s.object(
   },
 );
 
-export type MailcheckActionName = "get_status" | "verify_email" | "validate_domain";
-
 export const mailcheckActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_status",

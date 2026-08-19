@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { KeyObject } from "node:crypto";
 
 import {
@@ -88,7 +89,7 @@ export interface OracleCloudContext {
   signal?: AbortSignal;
 }
 
-export const oracleCloudActionHandlers: Record<string, OracleCloudActionHandler> = {
+export const oracleCloudActionHandlers: ProviderActionHandlers<"oracle_cloud", OracleCloudActionHandler> = {
   list_instances: (input, context) =>
     listResources(input, context, "instances", "/instances", {
       compartmentId: compartment(input, context),

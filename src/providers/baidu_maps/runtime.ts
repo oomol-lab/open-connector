@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -42,7 +43,7 @@ const baiduMapsInputStatuses = new Set([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 21,
 type RuntimeInput = Record<string, unknown>;
 type BaiduMapsActionHandler = (input: RuntimeInput, context: BaiduMapsActionContext) => Promise<unknown>;
 
-export const baiduMapsActionHandlers: Record<string, BaiduMapsActionHandler> = {
+export const baiduMapsActionHandlers: ProviderActionHandlers<"baidu_maps", BaiduMapsActionHandler> = {
   geocode(input, context) {
     return executeGeocode(input, context);
   },

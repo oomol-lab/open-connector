@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { WoodpeckerCoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface NormalizedWoodpeckerUser {
   raw: Record<string, unknown>;
 }
 
-export const woodpeckerCoActionHandlers: Record<WoodpeckerCoActionName, WoodpeckerCoActionHandler> = {
+export const woodpeckerCoActionHandlers: ProviderActionHandlers<"woodpecker_co", WoodpeckerCoActionHandler> = {
   async list_users(input, context) {
     const payload = await requestWoodpeckerCoJson({
       method: "GET",

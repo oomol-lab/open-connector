@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OpencageActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ const opencageApiBaseUrl = "https://api.opencagedata.com";
 type OpencagePhase = "validate" | "execute";
 type OpencageActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const opencageActionHandlers: Record<OpencageActionName, OpencageActionHandler> = {
+export const opencageActionHandlers: ProviderActionHandlers<"opencage", OpencageActionHandler> = {
   geocode_forward(input, context) {
     return opencageRequest("json", asForwardQuery(input), context, "execute");
   },

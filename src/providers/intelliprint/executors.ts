@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IntelliprintActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -19,7 +19,7 @@ type IntelliprintActionHandler = (
 
 type IntelliprintOutputKey = "print" | "background" | "mailingList" | "recipient";
 
-export const intelliprintActionHandlers: Record<IntelliprintActionName, IntelliprintActionHandler> = {
+export const intelliprintActionHandlers: ProviderActionHandlers<"intelliprint", IntelliprintActionHandler> = {
   list_prints(input, context) {
     return listIntelliprintObjects(printsPath, buildPrintListQuery(input), context);
   },

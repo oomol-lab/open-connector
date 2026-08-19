@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
@@ -20,7 +21,7 @@ interface OrcarouterRequestInput {
   mode?: "validate" | "execute";
 }
 
-export const orcarouterActionHandlers: Record<string, OrcarouterActionHandler> = {
+export const orcarouterActionHandlers: ProviderActionHandlers<"orcarouter", OrcarouterActionHandler> = {
   create_chat_completion(input, context) {
     assertStreamingDisabled(input);
     return orcarouterRequest(

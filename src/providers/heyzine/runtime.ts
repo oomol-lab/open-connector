@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HeyzineActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -28,7 +28,7 @@ interface HeyzineRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const heyzineActionHandlers: Record<HeyzineActionName, HeyzineActionHandler> = {
+export const heyzineActionHandlers: ProviderActionHandlers<"heyzine", HeyzineActionHandler> = {
   list_flipbooks(_input, context) {
     return listFlipbooks(context);
   },

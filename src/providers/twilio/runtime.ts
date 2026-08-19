@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { TwilioActionName } from "./actions.ts";
 
 import { optionalInteger, optionalString, optionalStringArray, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -73,7 +73,7 @@ interface TwilioCallPayload {
 
 type TwilioActionHandler = (input: Record<string, unknown>, context: TwilioActionContext) => Promise<unknown>;
 
-export const twilioActionHandlers: Record<TwilioActionName, TwilioActionHandler> = {
+export const twilioActionHandlers: ProviderActionHandlers<"twilio", TwilioActionHandler> = {
   get_account(_input, context) {
     return twilioGetAccount(context);
   },

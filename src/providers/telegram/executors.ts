@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TelegramActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -32,7 +32,7 @@ interface TelegramApiEnvelope<T> {
 
 type TelegramActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const telegramActionHandlers: Record<TelegramActionName, TelegramActionHandler> = {
+export const telegramActionHandlers: ProviderActionHandlers<"telegram", TelegramActionHandler> = {
   async get_me(_input, context): Promise<unknown> {
     return normalizeTelegramUser(
       await telegramRequest<Record<string, unknown>>({

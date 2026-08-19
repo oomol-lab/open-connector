@@ -20,13 +20,6 @@ const userInfoSchema = s.object("The authenticated CollegeFootballData account i
   remainingCalls: s.nullableNumber("The number of API calls remaining in the current rate-limit window."),
 });
 
-export type CollegeFootballDataActionName =
-  | "get_info"
-  | "list_conferences"
-  | "list_teams"
-  | "list_venues"
-  | "list_games";
-
 export const collegeFootballDataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_info",

@@ -92,5 +92,3 @@ export const shortMenuActions: ActionDefinition[] = [
     outputSchema: deleteLinkOutputSchema,
   }),
 ];
-
-export type ShortMenuActionName = "create_link" | "update_link" | "delete_link";

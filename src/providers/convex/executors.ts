@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ConvexActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { isIP } from "node:net";
 import {
@@ -40,7 +40,7 @@ interface ConvexContext {
 
 type ConvexActionHandler = (input: Record<string, unknown>, context: ConvexContext) => Promise<unknown>;
 
-const actionHandlers: Record<ConvexActionName, ConvexActionHandler> = {
+const actionHandlers: ProviderActionHandlers<"convex", ConvexActionHandler> = {
   get_token_details(_input, context) {
     return getTokenDetails(context);
   },

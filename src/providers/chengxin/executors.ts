@@ -1,22 +1,17 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ChengxinActionName } from "./actions.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-runtime.ts";
 import { chengxinActions } from "./actions.ts";
 import { executeChengxinAction, validateChengxinCredential } from "./runtime.ts";
 
-const handlers = Object.fromEntries(
-  chengxinActions.map((action) => [
-    action.name,
-    ((input, context) =>
-      executeChengxinAction(
-        action.name as ChengxinActionName,
-        input,
-        context.apiKey,
-        context.fetcher,
-      )) satisfies ProviderRuntimeHandler<ApiKeyProviderContext>,
-  ]),
+const handlers: ProviderActionHandlers<
+  "chengxin",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = mapProviderActionHandlers(
+  "chengxin",
+  chengxinActions,
+  (_action, name) => (input, context) => executeChengxinAction(name, input, context.apiKey, context.fetcher),
 );
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("chengxin", handlers, {

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ScrapingbeeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ interface ScrapingbeeUsage {
   renewal_subscription_date: string;
 }
 
-export const scrapingbeeActionHandlers: Record<ScrapingbeeActionName, ScrapingbeeActionHandler> = {
+export const scrapingbeeActionHandlers: ProviderActionHandlers<"scrapingbee", ScrapingbeeActionHandler> = {
   async fetch_html(input, context) {
     const response = await context.fetcher(scrapingbeeRequestUrl("", context.apiKey, buildFetchParams(input)), {
       method: "GET",

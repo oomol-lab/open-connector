@@ -439,19 +439,3 @@ export const timelinkActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type TimelinkActionName =
-  | "list_clients"
-  | "get_client"
-  | "list_projects"
-  | "get_project"
-  | "list_services"
-  | "get_service"
-  | "list_time_entries"
-  | "get_time_entry"
-  | "list_active_time_entries"
-  | "list_time_entry_required_fields"
-  | "list_users"
-  | "get_user"
-  | "get_company"
-  | "get_current_token";

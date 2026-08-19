@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ConfluenceActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -63,7 +63,7 @@ export interface ConfluenceRequestInput extends ConfluenceContext {
 
 type ConfluenceActionHandler = (input: Record<string, unknown>, context: ConfluenceContext) => Promise<unknown>;
 
-export const confluenceActionHandlers: Record<ConfluenceActionName, ConfluenceActionHandler> = {
+export const confluenceActionHandlers: ProviderActionHandlers<"confluence", ConfluenceActionHandler> = {
   async search_content(input, context): Promise<unknown> {
     const payload = await requestConfluenceJson({
       ...context,

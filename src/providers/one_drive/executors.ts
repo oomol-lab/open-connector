@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -64,7 +65,7 @@ type OneDriveUploadSession = {
   nextExpectedRanges: string[];
 };
 
-export const oneDriveActionHandlers: Record<string, OneDriveActionHandler> = {
+export const oneDriveActionHandlers: ProviderActionHandlers<"one_drive", OneDriveActionHandler> = {
   get_drive(input, deps) {
     return getDrive(input, deps);
   },

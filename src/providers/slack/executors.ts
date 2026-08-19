@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { SlackNormalizedConversationType } from "./constants.ts";
 
@@ -29,7 +30,7 @@ interface SlackPayloadError {
 
 type SlackActionHandler = (input: Record<string, unknown>, context: SlackActionContext) => Promise<unknown>;
 
-export const slackActionHandlers: Record<string, SlackActionHandler> = {
+export const slackActionHandlers: ProviderActionHandlers<"slack", SlackActionHandler> = {
   list_channels(input, context) {
     return slackListChannels(input, context);
   },

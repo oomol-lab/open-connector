@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ParallelActionName } from "./actions.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ type ParallelActionContext = ApiKeyProviderContext;
 
 type ParallelActionHandler = (input: Record<string, unknown>, context: ParallelActionContext) => Promise<unknown>;
 
-export const parallelActionHandlers: Record<ParallelActionName, ParallelActionHandler> = {
+export const parallelActionHandlers: ProviderActionHandlers<"parallel", ParallelActionHandler> = {
   async search(input, context) {
     const payload = await requestParallel({
       path: "/v1/search",

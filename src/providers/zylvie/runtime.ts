@@ -1,7 +1,12 @@
-import type { ZylvieActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  getProviderActionHandler,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface ZylvieCredentialCheck {
   providerAccountId?: string;
@@ -72,7 +77,7 @@ const couponFieldMap = {
   requiredSubscriptionProductId: "requires_subscription_product",
 } as const;
 
-const actionHandlers: Record<string, ActionHandler> = {
+const actionHandlers: ProviderActionHandlers<"zylvie", ActionHandler> = {
   get_current_user(input, fetcher) {
     return requestZylvieJson({
       apiKey: input.apiKey,
@@ -167,7 +172,7 @@ const actionHandlers: Record<string, ActionHandler> = {
     }
     return { subscriptions: payload };
   },
-} satisfies Record<ZylvieActionName, ActionHandler>;
+};
 
 export async function validateZylvieCredential(
   input: Record<string, string>,
@@ -195,7 +200,7 @@ export async function validateZylvieCredential(
 }
 
 export async function executeZylvieAction(input: ApiKeyProviderActionInput, fetcher: typeof fetch): Promise<unknown> {
-  const handler = actionHandlers[input.actionName as ZylvieActionName];
+  const handler = getProviderActionHandler(actionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(500, `Zylvie action is not implemented yet: ${input.actionName}`);
   }

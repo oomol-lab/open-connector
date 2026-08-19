@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { KnackActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -37,7 +37,7 @@ interface KnackListPayload extends Record<string, unknown> {
   total_records?: unknown;
 }
 
-export const knackActionHandlers: Record<KnackActionName, KnackActionHandler> = {
+export const knackActionHandlers: ProviderActionHandlers<"knack", KnackActionHandler> = {
   list_records(input, context) {
     return listKnackRecords(input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, objectArray, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -10,7 +11,7 @@ const stormglassApiBaseUrl = "https://api.stormglass.io";
 type StormglassPhase = "validate" | "execute";
 type StormglassActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const stormglassIoActionHandlers: Record<string, StormglassActionHandler> = {
+export const stormglassIoActionHandlers: ProviderActionHandlers<"stormglass_io", StormglassActionHandler> = {
   get_weather_point(input, context) {
     return executeWeatherPoint(input, context, "execute");
   },

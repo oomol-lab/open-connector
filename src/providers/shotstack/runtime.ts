@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -12,7 +13,10 @@ const shotstackRequestTimeoutMs = 30_000;
 
 type ShotstackRequestPhase = "validate" | "execute";
 
-export const shotstackActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const shotstackActionHandlers: ProviderActionHandlers<
+  "shotstack",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   render_edit(input, context) {
     return renderEdit(input, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RetellAiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ const validationPath = "/list-voices";
 
 type RetellAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const retellAiActionHandlers: Record<RetellAiActionName, RetellAiActionHandler> = {
+export const retellAiActionHandlers: ProviderActionHandlers<"retell_ai", RetellAiActionHandler> = {
   async list_voices(_input, context) {
     const payload = await requestRetellAiJson({
       path: validationPath,

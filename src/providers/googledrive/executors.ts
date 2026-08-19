@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
@@ -93,7 +94,7 @@ type ActionContext = OAuthProviderContext;
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
 
-const googledriveActionHandlers: Record<string, ActionHandler> = {
+const googledriveActionHandlers: ProviderActionHandlers<"googledrive", ActionHandler> = {
   "files.list"(input, { accessToken, fetcher }) {
     return listFiles(input, accessToken, fetcher);
   },

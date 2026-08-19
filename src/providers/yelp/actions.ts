@@ -152,8 +152,6 @@ const searchBusinessesInputSchema: JsonSchema = {
   oneOf: [{ required: ["location"] }, { required: ["latitude", "longitude"] }],
 };
 
-export type YelpActionName = "search_businesses" | "search_businesses_by_phone" | "get_business_details";
-
 export const yelpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_businesses",

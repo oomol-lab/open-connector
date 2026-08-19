@@ -120,12 +120,3 @@ export const goodyActions: ActionDefinition[] = [
     outputSchema: listResponseSchema("Goody workspaces for the current account.", "A Goody workspace."),
   }),
 ];
-
-export type GoodyActionName =
-  | "get_current_user"
-  | "list_products"
-  | "get_product"
-  | "list_orders"
-  | "get_order"
-  | "list_payment_methods"
-  | "list_workspaces";

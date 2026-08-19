@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -38,7 +39,7 @@ interface DiscordRequestInput {
 
 type DiscordActionHandler = (input: Record<string, unknown>, context: DiscordContext) => Promise<unknown>;
 
-export const discordActionHandlers: Record<string, DiscordActionHandler> = {
+export const discordActionHandlers: ProviderActionHandlers<"discord", DiscordActionHandler> = {
   delete_my_application_role_connection(input, context) {
     return deleteMyApplicationRoleConnection(input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString, requiredStringArray } from "../../core/cast.ts";
@@ -65,7 +66,10 @@ class SellerSpriteRequestError extends ProviderRequestError {
   }
 }
 
-export const sellerSpriteActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const sellerSpriteActionHandlers: ProviderActionHandlers<
+  "sellersprite",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_api_usage(_input, context): Promise<unknown> {
     const data = await requestSellerSpriteData({
       path: sellerSpriteValidationPath,

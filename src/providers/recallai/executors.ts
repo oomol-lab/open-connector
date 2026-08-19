@@ -5,8 +5,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { RecallAiActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -37,7 +37,7 @@ interface RecallAiContext {
 
 type RecallAiActionHandler = (input: Record<string, unknown>, context: RecallAiContext) => Promise<unknown>;
 
-export const recallaiActionHandlers: Record<RecallAiActionName, RecallAiActionHandler> = {
+export const recallaiActionHandlers: ProviderActionHandlers<"recallai", RecallAiActionHandler> = {
   async create_bot(input, context) {
     return {
       bot: readRecallAiObject(

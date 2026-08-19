@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineApiKeyProviderExecutors,
@@ -30,32 +31,34 @@ async function request(
     throw new ProviderRequestError(response.status, `Helcim request failed with status ${response.status}`, payload);
   return payload;
 }
+const handlers: ProviderActionHandlers<"helcim", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async list_customers(input, context) {
+    const url = new URL("customers", `${baseUrl}/`);
+    for (const [key, value] of Object.entries(input))
+      if (value !== undefined)
+        url.searchParams.set(key, key === "includeCards" ? (value ? "yes" : "no") : String(value));
+    const response = await context.fetcher(url, { headers: { "api-token": context.apiKey }, signal: context.signal });
+    const payload = await response.json();
+    if (!response.ok) throw new ProviderRequestError(response.status, "Helcim list customers failed", payload);
+    return { customers: payload };
+  },
+  async get_customer(input, context) {
+    return { customer: await request({}, context, "GET", `customers/${input.customerId}`) };
+  },
+  async create_customer(input, context) {
+    if (!input.contactName && !input.businessName)
+      throw new ProviderRequestError(400, "Helcim requires contactName, businessName, or both");
+    return { customer: await request(input, context, "POST", "customers") };
+  },
+  async update_customer(input, context) {
+    const { customerId, ...body } = input;
+    return { customer: await request(body, context, "PUT", `customers/${customerId}`) };
+  },
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
   "helcim",
-  {
-    async list_customers(input, context) {
-      const url = new URL("customers", `${baseUrl}/`);
-      for (const [key, value] of Object.entries(input))
-        if (value !== undefined)
-          url.searchParams.set(key, key === "includeCards" ? (value ? "yes" : "no") : String(value));
-      const response = await context.fetcher(url, { headers: { "api-token": context.apiKey }, signal: context.signal });
-      const payload = await response.json();
-      if (!response.ok) throw new ProviderRequestError(response.status, "Helcim list customers failed", payload);
-      return { customers: payload };
-    },
-    async get_customer(input, context) {
-      return { customer: await request({}, context, "GET", `customers/${input.customerId}`) };
-    },
-    async create_customer(input, context) {
-      if (!input.contactName && !input.businessName)
-        throw new ProviderRequestError(400, "Helcim requires contactName, businessName, or both");
-      return { customer: await request(input, context, "POST", "customers") };
-    },
-    async update_customer(input, context) {
-      const { customerId, ...body } = input;
-      return { customer: await request(body, context, "PUT", `customers/${customerId}`) };
-    },
-  },
+  handlers,
   { skipDnsValidation: true },
 );
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

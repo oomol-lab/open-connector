@@ -1,6 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderProxyExecutor } from "../../core/types.ts";
-import type { HabiticaActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -63,7 +63,7 @@ interface HabiticaEnvelope {
   error?: unknown;
 }
 
-export const habiticaActionHandlers: Record<HabiticaActionName, HabiticaActionHandler> = {
+export const habiticaActionHandlers: ProviderActionHandlers<"habitica", HabiticaActionHandler> = {
   get_user_profile(input, context) {
     return getUserProfile(input, context);
   },

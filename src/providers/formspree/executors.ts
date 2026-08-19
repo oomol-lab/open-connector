@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { FormspreeActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -21,7 +21,7 @@ interface FormspreeContext {
 
 type FormspreeActionHandler = (input: Record<string, unknown>, context: FormspreeContext) => Promise<unknown>;
 
-export const formspreeActionHandlers: Record<FormspreeActionName, FormspreeActionHandler> = {
+export const formspreeActionHandlers: ProviderActionHandlers<"formspree", FormspreeActionHandler> = {
   list_submissions(input, context) {
     return listSubmissions(input, context);
   },

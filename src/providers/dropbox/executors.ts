@@ -4,6 +4,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -56,7 +57,7 @@ type SharedLinkFileArg = {
   path?: string;
 };
 
-export const dropboxActionHandlers: Record<string, ActionHandler> = {
+export const dropboxActionHandlers: ProviderActionHandlers<"dropbox", ActionHandler> = {
   get_current_account(_input, { accessToken, fetcher }) {
     return getCurrentAccount(accessToken, fetcher);
   },

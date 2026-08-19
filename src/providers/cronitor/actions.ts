@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "cronitor";
 
-export type CronitorActionName =
-  | "list_monitors"
-  | "get_monitor"
-  | "create_monitor"
-  | "update_monitor"
-  | "delete_monitor";
-
 const monitorKeySchema = s.nonEmptyString("The unique key of the Cronitor monitor.");
 const monitorTypeSchema = s.stringEnum("The Cronitor monitor type.", ["job", "check", "heartbeat", "site"]);
 const notifyListSchema = s.array(

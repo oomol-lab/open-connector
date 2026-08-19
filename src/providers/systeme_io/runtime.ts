@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SystemeIoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface SystemeIoRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const systemeIoActionHandlers: Record<SystemeIoActionName, SystemeIoActionHandler> = {
+export const systemeIoActionHandlers: ProviderActionHandlers<"systeme_io", SystemeIoActionHandler> = {
   async list_contacts(input, context) {
     const { items, hasMore } = extractPaginatedPayload(
       await requestSystemeIoJson({

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { WpMapsActionName } from "./actions.ts";
 
@@ -43,7 +44,7 @@ const handlers: Record<WpMapsActionName, (input: Record<string, unknown>, contex
   list_stores: (input, context) => request("/stores/all", "GET", input, context),
   delete_stores: (input, context) => request("/stores/delete", "POST", input, context, { ids: input.storeIds }),
 };
-export const wpMapsActionHandlers: Record<string, ProviderRuntimeHandler<Context>> = handlers;
+export const wpMapsActionHandlers: ProviderActionHandlers<"wp_maps", ProviderRuntimeHandler<Context>> = handlers;
 
 export function readWpMapsCredential(accessToken: string, values: Record<string, unknown>): WpMapsCredential {
   return {

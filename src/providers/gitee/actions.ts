@@ -6,8 +6,6 @@ import { giteeProjectScopes, giteeUserInfoScopes } from "./scopes.ts";
 
 const service = "gitee";
 
-export type GiteeActionName = (typeof giteeActions)[number]["name"];
-
 interface GiteeActionSource {
   name: string;
   description: string;

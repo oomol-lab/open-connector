@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GeocodioActionName } from "./actions.ts";
 
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ const geocodioValidationQuery = "1109 N Highland St, Arlington VA";
 type GeocodioActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type GeocodioActionHandler = (input: Record<string, unknown>, context: GeocodioActionContext) => Promise<unknown>;
 
-export const geocodioActionHandlers: Record<GeocodioActionName, GeocodioActionHandler> = {
+export const geocodioActionHandlers: ProviderActionHandlers<"geocodio", GeocodioActionHandler> = {
   single_geocode(input, context) {
     validateSingleGeocodeInput(input);
     return geocodioGet("/geocode", buildSingleGeocodeQuery(input), context);

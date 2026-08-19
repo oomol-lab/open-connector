@@ -467,16 +467,3 @@ export const ablyActions: ActionDefinition[] = [
     outputSchema: publishMessageOutputSchema,
   }),
 ];
-
-export type AblyActionName =
-  | "batch_presence"
-  | "batch_presence_history"
-  | "create_channel"
-  | "delete_channel_subscription"
-  | "get_channel_details"
-  | "get_channel_history"
-  | "get_presence_history"
-  | "get_service_time"
-  | "get_stats"
-  | "list_push_channel_subscriptions"
-  | "publish_message_to_channel";

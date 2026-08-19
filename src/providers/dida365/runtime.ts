@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { Dida365ActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -30,7 +30,7 @@ interface Dida365RequestOptions {
   allowNotFound?: boolean;
 }
 
-export const dida365ActionHandlers: Record<Dida365ActionName, Dida365ActionHandler> = {
+export const dida365ActionHandlers: ProviderActionHandlers<"dida365", Dida365ActionHandler> = {
   async get_user_project(_input, context) {
     return { projects: await fetchProjects(context, "execute") };
   },

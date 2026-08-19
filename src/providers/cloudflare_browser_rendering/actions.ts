@@ -233,14 +233,6 @@ export const cloudflareBrowserRenderingActions: ProviderActionDefinition[] = [
   }),
 ];
 
-export type CloudflareBrowserRenderingActionName =
-  | "list_accounts"
-  | "get_html_content"
-  | "get_markdown"
-  | "get_links"
-  | "get_json"
-  | "scrape_elements";
-
 function quickActionInputSchema(
   description: string,
   properties: Record<string, JsonSchema> = {},

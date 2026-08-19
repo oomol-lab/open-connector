@@ -81,5 +81,3 @@ export const ip2whoisActions: ActionDefinition[] = [
     outputSchema: hostedDomainsLookupOutputSchema,
   }),
 ];
-
-export type Ip2whoisActionName = "lookup_domain" | "lookup_hosted_domains";

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { CloudflareBrowserRenderingActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -48,8 +48,8 @@ type CloudflareBrowserRenderingActionHandler = (
   context: CloudflareBrowserRenderingContext,
 ) => Promise<unknown>;
 
-const cloudflareBrowserRenderingActionHandlers: Record<
-  CloudflareBrowserRenderingActionName,
+const cloudflareBrowserRenderingActionHandlers: ProviderActionHandlers<
+  "cloudflare_browser_rendering",
   CloudflareBrowserRenderingActionHandler
 > = {
   list_accounts(input, context) {

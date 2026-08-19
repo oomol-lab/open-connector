@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { OnePasswordEventsActionName } from "./actions.ts";
 
@@ -41,7 +42,10 @@ const eventPathByActionName: Record<OnePasswordEventsActionName, string> = {
   list_sign_in_attempts: "/api/v2/signinattempts",
 };
 
-export const onePasswordEventsActionHandlers: Record<OnePasswordEventsActionName, OnePasswordEventsActionHandler> = {
+export const onePasswordEventsActionHandlers: ProviderActionHandlers<
+  "one_password_events",
+  OnePasswordEventsActionHandler
+> = {
   list_audit_events(input, context) {
     return listOnePasswordEvents("list_audit_events", input, context);
   },

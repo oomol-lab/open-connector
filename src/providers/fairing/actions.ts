@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "fairing";
 
-export type FairingActionName = "list_responses";
-
 const sortSchema = s.stringEnum("The Fairing response ordering direction.", [
   "inserted_at_desc",
   "inserted_at_asc",

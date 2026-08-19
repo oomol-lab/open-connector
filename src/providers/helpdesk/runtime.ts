@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { HelpdeskActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -29,7 +30,7 @@ type HelpdeskActionInput = ApiKeyProviderActionInput & {
 };
 type HelpdeskActionHandler = (input: HelpdeskActionInput, fetcher: typeof fetch) => Promise<unknown>;
 
-export const helpdeskActionHandlers: Record<HelpdeskActionName, HelpdeskActionHandler> = {
+export const helpdeskActionHandlers: ProviderActionHandlers<"helpdesk", HelpdeskActionHandler> = {
   list_tickets(input, fetcher) {
     return listTickets(input, fetcher);
   },
@@ -54,7 +55,7 @@ export const helpdeskActionHandlers: Record<HelpdeskActionName, HelpdeskActionHa
   list_teams(input, fetcher) {
     return listTeams(input, fetcher);
   },
-} satisfies Record<HelpdeskActionName, HelpdeskActionHandler>;
+};
 
 export async function validateHelpdeskCredential(
   input: Record<string, string>,

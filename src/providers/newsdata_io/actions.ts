@@ -158,8 +158,6 @@ const sourcesInput = s.object(
   { optional: ["country", "category", "language", "prioritydomain", "domainurl"] },
 );
 
-export type NewsdataIoActionName = "get_latest_news" | "search_news_archive" | "list_crypto_news" | "list_news_sources";
-
 export const newsdataIoActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_latest_news",

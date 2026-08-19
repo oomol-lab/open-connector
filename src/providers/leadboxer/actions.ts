@@ -97,5 +97,3 @@ export const leadboxerActions: ActionDefinition[] = [
     outputSchema: domainLookupOutputSchema,
   }),
 ];
-
-export type LeadboxerActionName = "lookup_ip" | "lookup_domain";

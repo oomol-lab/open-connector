@@ -253,18 +253,3 @@ export const featheryActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FeatheryActionName =
-  | "get_account_info"
-  | "list_forms"
-  | "get_form_schema"
-  | "create_or_update_form_submissions"
-  | "list_hidden_fields"
-  | "create_hidden_field"
-  | "edit_hidden_field"
-  | "delete_hidden_field"
-  | "list_users"
-  | "get_user_data"
-  | "get_user_session"
-  | "create_or_fetch_user"
-  | "delete_user";

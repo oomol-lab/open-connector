@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -17,7 +18,7 @@ type BetterStackRequestPhase = "validate" | "execute";
 type BetterStackContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type BetterStackActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const betterStackActionHandlers: Record<string, BetterStackActionHandler> = {
+export const betterStackActionHandlers: ProviderActionHandlers<"better_stack", BetterStackActionHandler> = {
   list_incidents(input, context) {
     return listIncidents(input, context);
   },

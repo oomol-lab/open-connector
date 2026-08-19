@@ -266,8 +266,6 @@ const getCreditBalanceOutputSchema = s.object(
   { optional: ["earliest_expiration"] },
 );
 
-export type TheirStackActionName = "search_jobs" | "search_companies" | "list_technographics" | "get_credit_balance";
-
 export const theirstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_jobs",

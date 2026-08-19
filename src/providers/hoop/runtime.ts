@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HoopActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -27,7 +27,7 @@ interface HoopRequestInput {
   query?: Record<string, string | number | undefined>;
 }
 
-export const hoopActionHandlers: Record<HoopActionName, HoopActionHandler> = {
+export const hoopActionHandlers: ProviderActionHandlers<"hoop", HoopActionHandler> = {
   async get_current_user(_input, context) {
     return {
       user: normalizeUserInfo(

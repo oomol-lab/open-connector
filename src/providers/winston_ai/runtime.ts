@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WinstonAiActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -25,7 +25,7 @@ const winstonAiDefaultRequestTimeoutMs = 60_000;
 const winstonAiValidationText =
   "Winston AI validates this connector credential with a short AI content detection request. This sample text is intentionally long enough to satisfy the documented minimum length for reliable API analysis while avoiding any user data.";
 
-export const winstonAiActionHandlers: Record<WinstonAiActionName, WinstonAiActionHandler> = {
+export const winstonAiActionHandlers: ProviderActionHandlers<"winston_ai", WinstonAiActionHandler> = {
   detect_ai_text(input, context) {
     return requestWinstonAiJson(
       { path: "/v2/ai-content-detection", body: buildScanBody(input), phase: "execute" },

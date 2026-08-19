@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "retently";
 
-export type RetentlyActionName =
-  | "get_account_status"
-  | "list_customers"
-  | "get_customer"
-  | "list_feedback"
-  | "get_feedback"
-  | "list_templates"
-  | "get_template"
-  | "list_campaigns"
-  | "upsert_customers";
-
 const nonEmptyStringSchema = (description: string) => s.string(description, { minLength: 1 });
 
 const pageSchema = s.positiveInteger("The current page number. Retently defaults to page 1.");

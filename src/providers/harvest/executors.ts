@@ -5,7 +5,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { HarvestActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -67,7 +67,7 @@ interface HarvestPagination {
   links?: HarvestLinks;
 }
 
-export const harvestActionHandlers: Record<HarvestActionName, HarvestActionHandler> = {
+export const harvestActionHandlers: ProviderActionHandlers<"harvest", HarvestActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TurbotPipesActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -16,7 +16,7 @@ export interface TurbotPipesContext extends ApiKeyProviderContext {
 export const turbotPipesApiBaseUrl = "https://pipes.turbot.com/api/latest";
 const credentialHelpUrl = "https://turbot.com/pipes/docs/profile#tokens";
 
-export const turbotPipesActionHandlers: Record<TurbotPipesActionName, TurbotPipesActionHandler> = {
+export const turbotPipesActionHandlers: ProviderActionHandlers<"turbot_pipes", TurbotPipesActionHandler> = {
   execute_query(input, context) {
     return executeQuery(input, context);
   },

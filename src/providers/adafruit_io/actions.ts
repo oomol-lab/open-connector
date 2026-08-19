@@ -121,13 +121,6 @@ const dataPointSchema = s.object("A normalized Adafruit IO feed data point.", {
   raw: s.looseObject("The raw data point object returned by Adafruit IO."),
 });
 
-export type AdafruitIoActionName =
-  | "get_current_user"
-  | "list_feeds"
-  | "get_feed"
-  | "list_feed_data"
-  | "create_feed_data";
-
 export const adafruitIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

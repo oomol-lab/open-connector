@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -32,7 +33,7 @@ type DynapicturesActionHandler = (
   context: DynapicturesActionContext,
 ) => Promise<unknown>;
 
-export const dynapicturesActionHandlers: Record<string, DynapicturesActionHandler> = {
+export const dynapicturesActionHandlers: ProviderActionHandlers<"dynapictures", DynapicturesActionHandler> = {
   list_templates(_input, context) {
     return listTemplates(context);
   },

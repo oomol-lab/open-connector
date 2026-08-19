@@ -5,21 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "statuspage";
 
-export type StatuspageActionName =
-  | "list_pages"
-  | "get_page"
-  | "list_components"
-  | "create_component"
-  | "update_component"
-  | "delete_component"
-  | "list_incidents"
-  | "get_incident"
-  | "create_incident"
-  | "update_incident"
-  | "delete_incident"
-  | "list_events"
-  | "get_automation_email";
-
 const pageIdSchema = s.nonEmptyString("The Statuspage page identifier.");
 const componentIdSchema = s.nonEmptyString("The Statuspage component identifier.");
 const incidentIdSchema = s.nonEmptyString("The Statuspage incident identifier.");

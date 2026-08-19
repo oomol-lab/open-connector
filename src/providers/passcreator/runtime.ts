@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -29,7 +30,10 @@ export interface PasscreatorActionContext {
   signal?: AbortSignal;
 }
 
-export const passcreatorActionHandlers: Record<string, ProviderRuntimeHandler<PasscreatorActionContext>> = {
+export const passcreatorActionHandlers: ProviderActionHandlers<
+  "passcreator",
+  ProviderRuntimeHandler<PasscreatorActionContext>
+> = {
   async list_pass_templates(_input, context) {
     const payload = await requestPasscreatorJson({
       url: new URL(passcreatorValidationPath, passcreatorApiBaseUrl),

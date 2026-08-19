@@ -111,16 +111,6 @@ const deploymentIncludeSchema = s.array(
   { minItems: 1 },
 );
 
-export type LaravelCloudActionName =
-  | "get_organization"
-  | "list_regions"
-  | "list_applications"
-  | "get_application"
-  | "list_environments"
-  | "get_environment"
-  | "list_deployments"
-  | "get_deployment";
-
 export const laravelCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",

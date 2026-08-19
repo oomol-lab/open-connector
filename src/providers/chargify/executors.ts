@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -109,6 +110,53 @@ function normalize(value: unknown, resource: "customer" | "product" | "subscript
     raw,
   };
 }
+const handlers: ProviderActionHandlers<"chargify", ProviderRuntimeHandler<Context>> = {
+  async list_customers(input, context) {
+    const payload = await request("customer", undefined, input, context);
+    return {
+      customers: Array.isArray(payload) ? payload.map((item) => normalize(unwrap(item, "customer"), "customer")) : [],
+      page: input.page ?? 1,
+      hasMore: Array.isArray(payload) && payload.length === (input.perPage ?? 20),
+    };
+  },
+  async get_customer(input, context) {
+    return {
+      customer: normalize(unwrap(await request("customer", input.customerId, {}, context), "customer"), "customer"),
+    };
+  },
+  async list_products(input, context) {
+    const payload = await request("product", undefined, input, context);
+    return {
+      products: Array.isArray(payload) ? payload.map((item) => normalize(unwrap(item, "product"), "product")) : [],
+      page: input.page ?? 1,
+      hasMore: Array.isArray(payload) && payload.length === (input.perPage ?? 20),
+    };
+  },
+  async get_product(input, context) {
+    return {
+      product: normalize(unwrap(await request("product", input.productId, {}, context), "product"), "product"),
+    };
+  },
+  async list_subscriptions(input, context) {
+    const payload = await request("subscription", undefined, input, context);
+    return {
+      subscriptions: Array.isArray(payload)
+        ? payload.map((item) => normalize(unwrap(item, "subscription"), "subscription"))
+        : [],
+      page: input.page ?? 1,
+      hasMore: Array.isArray(payload) && payload.length === (input.perPage ?? 20),
+    };
+  },
+  async get_subscription(input, context) {
+    return {
+      subscription: normalize(
+        unwrap(await request("subscription", input.subscriptionId, {}, context), "subscription"),
+        "subscription",
+      ),
+    };
+  },
+};
+
 export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "chargify",
   async createContext(context, fetcher) {
@@ -120,52 +168,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<Context>({
       signal: context.signal,
     };
   },
-  handlers: {
-    async list_customers(input, context) {
-      const payload = await request("customer", undefined, input, context);
-      return {
-        customers: Array.isArray(payload) ? payload.map((item) => normalize(unwrap(item, "customer"), "customer")) : [],
-        page: input.page ?? 1,
-        hasMore: Array.isArray(payload) && payload.length === (input.perPage ?? 20),
-      };
-    },
-    async get_customer(input, context) {
-      return {
-        customer: normalize(unwrap(await request("customer", input.customerId, {}, context), "customer"), "customer"),
-      };
-    },
-    async list_products(input, context) {
-      const payload = await request("product", undefined, input, context);
-      return {
-        products: Array.isArray(payload) ? payload.map((item) => normalize(unwrap(item, "product"), "product")) : [],
-        page: input.page ?? 1,
-        hasMore: Array.isArray(payload) && payload.length === (input.perPage ?? 20),
-      };
-    },
-    async get_product(input, context) {
-      return {
-        product: normalize(unwrap(await request("product", input.productId, {}, context), "product"), "product"),
-      };
-    },
-    async list_subscriptions(input, context) {
-      const payload = await request("subscription", undefined, input, context);
-      return {
-        subscriptions: Array.isArray(payload)
-          ? payload.map((item) => normalize(unwrap(item, "subscription"), "subscription"))
-          : [],
-        page: input.page ?? 1,
-        hasMore: Array.isArray(payload) && payload.length === (input.perPage ?? 20),
-      };
-    },
-    async get_subscription(input, context) {
-      return {
-        subscription: normalize(
-          unwrap(await request("subscription", input.subscriptionId, {}, context), "subscription"),
-          "subscription",
-        ),
-      };
-    },
-  },
+  handlers,
 });
 
 export const credentialValidators: CredentialValidators = {

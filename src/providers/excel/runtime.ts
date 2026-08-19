@@ -1,5 +1,7 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { compactObject } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { getProviderActionHandler, ProviderRequestError } from "../provider-runtime.ts";
 import { emptyWorkbookBytes, excelWorkbookMimeType } from "./workbook-template.ts";
 
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";
@@ -77,7 +79,7 @@ const excelCreateSessionMaxPollAttempts = 8;
 const excelCreateSessionBaseDelayMs = 500;
 const excelCreateSessionPollDelayMs = 1_000;
 
-export const excelActionHandlers: Record<string, ExcelActionHandler> = {
+export const excelActionHandlers: ProviderActionHandlers<"excel", ExcelActionHandler> = {
   create_workbook(input, deps) {
     return createWorkbook(input, deps);
   },
@@ -174,7 +176,7 @@ export const excelActionHandlers: Record<string, ExcelActionHandler> = {
 };
 
 export async function executeExcelAction(input: ExcelActionInvocation, fetcher: typeof fetch): Promise<unknown> {
-  const handler = excelActionHandlers[input.actionName as string];
+  const handler = getProviderActionHandler(excelActionHandlers, input.actionName);
   if (!handler) {
     throw new ExcelProviderRequestError("invalid_input", `unknown excel action: ${input.actionName}`, 400);
   }

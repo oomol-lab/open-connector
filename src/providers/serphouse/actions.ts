@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "serphouse";
 
-export type SerphouseActionName =
-  | "account_info"
-  | "list_domains"
-  | "list_languages"
-  | "search_locations"
-  | "search_web";
-
 const statusField = s.string("SERPHouse response status.");
 const messageField = s.string("SERPHouse response message.");
 const emptyInputSchema = s.object({}, { description: "No input is required." });

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CertnActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -44,7 +44,7 @@ type CertnRegionId = keyof typeof certnRegions;
 type RequestPhase = "validate" | "execute";
 type CertnActionHandler = (input: Record<string, unknown>, context: CertnProviderContext) => Promise<unknown>;
 
-export const certnActionHandlers: Record<CertnActionName, CertnActionHandler> = {
+export const certnActionHandlers: ProviderActionHandlers<"certn", CertnActionHandler> = {
   async list_cases(input, context) {
     const payload = await requestCertnJson({
       context,

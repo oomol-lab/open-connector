@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GleapActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -27,7 +27,7 @@ interface GleapRequestInput {
 
 type GleapActionHandler = (input: Record<string, unknown>, context: GleapActionContext) => Promise<unknown>;
 
-export const gleapActionHandlers: Record<GleapActionName, GleapActionHandler> = {
+export const gleapActionHandlers: ProviderActionHandlers<"gleap", GleapActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

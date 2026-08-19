@@ -557,19 +557,3 @@ export const huggingfaceActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type HuggingfaceActionName =
-  | "get_current_user"
-  | "list_models"
-  | "get_model_info"
-  | "list_datasets"
-  | "get_dataset_info"
-  | "get_dataset_first_rows"
-  | "get_dataset_statistics"
-  | "list_spaces"
-  | "get_space_info"
-  | "list_repo_files"
-  | "get_trending"
-  | "list_endpoints"
-  | "generate_chat_completion"
-  | "generate_embeddings";

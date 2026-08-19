@@ -277,16 +277,6 @@ function itemOutputSchema(description: string, key: string): JsonSchema {
   });
 }
 
-export type ItGlueActionName =
-  | "list_organizations"
-  | "get_organization"
-  | "list_users"
-  | "get_user"
-  | "list_configurations"
-  | "get_configuration"
-  | "list_contacts"
-  | "get_contact";
-
 export const itGlueActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",

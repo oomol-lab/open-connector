@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ interface BotStarRequestInput {
   phase?: BotStarPhase;
 }
 
-export const botStarActionHandlers: Record<string, BotStarActionHandler> = {
+export const botStarActionHandlers: ProviderActionHandlers<"bot_star", BotStarActionHandler> = {
   async list_bots(_input, context) {
     return { bots: await botStarRequest({ ...context, path: "/bots/" }) };
   },

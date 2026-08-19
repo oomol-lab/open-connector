@@ -241,13 +241,6 @@ const bulkScreenshotInputSchema = s.object(
   { optional: ["execute", "options", "optimize"] },
 );
 
-export type ScreenshotoneActionName =
-  | "take_screenshot"
-  | "take_animated_screenshot"
-  | "take_bulk_screenshots"
-  | "list_devices"
-  | "get_usage";
-
 export const screenshotoneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "take_screenshot",

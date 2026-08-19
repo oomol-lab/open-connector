@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -26,7 +27,10 @@ type WolframAlphaRecognizerResult = {
   summaryBoxPath: string | null;
 };
 
-export const wolframAlphaApiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const wolframAlphaApiActionHandlers: ProviderActionHandlers<
+  "wolfram_alpha_api",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async validate_query(input, context): Promise<unknown> {
     const query = requiredProviderString(input.query, "query");
     const mode = readMode(input.mode);

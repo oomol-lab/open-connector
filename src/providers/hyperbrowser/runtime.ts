@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HyperbrowserActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -23,7 +23,7 @@ interface HyperbrowserRequestInput {
   phase: HyperbrowserRequestPhase;
 }
 
-export const hyperbrowserActionHandlers: Record<HyperbrowserActionName, HyperbrowserActionHandler> = {
+export const hyperbrowserActionHandlers: ProviderActionHandlers<"hyperbrowser", HyperbrowserActionHandler> = {
   fetch_page: postAction("/api/web/fetch", buildDirectBody),
   search_web: postAction("/api/web/search", buildDirectBody),
   start_web_crawl: postAction("/api/web/crawl", buildDirectBody),

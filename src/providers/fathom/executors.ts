@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { FathomActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -31,7 +31,7 @@ interface FathomRequestOptions {
 
 type FathomActionHandler = (input: Record<string, unknown>, context: FathomActionContext) => Promise<unknown>;
 
-export const fathomActionHandlers: Record<FathomActionName, FathomActionHandler> = {
+export const fathomActionHandlers: ProviderActionHandlers<"fathom", FathomActionHandler> = {
   get_account(_input, context) {
     return requestFathomJson({
       apiKey: context.apiKey,

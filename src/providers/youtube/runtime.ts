@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { YoutubeActionName } from "./actions.ts";
 
 import { randomUUID } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
@@ -48,7 +48,7 @@ interface StreamingUploadSource {
   contentLength: number;
 }
 
-export const youtubeActionHandlers: Record<YoutubeActionName, YoutubeActionHandler> = {
+export const youtubeActionHandlers: ProviderActionHandlers<"youtube", YoutubeActionHandler> = {
   search(input, context) {
     return searchYoutube(input, context);
   },

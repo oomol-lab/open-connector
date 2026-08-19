@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { LessonspaceActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -42,7 +42,7 @@ interface LessonspaceRequestInput {
   phase: LessonspacePhase;
 }
 
-export const lessonspaceActionHandlers: Record<LessonspaceActionName, LessonspaceActionHandler> = {
+export const lessonspaceActionHandlers: ProviderActionHandlers<"lessonspace", LessonspaceActionHandler> = {
   list_organisation_sessions(input, context) {
     return listOrganisationSessions(input, context);
   },

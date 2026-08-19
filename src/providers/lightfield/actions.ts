@@ -117,18 +117,6 @@ const retrieveRecordOutputSchema = s.object(
   { required: ["record"] },
 );
 
-export type LightfieldActionName =
-  | "get_api_key_metadata"
-  | "list_object_definitions"
-  | "list_custom_object_records"
-  | "get_custom_object_record"
-  | "list_accounts"
-  | "get_account"
-  | "list_contacts"
-  | "get_contact"
-  | "list_opportunities"
-  | "get_opportunity";
-
 export const lightfieldActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_key_metadata",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PagerDutyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -18,7 +18,7 @@ type PagerDutyRequestPhase = "validate" | "execute";
 type PagerDutyActionContext = ApiKeyProviderContext;
 type PagerDutyActionHandler = (input: Record<string, unknown>, context: PagerDutyActionContext) => Promise<unknown>;
 
-export const pagerDutyActionHandlers: Record<PagerDutyActionName, PagerDutyActionHandler> = {
+export const pagerDutyActionHandlers: ProviderActionHandlers<"pagerduty", PagerDutyActionHandler> = {
   list_incidents(input, context) {
     return listIncidents(input, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LobActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -19,7 +19,7 @@ const lobDefaultRequestTimeoutMs = 30_000;
 
 type LobActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lobActionHandlers: Record<LobActionName, LobActionHandler> = {
+export const lobActionHandlers: ProviderActionHandlers<"lob", LobActionHandler> = {
   verify_us_address(input, context) {
     return verifyUsAddress(input, context);
   },

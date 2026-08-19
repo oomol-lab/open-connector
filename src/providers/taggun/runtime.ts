@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TaggunActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, compactJson } from "../../core/request.ts";
@@ -14,7 +14,7 @@ const campaignReceiptValidationUrlPath = "/api/validation/v1/campaign/receipt-va
 
 type TaggunActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const taggunActionHandlers: Record<TaggunActionName, TaggunActionHandler> = {
+export const taggunActionHandlers: ProviderActionHandlers<"taggun", TaggunActionHandler> = {
   extract_receipt_simple_url(input, context) {
     return executeReceiptUrlExtraction(simpleUrlPath, input, context);
   },

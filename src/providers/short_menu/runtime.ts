@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShortMenuActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -25,7 +25,7 @@ interface ShortMenuRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const shortMenuActionHandlers: Record<ShortMenuActionName, ShortMenuActionHandler> = {
+export const shortMenuActionHandlers: ProviderActionHandlers<"short_menu", ShortMenuActionHandler> = {
   create_link(input, context) {
     return createLink(input, context);
   },

@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -30,7 +31,7 @@ interface BamboohrAuthorization {
   companyDomain: string;
 }
 
-export const bamboohrActionHandlers: Record<string, ProviderRuntimeHandler<BamboohrContext>> = {
+export const bamboohrActionHandlers: ProviderActionHandlers<"bamboohr", ProviderRuntimeHandler<BamboohrContext>> = {
   async get_company_information(_input, context) {
     const raw = await requestBamboohrJson({
       context,

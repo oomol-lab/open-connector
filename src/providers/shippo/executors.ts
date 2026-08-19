@@ -4,8 +4,8 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShippoActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -42,7 +42,7 @@ interface ShippoRequestInput {
 
 type ShippoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const shippoActionHandlers: Record<ShippoActionName, ShippoActionHandler> = {
+export const shippoActionHandlers: ProviderActionHandlers<"shippo", ShippoActionHandler> = {
   list_addresses(input, context) {
     return requestAndWrapShippoPaginatedJson({
       path: "/addresses/",

@@ -1,11 +1,18 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
-import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type {
+  ProviderActionHandlers,
+  ProviderActionName,
+  ProviderActionSources,
+  ProviderFetch,
+  ProviderRuntimeHandler,
+} from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
+  mapProviderActionSources,
   ProviderRequestError,
   providerUserAgent,
   toProviderExecutionError,
@@ -54,7 +61,7 @@ class WangdianRequestError extends ProviderRequestError {
   }
 }
 
-const actionConfigByName: Record<string, WangdianActionConfig> = {
+const actionConfigByName: ProviderActionSources<"wangdian", WangdianActionConfig> = {
   list_shops: { endpoint: "shop.php", responseField: "shoplist", outputField: "shops" },
   list_warehouses: { endpoint: "warehouse_query.php", responseField: "warehouses", outputField: "warehouses" },
   list_goods: { endpoint: "goods_query.php", responseField: "goods_list", outputField: "goods" },
@@ -79,11 +86,15 @@ const actionConfigByName: Record<string, WangdianActionConfig> = {
   },
 };
 
-export const wangdianActionHandlers: Record<string, ProviderRuntimeHandler<WangdianContext>> = Object.fromEntries(
-  Object.keys(actionConfigByName).map((actionName) => [
-    actionName,
-    (input: Record<string, unknown>, context: WangdianContext) => executeWangdianAction(actionName, input, context),
-  ]),
+export const wangdianActionHandlers: ProviderActionHandlers<
+  "wangdian",
+  ProviderRuntimeHandler<WangdianContext>
+> = mapProviderActionSources(
+  "wangdian",
+  actionConfigByName,
+  (actionName): ProviderRuntimeHandler<WangdianContext> =>
+    (input, context) =>
+      executeWangdianAction(actionName, input, context),
 );
 
 export async function validateWangdianCredential(
@@ -178,7 +189,7 @@ export function toWangdianExecutionError(error: unknown): ExecutionResult {
 }
 
 async function executeWangdianAction(
-  actionName: string,
+  actionName: ProviderActionName<"wangdian">,
   input: Record<string, unknown>,
   context: WangdianContext,
 ): Promise<Record<string, unknown>> {

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HelpscoutDocsActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -26,7 +26,7 @@ type HelpscoutDocsActionHandler = (
   context: HelpscoutDocsActionContext,
 ) => Promise<unknown>;
 
-export const helpscoutDocsActionHandlers: Record<HelpscoutDocsActionName, HelpscoutDocsActionHandler> = {
+export const helpscoutDocsActionHandlers: ProviderActionHandlers<"helpscout_docs", HelpscoutDocsActionHandler> = {
   list_sites(input, context) {
     return executePagedRequest("sites", "sites", input, context);
   },

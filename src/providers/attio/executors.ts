@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ const attioSelfPath = "/v2/self";
 type AttioRequestPhase = "validate" | "execute";
 type AttioActionHandler = (input: Record<string, unknown>, context: BearerProviderContext) => Promise<unknown>;
 
-export const attioActionHandlers: Record<string, AttioActionHandler> = {
+export const attioActionHandlers: ProviderActionHandlers<"attio", AttioActionHandler> = {
   identify(_input, context) {
     return executeIdentify(context);
   },

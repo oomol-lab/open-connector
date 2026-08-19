@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ const validationPath = "/account";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const runscopeActionHandlers: Record<string, Handler> = {
+export const runscopeActionHandlers: ProviderActionHandlers<"runscope", Handler> = {
   async get_account(_input, context) {
     return singleOutput("account", await runscopeRequest(validationPath, context, { include_owner: true }));
   },

@@ -39,12 +39,6 @@ const todayHourSchema = s.nullable(
   ),
 );
 
-export type TripleWhaleActionName =
-  | "validate_api_key"
-  | "get_summary_page_data"
-  | "execute_custom_sql_query"
-  | "get_customer_journey_attribution_data";
-
 export const tripleWhaleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_api_key",

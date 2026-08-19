@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -26,7 +27,7 @@ export const klangioApiBaseUrl = "https://api.klang.io";
 const klangioValidationJobId = "00000000-0000-0000-0000-000000000000";
 const maxKlangioUploadSourceBytes = 100 * 1024 * 1024;
 
-export const klangioActionHandlers: Record<string, KlangioActionHandler> = {
+export const klangioActionHandlers: ProviderActionHandlers<"klangio", KlangioActionHandler> = {
   async create_transcription_job(input, context) {
     const formData = await createFileFormData(input.file, context);
     for (const output of readStringArray(input.outputs, "outputs")) {

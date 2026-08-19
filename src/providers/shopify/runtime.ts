@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -29,7 +30,7 @@ export interface ShopifyActionContext {
   signal?: AbortSignal;
 }
 
-export const shopifyActionHandlers: Record<string, ProviderRuntimeHandler<ShopifyActionContext>> = {
+export const shopifyActionHandlers: ProviderActionHandlers<"shopify", ProviderRuntimeHandler<ShopifyActionContext>> = {
   async get_shop(_input, context) {
     return {
       shop: await getShopifyResource(context, shopPath, "shop"),

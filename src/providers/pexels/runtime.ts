@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -19,7 +20,7 @@ type PexelsQueryValue = string | number | undefined;
 type PexelsPhase = "validate" | "execute";
 type PexelsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pexelsActionHandlers: Record<string, PexelsActionHandler> = {
+export const pexelsActionHandlers: ProviderActionHandlers<"pexels", PexelsActionHandler> = {
   search_photos(input, context) {
     return getPhotoList("/v1/search", input, context, {
       query: requiredText(input.query, "query"),

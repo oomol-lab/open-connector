@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FfhubActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -27,7 +27,7 @@ interface FfhubRequestSignal {
   cleanup: () => void;
 }
 
-export const ffhubActionHandlers: Record<FfhubActionName, FfhubActionHandler> = {
+export const ffhubActionHandlers: ProviderActionHandlers<"ffhub", FfhubActionHandler> = {
   async create_ffmpeg_task(input, context): Promise<unknown> {
     const payload = await requestFfhub({
       apiKey: context.apiKey,

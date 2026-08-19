@@ -425,24 +425,6 @@ const recommendPapersAction = defineProviderAction(service, {
   outputSchema: paperListOutputSchema,
 });
 
-export type SemanticScholarActionName =
-  | "get_paper"
-  | "get_papers"
-  | "search_papers"
-  | "bulk_search_papers"
-  | "match_paper_title"
-  | "autocomplete_papers"
-  | "get_paper_authors"
-  | "get_paper_citations"
-  | "get_paper_references"
-  | "search_authors"
-  | "get_author"
-  | "get_authors"
-  | "get_author_papers"
-  | "search_snippets"
-  | "recommend_for_paper"
-  | "recommend_papers";
-
 export const semanticScholarActions: ActionDefinition[] = [
   getPaperAction,
   getPapersAction,

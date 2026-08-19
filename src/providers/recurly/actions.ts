@@ -284,15 +284,3 @@ export const recurlyActions: ProviderActionDefinition[] = [
     outputSchema: s.object("The normalized created Recurly subscription.", { subscription: subscriptionSchema }),
   }),
 ];
-
-export type RecurlyActionName =
-  | "list_accounts"
-  | "get_account"
-  | "create_account"
-  | "update_account"
-  | "list_plans"
-  | "get_plan"
-  | "create_plan"
-  | "list_subscriptions"
-  | "get_subscription"
-  | "create_subscription";

@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -17,7 +19,7 @@ interface PlausibleContext {
 
 type PlausibleHandler = (input: Record<string, unknown>, context: PlausibleContext) => Promise<unknown>;
 
-export const plausibleAnalyticsActionHandlers: Record<string, PlausibleHandler> = {
+export const plausibleAnalyticsActionHandlers: ProviderActionHandlers<"plausible_analytics", PlausibleHandler> = {
   query_stats(input, context) {
     return requestPlausibleStats(context, buildStatsQueryPayload(input, context));
   },

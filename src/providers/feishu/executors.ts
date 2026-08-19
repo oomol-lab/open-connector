@@ -3,7 +3,12 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { FeishuActionRuntimeContext } from "./shared/client.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  getProviderActionHandler,
+  mapProviderActionHandlers,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { feishuActions } from "./actions.ts";
 import { feishuActionHandlers, fetchFeishuUserInfo } from "./runtime.ts";
 import { createFeishuApplicationActionHandlers } from "./shared/application-runtime.ts";
@@ -43,11 +48,12 @@ interface FeishuHandler {
   (input: Record<string, unknown>, context: OAuthProviderContext): Promise<unknown>;
 }
 
-const allFeishuActionHandlers: Record<string, FeishuHandler> = Object.fromEntries(
-  feishuActions.map((action) => [
-    action.name,
-    async (input: Record<string, unknown>, context: OAuthProviderContext): Promise<unknown> => {
-      const nativeHandler = feishuActionHandlers[action.name];
+const allFeishuActionHandlers = mapProviderActionHandlers(
+  service,
+  feishuActions,
+  (action): FeishuHandler =>
+    async (input, context) => {
+      const nativeHandler = getProviderActionHandler(feishuActionHandlers, action.name);
       if (nativeHandler) {
         return nativeHandler(input, context);
       }
@@ -58,7 +64,6 @@ const allFeishuActionHandlers: Record<string, FeishuHandler> = Object.fromEntrie
       }
       return sharedHandler(input);
     },
-  ]),
 );
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, allFeishuActionHandlers);

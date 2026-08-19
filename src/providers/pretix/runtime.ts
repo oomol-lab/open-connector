@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -27,7 +28,7 @@ type PretixActionHandler = (input: Record<string, unknown>, context: PretixActio
 
 const requestTimeoutMs = 30_000;
 
-export const pretixActionHandlers: Record<string, PretixActionHandler> = {
+export const pretixActionHandlers: ProviderActionHandlers<"pretix", PretixActionHandler> = {
   async list_organizers(input, context) {
     return normalizePage(await requestPretix(context, "/api/v1/organizers/", pickPageQuery(input)), "organizers");
   },

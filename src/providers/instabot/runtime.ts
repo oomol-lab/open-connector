@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { InstabotActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -41,7 +42,7 @@ type InstabotActionHandler = (
   fetcher: typeof fetch,
 ) => Promise<unknown>;
 
-export const instabotActionHandlers: Record<InstabotActionName, InstabotActionHandler> = {
+export const instabotActionHandlers: ProviderActionHandlers<"instabot", InstabotActionHandler> = {
   async create_user(input, credential, fetcher) {
     const payload = await requestInstabotJson({
       path: "/users",

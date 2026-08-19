@@ -225,12 +225,3 @@ export const formbricksActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FormbricksActionName =
-  | "get_me"
-  | "list_contact_attribute_keys"
-  | "get_contact_attribute_key"
-  | "create_contact_attribute_key"
-  | "update_contact_attribute_key"
-  | "delete_contact_attribute_key"
-  | "create_contact";

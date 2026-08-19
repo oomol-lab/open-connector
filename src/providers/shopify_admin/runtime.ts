@@ -1,5 +1,5 @@
 import type { TransitFileWriter } from "../../core/types.ts";
-import type { ShopifyAdminActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -622,7 +622,7 @@ interface ShopifyAdminShop {
   raw: Record<string, unknown>;
 }
 
-export const shopifyAdminActionHandlers: Record<ShopifyAdminActionName, ShopifyAdminActionHandler> = {
+export const shopifyAdminActionHandlers: ProviderActionHandlers<"shopify_admin", ShopifyAdminActionHandler> = {
   async get_shop(_input, context) {
     const payload = await requestShopifyAdminGraphQL(context, { query: getShopQuery });
     return { shop: normalizeShop(readObject(readObject(payload.data, "data").shop, "shop")) };

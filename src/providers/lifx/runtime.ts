@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { LifxActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -27,7 +27,7 @@ interface LifxRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const lifxActionHandlers: Record<LifxActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const lifxActionHandlers: ProviderActionHandlers<"lifx", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_lights(input, context) {
     const selector = readSelector(input);
     const payload = await requestLifx({

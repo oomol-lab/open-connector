@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { RazorpayActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
@@ -49,7 +50,7 @@ type RazorpayActionContext = {
   fetcher: typeof fetch;
 };
 
-export const razorpayActionHandlers: Record<RazorpayActionName, RazorpayActionHandler> = {
+export const razorpayActionHandlers: ProviderActionHandlers<"razorpay", RazorpayActionHandler> = {
   create_order(input, context) {
     return createOrder(input, context);
   },

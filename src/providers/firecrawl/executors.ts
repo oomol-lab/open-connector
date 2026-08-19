@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FirecrawlActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, pickOptionalBoolean } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -42,7 +42,7 @@ type FirecrawlRequestPhase = "validate" | "execute";
 type FirecrawlActionContext = ApiKeyProviderContext;
 type FirecrawlActionHandler = (input: Record<string, unknown>, context: FirecrawlActionContext) => Promise<unknown>;
 
-export const firecrawlActionHandlers: Record<FirecrawlActionName, FirecrawlActionHandler> = {
+export const firecrawlActionHandlers: ProviderActionHandlers<"firecrawl", FirecrawlActionHandler> = {
   scrape: firecrawlPostAction("/v2/scrape", buildDirectBody),
   batch_scrape: firecrawlPostAction("/v2/batch/scrape", buildDirectBody),
   batch_scrape_get: firecrawlGetAction((input) => `/v2/batch/scrape/${String(input.id)}`),

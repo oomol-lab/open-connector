@@ -50,8 +50,6 @@ const hostedDocumentOutputSchema = s.object(
   },
 );
 
-export type DocraptorActionName = "create_hosted_document";
-
 export const docraptorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_hosted_document",

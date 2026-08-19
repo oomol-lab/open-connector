@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZenrowsActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -36,7 +36,7 @@ type ZenrowsQueryValue = string | number | boolean | undefined;
 type ZenrowsAuthLocation = "query" | "header";
 type ZenrowsActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const zenrowsActionHandlers: Record<ZenrowsActionName, ZenrowsActionHandler> = {
+export const zenrowsActionHandlers: ProviderActionHandlers<"zenrows", ZenrowsActionHandler> = {
   async fetch_html(input, context) {
     const response = await requestZenrowsRaw(
       buildScrapeQuery(input, {

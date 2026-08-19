@@ -1,6 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CodegenActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ type CodegenActionContext = ApiKeyProviderContext & {
 };
 type CodegenActionHandler = (input: Record<string, unknown>, context: CodegenActionContext) => Promise<unknown>;
 
-export const codegenActionHandlers: Record<CodegenActionName, CodegenActionHandler> = {
+export const codegenActionHandlers: ProviderActionHandlers<"codegen", CodegenActionHandler> = {
   async get_current_user(_input, context) {
     const user = await requestCodegenJson({
       apiKey: context.apiKey,

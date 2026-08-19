@@ -263,16 +263,3 @@ export const webscraperIoActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type WebscraperIoActionName =
-  | "get_account_info"
-  | "create_sitemap"
-  | "get_sitemap"
-  | "list_sitemaps"
-  | "update_sitemap"
-  | "delete_sitemap"
-  | "create_scraping_job"
-  | "get_scraping_job"
-  | "list_scraping_jobs"
-  | "delete_scraping_job"
-  | "download_scraping_job_json";

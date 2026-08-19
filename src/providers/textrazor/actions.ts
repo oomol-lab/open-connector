@@ -125,11 +125,3 @@ export const textrazorActions: ActionDefinition[] = [
     rawObject,
   ),
 ];
-
-export type TextrazorActionName =
-  | "account_info"
-  | "analyze_content"
-  | "extract_entities"
-  | "classify_text"
-  | "custom_classifier_manager"
-  | "dictionary_manager";

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -31,7 +32,10 @@ type StackOverflowForTeamsHandler = (
   context: StackOverflowForTeamsContext,
 ) => Promise<unknown>;
 
-export const stackOverflowForTeamsActionHandlers: Record<string, StackOverflowForTeamsHandler> = {
+export const stackOverflowForTeamsActionHandlers: ProviderActionHandlers<
+  "stack_overflow_for_teams",
+  StackOverflowForTeamsHandler
+> = {
   search(input, context) {
     return requestPaginated(input, context, "search");
   },

@@ -6,6 +6,7 @@ import type {
   ProxyExecutionResult,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -37,7 +38,7 @@ interface DatadogActionContext {
   signal?: AbortSignal;
 }
 
-export const datadogActionHandlers: Record<string, ProviderRuntimeHandler<DatadogActionContext>> = {
+export const datadogActionHandlers: ProviderActionHandlers<"datadog", ProviderRuntimeHandler<DatadogActionContext>> = {
   validate_api_key(_input, context) {
     if (context.authorization) {
       return datadogRequestJson(

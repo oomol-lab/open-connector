@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WorkosActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -11,7 +11,7 @@ const workosApiBaseUrl = "https://api.workos.com";
 
 type WorkosActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const workosActionHandlers: Record<WorkosActionName, WorkosActionHandler> = {
+export const workosActionHandlers: ProviderActionHandlers<"workos", WorkosActionHandler> = {
   list_users(input, context) {
     return executeListAction(
       "/user_management/users",

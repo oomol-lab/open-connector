@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -33,7 +34,7 @@ interface RevenueCatList {
   url: string;
 }
 
-export const revenueCatActionHandlers: Record<string, RevenueCatActionHandler> = {
+export const revenueCatActionHandlers: ProviderActionHandlers<"revenuecat", RevenueCatActionHandler> = {
   list_projects(input, context) {
     return listRevenueCatResource("/v2/projects", input, context, "projects");
   },

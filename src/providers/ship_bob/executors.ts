@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ShipBobActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -34,7 +34,7 @@ interface ShipBobRequestOptions {
 
 type ShipBobActionHandler = (input: Record<string, unknown>, context: ShipBobActionContext) => Promise<unknown>;
 
-export const shipBobActionHandlers: Record<ShipBobActionName, ShipBobActionHandler> = {
+export const shipBobActionHandlers: ProviderActionHandlers<"ship_bob", ShipBobActionHandler> = {
   async list_channels(_input, context): Promise<unknown> {
     const payload = await requestShipBobJson({
       context,

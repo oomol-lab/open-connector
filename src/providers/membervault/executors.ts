@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, integer, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -37,7 +38,7 @@ interface MembervaultContext extends MembervaultCredential {
 
 type MembervaultActionHandler = (input: Record<string, unknown>, context: MembervaultContext) => Promise<unknown>;
 
-export const membervaultActionHandlers: Record<string, MembervaultActionHandler> = {
+export const membervaultActionHandlers: ProviderActionHandlers<"membervault", MembervaultActionHandler> = {
   async list_courses(_input, context) {
     const payload = await requestMembervaultJson("get_courses", {}, context, "execute");
     return { courses: normalizeCourses(payload), raw: payload };

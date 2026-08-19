@@ -5,21 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "bigmailer";
 
-export type BigmailerActionName =
-  | "list_brands"
-  | "get_brand"
-  | "list_lists"
-  | "create_list"
-  | "get_list"
-  | "update_list"
-  | "delete_list"
-  | "list_contacts"
-  | "create_contact"
-  | "get_contact"
-  | "update_contact"
-  | "upsert_contact"
-  | "delete_contact";
-
 const brandIdSchema = s.uuid("The BigMailer brand ID.");
 const listIdSchema = s.uuid("The BigMailer list ID.");
 const messageTypeIdSchema = s.uuid("The BigMailer message type ID.");

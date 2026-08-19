@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { OnesignalRestApiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -35,7 +35,7 @@ interface OneSignalRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const onesignalRestApiActionHandlers: Record<OnesignalRestApiActionName, OneSignalActionHandler> = {
+export const onesignalRestApiActionHandlers: ProviderActionHandlers<"onesignal_rest_api", OneSignalActionHandler> = {
   create_push_notification(input, context) {
     ensureAppIdIsNotOverridden(input);
     ensureCreatePushNotificationBody(input);

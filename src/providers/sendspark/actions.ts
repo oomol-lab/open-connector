@@ -74,13 +74,6 @@ const prospectDepurationConfigSchema = s.object(
   { optional: ["forceCreation"] },
 );
 
-export type SendsparkActionName =
-  | "list_dynamic_campaigns"
-  | "get_dynamic_campaign"
-  | "create_dynamic_campaign"
-  | "add_prospect"
-  | "get_prospect_by_email";
-
 export const sendsparkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_dynamic_campaigns",

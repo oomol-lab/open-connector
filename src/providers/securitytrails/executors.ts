@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SecuritytrailsActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -17,7 +17,7 @@ interface SecuritytrailsRequestInput {
   query?: Record<string, QueryValue>;
 }
 
-export const securitytrailsActionHandlers: Record<SecuritytrailsActionName, SecuritytrailsActionHandler> = {
+export const securitytrailsActionHandlers: ProviderActionHandlers<"securitytrails", SecuritytrailsActionHandler> = {
   async get_domain(input, context): Promise<unknown> {
     const hostname = readRequiredHostname(input);
     const payload = await securitytrailsRequest(

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
@@ -13,7 +14,10 @@ type AppstleSubscriptionsActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const appstleSubscriptionsActionHandlers: Record<string, AppstleSubscriptionsActionHandler> = {
+export const appstleSubscriptionsActionHandlers: ProviderActionHandlers<
+  "appstle_subscriptions",
+  AppstleSubscriptionsActionHandler
+> = {
   async list_customers_with_subscriptions(input, context) {
     const payload = await requestAppstleSubscriptionsJson({
       context,

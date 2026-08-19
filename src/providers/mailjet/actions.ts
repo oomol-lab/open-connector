@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mailjet";
 
-export type MailjetActionName = "list_contacts" | "get_contact" | "create_contact" | "update_contact";
-
 const nullableStringSchema = (description: string): JsonSchema => s.nullableString(description);
 
 const contactSchema = s.object(

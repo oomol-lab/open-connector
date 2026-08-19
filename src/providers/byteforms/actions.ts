@@ -93,8 +93,6 @@ const listFormResponsesInputSchema = s.object(
   { required: ["formId"], optional: ["limit", "order", "query", "after", "before"] },
 );
 
-export type ByteformsActionName = "list_forms" | "get_form" | "list_form_responses";
-
 export const byteformsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",

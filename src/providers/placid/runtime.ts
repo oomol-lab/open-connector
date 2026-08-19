@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ const imagesPath = "/api/rest/images";
 type PlacidPhase = "validate" | "execute";
 type PlacidHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const placidActionHandlers: Record<string, PlacidHandler> = {
+export const placidActionHandlers: ProviderActionHandlers<"placid", PlacidHandler> = {
   list_templates(input, context) {
     return listTemplates(input, context);
   },

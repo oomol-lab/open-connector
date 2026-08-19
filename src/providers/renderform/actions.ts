@@ -69,14 +69,6 @@ const requestOutputSchema = s.object("Normalized RenderForm async render respons
   request: s.looseObject("Echoed request payload returned by RenderForm when available."),
 });
 
-export type RenderformActionName =
-  | "get_usage"
-  | "list_templates"
-  | "get_template"
-  | "render_image"
-  | "list_results"
-  | "take_screenshot";
-
 export const renderformActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_usage",

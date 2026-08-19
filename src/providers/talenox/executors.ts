@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRawString, optionalRecord, positiveInteger } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ interface TalenoxRequestOptions {
 
 type TalenoxActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const talenoxActionHandlers: Record<string, TalenoxActionHandler> = {
+const talenoxActionHandlers: ProviderActionHandlers<"talenox", TalenoxActionHandler> = {
   async list_company_settings(_input, context) {
     const payload = await requestTalenoxJson({
       path: "/company_settings",

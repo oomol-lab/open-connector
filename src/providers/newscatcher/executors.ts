@@ -1,16 +1,18 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  mapProviderActionSources,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
 const service = "newscatcher";
 const baseUrl = "https://v3-api.newscatcherapi.com";
-const paths: Record<string, string> = {
+const paths: ProviderActionSources<"newscatcher", string> = {
   search_articles: "/api/search",
   get_latest_headlines: "/api/latest_headlines",
   list_sources: "/api/sources",
@@ -53,9 +55,14 @@ async function request(
   return record;
 }
 
-const handlers: Record<string, Parameters<typeof defineApiKeyProviderExecutors>[1][string]> = {};
-for (const [name, path] of Object.entries(paths))
-  handlers[name] = (input, context) => request(path, input, context.apiKey, context.fetcher, context.signal);
+const handlers: ProviderActionHandlers<
+  "newscatcher",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = mapProviderActionSources(
+  service,
+  paths,
+  (_name, path) => (input, context) => request(path, input, context.apiKey, context.fetcher, context.signal),
+);
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {
   skipDnsValidation: true,

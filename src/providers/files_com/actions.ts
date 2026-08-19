@@ -96,5 +96,3 @@ export const filesComActions: ActionDefinition[] = [
     outputSchema: deleteOutputSchema,
   }),
 ];
-
-export type FilesComActionName = "list_folder" | "get_file" | "create_folder" | "update_metadata" | "delete_file";

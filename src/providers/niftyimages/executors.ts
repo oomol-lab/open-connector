@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +26,7 @@ interface NiftyimagesContext {
 
 type NiftyimagesActionHandler = (input: Record<string, unknown>, context: NiftyimagesContext) => Promise<unknown>;
 
-export const niftyimagesActionHandlers: Record<string, NiftyimagesActionHandler> = {
+export const niftyimagesActionHandlers: ProviderActionHandlers<"niftyimages", NiftyimagesActionHandler> = {
   list_images(input, context) {
     return requestNiftyimagesJson(
       {

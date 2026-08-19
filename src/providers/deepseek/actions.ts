@@ -165,12 +165,6 @@ const balanceOutput = s.looseObject(
   { description: "A balance entry returned by the DeepSeek balance API." },
 );
 
-export type DeepseekActionName =
-  | "list_models"
-  | "get_user_balance"
-  | "create_chat_completion"
-  | "create_anthropic_message";
-
 export const deepseekActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",

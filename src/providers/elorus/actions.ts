@@ -137,20 +137,6 @@ const updateInput = (description: string): JsonSchema =>
     description,
   );
 
-export type ElorusActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "list_products"
-  | "get_product"
-  | "create_product"
-  | "update_product"
-  | "list_invoices"
-  | "get_invoice"
-  | "create_invoice"
-  | "update_invoice";
-
 export const elorusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

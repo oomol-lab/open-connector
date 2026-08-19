@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ContentstackContentManagementActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,8 +28,8 @@ type ContentstackActionHandler = (
   context: ContentstackContentManagementContext,
 ) => Promise<unknown>;
 
-export const contentstackContentManagementActionHandlers: Record<
-  ContentstackContentManagementActionName,
+export const contentstackContentManagementActionHandlers: ProviderActionHandlers<
+  "contentstack_content_management",
   ContentstackActionHandler
 > = {
   list_content_types(input, context) {

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -24,7 +25,7 @@ interface FivetranPage {
 
 type FivetranActionHandler = (input: Record<string, unknown>, context: FivetranContext) => Promise<unknown>;
 
-export const fivetranActionHandlers: Record<string, FivetranActionHandler> = {
+export const fivetranActionHandlers: ProviderActionHandlers<"fivetran", FivetranActionHandler> = {
   async list_transformation_projects(input, context) {
     const data = await fivetranGetData(
       "/v1/transformation-projects",

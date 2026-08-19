@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -26,7 +27,7 @@ const textContactFields = [
 type RequestMode = "validate" | "execute";
 type DropcontactActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const dropcontactActionHandlers: Record<string, DropcontactActionHandler> = {
+export const dropcontactActionHandlers: ProviderActionHandlers<"dropcontact", DropcontactActionHandler> = {
   async submit_enrichment(input, context): Promise<unknown> {
     const payload = await requestDropcontactJson(
       {

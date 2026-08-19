@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mailercloud";
 
-export type MailercloudActionName =
-  | "create_contact"
-  | "create_list"
-  | "list_contact_properties"
-  | "create_contact_property"
-  | "update_contact_property"
-  | "delete_contact_property";
-
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const boundedString = (description: string, options: { minLength?: number; maxLength?: number }) =>
   s.string(description, options);

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { MetaActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -32,7 +32,7 @@ interface MetaListPayload {
   paging?: unknown;
 }
 
-export const metaActionHandlers: Record<MetaActionName, MetaActionHandler> = {
+export const metaActionHandlers: ProviderActionHandlers<"meta", MetaActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

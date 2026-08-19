@@ -64,15 +64,6 @@ const successOutputSchema = s.object(
   { required: ["ok"], description: "The Customer.io Track API acknowledgement." },
 );
 
-export type CustomerioActionName =
-  | "identify_customer"
-  | "track_customer_event"
-  | "track_anonymous_event"
-  | "delete_customer"
-  | "suppress_customer"
-  | "unsuppress_customer"
-  | "merge_customers";
-
 export const customerioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify_customer",

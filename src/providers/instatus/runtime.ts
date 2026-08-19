@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { InstatusActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -18,7 +18,7 @@ interface InstatusActionHandler {
   (input: Record<string, unknown>, context: InstatusActionContext): Promise<unknown>;
 }
 
-export const instatusActionHandlers: Record<InstatusActionName, InstatusActionHandler> = {
+export const instatusActionHandlers: ProviderActionHandlers<"instatus", InstatusActionHandler> = {
   list_status_pages(input, context) {
     let query = paginationQuery(input);
     return requestList("/v2/pages", "statusPages", query, context, redactStatusPage);

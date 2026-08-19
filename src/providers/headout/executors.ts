@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { HeadoutActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -33,7 +33,7 @@ interface HeadoutActionContext {
 }
 type HeadoutActionHandler = (input: Record<string, unknown>, context: HeadoutActionContext) => Promise<unknown>;
 
-export const headoutActionHandlers: Record<HeadoutActionName, HeadoutActionHandler> = {
+export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutActionHandler> = {
   async list_cities(input, context) {
     const payload = await requestHeadoutJson({
       context,

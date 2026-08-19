@@ -219,5 +219,3 @@ export const simpleAnalyticsActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type SimpleAnalyticsActionName = "list_websites" | "get_aggregated_stats" | "export_data_points" | "send_event";

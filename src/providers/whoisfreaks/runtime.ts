@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WhoisfreaksActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
@@ -17,7 +17,7 @@ interface WhoisfreaksRequestInput {
 export const whoisfreaksApiBaseUrl = "https://api.whoisfreaks.com";
 const whoisfreaksValidationDomain = "example.com";
 
-export const whoisfreaksActionHandlers: Record<WhoisfreaksActionName, WhoisfreaksActionHandler> = {
+export const whoisfreaksActionHandlers: ProviderActionHandlers<"whoisfreaks", WhoisfreaksActionHandler> = {
   async check_domain_availability(input, context) {
     const payload = await whoisfreaksRequest(
       {

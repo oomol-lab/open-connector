@@ -203,8 +203,6 @@ const companySearchOutputSchema = s.object(
   { optional: ["scroll_token"] },
 );
 
-export type PeopledatalabsActionName = "enrich_person" | "search_people" | "enrich_company" | "search_companies";
-
 export const peopledatalabsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "enrich_person",

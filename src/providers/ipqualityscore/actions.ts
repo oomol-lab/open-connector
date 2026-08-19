@@ -318,5 +318,3 @@ export const ipqualityscoreActions: ActionDefinition[] = [
     outputSchema: urlOutputSchema,
   }),
 ];
-
-export type IpqualityscoreActionName = "check_ip_reputation" | "validate_email" | "validate_phone" | "scan_url";

@@ -6,6 +6,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -28,7 +29,10 @@ interface DropboxSignContext {
   signal?: AbortSignal;
 }
 
-export const dropboxSignActionHandlers: Record<string, ProviderRuntimeHandler<DropboxSignContext>> = {
+export const dropboxSignActionHandlers: ProviderActionHandlers<
+  "dropbox_sign",
+  ProviderRuntimeHandler<DropboxSignContext>
+> = {
   get_account(input, context) {
     return executeGetAccount(input, context);
   },

@@ -66,8 +66,6 @@ const ipLookupOutputSchema = s.looseObject("Output payload for a BigPicture IP-t
   asn: asnSchema,
 });
 
-export type BigpictureIoActionName = "find_company_by_domain" | "find_company_by_ip";
-
 export const bigpictureIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "find_company_by_domain",

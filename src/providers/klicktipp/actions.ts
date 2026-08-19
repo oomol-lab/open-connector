@@ -69,5 +69,3 @@ export const klicktippActions: ActionDefinition[] = [
     outputSchema: booleanResultOutputSchema,
   }),
 ];
-
-export type KlicktippActionName = "signin" | "signout" | "signoff";

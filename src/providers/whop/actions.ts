@@ -343,13 +343,3 @@ export const whopActions: ProviderActionDefinition[] = [
     outputSchema: authorizedUserSchema,
   }),
 ];
-
-export type WhopActionName =
-  | "list_companies"
-  | "get_company"
-  | "list_products"
-  | "get_product"
-  | "list_memberships"
-  | "get_membership"
-  | "list_authorized_users"
-  | "get_authorized_user";

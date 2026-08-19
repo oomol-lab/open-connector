@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -61,7 +62,7 @@ function ticketPath(input: Record<string, unknown>): string {
   return `/tickets/${encodeURIComponent(requiredString(input.ticket_id, "ticket_id"))}`;
 }
 
-export const neetodeskActionHandlers: Record<string, ProviderRuntimeHandler<NeetodeskContext>> = {
+export const neetodeskActionHandlers: ProviderActionHandlers<"neetodesk", ProviderRuntimeHandler<NeetodeskContext>> = {
   list_tickets: handler("GET", () => "/tickets", "query"),
   get_ticket: handler("GET", ticketPath, "none"),
   create_ticket: handler("POST", () => "/tickets", "body"),

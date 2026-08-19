@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -41,7 +42,7 @@ const triliumRequestTimeoutMs = 60_000;
 const triliumTextContentMaxBytes = 10 * 1024 * 1024;
 const triliumAttachmentMaxBytes = 20 * 1024 * 1024;
 
-export const triliumActionHandlers: Record<string, ProviderRuntimeHandler<TriliumContext>> = {
+export const triliumActionHandlers: ProviderActionHandlers<"trilium", ProviderRuntimeHandler<TriliumContext>> = {
   async search_notes(input, context) {
     const payload = requireResponseObject(
       await requestActionJson(context, "notes", {

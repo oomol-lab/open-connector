@@ -29,15 +29,6 @@ const datasetRecord = s.record(
   s.unknown("One JSON record value."),
 );
 
-export type DataboxActionName =
-  | "list_accounts"
-  | "create_data_source"
-  | "delete_data_source"
-  | "create_dataset"
-  | "delete_dataset"
-  | "push_dataset_data"
-  | "get_dataset_ingestion_status";
-
 export const databoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",

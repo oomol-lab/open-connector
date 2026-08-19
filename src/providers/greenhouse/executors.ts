@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GreenhouseActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -36,7 +36,7 @@ const queryParamByInputKey: Record<string, string> = {
   candidateId: "candidate_id",
 };
 
-export const greenhouseActionHandlers: Record<GreenhouseActionName, GreenhouseActionHandler> = {
+export const greenhouseActionHandlers: ProviderActionHandlers<"greenhouse", GreenhouseActionHandler> = {
   list_jobs(input, context) {
     return listCollection({ context, path: "/jobs", input, outputKey: "jobs" });
   },

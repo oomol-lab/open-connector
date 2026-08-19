@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ClockifyActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const clockifyApiBaseUrl = "https://api.clockify.me/api/v1";
 type ClockifyRequestPhase = "validate" | "execute";
 type ClockifyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const clockifyActionHandlers: Record<ClockifyActionName, ClockifyActionHandler> = {
+export const clockifyActionHandlers: ProviderActionHandlers<"clockify", ClockifyActionHandler> = {
   get_current_user(input, context) {
     return getCurrentUser(input, context);
   },

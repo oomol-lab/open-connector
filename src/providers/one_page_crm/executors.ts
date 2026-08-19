@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { OnePageCrmActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -48,7 +48,7 @@ interface OnePageCrmRequestOptions {
 
 type OnePageCrmActionHandler = (input: Record<string, unknown>, context: OnePageCrmActionContext) => Promise<unknown>;
 
-export const onePageCrmActionHandlers: Record<OnePageCrmActionName, OnePageCrmActionHandler> = {
+export const onePageCrmActionHandlers: ProviderActionHandlers<"one_page_crm", OnePageCrmActionHandler> = {
   list_contacts(input, context) {
     return listRecords({
       context,

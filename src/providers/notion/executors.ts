@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import {
@@ -40,7 +41,7 @@ interface NotionActionContext {
 
 type NotionActionHandler = (input: Record<string, unknown>, context: NotionActionContext) => Promise<unknown>;
 
-export const notionActionHandlers: Record<string, NotionActionHandler> = {
+export const notionActionHandlers: ProviderActionHandlers<"notion", NotionActionHandler> = {
   search(input, context): Promise<unknown> {
     return notionSearch(input, context.accessToken, context.fetcher);
   },

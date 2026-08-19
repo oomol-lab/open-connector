@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineApiKeyProviderExecutors,
@@ -43,18 +44,20 @@ async function execute(
     throw new ProviderRequestError(response.status, `Ringg AI request failed with status ${response.status}`, payload);
   return payload;
 }
+const handlers: ProviderActionHandlers<"ringg_ai", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  get_workspace: (input, context) => execute("get_workspace", input, context),
+  list_assistants: (input, context) => execute("list_assistants", input, context),
+  get_assistant: (input, context) => execute("get_assistant", input, context),
+  list_voices: (input, context) => execute("list_voices", input, context),
+  list_workspace_numbers: (input, context) => execute("list_workspace_numbers", input, context),
+  initiate_call: (input, context) => execute("initiate_call", input, context),
+  list_calls: (input, context) => execute("list_calls", input, context),
+  get_call: (input, context) => execute("get_call", input, context),
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
   "ringg_ai",
-  {
-    get_workspace: (input, context) => execute("get_workspace", input, context),
-    list_assistants: (input, context) => execute("list_assistants", input, context),
-    get_assistant: (input, context) => execute("get_assistant", input, context),
-    list_voices: (input, context) => execute("list_voices", input, context),
-    list_workspace_numbers: (input, context) => execute("list_workspace_numbers", input, context),
-    initiate_call: (input, context) => execute("initiate_call", input, context),
-    list_calls: (input, context) => execute("list_calls", input, context),
-    get_call: (input, context) => execute("get_call", input, context),
-  },
+  handlers,
   { skipDnsValidation: true },
 );
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { KeyObject } from "node:crypto";
 
@@ -44,7 +45,7 @@ class WaffoExecutionError extends ProviderRequestError {
   }
 }
 
-export const waffoActionHandlers: Record<string, ProviderRuntimeHandler<WaffoActionContext>> = {
+export const waffoActionHandlers: ProviderActionHandlers<"waffo", ProviderRuntimeHandler<WaffoActionContext>> = {
   async create_store(input, context) {
     const data = await requestWaffoData({
       path: "/v1/actions/store/create-store",

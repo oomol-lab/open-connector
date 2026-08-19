@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { VitallyActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -36,7 +36,7 @@ interface VitallyRequestOptions extends VitallyActionContext {
   searchParams?: URLSearchParams;
 }
 
-export const vitallyActionHandlers: Record<VitallyActionName, VitallyActionHandler> = {
+export const vitallyActionHandlers: ProviderActionHandlers<"vitally", VitallyActionHandler> = {
   list_accounts(input, context) {
     return listAccounts(input, context);
   },

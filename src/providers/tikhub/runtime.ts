@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -42,7 +43,7 @@ type TikHubEnvelope = {
   params?: Record<string, unknown> | null;
 };
 
-export const tikhubActionHandlers: Record<string, TikHubActionHandler> = {
+export const tikhubActionHandlers: ProviderActionHandlers<"tikhub", TikHubActionHandler> = {
   async get_user_daily_usage(_input, context) {
     const payload = await requestTikHubJson({
       path: "/api/v1/tikhub/user/get_user_daily_usage",

@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import AliOss from "ali-oss";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -179,7 +180,7 @@ const aliyunOssProxySignedQueryParameters = new Set([
   "x-oss-traffic-limit",
 ]);
 
-export const aliyunOssActionHandlers: Record<string, AliyunOssActionHandler> = {
+export const aliyunOssActionHandlers: ProviderActionHandlers<"aliyun_oss", AliyunOssActionHandler> = {
   list_buckets(input, context) {
     return aliyunListBuckets(input, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { OngageActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -45,7 +45,7 @@ interface OngageResponseEnvelope {
   payload: unknown;
 }
 
-export const ongageActionHandlers: Record<OngageActionName, OngageActionHandler> = {
+export const ongageActionHandlers: ProviderActionHandlers<"ongage", OngageActionHandler> = {
   list_lists: listLists,
   get_list: getList,
   get_contact_by_email: getContactByEmail,

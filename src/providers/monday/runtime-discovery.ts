@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
@@ -14,7 +15,7 @@ import {
   normalizeMondayWorkspace,
 } from "./runtime-common.ts";
 
-export const mondayDiscoveryActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayDiscoveryActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   get_current_user(input, fetcher) {
     return mondayGetCurrentUser(input, fetcher);
   },

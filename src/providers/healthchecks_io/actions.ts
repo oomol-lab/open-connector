@@ -107,19 +107,6 @@ const updateCheckInputSchema = {
   anyOf: mutationFieldNames.map((key) => ({ required: [key] })),
 };
 
-export type HealthchecksIoActionName =
-  | "list_checks"
-  | "get_check"
-  | "create_check"
-  | "update_check"
-  | "pause_check"
-  | "resume_check"
-  | "delete_check"
-  | "list_pings"
-  | "list_flips"
-  | "list_channels"
-  | "list_badges";
-
 export const healthchecksIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_checks",

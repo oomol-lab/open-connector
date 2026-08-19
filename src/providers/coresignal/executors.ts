@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { CoresignalActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -15,7 +15,7 @@ interface CoresignalContext {
 
 type CoresignalActionHandler = (input: Record<string, unknown>, context: CoresignalContext) => Promise<unknown>;
 
-const coresignalActionHandlers: Record<CoresignalActionName, CoresignalActionHandler> = {
+const coresignalActionHandlers: ProviderActionHandlers<"coresignal", CoresignalActionHandler> = {
   search_base_companies(input, context) {
     return searchBaseCompanies(input, context);
   },

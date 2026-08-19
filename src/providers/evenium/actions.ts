@@ -176,11 +176,3 @@ export const eveniumActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type EveniumActionName =
-  | "list_events"
-  | "get_event"
-  | "list_guests"
-  | "get_guest"
-  | "get_guest_status"
-  | "get_guest_post_status";

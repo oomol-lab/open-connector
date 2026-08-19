@@ -5,20 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "kaleido";
 
-export type KaleidoActionName =
-  | "list_memberships"
-  | "list_consortia"
-  | "get_consortium"
-  | "list_environments"
-  | "get_environment"
-  | "get_environment_status"
-  | "list_nodes"
-  | "get_node"
-  | "get_node_status"
-  | "list_services"
-  | "get_service"
-  | "get_service_status";
-
 const emptyInputSchema = s.object("This action does not require any input.", {});
 
 const idField = (description: string) => s.string(description, { minLength: 1 });

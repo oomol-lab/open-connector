@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -35,7 +36,10 @@ interface MailcoachRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const mailcoachActionHandlers: Record<string, ProviderRuntimeHandler<MailcoachActionContext>> = {
+export const mailcoachActionHandlers: ProviderActionHandlers<
+  "mailcoach",
+  ProviderRuntimeHandler<MailcoachActionContext>
+> = {
   list_email_lists(input, context) {
     return requestMailcoachJson({
       ...context,

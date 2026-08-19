@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { VimeoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -34,7 +34,7 @@ interface VimeoRequestInput {
   signal?: AbortSignal;
 }
 
-export const vimeoActionHandlers: Record<VimeoActionName, VimeoActionHandler> = {
+export const vimeoActionHandlers: ProviderActionHandlers<"vimeo", VimeoActionHandler> = {
   get_current_user(_input, context) {
     return vimeoGetCurrentUser(context);
   },

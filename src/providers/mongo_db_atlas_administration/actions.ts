@@ -114,5 +114,3 @@ export const mongoDbAtlasAdministrationActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type MongoDbAtlasAdministrationActionName = "list_projects" | "get_project" | "list_clusters" | "get_cluster";

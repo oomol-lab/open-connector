@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { BitqueryActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -40,7 +40,7 @@ interface BitqueryGraphqlRequestInput {
 
 type BitqueryActionHandler = (input: Record<string, unknown>, context: BitqueryRuntimeContext) => Promise<unknown>;
 
-export const bitqueryActionHandlers: Record<BitqueryActionName, BitqueryActionHandler> = {
+export const bitqueryActionHandlers: ProviderActionHandlers<"bitquery", BitqueryActionHandler> = {
   run_query: runQuery,
 };
 

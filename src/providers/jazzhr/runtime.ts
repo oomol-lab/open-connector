@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { JazzhrActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -87,7 +87,7 @@ const getActionConfigs = {
   },
 } as const satisfies Record<string, JazzhrGetConfig>;
 
-export const jazzhrActionHandlers: Record<JazzhrActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const jazzhrActionHandlers: ProviderActionHandlers<"jazzhr", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_jobs(input, context) {
     return listJazzhrRecords(input, context, listActionConfigs.list_jobs);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LexofficeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ interface LexofficeRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const lexofficeActionHandlers: Record<LexofficeActionName, LexofficeActionHandler> = {
+export const lexofficeActionHandlers: ProviderActionHandlers<"lexoffice", LexofficeActionHandler> = {
   get_profile(_input, context) {
     return requestLexofficeJson({
       path: lexofficeValidationPath,

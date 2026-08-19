@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RocketReachActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ const requestTimeoutMs = 30_000;
 type RocketReachQueryValue = string | number | boolean | Array<string | number> | undefined;
 type RocketReachActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const rocketReachActionHandlers: Record<RocketReachActionName, RocketReachActionHandler> = {
+export const rocketReachActionHandlers: ProviderActionHandlers<"rocket_reach", RocketReachActionHandler> = {
   get_account(_input, context) {
     return getAccount(context);
   },

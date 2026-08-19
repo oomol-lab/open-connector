@@ -5,12 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "crustdata";
 
-export type CrustdataActionName =
-  | "identify_companies"
-  | "enrich_companies"
-  | "search_companies"
-  | "autocomplete_companies";
-
 export const crustdataApiVersion = "2025-11-01";
 
 const identifierArraySchema = (description: string, itemDescription: string) =>

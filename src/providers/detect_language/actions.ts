@@ -74,5 +74,3 @@ export const detectLanguageActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type DetectLanguageActionName = "detect_text" | "detect_texts" | "get_account_status" | "list_languages";

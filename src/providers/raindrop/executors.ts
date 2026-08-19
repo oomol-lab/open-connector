@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -22,7 +23,7 @@ type RequestContext = ApiKeyProviderContext;
 
 type ActionHandler = (input: Record<string, unknown>, context: RequestContext) => Promise<unknown>;
 
-export const raindropActionHandlers: Record<string, ActionHandler> = {
+export const raindropActionHandlers: ProviderActionHandlers<"raindrop", ActionHandler> = {
   get_user(_input, context) {
     return requestJson("/user", { method: "GET" }, context, "execute");
   },

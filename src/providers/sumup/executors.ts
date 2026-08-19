@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineApiKeyProviderExecutors,
@@ -33,61 +34,61 @@ async function request(
     throw new ProviderRequestError(response.status, `SumUp request failed with status ${response.status}`, payload);
   return payload;
 }
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  "sumup",
-  {
-    async create_customer(input, context) {
-      return { customer: await request("/v0.1/customers", "POST", input, context) };
-    },
-    async get_customer(input, context) {
-      return {
-        customer: await request(`/v0.1/customers/${encodeURIComponent(String(input.customer_id))}`, "GET", {}, context),
-      };
-    },
-    async update_customer(input, context) {
-      return {
-        customer: await request(
-          `/v0.1/customers/${encodeURIComponent(String(input.customer_id))}`,
-          "PUT",
-          { personal_details: input.personal_details },
-          context,
-        ),
-      };
-    },
-    async list_payment_instruments(input, context) {
-      return {
-        payment_instruments: await request(
-          `/v0.1/customers/${encodeURIComponent(String(input.customer_id))}/payment-instruments`,
-          "GET",
-          {},
-          context,
-        ),
-      };
-    },
-    async create_checkout(input, context) {
-      return { checkout: await request("/v0.1/checkouts", "POST", input, context) };
-    },
-    async get_checkout(input, context) {
-      return {
-        checkout: await request(`/v0.1/checkouts/${encodeURIComponent(String(input.checkout_id))}`, "GET", {}, context),
-      };
-    },
-    async list_checkouts(input, context) {
-      return { checkouts: await request("/v0.1/checkouts", "GET", input, context) };
-    },
-    async deactivate_checkout(input, context) {
-      return {
-        checkout: await request(
-          `/v0.1/checkouts/${encodeURIComponent(String(input.checkout_id))}`,
-          "DELETE",
-          {},
-          context,
-        ),
-      };
-    },
+const handlers: ProviderActionHandlers<"sumup", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async create_customer(input, context) {
+    return { customer: await request("/v0.1/customers", "POST", input, context) };
   },
-  { skipDnsValidation: true },
-);
+  async get_customer(input, context) {
+    return {
+      customer: await request(`/v0.1/customers/${encodeURIComponent(String(input.customer_id))}`, "GET", {}, context),
+    };
+  },
+  async update_customer(input, context) {
+    return {
+      customer: await request(
+        `/v0.1/customers/${encodeURIComponent(String(input.customer_id))}`,
+        "PUT",
+        { personal_details: input.personal_details },
+        context,
+      ),
+    };
+  },
+  async list_payment_instruments(input, context) {
+    return {
+      payment_instruments: await request(
+        `/v0.1/customers/${encodeURIComponent(String(input.customer_id))}/payment-instruments`,
+        "GET",
+        {},
+        context,
+      ),
+    };
+  },
+  async create_checkout(input, context) {
+    return { checkout: await request("/v0.1/checkouts", "POST", input, context) };
+  },
+  async get_checkout(input, context) {
+    return {
+      checkout: await request(`/v0.1/checkouts/${encodeURIComponent(String(input.checkout_id))}`, "GET", {}, context),
+    };
+  },
+  async list_checkouts(input, context) {
+    return { checkouts: await request("/v0.1/checkouts", "GET", input, context) };
+  },
+  async deactivate_checkout(input, context) {
+    return {
+      checkout: await request(
+        `/v0.1/checkouts/${encodeURIComponent(String(input.checkout_id))}`,
+        "DELETE",
+        {},
+        context,
+      ),
+    };
+  },
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("sumup", handlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "sumup",

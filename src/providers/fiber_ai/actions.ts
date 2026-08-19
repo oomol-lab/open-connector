@@ -70,5 +70,3 @@ export const fiberAiActions: ActionDefinition[] = [
     outputSchema: commonFiberOutputSchema,
   }),
 ];
-
-export type FiberAiActionName = "get_org_credits" | "get_rate_limits" | "list_enum_values";

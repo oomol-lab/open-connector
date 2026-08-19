@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -21,7 +22,10 @@ export const timebuzzerApiBaseUrl = "https://my.timebuzzer.com";
 const apiPath = "/open-api";
 const timeoutMs = 30_000;
 
-export const timebuzzerActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const timebuzzerActionHandlers: ProviderActionHandlers<
+  "timebuzzer",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   get_current_user: (_input, context) => requestTimebuzzer("/account/me", {}, context, "execute"),
   async list_layers(_input, context) {
     return { layers: requireArray(await requestTimebuzzer("/layers", {}, context, "execute"), "layers") };

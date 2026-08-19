@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
@@ -6,7 +7,10 @@ import { executeHappyScribeAction, validateHappyScribeCredential } from "./runti
 
 const service = "happy_scribe";
 
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "happy_scribe",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   list_organizations: (input, context) =>
     executeHappyScribeAction(
       { apiKey: context.apiKey, values: {}, actionName: "list_organizations", input },

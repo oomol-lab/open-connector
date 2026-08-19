@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -49,7 +50,10 @@ export interface FastNoteSyncContext {
 const requestTimeoutMs = 60_000;
 const attachmentMaxBytes = 20 * 1024 * 1024;
 
-export const fastNoteSyncActionHandlers: Record<string, ProviderRuntimeHandler<FastNoteSyncContext>> = {
+export const fastNoteSyncActionHandlers: ProviderActionHandlers<
+  "fast_note_sync",
+  ProviderRuntimeHandler<FastNoteSyncContext>
+> = {
   async get_current_user(_input, context) {
     const response = await requestFastNoteSyncJson(context, "/user/info");
     return { user: sanitizeUser(readResponseDataObject(response, "get current user")) };

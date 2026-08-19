@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { SendgridActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import {
@@ -63,7 +63,7 @@ function buildValidationProviderMetadata(
   });
 }
 
-export const sendgridActionHandlers: Record<SendgridActionName, SendgridActionHandler> = {
+export const sendgridActionHandlers: ProviderActionHandlers<"sendgrid", SendgridActionHandler> = {
   get_account_info(_input, context) {
     return getAccountInfo(context);
   },
@@ -76,7 +76,7 @@ export const sendgridActionHandlers: Record<SendgridActionName, SendgridActionHa
   send_email(input, context) {
     return sendEmail(input, context);
   },
-} satisfies Record<SendgridActionName, SendgridActionHandler>;
+};
 
 export const executors: ProviderExecutors = defineProviderExecutors<SendgridActionContext>({
   service: "sendgrid",

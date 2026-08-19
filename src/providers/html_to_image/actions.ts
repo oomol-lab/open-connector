@@ -63,5 +63,3 @@ export const htmlToImageActions: ActionDefinition[] = [
     outputSchema: synchronousImageOutputSchema,
   }),
 ];
-
-export type HtmlToImageActionName = "convert_html_to_image" | "capture_website_screenshot";

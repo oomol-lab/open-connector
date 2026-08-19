@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { SplunkHttpEventCollectorActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -51,8 +52,8 @@ type SplunkHecActionHandler = (input: SplunkHecActionInput, fetcher: typeof fetc
 
 const splunkHecRequestTimeoutMs = 30_000;
 
-export const splunkHttpEventCollectorActionHandlers: Record<
-  SplunkHttpEventCollectorActionName,
+export const splunkHttpEventCollectorActionHandlers: ProviderActionHandlers<
+  "splunk_http_event_collector",
   SplunkHecActionHandler
 > = {
   send_event(input, fetcher) {

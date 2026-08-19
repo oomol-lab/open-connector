@@ -5,7 +5,8 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { FlomoActionName, FlomoMcpToolName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { FlomoMcpToolName } from "./actions.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -56,7 +57,7 @@ interface FlomoMcpToolSummary {
   description?: string;
 }
 
-export const flomoActionHandlers: Record<FlomoActionName, FlomoActionHandler> = {
+export const flomoActionHandlers: ProviderActionHandlers<"flomo", FlomoActionHandler> = {
   create_memo(input, context) {
     if (context.authType === "custom_credential") {
       return callFlomoMcpTool({

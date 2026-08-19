@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -23,7 +24,7 @@ const drimifyApiBaseUrl = "https://endpoint.drimify.com";
 type DrimifyRequestPhase = "validate" | "execute";
 type DrimifyQueryValue = number | string | undefined;
 
-const handlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+const handlers: ProviderActionHandlers<"drimify", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_app_data_collections(input, context) {
     const page = readPositiveInteger(input.page, "page") ?? 1;
     const itemsPerPage = readItemsPerPage(input.itemsPerPage);

@@ -161,5 +161,3 @@ export const imgixActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ImgixActionName = "list_sources" | "get_source" | "update_source" | "purge_asset";

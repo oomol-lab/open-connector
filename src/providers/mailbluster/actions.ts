@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mailbluster";
 
-export type MailblusterActionName = "list_fields" | "create_lead" | "get_lead" | "update_lead" | "delete_lead";
-
 const tagListSchema = s.array(
   "MailBluster tags associated with the lead.",
   s.nonEmptyString("One MailBluster tag name."),

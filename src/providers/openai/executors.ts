@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OpenAiActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -36,7 +36,7 @@ const openaiApiBaseUrl = "https://api.openai.com/v1";
 const openaiAudioSourceMaxBytes = 25 * 1024 * 1024;
 const openaiAudioSourceFetchTimeoutMs = 30_000;
 
-export const openaiActionHandlers: Record<OpenAiActionName, OpenAiActionHandler> = {
+export const openaiActionHandlers: ProviderActionHandlers<"openai", OpenAiActionHandler> = {
   list_models(_input, context) {
     return openaiListModels(context);
   },

@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { KrakenIoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { extname } from "node:path";
 import {
@@ -41,7 +41,7 @@ interface KrakenIoActionContext {
   signal?: AbortSignal;
 }
 
-export const krakenIoActionHandlers: Record<KrakenIoActionName, KrakenIoActionHandler> = {
+export const krakenIoActionHandlers: ProviderActionHandlers<"kraken_io", KrakenIoActionHandler> = {
   get_user_status(_input, context) {
     return fetchKrakenUserStatus(context.apiKey, context.apiSecret, context.fetcher, context.signal, "execute");
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PaperformActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalIntegerLike, optionalRawString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface PaperformCollectionPage<T> {
   };
 }
 
-export const paperformActionHandlers: Record<PaperformActionName, PaperformActionHandler> = {
+export const paperformActionHandlers: ProviderActionHandlers<"paperform", PaperformActionHandler> = {
   list_forms: listForms,
   get_form: getForm,
   list_form_fields: listFormFields,

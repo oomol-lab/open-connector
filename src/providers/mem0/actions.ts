@@ -255,18 +255,6 @@ const getUsersInputSchema = s.object(
   { optional: ["org_id", "project_id"] },
 );
 
-export type Mem0ActionName =
-  | "add_memories"
-  | "get_memories"
-  | "search_memories"
-  | "get_memory"
-  | "update_memory"
-  | "delete_memory"
-  | "get_memory_history"
-  | "get_events"
-  | "get_event"
-  | "get_users";
-
 export const mem0Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_memories",

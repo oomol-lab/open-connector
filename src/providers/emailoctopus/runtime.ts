@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EmailoctopusActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -27,7 +27,7 @@ interface EmailoctopusRequestOptions {
 
 type EmailoctopusActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const emailoctopusActionHandlers: Record<EmailoctopusActionName, EmailoctopusActionHandler> = {
+export const emailoctopusActionHandlers: ProviderActionHandlers<"emailoctopus", EmailoctopusActionHandler> = {
   list_lists(input, context) {
     return listLists(input, context);
   },

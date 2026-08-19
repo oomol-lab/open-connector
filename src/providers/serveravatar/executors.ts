@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ interface ServerAvatarRequestInput {
   query?: Record<string, QueryValue>;
 }
 
-export const serverAvatarActionHandlers: Record<string, ServerAvatarActionHandler> = {
+export const serverAvatarActionHandlers: ProviderActionHandlers<"serveravatar", ServerAvatarActionHandler> = {
   list_organizations(_input, context) {
     return requestServerAvatarJson({
       path: "/organizations",

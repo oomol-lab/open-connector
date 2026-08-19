@@ -442,19 +442,6 @@ const translationOutputSchema = s.object(
   { required: ["projectId", "translation"] },
 );
 
-export type LokaliseActionName =
-  | "list_projects"
-  | "get_project"
-  | "list_project_languages"
-  | "list_keys"
-  | "create_keys"
-  | "get_key"
-  | "update_key"
-  | "delete_key"
-  | "list_translations"
-  | "get_translation"
-  | "update_translation";
-
 export const lokaliseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",

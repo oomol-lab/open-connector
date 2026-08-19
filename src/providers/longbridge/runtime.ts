@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlerSubset, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { LongbridgeReadonlyActionSpec, LongbridgeReadonlyParamSpec } from "./readonly-action-specs.ts";
 
@@ -15,6 +16,7 @@ import { encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
+  mapProviderActionHandlers,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -40,11 +42,7 @@ export interface LongbridgeRequestOptions {
 
 type LongbridgeActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
 
-const longbridgeReadonlyActionHandlers: Record<string, LongbridgeActionHandler> = Object.fromEntries(
-  longbridgeReadonlyActionSpecs.map((spec) => [spec.name, createLongbridgeReadonlyActionHandler(spec)]),
-);
-
-export const longbridgeActionHandlers: Record<string, LongbridgeActionHandler> = {
+const longbridgeDirectActionHandlers: ProviderActionHandlerSubset<"longbridge", LongbridgeActionHandler> = {
   async list_securities(input, context) {
     const payload = await requestLongbridgeJson({
       method: "GET",
@@ -329,8 +327,20 @@ export const longbridgeActionHandlers: Record<string, LongbridgeActionHandler> =
       raw: payload,
     };
   },
-  ...longbridgeReadonlyActionHandlers,
 };
+
+export const longbridgeActionHandlers: ProviderActionHandlers<"longbridge", LongbridgeActionHandler> =
+  mapProviderActionHandlers(
+    "longbridge",
+    [
+      ...Object.entries(longbridgeDirectActionHandlers).map(([name, handler]) => ({ name, handler })),
+      ...longbridgeReadonlyActionSpecs.map((spec) => ({
+        name: spec.name,
+        handler: createLongbridgeReadonlyActionHandler(spec),
+      })),
+    ],
+    (source): LongbridgeActionHandler => source.handler,
+  );
 
 export async function validateLongbridgeCredential(
   accessToken: string,

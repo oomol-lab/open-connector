@@ -192,14 +192,6 @@ const profanityOutputSchema = s.object("The normalized JigsawStack profanity che
   profanitiesFound: s.nullable(s.boolean("Whether profanity was found in the text.")),
 });
 
-export type JigsawstackActionName =
-  | "search_web"
-  | "get_search_suggestions"
-  | "translate_text"
-  | "summarize_text"
-  | "check_spam"
-  | "check_profanity";
-
 export const jigsawstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_web",

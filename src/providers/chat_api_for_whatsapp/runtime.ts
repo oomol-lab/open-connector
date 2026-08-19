@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -39,7 +40,10 @@ interface ChatApiForWhatsappResponse {
   rawText: string;
 }
 
-export const chatApiForWhatsappActionHandlers: Record<string, ProviderRuntimeHandler<ChatApiForWhatsappContext>> = {
+export const chatApiForWhatsappActionHandlers: ProviderActionHandlers<
+  "chat_api_for_whatsapp",
+  ProviderRuntimeHandler<ChatApiForWhatsappContext>
+> = {
   test_api_key(_input, context) {
     return getStatus(context, "execute");
   },

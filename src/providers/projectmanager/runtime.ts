@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { ProjectmanagerActionName } from "./actions.ts";
 
@@ -18,7 +19,7 @@ type ProjectmanagerActionHandler = (
   context: ProjectmanagerActionContext,
 ) => Promise<unknown>;
 
-export const projectmanagerActionHandlers: Record<ProjectmanagerActionName, ProjectmanagerActionHandler> = {
+export const projectmanagerActionHandlers: ProviderActionHandlers<"projectmanager", ProjectmanagerActionHandler> = {
   list_projects(input, context) {
     return requestProjectmanagerList({
       path: "/api/data/projects",

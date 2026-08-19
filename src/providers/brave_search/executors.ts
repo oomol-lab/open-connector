@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BraveSearchActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ type BraveSearchPhase = "validate" | "execute";
 type BraveSearchQueryValue = boolean | number | string | string[] | undefined;
 type BraveSearchActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const braveSearchActionHandlers: Record<BraveSearchActionName, BraveSearchActionHandler> = {
+export const braveSearchActionHandlers: ProviderActionHandlers<"brave_search", BraveSearchActionHandler> = {
   async web_search(input, context) {
     const payload = await requestBraveSearchJson("/res/v1/web/search", buildWebSearchQuery(input), context, "execute");
     return normalizeWebSearchResponse(payload);

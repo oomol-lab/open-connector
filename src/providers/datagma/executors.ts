@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ const datagmaMaxResponseBytes = 10 * 1024 * 1024;
 type DatagmaPhase = "validate" | "execute";
 type DatagmaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const datagmaActionHandlers: Record<string, DatagmaActionHandler> = {
+const datagmaActionHandlers: ProviderActionHandlers<"datagma", DatagmaActionHandler> = {
   get_credit(input, context) {
     return requestDatagmaResult({
       path: "/api/ingress/v1/mine",

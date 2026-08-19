@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { EasypostActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -28,7 +28,7 @@ interface EasypostRequest {
   phase: EasypostPhase;
 }
 
-export const easypostActionHandlers: Record<EasypostActionName, EasypostActionHandler> = {
+export const easypostActionHandlers: ProviderActionHandlers<"easypost", EasypostActionHandler> = {
   async create_address(input, context) {
     const payload = await requestEasypost({
       method: "POST",

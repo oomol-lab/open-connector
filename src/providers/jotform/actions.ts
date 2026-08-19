@@ -258,12 +258,3 @@ export const jotformActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type JotformActionName =
-  | "get_current_user"
-  | "list_forms"
-  | "get_form"
-  | "list_form_questions"
-  | "list_form_submissions"
-  | "get_submission"
-  | "create_submission";

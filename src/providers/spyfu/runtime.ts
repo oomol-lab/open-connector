@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { SpyfuActionName } from "./actions.ts";
 
 import {
@@ -24,7 +25,7 @@ type SpyfuRequestMethod = "GET" | "POST";
 type SpyfuQuery = Record<string, string | number | boolean | undefined>;
 type SpyfuActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch, apiKey: string) => Promise<unknown>;
 
-export const spyfuActionHandlers: Record<SpyfuActionName, SpyfuActionHandler> = {
+export const spyfuActionHandlers: ProviderActionHandlers<"spyfu", SpyfuActionHandler> = {
   async get_monthly_usage(input, fetcher, apiKey) {
     const usageMonth = readUsageMonth(input.usageMonth);
     const payload = await requestSpyfuJson({
@@ -453,7 +454,7 @@ export const spyfuActionHandlers: Record<SpyfuActionName, SpyfuActionHandler> = 
       topAds: readOptionalResultRows(record.topAds),
     };
   },
-} satisfies Record<SpyfuActionName, SpyfuActionHandler>;
+};
 
 const ppcRouteBySearchType = {
   current_ads: "/apis/serp_api/v2/ppc/getPaidSerps",

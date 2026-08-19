@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BuiltwithActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -21,7 +21,7 @@ interface BuiltwithErrorEntry {
   code?: number;
 }
 
-export const builtwithActionHandlers: Record<BuiltwithActionName, BuiltwithActionHandler> = {
+export const builtwithActionHandlers: ProviderActionHandlers<"builtwith", BuiltwithActionHandler> = {
   lookup_domain_profile(input, context) {
     return executeLookupDomainProfile(input, context);
   },

@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "brandfetch";
 
-export type BrandfetchActionName = "get_brand" | "get_transaction_info";
-
 const brandfetchFormatSchema = s.object(
   "One asset format returned by Brandfetch.",
   {

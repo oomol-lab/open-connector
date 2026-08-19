@@ -5,20 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "buildkite";
 
-export type BuildkiteActionName =
-  | "get_current_access_token"
-  | "get_current_user"
-  | "list_organizations"
-  | "get_organization"
-  | "list_pipelines"
-  | "get_pipeline"
-  | "list_builds_for_organization"
-  | "list_builds_for_pipeline"
-  | "get_build"
-  | "create_build"
-  | "cancel_build"
-  | "rebuild_build";
-
 const readUserPermission = ["read_user"];
 const readOrganizationsPermission = ["read_organizations"];
 const readPipelinesPermission = ["read_pipelines"];

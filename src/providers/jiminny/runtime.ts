@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { JiminnyActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ export interface JiminnyActionContext {
   signal?: AbortSignal;
 }
 
-export const jiminnyActionHandlers: Record<JiminnyActionName, JiminnyActionHandler> = {
+export const jiminnyActionHandlers: ProviderActionHandlers<"jiminny", JiminnyActionHandler> = {
   get_current_organization(_input, context) {
     return getCurrentOrganization(context);
   },

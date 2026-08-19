@@ -83,13 +83,6 @@ const websiteSchema = s.object(
   { optional: ["name", "domain", "logo", "verified", "institutional"] },
 );
 
-export type CrispActionName =
-  | "get_website"
-  | "list_conversations"
-  | "get_conversation"
-  | "list_conversation_messages"
-  | "send_text_message";
-
 export const crispActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_website",

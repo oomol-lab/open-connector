@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 const crossrefApiBaseUrl = "https://api.crossref.org/v1";
 const crossrefRequestTimeoutMs = 30_000;
 const crossrefMaxResponseBytes = 4 * 1024 * 1024;
@@ -35,7 +36,7 @@ type CrossrefActionHandler = (
   apiKey?: string,
 ) => Promise<unknown>;
 
-export const crossrefActionHandlers: Record<string, CrossrefActionHandler> = {
+export const crossrefActionHandlers: ProviderActionHandlers<"crossref", CrossrefActionHandler> = {
   async get_work(input, fetcher, apiKey) {
     const doi = normalizeDoi(readRequiredString(input.doi, "doi"));
     const { payload } = await requestCrossrefJson({

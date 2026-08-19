@@ -41,8 +41,6 @@ const articleSchema = s.object("Normalized news article returned by Mediastack."
   publishedAt: s.nullableString("Article publication timestamp returned by Mediastack."),
 });
 
-export type MediastackActionName = "search_news_sources" | "search_live_news";
-
 export const mediastackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_news_sources",

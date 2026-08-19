@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "zhihu";
 
-export type ZhihuActionName = "zhihu_search" | "global_search" | "hot_list" | "zhida";
-
 const queryField = s.nonEmptyString("The search query keyword.");
 
 const commentInfoSchema = s.looseObject("A selected comment returned with a content item.", {

@@ -334,15 +334,6 @@ const tagsResponseSchema = s.looseRequiredObject("Storyblok tags response.", {
   tags: s.array("Tags returned by Storyblok.", tagSchema),
 });
 
-export type StoryblokActionName =
-  | "get_space"
-  | "list_stories"
-  | "get_story"
-  | "list_links"
-  | "list_datasources"
-  | "list_datasource_entries"
-  | "list_tags";
-
 export const storyblokActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_space",

@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { AdobeCommerceActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -47,7 +47,7 @@ type AdobeCommerceRequestMode = "validate" | "execute";
 type QueryValue = string | number | boolean | undefined;
 type AdobeCommerceActionHandler = (input: Record<string, unknown>, context: AdobeCommerceContext) => Promise<unknown>;
 
-export const adobeCommerceActionHandlers: Record<AdobeCommerceActionName, AdobeCommerceActionHandler> = {
+export const adobeCommerceActionHandlers: ProviderActionHandlers<"adobe_commerce", AdobeCommerceActionHandler> = {
   async list_products(input, context) {
     const payload = await requestAdobeCommerceJson({
       context: {

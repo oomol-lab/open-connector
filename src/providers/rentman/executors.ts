@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { RentmanActionName } from "./actions.ts";
 
@@ -23,7 +24,7 @@ const rentmanItemPathByAction: Partial<Record<RentmanActionName, string>> = {
 
 type RentmanActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const rentmanActionHandlers: Record<RentmanActionName, RentmanActionHandler> = {
+export const rentmanActionHandlers: ProviderActionHandlers<"rentman", RentmanActionHandler> = {
   list_contacts(input, context) {
     return executeListAction("list_contacts", input, context);
   },

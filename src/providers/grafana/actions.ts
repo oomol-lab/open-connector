@@ -5,27 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "grafana";
 
-export type GrafanaActionName =
-  | "list_folders"
-  | "get_folder"
-  | "create_folder"
-  | "update_folder"
-  | "delete_folder"
-  | "search_dashboards"
-  | "get_dashboard"
-  | "create_dashboard"
-  | "update_dashboard"
-  | "delete_dashboard"
-  | "list_data_sources"
-  | "get_data_source"
-  | "create_data_source"
-  | "update_data_source"
-  | "delete_data_source"
-  | "list_alert_rules"
-  | "get_alert_rule"
-  | "list_alert_instances"
-  | "list_contact_points";
-
 const namespaceSchema = s.string("The Grafana API namespace. Use default for the main organization.", {
   minLength: 1,
 });

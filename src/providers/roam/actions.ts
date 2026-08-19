@@ -95,8 +95,6 @@ const getMagicastInputSchema = s.actionInput(
   "Input parameters for retrieving a Roam HQ magicast.",
 );
 
-export type RoamActionName = "list_groups" | "send_message" | "list_recordings" | "list_magicasts" | "get_magicast";
-
 export const roamActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_groups",

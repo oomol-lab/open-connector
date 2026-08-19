@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
@@ -6,7 +7,10 @@ import { executeUnthreadAction, validateUnthreadCredential } from "./runtime.ts"
 
 const service = "unthread";
 
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "unthread",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   create_account: (input, context) =>
     executeUnthreadAction({ apiKey: context.apiKey, values: {}, actionName: "create_account", input }, context.fetcher),
   get_account: (input, context) =>

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -41,7 +42,7 @@ interface RespondIoRequest {
 
 type RespondIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const respondIoActionHandlers: Record<string, RespondIoActionHandler> = {
+export const respondIoActionHandlers: ProviderActionHandlers<"respond_io", RespondIoActionHandler> = {
   get_contact(input, context) {
     return requestContact(input, context, "GET");
   },

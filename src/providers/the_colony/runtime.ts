@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { TheColonyActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -25,7 +25,7 @@ interface TheColonyRequestInput {
   idempotencyKey?: string;
 }
 
-export const theColonyActionHandlers: Record<TheColonyActionName, TheColonyActionHandler> = {
+export const theColonyActionHandlers: ProviderActionHandlers<"the_colony", TheColonyActionHandler> = {
   async get_me(_input, context) {
     const user = await requestTheColonyJson({
       method: "GET",

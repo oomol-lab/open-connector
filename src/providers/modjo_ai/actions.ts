@@ -138,28 +138,6 @@ const defineModjoAction = <const TName extends string>(input: {
     outputSchema: input.outputSchema,
   });
 
-export type ModjoAiActionName =
-  | "list_users"
-  | "get_user"
-  | "list_teams"
-  | "get_team"
-  | "list_team_members"
-  | "list_accounts"
-  | "get_account"
-  | "list_contacts"
-  | "get_contact"
-  | "list_deals"
-  | "get_deal_summary"
-  | "list_calls"
-  | "get_call"
-  | "get_call_transcript"
-  | "list_call_notes"
-  | "list_call_summaries"
-  | "get_call_next_steps"
-  | "list_call_tags"
-  | "list_tags"
-  | "list_topics";
-
 export const modjoAiActions: readonly ActionDefinition[] = [
   defineModjoAction({
     name: "list_users",

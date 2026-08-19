@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -27,7 +28,7 @@ const resources: Record<ResourceName, ResourceSpec> = {
   product: { singular: "product", plural: "products", path: "/products" },
 };
 
-export const rechargeActionHandlers: Record<string, Handler> = {
+export const rechargeActionHandlers: ProviderActionHandlers<"recharge", Handler> = {
   list_customers(input, context) {
     return listResource(resources.customer, input, context);
   },

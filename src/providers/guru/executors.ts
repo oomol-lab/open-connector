@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { GuruActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -43,7 +43,7 @@ interface GuruResponse {
 
 type GuruActionHandler = (input: Record<string, unknown>, context: GuruActionContext) => Promise<unknown>;
 
-export const guruActionHandlers: Record<GuruActionName, GuruActionHandler> = {
+export const guruActionHandlers: ProviderActionHandlers<"guru", GuruActionHandler> = {
   async get_current_identity(_input, context) {
     const response = await guruGetJson(guruValidationPath, context, "execute");
     return {

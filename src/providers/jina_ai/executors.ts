@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
@@ -22,7 +23,7 @@ const paths: Record<string, string> = {
   rerank_documents: "/v1/rerank",
 };
 
-const jinaAiActionHandlers: Record<string, JinaAiActionHandler> = {
+const jinaAiActionHandlers: ProviderActionHandlers<"jina_ai", JinaAiActionHandler> = {
   create_embeddings(input, context) {
     return jinaPost(input, context, paths.create_embeddings, "execute");
   },

@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "kandji";
 
-export type KandjiActionName = "list_blueprints" | "get_blueprint" | "list_users" | "get_user";
-
 const cursorSchema = s.nonEmptyString("The opaque pagination cursor returned by a previous Kandji response.");
 const uuidSchema = s.uuid("A Kandji UUID value.");
 const nullableStringSchema = s.nullable(s.string("A string value returned by Kandji when present."));

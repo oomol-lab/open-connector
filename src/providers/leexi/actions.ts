@@ -189,14 +189,6 @@ const callDateFilterSchema = s.stringEnum("The Leexi date field used by from/to 
   "updated_at",
 ]);
 
-export type LeexiActionName =
-  | "list_users"
-  | "list_teams"
-  | "list_calls"
-  | "get_call"
-  | "list_call_notes"
-  | "get_call_note";
-
 export const leexiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",

@@ -167,8 +167,6 @@ const creditsOutputSchema = s.looseObject("The output payload for ScrapeGraphAI 
   jobs: s.looseObject("Current crawl and monitor job quotas."),
 });
 
-export type ScrapeGraphAiActionName = "scrape" | "extract" | "search" | "list_history" | "get_history" | "get_credits";
-
 export const scrapeGraphAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "scrape",

@@ -149,5 +149,3 @@ export const webshareActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type WebshareActionName = "get_profile" | "list_proxies" | "get_proxy_config" | "list_stats";

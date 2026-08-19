@@ -23,8 +23,6 @@ const optimizationSummarySchema = s.object("A normalized Route4Me optimization s
   raw: s.looseObject("The raw optimization object returned by Route4Me."),
 });
 
-export type Route4meActionName = "create_optimization" | "list_optimizations" | "delete_optimizations";
-
 export const route4meActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_optimization",

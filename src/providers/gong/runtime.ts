@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GongActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
@@ -29,7 +29,7 @@ export interface GongContext {
   signal?: AbortSignal;
 }
 
-export const gongActionHandlers: Record<GongActionName, GongActionHandler> = {
+export const gongActionHandlers: ProviderActionHandlers<"gong", GongActionHandler> = {
   list_users(input, context) {
     return requestGongJson({
       context,

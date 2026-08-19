@@ -118,14 +118,3 @@ export const ghostActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type GhostActionName =
-  | "list_posts"
-  | "get_post"
-  | "list_pages"
-  | "get_page"
-  | "list_tags"
-  | "get_tag"
-  | "list_authors"
-  | "get_author"
-  | "read_settings";

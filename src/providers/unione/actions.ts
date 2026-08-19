@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "unione";
 
-export type UnioneActionName = "get_account_info" | "send_email" | "list_templates" | "list_tags" | "list_suppressions";
-
 const utcDateTimeField = s.string('UTC datetime string in the "YYYY-MM-DD hh:mm:ss" format accepted by UniOne.');
 const stringOrIntegerValue = s.anyOf("String or integer value accepted by UniOne.", [
   s.string("String value."),

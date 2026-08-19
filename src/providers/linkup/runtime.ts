@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LinkupActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface LinkupRequestInput {
   mode: "validate" | "execute";
 }
 
-export const linkupActionHandlers: Record<LinkupActionName, LinkupActionHandler> = {
+export const linkupActionHandlers: ProviderActionHandlers<"linkup", LinkupActionHandler> = {
   get_credits_balance(_input, context) {
     return linkupRequest(context, {
       method: "GET",

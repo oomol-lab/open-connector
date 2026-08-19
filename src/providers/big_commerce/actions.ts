@@ -181,13 +181,6 @@ const productUpdateInputSchema = s.object(
   },
 );
 
-export type BigCommerceActionName =
-  | "list_products"
-  | "get_product"
-  | "create_product"
-  | "update_product"
-  | "delete_product";
-
 export const bigCommerceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",

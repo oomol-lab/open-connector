@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ButtondownActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -15,7 +15,7 @@ interface ButtondownFetchInput extends RequestInit {
   fetcher: ProviderFetch;
 }
 
-export const buttondownActionHandlers: Record<ButtondownActionName, ButtondownActionHandler> = {
+export const buttondownActionHandlers: ProviderActionHandlers<"buttondown", ButtondownActionHandler> = {
   get_account(_input, context) {
     return getAccount(context);
   },

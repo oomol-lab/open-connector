@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
@@ -9,7 +10,7 @@ import {
   normalizeMondayGroup,
 } from "./runtime-common.ts";
 
-export const mondayStructureActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayStructureActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   create_group(input, fetcher) {
     return mondayCreateGroup(input, fetcher);
   },

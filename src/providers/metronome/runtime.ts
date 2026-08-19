@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MetronomeActionName } from "./actions.ts";
 
 import {
   optionalBoolean,
@@ -22,7 +22,7 @@ interface PaginatedPayload {
   nextPage: string | null;
 }
 
-export const metronomeActionHandlers: Record<MetronomeActionName, MetronomeActionHandler> = {
+export const metronomeActionHandlers: ProviderActionHandlers<"metronome", MetronomeActionHandler> = {
   list_customers(input, context) {
     return listMetronomeCustomers(input, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BitlyActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -31,7 +31,7 @@ interface BitlyRequestInput {
   body?: unknown;
 }
 
-export const bitlyActionHandlers: Record<BitlyActionName, BitlyActionHandler> = {
+export const bitlyActionHandlers: ProviderActionHandlers<"bitly", BitlyActionHandler> = {
   get_user(input, context) {
     return getUser(input, context);
   },

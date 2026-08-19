@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "owl_protocol";
 
-export type OwlProtocolActionName = "get_project_info" | "get_project_token" | "patch_project_token";
-
 const chainIdSchema = s.positiveInteger("The EVM chain identifier for the Owl Protocol project.");
 
 const addressSchema = s.string("The contract address managed by the Owl Protocol project.", {

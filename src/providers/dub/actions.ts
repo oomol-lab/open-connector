@@ -5,23 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "dub" as const;
 
-export type DubActionName =
-  | "create_link"
-  | "list_links"
-  | "retrieve_link"
-  | "update_link"
-  | "delete_link"
-  | "count_links"
-  | "list_tags"
-  | "create_tag"
-  | "update_tag"
-  | "delete_tag"
-  | "list_folders"
-  | "create_folder"
-  | "update_folder"
-  | "delete_folder"
-  | "retrieve_analytics";
-
 interface DubActionInput<TName extends string> {
   name: TName;
   description: string;

@@ -105,8 +105,3 @@ export const similarwebDigitalRankApiActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type SimilarwebDigitalRankApiActionName =
-  | "get_subscription_status"
-  | "get_rank_tracker_describe"
-  | "get_similar_rank_top_sites";

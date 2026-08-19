@@ -1003,35 +1003,35 @@ describe("googlecalendar.remove_attendee", () => {
 });
 
 function addAttendee(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.add_attendee(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.add_attendee!(input, { accessToken, fetcher });
 }
 
 function createEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.create_event(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.create_event!(input, { accessToken, fetcher });
 }
 
 function updateEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.update_event(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.update_event!(input, { accessToken, fetcher });
 }
 
 function patchEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.patch_event(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.patch_event!(input, { accessToken, fetcher });
 }
 
 function deleteEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.delete_event(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.delete_event!(input, { accessToken, fetcher });
 }
 
 function moveEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.move_event(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.move_event!(input, { accessToken, fetcher });
 }
 
 function quickAddEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.quick_add_event(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.quick_add_event!(input, { accessToken, fetcher });
 }
 
 function removeAttendee(input: Record<string, unknown>, fetcher: ProviderFetch) {
-  return googlecalendarEventActionHandlers.remove_attendee(input, { accessToken, fetcher });
+  return googlecalendarEventActionHandlers.remove_attendee!(input, { accessToken, fetcher });
 }
 
 function stubCalendarResponses(responses: Response[]): { fetcher: ProviderFetch; requests: CapturedRequest[] } {

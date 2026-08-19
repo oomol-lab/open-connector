@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "starton";
 
-export type StartonActionName = "list_pins" | "get_pin" | "create_json_pin" | "pin_existing_file" | "delete_pin";
-
 const statusSchema = s.stringEnum("The Starton pin status returned by the API.", [
   "queued",
   "pinning",

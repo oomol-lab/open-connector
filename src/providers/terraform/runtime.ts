@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TerraformActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -18,7 +18,7 @@ interface TerraformRequestOptions {
   query?: Record<string, string | undefined>;
 }
 
-export const terraformActionHandlers: Record<TerraformActionName, TerraformActionHandler> = {
+export const terraformActionHandlers: ProviderActionHandlers<"terraform", TerraformActionHandler> = {
   async get_account_details(_input, context) {
     const payload = await requestTerraformJson(
       {

@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ScrapingantActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -41,7 +41,7 @@ interface ScrapingantRequestInput {
   phase: ScrapingantPhase;
 }
 
-export const scrapingantActionHandlers: Record<ScrapingantActionName, ScrapingantActionHandler> = {
+export const scrapingantActionHandlers: ProviderActionHandlers<"scrapingant", ScrapingantActionHandler> = {
   scrape_with_extended_json_output(input, context) {
     return requestScrapingantExtended(input, context);
   },

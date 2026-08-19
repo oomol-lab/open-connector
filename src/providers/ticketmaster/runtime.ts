@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { TicketmasterActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ type TicketmasterActionHandler = (
   context: TicketmasterActionContext,
 ) => Promise<unknown>;
 
-export const ticketmasterActionHandlers: Record<TicketmasterActionName, TicketmasterActionHandler> = {
+export const ticketmasterActionHandlers: ProviderActionHandlers<"ticketmaster", TicketmasterActionHandler> = {
   get_events(input: Record<string, unknown>, context: TicketmasterActionContext): Promise<unknown> {
     return getEvents(input, context);
   },

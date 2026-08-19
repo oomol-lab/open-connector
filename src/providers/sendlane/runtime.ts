@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { SendlaneActionName } from "./actions.ts";
 
@@ -52,7 +53,10 @@ const handler =
   (input, context) =>
     execute(name, input, context);
 
-export const sendlaneActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const sendlaneActionHandlers: ProviderActionHandlers<
+  "sendlane",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_lists: handler("list_lists"),
   get_list: handler("get_list"),
   create_list: handler("create_list"),

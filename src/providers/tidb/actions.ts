@@ -415,22 +415,3 @@ export const tidbActions: ProviderActionDefinition[] = [
     outputSchema: branchSchema,
   }),
 ];
-
-export type TiDBActionName =
-  | "list_api_keys"
-  | "get_api_key"
-  | "list_audit_logs"
-  | "list_clusters"
-  | "get_cluster"
-  | "list_regions"
-  | "show_node_quota"
-  | "show_cloud_providers"
-  | "get_region"
-  | "list_node_specs"
-  | "get_node_spec"
-  | "list_imports"
-  | "get_import"
-  | "list_exports"
-  | "get_export"
-  | "list_branches"
-  | "get_branch";

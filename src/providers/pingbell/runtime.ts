@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
@@ -6,7 +7,10 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 export const pingbellApiBaseUrl = "https://api.pingbell.io";
 const pingbellWebhookBaseUrl = "https://hooks.pingbell.io";
 
-export const pingbellActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const pingbellActionHandlers: ProviderActionHandlers<
+  "pingbell",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_sources(_input, context) {
     return { sources: await listSources(context.apiKey, context.fetcher, context.signal) };
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PaddleActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const paddleValidationPath = "/products";
 type PaddleRequestPhase = "validate" | "execute";
 type PaddleActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const paddleActionHandlers: Record<PaddleActionName, PaddleActionHandler> = {
+export const paddleActionHandlers: ProviderActionHandlers<"paddle", PaddleActionHandler> = {
   list_products(input, context) {
     return executeListProducts(input, context);
   },

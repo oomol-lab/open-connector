@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -18,7 +19,7 @@ interface RecruiteeContext {
 
 type Handler = ProviderRuntimeHandler<RecruiteeContext>;
 
-export const recruiteeActionHandlers: Record<string, Handler> = {
+export const recruiteeActionHandlers: ProviderActionHandlers<"recruitee", Handler> = {
   async list_offers(_input, context) {
     const raw = objectPayload(await recruiteeRequest("/offers", context), "offers");
     return { offers: arrayPayload(raw.offers, "offers"), raw };

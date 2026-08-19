@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -28,7 +29,7 @@ type AddressfinderActionHandler = (
   context: AddressfinderActionContext,
 ) => Promise<unknown>;
 
-export const addressfinderActionHandlers: Record<string, AddressfinderActionHandler> = {
+export const addressfinderActionHandlers: ProviderActionHandlers<"addressfinder", AddressfinderActionHandler> = {
   find_au_addresses(input, context) {
     return executeAutocomplete("au", "/au/address/autocomplete", input, context);
   },

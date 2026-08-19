@@ -96,14 +96,6 @@ const agentRunSchema = s.looseObject("A Codegen agent run.", {
   metadata: s.nullable(s.looseObject("Additional Codegen metadata for the agent run.")),
 });
 
-export type CodegenActionName =
-  | "get_current_user"
-  | "list_organizations"
-  | "list_repositories"
-  | "list_users"
-  | "list_agent_runs"
-  | "get_agent_run";
-
 export const codegenActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

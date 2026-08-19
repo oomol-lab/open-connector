@@ -111,11 +111,3 @@ export const helpscoutDocsActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HelpscoutDocsActionName =
-  | "list_sites"
-  | "list_collections"
-  | "list_categories"
-  | "list_articles"
-  | "search_articles"
-  | "get_article";

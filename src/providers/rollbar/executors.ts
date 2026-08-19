@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RollbarActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -20,7 +20,7 @@ type RollbarRequestPhase = "validate" | "execute";
 type RollbarRecord = Record<string, unknown>;
 type RollbarActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const rollbarActionHandlers: Record<RollbarActionName, RollbarActionHandler> = {
+export const rollbarActionHandlers: ProviderActionHandlers<"rollbar", RollbarActionHandler> = {
   async get_project(input, context) {
     const projectId = requirePositiveInteger(input.projectId, "projectId", 400);
     const payload = await requestRollbarJson({ path: `/project/${projectId}`, context, phase: "execute" });

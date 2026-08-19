@@ -108,5 +108,3 @@ export const vatlayerActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type VatlayerActionName = "validate_vat_number" | "get_rate" | "list_rates" | "calculate_price" | "list_types";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PdfCoActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -18,7 +18,7 @@ type PdfCoRequestPhase = "validate" | "execute";
 type PdfCoActionContext = ApiKeyProviderContext;
 type PdfCoActionHandler = (input: Record<string, unknown>, context: PdfCoActionContext) => Promise<unknown>;
 
-export const pdfCoActionHandlers: Record<PdfCoActionName, PdfCoActionHandler> = {
+export const pdfCoActionHandlers: ProviderActionHandlers<"pdf_co", PdfCoActionHandler> = {
   async get_account_balance(_input, context) {
     const payload = await pdfCoGetJson(pdfCoBalancePath, context.apiKey, context.fetcher, "execute");
     return normalizeBalancePayload(payload);

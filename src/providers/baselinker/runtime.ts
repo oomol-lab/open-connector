@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BaseLinkerActionName } from "./actions.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
@@ -33,7 +34,7 @@ const methodByActionName = {
   list_inventory_products: "getInventoryProductsList",
 } satisfies Record<BaseLinkerActionName, BaseLinkerApiMethod>;
 
-export const baseLinkerActionHandlers: Record<BaseLinkerActionName, BaseLinkerActionHandler> = {
+export const baseLinkerActionHandlers: ProviderActionHandlers<"baselinker", BaseLinkerActionHandler> = {
   list_order_statuses(input, context) {
     return executeBaseLinkerMethod("list_order_statuses", input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ const togetherAiApiBaseUrl = "https://api.together.ai/v1";
 
 type TogetherAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const togetherAiActionHandlers: Record<string, TogetherAiActionHandler> = {
+export const togetherAiActionHandlers: ProviderActionHandlers<"together_ai", TogetherAiActionHandler> = {
   list_models(_input, context) {
     return togetherAiRequest(context, { path: "/models" });
   },

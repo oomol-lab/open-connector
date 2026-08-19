@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { MakeActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -29,7 +29,7 @@ interface MakeRequestOptions extends MakeActionContext {
 
 type MakeActionHandler = (input: Record<string, unknown>, context: MakeActionContext) => Promise<unknown>;
 
-export const makeActionHandlers: Record<MakeActionName, MakeActionHandler> = {
+export const makeActionHandlers: ProviderActionHandlers<"make", MakeActionHandler> = {
   async get_current_user(input, context) {
     const raw = await requestMakeJson<Record<string, unknown>>({
       ...context,

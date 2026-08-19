@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FreepikActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -21,7 +21,7 @@ type FreepikPhase = "validate" | "execute";
 type FreepikActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type FreepikActionHandler = (input: Record<string, unknown>, context: FreepikActionContext) => Promise<unknown>;
 
-export const freepikActionHandlers: Record<FreepikActionName, FreepikActionHandler> = {
+export const freepikActionHandlers: ProviderActionHandlers<"freepik", FreepikActionHandler> = {
   async search_resources(input, context) {
     const payload = await requestFreepikJson({
       context,

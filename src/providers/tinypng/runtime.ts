@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { TinypngActionName } from "./actions.ts";
 
@@ -26,7 +27,7 @@ interface TinypngImageInfo {
   url?: unknown;
 }
 
-export const tinypngActionHandlers: Record<TinypngActionName, TinypngActionHandler> = {
+export const tinypngActionHandlers: ProviderActionHandlers<"tinypng", TinypngActionHandler> = {
   shrink_image(input, context) {
     return shrinkImage(input, context);
   },

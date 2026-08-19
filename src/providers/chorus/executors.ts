@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ChorusActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -21,7 +21,7 @@ type ChorusAcceptHeader = "application/json" | "application/vnd.api+json";
 type ChorusContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ChorusActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const chorusActionHandlers: Record<ChorusActionName, ChorusActionHandler> = {
+export const chorusActionHandlers: ProviderActionHandlers<"chorus", ChorusActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestChorusJson({
       apiKey: context.apiKey,

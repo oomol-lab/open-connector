@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -9,14 +10,9 @@ const postgridVerifyApiBaseUrl = "https://api.postgrid.com/v1/addver";
 const postgridVerifyValidationEndpoint = "/zip_codes";
 
 type PostgridVerifyPhase = "validate" | "execute";
-type PostgridVerifyActionName =
-  | "verify_address"
-  | "autocomplete_address"
-  | "parse_address"
-  | "lookup_city_state_from_postal";
 type PostgridVerifyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const postgridVerifyActionHandlers: Record<PostgridVerifyActionName, PostgridVerifyActionHandler> = {
+export const postgridVerifyActionHandlers: ProviderActionHandlers<"postgrid_verify", PostgridVerifyActionHandler> = {
   verify_address(input, context) {
     return requestPostgridVerifyJson({
       path: "/verifications",

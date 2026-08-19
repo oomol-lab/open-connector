@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ interface BrowserUseRequestInput {
 
 type BrowserUseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const browserUseActionHandlers: Record<string, BrowserUseActionHandler> = {
+export const browserUseActionHandlers: ProviderActionHandlers<"browser_use", BrowserUseActionHandler> = {
   async run_task(input, context) {
     const session = await requestBrowserUseJson({
       method: "POST",

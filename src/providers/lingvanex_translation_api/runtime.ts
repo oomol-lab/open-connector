@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -18,7 +19,10 @@ interface LingvanexRequestInput {
   query: Record<string, LingvanexQueryValue>;
 }
 
-export const lingvanexTranslationApiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const lingvanexTranslationApiActionHandlers: ProviderActionHandlers<
+  "lingvanex_translation_api",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   translate_text(input, context) {
     return translateText(input, context);
   },

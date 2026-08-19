@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "braze";
 
-export type BrazeActionName = "list_campaigns" | "get_campaign_details" | "list_canvases" | "get_canvas_details";
-
 const sortDirectionSchema = s.stringEnum("The creation-time sort direction to send to Braze.", ["asc", "desc"]);
 
 const listInputSchema = s.object(

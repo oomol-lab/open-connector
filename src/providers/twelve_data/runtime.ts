@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TwelveDataActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ type QueryValue = string | number | boolean | undefined;
 type TwelveDataRequestPhase = "validate" | "execute";
 type TwelveDataActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const twelveDataActionHandlers: Record<TwelveDataActionName, TwelveDataActionHandler> = {
+export const twelveDataActionHandlers: ProviderActionHandlers<"twelve_data", TwelveDataActionHandler> = {
   symbol_search(input, context) {
     return executeSymbolSearch(input, context);
   },

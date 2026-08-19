@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { KommoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -46,7 +46,7 @@ export interface KommoActionContext {
   signal?: AbortSignal;
 }
 
-export const kommoActionHandlers: Record<KommoActionName, KommoActionHandler> = {
+export const kommoActionHandlers: ProviderActionHandlers<"kommo", KommoActionHandler> = {
   async get_account(input, context) {
     const raw = await requestKommoJson({
       apiBaseUrl: context.apiBaseUrl,

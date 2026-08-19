@@ -467,24 +467,6 @@ export const tencentDocsActions: ActionDefinition[] = [
   }),
 ];
 
-export type TencentDocsActionName =
-  | "get_current_user"
-  | "create_file"
-  | "get_file_metadata"
-  | "rename_file"
-  | "list_folder"
-  | "search_files"
-  | "start_export"
-  | "get_export_progress"
-  | "convert_file_id"
-  | "get_sheet_range"
-  | "batch_update_sheet"
-  | "get_doc_content"
-  | "batch_update_doc"
-  | "list_smartsheet_sheets"
-  | "update_form_collection_deadline"
-  | "generate_form_result";
-
 export const tencentDocsActionByName: Map<string, ActionDefinition> = new Map(
   tencentDocsActions.map((action) => [action.name, action]),
 );

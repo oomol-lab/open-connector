@@ -142,12 +142,3 @@ export const honeycombActions: ActionDefinition[] = [
     outputSchema: s.actionOutput({ board: boardSchema }, "The Honeycomb board lookup result."),
   }),
 ];
-
-export type HoneycombActionName =
-  | "get_auth"
-  | "list_datasets"
-  | "get_dataset"
-  | "list_markers"
-  | "create_marker"
-  | "list_boards"
-  | "get_board";

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -5,7 +6,10 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 
 export const hybridAnalysisApiBaseUrl = "https://hybrid-analysis.com/api/v2";
 
-export const hybridAnalysisActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const hybridAnalysisActionHandlers: ProviderActionHandlers<
+  "hybrid_analysis",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_current_key(_input, context) {
     return normalizeKey(requireObject(await request("/key/current", context), "Invalid key payload"));
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FidelApiActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -24,7 +24,7 @@ type FidelApiRequestPhase = "validate" | "execute";
 type FidelApiActionContext = ApiKeyProviderContext;
 type FidelApiActionHandler = (input: Record<string, unknown>, context: FidelApiActionContext) => Promise<unknown>;
 
-export const fidelApiActionHandlers: Record<FidelApiActionName, FidelApiActionHandler> = {
+export const fidelApiActionHandlers: ProviderActionHandlers<"fidel_api", FidelApiActionHandler> = {
   async list_brands(input, context): Promise<unknown> {
     return normalizeBrandListResponse(
       await requestFidelJson({

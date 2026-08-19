@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { nullableString, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, readArray, readObject } from "./runtime.shared.ts";
@@ -15,7 +17,8 @@ type DopplerIntegrationActionHandler = (
 export const dopplerIntegrationActionHandlers: Record<
   "list_integrations" | "get_integration" | "get_sync" | "create_sync" | "delete_sync",
   DopplerIntegrationActionHandler
-> = {
+> &
+  ProviderActionHandlerSubset<"doppler", DopplerIntegrationActionHandler> = {
   list_integrations(input, context) {
     return dopplerListIntegrations(input, context.accessToken, context.fetcher);
   },
@@ -31,10 +34,7 @@ export const dopplerIntegrationActionHandlers: Record<
   delete_sync(input, context) {
     return dopplerDeleteSync(input, context.accessToken, context.fetcher);
   },
-} satisfies Record<
-  "list_integrations" | "get_integration" | "get_sync" | "create_sync" | "delete_sync",
-  DopplerIntegrationActionHandler
->;
+};
 
 async function dopplerListIntegrations(_input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
   const payload = await dopplerRequest(

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ export function createMailWizzContext(
   return { apiKey, baseUrl: normalizeMailWizzBaseUrl(values.baseUrl), fetcher, signal };
 }
 
-export const mailWizzActionHandlers: Record<string, ProviderRuntimeHandler<MailWizzContext>> = {
+export const mailWizzActionHandlers: ProviderActionHandlers<"mailwizz", ProviderRuntimeHandler<MailWizzContext>> = {
   list_lists(input, context) {
     return request(context, "/lists", { query: pagination(input) });
   },

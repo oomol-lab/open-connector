@@ -197,17 +197,3 @@ export const fluxguardActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FluxguardActionName =
-  | "get_account"
-  | "add_page"
-  | "initiate_crawl"
-  | "get_page"
-  | "get_sample_webhook"
-  | "list_webhooks"
-  | "upsert_webhook"
-  | "delete_webhook"
-  | "list_categories"
-  | "create_category"
-  | "delete_site"
-  | "delete_page";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NasdaqActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -27,7 +27,7 @@ const defaultDividendColumns = [
 
 const defaultQuoteColumns = ["ticker", "date", "open", "high", "low", "close", "volume", "dividend", "split"].join(",");
 
-export const nasdaqActionHandlers: Record<NasdaqActionName, NasdaqActionHandler> = {
+export const nasdaqActionHandlers: ProviderActionHandlers<"nasdaq", NasdaqActionHandler> = {
   get_datatable_metadata(input, context) {
     return executeGetDatatableMetadata(input, context);
   },

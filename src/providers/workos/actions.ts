@@ -101,22 +101,6 @@ const organizationMutationFields = {
   external_id: s.nonEmptyString("An external identifier for the organization."),
 };
 
-export type WorkosActionName =
-  | "list_users"
-  | "get_user"
-  | "create_user"
-  | "update_user"
-  | "list_organizations"
-  | "get_organization"
-  | "create_organization"
-  | "update_organization"
-  | "list_organization_memberships"
-  | "get_organization_membership"
-  | "create_organization_membership"
-  | "update_organization_membership"
-  | "deactivate_organization_membership"
-  | "reactivate_organization_membership";
-
 export const workosActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LaravelCloudActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ interface NormalizedOrganization extends JsonObject {
   slug: string | null;
 }
 
-export const laravelCloudActionHandlers: Record<LaravelCloudActionName, LaravelCloudActionHandler> = {
+export const laravelCloudActionHandlers: ProviderActionHandlers<"laravel_cloud", LaravelCloudActionHandler> = {
   async get_organization(_input, context) {
     const payload = await requestLaravelCloud({ path: "/meta/organization" }, context);
     return {

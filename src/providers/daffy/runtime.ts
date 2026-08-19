@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DaffyActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
@@ -11,7 +11,7 @@ const daffyApiBaseUrl = "https://public.daffy.org/v1";
 type DaffyPhase = "validate" | "execute";
 type DaffyHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const daffyActionHandlers: Record<DaffyActionName, DaffyHandler> = {
+export const daffyActionHandlers: ProviderActionHandlers<"daffy", DaffyHandler> = {
   async get_current_user(_input, context) {
     return { user: await daffyGetObject("/users/me", {}, context, "execute") };
   },

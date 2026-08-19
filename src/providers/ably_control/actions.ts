@@ -340,19 +340,3 @@ export const ablyControlActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type AblyControlActionName =
-  | "get_current_account"
-  | "get_account_stats"
-  | "get_app_stats"
-  | "list_apps"
-  | "create_app"
-  | "update_app"
-  | "delete_app"
-  | "list_keys"
-  | "create_key"
-  | "update_key"
-  | "revoke_key"
-  | "list_queues"
-  | "create_queue"
-  | "delete_queue";

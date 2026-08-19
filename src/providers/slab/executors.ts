@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -85,7 +86,7 @@ const postFields = `
   topics { ${topicSummaryFields} }
 `;
 
-export const slabActionHandlers: Record<string, SlabActionHandler> = {
+export const slabActionHandlers: ProviderActionHandlers<"slab", SlabActionHandler> = {
   async get_organization(_input, context) {
     const data = await requestSlabData(
       {

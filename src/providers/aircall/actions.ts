@@ -106,18 +106,6 @@ function resourceOutputSchema(resourceName: string) {
   );
 }
 
-export type AircallActionName =
-  | "list_users"
-  | "get_user"
-  | "list_teams"
-  | "get_team"
-  | "list_numbers"
-  | "get_number"
-  | "list_contacts"
-  | "get_contact"
-  | "list_calls"
-  | "get_call";
-
 export const aircallActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",

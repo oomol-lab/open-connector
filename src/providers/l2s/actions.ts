@@ -45,8 +45,6 @@ const upsertOptionalFields = [
   "tags",
 ];
 
-export type L2sActionName = "shorten_url" | "get_url_details" | "update_url_details";
-
 export const l2sActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "shorten_url",

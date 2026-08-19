@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -24,7 +26,7 @@ interface EmbaseActionContext {
 }
 type EmbaseActionHandler = (input: Record<string, unknown>, context: EmbaseActionContext) => Promise<unknown>;
 
-export const embaseActionHandlers: Record<string, EmbaseActionHandler> = {
+export const embaseActionHandlers: ProviderActionHandlers<"embase", EmbaseActionHandler> = {
   async search_articles(input, context) {
     const hasQuery = optionalString(input.query) != null;
     const hasAlertId = optionalString(input.alertId) != null;

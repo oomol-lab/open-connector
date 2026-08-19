@@ -4,7 +4,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { OssinsightActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -56,7 +56,7 @@ interface OssinsightActionContext {
 
 type OssinsightActionHandler = (input: Record<string, unknown>, context: OssinsightActionContext) => Promise<unknown>;
 
-export const ossinsightActionHandlers: Record<OssinsightActionName, OssinsightActionHandler> = {
+export const ossinsightActionHandlers: ProviderActionHandlers<"ossinsight", OssinsightActionHandler> = {
   async list_collections(_input, context): Promise<unknown> {
     const response = await requestOssinsightSql("/collections/", {}, context);
     return {

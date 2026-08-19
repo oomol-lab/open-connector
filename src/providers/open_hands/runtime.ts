@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { OpenHandsActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ type OpenHandsRequestMethod = "GET" | "POST";
 type OpenHandsPayload = Record<string, unknown> | unknown[];
 type OpenHandsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const openHandsActionHandlers: Record<OpenHandsActionName, OpenHandsActionHandler> = {
+export const openHandsActionHandlers: ProviderActionHandlers<"open_hands", OpenHandsActionHandler> = {
   async start_conversation(input, context) {
     const payload = await openHandsRequest(context.apiKey, "/api/v1/app-conversations", context, {
       method: "POST",

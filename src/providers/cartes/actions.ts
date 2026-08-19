@@ -295,26 +295,6 @@ const successOutputSchema = s.object(
   { optional: ["raw"] },
 );
 
-export type CartesActionName =
-  | "get_current_user"
-  | "list_maps"
-  | "search_maps"
-  | "create_map"
-  | "get_map"
-  | "update_map"
-  | "delete_map"
-  | "list_markers"
-  | "list_public_markers"
-  | "create_marker"
-  | "get_marker"
-  | "update_marker"
-  | "delete_marker"
-  | "create_marker_location"
-  | "list_categories"
-  | "list_related_maps"
-  | "list_users"
-  | "get_user";
-
 export const cartesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

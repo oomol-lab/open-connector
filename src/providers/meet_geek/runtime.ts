@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MeetGeekActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -25,7 +25,7 @@ type MeetGeekPhase = "validate" | "execute";
 type MeetGeekActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type MeetGeekActionHandler = (input: Record<string, unknown>, context: MeetGeekActionContext) => Promise<unknown>;
 
-export const meetGeekActionHandlers: Record<MeetGeekActionName, MeetGeekActionHandler> = {
+export const meetGeekActionHandlers: ProviderActionHandlers<"meet_geek", MeetGeekActionHandler> = {
   list_meetings(input, context) {
     return executeMeetingsPage("/v1/meetings", input, context);
   },

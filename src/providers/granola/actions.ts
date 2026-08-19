@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "granola";
 
-export type GranolaActionName = "list_notes" | "get_note" | "list_folders";
-
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const cursorSchema = nonEmptyString("Cursor token returned by a previous Granola page.");
 const pageSizeSchema = s.integer("Maximum number of records to return. Granola allows 1 to 30.", {

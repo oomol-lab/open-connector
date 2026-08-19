@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 import type { SpeechmaticsBatchRegion } from "./constants.ts";
 
@@ -122,7 +123,7 @@ const speechmaticsDeployments: readonly SpeechmaticsDeployment[] = [
   },
 ];
 
-export const speechmaticsActionHandlers: Record<string, SpeechmaticsActionHandler> = {
+export const speechmaticsActionHandlers: ProviderActionHandlers<"speechmatics", SpeechmaticsActionHandler> = {
   async submit_transcription(input, context): Promise<unknown> {
     const region = readBatchRegion(input.region, context.defaultRegion);
     const formData = new FormData();

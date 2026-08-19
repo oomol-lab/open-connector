@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
@@ -18,7 +19,10 @@ const maxNonJsonErrorMessageLength = 300;
 
 type ZenscrapePhase = "validate" | "execute";
 
-export const zenscrapeActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const zenscrapeActionHandlers: ProviderActionHandlers<
+  "zenscrape",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async fetch_url(input, context) {
     const forwardHeaders = buildForwardHeaders(input);
     const { response, bodyText } = await requestZenscrapeRaw(

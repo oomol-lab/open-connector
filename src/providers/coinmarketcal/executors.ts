@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +26,7 @@ const rankingToSortBy: Record<string, string> = {
   catalyst: "catalyst_events",
 };
 
-export const coinmarketcalActionHandlers: Record<string, CoinmarketcalActionHandler> = {
+export const coinmarketcalActionHandlers: ProviderActionHandlers<"coinmarketcal", CoinmarketcalActionHandler> = {
   async list_event_categories(_input, context) {
     const payload = await requestCoinmarketcalJson("/categories", {}, context, "execute");
     const normalized = normalizeCoinmarketcalListPayload(payload);

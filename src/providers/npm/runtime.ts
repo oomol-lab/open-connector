@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -38,7 +39,7 @@ const downloadPeriodPresets = new Set(["last-day", "last-week", "last-month", "l
 const npmMaxResponseBytes = 10 * 1024 * 1024;
 const npmRequestTimeoutMs = 30_000;
 
-export const npmActionHandlers: Record<string, NpmActionHandler> = {
+export const npmActionHandlers: ProviderActionHandlers<"npm", NpmActionHandler> = {
   async get_current_user(_input, context) {
     return normalizeCurrentUser(
       await requestNpmJson({

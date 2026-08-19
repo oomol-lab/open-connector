@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TencentMapsActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -29,7 +29,7 @@ type TencentMapsResponsePayload = Record<string, unknown> & {
 
 type TencentMapsActionHandler = (input: Record<string, unknown>, runtime: RuntimeContext) => Promise<unknown>;
 
-export const tencentMapsActionHandlers: Record<TencentMapsActionName, TencentMapsActionHandler> = {
+export const tencentMapsActionHandlers: ProviderActionHandlers<"tencent_maps", TencentMapsActionHandler> = {
   geocode(input, runtime) {
     return executeGeocode(input, runtime);
   },
@@ -75,7 +75,7 @@ export const tencentMapsActionHandlers: Record<TencentMapsActionName, TencentMap
   distance_matrix(input, runtime) {
     return executeDistanceMatrix(input, runtime);
   },
-} satisfies Record<TencentMapsActionName, TencentMapsActionHandler>;
+};
 
 export async function validateTencentMapsCredential(context: RuntimeContext): Promise<{
   profile: { accountId: string; displayName: string };

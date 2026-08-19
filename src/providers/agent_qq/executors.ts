@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -16,7 +17,7 @@ const agentQQApiBaseUrl = "https://api.agent.qq.com";
 
 type AgentQQActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const agentQQActionHandlers: Record<string, AgentQQActionHandler> = {
+const agentQQActionHandlers: ProviderActionHandlers<"agent_qq", AgentQQActionHandler> = {
   list_aliases(_input, context) {
     return agentQQRequest(context, { path: "/v1/me", mode: "execute" });
   },

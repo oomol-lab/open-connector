@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ type ProductboardQueryValue = string | number | boolean | readonly string[] | un
 
 type ProductboardActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const productboardActionHandlers: Record<string, ProductboardActionHandler> = {
+export const productboardActionHandlers: ProviderActionHandlers<"productboard", ProductboardActionHandler> = {
   list_entity_configurations: (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
     listPayload(
       { path: "/entities/configurations", query: { "type[]": readOptionalStringArray(input.types) } },

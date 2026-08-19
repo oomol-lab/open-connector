@@ -1,5 +1,10 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type {
+  ProviderActionHandlers,
+  ProviderActionSources,
+  ProviderFetch,
+  ProviderRuntimeHandler,
+} from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -9,7 +14,7 @@ import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export interface WandbMcpContext {
   endpoint: URL;
@@ -24,7 +29,7 @@ type WandbMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 const defaultEndpoint = "https://mcp.withwandb.com/mcp";
 const requestTimeoutMs = 60_000;
 
-export const wandbMcpTools: Record<string, string> = {
+export const wandbMcpTools: ProviderActionSources<"wandb", string> = {
   query_weave_traces: "query_weave_traces_tool",
   count_weave_traces: "count_weave_traces_tool",
   resolve_trace_roots: "resolve_trace_roots_tool",
@@ -49,15 +54,20 @@ export const wandbMcpTools: Record<string, string> = {
   probe_project: "probe_project_tool",
 };
 
-export const wandbMcpActionHandlers: Record<string, ProviderRuntimeHandler<WandbMcpContext>> = {};
-for (const [actionName, toolName] of Object.entries(wandbMcpTools)) {
-  wandbMcpActionHandlers[actionName] = async (input: Record<string, unknown>, context: WandbMcpContext) => {
-    if (context.availableActions && !context.availableActions.has(actionName)) {
-      throw new ProviderRequestError(400, `W&B MCP action ${actionName} is not available for this connection`);
-    }
-    return callWandbMcpTool(context, toolName, input);
-  };
-}
+export const wandbMcpActionHandlers: ProviderActionHandlers<
+  "wandb",
+  ProviderRuntimeHandler<WandbMcpContext>
+> = mapProviderActionSources(
+  "wandb",
+  wandbMcpTools,
+  (actionName, toolName): ProviderRuntimeHandler<WandbMcpContext> =>
+    async (input, context) => {
+      if (context.availableActions && !context.availableActions.has(actionName)) {
+        throw new ProviderRequestError(400, `W&B MCP action ${actionName} is not available for this connection`);
+      }
+      return callWandbMcpTool(context, toolName, input);
+    },
+);
 
 export function createWandbMcpContext(
   apiKey: string,

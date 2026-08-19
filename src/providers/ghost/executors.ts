@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { GhostActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -32,7 +32,7 @@ interface GhostActionContext {
 
 type GhostActionHandler = (input: Record<string, unknown>, context: GhostActionContext) => Promise<unknown>;
 
-export const ghostActionHandlers: Record<GhostActionName, GhostActionHandler> = {
+export const ghostActionHandlers: ProviderActionHandlers<"ghost", GhostActionHandler> = {
   list_posts(input, context) {
     return browseGhostCollection(input, context, "posts");
   },

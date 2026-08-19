@@ -237,5 +237,3 @@ export const agentqlActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type AgentqlActionName = "query_data" | "get_usage" | "create_browser_session" | "list_session_usage";

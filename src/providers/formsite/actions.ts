@@ -301,12 +301,3 @@ export const formsiteActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FormsiteActionName =
-  | "list_forms"
-  | "get_form"
-  | "get_form_items"
-  | "get_form_results"
-  | "list_webhooks"
-  | "upsert_webhook"
-  | "delete_webhook";

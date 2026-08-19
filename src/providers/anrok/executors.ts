@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ const anrokDefaultRequestTimeoutMs = 30_000;
 type AnrokPhase = "validate" | "execute";
 type AnrokActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const anrokActionHandlers: Record<string, AnrokActionHandler> = {
+export const anrokActionHandlers: ProviderActionHandlers<"anrok", AnrokActionHandler> = {
   async list_customers(input, context) {
     return requestAnrokJson({
       context,

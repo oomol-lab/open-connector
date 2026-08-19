@@ -55,8 +55,6 @@ const checkEmailOutputSchema = s.object(
   },
 );
 
-export type MailboxlayerActionName = "check_email";
-
 export const mailboxlayerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "check_email",

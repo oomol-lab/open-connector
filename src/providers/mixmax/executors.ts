@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -41,7 +42,7 @@ interface MixmaxRequestOptions {
   body?: unknown;
 }
 
-export const mixmaxActionHandlers: Record<string, MixmaxActionHandler> = {
+export const mixmaxActionHandlers: ProviderActionHandlers<"mixmax", MixmaxActionHandler> = {
   list_sequences(input, context) {
     if (input.next !== undefined && input.previous !== undefined) {
       throw new ProviderRequestError(400, "Use either next or previous, not both.");

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { BitriseActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ interface BitriseRequestInput {
   signal?: AbortSignal;
 }
 
-export const bitriseActionHandlers: Record<BitriseActionName, BitriseActionHandler> = {
+export const bitriseActionHandlers: ProviderActionHandlers<"bitrise", BitriseActionHandler> = {
   list_apps(input, context) {
     return listApps(input, context);
   },

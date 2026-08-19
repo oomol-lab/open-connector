@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { InterzoidActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface InterzoidRequestInput {
   phase: InterzoidPhase;
 }
 
-export const interzoidActionHandlers: Record<InterzoidActionName, InterzoidActionHandler> = {
+export const interzoidActionHandlers: ProviderActionHandlers<"interzoid", InterzoidActionHandler> = {
   async get_company_match_key(input, context) {
     const payload = await requestInterzoidJson(
       {

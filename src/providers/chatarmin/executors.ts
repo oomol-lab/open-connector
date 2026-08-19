@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ChatarminActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -21,7 +21,7 @@ type ChatarminMethod = "GET" | "POST" | "PUT" | "DELETE";
 type ChatarminContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ChatarminActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const chatarminActionHandlers: Record<ChatarminActionName, ChatarminActionHandler> = {
+export const chatarminActionHandlers: ProviderActionHandlers<"chatarmin", ChatarminActionHandler> = {
   list_contacts(input, context) {
     return listChatarminRecords("/contacts", input, context);
   },

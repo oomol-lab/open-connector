@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -45,7 +46,7 @@ interface ActivecampaignRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const activecampaignActionHandlers: Record<string, ActivecampaignActionHandler> = {
+export const activecampaignActionHandlers: ProviderActionHandlers<"activecampaign", ActivecampaignActionHandler> = {
   get_current_user(input, context) {
     return getCurrentUser(input, context);
   },

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { RingbaActionName } from "./actions.ts";
 
@@ -20,7 +21,7 @@ const handler =
     const path = buildPath(name, input, context);
     return requestJson(path, context.apiKey, context.fetcher, "execute");
   };
-export const ringbaActionHandlers: Record<string, ProviderRuntimeHandler<RingbaContext>> = {
+export const ringbaActionHandlers: ProviderActionHandlers<"ringba", ProviderRuntimeHandler<RingbaContext>> = {
   get_account: handler("get_account"),
   list_campaigns: handler("list_campaigns"),
   get_campaign: handler("get_campaign"),

@@ -84,5 +84,3 @@ export const ffhubActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FfhubActionName = "create_ffmpeg_task" | "get_ffmpeg_task" | "list_ffmpeg_tasks";

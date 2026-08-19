@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -45,6 +46,19 @@ async function request(
     );
   return payload;
 }
+const handlers: ProviderActionHandlers<"zenventory", ProviderRuntimeHandler<Context>> = {
+  list_items: (input, context) => request(input, context, "GET", "items", true),
+  get_item: (input, context) => {
+    const { id, ...query } = input;
+    return request(query, context, "GET", `items/${id}`, true);
+  },
+  create_item: (input, context) => request(input, context, "POST", "items"),
+  update_item: (input, context) => {
+    const { id, ...body } = input;
+    return request(body, context, "PUT", `items/${id}`);
+  },
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
   service: "zenventory",
   skipDnsValidation: true,
@@ -58,18 +72,7 @@ export const executors: import("../../core/types.ts").ProviderExecutors = define
       signal: context.signal,
     };
   },
-  handlers: {
-    list_items: (input, context) => request(input, context, "GET", "items", true),
-    get_item: (input, context) => {
-      const { id, ...query } = input;
-      return request(query, context, "GET", `items/${id}`, true);
-    },
-    create_item: (input, context) => request(input, context, "POST", "items"),
-    update_item: (input, context) => {
-      const { id, ...body } = input;
-      return request(body, context, "PUT", `items/${id}`);
-    },
-  },
+  handlers,
 });
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "zenventory",

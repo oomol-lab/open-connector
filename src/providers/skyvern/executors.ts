@@ -1,11 +1,15 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { executeSkyvernAction, validateSkyvernCredential } from "./runtime.ts";
 
 const service = "skyvern";
-const handlers: Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>> = {
+const handlers: ProviderActionHandlers<
+  "skyvern",
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
+> = {
   run_task: (input, context) => executeSkyvernAction("run_task", input, context.apiKey, context.fetcher),
   get_run: (input, context) => executeSkyvernAction("get_run", input, context.apiKey, context.fetcher),
   list_runs: (input, context) => executeSkyvernAction("list_runs", input, context.apiKey, context.fetcher),

@@ -4,6 +4,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -37,7 +38,7 @@ interface AppdragResponse {
 
 type AppdragActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const appdragActionHandlers: Record<string, AppdragActionHandler> = {
+export const appdragActionHandlers: ProviderActionHandlers<"appdrag", AppdragActionHandler> = {
   execute_function(input, context) {
     return executeFunction(input, context);
   },

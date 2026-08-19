@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { IqairAirvisualActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,8 +10,8 @@ export const iqairAirvisualApiBaseUrl = "https://api.airvisual.com/v2";
 type IqairAirvisualPhase = "validate" | "execute";
 type IqairAirvisualQueryValue = string | number | undefined;
 
-export const iqairAirvisualActionHandlers: Record<
-  IqairAirvisualActionName,
+export const iqairAirvisualActionHandlers: ProviderActionHandlers<
+  "iqair_airvisual",
   ProviderRuntimeHandler<ApiKeyProviderContext>
 > = {
   list_supported_countries(_input, context) {

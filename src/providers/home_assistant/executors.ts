@@ -1,8 +1,12 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { HomeAssistantActionContext } from "./runtime.ts";
+import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  combineProviderActionHandlers,
+  defineProviderExecutors,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 import { homeAssistantConfigActionHandlers } from "./runtime-config.ts";
 import { homeAssistantWebSocketActionHandlers } from "./runtime-ws.ts";
 import {
@@ -15,11 +19,12 @@ const service = "home_assistant";
 
 export const executors: ProviderExecutors = defineProviderExecutors<HomeAssistantActionContext>({
   service,
-  handlers: {
-    ...homeAssistantActionHandlers,
-    ...homeAssistantConfigActionHandlers,
-    ...homeAssistantWebSocketActionHandlers,
-  },
+  handlers: combineProviderActionHandlers<"home_assistant", HomeAssistantActionHandler>(
+    service,
+    homeAssistantActionHandlers,
+    homeAssistantConfigActionHandlers,
+    homeAssistantWebSocketActionHandlers,
+  ),
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<HomeAssistantActionContext> {
     const credential = await requireApiKeyCredential(context, service);

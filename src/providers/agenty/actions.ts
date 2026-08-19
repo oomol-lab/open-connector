@@ -598,36 +598,3 @@ export const agentyActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type AgentyActionName =
-  | "get_page_content"
-  | "extract_structured_data"
-  | "capture_screenshot"
-  | "convert_url_to_pdf"
-  | "get_redirects"
-  | "list_agents"
-  | "get_agent"
-  | "create_agent"
-  | "update_agent"
-  | "copy_agent"
-  | "delete_agent"
-  | "get_agent_templates"
-  | "get_agent_inputs"
-  | "update_agent_inputs"
-  | "create_list"
-  | "get_list"
-  | "add_list_rows"
-  | "get_list_row"
-  | "delete_list_row"
-  | "delete_list_rows"
-  | "clear_list_rows"
-  | "download_list_rows"
-  | "start_job"
-  | "get_job"
-  | "list_jobs"
-  | "stop_job"
-  | "get_job_logs"
-  | "get_job_result"
-  | "download_job_result"
-  | "list_job_files"
-  | "download_job_file";

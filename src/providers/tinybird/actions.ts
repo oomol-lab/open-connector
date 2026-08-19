@@ -115,5 +115,3 @@ export const tinybirdActions: ActionDefinition[] = [
     outputSchema: getDataSourceOutputSchema,
   }),
 ];
-
-export type TinybirdActionName = "run_sql_query" | "run_pipe_endpoint" | "list_data_sources" | "get_data_source";

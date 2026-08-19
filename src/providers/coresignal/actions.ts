@@ -112,5 +112,3 @@ export const coresignalActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type CoresignalActionName = "search_base_companies" | "preview_base_companies" | "collect_base_company";

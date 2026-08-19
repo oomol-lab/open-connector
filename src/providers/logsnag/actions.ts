@@ -76,8 +76,6 @@ const mutateInsightInputSchema = s.object(
   { optional: ["icon"] },
 );
 
-export type LogsnagActionName = "publish_event" | "identify_user" | "publish_insight" | "mutate_insight";
-
 export const logsnagActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "publish_event",

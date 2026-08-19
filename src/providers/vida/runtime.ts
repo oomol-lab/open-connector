@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { VidaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -24,7 +25,7 @@ export const vidaDefaultRequestTimeoutMs = 30_000;
 type VidaPhase = "validate" | "execute";
 type VidaActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch, apiKey: string) => Promise<unknown>;
 
-export const vidaActionHandlers: Record<VidaActionName, VidaActionHandler> = {
+export const vidaActionHandlers: ProviderActionHandlers<"vida", VidaActionHandler> = {
   get_account(input, fetcher, apiKey) {
     return requestVidaJson({
       path: "/api/v2/account",
@@ -79,7 +80,7 @@ export const vidaActionHandlers: Record<VidaActionName, VidaActionHandler> = {
       phase: "execute",
     });
   },
-} satisfies Record<VidaActionName, VidaActionHandler>;
+};
 
 export async function validateVidaCredential(
   input: Record<string, string>,

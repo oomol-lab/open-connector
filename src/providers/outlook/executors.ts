@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, requiredRecord } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ type OutlookErrorPayload = {
   message?: unknown;
 };
 
-export const outlookActionHandlers: Record<string, OutlookActionHandler> = {
+export const outlookActionHandlers: ProviderActionHandlers<"outlook", OutlookActionHandler> = {
   get_profile(_input, deps) {
     return getProfile(deps);
   },

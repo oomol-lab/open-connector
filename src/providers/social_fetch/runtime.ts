@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -10,8 +12,8 @@ interface SocialFetchContext {
   mode?: "validate" | "execute";
 }
 
-export const socialFetchActionHandlers: Record<
-  string,
+export const socialFetchActionHandlers: ProviderActionHandlers<
+  "social_fetch",
   (input: Record<string, unknown>, context: SocialFetchContext) => Promise<unknown>
 > = {
   async get_account(_input, context) {

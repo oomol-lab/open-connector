@@ -1,4 +1,5 @@
 import type { QueryValue } from "../../core/request.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { VercelActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -53,7 +54,7 @@ interface VercelTeamLookupOptions {
 
 type VercelActionInput = Record<string, unknown>;
 
-export const vercelActionHandlers: Record<VercelActionName, VercelActionHandler> = {
+export const vercelActionHandlers: ProviderActionHandlers<"vercel", VercelActionHandler> = {
   get_auth_user(input: VercelActionInput, context: VercelActionContext): Promise<unknown> {
     return vercelGetAuthUser(input, context);
   },

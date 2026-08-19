@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -99,7 +100,7 @@ class LingxingRequestError extends ProviderRequestError {
   }
 }
 
-export const lingxingActionHandlers: Record<string, ProviderRuntimeHandler<LingxingContext>> = {
+export const lingxingActionHandlers: ProviderActionHandlers<"lingxing", ProviderRuntimeHandler<LingxingContext>> = {
   list_tools(_input, context) {
     return listLingxingTools(context);
   },

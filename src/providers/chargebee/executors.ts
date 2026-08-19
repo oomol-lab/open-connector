@@ -6,6 +6,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ interface ChargebeeContext {
 
 type Handler = (input: Record<string, unknown>, context: ChargebeeContext) => Promise<unknown>;
 
-export const chargebeeActionHandlers: Record<string, Handler> = {
+export const chargebeeActionHandlers: ProviderActionHandlers<"chargebee", Handler> = {
   list_customers(input, context) {
     return listWrapped("customers", "customer", input, context);
   },

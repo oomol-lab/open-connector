@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ZipcodebaseActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ type ZipcodebaseQueryValue = string | number | undefined;
 type ZipcodebaseActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ZipcodebaseActionHandler = (input: Record<string, unknown>, context: ZipcodebaseActionContext) => Promise<unknown>;
 
-export const zipcodebaseActionHandlers: Record<ZipcodebaseActionName, ZipcodebaseActionHandler> = {
+export const zipcodebaseActionHandlers: ProviderActionHandlers<"zipcodebase", ZipcodebaseActionHandler> = {
   get_status(_input, context) {
     return requestZipcodebaseJson("/status", {}, context, "execute");
   },

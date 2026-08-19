@@ -108,13 +108,6 @@ const searchNewsSourcesInputSchema: JsonSchema = {
   anyOf: searchNewsSourcesOptionalFields.map((field) => ({ required: [field] })),
 };
 
-export type WorldNewsApiActionName =
-  | "search_news"
-  | "get_top_news"
-  | "retrieve_news"
-  | "search_news_sources"
-  | "get_geo_coordinates";
-
 export const worldNewsApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_news",

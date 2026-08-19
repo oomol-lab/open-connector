@@ -95,8 +95,6 @@ const deleteRecordOutputSchema = s.object("The normalized Knack record deletion 
   raw: s.nullable(s.looseObject("The raw Knack delete response payload when the API returned a JSON body.")),
 });
 
-export type KnackActionName = "list_records" | "get_record" | "create_record" | "update_record" | "delete_record";
-
 export const knackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_records",

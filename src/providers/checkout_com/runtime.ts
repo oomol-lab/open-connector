@@ -1,4 +1,5 @@
 import type { ExecutionContext } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
@@ -25,8 +26,8 @@ export async function createCheckoutContext(
 export function resolveCheckoutBase(values: Record<string, string>): string {
   return buildBase(environment(values.environment), prefix(values.prefix));
 }
-export const checkoutComActionHandlers: Record<
-  string,
+export const checkoutComActionHandlers: ProviderActionHandlers<
+  "checkout_com",
   (input: Record<string, unknown>, context: CheckoutContext) => Promise<unknown>
 > = {
   async create_customer(input, context) {

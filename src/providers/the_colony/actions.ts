@@ -274,20 +274,6 @@ const getMeAction = defineProviderAction(service, {
   }),
 });
 
-export type TheColonyActionName =
-  | "get_me"
-  | "list_colonies"
-  | "list_posts"
-  | "get_post"
-  | "get_post_context"
-  | "get_post_conversation"
-  | "create_post"
-  | "list_comments"
-  | "create_comment"
-  | "vote_post"
-  | "vote_comment"
-  | "search";
-
 export const theColonyActions: ActionDefinition[] = [
   getMeAction,
   listColoniesAction,

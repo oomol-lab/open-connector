@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LumaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -20,7 +20,7 @@ const lumaApiBaseUrl = "https://public-api.luma.com";
 
 type LumaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lumaActionHandlers: Record<LumaActionName, LumaActionHandler> = {
+export const lumaActionHandlers: ProviderActionHandlers<"luma", LumaActionHandler> = {
   async get_self(_input, context) {
     return {
       user: asRecord(await requestLuma(context, lumaUrl("/v1/users/get-self"), "execute"), "Luma user response"),

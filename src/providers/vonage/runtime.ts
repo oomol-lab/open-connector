@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -35,7 +36,7 @@ interface VonageRequestInput {
 
 type VonageHandler = (input: Record<string, unknown>, context: VonageContext) => Promise<unknown>;
 
-export const vonageActionHandlers: Record<string, VonageHandler> = {
+export const vonageActionHandlers: ProviderActionHandlers<"vonage", VonageHandler> = {
   async get_balance(_input, context) {
     return normalizeBalance(await requestVonage({ path: "/account/get-balance", context, phase: "execute" }));
   },

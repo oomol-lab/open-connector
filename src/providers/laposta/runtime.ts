@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { LapostaActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -20,7 +20,7 @@ export const lapostaApiBaseUrl = "https://api.laposta.nl";
 
 const lapostaDefaultRequestTimeoutMs = 30_000;
 
-export const lapostaActionHandlers: Record<LapostaActionName, LapostaActionHandler> = {
+export const lapostaActionHandlers: ProviderActionHandlers<"laposta", LapostaActionHandler> = {
   list_lists(_input, context) {
     return listResources("list", context);
   },

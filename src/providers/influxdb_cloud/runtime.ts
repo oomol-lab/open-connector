@@ -1,4 +1,4 @@
-import type { InfluxdbCloudActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -27,7 +27,7 @@ export interface InfluxdbCloudActionContext {
   signal?: AbortSignal;
 }
 
-export const influxdbCloudActionHandlers: Record<InfluxdbCloudActionName, InfluxdbCloudActionHandler> = {
+export const influxdbCloudActionHandlers: ProviderActionHandlers<"influxdb_cloud", InfluxdbCloudActionHandler> = {
   list_buckets(input, context) {
     return listBuckets(input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -18,7 +19,10 @@ interface MoorchehRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const moorchehActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const moorchehActionHandlers: ProviderActionHandlers<
+  "moorcheh",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   create_text_namespace(input, context) {
     return requestMoorchehJson(
       {

@@ -135,5 +135,3 @@ export const craftmypdfActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type CraftmypdfActionName = "get_account_info" | "list_templates" | "get_template" | "create_pdf";

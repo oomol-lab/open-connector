@@ -91,8 +91,6 @@ const freeEmailOutputSchema = s.object(
   { required: ["email_address", "is_free", "credits_available"] },
 );
 
-export type MailboxValidatorActionName = "validate_email" | "check_disposable_email" | "check_free_email";
-
 export const mailboxValidatorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_email",

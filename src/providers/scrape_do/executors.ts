@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ScrapeDoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -21,7 +21,7 @@ type ScrapeDoPhase = "validate" | "execute";
 type ScrapeDoQueryValue = string | number | boolean | undefined;
 type ScrapeDoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const scrapeDoActionHandlers: Record<ScrapeDoActionName, ScrapeDoActionHandler> = {
+export const scrapeDoActionHandlers: ProviderActionHandlers<"scrape_do", ScrapeDoActionHandler> = {
   fetch_html(input, context) {
     return requestScrapeDoContent(input, context, {
       returnJSON: undefined,

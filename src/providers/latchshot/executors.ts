@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderTransitFile } from "../provider-runtime.ts";
 
 import {
@@ -28,7 +29,7 @@ const latchshotJsonMaxBytes = 64 * 1024;
 type LatchshotActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type LatchshotRequestPhase = "validate" | "execute";
 
-export const latchshotActionHandlers: Record<string, LatchshotActionHandler> = {
+export const latchshotActionHandlers: ProviderActionHandlers<"latchshot", LatchshotActionHandler> = {
   capture_page(input, context) {
     return captureLatchshotPage(input, context);
   },

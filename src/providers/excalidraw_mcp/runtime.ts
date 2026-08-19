@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -32,7 +33,7 @@ type ExcalidrawMcpToolResult = {
 const defaultEndpoint = "https://mcp.excalidraw.com";
 const requestTimeoutMs = 30_000;
 
-export const excalidrawMcpActionHandlers: Record<string, ExcalidrawMcpActionHandler> = {
+export const excalidrawMcpActionHandlers: ProviderActionHandlers<"excalidraw_mcp", ExcalidrawMcpActionHandler> = {
   read_me(_input, context) {
     return callExcalidrawMcpTool(context, "read_me", {});
   },

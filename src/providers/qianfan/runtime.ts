@@ -1,11 +1,12 @@
 import type { CredentialValidationResult, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { QianfanActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  mapProviderActionSources,
   providerUserAgent,
   ProviderRequestError,
   readTransitFileInput,
@@ -44,7 +45,7 @@ interface QianfanRequestInput {
   mode?: "validate" | "execute";
 }
 
-export const qianfanActionHandlers: Record<QianfanActionName, QianfanActionHandler> = {
+export const qianfanActionHandlers: ProviderActionHandlers<"qianfan", QianfanActionHandler> = {
   list_models(input, fetcher) {
     return qianfanListModels(input, fetcher);
   },
@@ -122,17 +123,19 @@ export const qianfanActionHandlers: Record<QianfanActionName, QianfanActionHandl
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
+const qianfanExecutorHandlers: ProviderActionHandlers<
   "qianfan",
-  Object.fromEntries(
-    Object.entries(qianfanActionHandlers).map(([name, handler]) => [
-      name,
-      (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
-        handler({ apiKey: context.apiKey, input, transitFiles: context.transitFiles }, context.fetcher),
-    ]),
-  ),
-  { skipDnsValidation: true },
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = mapProviderActionSources<"qianfan", typeof qianfanActionHandlers, ProviderRuntimeHandler<ApiKeyProviderContext>>(
+  "qianfan",
+  qianfanActionHandlers,
+  (_name, handler) => (input, context) =>
+    handler({ apiKey: context.apiKey, input, transitFiles: context.transitFiles }, context.fetcher),
 );
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("qianfan", qianfanExecutorHandlers, {
+  skipDnsValidation: true,
+});
 
 export async function validateQianfanCredential(
   input: Record<string, string>,

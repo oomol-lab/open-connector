@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { nullableString, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, dopplerRequestWithResponse, readObject } from "./runtime.shared.ts";
@@ -12,18 +14,7 @@ type DopplerSecretActionHandler = (
   context: DopplerSecretActionContext,
 ) => Promise<unknown>;
 
-export const dopplerSecretActionHandlers: Record<
-  | "list_secrets"
-  | "list_secret_names"
-  | "get_secret"
-  | "download_secrets"
-  | "update_secrets"
-  | "delete_secret"
-  | "update_secret_note"
-  | "issue_dynamic_secret_lease"
-  | "revoke_dynamic_secret_lease",
-  DopplerSecretActionHandler
-> = {
+export const dopplerSecretActionHandlers: ProviderActionHandlerSubset<"doppler", DopplerSecretActionHandler> = {
   list_secrets(input, context) {
     return dopplerListSecrets(input, context.accessToken, context.fetcher);
   },

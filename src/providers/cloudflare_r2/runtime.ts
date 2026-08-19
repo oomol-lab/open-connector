@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CloudflareR2ActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -47,7 +47,10 @@ interface CloudflareR2Account {
 
 export const cloudflareR2ApiBaseUrl = "https://api.cloudflare.com/client/v4";
 
-export const cloudflareR2ActionHandlers: Record<CloudflareR2ActionName, ProviderRuntimeHandler<CloudflareR2Context>> = {
+export const cloudflareR2ActionHandlers: ProviderActionHandlers<
+  "cloudflare_r2",
+  ProviderRuntimeHandler<CloudflareR2Context>
+> = {
   list_accounts(input, context) {
     return listAccounts(input, context);
   },

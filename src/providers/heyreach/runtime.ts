@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { HeyreachActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -24,7 +24,10 @@ interface HeyreachRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const heyreachActionHandlers: Record<HeyreachActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const heyreachActionHandlers: ProviderActionHandlers<
+  "heyreach",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_campaigns(input, context): Promise<unknown> {
     const payload = await requestHeyreachJson({
       path: "/campaign/GetAll",

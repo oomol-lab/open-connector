@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZendeskActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -54,7 +54,7 @@ interface ZendeskListPayload {
   [key: string]: unknown;
 }
 
-export const zendeskActionHandlers: Record<ZendeskActionName, ZendeskActionHandler> = {
+export const zendeskActionHandlers: ProviderActionHandlers<"zendesk", ZendeskActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestZendeskJson<{ user?: unknown }>({
       context,

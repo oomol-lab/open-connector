@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TeltelActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -55,7 +55,7 @@ interface TeltelSmsReportPayload {
   error_msg?: unknown;
 }
 
-export const teltelActionHandlers: Record<TeltelActionName, TeltelActionHandler> = {
+export const teltelActionHandlers: ProviderActionHandlers<"teltel", TeltelActionHandler> = {
   async get_account_balance(_input, context): Promise<unknown> {
     return getTeltelAccountBalance(context);
   },

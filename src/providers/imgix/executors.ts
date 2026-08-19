@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ImgixActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -23,7 +23,7 @@ interface ImgixRequestInput {
   phase: ImgixRequestPhase;
 }
 
-export const imgixActionHandlers: Record<ImgixActionName, ImgixActionHandler> = {
+export const imgixActionHandlers: ProviderActionHandlers<"imgix", ImgixActionHandler> = {
   list_sources(input, context) {
     return executeListSources(input, context);
   },

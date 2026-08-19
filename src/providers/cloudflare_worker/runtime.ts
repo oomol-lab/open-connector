@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -47,7 +48,10 @@ const cloudflareApiBaseUrl = "https://api.cloudflare.com/client/v4";
 const defaultModuleName = "main.js";
 const defaultModuleContentType = "application/javascript+module";
 
-export const cloudflareWorkerActionHandlers: Record<string, ProviderRuntimeHandler<CloudflareWorkerContext>> = {
+export const cloudflareWorkerActionHandlers: ProviderActionHandlers<
+  "cloudflare_worker",
+  ProviderRuntimeHandler<CloudflareWorkerContext>
+> = {
   list_accounts(input, context) {
     return listAccounts(input, context);
   },

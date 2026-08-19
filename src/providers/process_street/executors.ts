@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ const baseUrl = "https://public-api.process.st/api/v1.1";
 
 type ProcessStreetActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const processStreetActionHandlers: Record<string, ProcessStreetActionHandler> = {
+export const processStreetActionHandlers: ProviderActionHandlers<"process_street", ProcessStreetActionHandler> = {
   list_workflows: async (input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> => {
     const response = await get(
       "/workflows",

@@ -98,20 +98,6 @@ const workflowInterfaceOutputSchema = s.object("Roboflow workflow interface desc
   raw: rawPayloadSchema,
 });
 
-export type RoboflowActionName =
-  | "list_projects"
-  | "get_project_versions"
-  | "get_version"
-  | "detect_objects"
-  | "run_workflow"
-  | "run_saved_workflow"
-  | "validate_workflow"
-  | "describe_workflow_interface"
-  | "get_workflow_schema"
-  | "get_execution_engine_versions"
-  | "get_server_info"
-  | "get_server_metrics";
-
 export const roboflowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",

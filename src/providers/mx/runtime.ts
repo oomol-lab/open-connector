@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -73,7 +74,7 @@ export async function validateMxCredential(
   };
 }
 
-export const mxActionHandlers: Record<string, ProviderRuntimeHandler<MxContext>> = {
+export const mxActionHandlers: ProviderActionHandlers<"mx", ProviderRuntimeHandler<MxContext>> = {
   list_users: listUsers,
   create_user(input, context) {
     return writeUser({

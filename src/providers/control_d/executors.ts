@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ControlDActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +25,7 @@ interface ControlDContext {
 
 type ControlDActionHandler = (input: Record<string, unknown>, context: ControlDContext) => Promise<unknown>;
 
-const actionHandlers: Record<ControlDActionName, ControlDActionHandler> = {
+const actionHandlers: ProviderActionHandlers<"control_d", ControlDActionHandler> = {
   get_current_ip(_input, context) {
     return getCurrentIp(context);
   },

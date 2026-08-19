@@ -58,14 +58,6 @@ const taskFilterSchema = {
   view: s.integer("The Label Studio view ID."),
 };
 
-export type LabelStudioActionName =
-  | "get_current_user"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "list_tasks"
-  | "create_task";
-
 export const labelStudioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

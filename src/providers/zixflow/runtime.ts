@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZixflowActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
@@ -27,7 +27,7 @@ interface ZixflowRequestOptions {
   body?: unknown;
 }
 
-export const zixflowActionHandlers: Record<ZixflowActionName, ZixflowActionHandler> = {
+export const zixflowActionHandlers: ProviderActionHandlers<"zixflow", ZixflowActionHandler> = {
   list_collections(_input, context) {
     return requestZixflowWrapped(context, "/collections", "execute", "collections");
   },

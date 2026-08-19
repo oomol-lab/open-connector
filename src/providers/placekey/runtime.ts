@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -19,7 +20,7 @@ const validationQuery = { latitude: 37.7371, longitude: -122.44283 };
 
 type PlacekeyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const placekeyActionHandlers: Record<string, PlacekeyActionHandler> = {
+export const placekeyActionHandlers: ProviderActionHandlers<"placekey", PlacekeyActionHandler> = {
   async get_placekey(input, context) {
     const payload = await requestPlacekey(context, placekeyLookupPath, {
       query: buildSingleLookupQuery(input, true),

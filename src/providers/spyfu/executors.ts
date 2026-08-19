@@ -1,15 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionSources } from "../provider-runtime.ts";
 import { spyfuActionHandlers, spyfuProxyBaseUrl, validateSpyfuCredential } from "./runtime.ts";
 
-const handlers = Object.fromEntries(
-  Object.entries(spyfuActionHandlers).map(([name, handler]) => [
-    name,
-    ((input, context) =>
-      handler(input, context.fetcher, context.apiKey)) satisfies ProviderRuntimeHandler<ApiKeyProviderContext>,
-  ]),
+const handlers = mapProviderActionSources(
+  "spyfu",
+  spyfuActionHandlers,
+  (_name, handler) => (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
+    handler(input, context.fetcher, context.apiKey),
 );
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("spyfu", handlers, {

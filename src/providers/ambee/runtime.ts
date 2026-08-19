@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -15,7 +16,7 @@ interface AmbeeActionContext {
 
 type AmbeeActionHandler = (input: Record<string, unknown>, context: AmbeeActionContext) => Promise<unknown>;
 
-export const ambeeActionHandlers: Record<string, AmbeeActionHandler> = {
+export const ambeeActionHandlers: ProviderActionHandlers<"ambee", AmbeeActionHandler> = {
   geocode_by_place(input, context) {
     return geocodeByPlace(input, context);
   },

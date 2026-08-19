@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KieAiActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const downloadUrlTtlSeconds = 20 * 60;
 
 type KieAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const kieAiActionHandlers: Record<KieAiActionName, KieAiActionHandler> = {
+export const kieAiActionHandlers: ProviderActionHandlers<"kie_ai", KieAiActionHandler> = {
   async get_account_credits(_input, context): Promise<unknown> {
     const payload = await requestKieAi(context, "/api/v1/chat/credit");
     return {

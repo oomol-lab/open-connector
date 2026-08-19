@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "kernel";
 
-export type KernelActionName =
-  | "list_browser_sessions"
-  | "create_browser_session"
-  | "get_browser_session"
-  | "update_browser_session"
-  | "delete_browser_session";
-
 const tagsSchema = s.record(
   "Kernel browser session tags keyed by tag name. Values are serialized as tags[key] query parameters for list filtering.",
   s.string("A Kernel tag value."),

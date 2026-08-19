@@ -6,15 +6,17 @@ import {
   credentialProviderProxyBaseUrl,
   defineProviderExecutors,
   defineProviderProxy,
+  mapProviderActionSources,
   ProviderRequestError,
 } from "../provider-runtime.ts";
 import { posthogActionHandlers, validatePosthogCredential } from "./runtime.ts";
 
 const service = "posthog";
 
-const posthogExecutorHandlers = Object.fromEntries(
-  Object.entries(posthogActionHandlers).map(([actionName, handler]) => [
-    actionName,
+const posthogExecutorHandlers = mapProviderActionSources(
+  service,
+  posthogActionHandlers,
+  (actionName, handler) =>
     async (input: Record<string, unknown>, context: PosthogRuntimeContext): Promise<unknown> =>
       handler(
         {
@@ -25,7 +27,6 @@ const posthogExecutorHandlers = Object.fromEntries(
         },
         context.fetcher,
       ),
-  ]),
 );
 
 export const executors: ProviderExecutors = defineProviderExecutors<PosthogRuntimeContext>({

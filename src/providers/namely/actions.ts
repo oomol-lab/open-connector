@@ -18,8 +18,6 @@ const listPaginationFields = {
   }),
 };
 
-export type NamelyActionName = "list_profiles" | "get_profile" | "get_current_profile" | "list_profile_fields";
-
 export const namelyActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_profiles",

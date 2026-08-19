@@ -1,6 +1,6 @@
 import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HeyyActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ const heyyRequestTimeoutMs = 15_000;
 type HeyyRequestPhase = "validate" | "execute";
 type HeyyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const heyyActionHandlers: Record<HeyyActionName, HeyyActionHandler> = {
+export const heyyActionHandlers: ProviderActionHandlers<"heyy", HeyyActionHandler> = {
   list_contacts: listContacts,
   get_contact: getContact,
   create_contact: createContact,

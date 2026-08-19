@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SendmatorActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ export interface SendmatorActionContext extends ApiKeyProviderContext {
   phase: SendmatorRequestPhase;
 }
 
-export const sendmatorActionHandlers: Record<SendmatorActionName, SendmatorActionHandler> = {
+export const sendmatorActionHandlers: ProviderActionHandlers<"sendmator", SendmatorActionHandler> = {
   list_contacts(input, context) {
     return executeListContacts(input, context);
   },

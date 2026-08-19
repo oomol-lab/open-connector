@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import {
@@ -78,7 +79,7 @@ interface StsXmlNode {
 
 type AwsStsActionHandler = (input: Record<string, unknown>, context: AwsStsContext) => Promise<unknown>;
 
-export const awsStsActionHandlers: Record<string, AwsStsActionHandler> = {
+export const awsStsActionHandlers: ProviderActionHandlers<"aws_sts", AwsStsActionHandler> = {
   assume_role(input, context) {
     return executeAssumeRole(input, context);
   },

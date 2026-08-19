@@ -36,8 +36,6 @@ const webFormFieldSchema = s.requiredObject("One visible field exposed by a Hell
   options: s.stringArray("The configured option values for dropdown-like fields."),
 });
 
-export type HelloleadsActionName = "get_web_form_definition" | "submit_web_form";
-
 export const helloleadsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_web_form_definition",

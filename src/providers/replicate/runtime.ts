@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ReplicateActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface ReplicateRequestOptions {
   mode?: "validate" | "execute";
 }
 
-export const replicateActionHandlers: Record<ReplicateActionName, ReplicateActionHandler> = {
+export const replicateActionHandlers: ProviderActionHandlers<"replicate", ReplicateActionHandler> = {
   get_account(_input, context) {
     return getAccount(context);
   },

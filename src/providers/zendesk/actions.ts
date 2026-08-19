@@ -82,19 +82,6 @@ const ticketMutationFields = {
   ),
 };
 
-export type ZendeskActionName =
-  | "get_current_user"
-  | "list_tickets"
-  | "get_ticket"
-  | "create_ticket"
-  | "update_ticket"
-  | "reply_to_ticket"
-  | "list_users"
-  | "get_user"
-  | "search_users"
-  | "list_organizations"
-  | "get_organization";
-
 export const zendeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

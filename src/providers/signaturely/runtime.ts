@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -12,7 +13,10 @@ import {
 
 export const signaturelyApiBaseUrl = "https://api.signaturely.com/api/v1/";
 const timeoutMs = 30_000;
-export const signaturelyActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const signaturelyActionHandlers: ProviderActionHandlers<
+  "signaturely",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_folders(input, context) {
     const query = new URLSearchParams({ page: String(input.page), limit: String(input.limit) });
     for (const key of ["folderId", "orderingKey", "orderingDirection"]) {

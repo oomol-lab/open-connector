@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TeamcampActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ type TeamcampQueryValue = boolean | number | string | null | undefined;
 type TeamcampRequestPhase = "validate" | "execute";
 type TeamcampActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const teamcampActionHandlers: Record<TeamcampActionName, TeamcampActionHandler> = {
+export const teamcampActionHandlers: ProviderActionHandlers<"teamcamp", TeamcampActionHandler> = {
   async list_projects(_input, context): Promise<unknown> {
     const projects = await requestTeamcampJson<Record<string, unknown>[]>({
       apiKey: context.apiKey,

@@ -375,17 +375,3 @@ export const twelveDataActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type TwelveDataActionName =
-  | "symbol_search"
-  | "price"
-  | "quote"
-  | "eod"
-  | "time_series"
-  | "stocks"
-  | "forex_pairs"
-  | "exchanges"
-  | "market_state"
-  | "earliest_timestamp"
-  | "profile"
-  | "market_movers";

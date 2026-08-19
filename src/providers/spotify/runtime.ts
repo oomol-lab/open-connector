@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { SpotifyActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -17,7 +17,7 @@ type SpotifyRequestOptions = {
   query?: Record<string, string | undefined>;
   body?: unknown;
 };
-export const spotifyActionHandlers: Record<SpotifyActionName, SpotifyActionHandler> = {
+export const spotifyActionHandlers: ProviderActionHandlers<"spotify", SpotifyActionHandler> = {
   get_current_user_profile(_input, deps) {
     return spotifyJsonRequest("me", deps);
   },

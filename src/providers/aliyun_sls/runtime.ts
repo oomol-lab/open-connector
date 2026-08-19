@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { AliyunSlsCredential } from "./resources.ts";
 
 import { Buffer } from "node:buffer";
@@ -83,7 +84,7 @@ interface AliyunSlsHistogram {
 
 type AliyunSlsActionHandler = (input: Record<string, unknown>, context: AliyunSlsActionContext) => Promise<unknown>;
 
-export const aliyunSlsActionHandlers: Record<string, AliyunSlsActionHandler> = {
+export const aliyunSlsActionHandlers: ProviderActionHandlers<"aliyun_sls", AliyunSlsActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },

@@ -163,5 +163,3 @@ export const confluenceActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ConfluenceActionName = "search_content" | "list_spaces" | "get_page" | "create_page" | "update_page";

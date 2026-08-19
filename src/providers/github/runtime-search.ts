@@ -1,9 +1,10 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { optionalInteger, optionalString } from "../../core/cast.ts";
 import { compactObject, githubRequestJson } from "./runtime-shared.ts";
 
-export const searchActionHandlers: Record<string, GitHubActionHandler> = {
+export const searchActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
   search_repositories(input, { accessToken, fetcher }) {
     return searchRepositories(input, accessToken, fetcher);
   },

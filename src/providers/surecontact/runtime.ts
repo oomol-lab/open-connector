@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SureContactActionName } from "./actions.ts";
 
 import {
   optionalBoolean,
@@ -40,7 +40,7 @@ interface SureContactListOptions {
   outputKey: string;
 }
 
-export const surecontactActionHandlers: Record<SureContactActionName, SureContactActionHandler> = {
+export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", SureContactActionHandler> = {
   list_contacts(input, context) {
     return requestSureContactList(context, {
       path: "/contacts",

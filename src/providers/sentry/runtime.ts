@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { SentryActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -15,7 +15,7 @@ type SentryJsonResponse = {
 
 type SentryActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
 
-export const sentryActionHandlers: Record<SentryActionName, SentryActionHandler> = {
+export const sentryActionHandlers: ProviderActionHandlers<"sentry", SentryActionHandler> = {
   list_organization_integrations(input, context) {
     return sentryListOrganizationIntegrations(input, context.accessToken, context.fetcher);
   },

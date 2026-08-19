@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IpregistryActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ type IpregistryRequestPhase = "validate" | "execute";
 type IpregistryActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type IpregistryActionHandler = (input: Record<string, unknown>, context: IpregistryActionContext) => Promise<unknown>;
 
-export const ipregistryActionHandlers: Record<IpregistryActionName, IpregistryActionHandler> = {
+export const ipregistryActionHandlers: ProviderActionHandlers<"ipregistry", IpregistryActionHandler> = {
   async lookup_ip(input, context) {
     const payload = await requestIpregistryJson(
       {

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
-import type { TicktickActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, objectArray, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
@@ -32,7 +32,7 @@ interface TicktickProjectData {
   columns: TicktickPayload[];
 }
 
-export const ticktickActionHandlers: Record<TicktickActionName, TicktickHandler> = {
+export const ticktickActionHandlers: ProviderActionHandlers<"ticktick", TicktickHandler> = {
   async get_user_project(_input, context) {
     return { projects: await fetchProjects(context, "execute") };
   },

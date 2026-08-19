@@ -5,8 +5,8 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FigmaActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -64,7 +64,7 @@ interface FigmaResponse {
 
 type FigmaActionHandler = ProviderRuntimeHandler<FigmaActionContext>;
 
-export const figmaActionHandlers: Record<FigmaActionName, FigmaActionHandler> = {
+export const figmaActionHandlers: ProviderActionHandlers<"figma", FigmaActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

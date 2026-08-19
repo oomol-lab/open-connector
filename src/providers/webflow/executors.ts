@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -18,7 +19,7 @@ const webflowApiBaseUrl = "https://api.webflow.com/v2";
 type WebflowRequestPhase = "validate" | "execute";
 type WebflowActionHandler = ProviderRuntimeHandler<BearerProviderContext>;
 
-const webflowActionHandlers: Record<string, WebflowActionHandler> = {
+const webflowActionHandlers: ProviderActionHandlers<"webflow", WebflowActionHandler> = {
   list_sites(_input, context): Promise<unknown> {
     return executeListSites(context);
   },

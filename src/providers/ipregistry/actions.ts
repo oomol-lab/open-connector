@@ -99,10 +99,3 @@ export const ipregistryActions: ActionDefinition[] = [
     outputSchema: batchOutputSchema,
   }),
 ];
-
-export type IpregistryActionName =
-  | "lookup_ip"
-  | "batch_lookup_ips"
-  | "parse_user_agents"
-  | "lookup_asn"
-  | "batch_lookup_asns";

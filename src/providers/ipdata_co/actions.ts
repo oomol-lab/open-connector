@@ -333,35 +333,3 @@ const ipdataCoActionDefinitions = [
 ];
 
 export const ipdataCoActions: ActionDefinition[] = ipdataCoActionDefinitions;
-
-export type IpdataCoActionName =
-  | "lookup_current_ip"
-  | "lookup_ip"
-  | "lookup_current_ip_eu"
-  | "lookup_ip_eu"
-  | "bulk_lookup"
-  | "lookup_basic_asn_by_ip"
-  | "lookup_advanced_asn"
-  | "get_company_by_ip"
-  | "get_threat_by_ip"
-  | "get_carrier_by_ip"
-  | "get_currency_by_ip"
-  | "get_time_zone_by_ip"
-  | "get_languages_by_ip"
-  | "get_ip"
-  | "get_is_eu"
-  | "get_city"
-  | "get_region"
-  | "get_region_code"
-  | "get_country_name"
-  | "get_country_code"
-  | "get_continent_name"
-  | "get_continent_code"
-  | "get_latitude"
-  | "get_longitude"
-  | "get_postal"
-  | "get_calling_code"
-  | "get_flag"
-  | "get_emoji_flag"
-  | "get_emoji_unicode"
-  | "get_count";

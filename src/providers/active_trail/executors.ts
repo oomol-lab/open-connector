@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ActiveTrailActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import {
@@ -20,7 +20,7 @@ type ActiveTrailMethod = "GET" | "POST" | "PUT" | "DELETE";
 type QueryValue = string | number | undefined;
 type ActiveTrailActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const activeTrailActionHandlers: Record<ActiveTrailActionName, ActiveTrailActionHandler> = {
+export const activeTrailActionHandlers: ProviderActionHandlers<"active_trail", ActiveTrailActionHandler> = {
   async get_account_balance(_input, context) {
     const payload = await requestActiveTrailJson({
       method: "GET",

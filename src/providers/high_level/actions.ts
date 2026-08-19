@@ -135,10 +135,3 @@ export const highLevelActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type HighLevelActionName =
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "search_contacts";

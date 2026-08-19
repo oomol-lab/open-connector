@@ -76,16 +76,6 @@ const paginatedCallSchema = s.object("A Retell AI paginated call response.", {
   raw: rawObjectSchema,
 });
 
-export type RetellAiActionName =
-  | "list_voices"
-  | "get_voice"
-  | "list_voice_agents"
-  | "get_voice_agent"
-  | "list_phone_numbers"
-  | "get_phone_number"
-  | "list_calls"
-  | "get_call";
-
 export const retellAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_voices",

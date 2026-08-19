@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -41,7 +42,7 @@ interface GptzeroJsonRequestOptions {
   phase: GptzeroRequestPhase;
 }
 
-export const gptzeroActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const gptzeroActionHandlers: ProviderActionHandlers<"gptzero", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async detect_text(input, context) {
     const payload = await requestGptzeroJson({
       apiKey: context.apiKey,

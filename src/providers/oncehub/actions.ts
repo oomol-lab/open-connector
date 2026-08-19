@@ -50,8 +50,6 @@ function paginatedInputSchema(description: string, properties: Record<string, Js
   );
 }
 
-export type OncehubActionName = "list_bookings" | "list_booking_pages" | "list_event_types";
-
 export const oncehubActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_bookings",

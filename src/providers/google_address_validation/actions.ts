@@ -257,5 +257,3 @@ export const googleAddressValidationActions: ActionDefinition[] = [
     outputSchema: s.object("Empty response returned after Google accepts the feedback.", {}),
   }),
 ];
-
-export type GoogleAddressValidationActionName = "validate_address" | "provide_validation_feedback";

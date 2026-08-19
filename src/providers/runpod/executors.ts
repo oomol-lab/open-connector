@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RunpodActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -33,7 +33,7 @@ interface RunpodRequestOptions {
   signal?: AbortSignal;
 }
 
-export const runpodActionHandlers: Record<RunpodActionName, RunpodActionHandler> = {
+export const runpodActionHandlers: ProviderActionHandlers<"runpod", RunpodActionHandler> = {
   list_pods(input, context) {
     return listPods(input, context);
   },

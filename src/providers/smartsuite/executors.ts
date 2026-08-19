@@ -1,6 +1,13 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  mapProviderActionHandlers,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
+import { smartsuiteActions } from "./actions.ts";
 import { executeSmartsuiteAction, validateSmartsuiteCredential } from "./runtime.ts";
 
 const service = "smartsuite";
@@ -11,22 +18,18 @@ interface SmartsuiteContext {
   fetcher: typeof fetch;
 }
 
-const handlers: Record<string, (input: Record<string, unknown>, context: SmartsuiteContext) => Promise<unknown>> = {};
-for (const name of [
-  "list_solutions",
-  "list_tables",
-  "list_records",
-  "get_record",
-  "create_record",
-  "update_record",
-  "delete_record",
-]) {
-  handlers[name] = (input, context) =>
+const handlers: ProviderActionHandlers<
+  "smartsuite",
+  (input: Record<string, unknown>, context: SmartsuiteContext) => Promise<unknown>
+> = mapProviderActionHandlers(
+  service,
+  smartsuiteActions,
+  (_action, name) => (input, context) =>
     executeSmartsuiteAction(
       { apiKey: context.apiKey, values: { workspaceId: context.workspaceId }, actionName: name, input },
       context.fetcher,
-    );
-}
+    ),
+);
 
 export const executors: ProviderExecutors = defineProviderExecutors<SmartsuiteContext>({
   service,

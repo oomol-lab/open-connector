@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -24,7 +25,7 @@ const assemblyaiApiBaseUrl = "https://api.assemblyai.com/v2";
 type AssemblyaiPhase = "validate" | "execute";
 type AssemblyaiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const assemblyaiActionHandlers: Record<string, AssemblyaiActionHandler> = {
+export const assemblyaiActionHandlers: ProviderActionHandlers<"assemblyai", AssemblyaiActionHandler> = {
   async create_transcript(input, context) {
     const payload = await requestAssemblyaiJson({
       path: "/transcript",

@@ -99,13 +99,6 @@ const candidateSchema = s.looseRequiredObject(
   },
 );
 
-export type HackerrankWorkActionName =
-  | "list_tests"
-  | "get_test"
-  | "list_test_candidates"
-  | "search_test_candidates"
-  | "get_test_candidate";
-
 export const hackerrankWorkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tests",

@@ -182,22 +182,6 @@ const couponSchema = s.object(
   },
 );
 
-export type PaperformActionName =
-  | "list_forms"
-  | "get_form"
-  | "list_form_fields"
-  | "get_form_field"
-  | "list_form_submissions"
-  | "get_form_submission"
-  | "get_submission"
-  | "list_form_partial_submissions"
-  | "get_form_partial_submission"
-  | "get_partial_submission"
-  | "list_form_products"
-  | "get_form_product"
-  | "list_form_coupons"
-  | "get_form_coupon";
-
 export const paperformActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",

@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { PkulawMcpServerId } from "./actions.ts";
 import type { PkulawContext } from "./runtime.ts";
@@ -28,7 +29,7 @@ import {
   validateServer,
 } from "./runtime.ts";
 
-const handlers: Record<string, ProviderRuntimeHandler<PkulawContext>> = {
+const handlers: ProviderActionHandlers<"pkulaw", ProviderRuntimeHandler<PkulawContext>> = {
   async list_tools(input, context) {
     const serverId = input.serverId as PkulawMcpServerId;
     const result = await discoverTools(serverId, context);

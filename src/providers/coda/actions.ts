@@ -198,19 +198,6 @@ const rowEditSchema = s.object(
   { required: ["cells"] },
 );
 
-export type CodaActionName =
-  | "get_current_user"
-  | "list_docs"
-  | "get_doc"
-  | "list_pages"
-  | "create_page"
-  | "list_tables"
-  | "get_table"
-  | "list_columns"
-  | "list_rows"
-  | "upsert_rows"
-  | "get_mutation_status";
-
 export const codaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

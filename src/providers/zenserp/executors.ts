@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZenserpActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ type ZenserpPhase = "validate" | "execute";
 type ZenserpQueryValue = string | number | boolean | undefined;
 type ZenserpActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const zenserpActionHandlers: Record<ZenserpActionName, ZenserpActionHandler> = {
+export const zenserpActionHandlers: ProviderActionHandlers<"zenserp", ZenserpActionHandler> = {
   search(input, context) {
     return requestZenserpSearch(buildZenserpSearchQuery(input, undefined), context, "execute");
   },

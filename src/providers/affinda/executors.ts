@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -32,7 +33,7 @@ interface AffindaActionContext {
 
 type AffindaActionHandler = (input: Record<string, unknown>, context: AffindaActionContext) => Promise<unknown>;
 
-export const affindaActionHandlers: Record<string, AffindaActionHandler> = {
+export const affindaActionHandlers: ProviderActionHandlers<"affinda", AffindaActionHandler> = {
   async list_organizations(_input, context) {
     const payload = await requestAffindaJson({
       path: affindaOrganizationsPath,

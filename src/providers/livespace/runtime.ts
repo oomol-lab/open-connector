@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -47,7 +48,7 @@ const invalidInputResultCodes = new Set([400, 420, 514, 515, 516, 550]);
 
 export const livespaceApiPathPrefix = "/api/public/json/";
 
-export const livespaceActionHandlers: Record<string, LivespaceActionHandler> = {
+export const livespaceActionHandlers: ProviderActionHandlers<"livespace", LivespaceActionHandler> = {
   get_current_user(_input, context) {
     return requestLivespaceApi(context, { methodPath: "Default/User_getInfo" });
   },

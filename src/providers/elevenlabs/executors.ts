@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ElevenlabsActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -33,7 +33,7 @@ type ElevenlabsRuntimeContext = ApiKeyProviderContext;
 
 type ElevenlabsActionHandler = (input: Record<string, unknown>, context: ElevenlabsRuntimeContext) => Promise<unknown>;
 
-export const elevenlabsActionHandlers: Record<ElevenlabsActionName, ElevenlabsActionHandler> = {
+export const elevenlabsActionHandlers: ProviderActionHandlers<"elevenlabs", ElevenlabsActionHandler> = {
   get_user_info(_input, context) {
     return getElevenlabsUserInfo(context);
   },

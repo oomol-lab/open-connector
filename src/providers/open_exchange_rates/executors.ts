@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OpenExchangeRatesActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,10 @@ type OpenExchangeRatesActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const openExchangeRatesActionHandlers: Record<OpenExchangeRatesActionName, OpenExchangeRatesActionHandler> = {
+export const openExchangeRatesActionHandlers: ProviderActionHandlers<
+  "open_exchange_rates",
+  OpenExchangeRatesActionHandler
+> = {
   get_currencies(_input, context) {
     return openExchangeRatesRequest({
       path: "/currencies.json",

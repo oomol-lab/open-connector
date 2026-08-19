@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PinataActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -32,7 +32,7 @@ interface PinataRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const pinataActionHandlers: Record<PinataActionName, PinataActionHandler> = {
+export const pinataActionHandlers: ProviderActionHandlers<"pinata", PinataActionHandler> = {
   list_files(input, context) {
     return listFiles(input, context);
   },

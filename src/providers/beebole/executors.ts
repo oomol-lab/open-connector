@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -32,7 +33,7 @@ interface BeeboleGraphqlRequestOptions {
   phase: BeeboleRequestPhase;
 }
 
-export const beeboleActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const beeboleActionHandlers: ProviderActionHandlers<"beebole", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   execute_graphql(input, context) {
     return requestBeeboleGraphql({
       apiKey: context.apiKey,

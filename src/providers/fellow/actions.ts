@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "fellow";
 
-export type FellowActionName =
-  | "get_current_user"
-  | "list_notes"
-  | "get_note"
-  | "list_action_items"
-  | "get_action_item"
-  | "mark_action_item_complete"
-  | "archive_action_item";
-
 const nullableNonEmptyString = (description: string) => s.nullable(s.nonEmptyString(description));
 
 const paginationSchema = s.object(

@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { europePmcGrantsApiBaseUrl, requestEuropePmcObject } from "./request.ts";
@@ -7,7 +9,7 @@ const defaultGrantResultType = "lite";
 
 type GrantActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch) => Promise<unknown>;
 
-export const europePmcGrantActionHandlers: Record<string, GrantActionHandler> = {
+export const europePmcGrantActionHandlers: ProviderActionHandlerSubset<"europe_pmc", GrantActionHandler> = {
   async search_grants(input: Record<string, unknown>, fetcher: typeof fetch) {
     const query = readRequiredString(input.query, "query");
     const resultType = readOptionalString(input.resultType) ?? defaultGrantResultType;

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BidsketchActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const bidsketchValidationPath = "/proposals/stats.json";
 type BidsketchPhase = "validate" | "execute";
 type BidsketchActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const bidsketchActionHandlers: Record<BidsketchActionName, BidsketchActionHandler> = {
+export const bidsketchActionHandlers: ProviderActionHandlers<"bidsketch", BidsketchActionHandler> = {
   async list_clients(input, context) {
     const payload = await requestBidsketchJson({
       path: "/clients.json",

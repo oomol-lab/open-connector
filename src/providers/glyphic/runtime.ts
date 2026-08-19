@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GlyphicActionName } from "./actions.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ type GlyphicRequestMode = "validate" | "execute";
 type GlyphicQueryValue = string | number | boolean | readonly string[] | null | undefined;
 type GlyphicActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const glyphicActionHandlers: Record<GlyphicActionName, GlyphicActionHandler> = {
+export const glyphicActionHandlers: ProviderActionHandlers<"glyphic", GlyphicActionHandler> = {
   async list_calls(input, context) {
     const payload = await requestGlyphicJson(
       {

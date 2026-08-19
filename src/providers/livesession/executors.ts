@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LivesessionActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,7 +14,7 @@ const livesessionCredentialHelpUrl = "https://livesession.dev/docs/api/authentic
 
 type LivesessionActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const livesessionActionHandlers: Record<LivesessionActionName, LivesessionActionHandler> = {
+export const livesessionActionHandlers: ProviderActionHandlers<"livesession", LivesessionActionHandler> = {
   list_sessions(input, context) {
     return listSessions(input, context);
   },

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -22,7 +23,7 @@ import {
 
 type PixellabObjectHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pixellabObjectActionHandlers: Record<string, PixellabObjectHandler> = {
+export const pixellabObjectActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabObjectHandler> = {
   async start_create_object_1_direction(input, context) {
     const styleImages = await encodeOptionalImages(input.styleImages, "styleImages", context);
     if (optionalInteger(input.size) !== undefined && styleImages !== undefined) {

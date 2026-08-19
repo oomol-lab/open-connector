@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { AmplitudeActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, requiredString } from "../../core/cast.ts";
@@ -39,7 +39,7 @@ interface AmplitudeQuery {
   [key: string]: string | number | undefined;
 }
 
-export const amplitudeActionHandlers: Record<AmplitudeActionName, AmplitudeActionHandler> = {
+export const amplitudeActionHandlers: ProviderActionHandlers<"amplitude", AmplitudeActionHandler> = {
   async list_events(_input, context) {
     const payload = await requestAmplitudeJson({
       ...resolveAmplitudeActionContext(_input, context),

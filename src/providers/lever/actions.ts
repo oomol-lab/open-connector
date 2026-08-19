@@ -101,14 +101,6 @@ const createNoteInputSchema = s.object("Input payload for creating a note on a L
   value: s.nonEmptyString("The note text to add to the opportunity."),
 });
 
-export type LeverActionName =
-  | "list_postings"
-  | "get_posting"
-  | "list_opportunities"
-  | "get_opportunity"
-  | "list_opportunity_notes"
-  | "create_opportunity_note";
-
 export const leverActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_postings",

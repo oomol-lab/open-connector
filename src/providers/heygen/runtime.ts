@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -32,7 +33,7 @@ interface HeygenRequestInput {
   signal?: AbortSignal;
 }
 
-export const heygenActionHandlers: Record<string, ProviderRuntimeHandler<HeygenActionContext>> = {
+export const heygenActionHandlers: ProviderActionHandlers<"heygen", ProviderRuntimeHandler<HeygenActionContext>> = {
   get_current_user(_input, context) {
     return heygenGetCurrentUser(context);
   },

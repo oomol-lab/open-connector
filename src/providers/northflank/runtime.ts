@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { NorthflankActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -23,7 +23,10 @@ interface NorthflankRequestInput {
   query?: Array<[string, QueryValue]>;
 }
 
-export const northflankActionHandlers: Record<NorthflankActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const northflankActionHandlers: ProviderActionHandlers<
+  "northflank",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_projects(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
     return executeListProjects(input, context);
   },

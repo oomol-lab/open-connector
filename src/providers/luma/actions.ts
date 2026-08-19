@@ -147,14 +147,6 @@ const listGuestsOutputSchema = s.object("Paginated Luma event guests response.",
   nextCursor: s.nullableString("Cursor to pass into the next request, when one is available."),
 });
 
-export type LumaActionName =
-  | "get_self"
-  | "get_calendar"
-  | "list_calendar_events"
-  | "get_event"
-  | "list_event_guests"
-  | "get_event_guest";
-
 export const lumaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_self",

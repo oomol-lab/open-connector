@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 import type { JsonSchemaType } from "@modelcontextprotocol/client";
@@ -55,7 +56,10 @@ const readOnlyTools = new Set([
 type Tool = Awaited<ReturnType<Client["listTools"]>>["tools"][number];
 type ToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
-export const helium10ActionHandlers: Record<string, ProviderRuntimeHandler<OAuthProviderContext>> = {
+export const helium10ActionHandlers: ProviderActionHandlers<
+  "helium10",
+  ProviderRuntimeHandler<OAuthProviderContext>
+> = {
   async list_tools(_input, context) {
     const tools = await listTools(context);
     return {

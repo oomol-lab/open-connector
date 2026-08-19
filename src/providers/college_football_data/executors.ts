@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CollegeFootballDataActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
@@ -23,8 +23,8 @@ type CollegeFootballDataActionHandler = (
   context: CollegeFootballDataContext,
 ) => Promise<unknown>;
 
-export const collegeFootballDataActionHandlers: Record<
-  CollegeFootballDataActionName,
+export const collegeFootballDataActionHandlers: ProviderActionHandlers<
+  "college_football_data",
   CollegeFootballDataActionHandler
 > = {
   async get_info(_input, context) {

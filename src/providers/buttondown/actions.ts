@@ -217,20 +217,6 @@ const updateTagInputSchema = s.object(
 const subscriberOutputSchema = s.actionOutput({ subscriber: subscriberSchema }, "A Buttondown subscriber result.");
 const tagOutputSchema = s.actionOutput({ tag: tagSchema }, "A Buttondown tag result.");
 
-export type ButtondownActionName =
-  | "get_account"
-  | "list_newsletters"
-  | "list_subscribers"
-  | "get_subscriber"
-  | "create_subscriber"
-  | "update_subscriber"
-  | "delete_subscriber"
-  | "list_tags"
-  | "create_tag"
-  | "get_tag"
-  | "update_tag"
-  | "delete_tag";
-
 export const buttondownActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

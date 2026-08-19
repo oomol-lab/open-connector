@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "crowdin";
 
-export type CrowdinActionName =
-  | "list_projects"
-  | "list_branches"
-  | "create_branch"
-  | "list_directories"
-  | "create_directory"
-  | "list_files"
-  | "upload_file";
-
 const paginationOutput = s.object(
   {
     offset: s.nonNegativeInteger("The current offset in the result set."),

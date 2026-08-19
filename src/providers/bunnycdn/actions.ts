@@ -68,8 +68,6 @@ const purgePullZoneCacheInputSchema = s.object(
   { required: ["pullZoneId"], optional: ["cacheTag"] },
 );
 
-export type BunnycdnActionName = "list_pull_zones" | "get_pull_zone" | "purge_pull_zone_cache";
-
 export const bunnycdnActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pull_zones",

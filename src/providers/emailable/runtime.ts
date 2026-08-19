@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EmailableActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ const emailableDefaultRequestTimeoutMs = 30_000;
 type EmailableRequestPhase = "validate" | "execute";
 type EmailableActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const emailableActionHandlers: Record<EmailableActionName, EmailableActionHandler> = {
+export const emailableActionHandlers: ProviderActionHandlers<"emailable", EmailableActionHandler> = {
   get_account_info(_input, context) {
     return requestEmailableAccountInfo({
       apiKey: context.apiKey,

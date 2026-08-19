@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { RagieActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ type RagieActionContext = {
 
 type RagieActionHandler = (input: Record<string, unknown>, context: RagieActionContext) => Promise<unknown>;
 
-export const ragieActionHandlers: Record<RagieActionName, RagieActionHandler> = {
+export const ragieActionHandlers: ProviderActionHandlers<"ragie", RagieActionHandler> = {
   retrieve: (input, context) => ragieRetrieve(input, context),
   list_documents: (input, context) => ragieListDocuments(input, context),
   get_document: (input, context) => ragieGetDocument(input, context),

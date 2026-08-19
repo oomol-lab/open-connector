@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { GoogleAdsActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -68,7 +68,7 @@ interface GoogleAdsRuntimeContext {
 type SearchRow = Record<string, unknown>;
 type GoogleAdsActionHandler = (input: Record<string, unknown>, context: GoogleAdsRuntimeContext) => Promise<unknown>;
 
-export const googleAdsActionHandlers: Record<GoogleAdsActionName, GoogleAdsActionHandler> = {
+export const googleAdsActionHandlers: ProviderActionHandlers<"googleads", GoogleAdsActionHandler> = {
   get_campaign_by_id: getCampaignById,
   get_campaign_by_name: getCampaignByName,
   list_accessible_customers: listAccessibleCustomers,

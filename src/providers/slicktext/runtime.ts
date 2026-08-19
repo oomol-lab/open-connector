@@ -1,11 +1,12 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 export const slicktextApiBaseUrl = "https://dev.slicktext.com/v1";
 
-export const slicktextActionHandlers: Record<
-  string,
+export const slicktextActionHandlers: ProviderActionHandlers<
+  "slicktext",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   get_brand(_input, context) {
