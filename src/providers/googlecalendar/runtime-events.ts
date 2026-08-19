@@ -605,6 +605,8 @@ function buildEventWriteQuery(event: Record<string, unknown>, sendUpdates: strin
   });
 }
 
+function pickSendUpdates(input: Record<string, unknown>, fallback: string): string;
+function pickSendUpdates(input: Record<string, unknown>, fallback?: string): string | undefined;
 function pickSendUpdates(input: Record<string, unknown>, fallback?: string): string | undefined {
   if (!Object.hasOwn(input, "sendUpdates")) {
     return fallback;

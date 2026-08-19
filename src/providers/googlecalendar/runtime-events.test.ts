@@ -29,7 +29,6 @@ const existingEvent = {
   ],
 };
 
-
 interface CapturedRequest {
   method: string;
   url: URL;
