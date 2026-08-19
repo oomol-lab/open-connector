@@ -96,7 +96,7 @@ We follow a coordinated disclosure process:
 - Vulnerabilities in third-party providers or their APIs. Report those to the provider.
 - Insecure **self-hosted configuration** that this project documents how to avoid — for example
   running without `OOMOL_CONNECT_ENCRYPTION_KEY`, running without `OOMOL_CONNECT_ADMIN_TOKEN`,
-  binding to `0.0.0.0` on an untrusted network, or exposing the SQLite/D1/R2 data store. See
+  binding to `0.0.0.0` on an untrusted network, or exposing the SQLite/PostgreSQL/D1/R2 data store. See
   [Hardening your deployment](#hardening-your-deployment).
 - The hosted [OOMOL](https://oomol.com/) service and other OOMOL products. These are maintained
   separately from this repository and are not covered by this policy; report issues in them to
@@ -132,11 +132,13 @@ responsibility for securing their deployment. At minimum:
 - **Control network exposure.** The Node server binds `127.0.0.1` by default; the Docker image binds
   `0.0.0.0`. Only expose the gateway on a trusted network or behind an authenticated proxy, and never
   expose it publicly without admin and runtime authentication enabled.
-- **Protect the data store.** The SQLite database (local), D1 (Cloudflare), and R2 transit files
-  contain sensitive material even when encrypted. Restrict file permissions and access, and store
-  Cloudflare secrets with `wrangler secret put`. Idempotent Action responses are eligible for replay
-  for 24 hours, but expired records are removed opportunistically rather than by a physical-deletion
-  deadline.
+- **Protect the data store.** The SQLite or PostgreSQL database (Node), D1 (Cloudflare), and transit
+  files contain sensitive material even when encrypted. Restrict file, database, and bucket access;
+  use TLS verification for remote PostgreSQL; keep database URLs in a secret manager; and store
+  Cloudflare secrets with `wrangler secret put`. PostgreSQL migrations can use a separate DDL role,
+  while the application role only needs runtime-table CRUD and `runtime_migrations` read access.
+  Idempotent Action responses are eligible for replay for 24 hours, but expired records are removed
+  opportunistically rather than by a physical-deletion deadline.
 - **Reduce attack surface.** Use `OOMOL_CONNECT_ALLOWED_ACTIONS` / `OOMOL_CONNECT_BLOCKED_ACTIONS` to
   limit which Actions can run. Restrict provider proxies separately with
   `OOMOL_CONNECT_ALLOWED_PROXIES` / `OOMOL_CONNECT_BLOCKED_PROXIES`: `/v1/proxy/:service` can reach

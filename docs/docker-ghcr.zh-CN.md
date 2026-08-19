@@ -66,6 +66,21 @@ docker run -d \
 
 完整环境变量参考见 [configuration.md](configuration.md)，连接 provider 见 [credentials.md](credentials.md)。
 
+### PostgreSQL Migration
+
+使用 PostgreSQL 时，请在服务器首次启动前，以及启动包含待执行 migration 的新镜像版本前，显式运行镜像的
+`migrate` 命令。Migration 应使用即将部署的同一个镜像标签：
+
+```bash
+docker run --rm \
+  -e OOMOL_CONNECT_DATABASE_URL="postgresql://migration_user:password@db.example.com:5432/open_connector?sslmode=verify-full" \
+  ghcr.io/oomol-lab/open-connector:v1.0.0 \
+  migrate
+```
+
+该命令应用 migration 后便会退出，不会启动 HTTP 服务器。不给镜像传命令时仍然默认启动服务器；服务器只检查
+schema 是否就绪，不会执行 PostgreSQL DDL。
+
 ### Docker Compose
 
 仓库自带一个 [`docker-compose.yml`](../docker-compose.yml)，直接运行这个发布镜像。在仓库目录下，先 export
@@ -73,6 +88,12 @@ docker run -d \
 
 ```bash
 docker compose up
+```
+
+导出 `OOMOL_CONNECT_DATABASE_URL` 后，可以通过一次性 Compose 命令执行 PostgreSQL migration：
+
+```bash
+docker compose run --rm connector migrate
 ```
 
 想改为从源码构建而不是拉取：

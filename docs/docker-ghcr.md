@@ -70,6 +70,23 @@ docker run -d \
 See [configuration.md](configuration.md) for the full environment variable reference and
 [credentials.md](credentials.md) for connecting providers.
 
+### PostgreSQL Migrations
+
+When using PostgreSQL, run the image's explicit `migrate` command before the first server start and
+before starting a newer image that contains pending migrations. Use the same image tag that you
+will deploy:
+
+```bash
+docker run --rm \
+  -e OOMOL_CONNECT_DATABASE_URL="postgresql://migration_user:password@db.example.com:5432/open_connector?sslmode=verify-full" \
+  ghcr.io/oomol-lab/open-connector:v1.0.0 \
+  migrate
+```
+
+The command exits after applying migrations and does not start the HTTP server. Starting the image
+without a command still starts the server, which only checks schema readiness and never applies
+PostgreSQL DDL.
+
 ### Docker Compose
 
 The repository ships a [`docker-compose.yml`](../docker-compose.yml) that runs this published image.
@@ -77,6 +94,12 @@ From a checkout, export the secrets shown above and start it:
 
 ```bash
 docker compose up
+```
+
+With `OOMOL_CONNECT_DATABASE_URL` exported, run PostgreSQL migrations as a one-off Compose command:
+
+```bash
+docker compose run --rm connector migrate
 ```
 
 To build from source instead of pulling, add the build overlay:

@@ -2,38 +2,41 @@
 
 OpenConnector is configured with environment variables.
 
-| Variable                                 | Default                   | Purpose                                                                                             |
-| ---------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `PORT`                                   | `3000`                    | Local HTTP server port.                                                                             |
-| `HOST`                                   | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                                          |
-| `OOMOL_CONNECT_ORIGIN`                   | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                                         |
-| `OOMOL_CONNECT_DATA_DIR`                 | `./data`                  | Runtime database, local transit files, and Node upload staging. Docker uses `/app/data`.            |
-| `OOMOL_CONNECT_ENCRYPTION_KEY`           | unset                     | Encrypts credentials, OAuth config, pending OAuth state, and completed idempotent Action responses. |
-| `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`       | unset                     | New key used by `runtime:data rotate-key`.                                                          |
-| `OOMOL_CONNECT_ADMIN_TOKEN`              | unset                     | Requires bearer-token auth for local admin API, docs, and web console.                              |
-| `OOMOL_CONNECT_RUNTIME_TOKEN`            | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.                                  |
-| `OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH`     | unset                     | Enables connection-scoped OAuth apps for `*` or a comma-separated service list.                     |
-| `OOMOL_CONNECT_JWKS_URI`                 | unset                     | Node-only JWKS endpoint for validating runtime JWT access tokens.                                   |
-| `OOMOL_CONNECT_JWT_ISSUER`               | unset                     | Expected `iss` claim for runtime JWT access tokens.                                                 |
-| `OOMOL_CONNECT_JWT_AUDIENCE`             | unset                     | Expected API `aud` claim for runtime JWT access tokens.                                             |
-| `OOMOL_CONNECT_ALLOWED_ACTIONS`          | unset                     | Comma-separated executable action allowlist. Supports `service.*` and `*`.                          |
-| `OOMOL_CONNECT_BLOCKED_ACTIONS`          | unset                     | Comma-separated executable action denylist. Supports `service.*` and `*`.                           |
-| `OOMOL_CONNECT_ALLOWED_PROXIES`          | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.                           |
-| `OOMOL_CONNECT_BLOCKED_PROXIES`          | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.                            |
-| `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`    | `false`                   | Allow self-hosted provider connections to target private networks. See below.                       |
-| `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS`     | unset                     | Trusted hosts routed through a corporate VPN. See below.                                            |
-| `OOMOL_CONNECT_LOG_LEVEL`                | `info`                    | Pino log level for the local Node server.                                                           |
-| `OOMOL_CONNECT_TRANSIT_FILE_BACKEND`     | `local`                   | Node transit-file backend: `local` or `s3`.                                                         |
-| `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` | `86400`                   | Transit file lifetime before cleanup.                                                               |
-| `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`   | `104857600`               | Maximum transit file upload size.                                                                   |
-| `OOMOL_CONNECT_S3_BUCKET`                | unset                     | Bucket used when the Node transit-file backend is `s3`.                                             |
-| `OOMOL_CONNECT_S3_REGION`                | `us-east-1`               | S3 signing region. Use the value required by the storage service.                                   |
-| `OOMOL_CONNECT_S3_ENDPOINT`              | AWS S3                    | S3-compatible endpoint for MinIO, Cloudflare R2, Alibaba Cloud OSS, or another object store.        |
-| `OOMOL_CONNECT_S3_FORCE_PATH_STYLE`      | `false`                   | Use path-style S3 URLs. This is commonly required by local MinIO deployments.                       |
-| `OOMOL_CONNECT_S3_ACCESS_KEY_ID`         | SDK credential chain      | Explicit S3 access key ID. Configure it with the secret key, or omit both.                          |
-| `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`     | SDK credential chain      | Explicit S3 secret access key. Configure it with the access key ID, or omit both.                   |
-| `OOMOL_CONNECT_S3_SESSION_TOKEN`         | unset                     | Optional session token used with explicit S3 credentials.                                           |
-| `OOMOL_CONNECT_RUN_LIMIT`                | `5000`                    | Maximum number of recent action run audit records to retain.                                        |
+| Variable                                    | Default                   | Purpose                                                                                             |
+| ------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `PORT`                                      | `3000`                    | Local HTTP server port.                                                                             |
+| `HOST`                                      | `127.0.0.1`               | Bind address. Docker image sets `0.0.0.0`.                                                          |
+| `OOMOL_CONNECT_ORIGIN`                      | `http://localhost:<PORT>` | Public origin used for OAuth redirect URLs.                                                         |
+| `OOMOL_CONNECT_DATA_DIR`                    | `./data`                  | SQLite database, local transit files, and Node upload staging. Docker uses `/app/data`.             |
+| `OOMOL_CONNECT_DATABASE_URL`                | unset                     | PostgreSQL connection URL. When unset, the Node runtime uses SQLite under the data directory.       |
+| `OOMOL_CONNECT_DATABASE_POOL_MAX`           | `10`                      | Maximum PostgreSQL connections per Node runtime instance.                                           |
+| `OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS` | `10000`                   | PostgreSQL connection timeout in milliseconds.                                                      |
+| `OOMOL_CONNECT_ENCRYPTION_KEY`              | unset                     | Encrypts credentials, OAuth config, pending OAuth state, and completed idempotent Action responses. |
+| `OOMOL_CONNECT_NEW_ENCRYPTION_KEY`          | unset                     | New key used by `runtime:data rotate-key`.                                                          |
+| `OOMOL_CONNECT_ADMIN_TOKEN`                 | unset                     | Requires bearer-token auth for local admin API, docs, and web console.                              |
+| `OOMOL_CONNECT_RUNTIME_TOKEN`               | unset                     | Optional bootstrap runtime bearer token for `/v1` and MCP callers.                                  |
+| `OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH`        | unset                     | Enables connection-scoped OAuth apps for `*` or a comma-separated service list.                     |
+| `OOMOL_CONNECT_JWKS_URI`                    | unset                     | Node-only JWKS endpoint for validating runtime JWT access tokens.                                   |
+| `OOMOL_CONNECT_JWT_ISSUER`                  | unset                     | Expected `iss` claim for runtime JWT access tokens.                                                 |
+| `OOMOL_CONNECT_JWT_AUDIENCE`                | unset                     | Expected API `aud` claim for runtime JWT access tokens.                                             |
+| `OOMOL_CONNECT_ALLOWED_ACTIONS`             | unset                     | Comma-separated executable action allowlist. Supports `service.*` and `*`.                          |
+| `OOMOL_CONNECT_BLOCKED_ACTIONS`             | unset                     | Comma-separated executable action denylist. Supports `service.*` and `*`.                           |
+| `OOMOL_CONNECT_ALLOWED_PROXIES`             | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.                           |
+| `OOMOL_CONNECT_BLOCKED_PROXIES`             | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.                            |
+| `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`       | `false`                   | Allow self-hosted provider connections to target private networks. See below.                       |
+| `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS`        | unset                     | Trusted hosts routed through a corporate VPN. See below.                                            |
+| `OOMOL_CONNECT_LOG_LEVEL`                   | `info`                    | Pino log level for the local Node server.                                                           |
+| `OOMOL_CONNECT_TRANSIT_FILE_BACKEND`        | `local`                   | Node transit-file backend: `local` or `s3`.                                                         |
+| `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS`    | `86400`                   | Transit file lifetime before cleanup.                                                               |
+| `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES`      | `104857600`               | Maximum transit file upload size.                                                                   |
+| `OOMOL_CONNECT_S3_BUCKET`                   | unset                     | Bucket used when the Node transit-file backend is `s3`.                                             |
+| `OOMOL_CONNECT_S3_REGION`                   | `us-east-1`               | S3 signing region. Use the value required by the storage service.                                   |
+| `OOMOL_CONNECT_S3_ENDPOINT`                 | AWS S3                    | S3-compatible endpoint for MinIO, Cloudflare R2, Alibaba Cloud OSS, or another object store.        |
+| `OOMOL_CONNECT_S3_FORCE_PATH_STYLE`         | `false`                   | Use path-style S3 URLs. This is commonly required by local MinIO deployments.                       |
+| `OOMOL_CONNECT_S3_ACCESS_KEY_ID`            | SDK credential chain      | Explicit S3 access key ID. Configure it with the secret key, or omit both.                          |
+| `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`        | SDK credential chain      | Explicit S3 secret access key. Configure it with the access key ID, or omit both.                   |
+| `OOMOL_CONNECT_S3_SESSION_TOKEN`            | unset                     | Optional session token used with explicit S3 credentials.                                           |
+| `OOMOL_CONNECT_RUN_LIMIT`                   | `5000`                    | Maximum number of recent action run audit records to retain.                                        |
 
 Example:
 
@@ -47,7 +50,8 @@ npm run dev
 ```
 
 Create persistent runtime tokens from the web console Access tab or `POST /api/runtime-tokens`.
-Only token hashes are stored: the Node server stores persistent-token records in SQLite, while
+Only token hashes are stored: the Node server stores persistent-token records in its selected SQLite
+or PostgreSQL database, while
 Cloudflare Workers store them in D1. Persistent tokens have independent Action rules, provider
 proxy grants, and optional connection grants. A new token has no proxy access until its
 `allowedProxies` includes a provider service or `*`; those grants can only narrow the deployment
@@ -60,6 +64,42 @@ connections do not require a grant. Create requests may omit the field; updates 
 `OOMOL_CONNECT_RUNTIME_TOKEN` remains available for bootstrap scripts and backward compatibility.
 Because the bootstrap token has no stored policy, its proxy access is controlled by the deployment
 and runtime rules, while its connection access remains unrestricted.
+
+## Runtime database
+
+The Node runtime uses `OOMOL_CONNECT_DATA_DIR/connect.sqlite` by default and applies SQLite
+migrations automatically when it opens the database. Leave `OOMOL_CONNECT_DATABASE_URL` unset to
+keep this zero-configuration mode.
+
+Set a `postgres:` or `postgresql:` connection URL to use PostgreSQL 15 or newer instead:
+
+```bash
+OOMOL_CONNECT_DATABASE_URL="postgresql://open_connector:password@db.example.com:5432/open_connector?sslmode=verify-full" \
+npm run runtime:migrate
+
+OOMOL_CONNECT_DATABASE_URL="postgresql://open_connector:password@db.example.com:5432/open_connector?sslmode=verify-full" \
+npm start
+```
+
+PostgreSQL migrations are explicit: run `npm run runtime:migrate` before the first server start and
+before starting a new application version that includes pending migrations. The server performs a
+read-only schema check and refuses to start with an actionable error when required migrations are
+missing. It never applies PostgreSQL DDL during startup.
+
+The migration command and application may use different database roles. The migration role needs
+permission to create and alter runtime tables and indexes. The application role needs CRUD access to
+the runtime tables plus `SELECT` access to `runtime_migrations`; it does not need DDL permission.
+Treat both connection URLs as secrets and use a TLS-verifying connection configuration for remote
+databases.
+
+Each process selects exactly one backend. PostgreSQL and SQLite are not synchronized, and selecting
+PostgreSQL does not import an existing `connect.sqlite` database. Removing the URL makes the runtime
+use the existing SQLite database again.
+
+For multiple Node instances, configure the same PostgreSQL database and
+`OOMOL_CONNECT_ENCRYPTION_KEY` on every instance. Also use the S3-compatible transit-file backend so
+files are shared across instances. Size `OOMOL_CONNECT_DATABASE_POOL_MAX` so the total across all
+instances leaves capacity for migrations and database administration.
 
 ## JWT access tokens
 
