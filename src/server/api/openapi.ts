@@ -120,11 +120,18 @@ const actionIdParameter = {
 };
 
 const namedConnectionDescription =
-  "Named connection. Same fact as MCP connectionName; HTTP alias, connectionName, and x-oo-connector-alias are equivalent. Defaults to default.";
+  "Named connection. Same fact as MCP connectionName; HTTP alias, connectionName, x-oo-connector-alias, and legacy x-oomol-connector-alias are equivalent. Defaults to default.";
 
 const namedConnectionParameters = [
   {
     name: "x-oo-connector-alias",
+    in: "header",
+    required: false,
+    schema: jsonSchema.string(),
+    description: namedConnectionDescription,
+  },
+  {
+    name: "x-oomol-connector-alias",
     in: "header",
     required: false,
     schema: jsonSchema.string(),
@@ -175,7 +182,11 @@ export function createOpenApiDocument(
   }
 
   const paths: Record<string, unknown> = {
-    "/health": getOperation("System", "Unauthenticated process health check.", { ok: jsonSchema.boolean() }),
+    "/health": getOperation(
+      "System",
+      "Unauthenticated process health check.",
+      jsonSchema.object({ ok: jsonSchema.boolean() }, { required: ["ok"], description: "Process health payload." }),
+    ),
     "/v1/health": runtimeGetOperation("System", "Runtime health check.", {
       data: jsonSchema.object(
         {
@@ -1347,15 +1358,17 @@ function getOperation(tag: string, summary: string, schema: JsonSchema): Record<
   };
 }
 
+interface RuntimeGetOperationOptions {
+  data: JsonSchema;
+  description?: string;
+  parameters?: unknown[];
+  errorStatuses?: Array<400 | 404>;
+}
+
 function runtimeGetOperation(
   tag: string,
   summary: string,
-  options: {
-    data: JsonSchema;
-    description?: string;
-    parameters?: unknown[];
-    errorStatuses?: Array<400 | 404>;
-  },
+  options: RuntimeGetOperationOptions,
 ): Record<string, unknown> {
   const responses: Record<string, unknown> = {
     200: jsonResponse(runtimeSuccessSchema(options.data)),

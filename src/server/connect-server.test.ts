@@ -490,6 +490,20 @@ describe("ConnectServer", () => {
       errorCode: "invalid_json",
       meta: {},
     });
+
+    const proxy = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{",
+    });
+    expect(proxy.status).toBe(400);
+    await expect(proxy.json()).resolves.toEqual({
+      success: false,
+      message: "Request body must be valid JSON.",
+      data: null,
+      errorCode: "invalid_json",
+      meta: {},
+    });
   });
 
   it("rejects JSON request bodies that are not objects", async () => {

@@ -600,21 +600,7 @@ export class ConnectServer {
   }
 
   private async createRuntimeProxyRequest(context: Context, service: string): Promise<Response> {
-    let body: Record<string, unknown>;
-    try {
-      body = await readJsonBody(context);
-    } catch (error) {
-      if (error instanceof HttpRequestError) {
-        return writeRuntimeFailure(context, {
-          status: 400,
-          errorCode: "invalid_input",
-          message: error.message,
-          meta: { service },
-        });
-      }
-
-      throw error;
-    }
+    const body = await readJsonBody(context);
 
     let policy: ActionPolicySnapshot;
     try {

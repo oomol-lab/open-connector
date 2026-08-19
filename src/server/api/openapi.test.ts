@@ -86,12 +86,24 @@ describe("action execution OpenAPI", () => {
       properties: { alias?: { description?: string } };
     };
 
+    const health = document.paths["/health"] as {
+      get: {
+        responses: Record<
+          string,
+          { content?: { "application/json"?: { schema?: { type?: string; required?: string[] } } } }
+        >;
+      };
+    };
+    const healthSchema = health.get.responses["200"]?.content?.["application/json"]?.schema;
+
     expect(document.paths["/v1/health"]).toBeDefined();
     expect(document.paths["/v1/providers"]).toBeDefined();
     expect(document.paths["/v1/actions"]).toBeDefined();
     expect(document.paths["/v1/apps"]).toBeDefined();
     expect(actionPath.get).toBeDefined();
     expect(actionPath.post).toBeDefined();
+    expect(healthSchema?.type).toBe("object");
+    expect(healthSchema?.required).toEqual(expect.arrayContaining(["ok"]));
     expect(document.components.schemas.ActionSearchRuntimeResult).toEqual({
       $ref: "#/components/schemas/ActionSearchResult",
     });
@@ -101,6 +113,7 @@ describe("action execution OpenAPI", () => {
     expect(search.get.responses["404"]).toBeUndefined();
     expect(connectedApp.required).toEqual(expect.arrayContaining(["alias", "isDefault"]));
     expect(connectedApp.properties.alias?.description).toContain("connectionName");
+    expect(connectedApp.properties.alias?.description).toContain("x-oomol-connector-alias");
   });
 
   it("documents Runtime and token policy management and run audit metadata", () => {
