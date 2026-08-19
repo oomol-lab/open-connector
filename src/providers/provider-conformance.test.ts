@@ -193,6 +193,25 @@ describe("scanProviderRuntimeSource", () => {
     ).toEqual(["definition_imports_executors"]);
   });
 
+  it("flags qualified global fetch and WebSocket constructors", () => {
+    expect(
+      scanProviderRuntimeSource({
+        service: "example",
+        fileName: "runtime.ts",
+        nodeOnly: false,
+        text: `await globalThis.fetch(url);\nnew globalThis.WebSocket(url);\n`,
+      }).map((finding) => finding.kind),
+    ).toEqual(["global_fetch", "raw_websocket"]);
+    expect(
+      scanProviderRuntimeSource({
+        service: "example",
+        fileName: "runtime.ts",
+        nodeOnly: false,
+        text: `await self.fetch(url);\nnew window.WebSocket(url);\n`,
+      }).map((finding) => finding.kind),
+    ).toEqual(["global_fetch", "raw_websocket"]);
+  });
+
   it("ignores fetch mentioned in comments and schema copy", () => {
     expect(
       scanProviderRuntimeSource({

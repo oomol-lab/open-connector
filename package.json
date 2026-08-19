@@ -72,6 +72,9 @@
     "vitest": "^4.1.9",
     "wrangler": "^4.114.0"
   },
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "allowScripts": {
     "fsevents@2.3.3": true,
     "esbuild@0.28.1": true,

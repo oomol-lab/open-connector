@@ -21,7 +21,16 @@ const findings: ProviderConformanceFinding[] = [];
 const sources = await loadProviderSources();
 
 for (const source of sources) {
-  assertProviderActionIdentity(source.definition);
+  try {
+    assertProviderActionIdentity(source.definition);
+  } catch (error) {
+    findings.push({
+      service: source.service,
+      file: "definition.ts",
+      kind: "catalog_action_mismatch",
+      detail: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   let executorModule: ExecutorModule;
   try {
@@ -58,39 +67,18 @@ for (const source of sources) {
   const files = await listProviderTypeScriptFiles(source.service);
   const sourceFiles = await Promise.all(
     files.map(async (fileName) => ({
+      service: source.service,
       fileName,
+      nodeOnly: source.nodeOnly,
       text: await readFile(join(providersDir, source.service, fileName), "utf8"),
     })),
   );
   for (const file of sourceFiles) {
-    findings.push(
-      ...scanProviderRuntimeSource({
-        service: source.service,
-        fileName: file.fileName,
-        nodeOnly: source.nodeOnly,
-        text: file.text,
-      }),
-    );
+    findings.push(...scanProviderRuntimeSource(file));
   }
   findings.push(
-    ...scanProviderSkipDnsPolicy({
-      service: source.service,
-      files: sourceFiles.map((file) => ({
-        service: source.service,
-        fileName: file.fileName,
-        nodeOnly: source.nodeOnly,
-        text: file.text,
-      })),
-    }),
-    ...scanProviderEgressPolicy({
-      service: source.service,
-      files: sourceFiles.map((file) => ({
-        service: source.service,
-        fileName: file.fileName,
-        nodeOnly: source.nodeOnly,
-        text: file.text,
-      })),
-    }),
+    ...scanProviderSkipDnsPolicy({ service: source.service, files: sourceFiles }),
+    ...scanProviderEgressPolicy({ service: source.service, files: sourceFiles }),
   );
 }
 

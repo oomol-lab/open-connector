@@ -111,7 +111,7 @@ Create or update `executors.ts` with `ProviderExecutors`:
 - Keep action handlers keyed by provider action names.
 - Preserve provider request semantics: endpoint paths, methods, auth headers, request bodies, query params, pagination, status handling, error mapping, and output normalization.
 - Use `ProviderRequestError` for provider API failures that should become stable execution errors.
-- Use `context.fetcher` / `providerFetch`; add `skipDnsValidation: true` only when every egress host is a hardcoded code-controlled literal.
+- Use `context.fetcher` / `providerFetch` for provider-owned endpoints. For user-supplied content or download URLs, call `assertPublicHttpUrl` without `allowPrivateNetwork` and use the public-only `providerFetch`. Add `skipDnsValidation: true` only when every egress host is a hardcoded code-controlled literal.
 - Use shared request helpers such as `setSearchParams`, `readProviderJson`, and `readProviderText` when they fit existing patterns.
 - Pass `context.signal` and transit file support through provider contexts when the provider needs cancellation or file output.
 

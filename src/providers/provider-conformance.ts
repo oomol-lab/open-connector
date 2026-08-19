@@ -230,7 +230,7 @@ export function scanProviderSkipDnsPolicy(input: {
   const findings: ProviderConformanceFinding[] = [];
   const joined = sources.map((file) => file.source).join("\n");
 
-  if (/\ballowPrivateNetwork\s*:/.test(joined)) {
+  if (hasAllowPrivateNetwork(joined)) {
     findings.push({
       service: input.service,
       file: skipFiles[0]?.fileName,
@@ -377,11 +377,13 @@ function importsRelativeModule(source: string, moduleName: string): boolean {
 }
 
 function hasBareFetchCall(source: string): boolean {
-  return /(?<![.\w$])fetch\s*\(/.test(source);
+  return /(?<![.\w$])fetch\s*\(/.test(source) || /(?:globalThis|self|window)\.fetch\s*\(/.test(source);
 }
 
 function hasRawWebSocketConstructor(source: string): boolean {
-  return /(?<![.\w$])new\s+WebSocket\s*\(/.test(source);
+  return (
+    /(?<![.\w$])new\s+WebSocket\s*\(/.test(source) || /new\s+(?:globalThis|self|window)\.WebSocket\s*\(/.test(source)
+  );
 }
 
 function hasAllowPrivateNetwork(source: string): boolean {
