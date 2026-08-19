@@ -11,6 +11,7 @@ import {
   defineProviderProxy,
   mapProviderActionSources,
   providerFetch,
+  readProviderJson,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
 
@@ -27,6 +28,26 @@ describe("toProviderExecutionError", () => {
         code: "internal_error",
         message: "Provider request failed.",
       },
+    });
+  });
+});
+
+describe("readProviderJson", () => {
+  it("includes bounded non-ok response text in provider errors", async () => {
+    await expect(readProviderJson(new Response('{"error":"nope"}', { status: 400 }), "provider")).rejects.toMatchObject(
+      {
+        status: 400,
+        message: '{"error":"nope"}',
+      },
+    );
+  });
+
+  it("does not read unbounded non-ok response bodies", async () => {
+    await expect(
+      readProviderJson(new Response("x".repeat(65 * 1024), { status: 500 }), "provider"),
+    ).rejects.toMatchObject({
+      status: 500,
+      message: "provider request failed",
     });
   });
 });

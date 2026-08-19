@@ -22,6 +22,7 @@ import {
   providerFetch,
   providerUserAgent,
   ProviderRequestError,
+  readProviderErrorTextBody,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -227,7 +228,7 @@ async function downloadFilesComFile(
       signal: downloadSignal,
     });
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
+      const text = await readProviderErrorTextBody(response, "Files.com download error response");
       throw new ProviderRequestError(
         response.status >= 500 ? 502 : response.status,
         text || `files_com download failed with HTTP ${response.status}`,

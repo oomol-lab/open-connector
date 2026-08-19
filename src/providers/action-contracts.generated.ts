@@ -4790,7 +4790,7 @@ export interface ProviderActionNames {
     | "create_dev_resources"
     | "update_dev_resources"
     | "delete_dev_resource";
-  files_com: "list_folder" | "get_file" | "create_folder" | "update_metadata" | "delete_file";
+  files_com: "list_folder" | "get_file" | "download_file" | "create_folder" | "update_metadata" | "delete_file";
   fillout:
     | "list_forms"
     | "get_form_metadata"

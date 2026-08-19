@@ -300,6 +300,7 @@ const blockedProxyRequestHeaders = new Set([
 ]);
 const defaultProviderProxyMaxResponseBytes = 20 * 1024 * 1024;
 const defaultProviderJsonMaxResponseBytes = 20 * 1024 * 1024;
+const defaultProviderErrorMaxResponseBytes = 64 * 1024;
 
 export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, queryInput?: unknown): URL {
   const endpoint = normalizeProviderProxyEndpoint(endpointInput);
@@ -670,6 +671,17 @@ export function setSearchParams(url: URL, query: Record<string, string | undefin
 }
 
 /**
+ * Read a bounded provider error response body as text.
+ */
+export async function readProviderErrorTextBody(response: Response, fieldName: string): Promise<string> {
+  try {
+    return await readProviderTextBody(response, fieldName, defaultProviderErrorMaxResponseBytes);
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Read a JSON provider response or raise a structured provider request error.
  */
 export async function readProviderJson<T>(response: Response, source: string): Promise<T> {
@@ -677,7 +689,7 @@ export async function readProviderJson<T>(response: Response, source: string): P
     return response.json() as Promise<T>;
   }
 
-  const text = await response.text().catch(() => "");
+  const text = await readProviderErrorTextBody(response, `${source} error response`);
   throw new ProviderRequestError(response.status, text || `${source} request failed`);
 }
 
@@ -767,7 +779,7 @@ export async function uploadProviderUrlToTransitFile(
     );
   }
   if (!response.ok) {
-    const text = await response.text().catch(() => "");
+    const text = await readProviderErrorTextBody(response, `${input.source} error response`);
     throw new ProviderRequestError(
       response.status >= 500 ? 502 : response.status,
       text || `${input.source} transit download failed with HTTP ${response.status}`,
