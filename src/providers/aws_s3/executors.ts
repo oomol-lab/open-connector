@@ -384,7 +384,11 @@ async function awsDownloadObject(input: Record<string, unknown>, context: AwsAct
       file,
     };
   } catch (error) {
-    if (timeoutSignal?.aborted && !context.signal?.aborted && isAbortLikeError(error)) {
+    if (
+      timeoutSignal?.aborted &&
+      !context.signal?.aborted &&
+      (isAbortLikeError(error) || error === timeoutSignal.reason)
+    ) {
       throw new ProviderRequestError(504, "aws_s3 download timed out", error);
     }
     throw normalizeAwsError(error, "execute");

@@ -175,12 +175,13 @@ describe("Alibaba Cloud OSS download_object", () => {
   });
 
   it("returns 504 when the download request times out", async () => {
+    const timeoutReason = new DOMException("The operation was aborted due to timeout", "TimeoutError");
     const timeoutController = new AbortController();
-    timeoutController.abort();
+    timeoutController.abort(timeoutReason);
     const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
     vi.stubGlobal("fetch", async (_input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.signal?.aborted) {
-        throw new DOMException("Aborted", "AbortError");
+        throw timeoutReason;
       }
       throw new Error("expected download fetch to use an aborted timeout signal");
     });

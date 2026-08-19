@@ -539,7 +539,11 @@ async function aliyunDownloadObject(input: Record<string, unknown>, context: Ali
       file,
     };
   } catch (error) {
-    if (timeoutSignal?.aborted && !context.signal?.aborted && isAbortLikeError(error)) {
+    if (
+      timeoutSignal?.aborted &&
+      !context.signal?.aborted &&
+      (isAbortLikeError(error) || error === timeoutSignal.reason)
+    ) {
       throw new ProviderRequestError(504, "aliyun_oss download timed out", error);
     }
     throw normalizeAliyunError(error, "execute");
