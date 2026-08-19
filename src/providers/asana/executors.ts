@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { AsanaActionHandler } from "./runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { compactObject, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
   combineProviderActionHandlers,
   defineBearerProviderExecutors,

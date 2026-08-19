@@ -25,6 +25,23 @@ const baiduNetdiskListToolByType = {
   image: "file_image_list",
   video: "file_video_list",
 } as const satisfies Record<BaiduNetdiskListType, string>;
+const requiredToolNames = [
+  "file_list",
+  "file_keyword_search",
+  "file_semantics_search",
+  "file_upload_by_content",
+  "file_upload_by_url",
+  "make_dir",
+  "file_copy",
+  "file_move",
+  "file_rename",
+] as const;
+const requiredToolInputProperties = new Map<string, Readonly<Record<string, string>>>([
+  ["file_list", { dir: "string", page: "number" }],
+  ["file_upload_by_content", { content: "string", dir: "string", filename: "string" }],
+  ["file_upload_by_url", { url: "string", dir: "string", filename: "string" }],
+  ["make_dir", { path: "string", rtype: "string" }],
+]);
 const semanticSourceByCode = new Map<number, (typeof baiduNetdiskSemanticMatchSources)[number]>([
   [4, "filename"],
   [5, "image_ocr"],
@@ -40,6 +57,32 @@ export type BaiduNetdiskMcpContext = {
   accessToken: string;
   fetcher: ProviderFetch;
 };
+
+export async function verifyBaiduNetdiskMcpConnection(accessToken: string, fetcher: ProviderFetch): Promise<void> {
+  await withBaiduNetdiskMcpClient(accessToken, fetcher, async (client) => {
+    const result = await client.listTools({}, { timeout: requestTimeoutMs });
+    const toolsByName = new Map(result.tools.map((tool) => [tool.name, tool]));
+    for (const toolName of requiredToolNames) {
+      const tool = toolsByName.get(toolName);
+      if (!tool) {
+        throw new ProviderRequestError(502, `baidu_netdisk MCP server is missing required tool: ${toolName}`);
+      }
+      const properties = tool.inputSchema.properties;
+      for (const [property, expectedType] of Object.entries(requiredToolInputProperties.get(toolName) ?? {})) {
+        const schema = properties?.[property];
+        if (
+          !schema ||
+          typeof schema !== "object" ||
+          Array.isArray(schema) ||
+          !("type" in schema) ||
+          schema.type !== expectedType
+        ) {
+          throw new ProviderRequestError(502, `baidu_netdisk MCP tool ${toolName} has an incompatible input schema`);
+        }
+      }
+    }
+  });
+}
 
 export async function executeBaiduNetdiskMcpAction(
   actionName: string,
