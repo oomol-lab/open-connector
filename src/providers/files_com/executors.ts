@@ -215,30 +215,43 @@ async function downloadFilesComFile(
   const downloadUrl = readFilesComDownloadUrl(
     requiredString(payload.download_uri, "download_uri", (message) => new ProviderRequestError(502, message)),
   );
-  const response = await providerFetch(downloadUrl, {
-    headers: {
-      accept: "*/*",
-      "user-agent": providerUserAgent,
-    },
-    signal: context.signal,
-  });
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new ProviderRequestError(
-      response.status >= 500 ? 502 : response.status,
-      text || `files_com download failed with HTTP ${response.status}`,
-    );
+  const downloadSignal = composeFilesComRequestSignal(context.signal);
+  let response: Response;
+  let bytes: Uint8Array;
+  try {
+    response = await providerFetch(downloadUrl, {
+      headers: {
+        accept: "*/*",
+        "user-agent": providerUserAgent,
+      },
+      signal: downloadSignal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new ProviderRequestError(
+        response.status >= 500 ? 502 : response.status,
+        text || `files_com download failed with HTTP ${response.status}`,
+      );
+    }
+    bytes = await readBoundedResponseBytes(response, {
+      maxBytes: context.transitFiles.maxBytes,
+      fieldName: "Files.com download",
+      createError: (message) => new ProviderRequestError(413, message),
+    });
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    if (isAbortError(error)) {
+      throw new ProviderRequestError(504, "Files.com request timed out");
+    }
+    throw error;
   }
 
   const mimeType =
     optionalString(response.headers.get("content-type")) ??
     optionalString(payload.mime_type) ??
     "application/octet-stream";
-  const bytes = await readBoundedResponseBytes(response, {
-    maxBytes: context.transitFiles.maxBytes,
-    fieldName: "Files.com download",
-    createError: (message) => new ProviderRequestError(413, message),
-  });
   const transitName = optionalString(input.fileName) ?? remoteName;
   const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], transitName, { type: mimeType }));
 
@@ -307,9 +320,7 @@ async function requestFilesComJson(input: FilesComRequestInput): Promise<unknown
     }
   }
 
-  const signal = input.signal
-    ? AbortSignal.any([input.signal, AbortSignal.timeout(filesComDefaultRequestTimeoutMs)])
-    : AbortSignal.timeout(filesComDefaultRequestTimeoutMs);
+  const signal = composeFilesComRequestSignal(input.signal);
 
   try {
     const response = await input.fetcher(url, {
@@ -464,6 +475,11 @@ function pickAccountLabel(payload: unknown): string | undefined {
     return undefined;
   }
   return optionalString(record.username) ?? optionalString(record.name) ?? optionalString(record.email);
+}
+
+function composeFilesComRequestSignal(parent?: AbortSignal): AbortSignal {
+  const timeout = AbortSignal.timeout(filesComDefaultRequestTimeoutMs);
+  return parent ? AbortSignal.any([parent, timeout]) : timeout;
 }
 
 function isAbortError(error: unknown): boolean {

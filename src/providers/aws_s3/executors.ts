@@ -12,6 +12,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderProxyUrl,
+  createProviderTimeout,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
   providerFetch,
@@ -269,6 +270,7 @@ async function awsListBuckets(input: Record<string, unknown>, context: AwsAction
       "continuation-token": optionalString(input.marker),
       "max-buckets": asOptionalPositiveInteger(input.maxKeys),
     }),
+    signal: context.signal,
   });
   const xml = await response.text();
   const parsed = parseListBucketsXml(xml);
@@ -296,6 +298,7 @@ async function awsListObjects(input: Record<string, unknown>, context: AwsAction
       "fetch-owner": input.fetchOwner === true ? "true" : undefined,
       "max-keys": asOptionalPositiveInteger(input.maxKeys),
     }),
+    signal: context.signal,
   });
   const xml = await response.text();
   const parsed = parseListObjectsXml(xml, { bucket, region });
@@ -341,7 +344,7 @@ async function awsPutObject(input: Record<string, unknown>, context: AwsActionCo
   const region = resolveRegion(input, context);
   const objectKey = requireAwsField(input.objectKey, "objectKey");
   const sourceUrl = optionalString(input.sourceUrl);
-  const sourceFile = sourceUrl ? await downloadSourceFile(sourceUrl) : null;
+  const sourceFile = sourceUrl ? await downloadSourceFile(sourceUrl, context.signal) : null;
   const resolvedContentType = optionalString(input.contentType) ?? sourceFile?.contentType;
   const body = sourceUrl
     ? sourceFile!.bytes
@@ -359,6 +362,7 @@ async function awsPutObject(input: Record<string, unknown>, context: AwsActionCo
       "content-disposition": optionalString(input.contentDisposition),
       ...buildAwsMetadataHeaders(optionalRecord(input.metadata)),
     },
+    signal: context.signal,
   });
   const headers = normalizeHeaderRecord(response.headers);
 
@@ -380,6 +384,7 @@ async function awsDeleteObject(input: Record<string, unknown>, context: AwsActio
     query: compactObject({
       versionId: optionalString(input.versionId),
     }),
+    signal: context.signal,
   });
 
   return {
@@ -916,15 +921,13 @@ function buildAwsMetadataHeaders(input: Record<string, unknown> | undefined) {
   );
 }
 
-async function downloadSourceFile(sourceUrl: string) {
+async function downloadSourceFile(sourceUrl: string, signal?: AbortSignal) {
   const validatedUrl = validateSourceUrl(sourceUrl);
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), sourceFetchTimeoutMs);
+  const timeout = createProviderTimeout(signal, sourceFetchTimeoutMs);
 
   try {
     const response = await providerFetch(validatedUrl, {
-      signal: controller.signal,
+      signal: timeout.signal,
     });
     const contentLength = parseHeaderInteger(response.headers.get("content-length"));
     if (contentLength != null && contentLength > maxSourceBytes) {
@@ -947,12 +950,12 @@ async function downloadSourceFile(sourceUrl: string) {
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (error instanceof DOMException && error.name === "AbortError") {
+    if (timeout.didTimeout()) {
       throw new ProviderRequestError(504, "sourceUrl download timed out");
     }
     throw error;
   } finally {
-    clearTimeout(timeout);
+    timeout.cleanup();
   }
 }
 

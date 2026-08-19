@@ -211,9 +211,10 @@ describe("Files.com download_file", () => {
       ]);
 
       const result = await executeDownload({ path: "secret.bin" }, store);
-      expect(result.ok).toBe(false);
-      if (result.ok) throw new Error("expected failure");
-      expect(result.error.message).toMatch(/private or reserved|cloud metadata hosts|untrusted download URL/);
+      expect(result).toMatchObject({
+        ok: false,
+        error: { message: expect.stringMatching(/private or reserved|cloud metadata hosts|untrusted download URL/) },
+      });
       expect(create).not.toHaveBeenCalled();
     }
   });
