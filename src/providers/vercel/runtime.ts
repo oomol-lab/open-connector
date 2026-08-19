@@ -287,10 +287,7 @@ function resolveTeamScope(input: VercelActionInput, context: VercelActionContext
   if (fromInput.teamId || fromInput.slug) {
     return fromInput;
   }
-  return compactObject({
-    teamId: optionalString(context.teamId),
-    slug: optionalString(context.slug),
-  });
+  return readVercelTeamScope({ teamId: context.teamId, slug: context.slug });
 }
 
 function teamQuery(

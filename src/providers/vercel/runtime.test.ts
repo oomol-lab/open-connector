@@ -255,6 +255,23 @@ describe("Vercel team-scoped REST queries", () => {
     });
   });
 
+  it("rejects credential context that sets both teamId and slug when action input omits both", async () => {
+    await expect(
+      vercelActionHandlers.list_projects(
+        { limit: 5 },
+        actionContext(
+          async () => {
+            throw new Error("fetch should not run");
+          },
+          { teamId: "team_123", slug: "acme" },
+        ),
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "teamId and slug cannot both be provided",
+    });
+  });
+
   it("does not attach team query parameters to get_auth_user or list_teams", async () => {
     const urls: string[] = [];
     const fetcher = jsonFetcher((url) => {
