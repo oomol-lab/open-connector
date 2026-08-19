@@ -238,8 +238,10 @@ export class ProxyRunner {
       throw new ProxyInputError("endpoint must be a relative path starting with /");
     }
     try {
-      new URL(endpoint);
-      throw new ProxyInputError("endpoint must be a relative path");
+      const url = new URL(endpoint.slice(1));
+      if (url.protocol === "http:" || url.protocol === "https:") {
+        throw new ProxyInputError("endpoint must be a relative path");
+      }
     } catch (error) {
       if (error instanceof ProxyInputError) {
         throw error;

@@ -42,10 +42,12 @@ describe("assertPublicHttpUrl", () => {
   it("rejects known cloud metadata hostnames even when private networks are allowed", () => {
     for (const value of [
       "http://instance-data.ec2.internal/",
+      "http://metadata/",
       "http://metadata.google.internal/",
       "http://metadata.google.internal./",
       "http://metadata.goog/",
     ]) {
+      expect(() => readPublicUrl(value)).toThrow("cloud metadata hosts");
       expect(() => readPublicUrl(value, true)).toThrow("cloud metadata hosts");
     }
   });
@@ -119,7 +121,7 @@ describe("isBlockedIpAddress", () => {
   });
 
   it("blocks reserved IPv6 addresses regardless of the private-network flag", () => {
-    for (const address of ["::", "::1", "fe80::1", "ff02::1", "2001:db8::1", "100::1"]) {
+    for (const address of ["::", "::1", "fe80::1", "ff02::1", "2001:db8::1", "100::1", "fd00:ec2::254"]) {
       expect(isBlockedIpAddress(address)).toBe(true);
       expect(isBlockedIpAddress(address, true)).toBe(true);
     }
@@ -157,6 +159,16 @@ describe("isBlockedIpAddress", () => {
     // 6to4 embedding 192.168.1.1 (c0a8:0101).
     expect(isBlockedIpAddress("2002:c0a8:101::1")).toBe(true);
     expect(isBlockedIpAddress("2002:c0a8:101::1", true)).toBe(false);
+  });
+
+  it("applies the IPv4 policy to Teredo client and server addresses", () => {
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:5601:5601")).toBe(true);
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:5601:5601", true)).toBe(true);
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:80ff:fffe")).toBe(true);
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:80ff:fffe", true)).toBe(true);
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:f5ff:fffa")).toBe(true);
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:f5ff:fffa", true)).toBe(false);
+    expect(isBlockedIpAddress("2001:0:808:808:0:0:f7f7:f7f7")).toBe(false);
   });
 
   it("allows public IPv6 addresses and ignores zone suffixes", () => {
@@ -217,7 +229,15 @@ describe("isIpAddress", () => {
 
 describe("classifyIpAddress", () => {
   it("classifies local, metadata, and unsafe special-use targets as always blocked", () => {
-    for (const value of ["127.0.0.1", "169.254.169.254", "100.100.100.200", "::1", "fe80::1", "ff02::1"]) {
+    for (const value of [
+      "127.0.0.1",
+      "169.254.169.254",
+      "100.100.100.200",
+      "::1",
+      "fe80::1",
+      "ff02::1",
+      "fd00:ec2::254",
+    ]) {
       expect(classifyIpAddress(value)).toBe("always-blocked");
     }
   });
@@ -235,6 +255,14 @@ describe("classifyIpAddress", () => {
     expect(classifyIpAddress("::ffff:198.18.0.196")).toBe("vpn-mapped");
     expect(classifyIpAddress("::ffff:10.0.0.5")).toBe("private");
     expect(classifyIpAddress("::ffff:8.8.8.8")).toBe("public");
+  });
+
+  it("classifies Teredo by the stricter of server and obfuscated client IPv4", () => {
+    expect(classifyIpAddress("2001:0:808:808:0:0:5601:5601")).toBe("always-blocked");
+    expect(classifyIpAddress("2001:0:808:808:0:0:80ff:fffe")).toBe("always-blocked");
+    expect(classifyIpAddress("2001:0:808:808:0:0:39ed:ff3b")).toBe("vpn-mapped");
+    expect(classifyIpAddress("2001:0:808:808:0:0:f5ff:fffa")).toBe("private");
+    expect(classifyIpAddress("2001:0:808:808:0:0:f7f7:f7f7")).toBe("public");
   });
 });
 

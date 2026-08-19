@@ -305,6 +305,9 @@ export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, 
   const endpoint = normalizeProviderProxyEndpoint(endpointInput);
   const base = new URL(baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
   const url = new URL(endpoint.slice(1), base);
+  if (url.origin !== base.origin) {
+    throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
+  }
   for (const [key, value] of Object.entries(normalizeProviderProxyQuery(queryInput))) {
     url.searchParams.set(key, value);
   }
@@ -317,8 +320,10 @@ export function normalizeProviderProxyEndpoint(endpointInput: unknown): string {
     throw new ProviderRequestError(400, "endpoint must be a relative path starting with /");
   }
   try {
-    new URL(endpoint);
-    throw new ProviderRequestError(400, "endpoint must be a relative path");
+    const url = new URL(endpoint.slice(1));
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      throw new ProviderRequestError(400, "endpoint must be a relative path");
+    }
   } catch (error) {
     if (error instanceof ProviderRequestError) {
       throw error;
@@ -478,6 +483,7 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         endpoint,
         proxyInput.query,
       );
+      const providerOrigin = url.origin;
       const headers = normalizeProviderProxyHeaders(proxyInput.headers);
       headers.set("user-agent", providerUserAgent);
       const credential = await applyProviderProxyAuth(input, context, url, headers);
@@ -490,6 +496,9 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         credential,
         fetcher: egressFetch,
       });
+      if (url.origin !== providerOrigin) {
+        throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
+      }
 
       const init: RequestInit = {
         method: proxyInput.method,

@@ -141,7 +141,12 @@ export async function readBoundedResponseBytes(
 // Always blocked: names that resolve to loopback, regardless of the flag.
 const localHostnames = new Set(["localhost", "localhost.localdomain", "ip6-localhost", "ip6-loopback"]);
 // Always blocked: cloud instance-metadata endpoints (prime SSRF escalation targets).
-const cloudMetadataHostnames = new Set(["instance-data.ec2.internal", "metadata.google.internal", "metadata.goog"]);
+const cloudMetadataHostnames = new Set([
+  "instance-data.ec2.internal",
+  "metadata",
+  "metadata.google.internal",
+  "metadata.goog",
+]);
 // Always blocked: .localhost (RFC 6761 loopback) and the localhost.localdomain alias.
 const localHostnameSuffixes = [".localhost", ".localdomain"];
 // Flag-gated: private hostname suffixes with mixed standards status — .local (mDNS special-use,
@@ -175,8 +180,9 @@ const reservedIpv4Cidrs: Array<[number, number]> = [
 // Trusted-host only: RFC 2544 benchmark space used by aTrust/EasyConnect-class VPNs to map
 // public SaaS hostnames into locally routed addresses.
 const vpnMappedIpv4Cidrs: Array<[number, number]> = [[ipv4ToNumber("198.18.0.0"), 15]];
-// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), multicast (ff00::/8),
-// plus discard, documentation, benchmark, and other special-purpose IPv6 ranges (RFC 6890 registry).
+// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), AWS IMDSv2 IPv6
+// (fd00:ec2::254), multicast (ff00::/8), plus discard, documentation, benchmark, and other
+// special-purpose IPv6 ranges (RFC 6890 registry).
 const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("::"), 128],
   [ipv6ToBytes("::1"), 128],
@@ -187,6 +193,7 @@ const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("2001:db8::"), 32],
   [ipv6ToBytes("3fff::"), 20],
   [ipv6ToBytes("5f00::"), 16],
+  [ipv6ToBytes("fd00:ec2::254"), 128],
   [ipv6ToBytes("fe80::"), 10],
   [ipv6ToBytes("ff00::"), 8],
 ];
@@ -359,8 +366,8 @@ export type IpAddressClass = "public" | "private" | "vpn-mapped" | "always-block
 /**
  * Classify one resolved IPv4 or IPv6 address for the shared egress policy.
  *
- * IPv6 ranges that embed an IPv4 address (v4-mapped, NAT64, 6to4) inherit the
- * embedded IPv4 classification. Unparseable input fails closed.
+ * IPv6 ranges that embed an IPv4 address (v4-mapped, NAT64, 6to4, Teredo)
+ * inherit the embedded IPv4 classification. Unparseable input fails closed.
  */
 export function classifyIpAddress(address: string): IpAddressClass {
   const ipv4 = parseIpv4(address);
@@ -380,10 +387,12 @@ export function classifyIpAddress(address: string): IpAddressClass {
   }
   for (const [network, bits, offset] of ipv4EmbeddedIpv6Cidrs) {
     if (ipv6InCidr(ipv6, network, bits)) {
-      const embedded =
-        ((ipv6[offset]! << 24) | (ipv6[offset + 1]! << 16) | (ipv6[offset + 2]! << 8) | ipv6[offset + 3]!) >>> 0;
-      return classifyIpv4(embedded);
+      return classifyIpv4(readIpv4At(ipv6, offset));
     }
+  }
+  const teredo = classifyTeredoIpv6(ipv6);
+  if (teredo !== undefined) {
+    return teredo;
   }
   return "public";
 }
@@ -420,6 +429,33 @@ export function isIpv4Address(hostname: string): boolean {
  */
 export function isIpAddress(value: string): boolean {
   return parseIpv4(value) !== undefined || parseIpv6(value) !== undefined;
+}
+
+function readIpv4At(bytes: Uint8Array, offset: number): number {
+  return ((bytes[offset]! << 24) | (bytes[offset + 1]! << 16) | (bytes[offset + 2]! << 8) | bytes[offset + 3]!) >>> 0;
+}
+
+/**
+ * Teredo (RFC 4380, `2001:0000::/32`) embeds a server IPv4 and an obfuscated
+ * client IPv4 (last 32 bits XOR `0xffffffff`). Classify as the stricter of the
+ * two so a crafted Teredo address cannot hide IMDS or RFC 1918 behind a public
+ * 6-in-4 prefix.
+ */
+function classifyTeredoIpv6(ipv6: Uint8Array): IpAddressClass | undefined {
+  if (ipv6[0] !== 0x20 || ipv6[1] !== 0x01 || ipv6[2] !== 0x00 || ipv6[3] !== 0x00) {
+    return undefined;
+  }
+  return stricterIpAddressClass(classifyIpv4(readIpv4At(ipv6, 4)), classifyIpv4(readIpv4At(ipv6, 12) ^ 0xffffffff));
+}
+
+function stricterIpAddressClass(left: IpAddressClass, right: IpAddressClass): IpAddressClass {
+  const rank: Record<IpAddressClass, number> = {
+    public: 0,
+    private: 1,
+    "vpn-mapped": 2,
+    "always-blocked": 3,
+  };
+  return rank[left] >= rank[right] ? left : right;
 }
 
 function classifyIpv4(value: number): IpAddressClass {

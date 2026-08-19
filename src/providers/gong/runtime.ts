@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -188,7 +189,8 @@ async function requestGongJson(input: {
   }
 }
 
-function normalizeGongApiBaseUrl(value: string): string {
+/** Normalize a public HTTPS Gong API tenant URL. */
+export function normalizeGongApiBaseUrl(value: string): string {
   const candidate = value.trim() || gongDefaultApiBaseUrl;
   let url: URL;
   try {
@@ -201,6 +203,10 @@ function normalizeGongApiBaseUrl(value: string): string {
     throw new ProviderRequestError(400, "apiBaseUrl must use https");
   }
 
+  assertPublicHttpUrl(url.toString(), {
+    fieldName: "apiBaseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+  });
   url.search = "";
   url.hash = "";
   const normalized = url.toString();

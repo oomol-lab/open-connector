@@ -7,7 +7,6 @@ import type {
 import type { GongContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -24,12 +23,11 @@ import { gongActionHandlers, resolveGongCredentialContext, validateGongCredentia
 
 const service = "gong";
 
-const gongFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+const gongFetch = createProviderFetch();
 
 export const executors: ProviderExecutors = defineProviderExecutors<GongContext>({
   service,
   handlers: gongActionHandlers,
-  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<GongContext> {
     const credential = await requireCustomCredential(context, service);
     return resolveGongCredentialContext(credential.values, fetcher, context.signal);
@@ -75,7 +73,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher, signal }) {
-    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    const guardedFetcher = createProviderFetch({ fetch: fetcher });
     return validateGongCredential(input.values, guardedFetcher, signal);
   },
 };

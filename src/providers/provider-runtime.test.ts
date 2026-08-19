@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
   createProviderTimeout,
+  createProviderProxyUrl,
   defineOAuthProviderExecutors,
   defineProviderExecutors,
   defineProviderProxy,
@@ -115,6 +116,27 @@ describe("createProviderTimeout", () => {
   });
 });
 
+describe("createProviderProxyUrl", () => {
+  it("rejects endpoints that can escape the provider origin", () => {
+    for (const endpoint of [
+      "/https://evil.example/steal",
+      "/https:///evil.example/",
+      "/http://169.254.169.254/latest/meta-data/",
+      "/http:/169.254.169.254/",
+    ]) {
+      expect(() => createProviderProxyUrl("https://api.example.com/v1/", endpoint)).toThrow(
+        "endpoint must be a relative path",
+      );
+    }
+  });
+
+  it("joins normal endpoints below an API path prefix", () => {
+    expect(createProviderProxyUrl("https://api.example.com/v1/", "/items").toString()).toBe(
+      "https://api.example.com/v1/items",
+    );
+  });
+});
+
 const apiKeyCredential: ResolvedCredential = {
   authType: "api_key",
   apiKey: "test-key",
@@ -141,6 +163,77 @@ function stubFetchSequence(responses: Response[]): Array<{ url: string; init: Re
 }
 
 describe("provider egress SSRF guard", () => {
+  it("does not fetch when a proxy endpoint escapes its provider origin", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/https://evil.example/steal" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("endpoint must be a relative path");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("keeps Z-API-style path rewrites on the provider origin", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const origins: string[] = [];
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      customizeRequest({ url }) {
+        origins.push(url.origin);
+        url.pathname = `/instances/instance/token/token${url.pathname}`;
+      },
+    });
+
+    await expect(proxy({ method: "GET", endpoint: "/items" }, executionContext)).resolves.toMatchObject({ ok: true });
+
+    expect(origins).toEqual(["https://api.example.com"]);
+    expect(calls[0]?.url).toBe("https://api.example.com/instances/instance/token/token/v1/items");
+  });
+
+  it("does not fetch when customizeRequest rewrites the URL off the provider origin", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      customizeRequest({ url }) {
+        url.hostname = "evil.example";
+      },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("endpoint must stay on the provider origin");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("rejects origin-escaping endpoints even when DNS validation is skipped", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      skipDnsValidation: true,
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/https://evil.example/steal" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("endpoint must be a relative path");
+    expect(calls).toHaveLength(0);
+  });
+
   it("blocks proxy responses redirecting to metadata targets", async () => {
     const calls = stubFetchSequence([
       new Response(null, { status: 302, headers: { location: "http://169.254.169.254/latest/meta-data/" } }),

@@ -241,6 +241,17 @@ describe("createGuardedFetch redirects", () => {
         "x-auth-token": "tok",
         "x-seq-apikey": "seq-secret",
         "x-acs-security-token": "aliyun-sts-secret",
+        "x-n8n-api-key": "n8n-secret",
+        "x-shopify-access-token": "shopify-secret",
+        "x-vtex-api-appkey": "vtex-app-key",
+        "x-vtex-api-apptoken": "vtex-app-token",
+        "x-tomba-key": "tomba-secret",
+        "client-token": "client-secret",
+        "x-session-key": "session-secret",
+        "x-redmine-api-key": "redmine-secret",
+        authkey: "authkey-secret",
+        "x-oksign-authorization": "oksign-secret",
+        "x-filesapi-key": "files-secret",
         "x-trace": "keep",
         // Look-alike but non-credential headers must survive cross-origin.
         "idempotency-key": "abc",
@@ -253,6 +264,17 @@ describe("createGuardedFetch redirects", () => {
     expect(sameOriginHeaders.get("x-api-key")).toBe("provider-secret");
     expect(sameOriginHeaders.get("x-seq-apikey")).toBe("seq-secret");
     expect(sameOriginHeaders.get("x-acs-security-token")).toBe("aliyun-sts-secret");
+    expect(sameOriginHeaders.get("x-n8n-api-key")).toBe("n8n-secret");
+    expect(sameOriginHeaders.get("x-shopify-access-token")).toBe("shopify-secret");
+    expect(sameOriginHeaders.get("x-vtex-api-appkey")).toBe("vtex-app-key");
+    expect(sameOriginHeaders.get("x-vtex-api-apptoken")).toBe("vtex-app-token");
+    expect(sameOriginHeaders.get("x-tomba-key")).toBe("tomba-secret");
+    expect(sameOriginHeaders.get("client-token")).toBe("client-secret");
+    expect(sameOriginHeaders.get("x-session-key")).toBe("session-secret");
+    expect(sameOriginHeaders.get("x-redmine-api-key")).toBe("redmine-secret");
+    expect(sameOriginHeaders.get("authkey")).toBe("authkey-secret");
+    expect(sameOriginHeaders.get("x-oksign-authorization")).toBe("oksign-secret");
+    expect(sameOriginHeaders.get("x-filesapi-key")).toBe("files-secret");
     const crossOriginHeaders = new Headers(calls[2]?.init?.headers);
     expect(crossOriginHeaders.has("authorization")).toBe(false);
     expect(crossOriginHeaders.has("cookie")).toBe(false);
@@ -260,6 +282,17 @@ describe("createGuardedFetch redirects", () => {
     expect(crossOriginHeaders.has("x-auth-token")).toBe(false);
     expect(crossOriginHeaders.has("x-seq-apikey")).toBe(false);
     expect(crossOriginHeaders.has("x-acs-security-token")).toBe(false);
+    expect(crossOriginHeaders.has("x-n8n-api-key")).toBe(false);
+    expect(crossOriginHeaders.has("x-shopify-access-token")).toBe(false);
+    expect(crossOriginHeaders.has("x-vtex-api-appkey")).toBe(false);
+    expect(crossOriginHeaders.has("x-vtex-api-apptoken")).toBe(false);
+    expect(crossOriginHeaders.has("x-tomba-key")).toBe(false);
+    expect(crossOriginHeaders.has("client-token")).toBe(false);
+    expect(crossOriginHeaders.has("x-session-key")).toBe(false);
+    expect(crossOriginHeaders.has("x-redmine-api-key")).toBe(false);
+    expect(crossOriginHeaders.has("authkey")).toBe(false);
+    expect(crossOriginHeaders.has("x-oksign-authorization")).toBe(false);
+    expect(crossOriginHeaders.has("x-filesapi-key")).toBe(false);
     expect(crossOriginHeaders.get("x-trace")).toBe("keep");
     expect(crossOriginHeaders.get("idempotency-key")).toBe("abc");
     expect(crossOriginHeaders.get("x-correlation-id")).toBe("cid");

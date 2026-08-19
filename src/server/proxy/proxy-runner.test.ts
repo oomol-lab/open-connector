@@ -354,6 +354,36 @@ describe("ProxyRunner", () => {
     });
   });
 
+  it("rejects slash-prefixed absolute endpoints before loading executors", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const runner = createRunner({
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+        loadProxyExecutor: async () => proxy,
+      },
+    });
+
+    for (const endpoint of [
+      "/https://evil.example/steal",
+      "/https:///evil.example/",
+      "/http://169.254.169.254/latest/meta-data/",
+      "/http:/169.254.169.254/",
+    ]) {
+      await expect(runner.run({ service: "example", input: { endpoint, method: "GET" } })).resolves.toMatchObject({
+        ok: false,
+        status: 400,
+        errorCode: "invalid_input",
+      });
+    }
+    expect(proxy).not.toHaveBeenCalled();
+  });
+
   it("passes proxy input and named connection context to provider proxy executors", async () => {
     const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
       await context.getCredential("example");

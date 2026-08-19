@@ -8,8 +8,8 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
-import { isIP } from "node:net";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderProxyUrl,
   defineProviderExecutors,
@@ -45,6 +45,7 @@ type AwsS3RequestInput = {
   query?: Record<string, string | number | boolean | undefined>;
   headers?: Record<string, string | undefined>;
   body?: string | Buffer;
+  signal?: AbortSignal;
 };
 
 type AwsOwner = {
@@ -312,6 +313,7 @@ async function awsHeadObject(input: Record<string, unknown>, context: AwsActionC
     query: compactObject({
       versionId: optionalString(input.versionId),
     }),
+    signal: context.signal,
   });
   const headers = normalizeHeaderRecord(response.headers);
 
@@ -339,7 +341,7 @@ async function awsPutObject(input: Record<string, unknown>, context: AwsActionCo
   const region = resolveRegion(input, context);
   const objectKey = requireAwsField(input.objectKey, "objectKey");
   const sourceUrl = optionalString(input.sourceUrl);
-  const sourceFile = sourceUrl ? await downloadSourceFile(sourceUrl, context.fetcher) : null;
+  const sourceFile = sourceUrl ? await downloadSourceFile(sourceUrl) : null;
   const resolvedContentType = optionalString(input.contentType) ?? sourceFile?.contentType;
   const body = sourceUrl
     ? sourceFile!.bytes
@@ -487,6 +489,7 @@ async function awsS3Request(client: AwsS3ClientConfig, input: AwsS3RequestInput)
     method,
     headers: signedRequest.headers,
     ...(body == null ? {} : { body }),
+    signal: input.signal,
   });
 
   if (!response.ok) {
@@ -913,14 +916,14 @@ function buildAwsMetadataHeaders(input: Record<string, unknown> | undefined) {
   );
 }
 
-async function downloadSourceFile(sourceUrl: string, fetcher: typeof fetch) {
+async function downloadSourceFile(sourceUrl: string) {
   const validatedUrl = validateSourceUrl(sourceUrl);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), sourceFetchTimeoutMs);
 
   try {
-    const response = await fetcher(validatedUrl, {
+    const response = await providerFetch(validatedUrl, {
       signal: controller.signal,
     });
     const contentLength = parseHeaderInteger(response.headers.get("content-length"));
@@ -954,55 +957,17 @@ async function downloadSourceFile(sourceUrl: string, fetcher: typeof fetch) {
 }
 
 function validateSourceUrl(value: string): URL {
-  let url: URL;
   try {
-    url = new URL(value);
-  } catch {
+    return assertPublicHttpUrl(value, {
+      fieldName: "sourceUrl",
+      createError: (message) => new ProviderRequestError(400, message),
+    });
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
     throw new ProviderRequestError(400, "sourceUrl must be a valid URL");
   }
-
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new ProviderRequestError(400, "sourceUrl must use http or https");
-  }
-  if (isBlockedSourceHost(url.hostname)) {
-    throw new ProviderRequestError(400, "sourceUrl host is not allowed");
-  }
-
-  return url;
-}
-
-function isBlockedSourceHost(hostname: string): boolean {
-  const normalized = hostname.toLowerCase();
-  if (normalized === "localhost" || normalized.endsWith(".localhost")) {
-    return true;
-  }
-
-  const ipVersion = isIP(normalized);
-  if (ipVersion === 4) {
-    return isPrivateIpv4(normalized);
-  }
-  if (ipVersion === 6) {
-    return (
-      normalized === "::1" ||
-      normalized.startsWith("fc") ||
-      normalized.startsWith("fd") ||
-      normalized.startsWith("fe80:")
-    );
-  }
-
-  return false;
-}
-
-function isPrivateIpv4(value: string): boolean {
-  const parts = value.split(".").map((part) => Number(part));
-  const [a, b] = parts;
-  if (a === 10 || a === 127 || a === 0 || (a === 169 && b === 254)) {
-    return true;
-  }
-  if (a === 172 && b !== undefined && b >= 16 && b <= 31) {
-    return true;
-  }
-  return a === 192 && b === 168;
 }
 
 async function readResponseBytesWithLimit(response: Response, limit: number) {
