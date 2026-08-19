@@ -499,16 +499,18 @@ async function aliyunDownloadObject(input: Record<string, unknown>, context: Ali
       "authorization",
       client.authorization(
         "GET",
-        buildAliyunOssProxyResource(url, bucket),
+        // ali-oss signs the raw object key; the request URL stays percent-encoded.
+        `/${bucket}/${objectKey}`,
         buildAliyunOssProxySubres(url),
         Object.fromEntries(headers.entries()),
       ),
     );
 
+    const timeoutSignal = AbortSignal.timeout(sourceFetchTimeoutMs);
     const response = await context.fetcher(url, {
       method: "GET",
       headers,
-      signal: context.signal,
+      signal: context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal,
     });
     if (!response.ok) {
       throw new ProviderRequestError(
@@ -527,7 +529,7 @@ async function aliyunDownloadObject(input: Record<string, unknown>, context: Ali
     const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
 
     return {
-      fileId: objectKey,
+      objectKey,
       name,
       mimeType,
       sizeBytes: file.sizeBytes,

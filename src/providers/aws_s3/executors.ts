@@ -353,6 +353,7 @@ async function awsDownloadObject(input: Record<string, unknown>, context: AwsAct
 
     const bucket = resolveBucket(input, context);
     const objectKey = readObjectKey(input);
+    const timeoutSignal = AbortSignal.timeout(sourceFetchTimeoutMs);
     const response = await awsS3Request(createClientForAction(input, context), {
       method: "GET",
       bucket,
@@ -360,7 +361,7 @@ async function awsDownloadObject(input: Record<string, unknown>, context: AwsAct
       query: compactObject({
         versionId: optionalString(input.versionId),
       }),
-      signal: context.signal,
+      signal: context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal,
     });
 
     const name = optionalString(input.fileName) ?? defaultObjectFileName(objectKey);
@@ -373,7 +374,7 @@ async function awsDownloadObject(input: Record<string, unknown>, context: AwsAct
     const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
 
     return {
-      fileId: objectKey,
+      objectKey,
       name,
       mimeType,
       sizeBytes: file.sizeBytes,

@@ -1,5 +1,6 @@
 import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../../core/types.ts";
 
+import AliOss from "ali-oss";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { executors } from "./executors.ts";
@@ -7,6 +8,16 @@ import { executors } from "./executors.ts";
 interface CapturedRequest {
   url: URL;
   authorization: string | null;
+  headers: Record<string, string>;
+}
+
+interface AliyunOssSigner {
+  authorization(
+    method: string,
+    resource: string,
+    subres: Record<string, string>,
+    headers: Record<string, string>,
+  ): string;
 }
 
 const credential: Extract<ResolvedCredential, { authType: "custom_credential" }> = {
@@ -48,7 +59,7 @@ describe("Alibaba Cloud OSS download_object", () => {
     expect(result).toEqual({
       ok: true,
       output: {
-        fileId: "reports/annual report #1.pdf",
+        objectKey: "reports/annual report #1.pdf",
         name: "annual report #1.pdf",
         mimeType: "application/pdf",
         sizeBytes: content.length,
@@ -79,12 +90,37 @@ describe("Alibaba Cloud OSS download_object", () => {
     expect(result).toMatchObject({
       ok: true,
       output: {
-        fileId: objectKey,
+        objectKey,
         name: "report.txt",
         file: { name: "report.txt" },
       },
     });
     expect(requests[0]?.url.pathname).toBe("/%20reports/file%21%27%28%29%2A.txt%20");
+  });
+
+  it("signs the raw object key while sending the encoded request path", async () => {
+    const objectKey = "reports/annual report #1.pdf";
+    const requests = stubResponses([new Response("ok")]);
+    const { store } = createTransitFileStore(1024);
+
+    await executeDownload({ bucket: "documents", objectKey }, store);
+
+    const request = requests[0]!;
+    expect(request.url.pathname).toBe("/reports/annual%20report%20%231.pdf");
+
+    const signedHeaders = { ...request.headers };
+    delete signedHeaders.authorization;
+    const client = new AliOss({
+      accessKeyId: credential.values.accessKeyId,
+      accessKeySecret: credential.values.accessKeySecret,
+      endpoint: "oss-cn-hangzhou.aliyuncs.com",
+      bucket: "documents",
+      secure: true,
+    }) as unknown as AliyunOssSigner;
+    expect(request.authorization).toBe(client.authorization("GET", `/documents/${objectKey}`, {}, signedHeaders));
+    expect(request.authorization).not.toBe(
+      client.authorization("GET", `/documents${request.url.pathname}`, {}, signedHeaders),
+    );
   });
 
   it("rejects dot segments instead of normalizing the object key", async () => {
@@ -139,6 +175,28 @@ describe("Alibaba Cloud OSS download_object", () => {
   });
 });
 
+describe("Alibaba Cloud OSS put_object sourceUrl", () => {
+  it("rejects a cloud-metadata sourceUrl before any outbound fetch", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePut({
+      bucket: "documents",
+      objectKey: "reports/source.bin",
+      sourceUrl: "https://169.254.169.254/latest/meta-data/",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "sourceUrl must not target private or reserved IP addresses",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
 function stubResponses(responses: Response[]): CapturedRequest[] {
   const requests: CapturedRequest[] = [];
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -146,6 +204,7 @@ function stubResponses(responses: Response[]): CapturedRequest[] {
     requests.push({
       url: new URL(request.url),
       authorization: request.headers.get("authorization"),
+      headers: Object.fromEntries(request.headers.entries()),
     });
     const response = responses.shift();
     if (!response) {
@@ -183,6 +242,18 @@ function createTransitFileStore(maxBytes: number): {
 }
 
 async function executeDownload(input: Record<string, unknown>, transitFiles?: TransitFileStore) {
+  return executeAction("aliyun_oss.download_object", input, transitFiles);
+}
+
+async function executePut(input: Record<string, unknown>) {
+  return executeAction("aliyun_oss.put_object", input);
+}
+
+async function executeAction(
+  action: "aliyun_oss.download_object" | "aliyun_oss.put_object",
+  input: Record<string, unknown>,
+  transitFiles?: TransitFileStore,
+) {
   const context: ExecutionContext = {
     getCredential: async (service) => {
       expect(service).toBe("aliyun_oss");
@@ -192,5 +263,5 @@ async function executeDownload(input: Record<string, unknown>, transitFiles?: Tr
   if (transitFiles) {
     context.transitFiles = transitFiles;
   }
-  return executors["aliyun_oss.download_object"]!(input, context);
+  return executors[action]!(input, context);
 }

@@ -37,7 +37,7 @@ const objectSchema = s.object("An OSS object summary.", {
 });
 
 const downloadedObjectSchema = s.requiredObject("A downloaded OSS object stored in local transit storage.", {
-  fileId: s.nonEmptyString("The OSS object key."),
+  objectKey: objectKeySchema,
   name: s.nonEmptyString("The filename used for the local transit file."),
   mimeType: s.nonEmptyString("The downloaded object MIME type."),
   sizeBytes: s.nonNegativeInteger("The downloaded object size in bytes."),

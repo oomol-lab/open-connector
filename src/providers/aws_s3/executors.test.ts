@@ -49,7 +49,7 @@ describe("AWS S3 download_object", () => {
     expect(result).toEqual({
       ok: true,
       output: {
-        fileId: "reports/annual report #1.pdf",
+        objectKey: "reports/annual report #1.pdf",
         name: "annual report #1.pdf",
         mimeType: "application/pdf",
         sizeBytes: content.length,
@@ -81,7 +81,7 @@ describe("AWS S3 download_object", () => {
     expect(result).toMatchObject({
       ok: true,
       output: {
-        fileId: objectKey,
+        objectKey,
         name: "report.txt",
         file: { name: "report.txt" },
       },
@@ -141,6 +141,28 @@ describe("AWS S3 download_object", () => {
   });
 });
 
+describe("AWS S3 put_object sourceUrl", () => {
+  it("rejects a cloud-metadata sourceUrl before any outbound fetch", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePut({
+      bucket: "documents",
+      objectKey: "reports/source.bin",
+      sourceUrl: "https://169.254.169.254/latest/meta-data/",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "sourceUrl must not target private or reserved IP addresses",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
 function stubResponses(responses: Response[]): CapturedRequest[] {
   const requests: CapturedRequest[] = [];
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -186,6 +208,18 @@ function createTransitFileStore(maxBytes: number): {
 }
 
 async function executeDownload(input: Record<string, unknown>, transitFiles?: TransitFileStore) {
+  return executeAction("aws_s3.download_object", input, transitFiles);
+}
+
+async function executePut(input: Record<string, unknown>) {
+  return executeAction("aws_s3.put_object", input);
+}
+
+async function executeAction(
+  action: "aws_s3.download_object" | "aws_s3.put_object",
+  input: Record<string, unknown>,
+  transitFiles?: TransitFileStore,
+) {
   const context: ExecutionContext = {
     getCredential: async (service) => {
       expect(service).toBe("aws_s3");
@@ -195,5 +229,5 @@ async function executeDownload(input: Record<string, unknown>, transitFiles?: Tr
   if (transitFiles) {
     context.transitFiles = transitFiles;
   }
-  return executors["aws_s3.download_object"]!(input, context);
+  return executors[action]!(input, context);
 }

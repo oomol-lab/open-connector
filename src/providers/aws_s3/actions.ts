@@ -37,7 +37,7 @@ const objectSchema = s.object("An S3 object summary.", {
 });
 
 const downloadedObjectSchema = s.requiredObject("A downloaded S3 object stored in local transit storage.", {
-  fileId: s.nonEmptyString("The S3 object key."),
+  objectKey: objectKeyField,
   name: s.nonEmptyString("The filename used for the local transit file."),
   mimeType: s.nonEmptyString("The downloaded object MIME type."),
   sizeBytes: s.nonNegativeInteger("The downloaded object size in bytes."),
