@@ -27,7 +27,7 @@ interface CapturedRequest {
 }
 
 describe("googlecalendar event write sendUpdates", () => {
-  it.each(["create_event", "update_event", "patch_event", "delete_event"] as const)(
+  it.each(["create_event", "update_event", "patch_event", "delete_event", "move_event", "quick_add_event"] as const)(
     "exposes optional sendUpdates on %s without changing required fields",
     (name) => {
       const action = googlecalendarActions.find((candidate) => candidate.name === name);
@@ -44,8 +44,9 @@ describe("googlecalendar event write sendUpdates", () => {
     },
   );
 
-  it("does not add sendUpdates to read-only get_event", () => {
-    const action = googlecalendarActions.find((candidate) => candidate.name === "get_event");
+  // events.import is the only event write Google does not accept sendUpdates on.
+  it.each(["get_event", "list_events", "import_event"] as const)("does not add sendUpdates to %s", (name) => {
+    const action = googlecalendarActions.find((candidate) => candidate.name === name);
 
     expect(action?.inputSchema.properties).not.toHaveProperty("sendUpdates");
   });
@@ -114,7 +115,7 @@ describe("googlecalendar event write sendUpdates", () => {
     expect(requests[1]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1");
     expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("externalOnly");
     expect(requests[1]?.headers.get("if-match")).toBe('"etag-1"');
-    expect(requests[1]?.body).toMatchObject({ summary: "Retro" });
+    expect(requests[1]?.body).toEqual({ status: "confirmed", summary: "Retro" });
   });
 
   it("refuses update_event when the GET payload has no ETag", async () => {
@@ -135,11 +136,69 @@ describe("googlecalendar event write sendUpdates", () => {
         },
         fetcher,
       ),
-    ).rejects.toEqual(
-      new ProviderRequestError(409, "cannot update event because Google Calendar did not provide an event ETag"),
-    );
+    ).rejects.toEqual(new ProviderRequestError(502, "googlecalendar returned an event without an etag"));
     expect(requests).toHaveLength(1);
     expect(requests[0]?.method).toBe("GET");
+  });
+
+  it("refuses update_event when the event re-read after a 412 has no ETag", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(createdEvent),
+      new Response(JSON.stringify({ error: { message: "Precondition Failed" } }), { status: 412 }),
+      Response.json({ id: "evt-1", status: "confirmed", summary: "Standup" }),
+    ]);
+
+    await expect(
+      updateEvent(
+        {
+          calendarId: "cal-1",
+          eventId: "evt-1",
+          event: { summary: "Retro" },
+        },
+        fetcher,
+      ),
+    ).rejects.toEqual(new ProviderRequestError(502, "googlecalendar returned an event without an etag"));
+    expect(requests.map((request) => request.method)).toEqual(["GET", "PUT", "GET"]);
+  });
+
+  it("does not retry update_event when the PUT fails for a reason other than If-Match", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(createdEvent),
+      new Response(JSON.stringify({ error: { message: "Insufficient permission" } }), { status: 403 }),
+    ]);
+
+    await expect(
+      updateEvent(
+        {
+          calendarId: "cal-1",
+          eventId: "evt-1",
+          event: { summary: "Retro" },
+        },
+        fetcher,
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Insufficient permission" });
+    expect(requests.map((request) => request.method)).toEqual(["GET", "PUT"]);
+  });
+
+  it("retries the update_event PUT at most once and surfaces a second If-Match 412", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      Response.json(createdEvent),
+      new Response(JSON.stringify({ error: { message: "Precondition Failed" } }), { status: 412 }),
+      Response.json({ ...createdEvent, etag: '"etag-2"' }),
+      new Response(JSON.stringify({ error: { message: "Precondition Failed" } }), { status: 412 }),
+    ]);
+
+    await expect(
+      updateEvent(
+        {
+          calendarId: "cal-1",
+          eventId: "evt-1",
+          event: { summary: "Retro" },
+        },
+        fetcher,
+      ),
+    ).rejects.toMatchObject({ status: 412, message: "Precondition Failed" });
+    expect(requests.map((request) => request.method)).toEqual(["GET", "PUT", "GET", "PUT"]);
   });
 
   it("re-GETs and retries update_event PUT after an If-Match 412", async () => {
@@ -170,7 +229,8 @@ describe("googlecalendar event write sendUpdates", () => {
     expect(requests[1]?.url.searchParams.get("sendUpdates")).toBe("all");
     expect(requests[3]?.headers.get("if-match")).toBe('"etag-2"');
     expect(requests[3]?.url.searchParams.get("sendUpdates")).toBe("all");
-    expect(requests[3]?.body).toMatchObject({
+    expect(requests[3]?.body).toEqual({
+      status: "confirmed",
       summary: "Retro",
       attendees: [{ email: "cara@example.com" }],
     });
@@ -213,6 +273,73 @@ describe("googlecalendar event write sendUpdates", () => {
     expect(requests[0]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1");
     expect(requests[0]?.url.searchParams.get("sendUpdates")).toBe("all");
     expect(requests[0]?.body).toBeUndefined();
+  });
+
+  it("still forwards sendUpdates on a delete_event that Google reports as already gone", async () => {
+    const { fetcher, requests } = stubCalendarResponses([
+      new Response(JSON.stringify({ error: { message: "Not Found" } }), { status: 404 }),
+    ]);
+
+    const output = await deleteEvent(
+      {
+        calendarId: "cal-1",
+        eventId: "evt-1",
+        sendUpdates: "none",
+      },
+      fetcher,
+    );
+
+    expect(output).toEqual({ success: true });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.url.searchParams.get("sendUpdates")).toBe("none");
+  });
+
+  it("forwards sendUpdates on move_event alongside the destination calendar", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(createdEvent)]);
+
+    await moveEvent(
+      {
+        calendarId: "cal-1",
+        eventId: "evt-1",
+        destinationCalendarId: "cal-2",
+        sendUpdates: "all",
+      },
+      fetcher,
+    );
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.method).toBe("POST");
+    expect(requests[0]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/evt-1/move");
+    expect(requests[0]?.url.searchParams.get("destination")).toBe("cal-2");
+    expect(requests[0]?.url.searchParams.get("sendUpdates")).toBe("all");
+  });
+
+  it("omits sendUpdates from move_event when the caller does not set a notification policy", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(createdEvent)]);
+
+    await moveEvent({ calendarId: "cal-1", eventId: "evt-1", destinationCalendarId: "cal-2" }, fetcher);
+
+    expect(requests[0]?.url.searchParams.get("destination")).toBe("cal-2");
+    expect(requests[0]?.url.searchParams.get("sendUpdates")).toBeNull();
+  });
+
+  it("forwards sendUpdates on quick_add_event alongside the natural-language text", async () => {
+    const { fetcher, requests } = stubCalendarResponses([Response.json(createdEvent)]);
+
+    await quickAddEvent(
+      {
+        calendarId: "cal-1",
+        text: "Standup tomorrow 9am",
+        sendUpdates: "externalOnly",
+      },
+      fetcher,
+    );
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.method).toBe("POST");
+    expect(requests[0]?.url.pathname).toBe("/calendar/v3/calendars/cal-1/events/quickAdd");
+    expect(requests[0]?.url.searchParams.get("text")).toBe("Standup tomorrow 9am");
+    expect(requests[0]?.url.searchParams.get("sendUpdates")).toBe("externalOnly");
   });
 
   it("returns 400 when sendUpdates is not a supported notification policy", async () => {
@@ -281,19 +408,27 @@ function deleteEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
   return googlecalendarEventActionHandlers.delete_event(input, { accessToken, fetcher });
 }
 
+function moveEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
+  return googlecalendarEventActionHandlers.move_event(input, { accessToken, fetcher });
+}
+
+function quickAddEvent(input: Record<string, unknown>, fetcher: ProviderFetch) {
+  return googlecalendarEventActionHandlers.quick_add_event(input, { accessToken, fetcher });
+}
+
 function stubCalendarResponses(responses: Response[]): { fetcher: ProviderFetch; requests: CapturedRequest[] } {
   const requests: CapturedRequest[] = [];
   const pending = [...responses];
   const fetcher: ProviderFetch = async (input, init) => {
     const request = input instanceof Request ? input : new Request(input, init);
+    // Only GET/HEAD are guaranteed body-less. Reading every other method, DELETE
+    // included, is what makes "this request carried no body" a real assertion.
+    const rawBody = request.method === "GET" || request.method === "HEAD" ? "" : await request.text().catch(() => "");
     requests.push({
       method: request.method,
       url: new URL(request.url),
       headers: request.headers,
-      body:
-        request.method === "GET" || request.method === "HEAD" || request.method === "DELETE"
-          ? undefined
-          : await request.json().catch(() => undefined),
+      body: rawBody === "" ? undefined : parseCapturedBody(rawBody),
     });
     const response = pending.shift();
     if (!response) {
@@ -302,4 +437,12 @@ function stubCalendarResponses(responses: Response[]): { fetcher: ProviderFetch;
     return response;
   };
   return { fetcher, requests };
+}
+
+function parseCapturedBody(rawBody: string): unknown {
+  try {
+    return JSON.parse(rawBody) as unknown;
+  } catch {
+    return rawBody;
+  }
 }

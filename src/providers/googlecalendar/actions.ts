@@ -39,7 +39,7 @@ const calendarId = nonEmptyStringWithDescription(
 const eventId = nonEmptyStringWithDescription("Google Calendar event ID.");
 const ruleId = nonEmptyStringWithDescription("Google Calendar ACL rule ID.");
 const sendUpdates = s.stringEnum(
-  "Who should receive update notifications about this change. none can prevent sync to external calendars; use import_event for migrations.",
+  "Which guests receive notifications about this change. Omit it to keep Google Calendar's default notification behavior. none can stop the change from syncing to external calendars; use import_event for migrations.",
   ["all", "externalOnly", "none"],
 );
 
@@ -437,11 +437,15 @@ const actions: GooglecalendarActionSource[] = [
     "move_event",
     "Move a Google Calendar event to another calendar.",
     googlecalendarEventsWriteScopes,
-    input({ calendarId, eventId, destinationCalendarId: nonEmptyStringWithDescription("Destination calendar ID.") }, [
-      "calendarId",
-      "eventId",
-      "destinationCalendarId",
-    ]),
+    input(
+      {
+        calendarId,
+        eventId,
+        destinationCalendarId: nonEmptyStringWithDescription("Destination calendar ID."),
+        sendUpdates,
+      },
+      ["calendarId", "eventId", "destinationCalendarId"],
+    ),
     eventOutput,
   ),
   action(
@@ -468,7 +472,14 @@ const actions: GooglecalendarActionSource[] = [
     "quick_add_event",
     "Create a Google Calendar event with natural language text.",
     googlecalendarEventsWriteScopes,
-    input({ calendarId, text: nonEmptyStringWithDescription("Natural-language event text.") }, ["calendarId", "text"]),
+    input(
+      {
+        calendarId,
+        text: nonEmptyStringWithDescription("Natural-language event text."),
+        sendUpdates,
+      },
+      ["calendarId", "text"],
+    ),
     eventOutput,
   ),
   action(

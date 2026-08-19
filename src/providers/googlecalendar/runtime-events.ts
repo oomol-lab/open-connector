@@ -182,7 +182,7 @@ async function updateEvent(input: Record<string, unknown>, { accessToken, fetche
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const etag = optionalString(current.etag);
     if (!etag) {
-      throw new ProviderRequestError(409, "cannot update event because Google Calendar did not provide an event ETag");
+      throw new ProviderRequestError(502, "googlecalendar returned an event without an etag");
     }
 
     const body = mergeEventUpdate(current, next);
@@ -222,14 +222,13 @@ async function patchEvent(input: Record<string, unknown>, { accessToken, fetcher
 }
 
 async function deleteEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   try {
     await googlecalendarRequest(eventUrl(resolveCalendarId(input), resolveEventId(input)), {
       accessToken,
       fetcher,
       method: "DELETE",
-      query: compactObject({
-        sendUpdates: pickSendUpdates(input),
-      }),
+      query: { sendUpdates },
     });
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status === 404) {
@@ -250,12 +249,14 @@ async function importEvent(input: Record<string, unknown>, { accessToken, fetche
 }
 
 async function moveEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   return googlecalendarJsonRequest(`${eventUrl(resolveCalendarId(input), resolveEventId(input))}/move`, {
     accessToken,
     fetcher,
     method: "POST",
     query: {
       destination: requireInputString(input, "destinationCalendarId", "destinationCalendarId"),
+      sendUpdates,
     },
   });
 }
@@ -280,12 +281,14 @@ async function listEventInstances(
 }
 
 async function quickAddEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   return googlecalendarJsonRequest(`${eventsUrl(resolveCalendarId(input))}/quickAdd`, {
     accessToken,
     fetcher,
     method: "POST",
     query: {
       text: requireInputString(input, "text", "text"),
+      sendUpdates,
     },
   });
 }
