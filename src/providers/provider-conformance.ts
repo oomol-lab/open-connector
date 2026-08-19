@@ -387,7 +387,7 @@ function hasRawWebSocketConstructor(source: string): boolean {
 }
 
 function hasAllowPrivateNetwork(source: string): boolean {
-  return /(?<!\?)\ballowPrivateNetwork\s*:/.test(source);
+  return /(?<!\?)\ballowPrivateNetwork\s*:/.test(source) || /(?:^|\{|,)\s*allowPrivateNetwork\s*(?:,|})/.test(source);
 }
 
 function hasSharedInstanceUrlAssert(source: string): boolean {
@@ -416,7 +416,10 @@ function hasPackageImport(source: string, packageName: string, includeSubpaths: 
 
 function collectLiteralStringBindings(source: string): Set<string> {
   const bindings = new Map<string, string>();
-  const bindingPrefix = String.raw`(?:export\s+)?(?:const|let)\s+([A-Za-z_][\w]*)(?:\s*:\s*[^=;]+)?\s*=\s*`;
+  // Only immutable `const` aliases count as code-controlled literals. A `let`
+  // binding can be reassigned to credential or user input after the initial
+  // literal, so it must not unlock `skipDnsValidation`.
+  const bindingPrefix = String.raw`(?:export\s+)?const\s+([A-Za-z_][\w]*)(?:\s*:\s*[^=;]+)?\s*=\s*`;
   const direct = new RegExp(`${bindingPrefix}(?:["']([^"'\\\\]+)["']|\`([^$\`\\\\]+)\`)`, "g");
   for (const match of source.matchAll(direct)) {
     bindings.set(match[1]!, match[2] ?? match[3] ?? "");
@@ -508,7 +511,9 @@ function hasProxyBaseUrlMethod(objectLiteral: string): boolean {
 
 function isLiteralProxyBaseUrl(expression: string, literalBindings: ReadonlySet<string>): boolean {
   const trimmed = expression.trim();
-  if (/^["'`]https?:\/\//.test(trimmed) && !trimmed.includes("${")) {
+  // Require the whole expression to be one string/template literal. Prefix
+  // matches like `"https://api.example.com" + suffix` must not count as literal.
+  if (/^["']https?:\/\/[^"'\\]+["']$/.test(trimmed) || /^`https?:\/\/[^$`\\]+`$/.test(trimmed)) {
     return true;
   }
   const ident = /^([A-Za-z_][\w]*)$/.exec(trimmed);

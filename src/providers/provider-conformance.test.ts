@@ -305,6 +305,68 @@ describe("scanProviderSkipDnsPolicy", () => {
     ).toEqual(["skip_dns_dynamic_host"]);
   });
 
+  it("flags shorthand allowPrivateNetwork with skipDnsValidation", () => {
+    expect(
+      scanProviderSkipDnsPolicy({
+        service: "selfhosted",
+        files: [
+          {
+            service: "selfhosted",
+            fileName: "executors.ts",
+            nodeOnly: false,
+            text: `defineProviderExecutors({ allowPrivateNetwork, skipDnsValidation: true });\n`,
+          },
+        ],
+      }).map((finding) => finding.kind),
+    ).toEqual(["skip_dns_dynamic_host"]);
+  });
+
+  it("rejects mutable let aliases and concatenated proxy base URLs", () => {
+    expect(
+      scanProviderSkipDnsPolicy({
+        service: "example",
+        files: [
+          {
+            service: "example",
+            fileName: "executors.ts",
+            nodeOnly: false,
+            text: `
+              let exampleApiHost = "api.example.com";
+              exampleApiHost = credentialHost;
+              export const proxy = defineProviderProxy({
+                service,
+                baseUrl: \`https://\${exampleApiHost}\`,
+                skipDnsValidation: true,
+                auth: { type: "bearer" },
+              });
+            `,
+          },
+        ],
+      }).map((finding) => finding.kind),
+    ).toEqual(["skip_dns_dynamic_host", "skip_dns_dynamic_host"]);
+
+    expect(
+      scanProviderSkipDnsPolicy({
+        service: "example",
+        files: [
+          {
+            service: "example",
+            fileName: "executors.ts",
+            nodeOnly: false,
+            text: `
+              export const proxy = defineProviderProxy({
+                service,
+                baseUrl: "https://api.example.com" + pathSuffix,
+                skipDnsValidation: true,
+                auth: { type: "bearer" },
+              });
+            `,
+          },
+        ],
+      }).map((finding) => finding.kind),
+    ).toEqual(["skip_dns_dynamic_host"]);
+  });
+
   it("flags skipDnsValidation with credential resolvers and interpolated hosts", () => {
     expect(
       scanProviderSkipDnsPolicy({

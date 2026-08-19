@@ -5,6 +5,7 @@ import type { PushoverActionName } from "./actions.ts";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
+import { openGuardedWebSocket } from "../../core/guarded-websocket.ts";
 import {
   defineApiKeyProviderExecutors,
   ProviderRequestError,
@@ -979,18 +980,26 @@ async function listenPushoverClientWebsocket(input: PushoverActionInput) {
     device_id: string;
     timeout?: number;
   };
-  if (typeof globalThis.WebSocket !== "function") {
-    throw pushoverError("provider_not_configured", "WebSocket is unavailable in this runtime");
-  }
 
   const timeoutSeconds = Math.min(
     Math.max(parsed.timeout ?? pushoverDefaultRealtimeTimeoutSeconds, 1),
     pushoverMaxRealtimeTimeoutSeconds,
   );
 
+  const socket = await openGuardedWebSocket(pushoverRealtimeUrl, {
+    // Host is a hardcoded Pushover literal; DNS checks are redundant here.
+    skipDnsValidation: true,
+    createError: (message) => pushoverError("invalid_input", message, 400),
+    createFailure: (kind, message) => {
+      if (kind === "unsupported") {
+        return pushoverError("provider_not_configured", message);
+      }
+      return pushoverError("provider_error", message, 502);
+    },
+  });
+
   return new Promise<{ events: Array<{ code: string; event: string; description: string }> }>((resolve, reject) => {
     const events: Array<{ code: string; event: string; description: string }> = [];
-    const socket = new globalThis.WebSocket(pushoverRealtimeUrl);
     let settled = false;
     const timeoutHandle = globalThis.setTimeout(() => {
       try {
@@ -1018,10 +1027,6 @@ async function listenPushoverClientWebsocket(input: PushoverActionInput) {
       reject(error);
     }
 
-    socket.addEventListener("open", () => {
-      socket.send(`login:${parsed.device_id}:${parsed.secret}\n`);
-    });
-
     socket.addEventListener("message", (event) => {
       const frames = normalizeWebSocketFrames(event.data);
       for (const frame of frames) {
@@ -1046,6 +1051,12 @@ async function listenPushoverClientWebsocket(input: PushoverActionInput) {
     socket.addEventListener("close", () => {
       settleResolve();
     });
+
+    try {
+      socket.send(`login:${parsed.device_id}:${parsed.secret}\n`);
+    } catch {
+      settleReject(pushoverError("provider_error", "pushover realtime websocket connection failed", 502));
+    }
   });
 }
 
