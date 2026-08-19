@@ -187,7 +187,18 @@ function isAllowedOutlookMessageNextLinkPath(pathname: string) {
   if (segments.length === 3 && segments[2] === "messages") {
     return true;
   }
+  if (segments.length === 4 && isParenthesizedMailFoldersSegment(segments[2]) && segments[3] === "messages") {
+    return true;
+  }
   return segments.length === 5 && segments[2] === "mailFolders" && segments[3] !== "" && segments[4] === "messages";
+}
+
+// Graph's @odata.nextLink uses the OData parenthesized-key form for
+// folder-scoped listings: /v1.0/me/mailFolders('{id}')/messages.
+function isParenthesizedMailFoldersSegment(segment: string) {
+  return (
+    segment.startsWith("mailFolders('") && segment.endsWith("')") && segment.length > "mailFolders('')".length
+  );
 }
 
 function isAllowedOutlookMailFolderNextLinkPath(pathname: string) {
