@@ -173,6 +173,34 @@ describe("Alibaba Cloud OSS download_object", () => {
     });
     expect(fetch).not.toHaveBeenCalled();
   });
+
+  it("returns 504 when the download request times out", async () => {
+    const timeoutController = new AbortController();
+    timeoutController.abort();
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
+    vi.stubGlobal("fetch", async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      throw new Error("expected download fetch to use an aborted timeout signal");
+    });
+    const { store } = createTransitFileStore(1024);
+
+    try {
+      const result = await executeDownload({ bucket: "documents", objectKey: "slow.bin" }, store);
+
+      expect(result).toMatchObject({
+        ok: false,
+        error: {
+          code: "provider_error",
+          message: "aliyun_oss download timed out",
+          details: { status: 504 },
+        },
+      });
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
 });
 
 describe("Alibaba Cloud OSS put_object sourceUrl", () => {

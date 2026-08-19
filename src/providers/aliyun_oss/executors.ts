@@ -16,6 +16,7 @@ import {
   createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
+  isAbortLikeError,
   normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
@@ -472,10 +473,13 @@ async function aliyunHeadObject(input: Record<string, unknown>, context: AliyunO
 }
 
 async function aliyunDownloadObject(input: Record<string, unknown>, context: AliyunOssContext): Promise<unknown> {
+  let timeoutSignal: AbortSignal | undefined;
   try {
     if (!context.transitFiles) {
       throw new ProviderRequestError(400, "aliyun_oss download_object requires local transit file storage");
     }
+
+    timeoutSignal = AbortSignal.timeout(sourceFetchTimeoutMs);
 
     const bucket = resolveBucket(input, context);
     const objectKey = readObjectKey(input);
@@ -506,7 +510,6 @@ async function aliyunDownloadObject(input: Record<string, unknown>, context: Ali
       ),
     );
 
-    const timeoutSignal = AbortSignal.timeout(sourceFetchTimeoutMs);
     const response = await context.fetcher(url, {
       method: "GET",
       headers,
@@ -536,6 +539,9 @@ async function aliyunDownloadObject(input: Record<string, unknown>, context: Ali
       file,
     };
   } catch (error) {
+    if (timeoutSignal?.aborted && !context.signal?.aborted && isAbortLikeError(error)) {
+      throw new ProviderRequestError(504, "aliyun_oss download timed out", error);
+    }
     throw normalizeAliyunError(error, "execute");
   }
 }
