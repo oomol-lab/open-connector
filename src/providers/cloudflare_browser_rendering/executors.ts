@@ -362,8 +362,8 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareBro
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      Array.isArray(context.metadata.availableAccounts)
-        ? "accountId is required for this Cloudflare Browser Run action because the OAuth connection can access multiple accounts."
+      context.authType === "oauth2"
+        ? "accountId is required for this Cloudflare Browser Run action. Use list_accounts to find an accessible Cloudflare account ID."
         : "accountId is required in the connected Cloudflare Browser Run credential.",
     );
   }

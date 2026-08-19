@@ -149,9 +149,24 @@ describe("Cloudflare Browser Run OAuth", () => {
 
     expect(missingAccount).toMatchObject({
       ok: false,
-      error: { message: expect.stringContaining("accountId is required") },
+      error: { message: expect.stringContaining("list_accounts") },
     });
     expect(selectedAccount).toEqual({ ok: true, output: { markdown: "# OpenMeld" } });
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("directs OAuth callers to list_accounts when no Cloudflare account is selected", async () => {
+    const result = await executors["cloudflare_browser_rendering.get_markdown"]!(
+      { url: "https://openmeld.ai" },
+      executionContext(oauthCredential({})),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        message:
+          "accountId is required for this Cloudflare Browser Run action. Use list_accounts to find an accessible Cloudflare account ID.",
+      },
+    });
   });
 });

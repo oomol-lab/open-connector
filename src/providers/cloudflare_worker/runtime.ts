@@ -732,8 +732,8 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareWor
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      context.metadata.requiresAccountSelection === true || Array.isArray(context.metadata.availableAccounts)
-        ? "accountId is required for this Cloudflare Worker action because the OAuth credential can access multiple accounts"
+      context.authType === "oauth2"
+        ? "accountId is required for this Cloudflare Worker action. Use list_accounts to find an accessible Cloudflare account ID."
         : "accountId is required in the connected credential",
     );
   }

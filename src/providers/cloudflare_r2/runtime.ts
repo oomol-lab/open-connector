@@ -388,8 +388,8 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareR2C
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      Array.isArray(context.metadata.availableAccounts)
-        ? "accountId is required for this Cloudflare R2 action because the OAuth credential can access multiple accounts"
+      context.authType === "oauth2"
+        ? "accountId is required for this Cloudflare R2 action. Use list_accounts to find an accessible Cloudflare account ID."
         : "accountId is required in the connected credential",
     );
   }

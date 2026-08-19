@@ -63,12 +63,15 @@ describe("Canva regional executors", () => {
       const request = input instanceof Request ? input : new Request(input, init);
       calls.push({ url: request.url, authorization: request.headers.get("authorization") });
       expect(request.url).toBe("https://api.canva.com/rest/v1/users/me");
+      expect(request.headers.get("authorization")).toBe("Bearer test-access-token");
       return Response.json({ team_user: { user_id: "user-1", team_id: "team-1" } });
     };
 
     const result = await createCanvaCredentialValidators("https://api.canva.com/rest").oauth2!(credential, { fetcher });
 
-    expect(calls).toHaveLength(1);
+    expect(calls).toEqual([
+      { url: "https://api.canva.com/rest/v1/users/me", authorization: "Bearer test-access-token" },
+    ]);
     expect(result).toMatchObject({
       profile: { accountId: "user-1", displayName: "user-1" },
       metadata: { validationEndpoint: "/v1/users/me", userId: "user-1", teamId: "team-1" },
