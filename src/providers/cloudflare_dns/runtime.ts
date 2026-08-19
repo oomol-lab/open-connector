@@ -138,6 +138,26 @@ export async function requestCloudflareAccounts(
   };
 }
 
+export async function requestCloudflareCurrentUser(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<{ userId: string; email?: string; firstName?: string; lastName?: string; username?: string }> {
+  const envelope = await cloudflareRequestEnvelope(accessToken, { path: "/user" }, { fetcher, signal }, "validate");
+  const user = readObject(envelope.result, "cloudflare user");
+  const userId = optionalString(user.id);
+  if (!userId) {
+    throw new ProviderRequestError(502, "cloudflare user response is missing id");
+  }
+  return {
+    userId,
+    email: optionalString(user.email),
+    firstName: optionalString(user.first_name),
+    lastName: optionalString(user.last_name),
+    username: optionalString(user.username),
+  };
+}
+
 async function probeCloudflareDnsZones(
   apiToken: string,
   fetcher: typeof fetch,

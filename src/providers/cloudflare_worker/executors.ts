@@ -6,11 +6,11 @@ import type {
 } from "../../core/types.ts";
 import type { CloudflareWorkerContext } from "./runtime.ts";
 
-import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 import {
   cloudflareWorkerActionHandlers,
-  requestCloudflareWorkerAccounts,
+  requestCloudflareWorkerCurrentUser,
   validateCloudflareWorkerCredential,
 } from "./runtime.ts";
 
@@ -58,37 +58,23 @@ export const credentialValidators: CredentialValidators = {
     return validateCloudflareWorkerCredential(input.values, fetcher, signal);
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    const result = await requestCloudflareWorkerAccounts(input.accessToken, fetcher, signal, { page: 1, perPage: 50 });
-    if (result.accounts.length === 0) {
-      throw new ProviderRequestError(400, "Cloudflare OAuth credential cannot access any accounts");
-    }
-    const totalCount = optionalInteger(result.resultInfo?.totalCount);
-    if (result.accounts.length === 1 && totalCount === 1) {
-      const account = result.accounts[0]!;
-      return {
-        profile: {
-          accountId: account.id,
-          displayName: account.name ?? "Cloudflare Worker",
-        },
-        grantedScopes: input.profile.grantedScopes,
-        metadata: {
-          accountId: account.id,
-          accountName: account.name,
-          accountType: account.type,
-          validationEndpoint: "/accounts?page=1&per_page=50",
-        },
-      };
-    }
+    const user = await requestCloudflareWorkerCurrentUser(input.accessToken, fetcher, signal);
+    const displayName =
+      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+      user.username ||
+      user.email ||
+      "Cloudflare Worker";
     return {
       profile: {
-        accountId: input.profile.accountId,
-        displayName: "Cloudflare Worker",
+        accountId: user.userId,
+        displayName,
       },
       grantedScopes: input.profile.grantedScopes,
-      metadata: {
-        requiresAccountSelection: true,
-        validationEndpoint: "/accounts?page=1&per_page=50",
-      },
+      metadata: compactObject({
+        userId: user.userId,
+        email: user.email,
+        validationEndpoint: "/user",
+      }),
     };
   },
 };

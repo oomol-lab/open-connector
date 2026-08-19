@@ -562,24 +562,14 @@ async function fetchHarvestCurrentAccount(
 }> {
   const accountsPayload = await requestHarvestAccounts(credential.accessToken, fetcher, signal);
   const accountsResponse = requireObjectPayload(accountsPayload, "harvest accounts response");
-  const accounts = readHarvestAccounts(accountsResponse);
-  const defaultAccount = selectDefaultHarvestAccount(accounts);
-  const accountId = requireHarvestResponseAccountId(defaultAccount.id);
-  const payload = await requestHarvestJson<Record<string, unknown>>({
-    accountId,
-    accessToken: credential.accessToken,
-    path: harvestValidationPath,
-    fetcher,
-    signal,
-    mode: "validate",
-  });
-
-  const user = requireObjectPayload(payload, "harvest current user response");
   const accountUser = optionalRecord(accountsResponse.user);
-  const userId = String(requireHarvestResponseId(user.id ?? accountUser?.id, "user.id"));
-  const firstName = optionalString(user.first_name) ?? optionalString(accountUser?.first_name);
-  const lastName = optionalString(user.last_name) ?? optionalString(accountUser?.last_name);
-  const email = optionalString(user.email) ?? optionalString(accountUser?.email);
+  const accounts = readHarvestAccounts(accountsResponse);
+  const defaultAccount = accounts.length > 0 ? selectDefaultHarvestAccount(accounts) : undefined;
+  const accountId = defaultAccount ? requireHarvestResponseAccountId(defaultAccount.id) : undefined;
+  const userId = String(requireHarvestResponseId(accountUser?.id, "user.id"));
+  const firstName = optionalString(accountUser?.first_name);
+  const lastName = optionalString(accountUser?.last_name);
+  const email = optionalString(accountUser?.email);
   const accountLabel = [firstName, lastName].filter(Boolean).join(" ").trim() || email || "Harvest User";
 
   return {
@@ -589,12 +579,11 @@ async function fetchHarvestCurrentAccount(
       apiBaseUrl: harvestApiBaseUrl,
       accountId,
       defaultAccountId: accountId,
-      validationEndpoint: harvestValidationPath,
+      validationEndpoint: harvestAccountsUrl,
       userId: Number(userId),
       firstName,
       lastName,
       email,
-      timezone: optionalString(user.timezone),
       accounts: accounts.map((account) =>
         compactObject({
           id: requireHarvestResponseAccountId(account.id),
@@ -700,10 +689,6 @@ function readHarvestAccounts(payload: Record<string, unknown>): Array<Record<str
       const product = optionalString(item.product);
       return product == null || product === "harvest";
     });
-
-  if (accounts.length === 0) {
-    throw new ProviderRequestError(502, "harvest oauth account list is empty");
-  }
 
   return accounts;
 }

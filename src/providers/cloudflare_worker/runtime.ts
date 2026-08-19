@@ -224,6 +224,26 @@ export async function requestCloudflareWorkerAccounts(
   };
 }
 
+export async function requestCloudflareWorkerCurrentUser(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<{ userId: string; email?: string; firstName?: string; lastName?: string; username?: string }> {
+  const envelope = await cloudflareRequestEnvelope(accessToken, { path: "/user" }, { fetcher, signal }, "validate");
+  const user = readObject(envelope.result, "cloudflare user");
+  const userId = optionalString(user.id);
+  if (!userId) {
+    throw new ProviderRequestError(502, "cloudflare user response is missing id");
+  }
+  return {
+    userId,
+    email: optionalString(user.email),
+    firstName: optionalString(user.first_name),
+    lastName: optionalString(user.last_name),
+    username: optionalString(user.username),
+  };
+}
+
 async function listAccounts(input: Record<string, unknown>, context: CloudflareWorkerContext): Promise<unknown> {
   return requestCloudflareWorkerAccounts(context.accessToken, context.fetcher, context.signal, {
     page: optionalInteger(input.page),

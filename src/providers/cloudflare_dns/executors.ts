@@ -1,7 +1,8 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
+import { compactObject } from "../../core/cast.ts";
 import { defineBearerProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
-import { cloudflareDnsActionHandlers, requestCloudflareAccounts, validateCloudflareDnsToken } from "./runtime.ts";
+import { cloudflareDnsActionHandlers, requestCloudflareCurrentUser, validateCloudflareDnsToken } from "./runtime.ts";
 
 const service = "cloudflare_dns";
 
@@ -12,19 +13,23 @@ export const credentialValidators: CredentialValidators = {
     return validateCloudflareDnsToken(input.apiKey, fetcher, signal);
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    const result = await requestCloudflareAccounts(input.accessToken, fetcher, signal, { page: 1, perPage: 1 });
-    const firstAccount = result.accounts[0];
+    const user = await requestCloudflareCurrentUser(input.accessToken, fetcher, signal);
+    const displayName =
+      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+      user.username ||
+      user.email ||
+      "Cloudflare DNS";
     return {
       profile: {
-        accountId: firstAccount?.id ?? input.profile.accountId,
-        displayName: firstAccount?.name ?? input.profile.displayName,
+        accountId: user.userId,
+        displayName,
       },
       grantedScopes: input.profile.grantedScopes,
-      metadata: {
-        accountId: firstAccount?.id,
-        accountName: firstAccount?.name,
-        validationEndpoint: "/accounts?page=1&per_page=1",
-      },
+      metadata: compactObject({
+        userId: user.userId,
+        email: user.email,
+        validationEndpoint: "/user",
+      }),
     };
   },
 };

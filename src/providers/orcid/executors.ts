@@ -1,9 +1,11 @@
-import type { ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
+import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 const service = "orcid";
 const baseUrl = "https://pub.orcid.org/v3.0";
+const orcidUserInfoUrl = "https://orcid.org/oauth/userinfo";
 const handlers = {
   async search_records(input: Record<string, unknown>, context: OAuthProviderContext) {
     const start = integer(input.start, 0);
@@ -39,6 +41,61 @@ const handlers = {
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, handlers, {
   skipDnsValidation: true,
 });
+
+export const credentialValidators: CredentialValidators = {
+  async oauth2(input, { fetcher, signal }) {
+    const response = await fetcher(orcidUserInfoUrl, {
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${input.accessToken}`,
+        "user-agent": providerUserAgent,
+      },
+      signal,
+    });
+    let payload: unknown;
+    try {
+      payload = await response.json();
+    } catch {
+      throw new ProviderRequestError(502, "ORCID userinfo returned invalid JSON");
+    }
+    if (!response.ok) {
+      throw new ProviderRequestError(
+        response.status === 401 || response.status === 403
+          ? 401
+          : response.status === 429
+            ? 429
+            : response.status < 500
+              ? 400
+              : 502,
+        "ORCID userinfo request failed",
+        payload,
+      );
+    }
+    const user = optionalRecord(payload);
+    if (!user) {
+      throw new ProviderRequestError(502, "ORCID userinfo response is invalid");
+    }
+    const orcidId = optionalString(user.sub) ?? optionalString(user.orcid);
+    if (!orcidId) {
+      throw new ProviderRequestError(502, "ORCID userinfo response is missing sub");
+    }
+    const displayName = optionalString(user.name) ?? orcidId;
+    return {
+      profile: {
+        accountId: orcidId,
+        displayName,
+      },
+      grantedScopes: ["openid"],
+      metadata: compactObject({
+        validationEndpoint: orcidUserInfoUrl,
+        orcidId,
+        name: optionalString(user.name),
+        givenName: optionalString(user.given_name),
+        familyName: optionalString(user.family_name),
+      }),
+    };
+  },
+};
 async function request(url: URL, context: OAuthProviderContext): Promise<Record<string, unknown>> {
   const response = await context.fetcher(url, {
     headers: {

@@ -6,7 +6,7 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 import { sentryProviderScopes } from "./scopes.ts";
 
 export const sentryApiBaseUrl: string = "https://sentry.io/api/0/";
-const sentryOrganizationsUrl = `${sentryApiBaseUrl}organizations/`;
+const sentryCurrentUserUrl = `${sentryApiBaseUrl}users/me/`;
 
 type SentryJsonResponse = {
   payload: unknown;
@@ -86,41 +86,29 @@ export async function validateSentryCredential(
   grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
-  const { payload: organizations } = await requestSentryJson(
-    accessToken,
-    sentryOrganizationsUrl,
-    fetcher,
-    {},
-    "validate",
-  );
-  if (!Array.isArray(organizations) || organizations.length === 0) {
-    throw new ProviderRequestError(502, "sentry organizations response did not include an authorized organization");
+  const { payload } = await requestSentryJson(accessToken, sentryCurrentUserUrl, fetcher, {}, "validate");
+  const user = asRecord(payload);
+  if (!user) {
+    throw new ProviderRequestError(502, "sentry current user payload is invalid");
   }
-
-  const organization = asRecord(organizations[0]);
-  if (!organization) {
-    throw new ProviderRequestError(502, "sentry organization payload is invalid");
-  }
-  const links = asOptionalRecord(organization.links);
-  const organizationId = pickString(organization.id, organization.slug);
-  const organizationName = pickString(organization.name, organization.slug, organization.id);
-
-  if (!organizationId || !organizationName) {
-    throw new ProviderRequestError(502, "sentry organization payload is invalid");
+  const userId = pickString(user.id, user.username, user.email);
+  const displayName = pickString(user.name, user.username, user.email, user.id);
+  if (!userId || !displayName) {
+    throw new ProviderRequestError(502, "sentry current user payload is invalid");
   }
 
   return {
     profile: {
-      accountId: organizationId,
-      displayName: organizationName,
+      accountId: userId,
+      displayName,
     },
     grantedScopes: sentryProviderScopes,
     metadata: compactObject({
-      organizationId,
-      slug: optionalString(organization.slug),
-      name: optionalString(organization.name),
-      organizationUrl: optionalString(links?.organizationUrl),
-      regionUrl: optionalString(links?.regionUrl),
+      validationEndpoint: "/users/me/",
+      userId,
+      username: optionalString(user.username),
+      email: optionalString(user.email),
+      name: optionalString(user.name),
     }),
   };
 }

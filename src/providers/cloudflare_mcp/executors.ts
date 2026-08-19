@@ -13,7 +13,6 @@ import { defineBearerProviderExecutors, providerUserAgent, ProviderRequestError 
 const service = "cloudflare_mcp";
 const cloudflareMcpEndpoint = "https://mcp.cloudflare.com/mcp";
 const cloudflareMcpRequestTimeoutMs = 60_000;
-const expectedTools = ["docs", "execute", "search"];
 
 type CloudflareMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
@@ -48,14 +47,6 @@ export const credentialValidators: CredentialValidators = {
 async function validateCloudflareMcpCredential(accessToken: string, fetcher: typeof fetch, signal?: AbortSignal) {
   const tools = await listCloudflareMcpTools({ accessToken, fetcher, signal });
   const toolNames = tools.map((tool) => tool.name).sort();
-  const missingTools = expectedTools.filter((tool) => !toolNames.includes(tool));
-  if (missingTools.length > 0) {
-    throw new ProviderRequestError(
-      502,
-      `Cloudflare MCP did not advertise the expected tools: ${missingTools.join(", ")}`,
-    );
-  }
-
   const tokenHash = createHash("sha256").update(accessToken).digest("hex").slice(0, 16);
   return {
     profile: {

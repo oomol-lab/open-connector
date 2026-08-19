@@ -146,42 +146,35 @@ export const credentialValidators: CredentialValidators = {
     };
   },
   async oauth2(input, { fetcher, signal }) {
-    const accounts = await requestAllOAuthAccounts(input.accessToken, { fetcher, signal });
-    if (accounts.length === 0) {
-      throw new ProviderRequestError(400, "Cloudflare OAuth cannot access any accounts.");
+    const envelope = await cloudflareRequestEnvelope(
+      input.accessToken,
+      { path: "/user" },
+      { fetcher, signal },
+      "validate",
+    );
+    const user = readObject(envelope.result, "cloudflare user");
+    const userId = optionalString(user.id);
+    if (!userId) {
+      throw new ProviderRequestError(502, "cloudflare user response is missing id");
     }
-
-    if (accounts.length === 1) {
-      const account = accounts[0]!;
-      const accountId = readRequiredString(account, "id");
-      const accountName = readRequiredString(account, "name");
-      return {
-        profile: {
-          accountId,
-          displayName: accountName,
-        },
-        grantedScopes: input.profile.grantedScopes,
-        metadata: compactObject({
-          apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
-          validationEndpoint: "/memberships?page=1&per_page=50&status=accepted",
-          accountId,
-          accountName,
-          accountType: optionalString(account.type),
-        }),
-      };
-    }
-
+    const email = optionalString(user.email);
+    const displayName =
+      [optionalString(user.first_name), optionalString(user.last_name)].filter(Boolean).join(" ").trim() ||
+      optionalString(user.username) ||
+      email ||
+      "Cloudflare Browser Run";
     return {
       profile: {
-        accountId: input.profile.accountId,
-        displayName: "Cloudflare Browser Run",
+        accountId: userId,
+        displayName,
       },
       grantedScopes: input.profile.grantedScopes,
-      metadata: {
+      metadata: compactObject({
         apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
-        validationEndpoint: "/memberships?page=1&per_page=50&status=accepted",
-        availableAccounts: accounts,
-      },
+        validationEndpoint: "/user",
+        userId,
+        email,
+      }),
     };
   },
 };
@@ -223,24 +216,6 @@ async function requestOAuthAccounts(
     accounts: normalizeMembershipAccountList(envelope.result),
     resultInfo: normalizeResultInfo(envelope.result_info),
   };
-}
-
-async function requestAllOAuthAccounts(
-  accessToken: string,
-  context: Pick<CloudflareBrowserRenderingContext, "fetcher" | "signal">,
-): Promise<Array<Record<string, unknown>>> {
-  const firstPage = await requestOAuthAccounts(accessToken, context, { page: 1, perPage: 50 }, "validate");
-  const totalPages = optionalInteger(firstPage.resultInfo.totalPages);
-  if (totalPages === undefined || totalPages < 1) {
-    throw new ProviderRequestError(502, "malformed cloudflare memberships pagination");
-  }
-
-  const accounts = [...firstPage.accounts];
-  for (let page = 2; page <= totalPages; page += 1) {
-    const result = await requestOAuthAccounts(accessToken, context, { page, perPage: 50 }, "validate");
-    accounts.push(...result.accounts);
-  }
-  return accounts;
 }
 
 async function requestAccounts(

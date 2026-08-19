@@ -1,6 +1,5 @@
-import type { ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
@@ -19,6 +18,49 @@ export const canvaActionHandlers: ProviderActionHandlers<"canva", CanvaActionHan
   createCanvaActionHandlers(canvaApiBaseUrl);
 
 export const executors: ProviderExecutors = createCanvaExecutors(service, canvaApiBaseUrl);
+
+/** Build Canva credential validators for one regional OAuth API base URL. */
+export function createCanvaCredentialValidators(apiBaseUrl: string): CredentialValidators {
+  return {
+    async oauth2(input, { fetcher, signal }) {
+      const account = await canvaJsonRequest(
+        "GET",
+        "/v1/users/me",
+        {
+          accessToken: input.accessToken,
+          tokenType: input.tokenType,
+          fetcher,
+          signal,
+        },
+        apiBaseUrl,
+      );
+      const teamUser = optionalRecord(account.team_user) ?? optionalRecord(account.user) ?? {};
+      const userId =
+        optionalString(teamUser.user_id) ??
+        optionalString(teamUser.userId) ??
+        optionalString(teamUser.id) ??
+        optionalString(account.id);
+      if (!userId) {
+        throw new ProviderRequestError(502, "canva current user response is missing user id");
+      }
+      const teamId = optionalString(teamUser.team_id) ?? optionalString(teamUser.teamId);
+      return {
+        profile: {
+          accountId: userId,
+          displayName: userId,
+        },
+        metadata: compactObject({
+          apiBaseUrl,
+          validationEndpoint: "/v1/users/me",
+          userId,
+          teamId,
+        }),
+      };
+    },
+  };
+}
+
+export const credentialValidators: CredentialValidators = createCanvaCredentialValidators(canvaApiBaseUrl);
 
 function createCanvaActionHandlers(apiBaseUrl: string): ProviderActionHandlers<"canva", CanvaActionHandler> {
   return {

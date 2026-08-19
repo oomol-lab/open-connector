@@ -22,17 +22,14 @@ function shopifyCredentialFetcher(expectedToken: string): typeof fetch {
     const requestUrl = new URL(url.toString());
     expect(requestUrl.origin).toBe("https://acme.myshopify.com");
     expect(new Headers(init?.headers).get("x-shopify-access-token")).toBe(expectedToken);
-    if (requestUrl.pathname.endsWith("/shop.json")) {
-      return Response.json({
-        shop: {
-          id: 123,
-          name: "Acme Store",
-          myshopify_domain: "acme.myshopify.com",
-        },
-      });
-    }
-    expect(requestUrl.pathname).toMatch(/\/blogs\/count\.json$/u);
-    return Response.json({ count: 1 });
+    expect(requestUrl.pathname.endsWith("/shop.json")).toBe(true);
+    return Response.json({
+      shop: {
+        id: 123,
+        name: "Acme Store",
+        myshopify_domain: "acme.myshopify.com",
+      },
+    });
   };
 }
 

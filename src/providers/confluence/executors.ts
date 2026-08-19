@@ -23,8 +23,6 @@ import {
   buildConfluenceOAuthApiBaseUrls,
   confluenceActionHandlers,
   confluenceDefaultTimeoutMs,
-  confluenceValidationPath,
-  requestConfluenceJson,
   validateConfluenceCredential,
 } from "./runtime.ts";
 import {
@@ -159,23 +157,6 @@ async function validateConfluenceOAuthCredential(
   const siteAvatarUrl = optionalString(resource.avatarUrl);
   const resourceScopes = optionalStringArray(resource.scopes) ?? [];
   const { baseUrl, restApiBaseUrl } = buildConfluenceOAuthApiBaseUrls(cloudId);
-  const payload = await requestConfluenceJson({
-    baseUrl,
-    restApiBaseUrl,
-    auth: {
-      type: "oauth2",
-      accessToken: credential.accessToken,
-      tokenType: credential.tokenType,
-    },
-    fetcher,
-    signal,
-    method: "GET",
-    path: confluenceValidationPath,
-    phase: "validate",
-    query: { limit: 1 },
-  });
-  const payloadObject = optionalRecord(payload);
-  const validationResultCount = Array.isArray(payloadObject?.results) ? payloadObject.results.length : undefined;
 
   return {
     profile: {
@@ -193,8 +174,7 @@ async function validateConfluenceOAuthCredential(
       resourceCount: resources.length,
       baseUrl,
       restApiBaseUrl,
-      validationEndpoint: confluenceValidationPath,
-      validationResultCount,
+      validationEndpoint: "/oauth/token/accessible-resources",
     }),
   };
 }

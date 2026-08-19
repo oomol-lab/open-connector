@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
-import { executeHubspotAction, fetchHubspotCurrentAccount, mapHubspotMcpDetailsToConnectorScopes } from "./runtime.ts";
+import { executeHubspotAction, fetchHubspotCurrentAccount } from "./runtime.ts";
 
 const service = "hubspot";
 
@@ -170,19 +170,13 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(service
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }): Promise<CredentialValidationResult> {
     const profile = await fetchHubspotCurrentAccount(input.accessToken, fetcher);
-    const userDetails = profile.providerMetadata.userDetails;
-    const grantedScopes = mapHubspotMcpDetailsToConnectorScopes(userDetails);
-
     return {
       profile: {
         accountId: profile.providerAccountId,
         displayName: profile.accountLabel,
       },
-      grantedScopes,
-      metadata: {
-        ...profile.providerMetadata,
-        connectorScopes: grantedScopes,
-      },
+      grantedScopes: ["mcp:tools"],
+      metadata: profile.providerMetadata,
     };
   },
 };

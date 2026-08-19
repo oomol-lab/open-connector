@@ -10,7 +10,6 @@ export const shopifyRestApiVersion = "2026-04";
 
 const credentialHelpUrl = "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens";
 const shopPath = "/shop.json";
-const contentValidationPath = "/blogs/count.json";
 
 type ShopifyRequestPhase = "validate" | "execute";
 interface ShopifyPagination {
@@ -194,11 +193,6 @@ export async function validateShopifyCredential(
     phase: "validate",
   });
   const shop = requireRecord(requireRecord(shopResult.payload, "Shopify shop response").shop, "shop");
-  await requestShopifyRest({
-    context,
-    path: contentValidationPath,
-    phase: "validate",
-  });
 
   return {
     profile: {
@@ -212,7 +206,6 @@ export async function validateShopifyCredential(
       restApiVersion: shopifyRestApiVersion,
       credentialHelpUrl,
       validationEndpoint: shopPath,
-      contentScopeValidationEndpoint: contentValidationPath,
       shopId: optionalNumber(shop.id),
       myshopifyDomain: optionalString(shop.myshopify_domain),
     }),
