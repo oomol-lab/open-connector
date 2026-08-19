@@ -25,12 +25,16 @@ interface PolicyEditorProps {
   providers: ProviderDefinition[];
   includeProxies: boolean;
   proxyAccess?: "constraint" | "grant";
+  connectionEditor?: ReactNode;
+  connectionInvalid?: boolean;
   onChange(draft: PolicyEditorDraft): void;
 }
 
 export function PolicyEditor(props: PolicyEditorProps): ReactNode {
   const t = useTranslate();
   const issues = validatePolicyEditorDraft(props.draft, props.includeProxies);
+  const actionIssue = issues.find((issue) => issue.field === "allowedActions" || issue.field === "blockedActions");
+  const proxyIssue = issues.find((issue) => issue.field === "allowedProxies" || issue.field === "blockedProxies");
   const actionEditor = (
     <PolicyResourceEditor resource="action" draft={props.draft} providers={props.providers} onChange={props.onChange} />
   );
@@ -40,10 +44,25 @@ export function PolicyEditor(props: PolicyEditorProps): ReactNode {
       {props.includeProxies ? (
         <Tabs defaultValue="action">
           <TabsList variant="line" aria-label={t("access.policy.editor.resourceLabel")}>
-            <TabsTrigger value="action">{t("access.policy.editor.actionsTab")}</TabsTrigger>
-            <TabsTrigger value="proxy">{t("access.policy.editor.proxiesTab")}</TabsTrigger>
+            <TabsTrigger value="action">
+              {t("access.policy.editor.actionsTab")}
+              {actionIssue ? <CircleAlert className="policy-tab-issue" aria-hidden /> : null}
+            </TabsTrigger>
+            <TabsTrigger value="proxy">
+              {t("access.policy.editor.proxiesTab")}
+              {proxyIssue ? <CircleAlert className="policy-tab-issue" aria-hidden /> : null}
+            </TabsTrigger>
+            {props.connectionEditor ? (
+              <TabsTrigger value="connection">
+                {t("access.policy.editor.connectionsTitle")}
+                {props.connectionInvalid ? <CircleAlert className="policy-tab-issue" aria-hidden /> : null}
+              </TabsTrigger>
+            ) : null}
           </TabsList>
-          <TabsContent value="action">{actionEditor}</TabsContent>
+          <TabsContent value="action">
+            {actionEditor}
+            {actionIssue ? <PolicyEditorError issue={actionIssue} /> : null}
+          </TabsContent>
           <TabsContent value="proxy">
             <PolicyResourceEditor
               resource="proxy"
@@ -52,17 +71,26 @@ export function PolicyEditor(props: PolicyEditorProps): ReactNode {
               proxyAccess={props.proxyAccess}
               onChange={props.onChange}
             />
+            {proxyIssue ? <PolicyEditorError issue={proxyIssue} /> : null}
           </TabsContent>
+          {props.connectionEditor ? <TabsContent value="connection">{props.connectionEditor}</TabsContent> : null}
         </Tabs>
       ) : (
-        actionEditor
+        <>
+          {actionEditor}
+          {actionIssue ? <PolicyEditorError issue={actionIssue} /> : null}
+        </>
       )}
-      {issues.length > 0 ? (
-        <div className="policy-editor-error" role="alert">
-          <CircleAlert size={15} />
-          <span>{draftIssueLabel(issues[0], t)}</span>
-        </div>
-      ) : null}
+    </div>
+  );
+}
+
+function PolicyEditorError(props: { issue: ReturnType<typeof validatePolicyEditorDraft>[number] }): ReactNode {
+  const t = useTranslate();
+  return (
+    <div className="policy-editor-error" role="alert">
+      <CircleAlert size={15} />
+      <span>{draftIssueLabel(props.issue, t)}</span>
     </div>
   );
 }

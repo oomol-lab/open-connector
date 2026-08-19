@@ -202,11 +202,11 @@ async function listConnections(options: IMcpServerOptions, service: string | und
       : await options.connections.listConnections();
     return successPayload(
       connections
-        .filter((connection) => !connection.virtual && policy.evaluateConnection(connection.connectionName).allowed)
+        .filter((connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed)
         .map(serializeConnection),
     );
   } catch (error) {
-    return connectionErrorPayload(error);
+    return connectionErrorPayload(error, policy);
   }
 }
 
@@ -219,7 +219,7 @@ async function listApps(options: IMcpServerOptions, query: string | undefined): 
   }
   const normalized = query?.trim().toLowerCase();
   const connections = (await options.connections.listConnections()).filter(
-    (connection) => policy.evaluateConnection(connection.connectionName).allowed,
+    (connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed,
   );
   const defaultConnections = new Map(
     connections.filter((connection) => connection.default).map((connection) => [connection.service, connection]),
@@ -296,7 +296,8 @@ async function getActionGuide(
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
-    const connectionDecision = policy.evaluateConnection(connectionName);
+    const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+    const connectionDecision = evaluateConnectionGrant(policy, connection);
     if (!connectionDecision.allowed) {
       return errorPayload(connectionDecision.code, connectionDecision.message);
     }
@@ -308,7 +309,7 @@ async function getActionGuide(
       ),
     });
   } catch (error) {
-    return connectionErrorPayload(error);
+    return connectionErrorPayload(error, policy);
   }
 }
 
@@ -329,11 +330,15 @@ async function executeAction(
   } catch {
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
-  if (connectionName && policy.evaluate(action).allowed && policy.evaluateConnection(connectionName).allowed) {
+  if (connectionName && policy.evaluate(action).allowed) {
     try {
-      await getSelectedConnectionSummary(options, action.service, connectionName);
+      const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+      const connectionDecision = evaluateConnectionGrant(policy, connection);
+      if (!connectionDecision.allowed) {
+        return errorPayload(connectionDecision.code, connectionDecision.message);
+      }
     } catch (error) {
-      return connectionErrorPayload(error);
+      return connectionErrorPayload(error, policy);
     }
   }
   const run = await options.actions.run({
@@ -397,15 +402,14 @@ async function describeActionCapability(
 ): Promise<ActionCapability> {
   const snapshot = policy ?? (await getPolicySnapshot(options));
   const provider = options.catalog.providers.find((candidate) => candidate.service === action.service);
+  const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
   return {
     execution: action.execution,
     authTypes: provider?.authTypes ?? [],
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
     policy: snapshot.evaluate(action),
-    connection: snapshot.evaluateConnection(connectionName).allowed
-      ? await getSelectedConnectionSummary(options, action.service, connectionName)
-      : undefined,
+    connection: evaluateConnectionGrant(snapshot, connection).allowed ? connection : undefined,
   };
 }
 
@@ -416,10 +420,9 @@ async function describeActionMarkdownContext(
   policy?: ActionPolicySnapshot,
 ): Promise<{ connection?: ConnectionSummary; providerPermissions: string[]; policy: ActionPolicyDecision }> {
   const snapshot = policy ?? (await getPolicySnapshot(options));
+  const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
   return {
-    connection: snapshot.evaluateConnection(connectionName).allowed
-      ? await getSelectedConnectionSummary(options, action.service, connectionName)
-      : undefined,
+    connection: evaluateConnectionGrant(snapshot, connection).allowed ? connection : undefined,
     providerPermissions: action.providerPermissions,
     policy: snapshot.evaluate(action),
   };
@@ -442,6 +445,13 @@ async function getSelectedConnectionSummary(
     throw new ConnectionError("connection_not_found", `${service} connection not found: ${connection.connectionName}.`);
   }
   return connection;
+}
+
+function evaluateConnectionGrant(
+  policy: ActionPolicySnapshot,
+  connection: ConnectionSummary | undefined,
+): ActionPolicyDecision {
+  return connection?.authType === "no_auth" ? { allowed: true, checks: [] } : policy.evaluateConnection(connection?.id);
 }
 
 function describeSchemaType(schema: JsonSchema | undefined): string {
@@ -491,8 +501,12 @@ function errorPayload(code: string, message: string): ToolPayload {
   };
 }
 
-function connectionErrorPayload(error: unknown): ToolPayload {
+function connectionErrorPayload(error: unknown, policy?: ActionPolicySnapshot): ToolPayload {
   if (error instanceof ConnectionError) {
+    const missingConnectionDecision = error.code === "connection_not_found" ? policy?.evaluateConnection() : undefined;
+    if (missingConnectionDecision && !missingConnectionDecision.allowed) {
+      return errorPayload(missingConnectionDecision.code, missingConnectionDecision.message);
+    }
     return errorPayload(error.code, error.message);
   }
   throw error;

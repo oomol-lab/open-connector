@@ -173,23 +173,24 @@ export class ActionPolicySnapshot {
     return { allowed: true, checks };
   }
 
-  evaluateConnection(connectionName?: string): ActionPolicyDecision {
+  evaluateConnection(connectionId?: string): ActionPolicyDecision {
     if (this.allowedConnections.length === 0) {
       return { allowed: true, checks: [] };
     }
 
-    const name = connectionName?.trim() || defaultPolicyConnectionName;
-    if (this.allowedConnections.includes(name)) {
+    if (connectionId && this.allowedConnections.includes(connectionId)) {
       return {
         allowed: true,
-        checks: [{ source: "token", outcome: "allow_match", rule: name }],
+        checks: [{ source: "token", outcome: "allow_match", rule: connectionId }],
       };
     }
 
     return {
       allowed: false,
       code: "connection_not_allowed",
-      message: `${name} connection is not granted to this runtime token.`,
+      message: connectionId
+        ? `${connectionId} connection is not granted to this runtime token.`
+        : "The selected connection is not granted to this runtime token.",
       checks: [{ source: "token", outcome: "allow_miss" }],
     };
   }
@@ -230,8 +231,6 @@ export function emptyPolicyRules(): PolicyRules {
     blockedProxies: [],
   };
 }
-
-const defaultPolicyConnectionName = "default";
 
 export function parseActionPolicyList(value: string | undefined): string[] {
   return (value ?? "")

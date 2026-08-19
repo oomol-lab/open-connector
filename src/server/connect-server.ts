@@ -473,7 +473,7 @@ export class ConnectServer {
         meta: { actionId },
       });
     }
-    if (!policy.evaluate(action).allowed || !policy.evaluateConnection(connectionName).allowed) {
+    if (!policy.evaluate(action).allowed) {
       return writeRuntimeActionHttpResult(
         context,
         await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
@@ -732,7 +732,9 @@ export class ConnectServer {
     policy: ActionPolicySnapshot,
     connections: ConnectionSummary[],
   ): ConnectionSummary[] {
-    return connections.filter((connection) => policy.evaluateConnection(connection.connectionName).allowed);
+    return connections.filter(
+      (connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed,
+    );
   }
 
   private async handleMcp(context: Context): Promise<Response> {

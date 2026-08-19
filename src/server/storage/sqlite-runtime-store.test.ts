@@ -688,12 +688,12 @@ describe("SqliteRuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.name).toBe("Claude Desktop");
     expect(created.record.tokenHash).not.toBe(created.token);
-    expect(created.record.allowedConnections).toEqual(["work"]);
+    expect(created.record.allowedConnections).toEqual(["example:work"]);
     await expectDatabaseDirectoryNotToContain(databasePath, created.token);
 
     await expect(tokens.verifyToken(created.token)).resolves.toBe(true);
@@ -704,13 +704,13 @@ describe("SqliteRuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
     expect(JSON.stringify(listed)).not.toContain(created.token);
     await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
       tokenId: created.record.id,
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
 
     await expect(
@@ -718,16 +718,16 @@ describe("SqliteRuntimeDatabase", () => {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
         allowedProxies: ["slack"],
-        allowedConnections: ["personal"],
+        allowedConnections: ["example:personal"],
       }),
     ).resolves.toMatchObject({
       allowedActions: ["github.get_current_user"],
       blockedActions: [],
       allowedProxies: ["slack"],
-      allowedConnections: ["personal"],
+      allowedConnections: ["example:personal"],
     });
     await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
-      allowedConnections: ["personal"],
+      allowedConnections: ["example:personal"],
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);

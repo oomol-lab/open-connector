@@ -185,6 +185,26 @@ describe("MCP server", () => {
     });
   });
 
+  it("keeps virtual no-auth connections discoverable without a connection grant", async () => {
+    const policy = new ActionPolicyService().createSnapshot(emptyPolicyRules(), {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["unrelated-connection-id"],
+    });
+    await withMcpClient(
+      async (client) => {
+        const result = await client.callTool({ name: "list_connections", arguments: { service: "example" } });
+
+        expect(result.structuredContent).toMatchObject({
+          ok: true,
+          data: [{ service: "example", authType: "no_auth", connectionName: "default" }],
+        });
+      },
+      { getPolicySnapshot: async () => policy },
+    );
+  });
+
   it("uses an explicitly selected connection for guides and execution", async () => {
     const runs = new MemoryRunLogStore();
     await withAuthenticatedMcpClient(async (client) => {
@@ -476,7 +496,7 @@ describe("MCP server", () => {
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
-      allowedConnections: ["secondary", "ghost"],
+      allowedConnections: ["connection-secondary", "connection-ghost"],
     });
     await withAuthenticatedMcpClient(
       async (client) => {
@@ -559,7 +579,7 @@ describe("MCP server", () => {
         });
         expect(grantedMissing.structuredContent).toMatchObject({
           ok: false,
-          error: { code: "connection_not_found" },
+          error: { code: "connection_not_allowed" },
         });
       },
       new MemoryRunLogStore(),
@@ -570,7 +590,7 @@ describe("MCP server", () => {
           allowedActions: [],
           blockedActions: [],
           allowedProxies: [],
-          allowedConnections: ["secondary", "ghost"],
+          allowedConnections: ["connection-secondary", "connection-ghost"],
         },
       },
     );

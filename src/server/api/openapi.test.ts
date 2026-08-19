@@ -122,7 +122,7 @@ describe("action execution OpenAPI", () => {
     expect(runLog.properties).toHaveProperty("runtimeTokenId");
   });
 
-  it("documents stored-token allowedConnections without changing deployment PolicyRules", () => {
+  it("documents stored-token connection IDs without changing deployment PolicyRules", () => {
     const document = createOpenApiDocument([provider]);
     const tokenSummary = document.components.schemas.RuntimeTokenSummary as {
       required: string[];
@@ -145,8 +145,7 @@ describe("action execution OpenAPI", () => {
       items: {
         type: "string",
         minLength: 1,
-        maxLength: 64,
-        pattern: "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+        maxLength: 256,
       },
     };
 
@@ -161,7 +160,8 @@ describe("action execution OpenAPI", () => {
     expect(tokenSummary.properties.allowedConnections.description).toMatch(/unrestricted/i);
     expect(createRequest.properties.allowedConnections.description).toMatch(/omit/i);
     expect(createRequest.properties.allowedConnections.description).toMatch(/exact/i);
-    expect(tokenPolicy.properties.allowedConnections.description).toMatch(/default/i);
+    expect(createRequest.properties.allowedConnections.description).toMatch(/opaque IDs/i);
+    expect(tokenPolicy.properties.allowedConnections.description).toMatch(/connection APIs/i);
     expect(tokenPolicy.properties.allowedConnections.description).not.toMatch(/omit/i);
   });
 });

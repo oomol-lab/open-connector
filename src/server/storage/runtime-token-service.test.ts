@@ -30,7 +30,7 @@ describe("RuntimeTokenService", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
       createdAt: "2026-07-20T00:00:00.000Z",
     };
     const store: IRuntimeTokenStore = {
@@ -47,7 +47,7 @@ describe("RuntimeTokenService", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
     expect(store.findByHash).toHaveBeenCalledWith(record.tokenHash);
     expect(store.list).not.toHaveBeenCalled();
@@ -97,27 +97,27 @@ describe("RuntimeTokenService", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work", "personal"],
+      allowedConnections: ["example:work", "example:personal"],
     });
 
-    expect(created.record.allowedConnections).toEqual(["work", "personal"]);
+    expect(created.record.allowedConnections).toEqual(["example:work", "example:personal"]);
     await expect(service.listTokens()).resolves.toMatchObject([
-      { id: created.record.id, allowedConnections: ["work", "personal"] },
+      { id: created.record.id, allowedConnections: ["example:work", "example:personal"] },
     ]);
     await expect(service.resolveToken(created.token)).resolves.toMatchObject({
       tokenId: created.record.id,
-      allowedConnections: ["work", "personal"],
+      allowedConnections: ["example:work", "example:personal"],
     });
     await expect(
       service.updateTokenPolicy(created.record.id, {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
         allowedProxies: ["slack"],
-        allowedConnections: ["work"],
+        allowedConnections: ["example:work"],
       }),
-    ).resolves.toMatchObject({ allowedConnections: ["work"] });
+    ).resolves.toMatchObject({ allowedConnections: ["example:work"] });
     await expect(service.resolveToken(created.token)).resolves.toMatchObject({
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
   });
 

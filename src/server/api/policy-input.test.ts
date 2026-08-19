@@ -51,35 +51,42 @@ describe("policy input", () => {
     );
   });
 
-  it("trims and stably deduplicates allowedConnections", () => {
+  it("trims and stably deduplicates allowed connection IDs", () => {
     expect(
       readTokenPolicy({
         allowedActions: [],
         blockedActions: [],
         allowedProxies: [],
-        allowedConnections: [" work ", "work", "personal"],
+        allowedConnections: [" connection-work ", "connection-work", "01J0CONNECTIONPERSONAL"],
       }),
     ).toEqual({
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
-      allowedConnections: ["work", "personal"],
+      allowedConnections: ["connection-work", "01J0CONNECTIONPERSONAL"],
     });
   });
 
-  it.each(["", " ", "*", "work*", "github:work", "service:connectionName", "work connection", "-lead", "work:prod"])(
-    "rejects invalid allowedConnections value %s",
-    (name) => {
-      expect(() =>
-        readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: [name] }),
-      ).toThrow(/empty|invalid/);
-    },
-  );
+  it.each(["", " "])("rejects empty allowedConnections value %s", (connectionId) => {
+    expect(() =>
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [connectionId],
+      }),
+    ).toThrow(/empty/);
+  });
 
   it("enforces allowedConnections item and UTF-8 byte limits", () => {
-    const names = Array.from({ length: policyRuleListMaxItems + 1 }, (_, index) => `c${index}`);
+    const connectionIds = Array.from({ length: policyRuleListMaxItems + 1 }, (_, index) => `connection-${index}`);
     expect(() =>
-      readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: names }),
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: connectionIds,
+      }),
     ).toThrow(`more than ${policyRuleListMaxItems}`);
     expect(() =>
       readTokenPolicy({

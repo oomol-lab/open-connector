@@ -381,8 +381,8 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
-            allowedConnections: connectionNameArraySchema(
-              "Bare connection names granted to this stored runtime token. An empty list is unrestricted connection access. A non-empty list matches exact normalized connectionName values; include default when unnamed requests should succeed.",
+            allowedConnections: connectionIdArraySchema(
+              "Stable connection IDs granted to this stored runtime token. An empty list is unrestricted connection access. IDs are opaque values returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
@@ -408,8 +408,8 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Optional provider proxy grants for the new token. Omit or leave empty to deny proxy access.",
             ),
-            allowedConnections: connectionNameArraySchema(
-              "Optional connection names granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact normalized bare connectionName values.",
+            allowedConnections: connectionIdArraySchema(
+              "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
           },
           {
@@ -424,8 +424,8 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
-            allowedConnections: connectionNameArraySchema(
-              "Connection names granted to this stored token. An empty list is unrestricted connection access. A non-empty list matches exact normalized bare connectionName values; restricted tokens must include default for unnamed HTTP, MCP, and proxy requests.",
+            allowedConnections: connectionIdArraySchema(
+              "Stable connection IDs granted to this stored token. An empty list is unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
           },
           {
@@ -782,17 +782,14 @@ function policyRuleArraySchema(description: string): JsonSchema {
   };
 }
 
-const connectionNameMaxLength = 64;
-
-function connectionNameArraySchema(description: string): JsonSchema {
+function connectionIdArraySchema(description: string): JsonSchema {
   return {
     type: "array",
     maxItems: policyRuleListMaxItems,
     items: jsonSchema.string({
       minLength: 1,
-      maxLength: connectionNameMaxLength,
-      pattern: "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
-      description: "Exact normalized bare connectionName. Wildcards and service prefixes are not accepted.",
+      maxLength: policyRuleMaxBytes,
+      description: "Opaque stable connection ID returned by a connection API.",
     }),
     description,
   };

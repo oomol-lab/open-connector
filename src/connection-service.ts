@@ -17,6 +17,7 @@ import { normalizeCredentialValues } from "./core/credential-fields.ts";
 import { providerFetch } from "./providers/provider-runtime.ts";
 
 export const defaultConnectionName = "default";
+const connectionNamePattern = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
 
 /**
  * Connection summary returned to the local console.
@@ -404,7 +405,7 @@ export class ConnectionService {
 
   private createNoAuthConnectionSummary(provider: ProviderDefinition, connectionName: string): ConnectionSummary {
     return {
-      id: createConnectionId(provider.service, connectionName),
+      id: `${provider.service}:${connectionName}`,
       service: provider.service,
       connectionName,
       authType: "no_auth",
@@ -690,7 +691,7 @@ function createApiKeyFields(auth: ApiKeyAuthDefinition): CredentialDefinition[] 
 
 export function normalizeConnectionName(value: string | undefined): string {
   const name = value?.trim() || defaultConnectionName;
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(name)) {
+  if (!connectionNamePattern.test(name)) {
     throw new ConnectionError(
       "invalid_connection_name",
       "connectionName must start with a letter or digit, contain only letters, digits, underscores, or hyphens, and be at most 64 characters.",
@@ -698,10 +699,6 @@ export function normalizeConnectionName(value: string | undefined): string {
   }
 
   return name;
-}
-
-function createConnectionId(service: string, connectionName: string): string {
-  return `${service}:${connectionName}`;
 }
 
 function normalizeGrantedScopes(value: string[] | undefined): string[] {

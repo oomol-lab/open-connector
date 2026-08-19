@@ -13,6 +13,9 @@ const action: ActionDefinition = {
   inputSchema: { type: "object" },
   outputSchema: { type: "object" },
 };
+const defaultConnectionId = "11111111-1111-4111-8111-111111111111";
+const workConnectionId = "22222222-2222-4222-8222-222222222222";
+const otherConnectionId = "33333333-3333-4333-8333-333333333333";
 
 describe("ActionPolicyService", () => {
   it("allows actions by default", () => {
@@ -254,7 +257,7 @@ describe("ActionPolicyService", () => {
           allowedActions: ["gmail.send_email"],
           blockedActions: ["github.create_issue"],
           allowedProxies: ["github"],
-          allowedConnections: ["work"],
+          allowedConnections: [workConnectionId],
         })
         .evaluateProxy("github"),
     ).toEqual({
@@ -278,7 +281,7 @@ describe("ActionPolicyService", () => {
         allowedActions: [],
         blockedActions: [],
         allowedProxies: [],
-        allowedConnections: ["work"],
+        allowedConnections: [workConnectionId],
       },
     );
 
@@ -309,60 +312,56 @@ describe("ActionPolicyService", () => {
 
     for (const snapshot of unrestricted) {
       expect(snapshot.evaluateConnection()).toEqual({ allowed: true, checks: [] });
-      expect(snapshot.evaluateConnection("work")).toEqual({ allowed: true, checks: [] });
+      expect(snapshot.evaluateConnection(workConnectionId)).toEqual({ allowed: true, checks: [] });
       expect(snapshot.evaluate(action)).toEqual({ allowed: true, checks: [] });
     }
   });
 
-  it("matches restricted connections by exact normalized bare names", () => {
+  it("matches restricted connections by exact stable IDs", () => {
     const snapshot = new ActionPolicyService().createSnapshot(undefined, {
       allowedActions: ["github.*"],
       blockedActions: [],
       allowedProxies: ["github"],
-      allowedConnections: ["work", "default"],
+      allowedConnections: [workConnectionId, defaultConnectionId],
     });
 
-    expect(snapshot.evaluateConnection("work")).toEqual({
+    expect(snapshot.evaluateConnection(workConnectionId)).toEqual({
       allowed: true,
-      checks: [{ source: "token", outcome: "allow_match", rule: "work" }],
+      checks: [{ source: "token", outcome: "allow_match", rule: workConnectionId }],
     });
-    expect(snapshot.evaluateConnection(" work ")).toEqual({
+    expect(snapshot.evaluateConnection(defaultConnectionId)).toEqual({
       allowed: true,
-      checks: [{ source: "token", outcome: "allow_match", rule: "work" }],
+      checks: [{ source: "token", outcome: "allow_match", rule: defaultConnectionId }],
     });
-    expect(snapshot.evaluateConnection()).toEqual({
-      allowed: true,
-      checks: [{ source: "token", outcome: "allow_match", rule: "default" }],
-    });
-    expect(snapshot.evaluateConnection("")).toEqual({
-      allowed: true,
-      checks: [{ source: "token", outcome: "allow_match", rule: "default" }],
-    });
-    expect(snapshot.evaluateConnection("personal")).toMatchObject({
+    expect(snapshot.evaluateConnection(otherConnectionId)).toMatchObject({
       allowed: false,
       code: "connection_not_allowed",
       checks: [{ source: "token", outcome: "allow_miss" }],
+    });
+    expect(snapshot.evaluateConnection()).toMatchObject({
+      allowed: false,
+      code: "connection_not_allowed",
     });
     expect(snapshot.evaluate(action)).toMatchObject({ allowed: true });
     expect(snapshot.evaluateProxy("github")).toMatchObject({ allowed: true });
   });
 
-  it("requires restricted tokens to grant default for the unnamed connection path", () => {
+  it("requires restricted tokens to grant the exact selected connection ID", () => {
     const snapshot = new ActionPolicyService().createSnapshot(undefined, {
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
-      allowedConnections: ["work"],
+      allowedConnections: [workConnectionId],
     });
 
     expect(snapshot.evaluateConnection()).toMatchObject({
       allowed: false,
       code: "connection_not_allowed",
     });
-    expect(snapshot.evaluateConnection("default")).toMatchObject({
+    expect(snapshot.evaluateConnection(defaultConnectionId)).toMatchObject({
       allowed: false,
       code: "connection_not_allowed",
     });
-    expect(snapshot.evaluateConnection("work")).toMatchObject({ allowed: true });
+    expect(snapshot.evaluateConnection(workConnectionId)).toMatchObject({ allowed: true });
   });
 });

@@ -167,11 +167,11 @@ describe("D1RuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.tokenHash).not.toBe(created.token);
-    expect(created.record.allowedConnections).toEqual(["work"]);
+    expect(created.record.allowedConnections).toEqual(["example:work"]);
 
     await expect(tokens.verifyToken(created.token)).resolves.toBe(true);
     const [listed] = await tokens.listTokens();
@@ -181,12 +181,12 @@ describe("D1RuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
     await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
       tokenId: created.record.id,
-      allowedConnections: ["work"],
+      allowedConnections: ["example:work"],
     });
 
     await expect(
@@ -194,16 +194,16 @@ describe("D1RuntimeDatabase", () => {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
         allowedProxies: ["slack"],
-        allowedConnections: ["personal"],
+        allowedConnections: ["example:personal"],
       }),
     ).resolves.toMatchObject({
       allowedActions: ["github.get_current_user"],
       blockedActions: [],
       allowedProxies: ["slack"],
-      allowedConnections: ["personal"],
+      allowedConnections: ["example:personal"],
     });
     await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
-      allowedConnections: ["personal"],
+      allowedConnections: ["example:personal"],
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);

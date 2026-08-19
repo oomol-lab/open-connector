@@ -7,19 +7,24 @@ import {
   AccessPage,
   allowedConnectionsFromDraft,
   ConnectionGrantEditor,
-  connectionNameSuggestions,
+  connectionGrantOptions,
   createConnectionGrantDraft,
-  parseConnectionNames,
   policyDraftFromRules,
   policyRulesFromDraft,
   runtimeTokenPolicyBody,
 } from "./access-page";
+import { PolicyEditor } from "./policy-editor";
 
 vi.mock("@embra/i18n/react", () => ({
   useTranslate() {
-    return (key: string) => key;
+    return (key: string, values?: { names?: string }) => (values?.names === undefined ? key : `${key} ${values.names}`);
   },
 }));
+
+const githubDefaultId = "11111111-1111-4111-8111-111111111111";
+const githubWorkId = "22222222-2222-4222-8222-222222222222";
+const slackWorkId = "33333333-3333-4333-8333-333333333333";
+const retiredConnectionId = "44444444-4444-4444-8444-444444444444";
 
 describe("AccessPage", () => {
   it("shows deployment, Runtime, and token policy state", () => {
@@ -83,13 +88,14 @@ describe("AccessPage", () => {
             allowedActions: [],
             blockedActions: [],
             allowedProxies: [],
-            allowedConnections: ["work"],
+            allowedConnections: [githubWorkId, slackWorkId, retiredConnectionId],
             createdAt: "2026-07-20T00:00:00.000Z",
           },
         ],
         connections: [
-          { service: "github", connectionName: "default", authType: "oauth2", metadata: {} },
-          { service: "github", connectionName: "work", authType: "oauth2", metadata: {} },
+          { id: githubDefaultId, service: "github", connectionName: "default", authType: "oauth2", metadata: {} },
+          { id: githubWorkId, service: "github", connectionName: "work", authType: "oauth2", metadata: {} },
+          { id: slackWorkId, service: "slack", connectionName: "work", authType: "oauth2", metadata: {} },
         ],
         onRefresh: vi.fn(),
       }),
@@ -105,6 +111,10 @@ describe("AccessPage", () => {
     expect(markup).toContain("access.policy.connectionsUnrestricted");
     expect(markup).toContain("access.policy.connectionsRestricted");
     expect(markup).toContain("work");
+    expect(markup).toContain("token-policy-connections");
+    expect(markup).toContain("GitHub · work, slack · work +1");
+    expect(markup).toContain(`title="GitHub · work, slack · work, ${retiredConnectionId}"`);
+    expect(markup).not.toContain(`<code>${githubWorkId}</code>`);
     expect(markup).toContain("access.policy.edit");
     expect(markup).toContain('role="combobox"');
     expect(markup).not.toContain("<datalist");
@@ -113,13 +123,13 @@ describe("AccessPage", () => {
   });
 
   it("treats omitted and empty allowedConnections as unrestricted token grants", () => {
-    expect(createConnectionGrantDraft()).toEqual({ mode: "unrestricted", names: [] });
-    expect(createConnectionGrantDraft([])).toEqual({ mode: "unrestricted", names: [] });
-    expect(allowedConnectionsFromDraft({ mode: "unrestricted", names: ["work"] })).toEqual([]);
+    expect(createConnectionGrantDraft()).toEqual({ mode: "unrestricted", ids: [] });
+    expect(createConnectionGrantDraft([])).toEqual({ mode: "unrestricted", ids: [] });
+    expect(allowedConnectionsFromDraft({ mode: "unrestricted", ids: [githubWorkId] })).toEqual([]);
     expect(
       runtimeTokenPolicyBody(
         { allowedActions: ["github.*"], blockedActions: [], allowedProxies: [] },
-        { mode: "unrestricted", names: ["work"] },
+        { mode: "unrestricted", ids: [githubWorkId] },
       ),
     ).toEqual({
       allowedActions: ["github.*"],
@@ -129,49 +139,70 @@ describe("AccessPage", () => {
     });
   });
 
-  it("keeps restricted connection grants as exact normalized bare names", () => {
-    expect(createConnectionGrantDraft(["work", "default"])).toEqual({
+  it("keeps restricted connection grants as exact stable connection IDs", () => {
+    expect(createConnectionGrantDraft([githubWorkId, githubDefaultId])).toEqual({
       mode: "restricted",
-      names: ["work", "default"],
+      ids: [githubWorkId, githubDefaultId],
     });
-    expect(parseConnectionNames(" work \n\nwork\ndefault ")).toEqual(["work", "default"]);
-    expect(parseConnectionNames("work*")).toEqual([]);
     expect(
       runtimeTokenPolicyBody(
         { allowedActions: [], blockedActions: [], allowedProxies: ["github"] },
-        { mode: "restricted", names: ["work"] },
+        { mode: "restricted", ids: [githubWorkId] },
       ),
     ).toEqual({
       allowedActions: [],
       blockedActions: [],
       allowedProxies: ["github"],
-      allowedConnections: ["work"],
+      allowedConnections: [githubWorkId],
     });
   });
 
-  it("suggests default plus current connection names for token grants", () => {
+  it("builds one token grant option for each current credential connection", () => {
     const connections: ConnectionRecord[] = [
-      { service: "github", authType: "oauth2", metadata: {} },
-      { service: "github", connectionName: " work ", authType: "oauth2", metadata: {} },
-      { service: "slack", connectionName: "work", authType: "oauth2", metadata: {} },
-      { service: "clock", connectionName: "virtual", authType: "no_auth", virtual: true, metadata: {} },
+      { id: githubDefaultId, service: "github", authType: "oauth2", metadata: {} },
+      { id: githubWorkId, service: "github", connectionName: " work ", authType: "oauth2", metadata: {} },
+      { id: slackWorkId, service: "slack", connectionName: "work", authType: "oauth2", metadata: {} },
+      {
+        id: "clock:virtual",
+        service: "clock",
+        connectionName: "virtual",
+        authType: "no_auth",
+        virtual: true,
+        metadata: {},
+      },
     ];
 
-    expect(connectionNameSuggestions(connections)).toEqual(["default", "work", "virtual"]);
+    expect(
+      connectionGrantOptions(connections, [
+        { service: "github", displayName: "GitHub", categories: [], authTypes: [], auth: [], actions: [] },
+      ]),
+    ).toEqual([
+      { id: githubDefaultId, name: "default", provider: "GitHub" },
+      { id: githubWorkId, name: "work", provider: "GitHub" },
+      { id: slackWorkId, name: "work", provider: "slack" },
+    ]);
   });
 
   it("makes unrestricted and restricted connection grants explicit in the token editor", () => {
     const unrestricted = renderToStaticMarkup(
       createElement(ConnectionGrantEditor, {
         draft: createConnectionGrantDraft(),
-        suggestions: ["default", "work"],
+        options: [
+          { id: githubDefaultId, name: "default", provider: "GitHub" },
+          { id: githubWorkId, name: "work", provider: "GitHub" },
+          { id: slackWorkId, name: "work", provider: "Slack" },
+        ],
         onChange: vi.fn(),
       }),
     );
     const restricted = renderToStaticMarkup(
       createElement(ConnectionGrantEditor, {
-        draft: createConnectionGrantDraft(["work"]),
-        suggestions: ["default", "work"],
+        draft: createConnectionGrantDraft([githubWorkId]),
+        options: [
+          { id: githubDefaultId, name: "default", provider: "GitHub" },
+          { id: githubWorkId, name: "work", provider: "GitHub" },
+          { id: slackWorkId, name: "work", provider: "Slack" },
+        ],
         onChange: vi.fn(),
       }),
     );
@@ -183,6 +214,51 @@ describe("AccessPage", () => {
     expect(restricted).toContain("access.policy.editor.connectionsList");
     expect(restricted).toContain("access.policy.editor.connectionsDefaultHint");
     expect(restricted).toContain("work");
+    expect(restricted).toContain("GitHub");
+    expect(restricted).toContain("Slack");
+    expect(restricted).toContain('type="checkbox"');
+    expect(restricted).toContain(`value="${githubWorkId}"`);
+    expect(restricted).toContain(`value="${slackWorkId}"`);
+    expect(restricted).not.toContain('role="combobox"');
+  });
+
+  it("keeps a granted connection visible when it no longer exists", () => {
+    const markup = renderToStaticMarkup(
+      createElement(ConnectionGrantEditor, {
+        draft: createConnectionGrantDraft([retiredConnectionId]),
+        options: [],
+        onChange: vi.fn(),
+      }),
+    );
+
+    expect(markup).toContain(retiredConnectionId);
+    expect(markup).toContain("access.policy.editor.unknownRule");
+    expect(markup).toContain('type="checkbox"');
+  });
+
+  it("places connection access beside actions and proxies in the token policy tabs", () => {
+    const markup = renderToStaticMarkup(
+      createElement(PolicyEditor, {
+        draft: {
+          rules: { allowedActions: [], blockedActions: [], allowedProxies: [], blockedProxies: [] },
+          actionAllowMode: "unrestricted",
+          proxyAllowMode: "unrestricted",
+        },
+        providers: [],
+        includeProxies: true,
+        connectionEditor: createElement(ConnectionGrantEditor, {
+          draft: createConnectionGrantDraft(),
+          options: [{ id: githubDefaultId, name: "default", provider: "GitHub" }],
+          onChange: vi.fn(),
+        }),
+        onChange: vi.fn(),
+      }),
+    );
+
+    expect(markup.match(/data-slot="tabs-trigger"/g)).toHaveLength(3);
+    expect(markup).toContain("access.policy.editor.actionsTab");
+    expect(markup).toContain("access.policy.editor.proxiesTab");
+    expect(markup).toContain("access.policy.editor.connectionsTitle");
   });
 
   it("serializes one policy rule per non-empty trimmed line", () => {

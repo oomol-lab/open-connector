@@ -238,9 +238,11 @@ curl -s -X POST "http://localhost:3000/v1/actions/github.get_current_user?alias=
 ```
 
 Persistent runtime tokens may further restrict this selection with `allowedConnections`. An omitted
-or empty list leaves every stored connection available. A non-empty list must include `default` for
-unnamed requests and `work` for the alias above; other names return `403 connection_not_allowed`
-before the credential is loaded.
+or empty list leaves every stored connection available. Entries are the stable, opaque IDs returned
+when connections are created or listed. The alias above selects the `work` connection, whose `id`
+must be granted; an unnamed request selects the default connection and requires its ID. Other
+connections return `403 connection_not_allowed` before the credential is loaded. Virtual `no_auth`
+connections do not require a grant.
 
 Example: keep a shared default GitHub connection and a `work` connection, then issue one
 unrestricted token and one work-only token:
@@ -260,7 +262,7 @@ curl -s -X POST http://localhost:3000/api/runtime-tokens \
 
 curl -s -X POST http://localhost:3000/api/runtime-tokens \
   -H 'content-type: application/json' \
-  -d '{"name":"work-client","allowedActions":[],"blockedActions":[],"allowedProxies":[],"allowedConnections":["work"]}'
+  -d '{"name":"work-client","allowedActions":[],"blockedActions":[],"allowedProxies":[],"allowedConnections":["<work-connection-id>"]}'
 ```
 
 ## Reset And Key Rotation
@@ -327,9 +329,11 @@ rules, provider proxy grants, and optional connection grants independently. Thei
 list is empty by default, which denies `/v1/proxy/:service`; add a provider service or `*` only when
 that client needs proxy access. Omit `allowedConnections` or send `[]` on create for unrestricted
 connection access. Updates must send the field so a PUT cannot drop an existing restriction. A
-non-empty list is an exact `connectionName` allowlist; unnamed requests use `default` and are denied
-unless that name is listed. HTTP, MCP, and proxy callers receive `connection_not_allowed` before
-lookup. Runtime discovery is filtered; `GET /api/connections` and Action `agent.md` guides are not.
+non-empty list is an exact allowlist of stable, opaque IDs returned by the connection APIs; unnamed
+requests select the provider's default connection and are denied unless its ID is listed. Virtual
+`no_auth` connections do not require a grant. HTTP, MCP, and proxy callers receive
+`connection_not_allowed` before lookup. Runtime discovery is filtered; `GET /api/connections` and
+Action `agent.md` guides are not.
 
 `OOMOL_CONNECT_RUNTIME_TOKEN` is still accepted for bootstrap scripts and backward compatibility.
 

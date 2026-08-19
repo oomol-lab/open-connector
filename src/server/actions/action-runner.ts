@@ -72,40 +72,51 @@ export class ActionRunner {
     const startedAt = new Date(startedAtMs).toISOString();
     const snapshot = input.policy ?? this.options.actionPolicy?.createSnapshot();
     let policy: ActionPolicyDecision = snapshot?.evaluate(action) ?? { allowed: true, checks: [] };
-    if (policy.allowed) {
-      const connectionPolicy = snapshot?.evaluateConnection(input.connectionName);
-      if (connectionPolicy && !connectionPolicy.allowed) {
-        policy = connectionPolicy;
-      }
-    }
     let connection: ExecutionConnection | undefined;
     let result: ExecutionResult;
     if (!policy.allowed) {
       result = { ok: false, error: { code: policy.code, message: policy.message } };
     } else {
       try {
-        connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
-        const executor = action.execution.locallyExecutable
-          ? await this.options.providerLoader.loadActionExecutor(
-              action.service,
-              action.id,
-              this.options.catalog.providers.find((provider) => provider.service === action.service)?.displayName,
-            )
-          : undefined;
-        result = await executeProviderAction(
-          action,
-          executor,
-          input.input,
-          this.createExecutionContext(connection.getCredential),
-        );
+        const summary = await this.options.connections.getConnectionSummary(action.service, input.connectionName);
+        const connectionPolicy =
+          summary?.authType === "no_auth" ? undefined : snapshot?.evaluateConnection(summary?.id);
+        if (connectionPolicy && !connectionPolicy.allowed) {
+          policy = connectionPolicy;
+          result = { ok: false, error: { code: policy.code, message: policy.message } };
+        } else {
+          connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
+          const executor = action.execution.locallyExecutable
+            ? await this.options.providerLoader.loadActionExecutor(
+                action.service,
+                action.id,
+                this.options.catalog.providers.find((provider) => provider.service === action.service)?.displayName,
+              )
+            : undefined;
+          result = await executeProviderAction(
+            action,
+            executor,
+            input.input,
+            this.createExecutionContext(connection.getCredential),
+          );
+        }
       } catch (error) {
-        result =
-          error instanceof ConnectionError
-            ? { ok: false, error: { code: error.code, message: error.message } }
-            : {
-                ok: false,
-                error: { code: "internal_error", message: "Action execution failed unexpectedly." },
-              };
+        const missingConnectionPolicy =
+          error instanceof ConnectionError && error.code === "connection_not_found"
+            ? snapshot?.evaluateConnection()
+            : undefined;
+        if (missingConnectionPolicy && !missingConnectionPolicy.allowed) {
+          policy = missingConnectionPolicy;
+          result = { ok: false, error: { code: policy.code, message: policy.message } };
+        } else {
+          result =
+            error instanceof ConnectionError
+              ? { ok: false, error: { code: error.code, message: error.message } }
+              : {
+                  ok: false,
+                  error: { code: "internal_error", message: "Action execution failed unexpectedly." },
+                };
+        }
       }
     }
     const completedAtMs = Date.now();

@@ -32,6 +32,8 @@ const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
   profile: { accountId: "acct_1", displayName: "Example", grantedScopes: [] },
   metadata: {},
 };
+const connectionId = "11111111-1111-4111-8111-111111111111";
+const otherConnectionId = "22222222-2222-4222-8222-222222222222";
 
 describe("ProxyRunner", () => {
   it("returns proxy_not_supported before resolving credentials when the provider has no proxy executor", async () => {
@@ -141,8 +143,14 @@ describe("ProxyRunner", () => {
     expect(loadProxyExecutor).not.toHaveBeenCalled();
   });
 
-  it("denies a restricted connection before loading executors or looking it up", async () => {
-    const loadProxyExecutor = vi.fn();
+  it("denies a restricted connection before executing the proxy", async () => {
+    const proxy = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const loadProxyExecutor = vi.fn(async () => proxy);
     const connections = createConnections();
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
@@ -158,7 +166,7 @@ describe("ProxyRunner", () => {
       allowedActions: [],
       blockedActions: [],
       allowedProxies: ["example"],
-      allowedConnections: ["work"],
+      allowedConnections: [otherConnectionId],
     });
 
     await expect(
@@ -180,8 +188,9 @@ describe("ProxyRunner", () => {
       status: 403,
       errorCode: "connection_not_allowed",
     });
-    expect(loadProxyExecutor).not.toHaveBeenCalled();
-    expect(connections.getConnectionSummary).not.toHaveBeenCalled();
+    expect(loadProxyExecutor).toHaveBeenCalledTimes(2);
+    expect(connections.getConnectionSummary).toHaveBeenCalledTimes(2);
+    expect(proxy).not.toHaveBeenCalled();
   });
 
   it("executes allowlisted proxy connections and leaves unrestricted tokens unchanged", async () => {
@@ -206,7 +215,7 @@ describe("ProxyRunner", () => {
           allowedActions: [],
           blockedActions: [],
           allowedProxies: ["example"],
-          allowedConnections: ["work"],
+          allowedConnections: [connectionId],
         }),
       }),
     ).resolves.toMatchObject({ ok: true });
@@ -224,6 +233,79 @@ describe("ProxyRunner", () => {
       }),
     ).resolves.toMatchObject({ ok: true });
     expect(proxy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not apply connection grants to no-auth proxies", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
+    const runner = createRunner({
+      actionPolicy,
+      provider: { ...provider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }] },
+      connections: createConnections({
+        getConnectionSummary: async () => ({
+          id: "example:default",
+          service: "example",
+          connectionName: "default",
+          authType: "no_auth",
+          configured: true,
+          virtual: true,
+          default: true,
+          profile: { accountId: "example", displayName: "Example", grantedScopes: [] },
+        }),
+      }),
+      providerLoader: new TestProviderLoader(proxy),
+    });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: actionPolicy.createSnapshot(undefined, {
+          allowedActions: [],
+          blockedActions: [],
+          allowedProxies: ["example"],
+          allowedConnections: [otherConnectionId],
+        }),
+      }),
+    ).resolves.toMatchObject({ ok: true });
+  });
+
+  it("applies connection grants to credentials on providers that also support no-auth", async () => {
+    const proxy = vi.fn(
+      async (): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: { status: 200, headers: {}, data: null },
+      }),
+    );
+    const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
+    const runner = createRunner({
+      actionPolicy,
+      provider: {
+        ...provider,
+        authTypes: ["no_auth", "api_key"],
+        auth: [{ type: "no_auth" }, { type: "api_key" }],
+      },
+      providerLoader: new TestProviderLoader(proxy),
+    });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: actionPolicy.createSnapshot(undefined, {
+          allowedActions: [],
+          blockedActions: [],
+          allowedProxies: ["example"],
+          allowedConnections: [otherConnectionId],
+        }),
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 403, errorCode: "connection_not_allowed" });
+    expect(proxy).not.toHaveBeenCalled();
   });
 
   it("runs allowlisted proxies regardless of action policy", async () => {
@@ -550,10 +632,11 @@ function createRunner(input: {
   actionPolicy?: ActionPolicyService;
   connections?: ConnectionService;
   logger?: Logger;
+  provider?: ProviderDefinition;
   providerLoader: IProviderLoader;
 }): ProxyRunner {
   return new ProxyRunner({
-    catalog: { providers: [provider] } as CatalogStore,
+    catalog: { providers: [input.provider ?? provider] } as CatalogStore,
     actionPolicy: input.actionPolicy,
     connections: input.connections ?? createConnections(),
     logger: input.logger,
@@ -567,7 +650,7 @@ function createConnections(
   } = {},
 ): ConnectionService {
   const summary: ConnectionSummary = {
-    id: "example:default",
+    id: connectionId,
     service: "example",
     connectionName: "default",
     authType: "api_key",

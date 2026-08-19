@@ -78,17 +78,6 @@ export class ProxyRunner {
         meta: { service: provider.service },
       };
     }
-    const connectionDecision = snapshot?.evaluateConnection(input.connectionName);
-    if (connectionDecision && !connectionDecision.allowed) {
-      return {
-        ok: false,
-        status: 403,
-        errorCode: connectionDecision.code,
-        message: connectionDecision.message,
-        meta: { service: provider.service },
-      };
-    }
-
     let executor: ProviderProxyExecutor | undefined;
     try {
       executor = await this.options.providerLoader.loadProxyExecutor(provider.service, provider.displayName);
@@ -125,8 +114,19 @@ export class ProxyRunner {
     };
     const startedAtMs = Date.now();
     try {
+      const connection = await this.options.connections.getConnectionSummary(provider.service, input.connectionName);
+      const connectionDecision =
+        connection?.authType === "no_auth" ? undefined : snapshot?.evaluateConnection(connection?.id);
+      if (connectionDecision && !connectionDecision.allowed) {
+        return {
+          ok: false,
+          status: 403,
+          errorCode: connectionDecision.code,
+          message: connectionDecision.message,
+          meta: { service: provider.service },
+        };
+      }
       this.options.logger?.info(logContext, "proxy request started");
-      await this.options.connections.getConnectionSummary(provider.service, input.connectionName);
       const result = await executor(request.input, {
         ...this.options.connections.forConnection(input.connectionName),
       });
@@ -155,6 +155,17 @@ export class ProxyRunner {
     } catch (error) {
       const durationMs = Date.now() - startedAtMs;
       if (error instanceof ConnectionError) {
+        const missingConnectionDecision =
+          error.code === "connection_not_found" ? snapshot?.evaluateConnection() : undefined;
+        if (missingConnectionDecision && !missingConnectionDecision.allowed) {
+          return {
+            ok: false,
+            status: 403,
+            errorCode: missingConnectionDecision.code,
+            message: missingConnectionDecision.message,
+            meta: { service: provider.service },
+          };
+        }
         const failure: ProxyRunFailure = {
           ok: false,
           status: mapConnectionErrorStatus(error),

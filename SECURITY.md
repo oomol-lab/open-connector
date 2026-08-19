@@ -145,10 +145,11 @@ responsibility for securing their deployment. At minimum:
   must independently grant provider proxy access through `allowedProxies`; an empty grant denies
   every proxy. Pin both the runtime policy and each token to the services they actually proxy, or set
   `OOMOL_CONNECT_BLOCKED_PROXIES="*"` to disable provider proxies entirely. Persistent tokens may
-  also set `allowedConnections` to an exact `connectionName` allowlist; omit it or send `[]` for
-  unrestricted connection access. Restricted tokens must include `default` to use unnamed HTTP, MCP,
-  or proxy requests. Denied names return `403 connection_not_allowed` before lookup so connection
-  existence is not leaked.
+  also set `allowedConnections` to an exact allowlist of the stable, opaque IDs returned by the
+  connection APIs; omit it or send `[]` for unrestricted connection access. Restricted tokens must
+  include the selected connection's ID, including the default connection used by unnamed requests. Denied connections
+  return `403 connection_not_allowed` before lookup so connection existence is not leaked. Virtual
+  `no_auth` connections do not require a grant.
 - **Stay current.** Run a supported Node.js (22.18+ / 24) and update to the latest OpenConnector
   release for security fixes.
 

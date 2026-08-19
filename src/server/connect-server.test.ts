@@ -1672,12 +1672,13 @@ describe("ConnectServer", () => {
       runtimeTokens,
       providerLoader: new ProxyProviderLoader(),
     }).createApp();
-    await app.request("/api/connections/example", {
+    const defaultConnectionResponse = await app.request("/api/connections/example", {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "default-key" } }),
     });
-    await app.request("/api/connections/example", {
+    const defaultConnection = (await defaultConnectionResponse.json()) as { id: string };
+    const workConnectionResponse = await app.request("/api/connections/example", {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -1686,6 +1687,7 @@ describe("ConnectServer", () => {
         values: { apiKey: "work-key" },
       }),
     });
+    const workConnection = (await workConnectionResponse.json()) as { id: string };
     const created = await app.request("/api/runtime-tokens", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -1694,7 +1696,7 @@ describe("ConnectServer", () => {
         allowedActions: [],
         blockedActions: [],
         allowedProxies: ["example"],
-        allowedConnections: ["work"],
+        allowedConnections: [workConnection.id],
       }),
     });
     const token = (await created.json()) as { token: string };
@@ -1773,14 +1775,14 @@ describe("ConnectServer", () => {
         allowedActions: [],
         blockedActions: [],
         allowedProxies: [],
-        allowedConnections: ["work", "ghost"],
+        allowedConnections: [workConnection.id, "deleted-connection-id"],
       }),
     });
     const grantedMissingToken = (await grantedMissingCreated.json()) as {
       token: string;
       record: { allowedConnections: string[] };
     };
-    expect(grantedMissingToken.record.allowedConnections).toEqual(["work", "ghost"]);
+    expect(grantedMissingToken.record.allowedConnections).toEqual([workConnection.id, "deleted-connection-id"]);
     const grantedMissing = await app.request("/v1/actions/example.echo", {
       method: "POST",
       headers: {
@@ -1789,13 +1791,14 @@ describe("ConnectServer", () => {
       },
       body: JSON.stringify({ input: {}, connectionName: "ghost" }),
     });
-    expect(grantedMissing.status).toBe(404);
-    await expect(grantedMissing.json()).resolves.toMatchObject({ errorCode: "connection_not_found" });
+    expect(grantedMissing.status).toBe(403);
+    await expect(grantedMissing.json()).resolves.toMatchObject({ errorCode: "connection_not_allowed" });
 
     const adminConnections = await app.request("/api/connections");
     expect(adminConnections.status).toBe(200);
-    const listed = (await adminConnections.json()) as Array<{ connectionName: string }>;
+    const listed = (await adminConnections.json()) as Array<{ id: string; connectionName: string }>;
     expect(listed.map((connection) => connection.connectionName).sort()).toEqual(["default", "work"]);
+    expect(listed.map((connection) => connection.id).sort()).toEqual([defaultConnection.id, workConnection.id].sort());
 
     const guide = await app.request("/api/actions/example.echo/agent.md");
     expect(guide.status).toBe(200);
@@ -1833,7 +1836,7 @@ describe("ConnectServer", () => {
         allowedActions: [],
         blockedActions: [],
         allowedProxies: [],
-        allowedConnections: ["work"],
+        allowedConnections: ["ungranted-connection-id"],
       }),
     });
     const unrestricted = await app.request("/api/runtime-tokens", {
@@ -1879,7 +1882,7 @@ describe("ConnectServer", () => {
         allowedActions: [],
         blockedActions: [],
         allowedProxies: [],
-        allowedConnections: ["work"],
+        allowedConnections: ["connection-id"],
       }),
     });
     const token = (await created.json()) as { record: { id: string } };
@@ -1892,7 +1895,7 @@ describe("ConnectServer", () => {
     await expect(omitted.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
     const listed = await app.request("/api/runtime-tokens");
     expect(listed.status).toBe(200);
-    await expect(listed.json()).resolves.toMatchObject([{ allowedConnections: ["work"] }]);
+    await expect(listed.json()).resolves.toMatchObject([{ allowedConnections: ["connection-id"] }]);
   });
 
   it("returns an idempotency conflict when different stored tokens reuse one key", async () => {

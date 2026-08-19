@@ -53,9 +53,10 @@ proxy grants, and optional connection grants. A new token has no proxy access un
 `allowedProxies` includes a provider service or `*`; those grants can only narrow the deployment
 and runtime proxy policy. `allowedConnections` is omitted or `[]` for unrestricted connection
 access and is not a deployment setting: there is no `OOMOL_CONNECT_ALLOWED_CONNECTIONS` variable.
-A non-empty list grants only those exact normalized bare `connectionName` values; include `default`
-if unnamed HTTP, MCP, or proxy requests should succeed. Create requests may omit the field; updates
-must send `allowedConnections` so a PUT cannot drop an existing restriction.
+A non-empty list grants exact stable, opaque IDs returned by the connection APIs. Include the
+default connection's ID if unnamed HTTP, MCP, or proxy requests should succeed. Virtual `no_auth`
+connections do not require a grant. Create requests may omit the field; updates must send
+`allowedConnections` so a PUT cannot drop an existing restriction.
 `OOMOL_CONNECT_RUNTIME_TOKEN` remains available for bootstrap scripts and backward compatibility.
 Because the bootstrap token has no stored policy, its proxy access is controlled by the deployment
 and runtime rules, while its connection access remains unrestricted.
