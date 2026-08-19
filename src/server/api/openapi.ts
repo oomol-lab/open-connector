@@ -120,18 +120,11 @@ const actionIdParameter = {
 };
 
 const namedConnectionDescription =
-  "Named connection. Same fact as MCP connectionName; HTTP alias, connectionName, x-oo-connector-alias, and legacy x-oomol-connector-alias are equivalent. Defaults to default.";
+  "Named connection. Same fact as MCP connectionName; HTTP alias, connectionName, and x-oo-connector-alias are equivalent. Defaults to default.";
 
 const namedConnectionParameters = [
   {
     name: "x-oo-connector-alias",
-    in: "header",
-    required: false,
-    schema: jsonSchema.string(),
-    description: namedConnectionDescription,
-  },
-  {
-    name: "x-oomol-connector-alias",
     in: "header",
     required: false,
     schema: jsonSchema.string(),

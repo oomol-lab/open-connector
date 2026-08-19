@@ -113,7 +113,7 @@ describe("action execution OpenAPI", () => {
     expect(search.get.responses["404"]).toBeUndefined();
     expect(connectedApp.required).toEqual(expect.arrayContaining(["alias", "isDefault"]));
     expect(connectedApp.properties.alias?.description).toContain("connectionName");
-    expect(connectedApp.properties.alias?.description).toContain("x-oomol-connector-alias");
+    expect(connectedApp.properties.alias?.description).not.toContain("x-oomol-connector-alias");
   });
 
   it("documents Runtime and token policy management and run audit metadata", () => {

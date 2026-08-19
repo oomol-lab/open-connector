@@ -502,7 +502,7 @@ describe("ConnectServer", () => {
       message: "Request body must be valid JSON.",
       data: null,
       errorCode: "invalid_json",
-      meta: {},
+      meta: { service: "example" },
     });
   });
 

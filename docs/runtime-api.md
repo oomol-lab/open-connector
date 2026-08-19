@@ -173,8 +173,7 @@ curl -s -X POST "http://localhost:3000/v1/actions/github.get_current_user?alias=
 ```
 
 `alias` is the `/v1` name for a named connection. MCP tools use `connectionName` for the same
-fact, and HTTP also accepts `connectionName` in the query or JSON body, plus the
-`x-oo-connector-alias` and legacy `x-oomol-connector-alias` headers. The default connection is
+fact, and HTTP also accepts `connectionName` in the query or JSON body. The default connection is
 `default`.
 
 Persistent tokens with a non-empty `allowedConnections` list must be granted the selected stable
