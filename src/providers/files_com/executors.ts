@@ -7,10 +7,19 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
+import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerFetch,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -21,6 +30,16 @@ const filesComApiHostSuffix = ".files.com";
 const filesComApiPathPrefix = "/api/rest/v1";
 const filesComValidationEndpoint = "/users/me.json";
 const filesComDefaultRequestTimeoutMs = 30_000;
+/** Files.com native storage uses dedicated S3 prefixes, not the application hostname. */
+const filesComNativeStoragePrefixes: Array<{ host: string; pathPrefix: string }> = [
+  { host: "s3.amazonaws.com", pathPrefix: "/objects.brickftp.com/" },
+  { host: "s3-ca-central-1.amazonaws.com", pathPrefix: "/objects-ca-central-1-brickftp-com/" },
+  { host: "s3-ap-southeast-2.amazonaws.com", pathPrefix: "/objects-ap-southeast-2-brickftp-com/" },
+  { host: "s3-eu-central-1.amazonaws.com", pathPrefix: "/objects-eu-central-1-brickftp-com/" },
+  { host: "s3-eu-west-2.amazonaws.com", pathPrefix: "/objects-eu-west-2-brickftp-com/" },
+  { host: "s3-ap-northeast-1.amazonaws.com", pathPrefix: "/objects-ap-northeast-1-brickftp-com/" },
+  { host: "s3-ap-southeast-1.amazonaws.com", pathPrefix: "/objects-ap-southeast-1-brickftp-com/" },
+];
 
 interface FilesComActionContext extends ApiKeyProviderContext {
   subdomain: string;
@@ -64,6 +83,9 @@ export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesCo
       path: `/files/${encodeRemotePath(readInputString(input.path, "path"))}.json`,
       wrapper: "file",
     });
+  },
+  download_file(input, context) {
+    return downloadFilesComFile(input, context);
   },
   create_folder(input, context) {
     return requestAndWrapFilesComJson({
@@ -111,6 +133,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<FilesComActi
       apiKey: credential.apiKey,
       subdomain: requireFilesComSubdomain(credential.values.subdomain ?? credential.metadata.subdomain),
       fetcher,
+      transitFiles: context.transitFiles,
       signal: context.signal,
     };
   },
@@ -152,6 +175,81 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+async function downloadFilesComFile(
+  input: Record<string, unknown>,
+  context: FilesComActionContext,
+): Promise<Record<string, unknown>> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(400, "files_com download_file requires local transit file storage");
+  }
+
+  const requestedPath = readInputString(input.path, "path");
+  const payload = optionalRecord(
+    await requestFilesComJson({
+      subdomain: context.subdomain,
+      apiKey: context.apiKey,
+      fetcher: context.fetcher,
+      signal: context.signal,
+      phase: "execute",
+      path: `/files/${encodeRemotePath(requestedPath)}.json`,
+    }),
+  );
+  if (!payload) {
+    throw new ProviderRequestError(502, "files_com download metadata is malformed");
+  }
+  if (optionalString(payload.type) !== "file") {
+    throw new ProviderRequestError(400, "files_com download_file requires a file path");
+  }
+
+  const remotePath = optionalString(payload.path) ?? requestedPath;
+  const remoteName = readFilesComFileName(payload.display_name, remotePath);
+  const reportedSizeBytes = optionalInteger(payload.size);
+  if (reportedSizeBytes !== undefined && reportedSizeBytes > context.transitFiles.maxBytes) {
+    throw new ProviderRequestError(
+      413,
+      `Files.com file exceeds local transit limit of ${context.transitFiles.maxBytes} bytes`,
+    );
+  }
+
+  const downloadUrl = readFilesComDownloadUrl(
+    requiredString(payload.download_uri, "download_uri", (message) => new ProviderRequestError(502, message)),
+  );
+  const response = await providerFetch(downloadUrl, {
+    headers: {
+      accept: "*/*",
+      "user-agent": providerUserAgent,
+    },
+    signal: context.signal,
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new ProviderRequestError(
+      response.status >= 500 ? 502 : response.status,
+      text || `files_com download failed with HTTP ${response.status}`,
+    );
+  }
+
+  const mimeType =
+    optionalString(response.headers.get("content-type")) ??
+    optionalString(payload.mime_type) ??
+    "application/octet-stream";
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: context.transitFiles.maxBytes,
+    fieldName: "Files.com download",
+    createError: (message) => new ProviderRequestError(413, message),
+  });
+  const transitName = optionalString(input.fileName) ?? remoteName;
+  const file = await context.transitFiles.create(new File([Uint8Array.from(bytes)], transitName, { type: mimeType }));
+
+  return {
+    fileId: remotePath,
+    name: remoteName,
+    mimeType,
+    sizeBytes: file.sizeBytes,
+    file,
+  };
+}
 
 async function requestAndWrapFilesComJson(input: {
   context: FilesComActionContext;
@@ -269,6 +367,46 @@ function encodeRemotePath(path: string): string {
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
+}
+
+function readFilesComFileName(displayName: unknown, remotePath: string): string {
+  const rawName = optionalRawString(displayName);
+  if (rawName && rawName.length > 0) {
+    return rawName;
+  }
+  return remotePath.split("/").findLast((segment) => segment.length > 0) ?? "files-com-file";
+}
+
+function readFilesComDownloadUrl(value: string): URL {
+  let url: URL;
+  try {
+    url = assertPublicHttpUrl(value, {
+      fieldName: "download_uri",
+      createError: (message) => new ProviderRequestError(502, message),
+    });
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    throw new ProviderRequestError(502, "files_com returned an invalid download URL");
+  }
+  if (url.protocol !== "https:" || url.username || url.password || !isFilesComDownloadHost(url)) {
+    throw new ProviderRequestError(502, "files_com returned an untrusted download URL");
+  }
+  return url;
+}
+
+function isFilesComDownloadHost(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase();
+  if (hostname === "files.com" || hostname.endsWith(".files.com")) {
+    return true;
+  }
+  if (hostname === "hosted-by-files.com" || hostname.endsWith(".hosted-by-files.com")) {
+    return true;
+  }
+  return filesComNativeStoragePrefixes.some(
+    (entry) => hostname === entry.host && url.pathname.startsWith(entry.pathPrefix),
+  );
 }
 
 function readObjectArray(value: unknown): Array<Record<string, unknown>> | undefined {
