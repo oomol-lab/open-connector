@@ -445,6 +445,24 @@ describe("MCP server", () => {
     );
   });
 
+  it("propagates the MCP request cancellation signal to action execution", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    await withMcpClient(
+      async (client) => {
+        const result = await client.callTool({
+          name: "execute_action",
+          arguments: { actionId: "example.echo", input: { message: "hello" } },
+        });
+        expect(result.structuredContent).toMatchObject({
+          ok: false,
+          error: { code: "execution_cancelled" },
+        });
+      },
+      { signal: controller.signal },
+    );
+  });
+
   it("applies token policy to MCP guides and execution", async () => {
     const policy = new ActionPolicyService().createSnapshot(emptyPolicyRules(), {
       allowedActions: ["example.*"],
@@ -608,6 +626,7 @@ async function withMcpClient(
       allowedProxies: string[];
       allowedConnections?: string[];
     };
+    signal?: AbortSignal;
   } = {},
 ): Promise<void> {
   const catalog = createCatalogStore([exampleProvider], {

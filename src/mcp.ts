@@ -27,6 +27,7 @@ export interface IMcpServerOptions {
   actionSearch?: ActionSearchIndexProvider;
   getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
   runtimeGrant?: RuntimeGrant;
+  signal?: AbortSignal;
 }
 
 /**
@@ -348,6 +349,7 @@ async function executeAction(
     connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    signal: options.signal,
   });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);

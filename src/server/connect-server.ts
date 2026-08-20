@@ -474,7 +474,7 @@ export class ConnectServer {
     if (!policy.evaluate(action).allowed) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
+        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant, context.req.raw.signal),
       );
     }
     const idempotencyKey = readIdempotencyKey(context.req.header("idempotency-key"));
@@ -490,7 +490,7 @@ export class ConnectServer {
     if (!idempotencyKey.key) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant),
+        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant, context.req.raw.signal),
       );
     }
 
@@ -544,7 +544,14 @@ export class ConnectServer {
       return writeRuntimeActionHttpResult(context, claim.response);
     }
 
-    const result = await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant);
+    const result = await this.executeRuntimeAction(
+      actionId,
+      input,
+      connectionName,
+      policy,
+      runtimeGrant,
+      context.req.raw.signal,
+    );
     const completed = await this.options.idempotency.complete({
       keyHash,
       requestHash,
@@ -565,6 +572,7 @@ export class ConnectServer {
     connectionName: string | undefined,
     policy: ActionPolicySnapshot,
     runtimeGrant: RuntimeGrant | undefined,
+    signal: AbortSignal | undefined,
   ): Promise<RuntimeActionHttpResult> {
     try {
       const run = await this.options.actions.run({
@@ -574,6 +582,7 @@ export class ConnectServer {
         connectionName,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
+        signal,
       });
       if (!run) {
         return serializeRuntimeFailure(unknownActionFailure(actionId));
@@ -742,6 +751,7 @@ export class ConnectServer {
           actionSearch: this.actionSearch,
           getPolicySnapshot: () => this.getPolicySnapshot(context),
           runtimeGrant: readRuntimeGrant(context),
+          signal: context.req.raw.signal,
         }),
       { legacy: "stateless", responseMode: "json" },
     );
