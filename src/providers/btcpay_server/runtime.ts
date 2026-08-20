@@ -10,6 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const btcpayApiSegment = "api/v1";
@@ -82,22 +83,20 @@ export async function validateBtcpayServerCredential(
   };
 }
 
-export function normalizeBtcpayBaseUrl(value: string | undefined): string {
+export function normalizeBtcpayBaseUrl(
+  value: string | undefined,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const trimmed = optionalString(value);
   if (!trimmed) {
     throw new ProviderRequestError(400, "Base URL is required");
   }
 
-  let parsed: URL;
-  try {
-    parsed = new URL(trimmed);
-  } catch {
-    throw new ProviderRequestError(400, "Base URL must be a valid absolute URL");
-  }
-
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new ProviderRequestError(400, "Base URL must use http or https");
-  }
+  const parsed = assertPublicHttpUrl(trimmed, {
+    fieldName: "baseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
 
   parsed.search = "";
   parsed.hash = "";

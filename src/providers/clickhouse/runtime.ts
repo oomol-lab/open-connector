@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -459,17 +460,16 @@ function createClickhouseError(
   return new ProviderRequestError(status || 500, message);
 }
 
-function normalizeClickhouseBaseUrl(value: unknown): string {
+export function normalizeClickhouseBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const raw = requireCredentialString(value, "baseUrl");
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new ProviderRequestError(400, "baseUrl must be a valid URL");
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new ProviderRequestError(400, "baseUrl must use http or https");
-  }
+  const url = assertPublicHttpUrl(raw, {
+    fieldName: "baseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
   url.hash = "";
   return url.toString();
 }
