@@ -139,35 +139,6 @@ describe("AWS S3 download_object", () => {
     });
     expect(fetch).not.toHaveBeenCalled();
   });
-
-  it("returns 504 when the download request times out", async () => {
-    const timeoutReason = new DOMException("The operation was aborted due to timeout", "TimeoutError");
-    const timeoutController = new AbortController();
-    timeoutController.abort(timeoutReason);
-    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
-    vi.stubGlobal("fetch", async (_input: RequestInfo | URL, init?: RequestInit) => {
-      if (init?.signal?.aborted) {
-        throw timeoutReason;
-      }
-      throw new Error("expected download fetch to use an aborted timeout signal");
-    });
-    const { store } = createTransitFileStore(1024);
-
-    try {
-      const result = await executeDownload({ bucket: "documents", objectKey: "slow.bin" }, store);
-
-      expect(result).toMatchObject({
-        ok: false,
-        error: {
-          code: "provider_error",
-          message: "aws_s3 download timed out",
-          details: { status: 504 },
-        },
-      });
-    } finally {
-      timeoutSpy.mockRestore();
-    }
-  });
 });
 
 describe("AWS S3 put_object sourceUrl", () => {

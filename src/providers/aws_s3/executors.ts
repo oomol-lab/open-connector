@@ -15,7 +15,6 @@ import {
   createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
@@ -347,13 +346,10 @@ async function awsHeadObject(input: Record<string, unknown>, context: AwsActionC
 }
 
 async function awsDownloadObject(input: Record<string, unknown>, context: AwsActionContext) {
-  let timeoutSignal: AbortSignal | undefined;
   try {
     if (!context.transitFiles) {
       throw new ProviderRequestError(400, "aws_s3 download_object requires local transit file storage");
     }
-
-    timeoutSignal = AbortSignal.timeout(sourceFetchTimeoutMs);
 
     const bucket = resolveBucket(input, context);
     const objectKey = readObjectKey(input);
@@ -364,7 +360,7 @@ async function awsDownloadObject(input: Record<string, unknown>, context: AwsAct
       query: compactObject({
         versionId: optionalString(input.versionId),
       }),
-      signal: context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal,
+      signal: context.signal,
     });
 
     const name = optionalString(input.fileName) ?? defaultObjectFileName(objectKey);
@@ -384,13 +380,6 @@ async function awsDownloadObject(input: Record<string, unknown>, context: AwsAct
       file,
     };
   } catch (error) {
-    if (
-      timeoutSignal?.aborted &&
-      !context.signal?.aborted &&
-      (isAbortLikeError(error) || error === timeoutSignal.reason)
-    ) {
-      throw new ProviderRequestError(504, "aws_s3 download timed out", error);
-    }
     throw normalizeAwsError(error, "execute");
   }
 }
