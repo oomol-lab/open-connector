@@ -265,6 +265,9 @@ by age.
 - `GET /v1/apps/authenticated`
 - `POST /v1/proxy/:service`
 
+`GET /v1/apps/authenticated` checks the repeated `service` query values and returns the authenticated
+service IDs from that candidate set. It returns an empty list when no candidates are supplied.
+
 `POST /v1/proxy/:service` proxies one provider API request when that provider has a registered or
 provider-specific local proxy executor. Providers without a proxy executor return `proxy_not_supported`.
 

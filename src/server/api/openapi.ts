@@ -131,6 +131,13 @@ const namedConnectionParameters = [
     description: namedConnectionDescription,
   },
   {
+    name: "connectionName",
+    in: "query",
+    required: false,
+    schema: jsonSchema.string(),
+    description: namedConnectionDescription,
+  },
+  {
     name: "alias",
     in: "query",
     required: false,
@@ -260,15 +267,21 @@ export function createOpenApiDocument(
         "RuntimeConnectedApp rows, not the provider catalog. Use GET /v1/providers or MCP list_apps for providers.",
       data: jsonSchema.array({ $ref: "#/components/schemas/RuntimeConnectedApp" }),
     }),
-    "/v1/apps/authenticated": runtimeGetOperation("Connections", "List authenticated provider service ids.", {
-      parameters: [
-        queryParameter("service", "Optional service id filter. Repeat to include multiple services.", {
-          type: "array",
-          items: jsonSchema.string(),
+    "/v1/apps/authenticated": runtimeGetOperation(
+      "Connections",
+      "Return authenticated provider service IDs from the supplied candidates.",
+      {
+        parameters: [
+          queryParameter("service", "Candidate service id to check. Repeat to check multiple services.", {
+            type: "array",
+            items: jsonSchema.string(),
+          }),
+        ],
+        data: jsonSchema.array(jsonSchema.string(), {
+          description: "Authenticated service IDs from the supplied candidates.",
         }),
-      ],
-      data: jsonSchema.array(jsonSchema.string(), { description: "Authenticated provider service ids." }),
-    }),
+      },
+    ),
     "/v1/apps/services/{service}": runtimeGetOperation("Connections", "List connected accounts for one provider.", {
       parameters: [
         {
