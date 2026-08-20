@@ -48,8 +48,10 @@ describe.skipIf(!testPostgresUrl)("PostgreSQL runtime integration", () => {
     const secondPool = new Pool({ connectionString: url, max: 1 });
     try {
       await Promise.all([migratePostgresDatabase({ pool: firstPool }), migratePostgresDatabase({ pool: secondPool })]);
-      const result = await firstPool.query<{ count: string }>("select count(*)::text as count from runtime_migrations");
-      expect(result.rows[0]?.count).toBe("1");
+      const result = await firstPool.query<{ name: string }>("select name from runtime_migrations order by name");
+      expect(result.rows.map((row) => row.name)).toEqual(
+        expect.arrayContaining(["0010_runtime.sql", "0011_runtime_token_connection_scope.sql"]),
+      );
     } finally {
       await firstPool.end();
       await secondPool.end();
