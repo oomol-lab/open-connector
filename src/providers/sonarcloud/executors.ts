@@ -14,7 +14,6 @@ const service = "sonarcloud";
 export const executors: ProviderExecutors = defineProviderExecutors<SonarCloudActionContext>({
   service,
   handlers: sonarCloudActionHandlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<SonarCloudActionContext> {
     const credential = await requireApiKeyCredential(context, service);
     return {
@@ -34,7 +33,6 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return resolveSonarCloudApiBaseUrl(credential.metadata.apiBaseUrl ?? credential.values.apiBaseUrl);
   },
   auth: { type: "bearer" },
-  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -47,7 +47,6 @@ const handlers: ProviderActionHandlers<"appcues", ProviderRuntimeHandler<Context
 
 export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "appcues",
-  skipDnsValidation: true,
   async createContext(context, fetcher) {
     const credential = await requireApiKeyCredential(context, "appcues");
     const apiSecret = credential.values.apiSecret;
@@ -121,5 +120,4 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     if (!headers.has("accept")) headers.set("accept", "application/json");
     if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
   },
-  skipDnsValidation: true,
 });

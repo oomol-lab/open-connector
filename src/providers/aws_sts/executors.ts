@@ -31,7 +31,7 @@ const stsApiVersion = "2011-06-15";
 const awsServiceName = "sts";
 const defaultRegion = "ap-southeast-1";
 const defaultRoleSessionName = "oomol-connect";
-const awsStsFetch = createProviderFetch({ skipDnsValidation: true });
+const awsStsFetch = createProviderFetch();
 
 interface AwsStsContext {
   values: Record<string, string>;
@@ -88,7 +88,6 @@ export const awsStsActionHandlers: ProviderActionHandlers<"aws_sts", AwsStsActio
 export const executors: ProviderExecutors = defineProviderExecutors<AwsStsContext>({
   service,
   handlers: awsStsActionHandlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<AwsStsContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "custom_credential") {
