@@ -1,7 +1,6 @@
 import type { ResolvedCredential } from "../../core/types.ts";
 
 import { describe, expect, it } from "vitest";
-import { ProviderRequestError } from "../provider-runtime.ts";
 import { credentialValidators } from "./executors.ts";
 
 const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
@@ -13,12 +12,28 @@ const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
 };
 
 describe("Harvest OAuth credential validation", () => {
-  it("rejects credentials without an executable Harvest account", async () => {
-    await expect(
-      credentialValidators.oauth2!(credential, {
-        fetcher: async () => Response.json({ user: { id: 42 }, accounts: [] }),
-      }),
-    ).rejects.toEqual(new ProviderRequestError(400, "harvest OAuth credential has no accessible Harvest account"));
+  it("accepts a valid identity when Harvest has not provisioned an account yet", async () => {
+    const result = await credentialValidators.oauth2!(credential, {
+      fetcher: async () =>
+        Response.json({
+          user: { id: 42, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com" },
+          accounts: [],
+        }),
+    });
+
+    expect(result).toEqual({
+      profile: { accountId: "42", displayName: "Ada Lovelace" },
+      grantedScopes: ["harvest.read", "harvest.write"],
+      metadata: {
+        apiBaseUrl: "https://api.harvestapp.com",
+        validationEndpoint: "https://id.getharvest.com/api/v2/accounts",
+        userId: 42,
+        firstName: "Ada",
+        lastName: "Lovelace",
+        email: "ada@example.com",
+        accounts: [],
+      },
+    });
   });
 
   it("selects the default Harvest account without a second API probe", async () => {

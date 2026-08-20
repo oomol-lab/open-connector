@@ -564,11 +564,8 @@ async function fetchHarvestCurrentAccount(
   const accountsResponse = requireObjectPayload(accountsPayload, "harvest accounts response");
   const accountUser = optionalRecord(accountsResponse.user);
   const accounts = readHarvestAccounts(accountsResponse);
-  if (accounts.length === 0) {
-    throw new ProviderRequestError(400, "harvest OAuth credential has no accessible Harvest account");
-  }
-  const defaultAccount = selectDefaultHarvestAccount(accounts);
-  const accountId = requireHarvestResponseAccountId(defaultAccount.id);
+  const defaultAccount = accounts.length > 0 ? selectDefaultHarvestAccount(accounts) : undefined;
+  const accountId = defaultAccount ? requireHarvestResponseAccountId(defaultAccount.id) : undefined;
   const userId = String(requireHarvestResponseId(accountUser?.id, "user.id"));
   const firstName = optionalString(accountUser?.first_name);
   const lastName = optionalString(accountUser?.last_name);
