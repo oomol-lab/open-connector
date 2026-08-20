@@ -228,8 +228,8 @@ déployer, définir un domaine personnalisé et ajuster le scaling.
 ## Image Docker (GHCR)
 
 Exécutez OpenConnector depuis une image préconstruite sur GitHub Packages (GHCR) :
-`ghcr.io/oomol-lab/open-connector`. Utilisez `latest` pour la dernière release, une version épinglée comme
-`v1.0.0` en production, ou `tip` pour le dernier build de `main`.
+`ghcr.io/oomol-lab/open-connector`. Utilisez `latest` pour la dernière release, une version de release
+épinglée en production, ou `tip` pour le dernier build de `main`.
 
 Consultez [docker-ghcr.md (anglais)](docker-ghcr.md) pour les tags d'image, le pull et l'exécution.
 
