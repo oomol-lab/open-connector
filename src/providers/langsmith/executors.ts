@@ -110,6 +110,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return readLangSmithApiBaseUrl(credential.values.region ?? credential.metadata.region);
   },
   auth: { type: "api_key_header", name: "X-Api-Key" },
+  allowedOrigins: Object.values(langSmithRegionBaseUrls),
   customizeRequest(input) {
     let region = input.url.searchParams.get("region");
     if (region != null) {

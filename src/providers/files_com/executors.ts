@@ -23,6 +23,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderErrorTextBody,
+  readProviderTextBody,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -31,16 +32,6 @@ const filesComApiHostSuffix = ".files.com";
 const filesComApiPathPrefix = "/api/rest/v1";
 const filesComValidationEndpoint = "/users/me.json";
 const filesComDefaultRequestTimeoutMs = 30_000;
-/** Files.com native storage uses dedicated S3 prefixes, not the application hostname. */
-const filesComNativeStoragePrefixes: Array<{ host: string; pathPrefix: string }> = [
-  { host: "s3.amazonaws.com", pathPrefix: "/objects.brickftp.com/" },
-  { host: "s3-ca-central-1.amazonaws.com", pathPrefix: "/objects-ca-central-1-brickftp-com/" },
-  { host: "s3-ap-southeast-2.amazonaws.com", pathPrefix: "/objects-ap-southeast-2-brickftp-com/" },
-  { host: "s3-eu-central-1.amazonaws.com", pathPrefix: "/objects-eu-central-1-brickftp-com/" },
-  { host: "s3-eu-west-2.amazonaws.com", pathPrefix: "/objects-eu-west-2-brickftp-com/" },
-  { host: "s3-ap-northeast-1.amazonaws.com", pathPrefix: "/objects-ap-northeast-1-brickftp-com/" },
-  { host: "s3-ap-southeast-1.amazonaws.com", pathPrefix: "/objects-ap-southeast-1-brickftp-com/" },
-];
 
 interface FilesComActionContext extends ApiKeyProviderContext {
   subdomain: string;
@@ -402,23 +393,10 @@ function readFilesComDownloadUrl(value: string): URL {
     }
     throw new ProviderRequestError(502, "files_com returned an invalid download URL");
   }
-  if (url.protocol !== "https:" || url.username || url.password || !isFilesComDownloadHost(url)) {
+  if (url.protocol !== "https:" || url.username || url.password) {
     throw new ProviderRequestError(502, "files_com returned an untrusted download URL");
   }
   return url;
-}
-
-function isFilesComDownloadHost(url: URL): boolean {
-  const hostname = url.hostname.toLowerCase();
-  if (hostname === "files.com" || hostname.endsWith(".files.com")) {
-    return true;
-  }
-  if (hostname === "hosted-by-files.com" || hostname.endsWith(".hosted-by-files.com")) {
-    return true;
-  }
-  return filesComNativeStoragePrefixes.some(
-    (entry) => hostname === entry.host && url.pathname.startsWith(entry.pathPrefix),
-  );
 }
 
 function readObjectArray(value: unknown): Array<Record<string, unknown>> | undefined {
@@ -429,7 +407,7 @@ function readObjectArray(value: unknown): Array<Record<string, unknown>> | undef
 }
 
 async function readFilesComPayload(response: Response): Promise<unknown> {
-  const text = await response.text();
+  const text = await readProviderTextBody(response, "Files.com API response");
   if (!text) {
     return {};
   }

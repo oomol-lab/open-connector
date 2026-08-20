@@ -33,6 +33,8 @@ export interface ProviderFetchOptions {
    * derived from user/credential input. See {@link GuardedFetchOptions.skipDnsValidation}.
    */
   skipDnsValidation?: boolean;
+  /** Additional credential-bearing headers to strip from cross-origin redirects. */
+  additionalSensitiveHeaders?: readonly string[];
 }
 
 /**
@@ -46,6 +48,7 @@ export function createProviderFetch(options: ProviderFetchOptions = {}): Provide
     fetch: options.fetch,
     allowPrivateNetwork: options.allowPrivateNetwork,
     skipDnsValidation: options.skipDnsValidation,
+    additionalSensitiveHeaders: options.additionalSensitiveHeaders,
     mapTransportError: (error) =>
       error instanceof TypeError
         ? new ProviderRequestError(502, `provider network request failed${describeTransportCauseCode(error)}`)
@@ -285,6 +288,8 @@ export interface ProviderProxyDefinition {
   auth: ProviderProxyAuth;
   allowedEndpoint?: (endpoint: string) => boolean;
   customizeRequest?: (input: ProviderProxyRequestCustomizationInput) => Promise<void> | void;
+  /** Exact code-controlled origins that `customizeRequest` may select in addition to the resolved base origin. */
+  allowedOrigins?: readonly string[];
   /** Deployment-gated private-network opt-in applied to this proxy's egress fetch (currently Dokploy). */
   allowPrivateNetwork?: () => boolean;
   /** Skip the redundant DNS resolved-address check; only for hardcoded-base-URL proxies. */
@@ -465,13 +470,13 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
 }
 
 export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
-  const egressFetch =
-    input.allowPrivateNetwork || input.skipDnsValidation
-      ? createProviderFetch({
-          allowPrivateNetwork: input.allowPrivateNetwork,
-          skipDnsValidation: input.skipDnsValidation,
-        })
-      : providerFetch;
+  const allowedOrigins = new Set(input.allowedOrigins?.map((value) => new URL(value).origin));
+  const additionalSensitiveHeaders = input.auth.type === "api_key_header" ? [input.auth.name] : undefined;
+  const egressFetch = createProviderFetch({
+    allowPrivateNetwork: input.allowPrivateNetwork,
+    skipDnsValidation: input.skipDnsValidation,
+    additionalSensitiveHeaders,
+  });
   return async (proxyInput: ProxyRequestInput, context: ExecutionContext): Promise<ProxyExecutionResult> => {
     try {
       const endpoint = normalizeProviderProxyEndpoint(proxyInput.endpoint);
@@ -497,7 +502,7 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         credential,
         fetcher: egressFetch,
       });
-      if (url.origin !== providerOrigin) {
+      if (url.origin !== providerOrigin && !allowedOrigins.has(url.origin)) {
         throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
       }
 

@@ -298,6 +298,28 @@ describe("createGuardedFetch redirects", () => {
     expect(crossOriginHeaders.get("x-correlation-id")).toBe("cid");
   });
 
+  it("strips caller-declared sensitive headers on cross-origin redirects", async () => {
+    const { transport, calls } = createTransport([
+      redirectTo("https://other.example.net/away"),
+      new Response("ok", { status: 200 }),
+    ]);
+    const guarded = createGuardedFetch({
+      fetch: transport,
+      additionalSensitiveHeaders: ["X-Provider-Credential"],
+    });
+
+    await guarded("https://api.example.com/", {
+      headers: {
+        "x-provider-credential": "secret",
+        "x-trace": "keep",
+      },
+    });
+
+    const redirectedHeaders = new Headers(calls[1]?.init?.headers);
+    expect(redirectedHeaders.has("x-provider-credential")).toBe(false);
+    expect(redirectedHeaders.get("x-trace")).toBe("keep");
+  });
+
   it("passes through when the caller handles redirects manually", async () => {
     const { transport, calls } = createTransport([redirectTo("http://169.254.169.254/")]);
     const guarded = createGuardedFetch({ fetch: transport });

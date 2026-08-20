@@ -44,6 +44,8 @@ export interface GuardedFetchOptions {
    * only adds a per-request lookup. On by default.
    */
   skipDnsValidation?: boolean;
+  /** Additional credential-bearing headers to drop when a redirect crosses origins. */
+  additionalSensitiveHeaders?: readonly string[];
   /** Transform errors thrown by the underlying transport before they escape the guarded fetch. */
   mapTransportError?: (error: unknown) => unknown;
 }
@@ -174,6 +176,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
   const baseFetch = unwrapGuardedFetch(options.fetch);
   const createError = options.createError ?? ((message: string) => new TypeError(message));
   const maxRedirects = options.maxRedirects ?? defaultMaxRedirects;
+  const additionalSensitiveHeaders = new Set(options.additionalSensitiveHeaders?.map((name) => name.toLowerCase()));
   const guardedFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const transport = baseFetch ?? globalThis.fetch;
     const fetchTransport = async (
@@ -261,7 +264,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
       }
       if (guardedNext.origin !== url.origin) {
         for (const name of [...headers.keys()]) {
-          if (crossOriginCredentialHeaders.has(name)) {
+          if (crossOriginCredentialHeaders.has(name) || additionalSensitiveHeaders.has(name)) {
             headers.delete(name);
           }
         }

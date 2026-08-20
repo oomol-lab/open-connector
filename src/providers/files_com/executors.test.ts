@@ -151,7 +151,7 @@ describe("Files.com download_file", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("rejects folders and untrusted download URLs", async () => {
+  it("rejects folders", async () => {
     const folderRequests = stubResponses([
       Response.json({
         path: "reports",
@@ -171,24 +171,50 @@ describe("Files.com download_file", () => {
     });
     expect(folderRequests).toHaveLength(1);
     expect(create).not.toHaveBeenCalled();
+  });
 
-    const untrustedRequests = stubResponses([
+  it("accepts public HTTPS download URLs returned by Files.com", async () => {
+    const content = new Uint8Array([1, 2, 3]);
+    const requests = stubResponses([
+      Response.json({
+        path: "report.bin",
+        display_name: "report.bin",
+        type: "file",
+        size: content.length,
+        download_uri: "https://cdn.example.net/generated/report.bin?signature=abc",
+      }),
+      new Response(content),
+    ]);
+    const { store, create } = createTransitFileStore(1024);
+
+    const result = await executeDownload({ path: "report.bin" }, store);
+
+    expect(result).toMatchObject({ ok: true, output: { fileId: "report.bin" } });
+    expect(requests[1]?.url.hostname).toBe("cdn.example.net");
+    expect(requests[1]?.apiKey).toBeNull();
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  it("rejects download URLs containing credentials", async () => {
+    const requests = stubResponses([
       Response.json({
         path: "secret.bin",
         display_name: "secret.bin",
         type: "file",
         size: 1,
-        download_uri: "https://attacker.example/file/secret",
+        download_uri: "https://user:password@cdn.example.net/secret.bin",
       }),
     ]);
+    const { store, create } = createTransitFileStore(1024);
 
-    const untrustedResult = await executeDownload({ path: "secret.bin" }, store);
+    const result = await executeDownload({ path: "secret.bin" }, store);
 
-    expect(untrustedResult).toMatchObject({
+    expect(result).toMatchObject({
       ok: false,
-      error: { message: "files_com returned an untrusted download URL" },
+      error: { message: expect.stringMatching(/credentials|untrusted download URL/) },
     });
-    expect(untrustedRequests).toHaveLength(1);
+    expect(requests).toHaveLength(1);
+    expect(create).not.toHaveBeenCalled();
   });
 
   it("rejects private, metadata, and non-https download URLs", async () => {
@@ -219,7 +245,7 @@ describe("Files.com download_file", () => {
     }
   });
 
-  it("downloads Files.com native S3 storage URLs and rejects other S3 buckets", async () => {
+  it("does not hardcode Files.com storage bucket paths", async () => {
     const content = new Uint8Array([1, 2, 3]);
     const allowedRequests = stubResponses([
       Response.json({
@@ -227,36 +253,35 @@ describe("Files.com download_file", () => {
         display_name: "archive.bin",
         type: "file",
         size: content.length,
-        download_uri: "https://s3.amazonaws.com/objects.brickftp.com/archive.bin?X-Amz-Signature=abc",
+        download_uri: "https://s3.amazonaws.com/new-files-storage/archive.bin?X-Amz-Signature=abc",
       }),
       new Response(content),
     ]);
     const { store, create } = createTransitFileStore(1024);
 
-    const allowed = await executeDownload({ path: "reports/archive.bin" }, store);
+    const result = await executeDownload({ path: "reports/archive.bin" }, store);
 
-    expect(allowed).toMatchObject({ ok: true, output: { fileId: "reports/archive.bin" } });
-    expect(allowedRequests[1]?.url.hostname).toBe("s3.amazonaws.com");
+    expect(result).toMatchObject({ ok: true, output: { fileId: "reports/archive.bin" } });
+    expect(allowedRequests[1]?.url.pathname).toBe("/new-files-storage/archive.bin");
     expect(create).toHaveBeenCalledOnce();
+  });
 
-    const rejectedRequests = stubResponses([
-      Response.json({
-        path: "secret.bin",
-        display_name: "secret.bin",
-        type: "file",
-        size: 1,
-        download_uri: "https://s3.amazonaws.com/other-bucket/secret.bin",
-      }),
+  it("bounds Files.com metadata responses", async () => {
+    const requests = stubResponses([
+      new Response("{}", { headers: { "content-length": String(20 * 1024 * 1024 + 1) } }),
     ]);
-    create.mockClear();
+    const { store, create } = createTransitFileStore(1024);
 
-    const rejected = await executeDownload({ path: "secret.bin" }, store);
+    const result = await executeDownload({ path: "report.bin" }, store);
 
-    expect(rejected).toMatchObject({
+    expect(result).toMatchObject({
       ok: false,
-      error: { message: "files_com returned an untrusted download URL" },
+      error: {
+        message: "Files.com API response exceeds 20971520 bytes",
+        details: { status: 413 },
+      },
     });
-    expect(rejectedRequests).toHaveLength(1);
+    expect(requests).toHaveLength(1);
     expect(create).not.toHaveBeenCalled();
   });
 

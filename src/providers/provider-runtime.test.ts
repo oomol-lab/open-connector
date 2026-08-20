@@ -238,6 +238,42 @@ describe("provider egress SSRF guard", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("allows customizeRequest to select an exact code-controlled origin", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      allowedOrigins: ["https://eu.api.example.com"],
+      customizeRequest({ url }) {
+        url.hostname = "eu.api.example.com";
+      },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.url).toBe("https://eu.api.example.com/v1/items");
+  });
+
+  it("strips the configured proxy API key header from cross-origin redirects", async () => {
+    const calls = stubFetchSequence([
+      new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_header", name: "X-Provider-Credential" },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(new Headers(calls[0]?.init?.headers).get("x-provider-credential")).toBe("test-key");
+    expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
+  });
+
   it("rejects origin-escaping endpoints even when DNS validation is skipped", async () => {
     const calls = stubFetchSequence([]);
     const proxy = defineProviderProxy({
