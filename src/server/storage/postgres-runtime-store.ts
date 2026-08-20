@@ -347,9 +347,9 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     await this.pool.query(
       `
         insert into runtime_tokens (
-          id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+          id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       `,
       [
         record.id,
@@ -358,6 +358,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.allowedActions),
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
+        JSON.stringify(record.allowedConnections ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
       ],
@@ -366,7 +367,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
 
   async list(): Promise<RuntimeTokenRecord[]> {
     const result = await this.pool.query<RuntimeRow>(`
-      select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+      select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
       from runtime_tokens
       where revoked_at is null
       order by created_at desc, id desc
@@ -377,7 +378,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>(
       `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
         from runtime_tokens
         where token_hash = $1 and revoked_at is null
       `,
@@ -391,14 +392,15 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     const result = await this.pool.query<RuntimeRow>(
       `
         update runtime_tokens
-        set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3
-        where id = $4 and revoked_at is null
-        returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, created_at, last_used_at
+        set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3, allowed_connections = $4
+        where id = $5 and revoked_at is null
+        returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
       `,
       [
         JSON.stringify(policy.allowedActions),
         JSON.stringify(policy.blockedActions),
         JSON.stringify(policy.allowedProxies),
+        JSON.stringify(policy.allowedConnections ?? []),
         id,
       ],
     );
@@ -631,6 +633,7 @@ function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
     allowedActions: parseJson(readString(row, "allowed_actions")),
     blockedActions: parseJson(readString(row, "blocked_actions")),
     allowedProxies: parseJson(readString(row, "allowed_proxies")),
+    allowedConnections: parseJson(readOptionalString(row, "allowed_connections") ?? "[]"),
     createdAt: readString(row, "created_at"),
     lastUsedAt: readOptionalString(row, "last_used_at"),
   };

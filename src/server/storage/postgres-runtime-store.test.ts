@@ -44,7 +44,7 @@ describe("PostgreSQL migrations with PGlite", () => {
       await expect(assertPostgresSchemaReady(pool)).resolves.toBeUndefined();
       await expect(migratePostgresDatabase({ pool })).resolves.toBeUndefined();
       await expect(pool.query("select name from runtime_migrations order by name")).resolves.toMatchObject({
-        rows: [{ name: "0010_runtime.sql" }],
+        rows: [{ name: "0010_runtime.sql" }, { name: "0011_runtime_token_connection_scope.sql" }],
       });
 
       await pool.query("delete from runtime_migrations where name = $1", ["0010_runtime.sql"]);
@@ -198,14 +198,19 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
+      allowedConnections: ["connection-work", "connection-personal"],
     });
     await expect(tokens.verifyToken(token.token)).resolves.toBe(true);
+    await expect(tokens.resolveToken(token.token)).resolves.toMatchObject({
+      allowedConnections: ["connection-work", "connection-personal"],
+    });
     await expect(tokens.listTokens()).resolves.toMatchObject([
       {
         id: token.record.id,
         allowedActions: ["github.*"],
         blockedActions: ["github.delete_repository"],
         allowedProxies: ["github"],
+        allowedConnections: ["connection-work", "connection-personal"],
       },
     ]);
     await expect(
@@ -213,8 +218,15 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
         allowedProxies: [],
+        allowedConnections: ["connection-work"],
       }),
-    ).resolves.toMatchObject({ allowedActions: ["github.get_current_user"] });
+    ).resolves.toMatchObject({
+      allowedActions: ["github.get_current_user"],
+      allowedConnections: ["connection-work"],
+    });
+    await expect(tokens.resolveToken(token.token)).resolves.toMatchObject({
+      allowedConnections: ["connection-work"],
+    });
 
     const policy = {
       rules: {
