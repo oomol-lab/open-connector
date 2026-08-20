@@ -182,8 +182,8 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
         connectionName: optionalConnectionNameSchema,
       },
     },
-    async ({ actionId, input, connectionName }) =>
-      toolResult(await executeAction(options, actionId, input, connectionName)),
+    async ({ actionId, input, connectionName }, extra) =>
+      toolResult(await executeAction(options, actionId, input, connectionName, extra.mcpReq.signal)),
   );
 
   return server;
@@ -318,6 +318,7 @@ async function executeAction(
   actionId: string,
   input: Record<string, unknown>,
   connectionName: string | undefined,
+  signal?: AbortSignal,
 ): Promise<ToolPayload> {
   const action = options.catalog.actionsById.get(actionId);
   if (!action) {
@@ -348,6 +349,7 @@ async function executeAction(
     connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    signal,
   });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);

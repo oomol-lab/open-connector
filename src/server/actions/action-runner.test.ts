@@ -257,6 +257,93 @@ describe("ActionRunner", () => {
     expect(denied?.result).toMatchObject({ ok: false, error: { code: "connection_not_allowed" } });
     expect(resolveConnection).toHaveBeenCalledTimes(2);
   });
+
+  it("propagates the caller abort signal into the executor context", async () => {
+    const controller = new AbortController();
+    let seen: AbortSignal | undefined;
+    const runner = createRunner({
+      runs: new MemoryRunLogStore(),
+      logger: createTestLogger().logger,
+      providerLoader: new TestProviderLoader(async (_input, context) => {
+        seen = context.signal;
+        return { ok: true, output: {} };
+      }),
+    });
+
+    controller.abort();
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      signal: controller.signal,
+    });
+
+    expect(run?.result).toEqual({ ok: true, output: {} });
+    expect(seen).toBe(controller.signal);
+    expect(seen?.aborted).toBe(true);
+  });
+
+  it("does not set context.signal when the caller omits one", async () => {
+    let seen: AbortSignal | undefined | "unset" = "unset";
+    const runner = createRunner({
+      runs: new MemoryRunLogStore(),
+      logger: createTestLogger().logger,
+      providerLoader: new TestProviderLoader(async (_input, context) => {
+        seen = context.signal;
+        return { ok: true, output: {} };
+      }),
+    });
+
+    await runner.run({ actionId: "example.echo", input: {}, caller: "http" });
+
+    expect(seen).toBeUndefined();
+  });
+
+  it("aborts a waiting executor when the caller signal aborts", async () => {
+    const controller = new AbortController();
+    let started!: () => void;
+    const startedPromise = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const runner = createRunner({
+      runs: new MemoryRunLogStore(),
+      logger: createTestLogger().logger,
+      providerLoader: new TestProviderLoader(async (_input, context) => {
+        await new Promise<void>((_resolve, reject) => {
+          const signal = context.signal;
+          if (!signal) {
+            reject(new Error("missing signal"));
+            return;
+          }
+          const abort = (): void => {
+            reject(signal.reason ?? new Error("aborted"));
+          };
+          if (signal.aborted) {
+            abort();
+            return;
+          }
+          signal.addEventListener("abort", abort, { once: true });
+          started();
+        });
+        return { ok: true, output: {} };
+      }),
+    });
+
+    const pending = runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      signal: controller.signal,
+    });
+    await startedPromise;
+    controller.abort();
+    const run = await pending;
+
+    expect(run?.result).toEqual({
+      ok: false,
+      error: { code: "internal_error", message: "Action execution failed unexpectedly." },
+    });
+  });
 });
 
 function createRunner(options: {

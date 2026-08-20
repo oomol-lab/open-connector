@@ -27,6 +27,7 @@ export interface RunActionInput {
   connectionName?: string;
   policy?: ActionPolicySnapshot;
   runtimeTokenId?: string;
+  signal?: AbortSignal;
 }
 
 export interface ActionRunResult {
@@ -97,7 +98,7 @@ export class ActionRunner {
             action,
             executor,
             input.input,
-            this.createExecutionContext(connection.getCredential),
+            this.createExecutionContext(connection.getCredential, input.signal),
           );
         }
       } catch (error) {
@@ -176,12 +177,18 @@ export class ActionRunner {
     return this.options.runs.get(id);
   }
 
-  private createExecutionContext(getCredential: ExecutionConnection["getCredential"]): ExecutionContext {
+  private createExecutionContext(
+    getCredential: ExecutionConnection["getCredential"],
+    signal?: AbortSignal,
+  ): ExecutionContext {
     const context: ExecutionContext = {
       getCredential,
     };
     if (this.options.transitFiles) {
       context.transitFiles = this.options.transitFiles;
+    }
+    if (signal) {
+      context.signal = signal;
     }
     return context;
   }
