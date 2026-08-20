@@ -114,11 +114,11 @@ export class ActionRunner {
           error instanceof ConnectionError && error.code === "connection_not_found"
             ? snapshot?.evaluateConnection()
             : undefined;
-        if (missingConnectionPolicy && !missingConnectionPolicy.allowed) {
+        if (input.signal?.aborted) {
+          result = cancelledExecutionResult();
+        } else if (missingConnectionPolicy && !missingConnectionPolicy.allowed) {
           policy = missingConnectionPolicy;
           result = { ok: false, error: { code: policy.code, message: policy.message } };
-        } else if (input.signal?.aborted) {
-          result = cancelledExecutionResult();
         } else {
           result =
             error instanceof ConnectionError
