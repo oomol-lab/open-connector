@@ -140,6 +140,23 @@ describe("Alibaba Cloud OSS download_object", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("rejects bucket values that alter the provider origin", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { store } = createTransitFileStore(1024);
+
+    const result = await executeDownload({ bucket: "attacker.example#", objectKey: "report.pdf" }, store);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "bucket must not alter the Alibaba Cloud OSS endpoint",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("honors the transit size limit without storing a partial object", async () => {
     const requests = stubResponses([new Response(new Uint8Array([1, 2, 3]))]);
     const { store, create } = createTransitFileStore(2);

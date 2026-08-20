@@ -106,6 +106,34 @@ describe("AWS S3 download_object", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("rejects bucket and region values that alter the provider origin", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { store } = createTransitFileStore(1024);
+
+    const invalidBucket = await executeDownload({ bucket: "attacker.example#", objectKey: "report.pdf" }, store);
+    const invalidRegion = await executeDownload(
+      { bucket: "documents", region: "us-east-1.attacker.example#", objectKey: "report.pdf" },
+      store,
+    );
+
+    expect(invalidBucket).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "bucket and region must form a valid AWS S3 endpoint",
+      },
+    });
+    expect(invalidRegion).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "bucket and region must form a valid AWS S3 endpoint",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("honors the transit size limit without storing a partial object", async () => {
     const requests = stubResponses([new Response(new Uint8Array([1, 2, 3]))]);
     const { store, create } = createTransitFileStore(2);

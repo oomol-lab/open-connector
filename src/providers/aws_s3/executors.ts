@@ -475,7 +475,7 @@ function normalizeAwsS3ProxyMethod(method: string): "GET" | "PUT" | "HEAD" | "DE
 }
 
 function buildAwsS3ProxyBaseUrl(region: string, bucket: string | undefined): string {
-  return bucket ? `https://${bucket}.s3.${region}.amazonaws.com` : `https://s3.${region}.amazonaws.com`;
+  return createAwsS3BaseUrl(region, bucket).origin;
 }
 
 function normalizeAwsS3ProxyBody(body: unknown): string | undefined {
@@ -651,8 +651,7 @@ function buildRequestTarget(input: {
   objectKey?: string;
   query?: Record<string, string | number | boolean | undefined>;
 }) {
-  const host = input.bucket ? `${input.bucket}.s3.${input.region}.amazonaws.com` : `s3.${input.region}.amazonaws.com`;
-  const url = new URL(`https://${host}`);
+  const url = createAwsS3BaseUrl(input.region, input.bucket);
   url.pathname = input.objectKey ? `/${encodeS3Key(input.objectKey)}` : "/";
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value == null) {
@@ -664,6 +663,27 @@ function buildRequestTarget(input: {
   return {
     url,
   };
+}
+
+function createAwsS3BaseUrl(region: string, bucket: string | undefined): URL {
+  const expectedHost = bucket ? `${bucket}.s3.${region}.amazonaws.com` : `s3.${region}.amazonaws.com`;
+  let url: URL;
+  try {
+    url = new URL(`https://${expectedHost}`);
+  } catch {
+    throw new ProviderRequestError(400, "bucket and region must form a valid AWS S3 endpoint");
+  }
+  if (
+    url.host !== expectedHost.toLowerCase() ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new ProviderRequestError(400, "bucket and region must form a valid AWS S3 endpoint");
+  }
+  return url;
 }
 
 function buildObjectUrl(region: string, bucket: string, objectKey: string) {

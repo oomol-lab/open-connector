@@ -348,7 +348,28 @@ async function createAliyunOssClient(input: AliyunClientOptions): Promise<Aliyun
 
 function buildAliyunOssProxyBaseUrl(endpoint: string, bucket: string | undefined): string {
   const endpointUrl = new URL(normalizeEndpoint(endpoint));
-  return bucket ? `https://${bucket}.${endpointUrl.host}` : endpointUrl.toString();
+  if (!bucket) {
+    return endpointUrl.toString();
+  }
+
+  const expectedHost = `${bucket}.${endpointUrl.host}`;
+  let url: URL;
+  try {
+    url = new URL(`https://${expectedHost}`);
+  } catch {
+    throw new ProviderRequestError(400, "bucket must not alter the Alibaba Cloud OSS endpoint");
+  }
+  if (
+    url.host !== expectedHost.toLowerCase() ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new ProviderRequestError(400, "bucket must not alter the Alibaba Cloud OSS endpoint");
+  }
+  return url.toString();
 }
 
 function buildAliyunOssProxyResource(url: URL, bucket: string | undefined): string {
@@ -480,13 +501,13 @@ async function aliyunDownloadObject(input: Record<string, unknown>, context: Ali
     const bucket = resolveBucket(input, context);
     const objectKey = readObjectKey(input);
     const endpoint = resolveEndpoint(input, context);
-    const client = await createClientForAction(input, context, bucket);
     const versionId = optionalString(input.versionId);
     const url = createProviderProxyUrl(
       buildAliyunOssProxyBaseUrl(endpoint, bucket),
       `/${encodeOssObjectKey(objectKey)}`,
       versionId ? { versionId } : undefined,
     );
+    const client = await createClientForAction(input, context, bucket);
     const headers = new Headers();
     headers.set("accept", "*/*");
     headers.set("user-agent", providerUserAgent);
