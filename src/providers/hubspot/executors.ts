@@ -168,8 +168,8 @@ export const hubspotActionHandlers: ProviderActionHandlers<"hubspot", HubspotAct
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, hubspotActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
-  async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    const profile = await fetchHubspotCurrentAccount(input.accessToken, fetcher, signal);
+  async oauth2(input, { fetcher }): Promise<CredentialValidationResult> {
+    const profile = await fetchHubspotCurrentAccount(input.accessToken, fetcher);
     return {
       profile: {
         accountId: profile.providerAccountId,

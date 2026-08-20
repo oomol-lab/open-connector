@@ -97,11 +97,14 @@ export async function validateHelium10Credential(
   const result = await withClient({ accessToken, fetcher, signal }, (client) =>
     client.listTools({}, { timeout: requestTimeoutMs, signal }),
   );
+  if (!result.tools.some((tool) => readOnlyTools.has(tool.name))) {
+    throw new ProviderRequestError(502, "Helium 10 MCP did not expose any approved read-only tools");
+  }
   const tokenHash = createHash("sha256").update(accessToken).digest("hex").slice(0, 16);
   return {
     profile: { accountId: `helium10:mcp:${tokenHash}`, displayName: `Helium 10 MCP · ${tokenHash.slice(-6)}` },
     grantedScopes: ["mcp:tools"],
-    metadata: { mcpEndpoint: helium10McpEndpoint, availableTools: result.tools.map((tool) => tool.name) },
+    metadata: { mcpEndpoint: helium10McpEndpoint },
   };
 }
 

@@ -161,9 +161,8 @@ export async function refreshHubspotAccessToken(
 export async function fetchHubspotCurrentAccount(
   accessToken: string,
   fetcher: typeof fetch,
-  signal?: AbortSignal,
 ): Promise<HubspotCurrentAccount> {
-  const tools = await listHubspotMcpTools({ accessToken, fetcher, signal });
+  await listHubspotMcpTools({ accessToken, fetcher });
   const tokenHash = hashHubspotToken(accessToken);
   const providerAccountId = `hubspot-mcp:${tokenHash}`;
   return {
@@ -171,8 +170,6 @@ export async function fetchHubspotCurrentAccount(
     accountLabel: `HubSpot MCP · ${tokenHash.slice(-6)}`,
     providerMetadata: {
       mcpEndpoint: hubspotMcpEndpoint,
-      mcpTools: tools.map((tool) => tool.name).sort(),
-      tokenHash,
     },
   };
 }
@@ -462,7 +459,7 @@ async function getHubspotProperty(input: Record<string, unknown>, context: Hubsp
   };
 }
 
-async function listHubspotMcpTools(input: { accessToken: string; fetcher: typeof fetch; signal?: AbortSignal }) {
+async function listHubspotMcpTools(input: { accessToken: string; fetcher: typeof fetch }): Promise<void> {
   const headers = new Headers();
   headers.set("authorization", `Bearer ${input.accessToken}`);
   headers.set("user-agent", providerUserAgent);
@@ -472,12 +469,13 @@ async function listHubspotMcpTools(input: { accessToken: string; fetcher: typeof
       transport: "streamable_http",
       fetcher: input.fetcher,
       headers,
-      signal: input.signal,
       mapError: (error) => mapHubspotMcpError("hubspot", error),
     },
     async (client) => {
-      const result = await client.listTools({}, { timeout: hubspotMcpRequestTimeoutMs, signal: input.signal });
-      return result.tools;
+      const result = await client.listTools({}, { timeout: hubspotMcpRequestTimeoutMs });
+      if (!result.tools.some((tool) => directMcpToolNames.has(tool.name) || tool.name === "get_user_details")) {
+        throw new ProviderRequestError(502, "hubspot MCP did not advertise any supported tools");
+      }
     },
   );
 }

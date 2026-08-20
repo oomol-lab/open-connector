@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { CloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -11,6 +12,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
+import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface CloudflareWorkerContext {
@@ -228,20 +230,9 @@ export async function requestCloudflareWorkerCurrentUser(
   accessToken: string,
   fetcher: typeof fetch,
   signal?: AbortSignal,
-): Promise<{ userId: string; email?: string; firstName?: string; lastName?: string; username?: string }> {
+): Promise<CloudflareCurrentUser> {
   const envelope = await cloudflareRequestEnvelope(accessToken, { path: "/user" }, { fetcher, signal }, "validate");
-  const user = readObject(envelope.result, "cloudflare user");
-  const userId = optionalString(user.id);
-  if (!userId) {
-    throw new ProviderRequestError(502, "cloudflare user response is missing id");
-  }
-  return {
-    userId,
-    email: optionalString(user.email),
-    firstName: optionalString(user.first_name),
-    lastName: optionalString(user.last_name),
-    username: optionalString(user.username),
-  };
+  return readCloudflareCurrentUser(envelope.result);
 }
 
 async function listAccounts(input: Record<string, unknown>, context: CloudflareWorkerContext): Promise<unknown> {

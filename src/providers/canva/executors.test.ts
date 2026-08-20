@@ -67,13 +67,17 @@ describe("Canva regional executors", () => {
       return Response.json({ team_user: { user_id: "user-1", team_id: "team-1" } });
     };
 
-    const result = await createCanvaCredentialValidators("https://api.canva.com/rest").oauth2!(credential, { fetcher });
+    const result = await createCanvaCredentialValidators("https://api.canva.com/rest").oauth2!(
+      { ...credential, metadata: { scope: "profile:read design:meta:read" } },
+      { fetcher },
+    );
 
     expect(calls).toEqual([
       { url: "https://api.canva.com/rest/v1/users/me", authorization: "Bearer test-access-token" },
     ]);
     expect(result).toMatchObject({
       profile: { accountId: "user-1", displayName: "user-1" },
+      grantedScopes: ["profile:read", "design:meta:read"],
       metadata: { validationEndpoint: "/v1/users/me", userId: "user-1", teamId: "team-1" },
     });
   });

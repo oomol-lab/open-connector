@@ -8,6 +8,7 @@ import type {
 import type { CloudflareR2Context } from "./runtime.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
+import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -119,11 +120,7 @@ export const credentialValidators: CredentialValidators = {
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const user = await requestCloudflareR2CurrentUser(input.accessToken, fetcher, signal);
-    const displayName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
-      user.username ||
-      user.email ||
-      "Cloudflare R2";
+    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare R2");
     return {
       profile: {
         accountId: user.userId,

@@ -6,6 +6,13 @@ import { defineOAuthProviderExecutors, ProviderRequestError, providerUserAgent }
 const service = "orcid";
 const baseUrl = "https://pub.orcid.org/v3.0";
 const orcidUserInfoUrl = "https://orcid.org/oauth/userinfo";
+
+interface OrcidResponseMessages {
+  invalidJson: string;
+  invalidPayload: string;
+  requestFailed: string;
+}
+
 const handlers = {
   async search_records(input: Record<string, unknown>, context: OAuthProviderContext) {
     const start = integer(input.start, 0);
@@ -52,29 +59,11 @@ export const credentialValidators: CredentialValidators = {
       },
       signal,
     });
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      throw new ProviderRequestError(502, "ORCID userinfo returned invalid JSON");
-    }
-    if (!response.ok) {
-      throw new ProviderRequestError(
-        response.status === 401 || response.status === 403
-          ? 401
-          : response.status === 429
-            ? 429
-            : response.status < 500
-              ? 400
-              : 502,
-        "ORCID userinfo request failed",
-        payload,
-      );
-    }
-    const user = optionalRecord(payload);
-    if (!user) {
-      throw new ProviderRequestError(502, "ORCID userinfo response is invalid");
-    }
+    const user = await readOrcidJsonResponse(response, {
+      invalidJson: "ORCID userinfo returned invalid JSON",
+      invalidPayload: "ORCID userinfo response is invalid",
+      requestFailed: "ORCID userinfo request failed",
+    });
     const orcidId = optionalString(user.sub) ?? optionalString(user.orcid);
     if (!orcidId) {
       throw new ProviderRequestError(502, "ORCID userinfo response is missing sub");
@@ -105,13 +94,23 @@ async function request(url: URL, context: OAuthProviderContext): Promise<Record<
     },
     signal: context.signal,
   });
+  return readOrcidJsonResponse(response, {
+    invalidJson: "ORCID returned invalid JSON",
+    invalidPayload: "ORCID response is invalid",
+    requestFailed: "ORCID request failed",
+  });
+}
+async function readOrcidJsonResponse(
+  response: Response,
+  messages: OrcidResponseMessages,
+): Promise<Record<string, unknown>> {
   let payload: unknown;
   try {
     payload = await response.json();
   } catch {
-    throw new ProviderRequestError(502, "ORCID returned invalid JSON");
+    throw new ProviderRequestError(502, messages.invalidJson);
   }
-  if (!response.ok)
+  if (!response.ok) {
     throw new ProviderRequestError(
       response.status === 401 || response.status === 403
         ? 401
@@ -120,12 +119,15 @@ async function request(url: URL, context: OAuthProviderContext): Promise<Record<
           : response.status < 500
             ? 400
             : 502,
-      "ORCID request failed",
+      messages.requestFailed,
       payload,
     );
-  if (!payload || typeof payload !== "object" || Array.isArray(payload))
-    throw new ProviderRequestError(502, "ORCID response is invalid");
-  return payload as Record<string, unknown>;
+  }
+  const record = optionalRecord(payload);
+  if (!record) {
+    throw new ProviderRequestError(502, messages.invalidPayload);
+  }
+  return record;
 }
 function string(value: unknown, name: string): string {
   if (typeof value !== "string" || !value.trim()) throw new ProviderRequestError(400, `${name} is required`);

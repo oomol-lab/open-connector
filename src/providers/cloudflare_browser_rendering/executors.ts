@@ -12,6 +12,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
@@ -152,28 +153,19 @@ export const credentialValidators: CredentialValidators = {
       { fetcher, signal },
       "validate",
     );
-    const user = readObject(envelope.result, "cloudflare user");
-    const userId = optionalString(user.id);
-    if (!userId) {
-      throw new ProviderRequestError(502, "cloudflare user response is missing id");
-    }
-    const email = optionalString(user.email);
-    const displayName =
-      [optionalString(user.first_name), optionalString(user.last_name)].filter(Boolean).join(" ").trim() ||
-      optionalString(user.username) ||
-      email ||
-      "Cloudflare Browser Run";
+    const user = readCloudflareCurrentUser(envelope.result);
+    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare Browser Run");
     return {
       profile: {
-        accountId: userId,
+        accountId: user.userId,
         displayName,
       },
       grantedScopes: input.profile.grantedScopes,
       metadata: compactObject({
         apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
         validationEndpoint: "/user",
-        userId,
-        email,
+        userId: user.userId,
+        email: user.email,
       }),
     };
   },

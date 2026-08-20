@@ -13,6 +13,7 @@ import { defineBearerProviderExecutors, providerUserAgent, ProviderRequestError 
 const service = "cloudflare_mcp";
 const cloudflareMcpEndpoint = "https://mcp.cloudflare.com/mcp";
 const cloudflareMcpRequestTimeoutMs = 60_000;
+const supportedToolNames = new Set(["docs", "search", "execute"]);
 
 type CloudflareMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
@@ -46,7 +47,9 @@ export const credentialValidators: CredentialValidators = {
 
 async function validateCloudflareMcpCredential(accessToken: string, fetcher: typeof fetch, signal?: AbortSignal) {
   const tools = await listCloudflareMcpTools({ accessToken, fetcher, signal });
-  const toolNames = tools.map((tool) => tool.name).sort();
+  if (!tools.some((tool) => supportedToolNames.has(tool.name))) {
+    throw new ProviderRequestError(502, "Cloudflare MCP did not advertise any supported tools");
+  }
   const tokenHash = createHash("sha256").update(accessToken).digest("hex").slice(0, 16);
   return {
     profile: {
@@ -55,7 +58,6 @@ async function validateCloudflareMcpCredential(accessToken: string, fetcher: typ
     },
     metadata: {
       mcpEndpoint: cloudflareMcpEndpoint,
-      mcpTools: toolNames,
     },
   };
 }

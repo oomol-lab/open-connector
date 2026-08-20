@@ -7,6 +7,7 @@ import type {
 import type { CloudflareWorkerContext } from "./runtime.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
+import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
 import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 import {
   cloudflareWorkerActionHandlers,
@@ -59,11 +60,7 @@ export const credentialValidators: CredentialValidators = {
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const user = await requestCloudflareWorkerCurrentUser(input.accessToken, fetcher, signal);
-    const displayName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
-      user.username ||
-      user.email ||
-      "Cloudflare Worker";
+    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare Worker");
     return {
       profile: {
         accountId: user.userId,

@@ -1,6 +1,7 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
 import { compactObject } from "../../core/cast.ts";
+import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
 import { defineBearerProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 import { cloudflareDnsActionHandlers, requestCloudflareCurrentUser, validateCloudflareDnsToken } from "./runtime.ts";
 
@@ -14,11 +15,7 @@ export const credentialValidators: CredentialValidators = {
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const user = await requestCloudflareCurrentUser(input.accessToken, fetcher, signal);
-    const displayName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
-      user.username ||
-      user.email ||
-      "Cloudflare DNS";
+    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare DNS");
     return {
       profile: {
         accountId: user.userId,
