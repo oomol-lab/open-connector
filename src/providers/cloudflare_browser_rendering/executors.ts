@@ -12,6 +12,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
@@ -146,42 +147,26 @@ export const credentialValidators: CredentialValidators = {
     };
   },
   async oauth2(input, { fetcher, signal }) {
-    const accounts = await requestAllOAuthAccounts(input.accessToken, { fetcher, signal });
-    if (accounts.length === 0) {
-      throw new ProviderRequestError(400, "Cloudflare OAuth cannot access any accounts.");
-    }
-
-    if (accounts.length === 1) {
-      const account = accounts[0]!;
-      const accountId = readRequiredString(account, "id");
-      const accountName = readRequiredString(account, "name");
-      return {
-        profile: {
-          accountId,
-          displayName: accountName,
-        },
-        grantedScopes: input.profile.grantedScopes,
-        metadata: compactObject({
-          apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
-          validationEndpoint: "/memberships?page=1&per_page=50&status=accepted",
-          accountId,
-          accountName,
-          accountType: optionalString(account.type),
-        }),
-      };
-    }
-
+    const envelope = await cloudflareRequestEnvelope(
+      input.accessToken,
+      { path: "/user" },
+      { fetcher, signal },
+      "validate",
+    );
+    const user = readCloudflareCurrentUser(envelope.result);
+    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare Browser Run");
     return {
       profile: {
-        accountId: input.profile.accountId,
-        displayName: "Cloudflare Browser Run",
+        accountId: user.userId,
+        displayName,
       },
       grantedScopes: input.profile.grantedScopes,
-      metadata: {
+      metadata: compactObject({
         apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
-        validationEndpoint: "/memberships?page=1&per_page=50&status=accepted",
-        availableAccounts: accounts,
-      },
+        validationEndpoint: "/user",
+        userId: user.userId,
+        email: user.email,
+      }),
     };
   },
 };
@@ -223,24 +208,6 @@ async function requestOAuthAccounts(
     accounts: normalizeMembershipAccountList(envelope.result),
     resultInfo: normalizeResultInfo(envelope.result_info),
   };
-}
-
-async function requestAllOAuthAccounts(
-  accessToken: string,
-  context: Pick<CloudflareBrowserRenderingContext, "fetcher" | "signal">,
-): Promise<Array<Record<string, unknown>>> {
-  const firstPage = await requestOAuthAccounts(accessToken, context, { page: 1, perPage: 50 }, "validate");
-  const totalPages = optionalInteger(firstPage.resultInfo.totalPages);
-  if (totalPages === undefined || totalPages < 1) {
-    throw new ProviderRequestError(502, "malformed cloudflare memberships pagination");
-  }
-
-  const accounts = [...firstPage.accounts];
-  for (let page = 2; page <= totalPages; page += 1) {
-    const result = await requestOAuthAccounts(accessToken, context, { page, perPage: 50 }, "validate");
-    accounts.push(...result.accounts);
-  }
-  return accounts;
 }
 
 async function requestAccounts(
@@ -387,8 +354,8 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareBro
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      Array.isArray(context.metadata.availableAccounts)
-        ? "accountId is required for this Cloudflare Browser Run action because the OAuth connection can access multiple accounts."
+      context.authType === "oauth2"
+        ? "accountId is required for this Cloudflare Browser Run action. Use list_accounts to find an accessible Cloudflare account ID."
         : "accountId is required in the connected Cloudflare Browser Run credential.",
     );
   }

@@ -47,9 +47,9 @@ async function writeRegistry(filename: string, sources: ProviderSource[]): Promi
   const existingContent = await readTextFile(path);
   if (existingContent !== content) {
     await writeFile(path, content);
-    console.log(`Generated ${filename} for ${services.length} providers.`);
+    console.log(`Generated ${filename} (${services.length} providers).`);
   } else {
-    console.log(`${filename} is up to date for ${services.length} providers.`);
+    console.log(`${filename} is up to date (${services.length} providers).`);
   }
 }
 
@@ -73,7 +73,8 @@ async function writeActionContracts(sources: ProviderSource[]): Promise<void> {
   }
 
   lines.push("}");
-  const path = join(providersDir, "action-contracts.generated.ts");
+  const filename = "action-contracts.generated.ts";
+  const path = join(providersDir, filename);
   const result = await format(path, `${lines.join("\n")}\n`, {
     printWidth: 120,
     trailingComma: "all",
@@ -85,9 +86,9 @@ async function writeActionContracts(sources: ProviderSource[]): Promise<void> {
   const existingContent = await readTextFile(path);
   if (existingContent !== content) {
     await writeFile(path, content);
-    console.log(`Generated action contracts for ${sources.length} providers.`);
+    console.log(`Generated ${filename} (${sources.length} providers).`);
   } else {
-    console.log(`Action contracts are up to date for ${sources.length} providers.`);
+    console.log(`${filename} is up to date (${sources.length} providers).`);
   }
 }
 

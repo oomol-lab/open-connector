@@ -1,6 +1,5 @@
-import type { ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
@@ -9,6 +8,11 @@ const service = "canva";
 const canvaApiBaseUrl = "https://api.canva.com/rest";
 
 type CanvaActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
+
+interface CanvaUserIdentity {
+  userId?: string;
+  teamId?: string;
+}
 
 /** Build Canva executors for one regional OAuth service and API base URL. */
 export function createCanvaExecutors(service: string, apiBaseUrl: string): ProviderExecutors {
@@ -19,6 +23,44 @@ export const canvaActionHandlers: ProviderActionHandlers<"canva", CanvaActionHan
   createCanvaActionHandlers(canvaApiBaseUrl);
 
 export const executors: ProviderExecutors = createCanvaExecutors(service, canvaApiBaseUrl);
+
+/** Build Canva credential validators for one regional OAuth API base URL. */
+export function createCanvaCredentialValidators(apiBaseUrl: string): CredentialValidators {
+  return {
+    async oauth2(input, { fetcher, signal }) {
+      const account = await canvaJsonRequest(
+        "GET",
+        "/v1/users/me",
+        {
+          accessToken: input.accessToken,
+          tokenType: input.tokenType,
+          fetcher,
+          signal,
+        },
+        apiBaseUrl,
+      );
+      const identity = readCanvaUserIdentity(account);
+      if (!identity.userId) {
+        throw new ProviderRequestError(502, "canva current user response is missing user id");
+      }
+      return {
+        profile: {
+          accountId: identity.userId,
+          displayName: identity.userId,
+        },
+        grantedScopes: readCanvaGrantedScopes(input.metadata.scope),
+        metadata: compactObject({
+          apiBaseUrl,
+          validationEndpoint: "/v1/users/me",
+          userId: identity.userId,
+          teamId: identity.teamId,
+        }),
+      };
+    },
+  };
+}
+
+export const credentialValidators: CredentialValidators = createCanvaCredentialValidators(canvaApiBaseUrl);
 
 function createCanvaActionHandlers(apiBaseUrl: string): ProviderActionHandlers<"canva", CanvaActionHandler> {
   return {
@@ -244,18 +286,30 @@ function normalizeHttpError(status: number, payload: Record<string, unknown>, fa
 }
 
 function normalizeCurrentUser(accountPayload: Record<string, unknown>, profilePayload: Record<string, unknown>) {
-  const teamUser = optionalRecord(accountPayload.team_user) ?? optionalRecord(accountPayload.user) ?? {};
+  const identity = readCanvaUserIdentity(accountPayload);
   const profile = optionalRecord(profilePayload.profile) ?? {};
-  const userId =
-    optionalString(teamUser.user_id) ??
-    optionalString(teamUser.userId) ??
-    optionalString(teamUser.id) ??
-    requireCanvaString(accountPayload.id, "canva user id");
   return {
-    userId,
-    teamId: optionalString(teamUser.team_id) ?? optionalString(teamUser.teamId) ?? null,
+    userId: identity.userId ?? requireCanvaString(accountPayload.id, "canva user id"),
+    teamId: identity.teamId ?? null,
     displayName: optionalString(profile.display_name) ?? optionalString(profile.displayName) ?? null,
   };
+}
+
+function readCanvaUserIdentity(accountPayload: Record<string, unknown>): CanvaUserIdentity {
+  const teamUser = optionalRecord(accountPayload.team_user) ?? optionalRecord(accountPayload.user) ?? {};
+  return {
+    userId:
+      optionalString(teamUser.user_id) ??
+      optionalString(teamUser.userId) ??
+      optionalString(teamUser.id) ??
+      optionalString(accountPayload.id),
+    teamId: optionalString(teamUser.team_id) ?? optionalString(teamUser.teamId),
+  };
+}
+
+function readCanvaGrantedScopes(value: unknown): string[] {
+  const scope = optionalString(value);
+  return scope ? [...new Set(scope.split(/[\s,]+/u).filter(Boolean))] : [];
 }
 
 function mapCanvaDesign(payload: Record<string, unknown>) {

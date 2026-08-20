@@ -2,7 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { createCanvaExecutors } from "./executors.ts";
+import { createCanvaCredentialValidators, createCanvaExecutors } from "./executors.ts";
 
 interface FetchCall {
   url: string;
@@ -55,5 +55,30 @@ describe("Canva regional executors", () => {
       { url: "https://api.canva.cn/rest/v1/users/me", authorization: "Bearer test-access-token" },
       { url: "https://api.canva.cn/rest/v1/users/me/profile", authorization: "Bearer test-access-token" },
     ]);
+  });
+
+  it("validates OAuth with the unscoped current-user endpoint", async () => {
+    const calls: FetchCall[] = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      const request = input instanceof Request ? input : new Request(input, init);
+      calls.push({ url: request.url, authorization: request.headers.get("authorization") });
+      expect(request.url).toBe("https://api.canva.com/rest/v1/users/me");
+      expect(request.headers.get("authorization")).toBe("Bearer test-access-token");
+      return Response.json({ team_user: { user_id: "user-1", team_id: "team-1" } });
+    };
+
+    const result = await createCanvaCredentialValidators("https://api.canva.com/rest").oauth2!(
+      { ...credential, metadata: { scope: "profile:read design:meta:read" } },
+      { fetcher },
+    );
+
+    expect(calls).toEqual([
+      { url: "https://api.canva.com/rest/v1/users/me", authorization: "Bearer test-access-token" },
+    ]);
+    expect(result).toMatchObject({
+      profile: { accountId: "user-1", displayName: "user-1" },
+      grantedScopes: ["profile:read", "design:meta:read"],
+      metadata: { validationEndpoint: "/v1/users/me", userId: "user-1", teamId: "team-1" },
+    });
   });
 });

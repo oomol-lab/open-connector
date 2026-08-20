@@ -28,58 +28,31 @@ afterEach(() => {
 });
 
 describe("Cloudflare Browser Run OAuth", () => {
-  it("validates OAuth by resolving the one accessible Cloudflare account", async () => {
+  it("validates OAuth with the current Cloudflare user", async () => {
     const fetch = vi.fn(async () =>
       Response.json({
         success: true,
-        result: [
-          {
-            id: "membership-1",
-            account: { id: "account-1", name: "Amplift", type: "standard" },
-            status: "accepted",
-          },
-        ],
-        result_info: { page: 1, per_page: 50, count: 1, total_count: 1, total_pages: 1 },
+        result: {
+          id: "user-1",
+          email: "ada@example.com",
+          first_name: "Ada",
+          last_name: "Lovelace",
+          username: "ada",
+        },
       }),
     );
 
     const result = await credentialValidators.oauth2!(oauthCredential({}), { fetcher: fetch });
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.cloudflare.com/client/v4/memberships?page=1&per_page=50&status=accepted",
+      "https://api.cloudflare.com/client/v4/user",
       expect.objectContaining({ headers: expect.objectContaining({ authorization: "Bearer oauth-access-token" }) }),
     );
     expect(result).toMatchObject({
-      profile: { accountId: "account-1", displayName: "Amplift" },
-      metadata: { accountId: "account-1", accountName: "Amplift", accountType: "standard" },
+      profile: { accountId: "user-1", displayName: "Ada Lovelace" },
+      metadata: { userId: "user-1", email: "ada@example.com", validationEndpoint: "/user" },
     });
-  });
-
-  it("collects every memberships page before storing the OAuth account allowlist", async () => {
-    const fetch = vi.fn(async (input: RequestInfo | URL) => {
-      const page = new URL(input.toString()).searchParams.get("page");
-      const accountId = page === "1" ? "account-1" : "account-2";
-      return Response.json({
-        success: true,
-        result: [
-          {
-            id: `membership-${page}`,
-            account: { id: accountId, name: `Account ${page}`, type: "standard" },
-            status: "accepted",
-          },
-        ],
-        result_info: { page: Number(page), per_page: 50, count: 1, total_count: 2, total_pages: 2 },
-      });
-    });
-
-    const result = await credentialValidators.oauth2!(oauthCredential({}), { fetcher: fetch });
-
-    expect(fetch).toHaveBeenCalledTimes(2);
-    if (!result) throw new Error("Expected OAuth credential validation result");
-    expect(result.metadata?.availableAccounts).toEqual([
-      { id: "account-1", name: "Account 1", type: "standard" },
-      { id: "account-2", name: "Account 2", type: "standard" },
-    ]);
+    expect(result?.metadata?.accountId).toBeUndefined();
   });
 
   it("lists OAuth accounts through Cloudflare memberships", async () => {
@@ -176,9 +149,24 @@ describe("Cloudflare Browser Run OAuth", () => {
 
     expect(missingAccount).toMatchObject({
       ok: false,
-      error: { message: expect.stringContaining("accountId is required") },
+      error: { message: expect.stringContaining("list_accounts") },
     });
     expect(selectedAccount).toEqual({ ok: true, output: { markdown: "# OpenMeld" } });
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("directs OAuth callers to list_accounts when no Cloudflare account is selected", async () => {
+    const result = await executors["cloudflare_browser_rendering.get_markdown"]!(
+      { url: "https://openmeld.ai" },
+      executionContext(oauthCredential({})),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        message:
+          "accountId is required for this Cloudflare Browser Run action. Use list_accounts to find an accessible Cloudflare account ID.",
+      },
+    });
   });
 });

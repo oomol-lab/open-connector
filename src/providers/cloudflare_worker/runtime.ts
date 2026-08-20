@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { CloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -11,6 +12,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
+import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface CloudflareWorkerContext {
@@ -222,6 +224,15 @@ export async function requestCloudflareWorkerAccounts(
     accounts: envelope.result.map((item) => normalizeAccount(item)),
     resultInfo: normalizeResultInfo(envelope.result_info),
   };
+}
+
+export async function requestCloudflareWorkerCurrentUser(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CloudflareCurrentUser> {
+  const envelope = await cloudflareRequestEnvelope(accessToken, { path: "/user" }, { fetcher, signal }, "validate");
+  return readCloudflareCurrentUser(envelope.result);
 }
 
 async function listAccounts(input: Record<string, unknown>, context: CloudflareWorkerContext): Promise<unknown> {
@@ -712,8 +723,8 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareWor
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      context.metadata.requiresAccountSelection === true || Array.isArray(context.metadata.availableAccounts)
-        ? "accountId is required for this Cloudflare Worker action because the OAuth credential can access multiple accounts"
+      context.authType === "oauth2"
+        ? "accountId is required for this Cloudflare Worker action. Use list_accounts to find an accessible Cloudflare account ID."
         : "accountId is required in the connected credential",
     );
   }

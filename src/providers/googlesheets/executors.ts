@@ -53,8 +53,6 @@ import {
 
 const service = "googlesheets";
 
-const sheetsApiBaseUrl = "https://sheets.googleapis.com/v4";
-
 type ActionContext = OAuthProviderContext;
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
@@ -189,11 +187,7 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(service
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
-    const profile: {
-      email?: string;
-      name?: string;
-      sub?: string;
-    } = await googleJsonRequest<{
+    const profile = await googleJsonRequest<{
       email?: string;
       name?: string;
       sub?: string;
@@ -201,20 +195,7 @@ export const credentialValidators: CredentialValidators = {
       accessToken: input.accessToken,
       fetcher,
       signal,
-    }).catch(
-      async (): Promise<{
-        email?: string;
-        name?: string;
-        sub?: string;
-      }> => {
-        await googleJsonRequest<Record<string, unknown>>(`${sheetsApiBaseUrl}/spreadsheets`, {
-          accessToken: input.accessToken,
-          fetcher,
-          signal,
-        });
-        return {};
-      },
-    );
+    });
 
     return {
       profile: {

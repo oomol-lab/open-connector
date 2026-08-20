@@ -1,9 +1,18 @@
-import type { ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
+import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 const service = "orcid";
 const baseUrl = "https://pub.orcid.org/v3.0";
+const orcidUserInfoUrl = "https://orcid.org/oauth/userinfo";
+
+interface OrcidResponseMessages {
+  invalidJson: string;
+  invalidPayload: string;
+  requestFailed: string;
+}
+
 const handlers = {
   async search_records(input: Record<string, unknown>, context: OAuthProviderContext) {
     const start = integer(input.start, 0);
@@ -39,6 +48,43 @@ const handlers = {
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, handlers, {
   skipDnsValidation: true,
 });
+
+export const credentialValidators: CredentialValidators = {
+  async oauth2(input, { fetcher, signal }) {
+    const response = await fetcher(orcidUserInfoUrl, {
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${input.accessToken}`,
+        "user-agent": providerUserAgent,
+      },
+      signal,
+    });
+    const user = await readOrcidJsonResponse(response, {
+      invalidJson: "ORCID userinfo returned invalid JSON",
+      invalidPayload: "ORCID userinfo response is invalid",
+      requestFailed: "ORCID userinfo request failed",
+    });
+    const orcidId = optionalString(user.sub) ?? optionalString(user.orcid);
+    if (!orcidId) {
+      throw new ProviderRequestError(502, "ORCID userinfo response is missing sub");
+    }
+    const displayName = optionalString(user.name) ?? orcidId;
+    return {
+      profile: {
+        accountId: orcidId,
+        displayName,
+      },
+      grantedScopes: readGrantedScopes(input.metadata.scope),
+      metadata: compactObject({
+        validationEndpoint: orcidUserInfoUrl,
+        orcidId,
+        name: optionalString(user.name),
+        givenName: optionalString(user.given_name),
+        familyName: optionalString(user.family_name),
+      }),
+    };
+  },
+};
 async function request(url: URL, context: OAuthProviderContext): Promise<Record<string, unknown>> {
   const response = await context.fetcher(url, {
     headers: {
@@ -48,13 +94,23 @@ async function request(url: URL, context: OAuthProviderContext): Promise<Record<
     },
     signal: context.signal,
   });
+  return readOrcidJsonResponse(response, {
+    invalidJson: "ORCID returned invalid JSON",
+    invalidPayload: "ORCID response is invalid",
+    requestFailed: "ORCID request failed",
+  });
+}
+async function readOrcidJsonResponse(
+  response: Response,
+  messages: OrcidResponseMessages,
+): Promise<Record<string, unknown>> {
   let payload: unknown;
   try {
     payload = await response.json();
   } catch {
-    throw new ProviderRequestError(502, "ORCID returned invalid JSON");
+    throw new ProviderRequestError(502, messages.invalidJson);
   }
-  if (!response.ok)
+  if (!response.ok) {
     throw new ProviderRequestError(
       response.status === 401 || response.status === 403
         ? 401
@@ -63,12 +119,15 @@ async function request(url: URL, context: OAuthProviderContext): Promise<Record<
           : response.status < 500
             ? 400
             : 502,
-      "ORCID request failed",
+      messages.requestFailed,
       payload,
     );
-  if (!payload || typeof payload !== "object" || Array.isArray(payload))
-    throw new ProviderRequestError(502, "ORCID response is invalid");
-  return payload as Record<string, unknown>;
+  }
+  const record = optionalRecord(payload);
+  if (!record) {
+    throw new ProviderRequestError(502, messages.invalidPayload);
+  }
+  return record;
 }
 function string(value: unknown, name: string): string {
   if (typeof value !== "string" || !value.trim()) throw new ProviderRequestError(400, `${name} is required`);
@@ -88,4 +147,7 @@ function objectOrEmpty(value: unknown): Record<string, unknown> {
 }
 function normalize(value: string): string {
   return value.toUpperCase().replace(/^HTTPS?:\/\/ORCID\.ORG\//, "");
+}
+function readGrantedScopes(scope: unknown): string[] {
+  return optionalString(scope)?.split(/\s+/u).filter(Boolean) ?? ["openid"];
 }

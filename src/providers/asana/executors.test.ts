@@ -20,7 +20,6 @@ describe("Asana credentials", () => {
               gid: "123",
               name: "Ada Lovelace",
               email: "ada@example.com",
-              workspaces: [{ gid: "456", name: "Analytical Engine" }],
             },
           });
         },
@@ -32,8 +31,8 @@ describe("Asana credentials", () => {
       grantedScopes: ["default"],
       metadata: {
         validationEndpoint: "/users/me",
-        workspaceCount: 1,
-        workspaceNames: ["Analytical Engine"],
+        userId: "123",
+        email: "ada@example.com",
       },
     });
   });

@@ -162,11 +162,7 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
-    const profile: {
-      email?: string;
-      name?: string;
-      sub?: string;
-    } = await googlecalendarJsonRequest<{
+    const profile = await googlecalendarJsonRequest<{
       email?: string;
       name?: string;
       sub?: string;
@@ -174,20 +170,7 @@ export const credentialValidators: CredentialValidators = {
       accessToken: input.accessToken,
       fetcher,
       signal,
-    }).catch(
-      async (): Promise<{
-        email?: string;
-        name?: string;
-        sub?: string;
-      }> => {
-        await googlecalendarJsonRequest<Record<string, unknown>>(`${googlecalendarApiBaseUrl}/users/me/calendarList`, {
-          accessToken: input.accessToken,
-          fetcher,
-          signal,
-        });
-        return {};
-      },
-    );
+    });
 
     return {
       profile: {

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { CloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -11,6 +12,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { queryParams, readBoundedResponseBytes } from "../../core/request.ts";
+import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface CloudflareR2Context {
@@ -141,6 +143,15 @@ export async function requestCloudflareR2Accounts(
     accounts: envelope.result.map((item) => normalizeAccount(item)),
     resultInfo: normalizeResultInfo(envelope.result_info),
   };
+}
+
+export async function requestCloudflareR2CurrentUser(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CloudflareCurrentUser> {
+  const envelope = await cloudflareR2RequestEnvelope(accessToken, { path: "/user" }, { fetcher, signal }, "validate");
+  return readCloudflareCurrentUser(envelope.result);
 }
 
 async function listAccounts(input: Record<string, unknown>, context: CloudflareR2Context): Promise<unknown> {
@@ -368,8 +379,8 @@ function resolveAccountId(input: Record<string, unknown>, context: CloudflareR2C
   if (!accountId) {
     throw new ProviderRequestError(
       400,
-      Array.isArray(context.metadata.availableAccounts)
-        ? "accountId is required for this Cloudflare R2 action because the OAuth credential can access multiple accounts"
+      context.authType === "oauth2"
+        ? "accountId is required for this Cloudflare R2 action. Use list_accounts to find an accessible Cloudflare account ID."
         : "accountId is required in the connected credential",
     );
   }

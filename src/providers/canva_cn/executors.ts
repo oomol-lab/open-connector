@@ -1,5 +1,9 @@
-import type { ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { createCanvaExecutors } from "../canva/executors.ts";
+import { createCanvaCredentialValidators, createCanvaExecutors } from "../canva/executors.ts";
 
-export const executors: ProviderExecutors = createCanvaExecutors("canva_cn", "https://api.canva.cn/rest");
+const canvaCnApiBaseUrl = "https://api.canva.cn/rest";
+
+export const executors: ProviderExecutors = createCanvaExecutors("canva_cn", canvaCnApiBaseUrl);
+
+export const credentialValidators: CredentialValidators = createCanvaCredentialValidators(canvaCnApiBaseUrl);

@@ -20,20 +20,19 @@ describe("Coinbase credentials", () => {
       },
       {
         fetcher: async (url, init) => {
-          expect(url.toString()).toBe("https://api.coinbase.com/api/v3/brokerage/accounts");
+          expect(url.toString()).toBe("https://api.coinbase.com/v2/user");
           expect(new Headers(init?.headers).get("authorization")).toBe("Bearer coinbase-oauth-token");
           return Response.json({
-            accounts: [{ uuid: "account-1", name: "Primary" }],
-            has_next: false,
+            data: { id: "user-1", name: "Ada Lovelace", username: "ada" },
           });
         },
       },
     );
 
     expect(result).toMatchObject({
-      profile: { accountId: "account-1", displayName: "Primary" },
+      profile: { accountId: "user-1", displayName: "Ada Lovelace" },
       grantedScopes: ["wallet:accounts:read", "offline_access"],
-      metadata: { accountCount: 1 },
+      metadata: { validationEndpoint: "/v2/user", userId: "user-1" },
     });
   });
 
