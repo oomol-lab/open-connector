@@ -82,6 +82,7 @@ export class ActionRunner {
     } else {
       try {
         const summary = await this.options.connections.getConnectionSummary(action.service, input.connectionName);
+        input.signal?.throwIfAborted();
         const connectionPolicy =
           summary?.authType === "no_auth" ? undefined : snapshot?.evaluateConnection(summary?.id);
         if (connectionPolicy && !connectionPolicy.allowed) {
@@ -89,6 +90,7 @@ export class ActionRunner {
           result = { ok: false, error: { code: policy.code, message: policy.message } };
         } else {
           connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
+          input.signal?.throwIfAborted();
           const executor = action.execution.locallyExecutable
             ? await this.options.providerLoader.loadActionExecutor(
                 action.service,
@@ -96,6 +98,7 @@ export class ActionRunner {
                 this.options.catalog.providers.find((provider) => provider.service === action.service)?.displayName,
               )
             : undefined;
+          input.signal?.throwIfAborted();
           result = await executeProviderAction(
             action,
             executor,

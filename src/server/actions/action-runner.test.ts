@@ -196,6 +196,41 @@ describe("ActionRunner", () => {
     expect(runs.items[0]).toMatchObject({ ok: false, errorCode: "execution_cancelled" });
   });
 
+  it("does not continue resource loading when cancelled during connection lookup", async () => {
+    const runs = new MemoryRunLogStore();
+    const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    let finishLookup: (() => void) | undefined;
+    const lookupPending = new Promise<void>((resolve) => {
+      finishLookup = resolve;
+    });
+    const getConnectionSummary = vi
+      .spyOn(ConnectionService.prototype, "getConnectionSummary")
+      .mockImplementationOnce(async () => {
+        await lookupPending;
+        return undefined;
+      });
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const controller = new AbortController();
+    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader });
+
+    const runPromise = runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(getConnectionSummary).toHaveBeenCalledOnce());
+    controller.abort();
+    finishLookup?.();
+    const run = await runPromise;
+
+    expect(run?.result).toMatchObject({ ok: false, error: { code: "execution_cancelled" } });
+    expect(resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(runs.items[0]).toMatchObject({ ok: false, errorCode: "execution_cancelled" });
+  });
+
   it("does not create a cancellation signal for callers that omit one", async () => {
     const runs = new MemoryRunLogStore();
     const runner = createRunner({
