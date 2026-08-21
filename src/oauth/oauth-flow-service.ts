@@ -27,6 +27,7 @@ export interface OAuthAuthorizationStartInput {
 export interface OAuthAuthorizationCompleteInput {
   state: string;
   code: string;
+  signal?: AbortSignal;
 }
 
 /**
@@ -179,7 +180,7 @@ export class OAuthFlowService {
       },
     };
 
-    await this.connections.setOAuthCredential(pending.service, oauthCredential, pending.connectionName);
+    await this.connections.setOAuthCredential(pending.service, oauthCredential, pending.connectionName, input.signal);
     return {
       service: pending.service,
       connected: true,

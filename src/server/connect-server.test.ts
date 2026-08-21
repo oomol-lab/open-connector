@@ -993,6 +993,54 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("propagates HTTP request cancellation to credential validation", async () => {
+    const controller = new AbortController();
+    let validationStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      validationStarted = resolve;
+    });
+    let validationSignal: AbortSignal | undefined;
+    const { entries, logger } = createTestLogger();
+    const providerLoader = new HangingCredentialValidatorLoader((signal) => {
+      validationSignal = signal;
+      validationStarted?.();
+    });
+    const app = createTestServer([apiKeyProvider], { logger, providerLoader }).createApp();
+    const request = new Request("http://localhost/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+      signal: controller.signal,
+    });
+
+    const responsePromise = app.fetch(request);
+    await started;
+    controller.abort();
+    const response = await responsePromise;
+
+    expect(validationSignal?.aborted).toBe(true);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "connection_cancelled",
+        message: "Credential validation was cancelled.",
+      },
+    });
+    expect(entries).toContainEqual({
+      level: "info",
+      fields: expect.objectContaining({ errorCode: "connection_cancelled" }),
+      message: "connection cancelled",
+    });
+    expect(entries).not.toContainEqual(
+      expect.objectContaining({
+        level: "warn",
+        message: "connection failed",
+      }),
+    );
+    const connections = await app.request("/api/connections");
+    await expect(connections.json()).resolves.toEqual([]);
+  });
+
   it("logs failed action runs with error codes", async () => {
     const { entries, logger } = createTestLogger();
     const app = createTestServer(
@@ -3640,6 +3688,42 @@ class EmptyProviderLoader implements IProviderLoader {
 
   async loadCredentialValidators(): Promise<undefined> {
     return undefined;
+  }
+}
+
+class HangingCredentialValidatorLoader implements IProviderLoader {
+  private readonly onStarted: (signal: AbortSignal | undefined) => void;
+
+  constructor(onStarted: (signal: AbortSignal | undefined) => void) {
+    this.onStarted = onStarted;
+  }
+
+  async loadActionExecutor(): Promise<never> {
+    throw new Error("No actions are available in this test.");
+  }
+
+  async loadProxyExecutor(): Promise<ProviderProxyExecutor | undefined> {
+    return undefined;
+  }
+
+  async loadCredentialValidators(): Promise<{
+    apiKey(
+      _input: { apiKey: string; values: Record<string, string> },
+      options: { signal?: AbortSignal },
+    ): Promise<void>;
+  }> {
+    return {
+      apiKey: async (_input, options) => {
+        this.onStarted(options.signal);
+        await new Promise<void>((_resolve, reject) => {
+          if (!options.signal) {
+            reject(new Error("request signal missing"));
+            return;
+          }
+          options.signal.addEventListener("abort", () => reject(new Error("request aborted")), { once: true });
+        });
+      },
+    };
   }
 }
 

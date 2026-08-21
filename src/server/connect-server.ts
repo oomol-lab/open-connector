@@ -816,7 +816,11 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithApiKey(service, { values, connectionName }),
+        this.options.connections.connectWithApiKey(service, {
+          values,
+          connectionName,
+          signal: context.req.raw.signal,
+        }),
         logContext,
       );
     }
@@ -824,7 +828,11 @@ export class ConnectServer {
       this.options.logger?.info(logContext, "connection started");
       return this.writeConnectionResult(
         context,
-        this.options.connections.connectWithCustomCredential(service, { values, connectionName }),
+        this.options.connections.connectWithCustomCredential(service, {
+          values,
+          connectionName,
+          signal: context.req.raw.signal,
+        }),
         logContext,
       );
     }
@@ -1025,7 +1033,13 @@ export class ConnectServer {
 
     let service: string;
     try {
-      service = (await this.options.oauthFlow.completeAuthorization({ state, code })).service;
+      service = (
+        await this.options.oauthFlow.completeAuthorization({
+          state,
+          code,
+          signal: context.req.raw.signal,
+        })
+      ).service;
       this.options.logger?.info(
         {
           ...logContext,
@@ -1035,12 +1049,13 @@ export class ConnectServer {
       );
     } catch (error) {
       if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
-        this.options.logger?.warn(
+        const cancelled = error instanceof ConnectionError && error.code === "connection_cancelled";
+        this.options.logger?.[cancelled ? "info" : "warn"](
           {
             ...logContext,
             errorCode: error.code,
           },
-          "oauth callback failed",
+          cancelled ? "oauth callback cancelled" : "oauth callback failed",
         );
         return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
       }
@@ -1067,12 +1082,17 @@ export class ConnectServer {
     } catch (error) {
       if (error instanceof ConnectionError) {
         if (logContext) {
-          this.options.logger?.warn(
+          const cancelled = error.code === "connection_cancelled";
+          this.options.logger?.[cancelled ? "info" : "warn"](
             {
               ...logContext,
               errorCode: error.code,
             },
-            logContext.operation === "disconnect" ? "connection disconnect failed" : "connection failed",
+            cancelled
+              ? "connection cancelled"
+              : logContext.operation === "disconnect"
+                ? "connection disconnect failed"
+                : "connection failed",
           );
         }
         return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);

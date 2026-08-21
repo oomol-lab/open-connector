@@ -355,6 +355,32 @@ describe("OAuthFlowService", () => {
     await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
   });
 
+  it("does not store OAuth credentials when the callback signal is already cancelled", async () => {
+    const services = createServices([oauthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: {
+        tenant: "default",
+      },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+    const controller = new AbortController();
+    controller.abort();
+
+    const started = await services.flow.startAuthorization({ service: "example" });
+    await expect(
+      services.flow.completeAuthorization({ state: started.state, code: "code", signal: controller.signal }),
+    ).rejects.toMatchObject({
+      code: "connection_cancelled",
+    });
+    await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
+  });
+
   it("stores Slack's user grant outside token metadata", async () => {
     const services = createServices([{ ...slackProvider, actions: [] }]);
     await services.clientConfigs.upsertConfig({

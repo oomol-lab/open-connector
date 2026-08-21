@@ -5,6 +5,7 @@ import type {
   CredentialDefinition,
   CredentialProfile,
   CredentialValidationResult,
+  CredentialValidatorOptions,
   CustomCredentialAuthDefinition,
   ProviderDefinition,
   ResolvedCredential,
@@ -39,6 +40,7 @@ export interface ConnectionSummary {
 export interface ConnectWithCredentialInput {
   connectionName?: string;
   values?: Record<string, unknown>;
+  signal?: AbortSignal;
 }
 
 export interface ConnectWithoutAuthInput {
@@ -289,10 +291,11 @@ export class ConnectionService {
         "api_key",
         createApiKeyFields(auth),
         values,
-        await this.validateApiKeyCredential(service, { apiKey, values }),
+        await this.validateApiKeyCredential(service, { apiKey, values }, input.signal),
       ),
     };
     const connectionName = normalizeConnectionName(input.connectionName);
+    this.assertNotCancelled(input.signal);
     const stored = await this.store.set(service, connectionName, credential);
 
     return this.createStoredConnectionSummary(provider, stored.id, connectionName, credential);
@@ -318,10 +321,11 @@ export class ConnectionService {
         "custom_credential",
         auth.fields,
         values,
-        await this.validateCustomCredential(service, { values }),
+        await this.validateCustomCredential(service, { values }, input.signal),
       ),
     };
     const connectionName = normalizeConnectionName(input.connectionName);
+    this.assertNotCancelled(input.signal);
     const stored = await this.store.set(service, connectionName, credential);
 
     return this.createStoredConnectionSummary(provider, stored.id, connectionName, credential);
@@ -331,6 +335,7 @@ export class ConnectionService {
     service: string,
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
     connectionNameInput?: string,
+    signal?: AbortSignal,
   ): Promise<ConnectionSummary> {
     const provider = this.getAvailableProvider(service);
     if (!this.supportsAuth(provider, "oauth2")) {
@@ -340,12 +345,13 @@ export class ConnectionService {
     const connectionName = normalizeConnectionName(connectionNameInput);
     let validation: CredentialValidationResult = {};
     try {
-      validation = await this.validateOAuthCredential(service, credential);
+      validation = await this.validateOAuthCredential(service, credential, signal);
     } catch (error) {
       if (!(error instanceof ConnectionError && error.code === "credential_verification_failed")) {
         throw error;
       }
     }
+    this.assertNotCancelled(signal);
     const storedCredential = {
       ...credential,
       ...this.mergeCredentialRuntimeData(provider, "oauth2", credential, validation),
@@ -464,33 +470,50 @@ export class ConnectionService {
   private async validateApiKeyCredential(
     service: string,
     input: ApiKeyCredentialValidationInput,
+    signal?: AbortSignal,
   ): Promise<CredentialValidationResult> {
+    this.assertNotCancelled(signal);
     const validators = await this.providerLoader.loadCredentialValidators(service);
-    return this.runCredentialValidator(service, () => validators?.apiKey?.(input, this.createValidatorOptions()));
+    return this.runCredentialValidator(
+      service,
+      () => validators?.apiKey?.(input, this.createValidatorOptions(signal)),
+      signal,
+    );
   }
 
   private async validateCustomCredential(
     service: string,
     input: CustomCredentialValidationInput,
+    signal?: AbortSignal,
   ): Promise<CredentialValidationResult> {
+    this.assertNotCancelled(signal);
     const validators = await this.providerLoader.loadCredentialValidators(service);
-    return this.runCredentialValidator(service, () =>
-      validators?.customCredential?.(input, this.createValidatorOptions()),
+    return this.runCredentialValidator(
+      service,
+      () => validators?.customCredential?.(input, this.createValidatorOptions(signal)),
+      signal,
     );
   }
 
   private async validateOAuthCredential(
     service: string,
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+    signal?: AbortSignal,
   ): Promise<CredentialValidationResult> {
+    this.assertNotCancelled(signal);
     const validators = await this.providerLoader.loadCredentialValidators(service);
-    return this.runCredentialValidator(service, () => validators?.oauth2?.(credential, this.createValidatorOptions()));
+    return this.runCredentialValidator(
+      service,
+      () => validators?.oauth2?.(credential, this.createValidatorOptions(signal)),
+      signal,
+    );
   }
 
-  private createValidatorOptions() {
+  private createValidatorOptions(signal?: AbortSignal): CredentialValidatorOptions {
     return {
       fetcher: providerFetch,
       logger: this.logger,
+      signal,
     };
   }
 
@@ -560,14 +583,27 @@ export class ConnectionService {
   private async runCredentialValidator(
     service: string,
     validate: CredentialValidatorCall,
+    signal?: AbortSignal,
   ): Promise<CredentialValidationResult> {
+    this.assertNotCancelled(signal);
     try {
-      return (await validate()) ?? {};
+      const result = (await validate()) ?? {};
+      this.assertNotCancelled(signal);
+      return result;
     } catch (error) {
+      if (signal?.aborted) {
+        throw cancelledConnectionError();
+      }
       throw new ConnectionError(
         "credential_verification_failed",
         error instanceof Error ? error.message : `${service} credential verification failed.`,
       );
+    }
+  }
+
+  private assertNotCancelled(signal?: AbortSignal): void {
+    if (signal?.aborted) {
+      throw cancelledConnectionError();
     }
   }
 
@@ -724,4 +760,8 @@ export class ConnectionError extends Error {
     super(message);
     this.code = code;
   }
+}
+
+function cancelledConnectionError(): ConnectionError {
+  return new ConnectionError("connection_cancelled", "Credential validation was cancelled.");
 }

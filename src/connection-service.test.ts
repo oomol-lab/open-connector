@@ -362,6 +362,93 @@ describe("ConnectionService", () => {
     expect(nativeFetchThis).toBeUndefined();
   });
 
+  it("propagates a request signal to credential validators and aborts them without storing the credential", async () => {
+    const controller = new AbortController();
+    let receivedSignal: AbortSignal | undefined;
+    let validationStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      validationStarted = resolve;
+    });
+    const service = createService([apiKeyProvider], {
+      providerLoader: new FakeProviderLoader({
+        async apiKey(_input, options) {
+          receivedSignal = options.signal;
+          validationStarted?.();
+          await new Promise<void>((_resolve, reject) => {
+            if (!options.signal) {
+              reject(new Error("request signal missing"));
+              return;
+            }
+            options.signal.addEventListener("abort", () => reject(new Error("request aborted")), { once: true });
+          });
+        },
+      }),
+    });
+
+    const connectPromise = service.connectWithApiKey("uptimerobot", {
+      values: {
+        apiKey: "valid-key",
+        accountId: "account-1",
+      },
+      signal: controller.signal,
+    });
+    await started;
+    controller.abort();
+
+    await expect(connectPromise).rejects.toMatchObject({
+      code: "connection_cancelled",
+      message: "Credential validation was cancelled.",
+    });
+    expect(receivedSignal).toBe(controller.signal);
+    expect(receivedSignal?.aborted).toBe(true);
+    await expect(service.getCredential("uptimerobot")).resolves.toBeUndefined();
+  });
+
+  it("does not load credential validators for an already cancelled connection request", async () => {
+    const providerLoader = new FakeProviderLoader({
+      async apiKey() {
+        return {};
+      },
+    });
+    const loadValidators = vi.spyOn(providerLoader, "loadCredentialValidators");
+    const controller = new AbortController();
+    controller.abort();
+    const service = createService([apiKeyProvider], { providerLoader });
+
+    await expect(
+      service.connectWithApiKey("uptimerobot", {
+        values: {
+          apiKey: "valid-key",
+          accountId: "account-1",
+        },
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({
+      code: "connection_cancelled",
+    });
+    expect(loadValidators).not.toHaveBeenCalled();
+    await expect(service.getCredential("uptimerobot")).resolves.toBeUndefined();
+  });
+
+  it("does not create a cancellation signal for callers that omit one", async () => {
+    const service = createService([apiKeyProvider], {
+      providerLoader: new FakeProviderLoader({
+        async apiKey(_input, options) {
+          expect(options.signal).toBeUndefined();
+        },
+      }),
+    });
+
+    await expect(
+      service.connectWithApiKey("uptimerobot", {
+        values: {
+          apiKey: "valid-key",
+          accountId: "account-1",
+        },
+      }),
+    ).resolves.toMatchObject({ service: "uptimerobot", configured: true });
+  });
+
   it("exposes connection profiles to local users and agents", async () => {
     const service = createService([apiKeyProvider], {
       providerLoader: new FakeProviderLoader({
@@ -431,6 +518,44 @@ describe("ConnectionService", () => {
       authType: "oauth2",
       accessToken: "access-token",
     });
+  });
+
+  it("does not store OAuth credentials when validation is cancelled", async () => {
+    const controller = new AbortController();
+    let validationStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      validationStarted = resolve;
+    });
+    const service = createService([oauthProvider], {
+      providerLoader: new FakeProviderLoader({
+        async oauth2(_input, options) {
+          validationStarted?.();
+          await new Promise<void>((_resolve, reject) => {
+            options.signal?.addEventListener("abort", () => reject(new Error("request aborted")), { once: true });
+          });
+        },
+      }),
+    });
+
+    const connectPromise = service.setOAuthCredential(
+      "example",
+      {
+        authType: "oauth2",
+        accessToken: "access-token",
+        tokenType: "Bearer",
+        profile: testProfile,
+        metadata: {},
+      },
+      undefined,
+      controller.signal,
+    );
+    await started;
+    controller.abort();
+
+    await expect(connectPromise).rejects.toMatchObject({
+      code: "connection_cancelled",
+    });
+    await expect(service.getCredential("example")).resolves.toBeUndefined();
   });
 
   it("refreshes expired OAuth credentials before returning them", async () => {
