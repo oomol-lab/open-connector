@@ -3,6 +3,7 @@ import type { OAuthProviderContext, ProviderFetch } from "../provider-runtime.ts
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { ouraActions } from "./actions.ts";
+import { ouraDocumentCollections, ouraOauthScopes } from "./collections.ts";
 import { fetchOuraAccountProfile, ouraActionHandlers } from "./runtime.ts";
 
 describe("Oura action catalog", () => {
@@ -19,6 +20,28 @@ describe("Oura action catalog", () => {
     ]);
     expect(inputProperties("list_daily_sleep")).toEqual(["startDate", "endDate", "nextToken", "fields"]);
     expect(inputProperties("list_ring_configuration")).toEqual(["nextToken", "fields"]);
+  });
+});
+
+describe("Oura OAuth scopes", () => {
+  it("requests every scope its collections read from", () => {
+    const requested = new Set(ouraOauthScopes);
+    const unrequested = ouraDocumentCollections
+      .filter(({ scope }) => !requested.has(scope))
+      .map(({ name, scope }) => `${name} needs ${scope}`);
+
+    expect(unrequested).toEqual([]);
+  });
+
+  it("uses the scope Oura enforces, not the collection's daily summary neighbours", () => {
+    // Oura gates these behind their own scopes even though they are published
+    // next to the daily summaries; requesting `daily` alone returns 401.
+    expect(scopeFor("daily_cardiovascular_age")).toBe("heart_health");
+    expect(scopeFor("vo2_max")).toBe("heart_health");
+    expect(scopeFor("daily_resilience")).toBe("stress");
+    expect(scopeFor("ring_configuration")).toBe("ring_configuration");
+    expect(scopeFor("ring_battery_level")).toBe("ring_configuration");
+    expect(scopeFor("daily_spo2")).toBe("spo2");
   });
 });
 
@@ -99,6 +122,10 @@ describe("Oura credential validation", () => {
     );
   });
 });
+
+function scopeFor(collectionName: string): string | undefined {
+  return ouraDocumentCollections.find(({ name }) => name === collectionName)?.scope;
+}
 
 function inputProperties(actionName: string): string[] {
   const action = ouraActions.find(({ name }) => name === actionName);

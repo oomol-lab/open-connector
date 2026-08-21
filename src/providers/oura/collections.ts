@@ -7,8 +7,14 @@ export const ouraApiBaseUrl = "https://api.ouraring.com";
 export const ouraUserCollectionPath = "/v2/usercollection";
 
 /**
- * Official Oura OAuth2 scopes, taken from the `OAuth2` security scheme in the
- * Oura API v2 OpenAPI document.
+ * Official Oura OAuth2 scopes.
+ *
+ * `email` through `session` come from the `OAuth2` security scheme in the Oura
+ * API v2 OpenAPI document. That scheme is stale: it omits `heart_health`,
+ * `stress`, and `ring_configuration`, and names the SpO2 scope `spo2Daily`
+ * where the API enforces `spo2`. The names below are the ones the live API
+ * reports in its 401 responses, so they are what an authorization request has
+ * to ask for.
  */
 export const ouraOauthScopes: string[] = [
   "email",
@@ -18,7 +24,10 @@ export const ouraOauthScopes: string[] = [
   "workout",
   "tag",
   "session",
-  "spo2Daily",
+  "spo2",
+  "heart_health",
+  "stress",
+  "ring_configuration",
 ];
 
 /**
@@ -64,7 +73,7 @@ export const ouraDocumentCollections: readonly OuraDocumentCollection[] = [
   collection({
     name: "daily_cardiovascular_age",
     label: "daily cardiovascular age",
-    scope: "daily",
+    scope: "heart_health",
   }),
   collection({
     name: "daily_readiness",
@@ -74,7 +83,7 @@ export const ouraDocumentCollections: readonly OuraDocumentCollection[] = [
   collection({
     name: "daily_resilience",
     label: "daily resilience summary",
-    scope: "daily",
+    scope: "stress",
   }),
   collection({
     name: "daily_sleep",
@@ -84,7 +93,7 @@ export const ouraDocumentCollections: readonly OuraDocumentCollection[] = [
   collection({
     name: "daily_spo2",
     label: "daily SpO2 summary",
-    scope: "spo2Daily",
+    scope: "spo2",
   }),
   collection({
     name: "daily_stress",
@@ -112,7 +121,7 @@ export const ouraDocumentCollections: readonly OuraDocumentCollection[] = [
   collection({
     name: "ring_battery_level",
     label: "ring battery level sample",
-    scope: "daily",
+    scope: "ring_configuration",
     window: "datetime",
     hasDocumentEndpoint: false,
     supportsLatest: true,
@@ -120,7 +129,7 @@ export const ouraDocumentCollections: readonly OuraDocumentCollection[] = [
   collection({
     name: "ring_configuration",
     label: "ring configuration",
-    scope: "daily",
+    scope: "ring_configuration",
     window: "none",
   }),
   collection({
@@ -148,7 +157,7 @@ export const ouraDocumentCollections: readonly OuraDocumentCollection[] = [
     name: "vo2_max",
     path: "vO2_max",
     label: "VO2 max measurement",
-    scope: "daily",
+    scope: "heart_health",
   }),
   collection({
     name: "workout",
