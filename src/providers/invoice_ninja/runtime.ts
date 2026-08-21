@@ -1,6 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const defaultInstanceUrl = "https://invoicing.co";
@@ -175,14 +176,16 @@ function resolveInvoiceNinjaProxyBaseUrl(context: { providerMetadata: Record<str
   return storedApiBaseUrl(context.providerMetadata);
 }
 
-export function normalizeInvoiceNinjaUrls(value: unknown): { instanceUrl: string; apiBaseUrl: string } {
+export function normalizeInvoiceNinjaUrls(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): { instanceUrl: string; apiBaseUrl: string } {
   const raw = typeof value === "string" && value.trim() ? value.trim() : defaultInstanceUrl;
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new InvoiceNinjaError("invalid_input", "instanceUrl must be a valid HTTPS URL", 400);
-  }
+  const url = assertPublicHttpUrl(raw, {
+    fieldName: "instanceUrl",
+    createError: (message) => new InvoiceNinjaError("invalid_input", message, 400),
+    allowPrivateNetwork,
+  });
   if (url.protocol !== "https:") {
     throw new InvoiceNinjaError("invalid_input", "instanceUrl must use HTTPS", 400);
   }

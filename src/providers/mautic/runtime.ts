@@ -2,6 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type MauticCredential = {
@@ -157,18 +158,20 @@ export async function validateMauticCredential(
   };
 }
 
-export function normalizeMauticBaseUrl(value: string): string {
+export function normalizeMauticBaseUrl(
+  value: string,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const trimmed = value.trim();
   if (!trimmed) {
     throw new MauticError("invalid_input", "baseUrl is required", 400);
   }
 
-  let url: URL;
-  try {
-    url = new URL(trimmed);
-  } catch {
-    throw new MauticError("invalid_input", "baseUrl must be a valid URL", 400);
-  }
+  const url = assertPublicHttpUrl(trimmed, {
+    fieldName: "baseUrl",
+    createError: (message) => new MauticError("invalid_input", message, 400),
+    allowPrivateNetwork,
+  });
   if (url.protocol !== "https:") {
     throw new MauticError(
       "invalid_input",

@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { compactObject, optionalRecord, optionalString, optionalStringArray, requiredString } from "../../core/cast.ts";
-import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
   defineProviderExecutors,
@@ -21,16 +21,19 @@ interface Context {
 }
 const inputError = (message: string) => new ProviderRequestError(400, message);
 
-function normalizeBaseUrl(value: unknown): string {
+export function normalizeBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const text = requiredString(value, "baseUrl", inputError);
-  let url: URL;
-  try {
-    url = new URL(text);
-  } catch {
-    throw inputError("baseUrl must be a valid http(s) URL");
-  }
-  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.pathname !== "/")
+  const url = assertPublicHttpUrl(text, {
+    fieldName: "baseUrl",
+    createError: inputError,
+    allowPrivateNetwork,
+  });
+  if (url.username || url.password || url.pathname !== "/") {
     throw inputError("baseUrl must be an HTTP(S) instance root URL without credentials or a path");
+  }
   url.search = "";
   url.hash = "";
   const normalized = url.toString();

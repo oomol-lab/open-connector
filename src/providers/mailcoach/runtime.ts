@@ -10,6 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type MailcoachRequestMode = "validate" | "execute";
@@ -198,19 +199,21 @@ export async function validateMailcoachCredential(
   };
 }
 
-export function normalizeMailcoachBaseUrl(input?: string): string {
+export function normalizeMailcoachBaseUrl(
+  input?: string,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const raw = input?.trim();
   if (!raw) {
     throw new ProviderRequestError(400, "baseUrl is required");
   }
 
   const withProtocol = raw.includes("://") ? raw : `https://${raw}`;
-  let parsed: URL;
-  try {
-    parsed = new URL(withProtocol);
-  } catch {
-    throw new ProviderRequestError(400, "baseUrl must be a valid URL");
-  }
+  const parsed = assertPublicHttpUrl(withProtocol, {
+    fieldName: "baseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
 
   if (parsed.protocol !== "https:") {
     throw new ProviderRequestError(400, "baseUrl must use https");
