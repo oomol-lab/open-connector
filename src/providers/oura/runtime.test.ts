@@ -1,10 +1,11 @@
+import type { JsonSchema } from "../../core/types.ts";
 import type { OAuthProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { ouraActions } from "./actions.ts";
 import { ouraDocumentCollections, ouraOauthScopes } from "./collections.ts";
-import { fetchOuraAccountProfile, ouraActionHandlers } from "./runtime.ts";
+import { fetchOuraAccountProfile, ouraActionHandlers, parseOuraGrantedScopes } from "./runtime.ts";
 
 describe("Oura action catalog", () => {
   it("derives each action from what its collection actually supports", () => {
@@ -42,6 +43,17 @@ describe("Oura OAuth scopes", () => {
     expect(scopeFor("ring_configuration")).toBe("ring_configuration");
     expect(scopeFor("ring_battery_level")).toBe("ring_configuration");
     expect(scopeFor("daily_spo2")).toBe("spo2");
+  });
+});
+
+describe("Oura list item schemas", () => {
+  it("promises a document id only where Oura serves documents by id", () => {
+    // Heart rate and ring battery level are time series: Oura returns bare
+    // samples with no identifier and no single-document endpoint to use one on.
+    expect(listItemSchema("list_daily_sleep").properties).toHaveProperty("id");
+    expect(listItemSchema("list_heartrate").properties).toBeUndefined();
+    expect(listItemSchema("list_ring_battery_level").properties).toBeUndefined();
+    expect(String(listItemSchema("list_heartrate").description)).not.toContain("`id` is always present");
   });
 });
 
@@ -100,6 +112,22 @@ describe("Oura document requests", () => {
   });
 });
 
+describe("Oura granted scopes", () => {
+  it("reports granted scopes in the same vocabulary the actions require", () => {
+    // Oura grants `extapi:`-prefixed scopes but its 401s, and this catalog,
+    // name them bare, so callers could never match one against the other.
+    expect(parseOuraGrantedScopes("extapi:daily extapi:heart_health")).toEqual(["daily", "heart_health"]);
+  });
+
+  it("keeps a scope that carries no Oura prefix", () => {
+    expect(parseOuraGrantedScopes("daily personal")).toEqual(["daily", "personal"]);
+  });
+
+  it("has nothing to report without a scope string", () => {
+    expect(parseOuraGrantedScopes(undefined)).toEqual([]);
+  });
+});
+
 describe("Oura credential validation", () => {
   it("identifies the account by user id and email", async () => {
     const result = await fetchOuraAccountProfile(
@@ -122,6 +150,12 @@ describe("Oura credential validation", () => {
     );
   });
 });
+
+function listItemSchema(actionName: string): JsonSchema {
+  const action = ouraActions.find(({ name }) => name === actionName);
+  const documents = action?.outputSchema.properties as Record<string, JsonSchema>;
+  return documents.documents!.items as JsonSchema;
+}
 
 function scopeFor(collectionName: string): string | undefined {
   return ouraDocumentCollections.find(({ name }) => name === collectionName)?.scope;

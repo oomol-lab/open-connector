@@ -11,6 +11,14 @@ const documentSchema = s.looseObject("One Oura document. Fields differ per colle
   id: s.nonEmptyString("The Oura document identifier."),
 });
 
+/**
+ * Time series collections return bare samples: Oura assigns them no document
+ * id, and exposes no single-document endpoint one could be used on.
+ */
+const sampleSchema = s.unknownObject(
+  "One Oura time series sample. Fields differ per collection, and samples carry no document identifier.",
+);
+
 const nextTokenSchema = s.nullableString(
   "Pagination token for the next page, or null when the last page has been returned.",
 );
@@ -61,7 +69,10 @@ function collectionActions(collection: OuraDocumentCollection): ActionDefinition
       requiredScopes: [collection.scope],
       inputSchema: listInputSchema(collection),
       outputSchema: s.object(`The paginated ${collection.label} list returned by Oura.`, {
-        documents: s.array(`The ${collection.label} documents returned for this page.`, documentSchema),
+        documents: s.array(
+          `The ${collection.label} documents returned for this page.`,
+          collection.hasDocumentEndpoint ? documentSchema : sampleSchema,
+        ),
         nextToken: nextTokenSchema,
       }),
     }),

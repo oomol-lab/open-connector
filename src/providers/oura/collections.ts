@@ -7,6 +7,12 @@ export const ouraApiBaseUrl = "https://api.ouraring.com";
 export const ouraUserCollectionPath = "/v2/usercollection";
 
 /**
+ * Prefix Oura puts on the scopes it grants. An authorization request asks for
+ * `daily`, and the issued token reports `extapi:daily` for the same scope.
+ */
+export const ouraGrantedScopePrefix = "extapi:";
+
+/**
  * Official Oura OAuth2 scopes.
  *
  * `email` through `session` come from the `OAuth2` security scheme in the Oura

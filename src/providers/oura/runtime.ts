@@ -14,7 +14,12 @@ import {
 } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
-import { ouraApiBaseUrl, ouraDocumentCollections, ouraUserCollectionPath } from "./collections.ts";
+import {
+  ouraApiBaseUrl,
+  ouraDocumentCollections,
+  ouraGrantedScopePrefix,
+  ouraUserCollectionPath,
+} from "./collections.ts";
 
 const ouraPersonalInfoPath = `${ouraUserCollectionPath}/personal_info`;
 const ouraRequestTimeoutMs = 30_000;
@@ -78,7 +83,12 @@ export function parseOuraGrantedScopes(value: unknown): string[] {
   if (!scope) {
     return [];
   }
-  return scope.split(/\s+/).filter(Boolean);
+  return scope
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((granted) =>
+      granted.startsWith(ouraGrantedScopePrefix) ? granted.slice(ouraGrantedScopePrefix.length) : granted,
+    );
 }
 
 function buildOuraActionHandlers(): Record<string, OuraActionHandler> {
