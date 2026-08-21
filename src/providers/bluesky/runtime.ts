@@ -85,6 +85,33 @@ export const blueskyActionHandlers: ProviderActionHandlers<"bluesky", BlueskyAct
       hitsTotal: optionalInteger(record.hitsTotal) ?? null,
     };
   },
+  async get_timeline(input, context) {
+    const session = await createBlueskySession({
+      identifier: context.handle,
+      appPassword: context.apiKey,
+      fetcher: context.fetcher,
+      signal: context.signal,
+      phase: "execute",
+    });
+    const payload = await requestBlueskyJson({
+      path: "/xrpc/app.bsky.feed.getTimeline",
+      method: "GET",
+      query: compactObject({
+        algorithm: optionalString(input.algorithm),
+        limit: optionalInteger(input.limit),
+        cursor: optionalString(input.cursor),
+      }),
+      accessJwt: session.accessJwt,
+      fetcher: context.fetcher,
+      signal: context.signal,
+      phase: "execute",
+    });
+    const record = requireRecord(payload, "Bluesky timeline response");
+    return {
+      feed: requireArray(record.feed, "feed").map((item) => requireRecord(item, "Bluesky timeline item")),
+      cursor: optionalString(record.cursor) ?? null,
+    };
+  },
   async create_text_post(input, context) {
     const session = await createBlueskySession({
       identifier: context.handle,
