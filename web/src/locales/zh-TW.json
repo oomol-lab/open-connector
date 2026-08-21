@@ -243,7 +243,7 @@
     "oauthClientSettings": {
       "setupTitle": "建立 OAuth 應用程式",
       "setupIntro": "在 {{name}} 註冊一個 OAuth 應用程式，然後將其憑證貼到下方。",
-      "setupDocsLink": "開啟 {{name}} 應用程式註冊頁",
+      "setupDocsLink": "開啟 {{name}} 開發者入口網站",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
