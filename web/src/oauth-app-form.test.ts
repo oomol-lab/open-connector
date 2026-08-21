@@ -47,6 +47,13 @@ describe("OAuthAppForm", () => {
     expect(markup).toContain("Create the application.");
   });
 
+  it("links out to the provider's app registration from the steps", () => {
+    const markup = markupFor(setupAuth);
+
+    expect(markup).toContain('href="https://provider.example/apps"');
+    expect(markup).toContain("Open Example app registration");
+  });
+
   it("shows backtick-wrapped values as code rather than literal backticks", () => {
     const markup = markupFor(setupAuth);
 

@@ -1,8 +1,8 @@
-import type { AuthDefinition, CredentialField, OAuthConfig, ProviderDefinition } from "./model";
+import type { AuthDefinition, CredentialField, OAuthClientSetup, OAuthConfig, ProviderDefinition } from "./model";
 import type { ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
-import { Settings, Trash2 } from "lucide-react";
+import { ExternalLink, Settings, Trash2 } from "lucide-react";
 import { createElement, Fragment, useEffect, useMemo, useState } from "react";
 import { apiDelete, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
@@ -42,14 +42,6 @@ export function OAuthAppDialog(props: OAuthAppDialogProps): ReactNode {
             {props.auth.clientSetup
               ? t("providers.oauthClientSettings.setupIntro", { name: props.provider.displayName })
               : props.provider.service}
-            {props.auth.clientSetup?.docsUrl ? (
-              <>
-                {" "}
-                <a href={props.auth.clientSetup.docsUrl} target="_blank" rel="noreferrer noopener">
-                  {t("providers.oauthClientSettings.setupDocsLink", { name: props.provider.displayName })}
-                </a>
-              </>
-            ) : null}
           </DialogDescription>
         </DialogHeader>
         <OAuthAppForm
@@ -117,7 +109,9 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
 
   return (
     <form className="form-grid" onSubmit={(event) => void submit(event)}>
-      {props.auth.clientSetup ? <OAuthClientSetupSteps steps={props.auth.clientSetup.steps} /> : null}
+      {props.auth.clientSetup ? (
+        <OAuthClientSetupSteps setup={props.auth.clientSetup} providerName={props.provider.displayName} />
+      ) : null}
       {props.config?.expectedRedirectUri ? (
         <Label className="field">
           <span>{t("providers.oauthClientSettings.callbackUrl")}</span>
@@ -165,16 +159,27 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
   );
 }
 
-function OAuthClientSetupSteps(props: { steps: string[] }): ReactNode {
+function OAuthClientSetupSteps(props: { setup: OAuthClientSetup; providerName: string }): ReactNode {
   const t = useTranslate();
   return (
     <section className="rounded-md border bg-muted/40 p-3">
       <h4 className="mb-2 text-sm font-medium">{t("providers.oauthClientSettings.setupTitle")}</h4>
       <ol className="ml-4 list-decimal space-y-1 text-sm text-muted-foreground marker:text-muted-foreground">
-        {props.steps.map((step) => (
+        {props.setup.steps.map((step) => (
           <li key={step}>{renderStepText(step)}</li>
         ))}
       </ol>
+      {props.setup.docsUrl ? (
+        <a
+          className="mt-2 inline-flex items-center gap-1 text-sm underline underline-offset-3 hover:text-foreground"
+          href={props.setup.docsUrl}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          {t("providers.oauthClientSettings.setupDocsLink", { name: props.providerName })}
+          <ExternalLink size={14} />
+        </a>
+      ) : null}
     </section>
   );
 }
