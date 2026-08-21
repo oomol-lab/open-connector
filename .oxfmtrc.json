@@ -1,6 +1,12 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["node_modules", "dist", "coverage", "catalog/apps"],
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "catalog/apps",
+    "deploy/helm"
+  ],
   "printWidth": 120,
   "trailingComma": "all",
   "sortImports": {
