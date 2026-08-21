@@ -38,7 +38,7 @@ const postViewSchema = s.looseObject("The raw Bluesky post view returned by a fe
   cid: cidSchema,
   author: s.looseObject("The Bluesky author view for the post."),
   record: compactRecordSchema,
-  indexedAt: s.string("The server timestamp when the post was indexed."),
+  indexedAt: s.dateTime("The server timestamp when the post was indexed."),
 });
 
 const feedViewPostSchema = s.object(
