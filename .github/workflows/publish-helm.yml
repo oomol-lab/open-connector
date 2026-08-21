@@ -1,0 +1,158 @@
+name: Publish Helm chart
+
+# Pushes the chart at deploy/helm/open-connector to GitHub Packages (ghcr.io)
+# as an OCI artifact. Mirror the tag scheme from publish-docker.yml so the
+# Helm chart and Docker image advance in lock-step:
+#
+#   push to main        -> <chart-version>-tip            (latest main build)
+#                         <chart-version>-tip.<short-sha> (immutable ref)
+#   published release   -> <chart-version>                (when chart version
+#                                                          matches the release)
+#                         <chart-version>  + latest      (non-prerelease only)
+#
+# Pulling the published chart:
+#   helm pull oci://ghcr.io/$OWNER/charts/open-connector --version 0.1.0
+#
+# ghcr.io packages are private by default. Promote a release to public by
+# editing the package's visibility in the GitHub Packages UI, or call
+#   gh api -X PATCH /users/{user}/packages/container/charts%2Fopen-connector -f visibility=public
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/helm/open-connector/**'
+      - '.github/workflows/publish-helm.yml'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# Least privilege: read the repo, write to push packages to ghcr.io.
+permissions:
+  contents: read
+  packages: write
+
+# One in-flight publish per ref. main-branch pushes share a group so a
+# newer commit cancels an older, still-running build - this keeps the
+# "tip" tag pointing at the most recent commit. Releases use their own
+# per-tag group and are never cancelled.
+concurrency:
+  group: publish-helm-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    env:
+      CHART_PATH: deploy/helm/open-connector
+      # ghcr.io requires OCI artifacts to be linked to a repository. We use
+      # a dedicated "charts" namespace inside the owner's account so the
+      # package name is `charts/open-connector`, distinct from the docker
+      # image package `open-connector`. Override here to push elsewhere
+      # (e.g. oci://ghcr.io/${{ github.repository_owner }}/open-connector/helm).
+      OCI_REPO: oci://ghcr.io/${{ github.repository_owner }}/charts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Read chart metadata
+        id: meta
+        run: |
+          version=$(grep '^version:' "${{ env.CHART_PATH }}/Chart.yaml" | awk '{print $2}')
+          name=$(grep '^name:'    "${{ env.CHART_PATH }}/Chart.yaml" | head -1 | awk '{print $2}')
+          if [[ -z "${version}" || -z "${name}" ]]; then
+            echo "::error::Could not read name/version from Chart.yaml"
+            exit 1
+          fi
+          echo "name=${name}"       >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Chart: ${name} v${version}"
+
+      - name: Helm lint
+        run: helm lint "${{ env.CHART_PATH }}"
+
+      - name: Helm package
+        run: |
+          helm package "${{ env.CHART_PATH }}" \
+            --destination .charts \
+            --version "${{ steps.meta.outputs.version }}"
+
+      - name: Compute OCI tags
+        id: tags
+        run: |
+          version="${{ steps.meta.outputs.version }}"
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            tags="${version}"
+            if [[ "${{ github.event.release.prerelease }}" == "false" ]]; then
+              tags="${tags} latest"
+            fi
+          else
+            sha=$(git rev-parse --short HEAD)
+            tags="${version}-tip ${version}-tip.${sha}"
+          fi
+          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push chart OCI artifacts
+        env:
+          TAGS: ${{ steps.tags.outputs.tags }}
+        run: |
+          set -euo pipefail
+          for tag in ${TAGS}; do
+            echo "::group::Push ${{ steps.meta.outputs.name }}:${tag}"
+            helm push ".charts/${{ steps.meta.outputs.name }}-${{ steps.meta.outputs.version }}.tgz" \
+              "${{ env.OCI_REPO }}" \
+              --version "${tag}"
+            echo "::endgroup::"
+          done
+
+      - name: Promote release to public (best-effort)
+        if: github.event_name == 'release' && github.event.release.prerelease == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER:    ${{ github.repository_owner }}
+        run: |
+          # ghcr.io OCI packages are private by default; flip the published
+          # chart package to public so `helm pull` works without auth.
+          # Try the user endpoint first, then the org endpoint; silently
+          # skip on failure. Visibility can always be changed in the UI.
+          ENDPOINTS=(
+            "/users/${OWNER}/packages/container/charts%2Fopen-connector"
+            "/orgs/${OWNER}/packages/container/charts%2Fopen-connector"
+          )
+          for ep in "${ENDPOINTS[@]}"; do
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -X PATCH \
+              "${ep}" \
+              -f visibility=public >/dev/null 2>&1 || true
+          done
+
+      - name: Workflow summary
+        if: always()
+        run: |
+          {
+            echo "## Helm chart published"
+            echo
+            echo "- **Chart**: \`${{ steps.meta.outputs.name }}\`"
+            echo "- **Version**: \`${{ steps.meta.outputs.version }}\`"
+            echo "- **Tags**: ${{ steps.tags.outputs.tags }}"
+            echo "- **Registry**: \`${{ env.OCI_REPO }}\`"
+            echo
+            echo "Install with:"
+            echo '```'
+            echo "helm install open-connector \\"
+            echo "  oci://ghcr.io/${{ github.repository_owner }}/charts/open-connector \\"
+            echo "  --version ${{ steps.meta.outputs.version }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
