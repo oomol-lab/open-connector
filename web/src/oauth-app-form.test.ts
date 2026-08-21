@@ -12,7 +12,7 @@ const setupAuth: Extract<AuthDefinition, { type: "oauth2" }> = {
   scopes: [],
   clientSetup: {
     docsUrl: "https://provider.example/developers",
-    steps: ["Create the application.", "Enable the `heart_health` scope."],
+    steps: ["Create the application.", "Enable every scope the runtime requests."],
   },
 };
 
@@ -52,14 +52,6 @@ describe("OAuthAppForm", () => {
 
     expect(markup).toContain('href="https://provider.example/developers"');
     expect(markup).toContain("Open Example developer portal");
-  });
-
-  it("shows backtick-wrapped values as code rather than literal backticks", () => {
-    const markup = markupFor(setupAuth);
-
-    expect(markup).toContain("<code");
-    expect(markup).toContain(">heart_health</code>");
-    expect(markup).not.toContain("`");
   });
 
   it("omits the steps for a provider that documents no setup", () => {

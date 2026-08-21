@@ -3,7 +3,7 @@ import type { ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
 import { ExternalLink, Settings, Trash2 } from "lucide-react";
-import { createElement, Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiDelete, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
 import { FormStatus } from "./shared-ui";
@@ -166,7 +166,7 @@ function OAuthClientSetupSteps(props: { setup: OAuthClientSetup; providerName: s
       <h4 className="mb-2 text-sm font-medium">{t("providers.oauthClientSettings.setupTitle")}</h4>
       <ol className="ml-4 list-decimal space-y-1 text-sm text-muted-foreground marker:text-muted-foreground">
         {props.setup.steps.map((step) => (
-          <li key={step}>{renderStepText(step)}</li>
+          <li key={step}>{step}</li>
         ))}
       </ol>
       {props.setup.docsUrl ? (
@@ -182,21 +182,6 @@ function OAuthClientSetupSteps(props: { setup: OAuthClientSetup; providerName: s
       ) : null}
     </section>
   );
-}
-
-/**
- * Render a setup step, showing every backtick-wrapped span as code. Splitting
- * on the delimiter keeps the step plain text, so catalog data can never inject
- * markup into the console.
- */
-function renderStepText(step: string): ReactNode[] {
-  return step
-    .split("`")
-    .map((part, index) =>
-      index % 2 === 1
-        ? createElement("code", { key: index, className: "rounded bg-muted px-1 py-0.5 font-mono text-xs" }, part)
-        : createElement(Fragment, { key: index }, part),
-    );
 }
 
 export function clientConfigFieldsFor(auth: AuthDefinition): CredentialField[] {

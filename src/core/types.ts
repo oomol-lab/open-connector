@@ -59,11 +59,7 @@ export type OAuthClientConfigFieldDefinition = CredentialDefinition & {
 export type OAuthClientSetupDefinition = {
   /** Provider page where users register the OAuth app. */
   docsUrl?: string;
-  /**
-   * Ordered setup steps, each a single self-contained sentence. Wrap literal
-   * values such as scope names in backticks; the console renders those spans
-   * as code and everything else as plain text. No other markup is supported.
-   */
+  /** Ordered setup steps, each a single self-contained sentence of plain text. */
   steps: string[];
 };
 
