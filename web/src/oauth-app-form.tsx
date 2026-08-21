@@ -3,7 +3,7 @@ import type { ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
 import { Settings, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { createElement, Fragment, useEffect, useMemo, useState } from "react";
 import { apiDelete, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
 import { FormStatus } from "./shared-ui";
@@ -38,7 +38,19 @@ export function OAuthAppDialog(props: OAuthAppDialogProps): ReactNode {
               name: props.provider.displayName,
             })}
           </DialogTitle>
-          <DialogDescription>{props.provider.service}</DialogDescription>
+          <DialogDescription>
+            {props.auth.clientSetup
+              ? t("providers.oauthClientSettings.setupIntro", { name: props.provider.displayName })
+              : props.provider.service}
+            {props.auth.clientSetup?.docsUrl ? (
+              <>
+                {" "}
+                <a href={props.auth.clientSetup.docsUrl} target="_blank" rel="noreferrer noopener">
+                  {t("providers.oauthClientSettings.setupDocsLink", { name: props.provider.displayName })}
+                </a>
+              </>
+            ) : null}
+          </DialogDescription>
         </DialogHeader>
         <OAuthAppForm
           provider={props.provider}
@@ -105,6 +117,7 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
 
   return (
     <form className="form-grid" onSubmit={(event) => void submit(event)}>
+      {props.auth.clientSetup ? <OAuthClientSetupSteps steps={props.auth.clientSetup.steps} /> : null}
       {props.config?.expectedRedirectUri ? (
         <Label className="field">
           <span>{t("providers.oauthClientSettings.callbackUrl")}</span>
@@ -150,6 +163,35 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
       {status ? <FormStatus message={status} /> : null}
     </form>
   );
+}
+
+function OAuthClientSetupSteps(props: { steps: string[] }): ReactNode {
+  const t = useTranslate();
+  return (
+    <section className="rounded-md border bg-muted/40 p-3">
+      <h4 className="mb-2 text-sm font-medium">{t("providers.oauthClientSettings.setupTitle")}</h4>
+      <ol className="ml-4 list-decimal space-y-1 text-sm text-muted-foreground marker:text-muted-foreground">
+        {props.steps.map((step) => (
+          <li key={step}>{renderStepText(step)}</li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/**
+ * Render a setup step, showing every backtick-wrapped span as code. Splitting
+ * on the delimiter keeps the step plain text, so catalog data can never inject
+ * markup into the console.
+ */
+function renderStepText(step: string): ReactNode[] {
+  return step
+    .split("`")
+    .map((part, index) =>
+      index % 2 === 1
+        ? createElement("code", { key: index, className: "rounded bg-muted px-1 py-0.5 font-mono text-xs" }, part)
+        : createElement(Fragment, { key: index }, part),
+    );
 }
 
 export function clientConfigFieldsFor(auth: AuthDefinition): CredentialField[] {

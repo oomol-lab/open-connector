@@ -18,6 +18,15 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://api.ouraring.com/oauth/token",
       scopes: ouraOauthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
+      clientSetup: {
+        docsUrl: "https://cloud.ouraring.com/oauth/applications",
+        steps: [
+          "Sign in with the Oura account that owns the app and create a new application.",
+          "Copy the Callback URL below into the application's Redirect URI field; Oura requires an exact match.",
+          "Enable every scope this runtime requests, including `heart_health`, `stress`, `ring_configuration`, and `spo2`. Oura silently drops scopes the application does not enable, and actions that need them fail with 401 at run time.",
+          "Copy the generated Client ID and Client Secret into the fields below.",
+        ],
+      },
     },
   ],
   homepageUrl: "https://ouraring.com",

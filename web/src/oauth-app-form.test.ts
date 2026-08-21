@@ -1,0 +1,64 @@
+import type { AuthDefinition, ProviderDefinition } from "./model";
+
+import { I18nProvider } from "@embra/i18n/react";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import { createAppI18n } from "./i18n";
+import { OAuthAppForm } from "./oauth-app-form";
+
+const setupAuth: Extract<AuthDefinition, { type: "oauth2" }> = {
+  type: "oauth2",
+  scopes: [],
+  clientSetup: {
+    docsUrl: "https://provider.example/apps",
+    steps: ["Create the application.", "Enable the `heart_health` scope."],
+  },
+};
+
+const bareAuth: Extract<AuthDefinition, { type: "oauth2" }> = { type: "oauth2", scopes: [] };
+
+function provider(auth: AuthDefinition): ProviderDefinition {
+  return {
+    service: "example",
+    displayName: "Example",
+    categories: [],
+    authTypes: ["oauth2"],
+    auth: [auth],
+    actions: [],
+  };
+}
+
+function markupFor(auth: Extract<AuthDefinition, { type: "oauth2" }>): string {
+  return renderToStaticMarkup(
+    createElement(
+      I18nProvider,
+      { i18n: createAppI18n("en") },
+      createElement(OAuthAppForm, { provider: provider(auth), auth, onRefresh: vi.fn() }),
+    ),
+  );
+}
+
+describe("OAuthAppForm", () => {
+  it("walks the user through registering the provider OAuth app", () => {
+    const markup = markupFor(setupAuth);
+
+    expect(markup).toContain("Create the OAuth app");
+    expect(markup).toContain("Create the application.");
+  });
+
+  it("shows backtick-wrapped values as code rather than literal backticks", () => {
+    const markup = markupFor(setupAuth);
+
+    expect(markup).toContain("<code");
+    expect(markup).toContain(">heart_health</code>");
+    expect(markup).not.toContain("`");
+  });
+
+  it("omits the steps for a provider that documents no setup", () => {
+    const markup = markupFor(bareAuth);
+
+    expect(markup).not.toContain("Create the OAuth app");
+    expect(markup).toContain("Client ID");
+  });
+});

@@ -241,6 +241,9 @@
       "resetOAuthClient": "Сбросить App по умолчанию"
     },
     "oauthClientSettings": {
+      "setupTitle": "Создайте приложение OAuth",
+      "setupIntro": "Зарегистрируйте приложение OAuth в {{name}}, затем вставьте его учётные данные ниже.",
+      "setupDocsLink": "Открыть регистрацию приложения {{name}}",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
