@@ -80,20 +80,38 @@ jobs:
             --destination .charts \
             --version "${{ steps.meta.outputs.version }}"
 
-      - name: Compute OCI tags
-        id: tags
+      - name: Validate release tag matches chart version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          CHART_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          version="${{ steps.meta.outputs.version }}"
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            tags="${version}"
-            if [[ "${{ github.event.release.prerelease }}" == "false" ]]; then
-              tags="${tags} latest"
-            fi
-          else
-            sha=$(git rev-parse --short HEAD)
-            tags="${version}-tip ${version}-tip.${sha}"
+          # Strip a leading 'v' from the release tag (v1.4.0 -> 1.4.0)
+          # so releases can be tagged with or without the conventional prefix.
+          stripped="${RELEASE_TAG#v}"
+          if [[ "${stripped}" != "${CHART_VERSION}" ]]; then
+            echo "::error::Chart version ${CHART_VERSION} does not match release tag ${RELEASE_TAG}"
+            echo "::error::Bump Chart.yaml 'version:' to ${stripped} before publishing this release."
+            exit 1
           fi
-          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute package version
+        id: version
+        env:
+          CHART_VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            # For releases, the package version is the chart version itself.
+            # The validation step above has already confirmed it matches
+            # the release tag.
+            version="${CHART_VERSION}"
+          else
+            # For main-branch pushes, use a unique SemVer build suffix so
+            # each commit produces a distinct, installable chart.
+            sha=$(git rev-parse --short HEAD)
+            version="${CHART_VERSION}-tip.${sha}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to ghcr.io
         uses: docker/login-action@v4
@@ -102,18 +120,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push chart OCI artifacts
+      - name: Push chart OCI artifact
+        run: |
+          # The version embedded in the .tgz filename is what helm push
+          # uses as the OCI tag. We deliberately do NOT pass --version:
+          # doing so would create a duplicate OCI manifest under a
+          # different tag instead of referencing the same artifact.
+          tgz=".charts/${{ steps.meta.outputs.name }}-${{ steps.version.outputs.version }}.tgz"
+          helm push "${tgz}" "${{ env.OCI_REPO }}"
+
+      - name: Tag release as 'latest'
+        if: github.event_name == 'release' && github.event.release.prerelease == 'false'
         env:
-          TAGS: ${{ steps.tags.outputs.tags }}
+          REGISTRY: ghcr.io/${{ github.repository_owner }}/charts
+          CHART_NAME: ${{ steps.meta.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          for tag in ${TAGS}; do
-            echo "::group::Push ${{ steps.meta.outputs.name }}:${tag}"
-            helm push ".charts/${{ steps.meta.outputs.name }}-${{ steps.meta.outputs.version }}.tgz" \
-              "${{ env.OCI_REPO }}" \
-              --version "${tag}"
-            echo "::endgroup::"
-          done
+          # Copy the just-pushed manifest to the "latest" tag via ORAS
+          # so we reference the same OCI artifact instead of duplicating
+          # it. This is a separate tag flow from the main helm push above.
+          curl -sSfLo /tmp/oras.tgz \
+            "https://github.com/oras-project/oras/releases/download/v1.2.2/oras_1.2.2_linux_amd64.tar.gz"
+          tar -xz -C /usr/local/bin -f /tmp/oras.tgz oras
+
+          oras copy \
+            "${REGISTRY}/${CHART_NAME}:${VERSION}" \
+            "${REGISTRY}/${CHART_NAME}:latest"
 
       - name: Promote release to public (best-effort)
         if: github.event_name == 'release' && github.event.release.prerelease == 'false'
@@ -145,14 +178,13 @@ jobs:
             echo "## Helm chart published"
             echo
             echo "- **Chart**: \`${{ steps.meta.outputs.name }}\`"
-            echo "- **Version**: \`${{ steps.meta.outputs.version }}\`"
-            echo "- **Tags**: ${{ steps.tags.outputs.tags }}"
+            echo "- **Version**: \`${{ steps.version.outputs.version }}\`"
             echo "- **Registry**: \`${{ env.OCI_REPO }}\`"
             echo
             echo "Install with:"
             echo '```'
             echo "helm install open-connector \\"
             echo "  oci://ghcr.io/${{ github.repository_owner }}/charts/open-connector \\"
-            echo "  --version ${{ steps.meta.outputs.version }}"
+            echo "  --version ${{ steps.version.outputs.version }}"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
