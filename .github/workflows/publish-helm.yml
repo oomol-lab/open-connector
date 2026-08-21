@@ -20,8 +20,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'deploy/helm/open-connector/**'
-      - '.github/workflows/publish-helm.yml'
+      - "deploy/helm/open-connector/**"
+      - ".github/workflows/publish-helm.yml"
   release:
     types: [published]
   workflow_dispatch:
@@ -119,7 +119,7 @@ jobs:
         if: github.event_name == 'release' && github.event.release.prerelease == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER:    ${{ github.repository_owner }}
+          OWNER: ${{ github.repository_owner }}
         run: |
           # ghcr.io OCI packages are private by default; flip the published
           # chart package to public so `helm pull` works without auth.
