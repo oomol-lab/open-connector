@@ -57,10 +57,6 @@ spec:
                   name: {{ .Values.database.existingUrlSecret }}
                   key: {{ .Values.database.existingUrlSecretKey | default "url" }}
                   optional: false
-            - name: OOMOL_CONNECT_DATABASE_POOL_MAX
-              value: {{ .Values.database.poolMax | quote }}
-            - name: OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS
-              value: {{ .Values.database.connectTimeoutMs | quote }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

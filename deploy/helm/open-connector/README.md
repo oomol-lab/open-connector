@@ -46,11 +46,21 @@ ingress:
 
 database:
   enabled: true
-  url: "postgresql://open_connector:***@postgres.example.com:5432/open_connector?sslmode=verify-full"
+  # Either set `url` directly (inline, see example below) OR reference
+  # an externally-managed Secret via `existingUrlSecret` + key. Do NOT
+  # set both at the same time.
   existingUrlSecret: open-connector-db
   existingUrlSecretKey: url
   migration:
     enabled: true
+
+# Example with the URL inlined (use only when you cannot use an external
+# Secret manager). NEVER commit real credentials to values.yaml:
+#   database:
+#     enabled: true
+#     url: "postgresql://USER:PASSWORD@HOST:5432/DBNAME?sslmode=verify-full"
+#     migration:
+#       enabled: true
 
 autoscaling:
   enabled: true

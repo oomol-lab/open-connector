@@ -1,3 +1,13 @@
+{{- /*
+  Guard rail: refuse to install unless the admin surface can be
+  authenticated. Set `secret.adminToken` or `secret.existingSecret`,
+  or explicitly opt in to local experimentation with
+  `insecureDevelopment: true`.
+*/ -}}
+{{- if not (or .Values.secret.adminToken .Values.secret.existingSecret .Values.insecureDevelopment) }}
+{{- fail "open-connector: secret.adminToken or secret.existingSecret must be set. For local experimentation only, pass --set insecureDevelopment=true. Do NOT enable insecureDevelopment in any environment reachable outside the loopback." }}
+{{- end }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,8 +23,12 @@ data:
   {{ $envName }}: {{ $value | quote }}
   {{- end }}
 {{- end }}
-{{- if and .Values.database.enabled (not .Values.database.existingUrlSecret) }}
+{{- if .Values.database.enabled }}
+  {{- if not .Values.database.existingUrlSecret }}
   OOMOL_CONNECT_DATABASE_URL: {{ .Values.database.url | quote }}
+  {{- end }}
+  OOMOL_CONNECT_DATABASE_POOL_MAX: {{ .Values.database.poolMax | quote }}
+  OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS: {{ .Values.database.connectTimeoutMs | quote }}
 {{- end }}
   NODE_ENV: production
   PORT: "3000"

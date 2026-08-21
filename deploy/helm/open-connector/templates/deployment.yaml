@@ -18,7 +18,7 @@ spec:
       labels:
         {{- include "open-connector.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
-        {{ toYaml . }}
+        {{ toYaml . | nindent 8 }}
         {{- end }}
       annotations:
         # Roll the pod when the Secret or ConfigMap changes; secrets and
@@ -26,7 +26,7 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
-        {{ toYaml . }}
+        {{ toYaml . | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ include "open-connector.serviceAccountName" . }}
@@ -74,10 +74,6 @@ spec:
                   name: {{ .Values.database.existingUrlSecret }}
                   key: {{ .Values.database.existingUrlSecretKey | default "url" }}
                   optional: false
-            - name: OOMOL_CONNECT_DATABASE_POOL_MAX
-              value: {{ .Values.database.poolMax | quote }}
-            - name: OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS
-              value: {{ .Values.database.connectTimeoutMs | quote }}
             {{- end }}
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}

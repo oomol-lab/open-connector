@@ -17,6 +17,14 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
+    {{- with .Values.networkPolicy.ingressNamespaceSelector }}
+    - from:
+        - namespaceSelector:
+            {{- toYaml . | nindent 12 }}
+      ports:
+        - protocol: TCP
+          port: 3000
+    {{- end }}
     {{- with .Values.networkPolicy.additionalIngressNamespaceSelector }}
     - from:
         - namespaceSelector:

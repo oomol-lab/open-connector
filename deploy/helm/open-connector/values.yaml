@@ -138,13 +138,23 @@ config:
   allowPrivateNetwork: false
   logLevel: info
   runLimit: 5000
-  transitFileBackend: local   # local | s3
+  transitFileBackend: local # local | s3
   transitFileTTLSeconds: 86400
   transitFileMaxBytes: 104857600
   s3Bucket: ""
   s3Region: us-east-1
   s3Endpoint: ""
   s3ForcePathStyle: false
+
+# SECURITY: by default, helm install refuses to render unless the chart
+# can authenticate the /api, /docs, and web console surfaces. Provide
+# either `secret.adminToken` or `secret.existingSecret`, or set
+# `insecureDevelopment: true` to bypass for local experimentation only.
+#
+# Do NOT set `insecureDevelopment: true` in any environment reachable
+# from outside the loopback - the admin API and web console will be
+# completely unauthenticated.
+insecureDevelopment: false
 
 # Secret runtime configuration. Leave empty values blank to skip the
 # corresponding env var entirely. The runtime will use its built-in defaults.

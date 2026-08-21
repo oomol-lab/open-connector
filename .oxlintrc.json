@@ -14,5 +14,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["dist", "node_modules", "catalog/apps", "deploy/helm"]
+  "ignorePatterns": ["dist", "node_modules", "catalog/apps", "deploy/helm/open-connector/templates"]
 }

@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "open-connector.labels" . | nindent 4 }}
     {{- with .Values.metrics.serviceMonitor.labels }}
-    {{ toYaml . }}
+    {{ toYaml . | nindent 4 }}
     {{- end }}
   {{- with .Values.metrics.serviceMonitor.annotations }}
   annotations:
