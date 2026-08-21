@@ -241,6 +241,9 @@
       "resetOAuthClient": "デフォルト App をリセット"
     },
     "oauthClientSettings": {
+      "setupTitle": "OAuth アプリを作成する",
+      "setupIntro": "{{name}} で OAuth アプリを登録し、その認証情報を以下に貼り付けてください。",
+      "setupDocsLink": "{{name}} デベロッパーポータルを開く",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",

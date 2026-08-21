@@ -13,7 +13,14 @@ export type AuthDefinition =
       scopes: string[];
       tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
       clientConfigFields?: CredentialField[];
+      clientSetup?: OAuthClientSetup;
     };
+
+/** How to register the provider OAuth app, shown while configuring the client. */
+export interface OAuthClientSetup {
+  docsUrl?: string;
+  steps: string[];
+}
 
 export interface CredentialField {
   key: string;

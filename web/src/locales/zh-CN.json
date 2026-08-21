@@ -241,6 +241,9 @@
       "resetOAuthClient": "重置默认 App"
     },
     "oauthClientSettings": {
+      "setupTitle": "创建 OAuth 应用",
+      "setupIntro": "在 {{name}} 注册一个 OAuth 应用，然后将其凭据粘贴到下方。",
+      "setupDocsLink": "打开 {{name}} 开发者门户",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",

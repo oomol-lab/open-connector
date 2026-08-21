@@ -49,6 +49,21 @@ export type OAuthClientConfigFieldDefinition = CredentialDefinition & {
 };
 
 /**
+ * Instructions for registering the OAuth app this provider needs.
+ *
+ * The local console shows these where users paste the client id and secret,
+ * because that is the moment they need them. Steps describe the provider's
+ * flow in this project's own words and link to the provider's own
+ * documentation; they never reproduce provider documentation or screenshots.
+ */
+export type OAuthClientSetupDefinition = {
+  /** Provider page where users register the OAuth app. */
+  docsUrl?: string;
+  /** Ordered setup steps, each a single self-contained sentence of plain text. */
+  steps: string[];
+};
+
+/**
  * API key connection configuration shown by the local console.
  */
 export type ApiKeyAuthDefinition = {
@@ -147,6 +162,8 @@ export type OAuth2AuthDefinition = {
   };
   /** Extra local OAuth app fields required before starting authorization. */
   clientConfigFields?: OAuthClientConfigFieldDefinition[];
+  /** How to register the provider OAuth app that supplies the client id and secret. */
+  clientSetup?: OAuthClientSetupDefinition;
 };
 
 /**

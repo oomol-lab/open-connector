@@ -241,6 +241,9 @@
       "resetOAuthClient": "Reset Default App"
     },
     "oauthClientSettings": {
+      "setupTitle": "Create the OAuth app",
+      "setupIntro": "Register an OAuth app with {{name}}, then paste its credentials below.",
+      "setupDocsLink": "Open {{name}} developer portal",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
