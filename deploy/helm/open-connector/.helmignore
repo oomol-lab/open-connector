@@ -1,0 +1,37 @@
+# Patterns to ignore when building packages.
+# This supports shell glob matching, relative path matching, and
+# negation (prefixed with !). Only one pattern per line.
+#
+# NOTE on Helm 4.x: the `*.md` + `!README.md` negation pattern that worked
+# in Helm 3 causes `helm lint` to mis-report "Chart.yaml file is missing"
+# in Helm 4.x. If you need to exclude *.md files, prefer moving them
+# outside the chart directory rather than relying on negation.
+.DS_Store
+# Common VCS dirs
+.git/
+.gitignore
+.bzr/
+.bzrignore
+.hg/
+.hgignore
+.svn/
+# Common backup files
+*.swp
+*.bak
+*.tmp
+*.orig
+*~
+# Various IDEs
+.project
+.idea/
+*.tmproj
+.vscode/
+# Helm-related
+OWNERS
+# Tests directory is for helm-unittest; keep it out of release artifacts
+tests/
+# Excluding everything-as-markdown prevents the chart README from being
+# packaged, but that's OK: the chart README is rendered by `helm install`
+# and shipping it separately keeps the package lean.
+*.md
+README.md

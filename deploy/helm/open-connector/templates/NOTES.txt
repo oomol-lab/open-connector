@@ -1,0 +1,68 @@
+Thanks for installing {{ .Chart.Name }} {{ .Chart.Version }} (app version {{ .Chart.AppVersion }}).
+
+==========================================================================
+  Local try-out (mirrors `docker compose up`)
+==========================================================================
+
+The release is configured with a single replica and a ClusterIP service.
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward \
+    svc/{{ include "open-connector.fullname" . }} 3000:3000
+
+Then open:
+
+  - Web console:  http://localhost:3000
+  - API docs:     http://localhost:3000/docs
+  - OpenAPI:      http://localhost:3000/openapi.json
+  - Health:       http://localhost:3000/health
+
+No admin token is set yet. Set `secret.adminToken` (or wire an existing
+Secret) before exposing the admin API, docs, or web console outside the
+loopback.
+
+==========================================================================
+  First-call smoke test
+==========================================================================
+
+{{- if .Values.database.enabled }}
+
+This release uses PostgreSQL. The migration Job ran as a Helm hook
+(pre-install/pre-upgrade); verify it succeeded with:
+
+  kubectl --namespace {{ .Release.Namespace }} get jobs \
+    -l "app.kubernetes.io/name={{ include "open-connector.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+
+{{- else }}
+
+SQLite is the default backend. The runtime migrates the local SQLite
+database automatically on first start.
+
+{{- end }}
+
+Smoke-test a no-auth Action:
+
+  curl -s -X POST http://localhost:3000/v1/actions/hackernews.get_top_stories \
+    -H 'content-type: application/json' \
+    -d '{"input":{}}'
+
+==========================================================================
+  Production checklist
+==========================================================================
+
+Before exposing this runtime to the public:
+
+  [ ] Set `secret.encryptionKey` to a long random value.
+  [ ] Set `secret.adminToken` and gate /api, /docs, / via Ingress + auth.
+  [ ] Set `image.tag` (or `imageDigest`) to a pinned version, not "latest".
+  [ ] Enable `ingress`, `networkPolicy`, `podDisruptionBudget`, and `metrics`.
+  [ ] Raise `replicaCount`, enable `autoscaling`, switch to PostgreSQL
+      (`database.enabled=true`), and configure S3 transit
+      (`config.transitFileBackend=s3`).
+  [ ] Move `secret.*` out of values.yaml and into a Secret manager
+      (`secret.existingSecret`) or External Secrets Operator.
+  [ ] Set `config.origin` to your public https origin (used for OAuth redirects).
+  [ ] Set `config.allowedActions` / `allowedProxies` to the explicit list
+      your agents need.
+
+For more, see:
+  https://github.com/oomol-lab/open-connector/blob/main/docs/configuration.md

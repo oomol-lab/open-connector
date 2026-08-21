@@ -1,0 +1,233 @@
+# ============================================================================
+# OpenConnector Helm chart - values.yaml
+# ----------------------------------------------------------------------------
+# Defaults are tuned so that `helm install open-connector .` gives you a
+# working single-replica deployment on `kubectl port-forward`, mirroring
+# `docker compose up`. Flip the toggles at the bottom for production use.
+# ============================================================================
+
+# Number of Deployment replicas (ignored when autoscaling is enabled).
+replicaCount: 1
+
+image:
+  repository: ghcr.io/oomol-lab/open-connector
+  # Tag is the upstream image tag. Common choices:
+  #   "latest"   - latest released version (use with caution in production)
+  #   "tip"      - latest main-branch build
+  #   "1.4.0"    - pin to a specific released version (recommended)
+  #   "<sha>"    - pin to a specific commit
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Image pull secrets. GHCR is public for this image, so usually not needed.
+imagePullSecrets: []
+
+# Override the image reference with a digest for immutable deployment.
+imageDigest: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+  # The runtime does not call the Kubernetes API.
+  automountServiceAccountToken: false
+
+# Hardened by default. The upstream image runs as root; these settings
+# switch the workload to a dedicated non-root user.
+podSecurityContext:
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  capabilities:
+    drop:
+      - ALL
+
+# Optional pod-level anti-affinity.
+podAntiAffinity:
+  preferredDuringScheduling: true
+
+# ClusterIP matches docker-compose's port-published container. Use NodePort
+# or LoadBalancer if you don't front it with an Ingress.
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+
+# Off by default - same shape as `docker compose up` exposing port 3000.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: connector.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Probes target GET /health on port 3000 (matches the Dockerfile HEALTHCHECK).
+probes:
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  startup:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+
+# Mirrors the `connector-data` named volume in docker-compose. SQLite,
+# transit files, and tmp staging all live under /app/data.
+persistence:
+  enabled: true
+  mountPath: /app/data
+  existingClaim: ""
+  size: 5Gi
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  annotations: {}
+
+# Non-secret runtime configuration. Each key is exposed as the matching
+# OOMOL_CONNECT_<UPPER_SNAKE> environment variable. See
+# https://github.com/oomol-lab/open-connector/blob/main/docs/configuration.md
+config:
+  origin: ""
+  dataDir: /app/data
+  allowedActions: ""
+  blockedActions: ""
+  allowedProxies: ""
+  blockedProxies: ""
+  allowedCustomOAuth: ""
+  egressTrustedHosts: ""
+  allowPrivateNetwork: false
+  logLevel: info
+  runLimit: 5000
+  transitFileBackend: local   # local | s3
+  transitFileTTLSeconds: 86400
+  transitFileMaxBytes: 104857600
+  s3Bucket: ""
+  s3Region: us-east-1
+  s3Endpoint: ""
+  s3ForcePathStyle: false
+
+# Secret runtime configuration. Leave empty values blank to skip the
+# corresponding env var entirely. The runtime will use its built-in defaults.
+secret:
+  # Reference an externally-managed Secret (sealed-secrets, ESO, Vault).
+  # When set, the auto-generated Secret is NOT created and the keys below
+  # are ignored. The Secret must contain every key listed in `secretKeys`.
+  existingSecret: ""
+  secretKeys:
+    - encryptionKey
+    - adminToken
+    - runtimeToken
+    - jwksUri
+    - jwtIssuer
+    - jwtAudience
+    - s3AccessKeyId
+    - s3SecretAccessKey
+    - s3SessionToken
+  annotations: {}
+  encryptionKey: ""
+  adminToken: ""
+  runtimeToken: ""
+  jwksUri: ""
+  jwtIssuer: ""
+  jwtAudience: ""
+  s3AccessKeyId: ""
+  s3SecretAccessKey: ""
+  s3SessionToken: ""
+
+# SQLite by default (matches docker-compose). Set enabled=true and provide
+# a URL to switch to PostgreSQL - also enables the migration Job.
+database:
+  enabled: false
+  url: ""
+  poolMax: 10
+  connectTimeoutMs: 10000
+  existingUrlSecret: ""
+  existingUrlSecretKey: ""
+  migration:
+    enabled: true
+    backoffLimit: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: ""
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: ""
+  maxUnavailable: ""
+
+networkPolicy:
+  enabled: false
+  ingressNamespaceSelector: {}
+  additionalIngressNamespaceSelector: {}
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    interval: 30s
+    scrapeTimeout: 10s
+    annotations: {}
+    labels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podLabels: {}
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+
+# Free-form OOMOL_CONNECT_* overrides.
+extraEnv: []
+extraVolumes: []
+extraVolumeMounts: []
+
+terminationGracePeriodSeconds: 30

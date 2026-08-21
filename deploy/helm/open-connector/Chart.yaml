@@ -1,0 +1,30 @@
+apiVersion: v2
+name: open-connector
+description: |
+  OpenConnector is an open-source connector gateway for AI agents. Provides
+  virtual credentials for 1,000+ providers and 10,000+ Actions so AI agents
+  never hold the real OAuth/API-key secrets. This chart deploys the Node
+  runtime container on Kubernetes with sensible "easy try" defaults that
+  mirror Docker Compose, plus switches for production hardening.
+type: application
+version: 0.1.0
+appVersion: "1.4.0"
+icon: https://raw.githubusercontent.com/oomol-lab/open-connector/main/assets/open-connector-icon.png
+home: https://github.com/oomol-lab/open-connector
+sources:
+  - https://github.com/oomol-lab/open-connector
+  - https://oomol.com/docs/openconnector-self-hosting/
+keywords:
+  - open-connector
+  - mcp
+  - oauth
+  - ai-agents
+  - credentials
+  - gateway
+  - connectors
+maintainers:
+  - name: timoa
+    email: dev@timoa.com
+annotations:
+  category: AI Infrastructure
+  licenses: Apache-2.0

@@ -1,0 +1,67 @@
+{{- if and .Values.database.enabled .Values.database.migration.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "open-connector.fullname" . }}-migrate
+  labels:
+    {{- include "open-connector.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.database.migration.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "open-connector.fullname" . }}-migrate
+      labels:
+        {{- include "open-connector.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "open-connector.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/local/bin/open-connector", "migrate"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "open-connector.fullname" . }}
+          env:
+            {{- if .Values.secret.existingSecret }}
+            {{- range $key := .Values.secret.secretKeys }}
+            - name: {{ include "open-connector.secretEnvName" $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secret.existingSecret }}
+                  key: {{ $key }}
+                  optional: true
+            {{- end }}
+            {{- else }}
+            {{- range $key := .Values.secret.secretKeys }}
+            - name: {{ include "open-connector.secretEnvName" $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-connector.secretName" $ }}
+                  key: {{ $key }}
+                  optional: true
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.database.enabled .Values.database.existingUrlSecret }}
+            - name: OOMOL_CONNECT_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingUrlSecret }}
+                  key: {{ .Values.database.existingUrlSecretKey | default "url" }}
+                  optional: false
+            - name: OOMOL_CONNECT_DATABASE_POOL_MAX
+              value: {{ .Values.database.poolMax | quote }}
+            - name: OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS
+              value: {{ .Values.database.connectTimeoutMs | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+{{- end }}
