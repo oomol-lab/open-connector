@@ -28,6 +28,7 @@ spec:
         # Roll the pod when the Secret or ConfigMap changes; secrets and
         # configmaps aren't auto-detected by the kubelet.
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/db-secret: {{ include (print $.Template.BasePath "/secret-db.yaml") . | sha256sum }}
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -91,7 +92,7 @@ spec:
             - name: OOMOL_CONNECT_DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "open-connector.fullname" . }}
+                  name: {{ printf "%s-db" (include "open-connector.fullname" . | trunc 60 | trimSuffix "-") }}
                   key: databaseUrl
                   optional: false
             {{- end }}

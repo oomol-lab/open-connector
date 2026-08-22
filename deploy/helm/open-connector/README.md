@@ -198,7 +198,8 @@ Before going to production, **set `secret.encryptionKey` and `secret.adminToken`
 | `templates/ingress.yaml`             | Optional Ingress                                           |
 | `templates/serviceaccount.yaml`      | Hardened ServiceAccount                                    |
 | `templates/configmap.yaml`           | Non-secret `OOMOL_CONNECT_*` env, install-time guard rails |
-| `templates/secret.yaml`              | Auto-generated Secret (app secrets + inline database URL)  |
+| `templates/secret.yaml`              | Auto-generated Secret for the app secrets                  |
+| `templates/secret-db.yaml`           | Secret for an inline `database.url`                        |
 | `templates/pvc.yaml`                 | Persistent volume for SQLite/transit files                 |
 | `templates/hpa.yaml`                 | Optional HPA                                               |
 | `templates/poddisruptionbudget.yaml` | Optional PDB                                               |
