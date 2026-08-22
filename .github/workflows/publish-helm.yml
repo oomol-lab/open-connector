@@ -103,11 +103,13 @@ jobs:
             echo "::error::OCI_REPO namespace must include an owner (got '${namespace}')"
             exit 1
           fi
-          echo "host=${host}"             >> "$GITHUB_OUTPUT"
-          echo "namespace=${namespace}"   >> "$GITHUB_OUTPUT"
-          echo "chart_name=${chart_name}" >> "$GITHUB_OUTPUT"
-          echo "package_name=${package_name}" >> "$GITHUB_OUTPUT"
-          echo "owner=${owner}"           >> "$GITHUB_OUTPUT"
+          {
+            echo "host=${host}"
+            echo "namespace=${namespace}"
+            echo "chart_name=${chart_name}"
+            echo "package_name=${package_name}"
+            echo "owner=${owner}"
+          } >> "$GITHUB_OUTPUT"
           echo "OCI: ${host} / ${namespace} / ${chart_name} -> ${package_name} (owner=${owner})"
 
       - name: Helm lint
