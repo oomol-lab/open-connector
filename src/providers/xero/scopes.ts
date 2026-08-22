@@ -20,6 +20,10 @@ export const xeroProfitAndLossReadScope = "accounting.reports.profitandloss.read
 export const xeroBalanceSheetReadScope = "accounting.reports.balancesheet.read";
 export const xeroContactsWriteScope = "accounting.contacts";
 export const xeroInvoicesWriteScope = "accounting.invoices";
+/** OpenID Connect scopes required to call GET https://identity.xero.com/connect/userinfo. */
+export const xeroOpenIdScope = "openid";
+export const xeroProfileScope = "profile";
+export const xeroEmailScope = "email";
 /** Required for a refresh token. Without it, Xero access lasts 30 minutes and then dies. */
 export const xeroOfflineAccessScope = "offline_access";
 
@@ -40,5 +44,12 @@ export const xeroReadOnlyScopes: string[] = [
 /** Read-write scopes needed by create/update actions such as creating invoices. */
 export const xeroWriteScopes: string[] = [xeroContactsWriteScope, xeroInvoicesWriteScope];
 
-/** Scopes declared on the OAuth app. `offline_access` is required so the runtime can refresh. */
-export const xeroOAuthScopes: string[] = [...xeroReadOnlyScopes, ...xeroWriteScopes, xeroOfflineAccessScope];
+/** Scopes declared on the OAuth app. OIDC scopes are required for userinfo; `offline_access` is required so the runtime can refresh. */
+export const xeroOAuthScopes: string[] = [
+  xeroOpenIdScope,
+  xeroProfileScope,
+  xeroEmailScope,
+  ...xeroReadOnlyScopes,
+  ...xeroWriteScopes,
+  xeroOfflineAccessScope,
+];

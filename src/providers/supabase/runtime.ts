@@ -130,6 +130,7 @@ export const supabaseActionHandlers: ProviderActionHandlers<"supabase", Supabase
 export async function validateSupabaseCredential(
   accessToken: string,
   fetcher: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<{
   profile: {
     accountId: string;
@@ -143,6 +144,7 @@ export async function validateSupabaseCredential(
       await requestSupabaseJson({
         accessToken,
         fetcher,
+        signal,
         phase: "validate",
         path: "/organizations",
       }),
@@ -166,6 +168,48 @@ export async function validateSupabaseCredential(
           ? "organization_fingerprint"
           : "access_token_fingerprint",
     },
+  };
+}
+
+export async function validateSupabaseOAuthCredential(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<{
+  profile: {
+    accountId: string;
+    displayName: string;
+    grantedScopes: string[];
+  };
+  metadata: Record<string, unknown>;
+}> {
+  const profile = requiredRecord(
+    await requestSupabaseJson({
+      accessToken,
+      fetcher,
+      signal,
+      phase: "validate",
+      path: "/profile",
+    }),
+    "profile",
+    providerMalformedError,
+  );
+  const gotrueId = requiredString(profile.gotrue_id, "profile.gotrue_id", providerMalformedError);
+  const username = optionalString(profile.username);
+  const primaryEmail = optionalString(profile.primary_email);
+
+  return {
+    profile: {
+      accountId: gotrueId,
+      displayName: username || primaryEmail || "Supabase User",
+      grantedScopes: supabaseProviderScopes,
+    },
+    metadata: compactObject({
+      validationEndpoint: "/profile",
+      gotrueId,
+      username,
+      primaryEmail,
+    }),
   };
 }
 
@@ -663,6 +707,7 @@ async function requestSupabaseJson(options: {
   accessToken?: string;
   context?: BearerProviderContext;
   fetcher?: typeof fetch;
+  signal?: AbortSignal;
   phase?: SupabaseRequestPhase;
   method?: SupabaseRequestOptions["method"];
   path: string;
@@ -696,7 +741,7 @@ async function requestSupabaseJson(options: {
       method: options.method ?? (options.body ? "POST" : "GET"),
       headers: supabaseHeaders(accessToken, Boolean(options.body)),
       body: options.body ? JSON.stringify(options.body) : undefined,
-      signal: options.context?.signal,
+      signal: options.signal ?? options.context?.signal,
     });
   } catch (error) {
     throw new ProviderRequestError(
