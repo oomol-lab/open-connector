@@ -356,6 +356,43 @@ const downloadVideoInputSchema = s.object("Input parameters for retrieving a gen
   file_id: trimmedNonEmptyString("Identifier of the generated video file to retrieve."),
 });
 
+const textToAudioInputSchema = s.object(
+  "Request body for MiniMax text-to-audio synthesis.",
+  {
+    model: trimmedNonEmptyString("MiniMax speech model to invoke."),
+    text: trimmedNonEmptyString("Text to synthesize into audio."),
+    stream: s.boolean("Whether to request streaming synthesis."),
+    language_boost: optionalTrimmedString("Language hint for pronunciation."),
+    output_format: s.stringEnum("Output audio format.", ["url", "hex"]),
+    voice_setting: s.unknownObject("MiniMax voice settings."),
+    pronunciation_dict: s.unknownObject("MiniMax pronunciation overrides."),
+    audio_setting: s.unknownObject("MiniMax audio settings."),
+    voice_modify: s.unknownObject("MiniMax voice modification settings."),
+    subtitle_enable: s.boolean("Whether to include subtitle timing data."),
+  },
+  {
+    optional: [
+      "stream",
+      "language_boost",
+      "output_format",
+      "voice_setting",
+      "pronunciation_dict",
+      "audio_setting",
+      "voice_modify",
+      "subtitle_enable",
+    ],
+  },
+);
+
+const textToAudioOutputSchema = s.looseRequiredObject(
+  "MiniMax text-to-audio response.",
+  {
+    data: s.unknownObject("Audio payload and synthesis status."),
+    base_resp: s.unknownObject("MiniMax response status wrapper."),
+  },
+  { optional: ["data", "base_resp"] },
+);
+
 const minimaxBaseRespSchema = s.looseRequiredObject(
   "MiniMax base response wrapper.",
   {
@@ -538,5 +575,11 @@ export const minimaxActions: ActionDefinition[] = [
     description: "Retrieve the download URL and metadata for a generated MiniMax video file.",
     inputSchema: downloadVideoInputSchema,
     outputSchema: videoFileOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "text_to_audio",
+    description: "Synthesize text into audio with the MiniMax T2A v2 API.",
+    inputSchema: textToAudioInputSchema,
+    outputSchema: textToAudioOutputSchema,
   }),
 ];

@@ -67,6 +67,9 @@ export const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxAct
     const fileId = readInputString(input.file_id, "file_id");
     return minimaxGetJson(`/v1/files/retrieve?file_id=${encodeURIComponent(fileId)}`, context);
   },
+  text_to_audio(input, context) {
+    return minimaxPostJson("/v1/t2a_v2", normalizeMinimaxAudioBody(input), context);
+  },
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<MinimaxActionContext>({
@@ -230,6 +233,16 @@ function normalizeMinimaxVideoV2Body(input: Record<string, unknown>): Record<str
     resolution: trimString(input.resolution),
     ratio: trimString(input.ratio),
     callback_url: trimString(input.callback_url),
+  });
+}
+
+function normalizeMinimaxAudioBody(input: Record<string, unknown>): Record<string, unknown> {
+  return compactObject({
+    ...input,
+    model: trimString(input.model),
+    text: trimString(input.text),
+    language_boost: trimString(input.language_boost),
+    output_format: trimString(input.output_format),
   });
 }
 
