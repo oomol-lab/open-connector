@@ -9,7 +9,11 @@ spec:
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   strategy:
-    {{- toYaml .Values.updateStrategy | nindent 4 }}
+    type: {{ .Values.updateStrategy.type }}
+    {{- if and (eq .Values.updateStrategy.type "RollingUpdate") .Values.updateStrategy.rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml .Values.updateStrategy.rollingUpdate | nindent 6 }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "open-connector.selectorLabels" . | nindent 6 }}
@@ -18,7 +22,7 @@ spec:
       labels:
         {{- include "open-connector.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
-        {{ toYaml . | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       annotations:
         # Roll the pod when the Secret or ConfigMap changes; secrets and
@@ -26,7 +30,7 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
-        {{ toYaml . | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ include "open-connector.serviceAccountName" . }}
@@ -83,6 +87,13 @@ spec:
                   name: {{ .Values.database.existingUrlSecret }}
                   key: {{ .Values.database.existingUrlSecretKey | default "url" }}
                   optional: false
+            {{- else if and .Values.database.enabled .Values.database.url }}
+            - name: OOMOL_CONNECT_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-connector.fullname" . }}
+                  key: databaseUrl
+                  optional: false
             {{- end }}
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
@@ -122,10 +133,16 @@ spec:
           volumeMounts:
             - name: data
               mountPath: {{ .Values.persistence.mountPath }}
+            # The root filesystem is read-only; mail-attachment staging
+            # writes to the OS temp dir.
+            - name: tmp
+              mountPath: /tmp
             {{- with .Values.extraVolumeMounts }}
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: data
           {{- if and .Values.persistence.enabled .Values.persistence.existingClaim }}
           persistentVolumeClaim:
@@ -137,7 +154,7 @@ spec:
           emptyDir: {}
           {{- end }}
         {{- with .Values.extraVolumes }}
-        {{ toYaml . | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -155,7 +172,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.podAntiAffinity.preferredDuringScheduling }}
+      {{- if .Values.topologySpread.enabled }}
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname

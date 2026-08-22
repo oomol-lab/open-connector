@@ -10,14 +10,14 @@
     },
     "image": {
       "type": "object",
-      "required": ["repository", "tag"],
+      "required": ["repository"],
       "properties": {
         "repository": { "type": "string", "minLength": 1 },
-        "tag": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
         "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
       }
     },
-    "imageDigest": { "type": "string" },
+    "imageDigest": { "type": "string", "pattern": "^(sha256:[0-9a-f]{64})?$" },
     "imagePullSecrets": {
       "type": "array",
       "items": {
@@ -39,10 +39,10 @@
     },
     "podSecurityContext": { "type": "object" },
     "securityContext": { "type": "object" },
-    "podAntiAffinity": {
+    "topologySpread": {
       "type": "object",
       "properties": {
-        "preferredDuringScheduling": { "type": "boolean" }
+        "enabled": { "type": "boolean" }
       }
     },
     "service": {
@@ -85,7 +85,6 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["hosts"],
             "properties": {
               "secretName": { "type": "string" },
               "hosts": { "type": "array", "items": { "type": "string" } }
@@ -98,18 +97,9 @@
     "probes": {
       "type": "object",
       "properties": {
-        "liveness": {
-          "type": "object",
-          "properties": { "enabled": { "type": "boolean" }, "path": { "type": "string" } }
-        },
-        "readiness": {
-          "type": "object",
-          "properties": { "enabled": { "type": "boolean" }, "path": { "type": "string" } }
-        },
-        "startup": {
-          "type": "object",
-          "properties": { "enabled": { "type": "boolean" }, "path": { "type": "string" } }
-        }
+        "liveness": { "$ref": "#/$defs/probe" },
+        "readiness": { "$ref": "#/$defs/probe" },
+        "startup": { "$ref": "#/$defs/probe" }
       }
     },
     "persistence": {
@@ -219,30 +209,34 @@
         "additionalIngressNamespaceSelector": { "type": "object" }
       }
     },
-    "metrics": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean" },
-        "serviceMonitor": {
-          "type": "object",
-          "properties": {
-            "interval": { "type": "string" },
-            "scrapeTimeout": { "type": "string" },
-            "annotations": { "type": "object" },
-            "labels": { "type": "object" }
-          }
-        }
-      }
-    },
     "nodeSelector": { "type": "object" },
     "tolerations": { "type": "array" },
     "affinity": { "type": "object" },
     "podAnnotations": { "type": "object" },
     "podLabels": { "type": "object" },
-    "updateStrategy": { "type": "object" },
+    "updateStrategy": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["RollingUpdate", "Recreate"] },
+        "rollingUpdate": { "type": "object" }
+      }
+    },
     "extraEnv": { "type": "array" },
     "extraVolumes": { "type": "array" },
     "extraVolumeMounts": { "type": "array" },
     "terminationGracePeriodSeconds": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "probe": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "path": { "type": "string" },
+        "initialDelaySeconds": { "type": "integer", "minimum": 0 },
+        "periodSeconds": { "type": "integer", "minimum": 1 },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "failureThreshold": { "type": "integer", "minimum": 1 }
+      }
+    }
   }
 }

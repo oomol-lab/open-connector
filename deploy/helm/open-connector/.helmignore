@@ -30,8 +30,10 @@
 OWNERS
 # Tests directory is for helm-unittest; keep it out of release artifacts
 tests/
-# Excluding everything-as-markdown prevents the chart README from being
-# packaged, but that's OK: the chart README is rendered by `helm install`
-# and shipping it separately keeps the package lean.
+# Excluding *.md keeps README.md out of the package, so `helm show readme`
+# and Artifact Hub have no readme for the published chart. Deliberate
+# trade-off until the Helm 4 negation bug above is fixed: post-install
+# guidance ships via templates/NOTES.txt, and the full README lives in the
+# repository.
 *.md
 README.md

@@ -43,9 +43,6 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: open-connector
-{{- with .Values.podLabels }}
-{{ toYaml . }}
-{{- end }}
 {{- end -}}
 
 {{/*
@@ -117,7 +114,7 @@ Map a snake-case secret key name to its OOMOL_CONNECT_* env-var name.
 {{- else if eq . "s3AccessKeyId" -}}OOMOL_CONNECT_S3_ACCESS_KEY_ID
 {{- else if eq . "s3SecretAccessKey" -}}OOMOL_CONNECT_S3_SECRET_ACCESS_KEY
 {{- else if eq . "s3SessionToken" -}}OOMOL_CONNECT_S3_SESSION_TOKEN
-{{- else -}}OOMOL_CONNECT_{{ . | upper }}
+{{- else -}}OOMOL_CONNECT_{{ . | snakecase | upper }}
 {{- end -}}
 {{- end -}}
 
@@ -143,6 +140,6 @@ Map a config key name to its OOMOL_CONNECT_* env-var name.
 {{- else if eq . "runLimit" -}}OOMOL_CONNECT_RUN_LIMIT
 {{- else if eq . "dataDir" -}}OOMOL_CONNECT_DATA_DIR
 {{- else if eq . "origin" -}}OOMOL_CONNECT_ORIGIN
-{{- else -}}OOMOL_CONNECT_{{ . | upper }}
+{{- else -}}OOMOL_CONNECT_{{ . | snakecase | upper }}
 {{- end -}}
 {{- end -}}

@@ -1,4 +1,7 @@
 {{- if .Values.autoscaling.enabled -}}
+{{- if not (or .Values.autoscaling.targetCPUUtilizationPercentage .Values.autoscaling.targetMemoryUtilizationPercentage) }}
+{{- fail "open-connector: autoscaling.enabled=true requires targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage (an HPA without metrics silently applies the cluster default)." }}
+{{- end }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

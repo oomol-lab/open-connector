@@ -1,10 +1,14 @@
 {{- if and .Values.database.enabled .Values.database.migration.enabled -}}
+{{- /* Truncate the base name so the appended suffix stays inside the
+     63-character name limit. */ -}}
+{{- $jobName := printf "%s-migrate" (include "open-connector.fullname" . | trunc 55 | trimSuffix "-") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "open-connector.fullname" . }}-migrate
+  name: {{ $jobName }}
   labels:
     {{- include "open-connector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -13,9 +17,14 @@ spec:
   backoffLimit: {{ .Values.database.migration.backoffLimit }}
   template:
     metadata:
-      name: {{ include "open-connector.fullname" . }}-migrate
+      name: {{ $jobName }}
       labels:
-        {{- include "open-connector.selectorLabels" . | nindent 8 }}
+        {{- /* Deliberately NOT the Deployment's selector labels: the hook
+             pod must not be picked up by the Service, PDB, or
+             NetworkPolicy selectors. */}}
+        app.kubernetes.io/name: {{ include "open-connector.name" . }}-migrate
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: migrate
     spec:
       restartPolicy: OnFailure
       securityContext:
@@ -27,37 +36,50 @@ spec:
           image: {{ include "open-connector.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/usr/local/bin/open-connector", "migrate"]
-          envFrom:
-            - configMapRef:
-                name: {{ include "open-connector.fullname" . }}
+          {{- /* The migrate entrypoint only reads the database settings.
+               It must not consume the release ConfigMap or Secret: as a
+               pre-install hook it runs before regular resources exist, and
+               on upgrades it would read the previous revision's values.
+               The URL comes from the external Secret or from the
+               hook-scoped copy in migration-secret.yaml. */}}
           env:
-            {{- if .Values.secret.existingSecret }}
-            {{- range $key := .Values.secret.secretKeys }}
-            - name: {{ include "open-connector.secretEnvName" $key }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.secret.existingSecret }}
-                  key: {{ $key }}
-                  optional: true
-            {{- end }}
-            {{- else }}
-            {{- range $key := .Values.secret.secretKeys }}
-            - name: {{ include "open-connector.secretEnvName" $key }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "open-connector.secretName" $ }}
-                  key: {{ $key }}
-                  optional: true
-            {{- end }}
-            {{- end }}
-            {{- if and .Values.database.enabled .Values.database.existingUrlSecret }}
             - name: OOMOL_CONNECT_DATABASE_URL
               valueFrom:
                 secretKeyRef:
+                  {{- if .Values.database.existingUrlSecret }}
                   name: {{ .Values.database.existingUrlSecret }}
                   key: {{ .Values.database.existingUrlSecretKey | default "url" }}
+                  {{- else }}
+                  name: {{ $jobName }}
+                  key: databaseUrl
+                  {{- end }}
                   optional: false
-            {{- end }}
+            - name: OOMOL_CONNECT_DATABASE_POOL_MAX
+              value: {{ .Values.database.poolMax | quote }}
+            - name: OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS
+              value: {{ .Values.database.connectTimeoutMs | quote }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- end }}

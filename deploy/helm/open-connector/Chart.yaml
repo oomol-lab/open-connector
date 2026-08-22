@@ -8,8 +8,9 @@ description: |
   mirror Docker Compose, plus switches for production hardening.
 type: application
 version: 0.1.0
-appVersion: "1.4.0"
-icon: https://raw.githubusercontent.com/oomol-lab/open-connector/main/assets/open-connector-icon.png
+# Matches the upstream image tag (releases are tagged with a leading "v").
+appVersion: "v1.4.0"
+icon: https://raw.githubusercontent.com/oomol-lab/open-connector/main/web/src/assets/oomol-connect-logo.png
 home: https://github.com/oomol-lab/open-connector
 sources:
   - https://github.com/oomol-lab/open-connector

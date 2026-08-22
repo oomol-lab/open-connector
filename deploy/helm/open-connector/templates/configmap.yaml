@@ -17,6 +17,29 @@
 {{- fail "open-connector: when secret.existingSecret is set, secret.secretKeys must include 'adminToken'. Without it the admin surface is unauthenticated." }}
 {{- end }}
 {{- end }}
+{{- if .Values.database.enabled }}
+{{- if and .Values.database.url .Values.database.existingUrlSecret }}
+{{- fail "open-connector: set either database.url or database.existingUrlSecret, not both." }}
+{{- end }}
+{{- if not (or .Values.database.url .Values.database.existingUrlSecret) }}
+{{- fail "open-connector: database.enabled=true requires database.url or database.existingUrlSecret. Without a URL the runtime silently falls back to SQLite." }}
+{{- end }}
+{{- end }}
+{{- /*
+  The data volume is shared by every replica. A single SQLite file must
+  never be opened by more than one pod, and a ReadWriteOnce PVC cannot be
+  mounted across nodes, so multi-replica setups must move their state out
+  of the volume entirely.
+*/ -}}
+{{- $maxReplicas := int (ternary .Values.autoscaling.maxReplicas .Values.replicaCount .Values.autoscaling.enabled) }}
+{{- if and .Values.persistence.enabled (gt $maxReplicas 1) }}
+{{- if not .Values.database.enabled }}
+{{- fail "open-connector: more than one replica (replicaCount or autoscaling.maxReplicas) requires PostgreSQL (database.enabled=true) - the default SQLite database cannot be shared between pods." }}
+{{- end }}
+{{- if not (has "ReadWriteMany" .Values.persistence.accessModes) }}
+{{- fail "open-connector: more than one replica with persistence.enabled=true requires a ReadWriteMany PVC. Either set persistence.enabled=false (with database.enabled=true and config.transitFileBackend=s3) or use an RWX storage class in persistence.accessModes." }}
+{{- end }}
+{{- end }}
 
 apiVersion: v1
 kind: ConfigMap
@@ -25,18 +48,23 @@ metadata:
   labels:
     {{- include "open-connector.labels" . | nindent 4 }}
 data:
-{{- range $key, $value := .Values.config }}
+{{- /* Merge the dataDir default in before rendering so the env loop stays uniform. */}}
+{{- $config := merge (dict) .Values.config }}
+{{- if not $config.dataDir }}
+{{- $_ := set $config "dataDir" .Values.persistence.mountPath }}
+{{- end }}
+{{- range $key, $value := $config }}
   {{- $envName := include "open-connector.configEnvName" $key }}
+  {{- /* Skip empty strings: an empty env var would override the runtime's
+         built-in default (e.g. OOMOL_CONNECT_ORIGIN="" breaks OAuth
+         redirect URLs), while booleans and numbers always render. */}}
   {{- if or (eq (printf "%T" $value) "float64") (eq (printf "%T" $value) "int") }}
   {{ $envName }}: {{ $value | int | quote }}
-  {{- else }}
+  {{- else if or $value (eq (printf "%T" $value) "bool") }}
   {{ $envName }}: {{ $value | quote }}
   {{- end }}
 {{- end }}
 {{- if .Values.database.enabled }}
-  {{- if not .Values.database.existingUrlSecret }}
-  OOMOL_CONNECT_DATABASE_URL: {{ .Values.database.url | quote }}
-  {{- end }}
   OOMOL_CONNECT_DATABASE_POOL_MAX: {{ .Values.database.poolMax | quote }}
   OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS: {{ .Values.database.connectTimeoutMs | quote }}
 {{- end }}
