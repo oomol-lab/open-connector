@@ -74,12 +74,6 @@ jobs:
       - name: Helm lint
         run: helm lint "${{ env.CHART_PATH }}"
 
-      - name: Helm package
-        run: |
-          helm package "${{ env.CHART_PATH }}" \
-            --destination .charts \
-            --version "${{ steps.meta.outputs.version }}"
-
       - name: Validate release tag matches chart version
         if: github.event_name == 'release'
         env:
@@ -113,6 +107,17 @@ jobs:
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
+      # Package after the package version is known, so the .tgz filename
+      # matches what `Push chart OCI artifact` reads below. Previously the
+      # package step ran before the version was computed, and the .tgz for
+      # main-branch pushes had the wrong name (e.g. open-connector-0.1.0.tgz
+      # vs. the expected open-connector-0.1.0-tip.<sha>.tgz).
+      - name: Helm package
+        run: |
+          helm package "${{ env.CHART_PATH }}" \
+            --destination .charts \
+            --version "${{ steps.version.outputs.version }}"
+
       - name: Log in to ghcr.io
         uses: docker/login-action@v4
         with:
@@ -130,7 +135,7 @@ jobs:
           helm push "${tgz}" "${{ env.OCI_REPO }}"
 
       - name: Tag release as 'latest'
-        if: github.event_name == 'release' && github.event.release.prerelease == 'false'
+        if: github.event_name == 'release' && github.event.release.prerelease == false
         env:
           REGISTRY: ghcr.io/${{ github.repository_owner }}/charts
           CHART_NAME: ${{ steps.meta.outputs.name }}
@@ -149,7 +154,7 @@ jobs:
             "${REGISTRY}/${CHART_NAME}:latest"
 
       - name: Promote release to public (best-effort)
-        if: github.event_name == 'release' && github.event.release.prerelease == 'false'
+        if: github.event_name == 'release' && github.event.release.prerelease == false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
