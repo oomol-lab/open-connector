@@ -3,12 +3,15 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
-import { arrayPayload, definedBody, objectPayload, requestJson } from "../http-json-runtime.ts";
+import { arrayPayload, definedBody, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "xero";
 const apiBaseUrl = "https://api.xero.com/api.xro/2.0";
 const identityBaseUrl = "https://api.xero.com";
+const xeroUserinfoBaseUrl = "https://identity.xero.com";
+const xeroUserinfoPath = "/connect/userinfo";
+const xeroUserinfoUrl = `${xeroUserinfoBaseUrl}${xeroUserinfoPath}`;
 const apiPackage = "OpenConnector";
 
 type XeroHandler = ProviderRuntimeHandler<OAuthProviderContext>;
@@ -203,23 +206,30 @@ export const xeroActionHandlers: ProviderActionHandlers<"xero", XeroHandler> = {
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, xeroActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
-  async oauth2(input, { fetcher }) {
-    const payload = await requestJson({
-      providerName: service,
-      baseUrl: identityBaseUrl,
-      path: "/connections",
-      fetcher,
-      headers: bearerHeaders(input.accessToken),
-    });
-    const tenants = arrayPayload(payload, "connections");
-    const first = tenants.length > 0 ? optionalRecordValue(tenants[0]) : undefined;
-    if (!first) {
-      return;
+  async oauth2(input, { fetcher, signal }) {
+    const payload = objectPayload(
+      await requestJson({
+        providerName: service,
+        baseUrl: xeroUserinfoBaseUrl,
+        path: xeroUserinfoPath,
+        fetcher,
+        signal,
+        headers: bearerHeaders(input.accessToken),
+        phase: "validate",
+      }),
+      "Xero userinfo",
+    );
+    const accountId = optionalString(payload.sub) ?? optionalString(payload.xero_userid);
+    if (!accountId) {
+      throw new ProviderRequestError(502, "Xero userinfo response is missing sub");
     }
     return {
       profile: {
-        accountId: optionalString(first.tenantId),
-        displayName: optionalString(first.tenantName),
+        accountId,
+        displayName: firstString(payload, ["name", "preferred_username", "email"]) ?? accountId,
+      },
+      metadata: {
+        validationEndpoint: xeroUserinfoUrl,
       },
     };
   },

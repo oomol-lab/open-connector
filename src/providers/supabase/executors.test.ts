@@ -3,8 +3,10 @@ import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { executeAction } from "../../core/execution.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { provider } from "./definition.ts";
-import { executors } from "./executors.ts";
+import { credentialValidators, executors } from "./executors.ts";
+import { supabaseProviderScopes } from "./scopes.ts";
 
 interface CapturedRequest {
   url: URL;
@@ -28,6 +30,77 @@ beforeEach(() => {
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(undefined);
   vi.unstubAllGlobals();
+});
+
+describe("Supabase credential validation", () => {
+  it("validates OAuth through /v1/profile and uses gotrue_id as the account identity", async () => {
+    const calls: string[] = [];
+    const result = await credentialValidators.oauth2!(oauthCredential, {
+      fetcher: async (input) => {
+        calls.push(String(input));
+        return Response.json({
+          gotrue_id: "11111111-2222-3333-4444-555555555555",
+          primary_email: "ada@example.com",
+          username: "ada",
+        });
+      },
+    });
+
+    expect(calls).toEqual(["https://api.supabase.com/v1/profile"]);
+    expect(result).toEqual({
+      profile: {
+        accountId: "11111111-2222-3333-4444-555555555555",
+        displayName: "ada",
+        grantedScopes: supabaseProviderScopes,
+      },
+      metadata: {
+        validationEndpoint: "/profile",
+        gotrueId: "11111111-2222-3333-4444-555555555555",
+        username: "ada",
+        primaryEmail: "ada@example.com",
+      },
+    });
+  });
+
+  it("rejects an OAuth profile response that is missing gotrue_id", async () => {
+    await expect(
+      credentialValidators.oauth2!(oauthCredential, {
+        fetcher: async () => Response.json({ primary_email: "ada@example.com", username: "ada" }),
+      }),
+    ).rejects.toEqual(new ProviderRequestError(502, "malformed supabase response: profile.gotrue_id is required."));
+  });
+
+  it("rejects unauthorized OAuth profile responses", async () => {
+    await expect(
+      credentialValidators.oauth2!(oauthCredential, {
+        fetcher: async () => Response.json({ message: "invalid token" }, { status: 401 }),
+      }),
+    ).rejects.toMatchObject({ status: 400, message: "invalid token" });
+  });
+
+  it("keeps API-key validation on organizations even when the list is empty", async () => {
+    const calls: string[] = [];
+    const result = await credentialValidators.apiKey!(
+      { apiKey: "sbp_test", values: {} },
+      {
+        fetcher: async (input) => {
+          calls.push(String(input));
+          return Response.json([]);
+        },
+      },
+    );
+
+    expect(calls).toEqual(["https://api.supabase.com/v1/organizations"]);
+    expect(result).toMatchObject({
+      profile: { displayName: "Supabase OAuth" },
+      metadata: {
+        validationEndpoint: "/organizations",
+        organizationCount: 0,
+        organizations: [],
+        identitySource: "access_token_fingerprint",
+      },
+    });
+  });
 });
 
 describe("Supabase download_storage_object", () => {
