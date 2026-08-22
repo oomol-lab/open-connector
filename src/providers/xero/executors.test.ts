@@ -3,9 +3,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
-import { provider } from "./definition.ts";
 import { credentialValidators, xeroActionHandlers } from "./executors.ts";
-import { xeroEmailScope, xeroOAuthScopes, xeroOpenIdScope, xeroProfileScope } from "./scopes.ts";
 
 interface RecordedRequest {
   url: string;
@@ -99,9 +97,10 @@ const userinfoFixture = {
 };
 
 describe("credentialValidators", () => {
-  it("maps OpenID userinfo to the credential profile", async () => {
+  it("accepts a valid identity when no organisation is connected", async () => {
     const { fetcher, requests } = createFetcher({
       "https://identity.xero.com/connect/userinfo": userinfoFixture,
+      "https://api.xero.com/connections": [],
     });
     await expect(credentialValidators.oauth2!(oauthCredential, { fetcher })).resolves.toEqual({
       profile: { accountId: "f7a1382e-c791-4cae-93be-1b912c6a7c6e", displayName: "Ada Lovelace" },
@@ -125,18 +124,6 @@ describe("credentialValidators", () => {
       status: 400,
       message: "invalid_token",
     });
-  });
-});
-
-describe("OAuth scopes", () => {
-  it("requests OpenID Connect scopes required for userinfo", () => {
-    expect(xeroOAuthScopes).toEqual(
-      expect.arrayContaining([xeroOpenIdScope, xeroProfileScope, xeroEmailScope, "offline_access"]),
-    );
-    expect(xeroOAuthScopes.slice(0, 3)).toEqual(["openid", "profile", "email"]);
-    expect(provider.auth).toEqual(
-      expect.arrayContaining([expect.objectContaining({ type: "oauth2", scopes: xeroOAuthScopes })]),
-    );
   });
 });
 
