@@ -31,7 +31,7 @@ Create a `values-prod.yaml`:
 ```yaml
 replicaCount: 3
 image:
-  tag: 1.4.0          # pin a release
+  tag: 1.4.0 # pin a release
 ingress:
   enabled: true
   className: nginx
@@ -102,26 +102,26 @@ helm upgrade --install open-connector ./deploy/helm/open-connector \
 
 ## Configuration
 
-| Value | Description | Default |
-|---|---|---|
-| `replicaCount` | Number of Deployment replicas | `1` |
-| `image.repository` | OCI image | `ghcr.io/oomol-lab/open-connector` |
-| `image.tag` | Image tag | `latest` |
-| `imageDigest` | Pin by digest (overrides `tag`) | `""` |
-| `service.type` | `ClusterIP` / `NodePort` / `LoadBalancer` | `ClusterIP` |
-| `service.port` | Service port | `3000` |
-| `ingress.enabled` | Create an Ingress | `false` |
-| `persistence.enabled` | Create a PVC for `/app/data` | `true` |
-| `persistence.size` | PVC size | `5Gi` |
-| `database.enabled` | Use PostgreSQL instead of SQLite | `false` |
-| `database.migration.enabled` | Run a `migrate` Job as a Helm hook | `true` |
-| `autoscaling.enabled` | HPA | `false` |
-| `networkPolicy.enabled` | Restrict ingress to in-namespace Pods | `false` |
-| `metrics.enabled` | Prometheus ServiceMonitor | `false` |
-| `podDisruptionBudget.enabled` | PDB | `false` |
-| `secret.existingSecret` | Use a pre-existing Secret | `""` |
-| `secret.encryptionKey` | 32-byte random key (sensitive) | `""` |
-| `secret.adminToken` | Bearer token for /api, /docs, / (sensitive) | `""` |
+| Value                         | Description                                 | Default                            |
+| ----------------------------- | ------------------------------------------- | ---------------------------------- |
+| `replicaCount`                | Number of Deployment replicas               | `1`                                |
+| `image.repository`            | OCI image                                   | `ghcr.io/oomol-lab/open-connector` |
+| `image.tag`                   | Image tag                                   | `latest`                           |
+| `imageDigest`                 | Pin by digest (overrides `tag`)             | `""`                               |
+| `service.type`                | `ClusterIP` / `NodePort` / `LoadBalancer`   | `ClusterIP`                        |
+| `service.port`                | Service port                                | `3000`                             |
+| `ingress.enabled`             | Create an Ingress                           | `false`                            |
+| `persistence.enabled`         | Create a PVC for `/app/data`                | `true`                             |
+| `persistence.size`            | PVC size                                    | `5Gi`                              |
+| `database.enabled`            | Use PostgreSQL instead of SQLite            | `false`                            |
+| `database.migration.enabled`  | Run a `migrate` Job as a Helm hook          | `true`                             |
+| `autoscaling.enabled`         | HPA                                         | `false`                            |
+| `networkPolicy.enabled`       | Restrict ingress to in-namespace Pods       | `false`                            |
+| `metrics.enabled`             | Prometheus ServiceMonitor                   | `false`                            |
+| `podDisruptionBudget.enabled` | PDB                                         | `false`                            |
+| `secret.existingSecret`       | Use a pre-existing Secret                   | `""`                               |
+| `secret.encryptionKey`        | 32-byte random key (sensitive)              | `""`                               |
+| `secret.adminToken`           | Bearer token for /api, /docs, / (sensitive) | `""`                               |
 
 For every key under `config.*` and `secret.*`, see `docs/configuration.md` in the OpenConnector repo.
 
@@ -168,24 +168,24 @@ Before going to production, **set `secret.encryptionKey` and `secret.adminToken`
 
 ## Architecture map
 
-| File | Purpose |
-|---|---|
-| `Chart.yaml` | Chart metadata, version, appVersion, sources |
-| `values.yaml` | All tunables, heavily commented |
-| `values.schema.json` | JSON-schema validation on `helm install` |
-| `templates/deployment.yaml` | Main runtime workload |
-| `templates/service.yaml` | ClusterIP service on port 3000 |
-| `templates/ingress.yaml` | Optional Ingress |
-| `templates/serviceaccount.yaml` | Hardened ServiceAccount |
-| `templates/configmap.yaml` | Non-secret OOMOL_CONNECT_* env |
-| `templates/secret.yaml` | Auto-generated Secret (skipped if `existingSecret` is set) |
-| `templates/pvc.yaml` | Persistent volume for SQLite/transit files |
-| `templates/hpa.yaml` | Optional HPA |
-| `templates/poddisruptionbudget.yaml` | Optional PDB |
-| `templates/networkpolicy.yaml` | Optional NetworkPolicy |
-| `templates/servicemonitor.yaml` | Optional Prometheus ServiceMonitor |
-| `templates/migration-job.yaml` | Helm-hook Job for `runtime:migrate` |
-| `templates/NOTES.txt` | Post-install instructions |
+| File                                 | Purpose                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `Chart.yaml`                         | Chart metadata, version, appVersion, sources               |
+| `values.yaml`                        | All tunables, heavily commented                            |
+| `values.schema.json`                 | JSON-schema validation on `helm install`                   |
+| `templates/deployment.yaml`          | Main runtime workload                                      |
+| `templates/service.yaml`             | ClusterIP service on port 3000                             |
+| `templates/ingress.yaml`             | Optional Ingress                                           |
+| `templates/serviceaccount.yaml`      | Hardened ServiceAccount                                    |
+| `templates/configmap.yaml`           | Non-secret OOMOL*CONNECT*\* env                            |
+| `templates/secret.yaml`              | Auto-generated Secret (skipped if `existingSecret` is set) |
+| `templates/pvc.yaml`                 | Persistent volume for SQLite/transit files                 |
+| `templates/hpa.yaml`                 | Optional HPA                                               |
+| `templates/poddisruptionbudget.yaml` | Optional PDB                                               |
+| `templates/networkpolicy.yaml`       | Optional NetworkPolicy                                     |
+| `templates/servicemonitor.yaml`      | Optional Prometheus ServiceMonitor                         |
+| `templates/migration-job.yaml`       | Helm-hook Job for `runtime:migrate`                        |
+| `templates/NOTES.txt`                | Post-install instructions                                  |
 
 ## License
 
