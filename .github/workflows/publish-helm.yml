@@ -72,6 +72,7 @@ jobs:
           echo "Chart: ${name} v${version}"
 
       - name: Helm lint
+        id: lint
         run: helm lint "${{ env.CHART_PATH }}"
 
       - name: Validate release tag matches chart version
@@ -113,12 +114,14 @@ jobs:
       # main-branch pushes had the wrong name (e.g. open-connector-0.1.0.tgz
       # vs. the expected open-connector-0.1.0-tip.<sha>.tgz).
       - name: Helm package
+        id: pkg
         run: |
           helm package "${{ env.CHART_PATH }}" \
             --destination .charts \
             --version "${{ steps.version.outputs.version }}"
 
       - name: Log in to ghcr.io
+        id: login
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -126,6 +129,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push chart OCI artifact
+        id: push-chart
         run: |
           # The version embedded in the .tgz filename is what helm push
           # uses as the OCI tag. We deliberately do NOT pass --version:
@@ -147,6 +151,10 @@ jobs:
           # it. This is a separate tag flow from the main helm push above.
           curl -sSfLo /tmp/oras.tgz \
             "https://github.com/oras-project/oras/releases/download/v1.2.2/oras_1.2.2_linux_amd64.tar.gz"
+          # Pin the download to its published SHA-256 so a tampered or
+          # repackaged upstream release fails the workflow before we
+          # extract the binary.
+          echo "bff970346470e5ef888e9f2c0bf7f8ee47283f5a45207d6e7a037da1fb0eae0d  /tmp/oras.tgz" | sha256sum -c -
           tar -xz -C /usr/local/bin -f /tmp/oras.tgz oras
 
           oras copy \
@@ -178,18 +186,38 @@ jobs:
 
       - name: Workflow summary
         if: always()
+        env:
+          PUSH_RESULT: ${{ steps.push-chart.conclusion }}
+          LINT_RESULT: ${{ steps.lint.conclusion }}
+          PACKAGE_RESULT: ${{ steps.pkg.conclusion }}
+          LOGIN_RESULT: ${{ steps.login.conclusion }}
         run: |
           {
-            echo "## Helm chart published"
-            echo
-            echo "- **Chart**: \`${{ steps.meta.outputs.name }}\`"
-            echo "- **Version**: \`${{ steps.version.outputs.version }}\`"
-            echo "- **Registry**: \`${{ env.OCI_REPO }}\`"
-            echo
-            echo "Install with:"
-            echo '```'
-            echo "helm install open-connector \\"
-            echo "  oci://ghcr.io/${{ github.repository_owner }}/charts/open-connector \\"
-            echo "  --version ${{ steps.version.outputs.version }}"
-            echo '```'
+            if [[ "${PUSH_RESULT}" == "success" ]]; then
+              echo "## Helm chart published"
+              echo
+              echo "- **Chart**: \`${{ steps.meta.outputs.name }}\`"
+              echo "- **Version**: \`${{ steps.version.outputs.version }}\`"
+              echo "- **Registry**: \`${{ env.OCI_REPO }}\`"
+              echo
+              echo "Install with:"
+              echo '```'
+              echo "helm install open-connector \\"
+              echo "  oci://ghcr.io/${{ github.repository_owner }}/charts/open-connector \\"
+              echo "  --version ${{ steps.version.outputs.version }}"
+              echo '```'
+            else
+              echo "## Helm chart publish failed"
+              echo
+              echo "The chart was **not** published. Do not install from this run."
+              echo
+              echo "| Step | Result |"
+              echo "| --- | --- |"
+              echo "| Lint | \`${LINT_RESULT:-skipped}\` |"
+              echo "| Package | \`${PACKAGE_RESULT:-skipped}\` |"
+              echo "| Registry login | \`${LOGIN_RESULT:-skipped}\` |"
+              echo "| Push chart OCI artifact | \`${PUSH_RESULT:-skipped}\` |"
+              echo
+              echo "Inspect the failing step's logs above for the cause."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
