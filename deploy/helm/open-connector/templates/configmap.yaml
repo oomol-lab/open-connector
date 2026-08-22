@@ -3,9 +3,19 @@
   authenticated. Set `secret.adminToken` or `secret.existingSecret`,
   or explicitly opt in to local experimentation with
   `insecureDevelopment: true`.
+
+  When an external Secret is referenced, require `adminToken` to be
+  listed in `secret.secretKeys`. Without that key, the Deployment
+  renders `OOMOL_CONNECT_ADMIN_TOKEN` with `optional: true`, the
+  lookup silently misses, and the admin surface starts unauthenticated.
 */ -}}
 {{- if not (or .Values.secret.adminToken .Values.secret.existingSecret .Values.insecureDevelopment) }}
 {{- fail "open-connector: secret.adminToken or secret.existingSecret must be set. For local experimentation only, pass --set insecureDevelopment=true. Do NOT enable insecureDevelopment in any environment reachable outside the loopback." }}
+{{- end }}
+{{- if .Values.secret.existingSecret }}
+{{- if not (has "adminToken" .Values.secret.secretKeys) }}
+{{- fail "open-connector: when secret.existingSecret is set, secret.secretKeys must include 'adminToken'. Without it the admin surface is unauthenticated." }}
+{{- end }}
 {{- end }}
 
 apiVersion: v1

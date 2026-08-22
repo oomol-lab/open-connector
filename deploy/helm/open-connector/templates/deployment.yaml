@@ -50,12 +50,21 @@ spec:
           env:
             {{- if .Values.secret.existingSecret }}
             {{- range $key := .Values.secret.secretKeys }}
+            {{- if eq $key "adminToken" }}
+            - name: {{ include "open-connector.secretEnvName" $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secret.existingSecret }}
+                  key: {{ $key }}
+                  optional: false
+            {{- else }}
             - name: {{ include "open-connector.secretEnvName" $key }}
               valueFrom:
                 secretKeyRef:
                   name: {{ $.Values.secret.existingSecret }}
                   key: {{ $key }}
                   optional: true
+            {{- end }}
             {{- end }}
             {{- else }}
             {{- range $key := .Values.secret.secretKeys }}
