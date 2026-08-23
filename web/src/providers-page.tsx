@@ -89,6 +89,35 @@ interface ProviderCardProps {
   status: ProviderConnectionStatus;
 }
 
+interface ProviderScenarioGridProps {
+  counts: Map<ProviderScenario, number>;
+  providers: ProviderDefinition[];
+  onSelect(scenario: ProviderDiscoveryScenario): void;
+}
+
+interface ProviderCatalogProps {
+  counts: Array<{ id: ProviderStatusFilter; labelKey: string; count: number }>;
+  categoryOptions: Array<{ category: string; count: number }>;
+  categoryFilter: string;
+  filtersActive: boolean;
+  hasMoreProviders: boolean;
+  loadMoreProviders(): void;
+  loadMoreProvidersRef: (node: HTMLDivElement | null) => void;
+  providers: ProviderDefinition[];
+  query: string;
+  scenarioFilter?: ProviderDiscoveryScenario | "all";
+  showStatusFilters: boolean;
+  statusByService: Map<string, ProviderConnectionStatus>;
+  providerCount: number;
+  selected: ProviderStatusFilter;
+  totalProviderCount: number;
+  onReset(): void;
+  onCategoryFilterChange(value: string): void;
+  onQueryChange(value: string): void;
+  onScenarioFilterClear?(): void;
+  onStatusFilterChange?(value: ProviderStatusFilter): void;
+}
+
 interface ConnectionFormProps {
   provider: ProviderDefinition;
   auth: AuthDefinition;
@@ -441,11 +470,7 @@ function useIntersectionLoader(enabled: boolean, onLoad: () => void): (node: HTM
   return setNode;
 }
 
-function ProviderScenarioGrid(props: {
-  counts: Map<ProviderScenario, number>;
-  providers: ProviderDefinition[];
-  onSelect(scenario: ProviderDiscoveryScenario): void;
-}): ReactNode {
+function ProviderScenarioGrid(props: ProviderScenarioGridProps): ReactNode {
   const t = useTranslate();
 
   return (
@@ -495,28 +520,7 @@ function ProviderScenarioGrid(props: {
   );
 }
 
-function ProviderCatalog(props: {
-  counts: Array<{ id: ProviderStatusFilter; labelKey: string; count: number }>;
-  categoryOptions: Array<{ category: string; count: number }>;
-  categoryFilter: string;
-  filtersActive: boolean;
-  hasMoreProviders: boolean;
-  loadMoreProviders(): void;
-  loadMoreProvidersRef: (node: HTMLDivElement | null) => void;
-  providers: ProviderDefinition[];
-  query: string;
-  scenarioFilter?: ProviderDiscoveryScenario | "all";
-  showStatusFilters: boolean;
-  statusByService: Map<string, ProviderConnectionStatus>;
-  providerCount: number;
-  selected: ProviderStatusFilter;
-  totalProviderCount: number;
-  onReset(): void;
-  onCategoryFilterChange(value: string): void;
-  onQueryChange(value: string): void;
-  onScenarioFilterClear?(): void;
-  onStatusFilterChange?(value: ProviderStatusFilter): void;
-}): ReactNode {
+function ProviderCatalog(props: ProviderCatalogProps): ReactNode {
   const t = useTranslate();
 
   return (
