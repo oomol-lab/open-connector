@@ -32,12 +32,11 @@ const service = "alpaca";
 const paperTradingBaseUrl = "https://paper-api.alpaca.markets";
 const liveTradingBaseUrl = "https://api.alpaca.markets";
 const dataBaseUrl = "https://data.alpaca.markets";
-const alpacaFetch = createProviderFetch({ skipDnsValidation: true });
+const alpacaFetch = createProviderFetch();
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: alpacaActionHandlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     return resolveAlpacaActionContext(context, fetcher);
   },

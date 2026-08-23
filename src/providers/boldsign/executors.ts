@@ -29,7 +29,6 @@ export const executors: ProviderExecutors = defineProviderExecutors<BoldSignActi
       signal: context.signal,
     };
   },
-  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -51,5 +50,4 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     "https://api-ca.boldsign.com",
     "https://api-au.boldsign.com",
   ],
-  skipDnsValidation: true,
 });

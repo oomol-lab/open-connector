@@ -2,8 +2,9 @@ import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeAction } from "../../core/execution.ts";
+import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { provider } from "./definition.ts";
-import { executors } from "./executors.ts";
+import { executors, proxy } from "./executors.ts";
 
 interface CapturedRequest {
   url: URL;
@@ -20,7 +21,42 @@ const oauthCredential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
 };
 
 afterEach(() => {
+  setDefaultGuardedFetchDnsLookup(null);
   vi.unstubAllGlobals();
+});
+
+const dnsContext: ExecutionContext = {
+  getCredential: async () => oauthCredential,
+};
+
+describe("Dropbox host DNS validation", () => {
+  it("rejects an action host that resolves to cloud metadata before any fetch", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "169.254.169.254", family: 4 }]);
+
+    const result = await executors["dropbox.get_current_account"]!({}, dnsContext);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: expect.stringContaining("must not resolve to private or reserved IP addresses") },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a proxy base URL that resolves to cloud metadata before any fetch", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "169.254.169.254", family: 4 }]);
+
+    const result = await proxy({ endpoint: "/files/download", method: "POST" }, dnsContext);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: expect.stringContaining("must not resolve to private or reserved IP addresses") },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });
 
 describe("Dropbox transit downloads", () => {

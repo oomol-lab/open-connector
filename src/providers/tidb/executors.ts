@@ -16,12 +16,11 @@ import { requestTiDBProxy, resolveTiDBProxyTarget, tidbActionHandlers, validateT
 
 const service = "tidb";
 
-const tidbFetch = createProviderFetch({ skipDnsValidation: true });
+const tidbFetch = createProviderFetch();
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
   handlers: tidbActionHandlers,
-  skipDnsValidation: true,
   async createContext(context, fetcher) {
     const credential = await requireCustomCredential(context, service);
     return {

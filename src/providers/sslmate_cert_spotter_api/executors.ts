@@ -23,11 +23,9 @@ import {
 const service = "sslmate_cert_spotter_api";
 const ctSearchProxyPrefix = "/ct-search";
 
-const certSpotterFetch = createProviderFetch({ skipDnsValidation: true });
+const certSpotterFetch = createProviderFetch();
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, certSpotterActionHandlers, {
-  skipDnsValidation: true,
-});
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, certSpotterActionHandlers);
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {

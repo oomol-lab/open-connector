@@ -8,7 +8,6 @@ type PayPalContext = Awaited<ReturnType<typeof createPayPalActionContext>>;
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "paypal",
   handlers: paypalActionHandlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<PayPalContext> {
     const credential = await requireCustomCredential(context, "paypal");
     return createPayPalActionContext(credential.values, fetcher);

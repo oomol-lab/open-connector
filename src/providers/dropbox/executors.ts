@@ -30,7 +30,7 @@ import {
 
 const dropboxApiBaseUrl = "https://api.dropboxapi.com/2";
 const dropboxContentBaseUrl = "https://content.dropboxapi.com/2";
-const dropboxFetch = createProviderFetch({ skipDnsValidation: true });
+const dropboxFetch = createProviderFetch();
 const dropboxMaxSimpleUploadBytes = 150 * 1024 * 1024;
 const dropboxContentEndpointPrefixes = [
   "/files/download",
@@ -132,9 +132,7 @@ export const dropboxActionHandlers: ProviderActionHandlers<"dropbox", ActionHand
   },
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("dropbox", dropboxActionHandlers, {
-  skipDnsValidation: true,
-});
+export const executors: ProviderExecutors = defineOAuthProviderExecutors("dropbox", dropboxActionHandlers);
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {

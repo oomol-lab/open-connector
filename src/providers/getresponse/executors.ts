@@ -25,7 +25,6 @@ const handlers: Record<string, (input: Record<string, unknown>, context: Getresp
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "getresponse",
   handlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, "getresponse");
     return { apiKey: credential.apiKey, values: credential.values, metadata: credential.metadata, fetcher };

@@ -1,9 +1,11 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
 afterEach(() => {
+  setDefaultGuardedFetchDnsLookup(null);
   vi.unstubAllGlobals();
 });
 
@@ -141,6 +143,48 @@ describe("Alpaca credentials", () => {
     );
   });
 });
+
+describe("Alpaca environment resolver DNS", () => {
+  it("rejects an environment host that resolves to cloud metadata before any fetch", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "169.254.169.254", family: 4 }]);
+    const context: ExecutionContext = { getCredential: async () => apiKeyCredential() };
+
+    const result = await executors["alpaca.get_account"]!({}, context);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: expect.stringContaining("must not resolve to private or reserved IP addresses") },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a proxy request to an environment host that resolves to cloud metadata", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "169.254.169.254", family: 4 }]);
+    const context: ExecutionContext = { getCredential: async () => apiKeyCredential() };
+
+    const result = await proxy!({ endpoint: "/v2/account", method: "GET" }, context);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: expect.stringContaining("must not resolve to private or reserved IP addresses") },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+function apiKeyCredential(): Extract<ResolvedCredential, { authType: "api_key" }> {
+  return {
+    authType: "api_key",
+    apiKey: "alpaca-secret-key",
+    values: { apiKeyId: "alpaca-key-id", environment: "live" },
+    profile: { accountId: "alpaca", displayName: "Alpaca", grantedScopes: [] },
+    metadata: {},
+  };
+}
 
 function oauthCredential(
   metadata: Record<string, unknown> = { scope: "data" },
