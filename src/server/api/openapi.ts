@@ -390,6 +390,7 @@ export function createOpenApiDocument(
             displayName: jsonSchema.string({ description: "Human-readable provider name." }),
             iconUrl: jsonSchema.nullable(jsonSchema.string({ description: "Provider icon URL." })),
             homepageUrl: jsonSchema.nullable(jsonSchema.string({ description: "Provider homepage URL." })),
+            scenario: jsonSchema.string({ description: "Broad task-oriented provider discovery scenario." }),
             categories: jsonSchema.array(
               jsonSchema.object(
                 {
@@ -402,7 +403,7 @@ export function createOpenApiDocument(
             authTypes: jsonSchema.array(jsonSchema.string(), { description: "Supported authentication types." }),
           },
           {
-            required: ["service", "displayName", "iconUrl", "homepageUrl", "categories", "authTypes"],
+            required: ["service", "displayName", "iconUrl", "homepageUrl", "scenario", "categories", "authTypes"],
             description: "Public provider catalog row from GET /v1/providers.",
           },
         ),

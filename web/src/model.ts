@@ -16,6 +16,17 @@ export type AuthDefinition =
       clientSetup?: OAuthClientSetup;
     };
 
+export type ProviderScenario =
+  | "ai"
+  | "cross-border-ecommerce"
+  | "communication"
+  | "docs"
+  | "productivity"
+  | "marketing"
+  | "data-storage"
+  | "developer"
+  | "other";
+
 /** How to register the provider OAuth app, shown while configuring the client. */
 export interface OAuthClientSetup {
   docsUrl?: string;
@@ -69,6 +80,7 @@ export interface ProviderDefinition {
   displayName: string;
   description?: string;
   categories: string[];
+  scenario?: ProviderScenario;
   authTypes: string[];
   auth: AuthDefinition[];
   homepageUrl?: string;

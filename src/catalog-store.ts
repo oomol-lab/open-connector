@@ -1,8 +1,9 @@
-import type { ActionDefinition, AuthType, ProviderDefinition } from "./core/types.ts";
+import type { ActionDefinition, AuthType, ProviderDefinition, ProviderScenario } from "./core/types.ts";
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { sortProviders } from "./core/catalog.ts";
+import { resolveProviderScenario } from "./core/provider-scenarios.ts";
 
 export type ActionExecutionStatus = {
   locallyExecutable: boolean;
@@ -18,6 +19,8 @@ export type RuntimeActionDefinition = ActionDefinition & {
 
 export type RuntimeProviderDefinition = Omit<ProviderDefinition, "actions"> & {
   actions: RuntimeActionDefinition[];
+  /** Stable task-oriented category supplied to local catalog clients. */
+  scenario: ProviderScenario;
   execution: {
     actionCount: number;
     locallyExecutableActionCount: number;
@@ -95,6 +98,7 @@ export function createCatalogStore(
     return {
       ...provider,
       actions,
+      scenario: resolveProviderScenario(provider),
       execution: {
         actionCount: actions.length,
         locallyExecutableActionCount: actions.filter((action) => action.execution.locallyExecutable).length,

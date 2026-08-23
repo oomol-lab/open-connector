@@ -126,6 +126,34 @@
   },
   "providers": {
     "catalogTitle": "Providers",
+    "viewLabel": "Provider view",
+    "views": { "manage": "My connections", "discover": "Discover apps" },
+    "discovery": {
+      "browseByTask": "Browse by task",
+      "explore": "Explore apps",
+      "scenarios": {
+        "ai": { "title": "AI & agents", "description": "Models, agents, search, and media generation" },
+        "crossBorderEcommerce": {
+          "title": "E-commerce operations",
+          "description": "Storefronts, orders, fulfillment, and market data"
+        },
+        "communication": {
+          "title": "Team collaboration",
+          "description": "Messaging, email, meetings, and notifications"
+        },
+        "docs": { "title": "Docs & knowledge", "description": "Documents, knowledge bases, drives, and spreadsheets" },
+        "productivity": {
+          "title": "Projects & productivity",
+          "description": "Projects, tasks, schedules, and automation"
+        },
+        "marketing": { "title": "Marketing & growth", "description": "Ads, content, leads, and growth data" },
+        "dataStorage": { "title": "Data & analytics", "description": "Warehouses, databases, BI, and storage" },
+        "developer": {
+          "title": "Development & cloud",
+          "description": "Code, deployment, cloud services, and observability"
+        }
+      }
+    },
     "brandNotice": "Third-party names, logos, and trademarks belong to their respective owners and are displayed only to identify the corresponding providers. This project does not claim ownership of them. Users who redistribute or commercialize this project are responsible for reviewing the applicable brand guidelines and obtaining any permissions required for their intended use.",
     "searchPlaceholder": "Search providers",
     "statusFilterLabel": "Provider status",

@@ -380,6 +380,7 @@ describe("ConnectServer", () => {
     expect(listedAction).not.toHaveProperty("outputSchema");
     expect(listedAction).toHaveProperty("id");
     expect(listedAction).toHaveProperty("execution");
+    expect(listed[0]).toMatchObject({ scenario: "developer" });
 
     const actionResponse = await app.request(`/api/actions/${String(listedAction?.id)}`);
     await expect(actionResponse.json()).resolves.toHaveProperty("inputSchema");

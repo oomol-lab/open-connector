@@ -14,6 +14,23 @@ export type JsonSchema = {
 export type AuthType = "no_auth" | "api_key" | "custom_credential" | "oauth2";
 
 /**
+ * Broad, task-oriented provider group calculated from catalog source metadata.
+ *
+ * Provider definitions do not need to repeat this field: the catalog builder
+ * adds it to runtime entries through the shared scenario resolver.
+ */
+export type ProviderScenario =
+  | "ai"
+  | "cross-border-ecommerce"
+  | "communication"
+  | "docs"
+  | "productivity"
+  | "marketing"
+  | "data-storage"
+  | "developer"
+  | "other";
+
+/**
  * A single credential field that users can configure for a provider.
  */
 export type CredentialDefinition = {

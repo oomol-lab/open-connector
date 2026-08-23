@@ -126,6 +126,22 @@
   },
   "providers": {
     "catalogTitle": "服務提供者",
+    "viewLabel": "服務提供者檢視",
+    "views": { "manage": "我的連線", "discover": "探索應用程式" },
+    "discovery": {
+      "browseByTask": "依任務瀏覽",
+      "explore": "探索應用程式",
+      "scenarios": {
+        "ai": { "title": "AI 與 Agent", "description": "模型、Agent、搜尋與媒體生成" },
+        "crossBorderEcommerce": { "title": "電商營運", "description": "店面、訂單、履約與市場資料" },
+        "communication": { "title": "團隊協作", "description": "訊息、電子郵件、會議與通知" },
+        "docs": { "title": "文件與知識", "description": "文件、知識庫、雲端硬碟與試算表" },
+        "productivity": { "title": "專案與效率", "description": "專案、工作、行程與自動化" },
+        "marketing": { "title": "行銷與成長", "description": "廣告、內容、潛在客戶與成長資料" },
+        "dataStorage": { "title": "資料與分析", "description": "資料倉儲、資料庫、BI 與儲存" },
+        "developer": { "title": "開發與雲端", "description": "程式碼、部署、雲端服務與可觀測性" }
+      }
+    },
     "brandNotice": "第三方名稱、標誌及商標歸其各自權利人所有，此處僅用於識別對應的服務提供者。本專案不主張擁有相關權利。再散布本專案或將其用於商業用途的使用者，應自行查閱適用的品牌規範，並依其具體用途取得所需許可。",
     "searchPlaceholder": "搜尋服務提供者",
     "statusFilterLabel": "服務提供者狀態",

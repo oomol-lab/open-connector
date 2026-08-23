@@ -265,6 +265,33 @@ describe("ProvidersPage route shell", () => {
     expect(markup).not.toContain("Reset Default App");
   });
 
+  it("uses task-oriented scenarios as the discovery entry point", () => {
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        providers: [{ ...oauthProvider, scenario: "communication" }],
+      },
+      "/providers",
+    );
+
+    expect(markup).toContain("Discover apps");
+    expect(markup).toContain("Browse by task");
+    expect(markup).toContain("Team collaboration");
+  });
+
+  it("defaults to connection management after a local credential is configured", () => {
+    const markup = renderProvidersPage(
+      {
+        ...providerData,
+        connections: [{ service: "gmail", authType: "oauth2", configured: true, metadata: {} }],
+      },
+      "/providers",
+    );
+
+    expect(markup).toContain("My connections");
+    expect(markup).toContain("Gmail");
+  });
+
   it("renders a full provider detail page at /providers/:service", () => {
     const markup = renderProvidersPage(providerData, "/providers/gmail");
 

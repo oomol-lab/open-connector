@@ -1,9 +1,10 @@
 import type { RuntimeActionDefinition } from "../../catalog-store.ts";
 import type { ConnectionError, ConnectionSummary } from "../../connection-service.ts";
-import type { ExecutionResult, ProviderDefinition } from "../../core/types.ts";
+import type { ExecutionResult, ProviderDefinition, ProviderScenario } from "../../core/types.ts";
 import type { Context } from "hono";
 
 import { requiredRecord } from "../../core/cast.ts";
+import { resolveProviderScenario } from "../../core/provider-scenarios.ts";
 
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
@@ -30,6 +31,7 @@ export interface RuntimeProviderMetadata {
   iconUrl: string | null;
   homepageUrl: string | null;
   categories: RuntimeProviderCategory[];
+  scenario: ProviderScenario;
   authTypes: string[];
 }
 
@@ -102,6 +104,7 @@ export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeP
       id: category,
       displayName: category,
     })),
+    scenario: resolveProviderScenario(provider),
     authTypes: provider.authTypes,
   };
 }

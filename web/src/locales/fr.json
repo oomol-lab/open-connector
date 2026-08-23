@@ -126,6 +126,40 @@
   },
   "providers": {
     "catalogTitle": "Fournisseurs",
+    "viewLabel": "Vue des fournisseurs",
+    "views": { "manage": "Mes connexions", "discover": "Découvrir des apps" },
+    "discovery": {
+      "browseByTask": "Parcourir par tâche",
+      "explore": "Explorer les apps",
+      "scenarios": {
+        "ai": { "title": "IA et agents", "description": "Modèles, agents, recherche et génération de médias" },
+        "crossBorderEcommerce": {
+          "title": "Opérations e-commerce",
+          "description": "Boutiques, commandes, exécution et données de marché"
+        },
+        "communication": {
+          "title": "Collaboration d’équipe",
+          "description": "Messagerie, e-mail, réunions et notifications"
+        },
+        "docs": {
+          "title": "Documents et connaissances",
+          "description": "Documents, bases de connaissances, drives et tableurs"
+        },
+        "productivity": {
+          "title": "Projets et productivité",
+          "description": "Projets, tâches, plannings et automatisation"
+        },
+        "marketing": {
+          "title": "Marketing et croissance",
+          "description": "Publicité, contenu, prospects et données de croissance"
+        },
+        "dataStorage": {
+          "title": "Données et analytique",
+          "description": "Entrepôts, bases de données, BI et stockage"
+        },
+        "developer": { "title": "Développement et cloud", "description": "Code, déploiement, cloud et observabilité" }
+      }
+    },
     "brandNotice": "Les noms, logos et marques de tiers appartiennent à leurs propriétaires respectifs et sont affichés uniquement pour identifier les fournisseurs correspondants. Ce projet ne revendique aucun droit sur ceux-ci. Les utilisateurs qui redistribuent ou commercialisent ce projet doivent consulter les règles applicables aux marques et obtenir les autorisations nécessaires à leur usage.",
     "searchPlaceholder": "Rechercher des fournisseurs",
     "statusFilterLabel": "Statut du fournisseur",

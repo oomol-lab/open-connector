@@ -390,7 +390,13 @@ export class ConnectServer {
         return true;
       }
 
-      return [provider.service, provider.displayName, provider.categories.join(" "), provider.authTypes.join(" ")]
+      return [
+        provider.service,
+        provider.displayName,
+        provider.categories.join(" "),
+        provider.scenario,
+        provider.authTypes.join(" "),
+      ]
         .join(" ")
         .toLowerCase()
         .includes(query);

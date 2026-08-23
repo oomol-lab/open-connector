@@ -126,6 +126,25 @@
   },
   "providers": {
     "catalogTitle": "プロバイダー",
+    "viewLabel": "プロバイダー表示",
+    "views": { "manage": "接続済み", "discover": "アプリを探す" },
+    "discovery": {
+      "browseByTask": "目的から探す",
+      "explore": "アプリを見る",
+      "scenarios": {
+        "ai": { "title": "AI とエージェント", "description": "モデル、エージェント、検索、メディア生成" },
+        "crossBorderEcommerce": { "title": "EC 運用", "description": "ストア、注文、フルフィルメント、市場データ" },
+        "communication": { "title": "チーム連携", "description": "メッセージ、メール、会議、通知" },
+        "docs": {
+          "title": "ドキュメントと知識",
+          "description": "ドキュメント、ナレッジベース、ドライブ、スプレッドシート"
+        },
+        "productivity": { "title": "プロジェクトと生産性", "description": "プロジェクト、タスク、予定、自動化" },
+        "marketing": { "title": "マーケティングと成長", "description": "広告、コンテンツ、リード、成長データ" },
+        "dataStorage": { "title": "データと分析", "description": "データウェアハウス、データベース、BI、ストレージ" },
+        "developer": { "title": "開発とクラウド", "description": "コード、デプロイ、クラウド、オブザーバビリティ" }
+      }
+    },
     "brandNotice": "第三者の名称、ロゴ、および商標は各権利者に帰属し、対応するプロバイダーを識別する目的でのみ表示されています。本プロジェクトはこれらの権利を主張しません。本プロジェクトを再配布または商用利用する場合、利用者の責任で該当するブランドガイドラインを確認し、用途に必要な許可を取得してください。",
     "searchPlaceholder": "プロバイダーを検索",
     "statusFilterLabel": "プロバイダーのステータス",

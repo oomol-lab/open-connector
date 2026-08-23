@@ -126,6 +126,22 @@
   },
   "providers": {
     "catalogTitle": "提供商",
+    "viewLabel": "提供商视图",
+    "views": { "manage": "我的连接", "discover": "发现应用" },
+    "discovery": {
+      "browseByTask": "按任务浏览",
+      "explore": "浏览应用",
+      "scenarios": {
+        "ai": { "title": "AI 与 Agent", "description": "模型、Agent、检索与媒体生成" },
+        "crossBorderEcommerce": { "title": "电商运营", "description": "店铺、订单、履约与市场数据" },
+        "communication": { "title": "团队协作", "description": "消息、邮件、会议与通知" },
+        "docs": { "title": "文档与知识", "description": "文档、知识库、网盘与表格" },
+        "productivity": { "title": "项目与效率", "description": "项目、任务、日程与自动化" },
+        "marketing": { "title": "营销与增长", "description": "广告、内容、线索与增长数据" },
+        "dataStorage": { "title": "数据与分析", "description": "数据仓库、数据库、BI 与存储" },
+        "developer": { "title": "开发与云服务", "description": "代码、部署、云服务与可观测性" }
+      }
+    },
     "brandNotice": "第三方名称、标志及商标归其各自权利人所有，此处仅用于识别对应的提供商。本项目不主张拥有相关权利。再分发本项目或将其用于商业用途的用户，应自行查阅适用的品牌规范，并按其具体用途取得所需许可。",
     "searchPlaceholder": "搜索提供商",
     "statusFilterLabel": "提供商状态",
