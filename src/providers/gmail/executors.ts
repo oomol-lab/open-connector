@@ -2,7 +2,12 @@ import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { GmailDraftResource, GmailMessageResource, GmailThreadResource } from "./message.ts";
 
-import { defineProviderExecutors, ProviderRequestError, requireOAuthCredential } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  ProviderRequestError,
+  readProviderJsonBody,
+  requireOAuthCredential,
+} from "../provider-runtime.ts";
 import {
   buildRecipients,
   encodeMimeMessage,
@@ -801,7 +806,7 @@ async function listHistory(input: Record<string, unknown>, userId: string, acces
 
 async function listFilters(userId: string, accessToken: string, fetcher: typeof fetch) {
   const payload = normalizeNullableObjectResponse(
-    await fetchJson<unknown>(gmailUserUrl(userId, "settings", "filters"), accessToken, fetcher),
+    await fetchNullableJson(gmailUserUrl(userId, "settings", "filters"), accessToken, fetcher),
     "gmail filters list",
   );
   const filters = payload.filter;
@@ -875,7 +880,7 @@ async function updateSettingsResource(
 
 async function listForwardingAddresses(userId: string, accessToken: string, fetcher: typeof fetch) {
   const payload = normalizeNullableObjectResponse(
-    await fetchJson<unknown>(gmailUserUrl(userId, "settings", "forwardingAddresses"), accessToken, fetcher),
+    await fetchNullableJson(gmailUserUrl(userId, "settings", "forwardingAddresses"), accessToken, fetcher),
     "gmail forwarding addresses list",
   );
   const forwardingAddresses = payload.forwardingAddresses;
@@ -1009,16 +1014,31 @@ function normalizeNullableObjectResponse(value: unknown, operation: string) {
 }
 
 async function fetchJson<T>(url: string, accessToken: string, fetcher: typeof fetch, init: RequestInit = {}) {
-  const requestInit = buildGmailRequestInit(accessToken, init);
-  const response = await fetcher(url, requestInit);
-  await assertGmailResponse(response);
+  const response = await sendGmailRequest(url, accessToken, fetcher, init);
   return (await response.json()) as T;
 }
 
+async function fetchNullableJson(url: string, accessToken: string, fetcher: typeof fetch): Promise<unknown> {
+  return readProviderJsonBody(await sendGmailRequest(url, accessToken, fetcher), {
+    emptyBody: null,
+    invalidJsonMessage: "Gmail response must be valid JSON",
+  });
+}
+
 async function fetchEmpty(url: string, accessToken: string, fetcher: typeof fetch, init: RequestInit = {}) {
+  await sendGmailRequest(url, accessToken, fetcher, init);
+}
+
+async function sendGmailRequest(
+  url: string,
+  accessToken: string,
+  fetcher: typeof fetch,
+  init: RequestInit = {},
+): Promise<Response> {
   const requestInit = buildGmailRequestInit(accessToken, init);
   const response = await fetcher(url, requestInit);
   await assertGmailResponse(response);
+  return response;
 }
 
 function buildGmailRequestInit(accessToken: string, init: RequestInit) {
