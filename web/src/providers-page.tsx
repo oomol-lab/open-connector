@@ -141,6 +141,7 @@ export interface ManualOAuthAuthorizationInput {
 
 type ProviderStatusFilter = "all" | "connected" | "not_connected" | "oauth_needs_config";
 type ProviderBrowserView = "manage" | "discover";
+type ProviderDiscoveryScenario = Exclude<ProviderScenario, "other">;
 
 const providerPageSize = 48;
 const defaultConnectionName = "default";
@@ -155,7 +156,7 @@ const providerCardStyle = {
   contentVisibility: "auto",
   containIntrinsicSize: "64px",
 } satisfies CSSProperties;
-const scenarioIconById: Record<Exclude<ProviderScenario, "other">, ComponentType<{ className?: string }>> = {
+const scenarioIconById: Record<ProviderDiscoveryScenario, ComponentType<{ className?: string }>> = {
   ai: Bot,
   "cross-border-ecommerce": ShoppingBag,
   communication: MessagesSquare,
@@ -206,7 +207,7 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   const [view, setView] = useState<ProviderBrowserView>(initialView);
   const userSelectedView = useRef(false);
   const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>("all");
-  const [scenarioFilter, setScenarioFilter] = useState<ProviderScenario | "all">("all");
+  const [scenarioFilter, setScenarioFilter] = useState<ProviderDiscoveryScenario | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const resetKey = providerBrowserResetKey(deferredQuery, statusFilter, categoryFilter, scenarioFilter, view);
   const statusByService = useMemo(
@@ -297,7 +298,7 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     setCategoryFilter("all");
   }
 
-  function selectScenario(scenario: Exclude<ProviderScenario, "other">): void {
+  function selectScenario(scenario: ProviderDiscoveryScenario): void {
     userSelectedView.current = true;
     setView("discover");
     setQuery("");
@@ -443,7 +444,7 @@ function useIntersectionLoader(enabled: boolean, onLoad: () => void): (node: HTM
 function ProviderScenarioGrid(props: {
   counts: Map<ProviderScenario, number>;
   providers: ProviderDefinition[];
-  onSelect(scenario: Exclude<ProviderScenario, "other">): void;
+  onSelect(scenario: ProviderDiscoveryScenario): void;
 }): ReactNode {
   const t = useTranslate();
 
@@ -504,7 +505,7 @@ function ProviderCatalog(props: {
   loadMoreProvidersRef: (node: HTMLDivElement | null) => void;
   providers: ProviderDefinition[];
   query: string;
-  scenarioFilter?: ProviderScenario | "all";
+  scenarioFilter?: ProviderDiscoveryScenario | "all";
   showStatusFilters: boolean;
   statusByService: Map<string, ProviderConnectionStatus>;
   providerCount: number;
@@ -630,7 +631,7 @@ function ProviderCatalog(props: {
   );
 }
 
-function scenarioTranslationKey(scenario: ProviderScenario): string {
+function scenarioTranslationKey(scenario: ProviderDiscoveryScenario): string {
   return scenario === "cross-border-ecommerce"
     ? "crossBorderEcommerce"
     : scenario === "data-storage"
@@ -1633,7 +1634,7 @@ export function providerBrowserResetKey(
   query: string,
   status: ProviderStatusFilter,
   category: string,
-  scenario: ProviderScenario | "all" = "all",
+  scenario: ProviderDiscoveryScenario | "all" = "all",
   view: ProviderBrowserView = "discover",
 ): string {
   return `${query}\u0000${status}\u0000${category}\u0000${scenario}\u0000${view}`;

@@ -290,6 +290,7 @@ describe("ProvidersPage route shell", () => {
 
     expect(markup).toContain("My connections");
     expect(markup).toContain("Gmail");
+    expect(markup).not.toContain("Browse by task");
   });
 
   it("renders a full provider detail page at /providers/:service", () => {

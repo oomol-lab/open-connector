@@ -155,7 +155,7 @@ export function resolveProviderScenario(provider: ProviderDefinition): ProviderS
 
   const searchableText = normalizeValue([provider.service, provider.displayName, provider.description].join(" "));
   for (const [scenario, keywords] of scenarioKeywords) {
-    if (keywords.some((keyword) => searchableText.includes(normalizeValue(keyword)))) {
+    if (keywords.some((keyword) => matchesScenarioKeyword(searchableText, keyword))) {
       return scenario;
     }
   }
@@ -165,6 +165,15 @@ export function resolveProviderScenario(provider: ProviderDefinition): ProviderS
 
 function compactValue(value: string): string {
   return normalizeValue(value).replace(/\s+/g, "");
+}
+
+function matchesScenarioKeyword(source: string, keyword: string): boolean {
+  const normalizedKeyword = normalizeValue(keyword);
+  if (normalizedKeyword === "transcrib") {
+    return source.split(" ").some((token) => token.startsWith(normalizedKeyword));
+  }
+
+  return ` ${source} `.includes(` ${normalizedKeyword} `);
 }
 
 function normalizeValue(value: string): string {

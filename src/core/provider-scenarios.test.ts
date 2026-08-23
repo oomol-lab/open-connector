@@ -44,6 +44,11 @@ describe("resolveProviderScenario", () => {
     ).toBe("docs");
   });
 
+  it("matches scenario keywords as whole words while retaining transcription prefixes", () => {
+    expect(resolveProviderScenario(provider({ displayName: "Email Service" }))).toBe("communication");
+    expect(resolveProviderScenario(provider({ displayName: "Transcriber Service" }))).toBe("ai");
+  });
+
   it("falls back to other when a provider has no reliable scenario signal", () => {
     expect(resolveProviderScenario(provider({ categories: ["Finance"] }))).toBe("other");
   });

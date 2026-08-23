@@ -231,7 +231,10 @@ export function createOpenApiDocument(
     "/v1/providers": runtimeGetOperation("Catalog", "List public provider catalog entries.", {
       description: "Closest HTTP analog of MCP list_apps. Categories are objects; MCP list_apps returns strings.",
       parameters: [
-        queryParameter("q", "Optional case-insensitive filter over service, display name, category, or auth type."),
+        queryParameter(
+          "q",
+          "Optional case-insensitive filter over service, display name, scenario, category, or auth type.",
+        ),
         queryParameter("service", "Optional provider service id. Repeat to include multiple providers.", {
           type: "array",
           items: jsonSchema.string(),
