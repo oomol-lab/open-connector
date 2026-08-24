@@ -2,7 +2,6 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { SlackNormalizedConversationType } from "./constants.ts";
-import type { SlackOAuthTokenKind } from "./oauth.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
@@ -20,7 +19,8 @@ const slackApiBaseUrl = "https://slack.com/api";
 const slackFileUrlMaxBytes = 100 * 1024 * 1024;
 const slackFileUrlFetchTimeoutMs = 30_000;
 
-type SlackActionContext = Omit<OAuthProviderContext, "providerSecret">;
+type SlackActionContext = Omit<OAuthProviderContext, "providerSecret" | "tokenType">;
+type SlackOAuthTokenKind = "bot" | "user";
 
 interface SlackPayloadError {
   ok?: boolean;
@@ -49,7 +49,6 @@ export function defineSlackProviderExecutors(
       }
       const providerContext: SlackActionContext = {
         accessToken: credential.accessToken,
-        tokenType: credential.tokenType,
         fetcher,
         signal: context.signal,
       };
@@ -148,12 +147,18 @@ export const slackCredentialValidators: CredentialValidators = {
       method: "auth.test",
     });
 
+    const authedUser = optionalRecord(input.metadata.authed_user);
+    const responseScopes = uniqueSlackScopes([
+      ...readSlackScopes(input.metadata.scope),
+      ...readSlackScopes(authedUser?.scope),
+    ]);
+
     return {
       profile: {
         accountId: payload.user_id ?? payload.team_id ?? "slack:oauth2",
         displayName: payload.team ?? payload.team_id ?? payload.user_id ?? "Slack Workspace",
       },
-      grantedScopes: input.profile.grantedScopes,
+      grantedScopes: responseScopes.length > 0 ? responseScopes : input.profile.grantedScopes,
       metadata: {
         currentAccount: payload,
       },
@@ -825,6 +830,17 @@ async function uploadSlackFileContent(
 
 function normalizeNextCursor(cursor: string | undefined): string | null {
   return cursor ? cursor : null;
+}
+
+function readSlackScopes(value: unknown): string[] {
+  return (optionalString(value) ?? "")
+    .split(",")
+    .map((scope) => scope.trim())
+    .filter(Boolean);
+}
+
+function uniqueSlackScopes(scopes: string[]): string[] {
+  return [...new Set(scopes)];
 }
 
 function normalizeScheduledPostAt(value: number | string | undefined, fallback: number): number {

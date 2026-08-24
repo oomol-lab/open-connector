@@ -435,26 +435,29 @@ describe("OAuthFlowService", () => {
       authType: "oauth2",
       accessToken: "user-access",
       refreshToken: "user-refresh",
-      tokenType: "Bearer",
-      profile: {
-        grantedScopes: ["channels:read", "chat:write", "search:read"],
+      tokenType: "user",
+      metadata: {
+        rawTokenType: "user",
+        authed_user: {
+          id: "U123",
+          scope: "channels:read,chat:write,search:read",
+        },
       },
     });
     await expect(services.connections.getCredential("slackbot")).resolves.toMatchObject({
       authType: "oauth2",
       accessToken: "bot-access",
       refreshToken: "bot-refresh",
-      tokenType: "Bearer",
-      profile: {
-        grantedScopes: ["channels:read", "chat:write"],
+      tokenType: "bot",
+      metadata: {
+        rawTokenType: "bot",
+        scope: "channels:read,chat:write",
       },
     });
     expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual([
       "https://slack.com/api/oauth.v2.user.access",
       "https://slack.com/api/oauth.v2.access",
     ]);
-    const userCredential = await services.connections.getCredential("slack");
-    expect(userCredential?.authType === "oauth2" ? userCredential.metadata : {}).not.toHaveProperty("authed_user");
   });
 
   it("rejects expired OAuth authorization states", async () => {

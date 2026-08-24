@@ -7,7 +7,6 @@ import type {
 } from "./oauth-client-config-service.ts";
 
 import { createHash, randomBytes } from "node:crypto";
-import { getSlackOAuthTokenKind, normalizeSlackOAuthCredential } from "../providers/slack/oauth.ts";
 import { requestAuthorizationCodeToken } from "./oauth-token.ts";
 
 /**
@@ -150,7 +149,7 @@ export class OAuthFlowService {
       );
     }
 
-    let tokenResponse = await requestAuthorizationCodeToken({
+    const tokenResponse = await requestAuthorizationCodeToken({
       code: input.code,
       state: pending.state,
       clientId: config.clientId,
@@ -164,10 +163,6 @@ export class OAuthFlowService {
       extraFields: createTokenExtraFields(pending),
       createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
     });
-    const slackTokenKind = getSlackOAuthTokenKind(pending.service);
-    if (slackTokenKind) {
-      tokenResponse = normalizeSlackOAuthCredential(tokenResponse, slackTokenKind, "oauth_token_exchange_failed");
-    }
     const oauthCredential = {
       ...tokenResponse,
       metadata: {
