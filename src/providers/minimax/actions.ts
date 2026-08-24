@@ -444,12 +444,15 @@ const textToAudioVoiceSettingSchema = s.looseObject("MiniMax voice settings.", {
 });
 
 const textToAudioAudioSettingSchema = s.looseObject("MiniMax audio settings.", {
-  sample_rate: s.integer(
-    "Sample rate of the generated audio. Supported values are 8000, 16000, 22050, 24000, 32000, and 44100.",
+  sample_rate: s.anyOf(
+    [s.literal(8000), s.literal(16000), s.literal(22050), s.literal(24000), s.literal(32000), s.literal(44100)],
+    {
+      description: "Sample rate of the generated audio in hertz. MiniMax defaults to 32000.",
+    },
   ),
-  bitrate: s.integer(
-    "Bitrate of the generated audio, applied to mp3 output only. Supported values are 32000, 64000, 128000, and 256000.",
-  ),
+  bitrate: s.anyOf([s.literal(32000), s.literal(64000), s.literal(128000), s.literal(256000)], {
+    description: "Bitrate of the generated audio, applied to mp3 output only. MiniMax defaults to 128000.",
+  }),
   format: s.stringEnum(
     "Format of the generated audio. MiniMax defaults to mp3, pcmu_raw and pcmu_wav are G.711 mu-law, and opus is Ogg/Opus.",
     ["mp3", "pcm", "flac", "wav", "pcmu_raw", "pcmu_wav", "opus"],
