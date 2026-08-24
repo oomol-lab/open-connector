@@ -81,7 +81,7 @@ const conversationSchema = s.object(
     }),
     isArchived: s.nullable(s.boolean({ description: "Whether the conversation is archived." })),
     isPrivate: s.nullable(s.boolean({ description: "Whether the conversation is private." })),
-    isMember: s.nullable(s.boolean({ description: "Whether the bot user is a member." })),
+    isMember: s.nullable(s.boolean({ description: "Whether the connected Slack identity is a member." })),
     memberCount: s.integer({ description: "The member count when Slack provides it." }),
     topic: s.nullable(s.string({ description: "The conversation topic." })),
     purpose: s.nullable(s.string({ description: "The conversation purpose." })),
@@ -152,7 +152,7 @@ const reactionItemSchema = s.unknownObject("A Slack item with reactions.");
 export const slackActions: ActionDefinition[] = [
   action({
     name: "list_channels",
-    description: "List Slack public channels visible to the bot.",
+    description: "List Slack public channels visible to the connected Slack identity.",
     requiredScopes: ["channels:read"],
     inputSchema: s.object(
       {
@@ -266,7 +266,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "list_conversations",
-    description: "List Slack conversations visible to the bot.",
+    description: "List Slack conversations visible to the connected Slack identity.",
     requiredScopes: ["channels:read", "groups:read", "im:read", "mpim:read"],
     inputSchema: s.object(
       {
@@ -327,7 +327,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "list_users",
-    description: "List Slack users visible to the bot.",
+    description: "List Slack users visible to the connected Slack identity.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
       {
@@ -401,7 +401,7 @@ export const slackActions: ActionDefinition[] = [
   action({
     name: "update_message",
     description:
-      "Update a Slack message posted by the bot. Provide text, blocks, or attachments as the new message content.",
+      "Update a Slack message posted through this connection. Provide text, blocks, or attachments as the new message content.",
     requiredScopes: ["chat:write"],
     inputSchema: messageInputSchema("Input parameters for updating a Slack message.", { messageTs: messageTsSchema }, [
       "messageTs",
@@ -410,7 +410,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_message",
-    description: "Delete a Slack message posted by the bot.",
+    description: "Delete a Slack message posted through this connection.",
     requiredScopes: ["chat:write"],
     inputSchema: s.object(
       {
@@ -499,7 +499,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "list_files",
-    description: "List Slack files visible to the bot, optionally filtered by channel or user.",
+    description: "List Slack files visible to the connected Slack identity, optionally filtered by channel or user.",
     requiredScopes: ["files:read"],
     inputSchema: s.object(
       {

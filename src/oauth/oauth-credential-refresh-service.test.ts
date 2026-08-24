@@ -151,54 +151,56 @@ describe("OAuthCredentialRefreshService", () => {
     expect(refreshed.providerSecret).toEqual(credential.providerSecret);
   });
 
-  it("refreshes Slack's user and bot grants through the provider-specific path", async () => {
-    const requestedRefreshTokens: string[] = [];
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (_url, init) => {
-        const refreshToken = new URLSearchParams(String(init?.body)).get("refresh_token") ?? "";
-        requestedRefreshTokens.push(refreshToken);
-        const user = refreshToken === "old-user-refresh";
-        return Response.json({
-          ok: true,
-          access_token: user ? "new-user-access" : "new-bot-access",
-          refresh_token: user ? "new-user-refresh" : "new-bot-refresh",
-          token_type: user ? "user" : "bot",
-          expires_in: 43_200,
-          scope: user ? "search:read" : "channels:read,chat:write",
-        });
+  it.each([
+    { service: "slack", tokenType: "user", scopes: "channels:read,chat:write,search:read" },
+    { service: "slackbot", tokenType: "bot", scopes: "channels:read,chat:write" },
+  ])("refreshes the $service credential as one $tokenType token", async ({ service, tokenType, scopes }) => {
+    const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      Response.json({
+        ok: true,
+        access_token: `new-${tokenType}-access`,
+        refresh_token: `new-${tokenType}-refresh`,
+        token_type: tokenType,
+        expires_in: 43_200,
+        scope: scopes,
       }),
     );
+    vi.stubGlobal("fetch", fetcher);
     const credential = {
-      ...expiredCredential({ expires_in: 43_200, scope: "channels:read,chat:write" }),
-      refreshToken: "old-bot-refresh",
+      ...expiredCredential({ expires_in: 43_200, scope: scopes }),
+      accessToken: `old-${tokenType}-access`,
+      refreshToken: `old-${tokenType}-refresh`,
       profile: {
         accountId: "U123",
         displayName: "Example workspace",
-        grantedScopes: ["channels:read", "chat:write", "search:read"],
-      },
-      providerSecret: {
-        userGrant: {
-          accessToken: "old-user-access",
-          refreshToken: "old-user-refresh",
-          expiresAt: new Date(Date.now() - 60_000).toISOString(),
-          scopes: ["search:read"],
-        },
+        grantedScopes: scopes.split(","),
       },
     };
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("slack", credential);
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh(service, credential);
 
-    expect(requestedRefreshTokens).toEqual(["old-user-refresh", "old-bot-refresh"]);
+    expect(fetcher).toHaveBeenCalledOnce();
+    const request = fetcher.mock.calls[0]?.[1];
+    expect(new URLSearchParams(String(request?.body)).get("refresh_token")).toBe(`old-${tokenType}-refresh`);
     expect(refreshed).toMatchObject({
-      accessToken: "new-bot-access",
-      refreshToken: "new-bot-refresh",
-      providerSecret: {
-        userGrant: {
-          accessToken: "new-user-access",
-          refreshToken: "new-user-refresh",
-        },
+      accessToken: `new-${tokenType}-access`,
+      refreshToken: `new-${tokenType}-refresh`,
+      tokenType: "Bearer",
+      profile: {
+        grantedScopes: scopes.split(","),
       },
+    });
+    expect(refreshed.providerSecret).toBeUndefined();
+  });
+
+  it("rejects a Slack refresh response with the wrong token kind", async () => {
+    stubRefreshResponse({ token_type: "bot", expires_in: 43_200 });
+
+    await expect(
+      new OAuthCredentialRefreshService(clientConfigs).refresh("slack", expiredCredential({ expires_in: 43_200 })),
+    ).rejects.toMatchObject({
+      code: "oauth_token_refresh_failed",
+      message: "Slack OAuth response is invalid: expected a user token.",
     });
   });
 });
