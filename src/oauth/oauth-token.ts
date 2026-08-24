@@ -2,7 +2,7 @@ import type { OAuth2AuthDefinition, ResolvedCredential } from "../core/types.ts"
 
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
-import { providerFetch } from "../providers/provider-runtime.ts";
+import { providerFetch, providerUserAgent } from "../providers/provider-runtime.ts";
 
 const oauthTokenRequestTimeoutMs = 30_000;
 const oauthTokenResponseMaxBytes = 1024 * 1024;
@@ -67,6 +67,7 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
   }
   const headers: Record<string, string> = {
     accept: "application/json",
+    "user-agent": providerUserAgent,
   };
   let body: BodyInit;
 

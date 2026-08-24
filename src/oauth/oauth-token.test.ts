@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { providerUserAgent } from "../providers/provider-runtime.ts";
 import { requestAuthorizationCodeToken, requestRefreshToken } from "./oauth-token.ts";
 
 const authorizationCodeRequest = {
@@ -52,7 +53,11 @@ describe("OAuth token requests", () => {
 
     expect(fetcher).toHaveBeenCalledOnce();
     const init = fetcher.mock.calls[0]?.[1];
-    expect(init).toMatchObject({ method: "POST", redirect: "manual" });
+    expect(init).toMatchObject({
+      method: "POST",
+      redirect: "manual",
+      headers: { "user-agent": providerUserAgent },
+    });
     expect(String(init?.body)).toContain("client_secret=client-secret");
     expect(String(init?.body)).toContain("code=authorization-code");
   });
