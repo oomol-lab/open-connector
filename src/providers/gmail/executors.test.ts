@@ -36,7 +36,7 @@ describe("Gmail list actions", () => {
       ),
     ).rejects.toMatchObject({
       status: 502,
-      message: "Gmail response must be valid JSON",
+      message: "gmail filters list response must be valid JSON",
     });
   });
 });

@@ -806,7 +806,7 @@ async function listHistory(input: Record<string, unknown>, userId: string, acces
 
 async function listFilters(userId: string, accessToken: string, fetcher: typeof fetch) {
   const payload = normalizeNullableObjectResponse(
-    await fetchNullableJson(gmailUserUrl(userId, "settings", "filters"), accessToken, fetcher),
+    await fetchNullableJson(gmailUserUrl(userId, "settings", "filters"), accessToken, fetcher, "gmail filters list"),
     "gmail filters list",
   );
   const filters = payload.filter;
@@ -880,7 +880,12 @@ async function updateSettingsResource(
 
 async function listForwardingAddresses(userId: string, accessToken: string, fetcher: typeof fetch) {
   const payload = normalizeNullableObjectResponse(
-    await fetchNullableJson(gmailUserUrl(userId, "settings", "forwardingAddresses"), accessToken, fetcher),
+    await fetchNullableJson(
+      gmailUserUrl(userId, "settings", "forwardingAddresses"),
+      accessToken,
+      fetcher,
+      "gmail forwarding addresses list",
+    ),
     "gmail forwarding addresses list",
   );
   const forwardingAddresses = payload.forwardingAddresses;
@@ -1018,10 +1023,15 @@ async function fetchJson<T>(url: string, accessToken: string, fetcher: typeof fe
   return (await response.json()) as T;
 }
 
-async function fetchNullableJson(url: string, accessToken: string, fetcher: typeof fetch): Promise<unknown> {
+async function fetchNullableJson(
+  url: string,
+  accessToken: string,
+  fetcher: typeof fetch,
+  operation: string,
+): Promise<unknown> {
   return readProviderJsonBody(await sendGmailRequest(url, accessToken, fetcher), {
     emptyBody: null,
-    invalidJsonMessage: "Gmail response must be valid JSON",
+    invalidJsonMessage: `${operation} response must be valid JSON`,
   });
 }
 
