@@ -46,9 +46,6 @@ export async function validateRingbaCredential(
     const accountId = optionalString(account.accountId) ?? optionalString(account.id);
     return accountId ? [accountId] : [];
   });
-  if (accessibleAccountIds.length === 0) {
-    throw new ProviderRequestError(502, "Ringba returned no accessible account");
-  }
   const normalizedRequestedAccountId = requestedAccountId?.trim() || undefined;
   if (normalizedRequestedAccountId && !accessibleAccountIds.includes(normalizedRequestedAccountId)) {
     throw new ProviderRequestError(400, "Ringba accountId is not accessible with the provided API token");
