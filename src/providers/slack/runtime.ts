@@ -28,6 +28,14 @@ interface SlackPayloadError {
   response_metadata?: Record<string, unknown>;
 }
 
+interface SlackRequestJsonInput {
+  method: string;
+  accessToken: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
+  body?: Record<string, unknown>;
+}
+
 export type SlackActionHandler = (input: Record<string, unknown>, context: SlackActionContext) => Promise<unknown>;
 
 /** Build Slack executors that reject credentials issued for the other authorization path. */
@@ -147,11 +155,7 @@ export const slackCredentialValidators: CredentialValidators = {
       method: "auth.test",
     });
 
-    const authedUser = optionalRecord(input.metadata.authed_user);
-    const responseScopes = uniqueSlackScopes([
-      ...readSlackScopes(input.metadata.scope),
-      ...readSlackScopes(authedUser?.scope),
-    ]);
+    const responseScopes = readSlackCredentialScopes(input.metadata);
 
     return {
       profile: {
@@ -692,13 +696,7 @@ async function slackGetJson<T extends SlackPayloadError>(url: URL, context: Slac
   return readSlackResponseJson<T>(response);
 }
 
-async function slackRequestJson<T extends SlackPayloadError>(input: {
-  method: string;
-  accessToken: string;
-  fetcher: typeof fetch;
-  signal?: AbortSignal;
-  body?: Record<string, unknown>;
-}): Promise<T> {
+async function slackRequestJson<T extends SlackPayloadError>(input: SlackRequestJsonInput): Promise<T> {
   const response = await input.fetcher(slackApiUrl(input.method).toString(), {
     method: "POST",
     headers: slackHeaders(input.accessToken),
@@ -781,7 +779,7 @@ async function resolveSlackFileContent(
     if (!response.ok) {
       throw new ProviderRequestError(400, `failed to fetch fileUrl: ${response.status}`);
     }
-    return readBoundedResponseBytes(response, {
+    return await readBoundedResponseBytes(response, {
       maxBytes: slackFileUrlMaxBytes,
       fieldName: "fileUrl",
       createError: (message) => new ProviderRequestError(400, message),
@@ -837,6 +835,17 @@ function readSlackScopes(value: unknown): string[] {
     .split(",")
     .map((scope) => scope.trim())
     .filter(Boolean);
+}
+
+function readSlackCredentialScopes(metadata: Record<string, unknown>): string[] {
+  switch (metadata.rawTokenType) {
+    case "user":
+      return uniqueSlackScopes(readSlackScopes(optionalRecord(metadata.authed_user)?.scope));
+    case "bot":
+      return uniqueSlackScopes(readSlackScopes(metadata.scope));
+    default:
+      return [];
+  }
 }
 
 function uniqueSlackScopes(scopes: string[]): string[] {

@@ -29,18 +29,45 @@ describe("Slack authorization paths", () => {
 
   it.each([
     {
+      actionId: "slack.open_conversation",
+      rawTokenType: "user",
+      execute: slackExecutors["slack.open_conversation"]!,
+    },
+    {
+      actionId: "slackbot.open_conversation",
+      rawTokenType: "bot",
+      execute: slackbotExecutors["slackbot.open_conversation"]!,
+    },
+  ])("allows the matching authorization path for $actionId", async ({ rawTokenType, execute }) => {
+    const context: ExecutionContext = {
+      getCredential: async () => oauthCredential(rawTokenType),
+    };
+
+    await expect(execute({ userIds: [] }, context)).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "open_conversation only supports one userId",
+      },
+    });
+  });
+
+  it.each([
+    {
       tokenType: "user",
       metadata: {
         rawTokenType: "user",
-        authed_user: { scope: "channels:read,chat:write,search:read" },
+        scope: "channels:read",
+        authed_user: { scope: "chat:write,search:read" },
       },
-      scopes: ["channels:read", "chat:write", "search:read"],
+      scopes: ["chat:write", "search:read"],
     },
     {
       tokenType: "bot",
       metadata: {
         rawTokenType: "bot",
         scope: "channels:read,chat:write",
+        authed_user: { scope: "search:read" },
       },
       scopes: ["channels:read", "chat:write"],
     },
