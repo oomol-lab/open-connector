@@ -398,14 +398,11 @@ describe("OAuthFlowService", () => {
       if (String(url).endsWith("/oauth.v2.user.access")) {
         return Response.json({
           ok: true,
-          access_token: "user-access",
+          access_token: "xoxp-user-access",
           refresh_token: "user-refresh",
-          token_type: "user",
+          token_type: "Bearer",
           expires_in: 43_200,
-          authed_user: {
-            id: "U123",
-            scope: "channels:read,chat:write,search:read",
-          },
+          scope: "channels:read,chat:write,search:read",
         });
       }
       return Response.json({
@@ -433,15 +430,12 @@ describe("OAuthFlowService", () => {
 
     await expect(services.connections.getCredential("slack")).resolves.toMatchObject({
       authType: "oauth2",
-      accessToken: "user-access",
+      accessToken: "xoxp-user-access",
       refreshToken: "user-refresh",
-      tokenType: "user",
+      tokenType: "Bearer",
       metadata: {
-        rawTokenType: "user",
-        authed_user: {
-          id: "U123",
-          scope: "channels:read,chat:write,search:read",
-        },
+        rawTokenType: "Bearer",
+        scope: "channels:read,chat:write,search:read",
       },
     });
     await expect(services.connections.getCredential("slackbot")).resolves.toMatchObject({

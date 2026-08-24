@@ -49,7 +49,7 @@ export function defineSlackProviderExecutors(
     handlers,
     async createContext(context, fetcher): Promise<SlackActionContext> {
       const credential = await requireOAuthCredential(context, service);
-      if (credential.metadata.rawTokenType != tokenKind) {
+      if (readSlackTokenKind(credential.accessToken, credential.metadata) != tokenKind) {
         throw new ProviderRequestError(
           401,
           `Reconnect ${service} with ${tokenKind} authorization before running its actions.`,
@@ -155,7 +155,7 @@ export const slackCredentialValidators: CredentialValidators = {
       method: "auth.test",
     });
 
-    const responseScopes = readSlackCredentialScopes(input.metadata);
+    const responseScopes = readSlackCredentialScopes(input.accessToken, input.metadata);
 
     return {
       profile: {
@@ -837,10 +837,27 @@ function readSlackScopes(value: unknown): string[] {
     .filter(Boolean);
 }
 
-function readSlackCredentialScopes(metadata: Record<string, unknown>): string[] {
-  switch (metadata.rawTokenType) {
+function readSlackTokenKind(accessToken: string, metadata: Record<string, unknown>): SlackOAuthTokenKind | undefined {
+  const rawTokenType = metadata.rawTokenType;
+  if (rawTokenType == "bot") {
+    return "bot";
+  }
+  if (rawTokenType == "user") {
+    return "user";
+  }
+  if (accessToken.startsWith("xoxb-")) {
+    return "bot";
+  }
+  if (accessToken.startsWith("xoxp-")) {
+    return "user";
+  }
+  return undefined;
+}
+
+function readSlackCredentialScopes(accessToken: string, metadata: Record<string, unknown>): string[] {
+  switch (readSlackTokenKind(accessToken, metadata)) {
     case "user":
-      return uniqueSlackScopes(readSlackScopes(optionalRecord(metadata.authed_user)?.scope));
+      return uniqueSlackScopes(readSlackScopes(optionalRecord(metadata.authed_user)?.scope ?? metadata.scope));
     case "bot":
       return uniqueSlackScopes(readSlackScopes(metadata.scope));
     default:
