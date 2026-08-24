@@ -68,6 +68,7 @@ export const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxAct
     return minimaxGetJson(`/v1/files/retrieve?file_id=${encodeURIComponent(fileId)}`, context);
   },
   text_to_audio(input, context) {
+    assertStreamingDisabled(input);
     return minimaxPostJson("/v1/t2a_v2", normalizeMinimaxAudioBody(input), context);
   },
 };
@@ -302,7 +303,7 @@ function mapMinimaxError(status: number, payload: Record<string, unknown>): Prov
   if (status === 401 || status === 403 || errorCode === "1004" || errorCode === "2049") {
     return new ProviderRequestError(401, message, payload);
   }
-  if (status === 429 || errorCode === "1002" || errorCode === "1008") {
+  if (status === 429 || errorCode === "1002" || errorCode === "1008" || errorCode === "1039") {
     return new ProviderRequestError(429, message, payload);
   }
   if (status >= 400 && status < 500) {
