@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SageSalesManagementActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -52,8 +52,8 @@ const opportunitiesConfig = {
   recordOutputKey: "opportunity",
 } as const satisfies ResourceConfig;
 
-export const sageSalesManagementActionHandlers: Record<
-  SageSalesManagementActionName,
+export const sageSalesManagementActionHandlers: ProviderActionHandlers<
+  "sage_sales_management",
   SageSalesManagementActionHandler
 > = {
   get_accounts_schema(input, context) {
@@ -110,7 +110,7 @@ export const sageSalesManagementActionHandlers: Record<
   delete_opportunity(input, context) {
     return executeDeleteResource(opportunitiesConfig, input, context);
   },
-} satisfies Record<SageSalesManagementActionName, SageSalesManagementActionHandler>;
+};
 
 export async function validateSageSalesManagementCredential(
   input: Record<string, string>,

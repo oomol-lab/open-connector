@@ -52,14 +52,6 @@ const googleMapsPlaceInputSchema: JsonSchema = {
   anyOf: [{ required: ["dataId"] }, { required: ["placeId"] }],
 };
 
-export type ScrapingdogActionName =
-  | "fetch_html"
-  | "google_search"
-  | "google_maps_search"
-  | "google_maps_place"
-  | "google_scholar_search"
-  | "get_account_usage";
-
 export const scrapingdogActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_html",

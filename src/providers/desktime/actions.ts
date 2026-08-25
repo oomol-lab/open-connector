@@ -35,8 +35,6 @@ const project = s.object(
   { required: ["id", "name", "createdAt", "tasks", "raw"], description: "A normalized DeskTime project." },
 );
 
-export type DeskTimeActionName = "get_company" | "list_employees" | "get_employee" | "list_projects" | "create_project";
-
 export const desktimeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company",

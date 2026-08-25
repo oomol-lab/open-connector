@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TriggerDevActionName } from "./actions.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,10 @@ interface TriggerDevRequestOptions {
   body?: unknown;
 }
 
-export const triggerDevActionHandlers: Record<TriggerDevActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const triggerDevActionHandlers: ProviderActionHandlers<
+  "trigger_dev",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_runs(input, context) {
     return listRuns(input, context);
   },

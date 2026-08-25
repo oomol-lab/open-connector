@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "grist";
 
-export type GristActionName =
-  | "list_workspaces"
-  | "get_document"
-  | "list_tables"
-  | "list_columns"
-  | "list_records"
-  | "add_records"
-  | "update_records"
-  | "delete_records";
-
 const looseObjectSchema = s.looseObject("A raw Grist object.");
 const unknownRecordSchema = s.record("Column IDs mapped to cell values.", s.unknown("A Grist cell value."));
 const timestampField = s.string("Timestamp in ISO 8601 format.");

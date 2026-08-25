@@ -224,13 +224,3 @@ export const falAiActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type FalAiActionName =
-  | "get_models"
-  | "get_pricing"
-  | "estimate_pricing"
-  | "get_jwks"
-  | "queue_get_status"
-  | "queue_get_status_stream"
-  | "get_queue_request_result"
-  | "cancel_queue_request";

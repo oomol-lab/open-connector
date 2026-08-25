@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TremendousActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -26,7 +26,7 @@ const tremendousDefaultRequestTimeoutMs = 30_000;
 type TremendousPhase = "validate" | "execute";
 type TremendousActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const tremendousActionHandlers: Record<TremendousActionName, TremendousActionHandler> = {
+export const tremendousActionHandlers: ProviderActionHandlers<"tremendous", TremendousActionHandler> = {
   async list_products(input, context) {
     const payload = await requestTremendousJson({
       context,

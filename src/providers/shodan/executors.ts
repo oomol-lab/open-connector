@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShodanActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface ShodanRequestInput {
   query?: Record<string, ShodanQueryValue>;
 }
 
-export const shodanActionHandlers: Record<ShodanActionName, ShodanActionHandler> = {
+export const shodanActionHandlers: ProviderActionHandlers<"shodan", ShodanActionHandler> = {
   async get_api_info(_input, context) {
     return normalizeApiInfoPayload(await requestShodanJson({ path: validationEndpoint }, context, "execute"));
   },

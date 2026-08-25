@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { PushByTechulusActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ type PushByTechulusActionHandler = (
   context: PushByTechulusActionContext,
 ) => Promise<unknown>;
 
-export const pushByTechulusActionHandlers: Record<PushByTechulusActionName, PushByTechulusActionHandler> = {
+export const pushByTechulusActionHandlers: ProviderActionHandlers<"push_by_techulus", PushByTechulusActionHandler> = {
   send_notification(input, context) {
     return sendPushByTechulusNotification("notify", input, context);
   },

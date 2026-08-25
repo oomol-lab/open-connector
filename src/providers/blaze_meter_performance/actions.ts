@@ -50,14 +50,6 @@ const listTestsInputSchema: JsonSchema = s.object(
 );
 listTestsInputSchema.anyOf = [{ required: ["workspaceId"] }, { required: ["projectId"] }];
 
-export type BlazeMeterPerformanceActionName =
-  | "get_user"
-  | "list_accounts"
-  | "list_workspaces"
-  | "list_projects"
-  | "list_tests"
-  | "get_test";
-
 export const blazeMeterPerformanceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",

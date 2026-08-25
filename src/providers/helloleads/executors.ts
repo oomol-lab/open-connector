@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HelloleadsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -53,7 +53,7 @@ interface LoadedWebForm {
   fields: NormalizedWebFormField[];
 }
 
-export const helloleadsActionHandlers: Record<HelloleadsActionName, HelloleadsActionHandler> = {
+export const helloleadsActionHandlers: ProviderActionHandlers<"helloleads", HelloleadsActionHandler> = {
   async get_web_form_definition(_input, context) {
     const form = await loadWebForm(context.apiKey, context);
 

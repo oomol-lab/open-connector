@@ -1,0 +1,23 @@
+{{- if .Values.podDisruptionBudget.enabled -}}
+{{- /* Explicit 0 is a valid setting and must not fall through to the
+     default, so test for "value present" rather than truthiness. */ -}}
+{{- $minAvailable := toString .Values.podDisruptionBudget.minAvailable }}
+{{- $maxUnavailable := toString .Values.podDisruptionBudget.maxUnavailable }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "open-connector.fullname" . }}
+  labels:
+    {{- include "open-connector.labels" . | nindent 4 }}
+spec:
+  {{- if ne $minAvailable "" }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- else if ne $maxUnavailable "" }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- else }}
+  minAvailable: 1
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "open-connector.selectorLabels" . | nindent 6 }}
+{{- end }}

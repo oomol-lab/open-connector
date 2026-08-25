@@ -2,7 +2,7 @@ import type { OAuth2AuthDefinition, ResolvedCredential } from "../core/types.ts"
 
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
-import { providerFetch } from "../providers/provider-runtime.ts";
+import { providerFetch, providerUserAgent } from "../providers/provider-runtime.ts";
 
 const oauthTokenRequestTimeoutMs = 30_000;
 const oauthTokenResponseMaxBytes = 1024 * 1024;
@@ -23,6 +23,7 @@ export interface OAuthTokenRequestOptions {
 
 interface AuthorizationCodeTokenRequest extends OAuthTokenRequestOptions {
   code: string;
+  state?: string;
   redirectUri: string;
   extraFields?: Record<string, string>;
   createError: OAuthTokenErrorFactory;
@@ -66,6 +67,7 @@ async function requestToken(input: TokenRequest): Promise<Extract<ResolvedCreden
   }
   const headers: Record<string, string> = {
     accept: "application/json",
+    "user-agent": providerUserAgent,
   };
   let body: BodyInit;
 
@@ -253,6 +255,10 @@ function createAuthorizationCodeFields(input: AuthorizationCodeTokenRequest): Re
     "redirect_uri",
     input.redirectUri,
   );
+  const stateField = fieldMap?.authorizationCode?.state;
+  if (input.state !== undefined && stateField !== undefined) {
+    setMappedField(fields, stateField, "state", input.state);
+  }
   return {
     ...fields,
     ...(input.extraFields ?? {}),

@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HtmlToImageActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ type HtmlToImageRequestPhase = "validate" | "execute";
 type HtmlToImageActionContext = ApiKeyProviderContext;
 type HtmlToImageActionHandler = (input: Record<string, unknown>, context: HtmlToImageActionContext) => Promise<unknown>;
 
-export const htmlToImageActionHandlers: Record<HtmlToImageActionName, HtmlToImageActionHandler> = {
+export const htmlToImageActionHandlers: ProviderActionHandlers<"html_to_image", HtmlToImageActionHandler> = {
   convert_html_to_image(input, context) {
     return executeHtmlToImageRender(htmlToImageHtmlPath, buildConvertHtmlRequestBody(input), context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OncehubActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -36,7 +36,7 @@ interface OncehubCursors {
   previousCursor: string | null;
 }
 
-export const oncehubActionHandlers: Record<OncehubActionName, OncehubActionHandler> = {
+export const oncehubActionHandlers: ProviderActionHandlers<"oncehub", OncehubActionHandler> = {
   list_bookings(input, context) {
     return requestOncehubList({
       context,

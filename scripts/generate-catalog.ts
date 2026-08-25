@@ -2,6 +2,7 @@ import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { sortProviders } from "../src/core/catalog.ts";
 import { assertProviderId } from "../src/core/provider-id.ts";
+import { resolveProviderScenario } from "../src/core/provider-scenarios.ts";
 import { generateProviderRegistries } from "./generate-provider-registry.ts";
 import { loadProviderSources } from "./provider-source.ts";
 
@@ -11,7 +12,10 @@ const tempOutputDir = join(catalogRootDir, `.apps-${process.pid}-${Date.now()}`)
 const providerSources = await loadProviderSources();
 await generateProviderRegistries(providerSources);
 const providers = providerSources.map((source) => source.definition);
-const apps = sortProviders(providers);
+const apps = sortProviders(providers).map((provider) => ({
+  ...provider,
+  scenario: resolveProviderScenario(provider),
+}));
 
 await mkdir(catalogRootDir, { recursive: true });
 

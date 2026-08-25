@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SlingActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ type SlingPhase = "validate" | "execute";
 type SlingQueryValue = string | number | boolean | readonly (string | number)[];
 type SlingActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const slingActionHandlers: Record<SlingActionName, SlingActionHandler> = {
+export const slingActionHandlers: ProviderActionHandlers<"sling", SlingActionHandler> = {
   get_current_session(_input, context) {
     return requestWrapped("session", "/account/session", {}, context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GodialActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type GodialMode = "validation" | "execution";
 type GodialMethod = "GET" | "POST";
 type GodialActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const godialActionHandlers: Record<GodialActionName, GodialActionHandler> = {
+export const godialActionHandlers: ProviderActionHandlers<"godial", GodialActionHandler> = {
   list_accounts(_input, context) {
     return listAccounts(context);
   },

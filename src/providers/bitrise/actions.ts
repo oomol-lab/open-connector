@@ -245,5 +245,3 @@ export const bitriseActions: readonly ActionDefinition[] = [
     outputSchema: triggerBuildOutputSchema,
   }),
 ];
-
-export type BitriseActionName = "list_apps" | "list_builds" | "get_build" | "trigger_build";

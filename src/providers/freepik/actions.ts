@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "freepik";
 
-export type FreepikActionName = "search_resources" | "get_resource" | "download_resource";
-
 const resourceIdSchema = s.anyOf("The Freepik resource ID.", [
   s.nonEmptyString("The Freepik resource ID as a string."),
   s.integer("The Freepik resource ID as a number."),

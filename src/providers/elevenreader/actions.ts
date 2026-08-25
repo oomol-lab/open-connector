@@ -132,8 +132,6 @@ const generatedFileSchema = s.actionOutput(
   "A generated audio file stored in local transit file storage.",
 );
 
-export type ElevenreaderActionName = "get_user_info" | "get_models" | "search_voices" | "get_voice" | "read_text";
-
 export const elevenreaderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_info",

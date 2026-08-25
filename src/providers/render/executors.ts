@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ type RenderRequestPhase = "validate" | "execute";
 type RenderQueryValue = string | number | boolean | string[] | undefined;
 type RenderActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const renderActionHandlers: Record<string, RenderActionHandler> = {
+export const renderActionHandlers: ProviderActionHandlers<"render", RenderActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

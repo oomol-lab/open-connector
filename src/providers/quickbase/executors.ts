@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -39,7 +40,7 @@ interface QuickbaseContext {
 
 type Handler = ProviderRuntimeHandler<QuickbaseContext>;
 
-export const quickbaseActionHandlers: Record<string, Handler> = {
+export const quickbaseActionHandlers: ProviderActionHandlers<"quickbase", Handler> = {
   async get_app(input, context) {
     return {
       app: objectPayload(

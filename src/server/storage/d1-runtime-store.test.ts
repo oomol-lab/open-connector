@@ -167,9 +167,11 @@ describe("D1RuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
+      allowedConnections: ["example:work"],
     });
     expect(created.token).toMatch(/^oct_/);
     expect(created.record.tokenHash).not.toBe(created.token);
+    expect(created.record.allowedConnections).toEqual(["example:work"]);
 
     await expect(tokens.verifyToken(created.token)).resolves.toBe(true);
     const [listed] = await tokens.listTokens();
@@ -179,25 +181,61 @@ describe("D1RuntimeDatabase", () => {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
+      allowedConnections: ["example:work"],
     });
     expect(listed?.lastUsedAt).toBeTruthy();
+    await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
+      tokenId: created.record.id,
+      allowedConnections: ["example:work"],
+    });
 
     await expect(
       tokens.updateTokenPolicy(created.record.id, {
         allowedActions: ["github.get_current_user"],
         blockedActions: [],
         allowedProxies: ["slack"],
+        allowedConnections: ["example:personal"],
       }),
     ).resolves.toMatchObject({
       allowedActions: ["github.get_current_user"],
       blockedActions: [],
       allowedProxies: ["slack"],
+      allowedConnections: ["example:personal"],
+    });
+    await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({
+      allowedConnections: ["example:personal"],
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
     await expect(tokens.listTokens()).resolves.toEqual([]);
     await expect(tokens.verifyToken(created.token)).resolves.toBe(false);
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(false);
+  });
+
+  it("defaults omitted allowedConnections to an unrestricted empty list", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+    const created = await tokens.createToken("Open token");
+    expect(created.record.allowedConnections).toEqual([]);
+    await expect(tokens.listTokens()).resolves.toMatchObject([{ allowedConnections: [] }]);
+    await expect(tokens.resolveToken(created.token)).resolves.toMatchObject({ allowedConnections: [] });
+  });
+
+  it("defaults missing allowedConnections to an unrestricted empty list", async () => {
+    const d1 = new SqliteD1Database();
+    d1.exec(
+      `insert into runtime_tokens (id, name, token_hash, created_at) values ('legacy-token', 'Legacy', 'legacy-hash', '2026-06-30T00:00:00.000Z')`,
+    );
+    const database = new D1RuntimeDatabase(d1);
+    await expect(database.runtimeTokenStore.list()).resolves.toMatchObject([
+      {
+        id: "legacy-token",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      },
+    ]);
   });
 
   it("persists the singleton runtime policy", async () => {
@@ -497,6 +535,9 @@ class SqliteD1Database implements D1DatabaseBinding {
     );
     this.database.exec(
       readFileSync(new URL("../../../migrations/0010_connection_revision.sql", import.meta.url), "utf8"),
+    );
+    this.database.exec(
+      readFileSync(new URL("../../../migrations/0011_runtime_token_connection_scope.sql", import.meta.url), "utf8"),
     );
   }
 

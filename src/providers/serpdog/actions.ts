@@ -97,13 +97,6 @@ const googleAutocompleteInputSchema = s.actionInput(
   "Input parameters for running a Google Autocomplete request through Serpdog.",
 );
 
-export type SerpdogActionName =
-  | "get_account_info"
-  | "google_search"
-  | "google_news_search"
-  | "google_videos_search"
-  | "google_autocomplete";
-
 export const serpdogActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

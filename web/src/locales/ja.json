@@ -126,6 +126,25 @@
   },
   "providers": {
     "catalogTitle": "プロバイダー",
+    "viewLabel": "プロバイダー表示",
+    "views": { "manage": "接続済み", "discover": "アプリを探す" },
+    "discovery": {
+      "browseByTask": "目的から探す",
+      "explore": "アプリを見る",
+      "scenarios": {
+        "ai": { "title": "AI とエージェント", "description": "モデル、エージェント、検索、メディア生成" },
+        "crossBorderEcommerce": { "title": "EC 運用", "description": "ストア、注文、フルフィルメント、市場データ" },
+        "communication": { "title": "チーム連携", "description": "メッセージ、メール、会議、通知" },
+        "docs": {
+          "title": "ドキュメントと知識",
+          "description": "ドキュメント、ナレッジベース、ドライブ、スプレッドシート"
+        },
+        "productivity": { "title": "プロジェクトと生産性", "description": "プロジェクト、タスク、予定、自動化" },
+        "marketing": { "title": "マーケティングと成長", "description": "広告、コンテンツ、リード、成長データ" },
+        "dataStorage": { "title": "データと分析", "description": "データウェアハウス、データベース、BI、ストレージ" },
+        "developer": { "title": "開発とクラウド", "description": "コード、デプロイ、クラウド、オブザーバビリティ" }
+      }
+    },
     "brandNotice": "第三者の名称、ロゴ、および商標は各権利者に帰属し、対応するプロバイダーを識別する目的でのみ表示されています。本プロジェクトはこれらの権利を主張しません。本プロジェクトを再配布または商用利用する場合、利用者の責任で該当するブランドガイドラインを確認し、用途に必要な許可を取得してください。",
     "searchPlaceholder": "プロバイダーを検索",
     "statusFilterLabel": "プロバイダーのステータス",
@@ -241,6 +260,9 @@
       "resetOAuthClient": "デフォルト App をリセット"
     },
     "oauthClientSettings": {
+      "setupTitle": "OAuth アプリを作成する",
+      "setupIntro": "{{name}} で OAuth アプリを登録し、その認証情報を以下に貼り付けてください。",
+      "setupDocsLink": "{{name}} デベロッパーポータルを開く",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -420,6 +442,8 @@
       },
       "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
       "tokenSummary": "Action allow rules {{allowed}} · Action block rules {{blocked}} · Proxy grants {{proxies}} · Runtime ベースラインでさらに制限",
+      "connectionsUnrestricted": "すべての接続",
+      "connectionsRestricted": "接続: {{names}}",
       "editor": {
         "title": "Runtime policy を編集",
         "description": "保存前に deployment 制約と組み合わせて影響を確認します。",
@@ -463,7 +487,15 @@
         "noRules": "このリストに rules はありません。",
         "actionAllowRequired": "Action allow rule を追加するか、追加制限なしを選択してください。",
         "proxyAllowRequired": "Provider allow rule を追加するか、追加制限なしを選択してください。",
-        "tokenHint": "Action rules と proxy grants は独立しています。Proxy grant が空の場合、token は provider proxy requests を送信できません。",
+        "connectionsTitle": "Connection アクセス",
+        "connectionsUnrestrictedHint": "この token は保存済みの任意の connection を使用できます。リクエストで名前を省略した場合は default を使います。",
+        "connectionsRestrictedHint": "この token は選択した Provider の connection だけを使用できます。",
+        "connectionsList": "許可する connections",
+        "connectionsRequired": "connection を少なくとも 1 つ選択するか、追加制限なしを選択してください。",
+        "tooManyConnections": "connection リストには 128 個までしか含められません。",
+        "connectionCount": "{{count}} connections",
+        "noConnections": "このリストに connections はありません。",
+        "connectionsDefaultHint": "Provider の default connection を選択すると、その Provider の名前なし HTTP / MCP / proxy リクエストを許可できます。",
         "discard": "変更を破棄",
         "preview": "影響をプレビュー"
       },

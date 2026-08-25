@@ -140,5 +140,3 @@ export const recallaiActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type RecallAiActionName = "create_bot" | "list_bots" | "get_bot" | "remove_bot_from_call" | "delete_bot_media";

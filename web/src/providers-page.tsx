@@ -5,25 +5,34 @@ import type {
   OAuthConfig,
   ProviderConnectionStatus,
   ProviderDefinition,
+  ProviderScenario,
 } from "./model";
-import type { CSSProperties, ReactNode, SubmitEvent } from "react";
+import type { CSSProperties, ComponentType, ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
 import {
   ArrowLeft,
   ArrowUpRight,
+  Bot,
   Check,
   CheckCircle2,
   ChevronRight,
   CircleSlash2,
+  Cloud,
+  Database,
   ExternalLink,
+  FileText,
+  Megaphone,
+  MessagesSquare,
   Plus,
   Search,
   Settings,
+  ShoppingBag,
+  SquareKanban,
   Trash2,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
@@ -42,12 +51,20 @@ import {
   OAuthAppDialog,
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
+import {
+  featuredProvidersForScenario,
+  filterProvidersByScenario,
+  providerScenario,
+  providerScenarioCounts,
+  providerScenarioOptions,
+} from "./provider-scenarios";
 import { Badge, EmptyState, FormStatus, ProviderIcon, TagList } from "./shared-ui";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface ProvidersPageProps {
@@ -70,6 +87,35 @@ interface ProviderBrowserProps {
 interface ProviderCardProps {
   provider: ProviderDefinition;
   status: ProviderConnectionStatus;
+}
+
+interface ProviderScenarioGridProps {
+  counts: Map<ProviderScenario, number>;
+  providers: ProviderDefinition[];
+  onSelect(scenario: ProviderDiscoveryScenario): void;
+}
+
+interface ProviderCatalogProps {
+  counts: Array<{ id: ProviderStatusFilter; labelKey: string; count: number }>;
+  categoryOptions: Array<{ category: string; count: number }>;
+  categoryFilter: string;
+  filtersActive: boolean;
+  hasMoreProviders: boolean;
+  loadMoreProviders(): void;
+  loadMoreProvidersRef: (node: HTMLDivElement | null) => void;
+  providers: ProviderDefinition[];
+  query: string;
+  scenarioFilter?: ProviderDiscoveryScenario | "all";
+  showStatusFilters: boolean;
+  statusByService: Map<string, ProviderConnectionStatus>;
+  providerCount: number;
+  selected: ProviderStatusFilter;
+  totalProviderCount: number;
+  onReset(): void;
+  onCategoryFilterChange(value: string): void;
+  onQueryChange(value: string): void;
+  onScenarioFilterClear?(): void;
+  onStatusFilterChange?(value: ProviderStatusFilter): void;
 }
 
 interface ConnectionFormProps {
@@ -123,6 +169,8 @@ export interface ManualOAuthAuthorizationInput {
 }
 
 type ProviderStatusFilter = "all" | "connected" | "not_connected" | "oauth_needs_config";
+type ProviderBrowserView = "manage" | "discover";
+type ProviderDiscoveryScenario = Exclude<ProviderScenario, "other">;
 
 const providerPageSize = 48;
 const defaultConnectionName = "default";
@@ -137,6 +185,16 @@ const providerCardStyle = {
   contentVisibility: "auto",
   containIntrinsicSize: "64px",
 } satisfies CSSProperties;
+const scenarioIconById: Record<ProviderDiscoveryScenario, ComponentType<{ className?: string }>> = {
+  ai: Bot,
+  "cross-border-ecommerce": ShoppingBag,
+  communication: MessagesSquare,
+  docs: FileText,
+  productivity: SquareKanban,
+  marketing: Megaphone,
+  "data-storage": Database,
+  developer: Cloud,
+};
 
 export function ProvidersPage(props: ProvidersPageProps): ReactNode {
   const params = useParams();
@@ -173,9 +231,14 @@ export function ProvidersPage(props: ProvidersPageProps): ReactNode {
 function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   const t = useTranslate();
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
+  const initialView = defaultProviderBrowserView(props.data.connections);
+  const [view, setView] = useState<ProviderBrowserView>(initialView);
+  const userSelectedView = useRef(false);
   const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>("all");
+  const [scenarioFilter, setScenarioFilter] = useState<ProviderDiscoveryScenario | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const resetKey = providerBrowserResetKey(query, statusFilter, categoryFilter);
+  const resetKey = providerBrowserResetKey(deferredQuery, statusFilter, categoryFilter, scenarioFilter, view);
   const statusByService = useMemo(
     () =>
       new Map(
@@ -199,9 +262,18 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     () => sortProviders(props.data.providers, credentialConnectionsByService),
     [credentialConnectionsByService, props.data.providers],
   );
-  const searchedProviders = filterProviders(sortedProviders, query);
-  const categoryFilteredProviders = filterProvidersByCategory(searchedProviders, categoryFilter);
-  const statusFilteredProviders = filterProvidersByStatus(searchedProviders, statusFilter, statusByService);
+  const managedProviders = useMemo(
+    () => sortedProviders.filter((provider) => statusByService.get(provider.service)?.connected),
+    [sortedProviders, statusByService],
+  );
+  const browserProviders = view === "manage" ? managedProviders : sortedProviders;
+  const searchedProviders = filterProviders(browserProviders, deferredQuery);
+  const scenarioFilteredProviders = filterProvidersByScenario(searchedProviders, scenarioFilter);
+  const categoryFilteredProviders = filterProvidersByCategory(scenarioFilteredProviders, categoryFilter);
+  const statusFilteredProviders =
+    view === "manage"
+      ? scenarioFilteredProviders
+      : filterProvidersByStatus(scenarioFilteredProviders, statusFilter, statusByService);
   const visibleProviders = filterProvidersByCategory(statusFilteredProviders, categoryFilter);
   const {
     hasMore: hasMoreProviders,
@@ -210,7 +282,8 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   } = useProgressiveProviderLimit(visibleProviders.length, resetKey);
   const loadMoreProvidersRef = useIntersectionLoader(hasMoreProviders, loadMoreProviders);
   const renderedProviders = visibleProviders.slice(0, visibleLimit);
-  const filtersActive = query.trim().length > 0 || statusFilter !== "all" || categoryFilter !== "all";
+  const filtersActive =
+    query.trim().length > 0 || scenarioFilter !== "all" || categoryFilter !== "all" || statusFilter !== "all";
   const statusCounts = useMemo(
     () =>
       providerStatusOptions.map((option) => ({
@@ -230,75 +303,108 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
         .map(([category, count]) => ({ category, count })),
     [categoryCounts, categoryFilter],
   );
+  const scenarioCounts = useMemo(() => providerScenarioCounts(sortedProviders), [sortedProviders]);
+
+  useEffect(() => {
+    if (!userSelectedView.current) {
+      setView(initialView);
+    }
+  }, [initialView]);
 
   function resetFilters(): void {
     setQuery("");
     setStatusFilter("all");
+    setScenarioFilter("all");
+    setCategoryFilter("all");
+  }
+
+  function selectView(nextView: ProviderBrowserView): void {
+    userSelectedView.current = true;
+    setView(nextView);
+    setQuery("");
+    setStatusFilter("all");
+    setScenarioFilter("all");
+    setCategoryFilter("all");
+  }
+
+  function selectScenario(scenario: ProviderDiscoveryScenario): void {
+    userSelectedView.current = true;
+    setView("discover");
+    setQuery("");
+    setStatusFilter("all");
+    setScenarioFilter(scenario);
     setCategoryFilter("all");
   }
 
   return (
-    <section className="provider-browser-panel">
-      <div className="provider-browser-header">
-        <div>
-          <h2>{t("providers.catalogTitle")}</h2>
-        </div>
-        <label className="relative flex w-full max-w-80 items-center sm:w-80">
-          <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
-          <Input
-            className="h-8 pl-9 text-sm"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("providers.searchPlaceholder")}
-            aria-label={t("providers.searchPlaceholder")}
+    <Tabs
+      value={view}
+      onValueChange={(value) => selectView(value as ProviderBrowserView)}
+      className="provider-browser-tabs"
+    >
+      <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
+        <TabsTrigger value="manage" className="flex-none px-4">
+          {t("providers.views.manage")}
+        </TabsTrigger>
+        <TabsTrigger value="discover" className="flex-none px-4">
+          {t("providers.views.discover")}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="manage" className="provider-browser-tab-content">
+        {view === "manage" ? (
+          <ProviderCatalog
+            categoryFilter={categoryFilter}
+            categoryOptions={categoryOptions}
+            filtersActive={filtersActive}
+            hasMoreProviders={hasMoreProviders}
+            loadMoreProviders={loadMoreProviders}
+            loadMoreProvidersRef={loadMoreProvidersRef}
+            onCategoryFilterChange={setCategoryFilter}
+            onQueryChange={setQuery}
+            onReset={resetFilters}
+            providerCount={visibleProviders.length}
+            providers={renderedProviders}
+            query={query}
+            showStatusFilters={false}
+            statusByService={statusByService}
+            counts={statusCounts}
+            selected={statusFilter}
+            totalProviderCount={browserProviders.length}
           />
-        </label>
-      </div>
-
-      <ProviderCollectionBar
-        counts={statusCounts}
-        categoryOptions={categoryOptions}
-        categoryFilter={categoryFilter}
-        filtersActive={filtersActive}
-        providerCount={visibleProviders.length}
-        selected={statusFilter}
-        totalProviderCount={props.data.providers.length}
-        onReset={resetFilters}
-        onSelect={setStatusFilter}
-        onSelectCategory={setCategoryFilter}
-      />
-
-      <p className="provider-brand-notice">{t("providers.brandNotice")}</p>
-
-      {visibleProviders.length === 0 ? (
-        <div className="provider-empty-row">
-          <EmptyState title={t("providers.noProvidersTitle")} description={t("providers.noProvidersDescription")} />
-          {filtersActive ? (
-            <Button variant="outline" size="sm" type="button" onClick={resetFilters}>
-              <X size={14} />
-              {t("providers.resetFilters")}
-            </Button>
-          ) : null}
-        </div>
-      ) : (
-        <div className="provider-card-grid">
-          {renderedProviders.map((provider) => (
-            <ProviderCard
-              key={provider.service}
-              provider={provider}
-              status={statusByService.get(provider.service) ?? resolveProviderConnectionStatus(provider, [], [])}
+        ) : null}
+      </TabsContent>
+      <TabsContent value="discover" className="provider-browser-tab-content flex flex-col gap-6">
+        {view === "discover" ? (
+          <>
+            {!query.trim() ? (
+              <ProviderScenarioGrid counts={scenarioCounts} providers={sortedProviders} onSelect={selectScenario} />
+            ) : null}
+            <ProviderCatalog
+              categoryFilter={categoryFilter}
+              categoryOptions={categoryOptions}
+              filtersActive={filtersActive}
+              hasMoreProviders={hasMoreProviders}
+              loadMoreProviders={loadMoreProviders}
+              loadMoreProvidersRef={loadMoreProvidersRef}
+              onCategoryFilterChange={setCategoryFilter}
+              onQueryChange={setQuery}
+              onReset={resetFilters}
+              onStatusFilterChange={setStatusFilter}
+              providerCount={visibleProviders.length}
+              providers={renderedProviders}
+              query={query}
+              scenarioFilter={scenarioFilter}
+              showStatusFilters
+              statusByService={statusByService}
+              counts={statusCounts}
+              selected={statusFilter}
+              totalProviderCount={browserProviders.length}
+              onScenarioFilterClear={() => setScenarioFilter("all")}
             />
-          ))}
-          {hasMoreProviders ? (
-            <div ref={loadMoreProvidersRef} className="provider-show-more">
-              <Button variant="outline" size="sm" type="button" onClick={loadMoreProviders}>
-                {t("providers.showMore")}
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      )}
-    </section>
+          </>
+        ) : null}
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -364,74 +470,177 @@ function useIntersectionLoader(enabled: boolean, onLoad: () => void): (node: HTM
   return setNode;
 }
 
-function ProviderCollectionBar(props: {
-  counts: Array<{ id: ProviderStatusFilter; labelKey: string; count: number }>;
-  categoryOptions: Array<{ category: string; count: number }>;
-  categoryFilter: string;
-  filtersActive: boolean;
-  providerCount: number;
-  selected: ProviderStatusFilter;
-  totalProviderCount: number;
-  onReset(): void;
-  onSelect(value: ProviderStatusFilter): void;
-  onSelectCategory(value: string): void;
-}): ReactNode {
+function ProviderScenarioGrid(props: ProviderScenarioGridProps): ReactNode {
   const t = useTranslate();
 
   return (
-    <div className="provider-collection-bar">
-      <ToggleGroup
-        className="provider-filter-list"
-        type="single"
-        value={props.selected}
-        onValueChange={(value) => (value ? props.onSelect(value as ProviderStatusFilter) : undefined)}
-        aria-label={t("providers.statusFilterLabel")}
-      >
-        {props.counts.map((option) => (
-          <ToggleGroupItem
-            key={option.id}
-            value={option.id}
-            className="h-8 gap-2 rounded-md border px-3 text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:[&>span:last-child]:text-primary-foreground/70 [&>span:last-child]:min-w-8 [&>span:last-child]:text-right [&>span:last-child]:text-xs [&>span:last-child]:text-muted-foreground [&>span:last-child]:tabular-nums"
-            disabled={option.count === 0 && option.id !== "all"}
+    <section className="provider-scenario-section" aria-labelledby="provider-discovery-heading">
+      <h2 id="provider-discovery-heading">{t("providers.discovery.browseByTask")}</h2>
+      <div className="provider-scenario-grid">
+        {providerScenarioOptions.map((scenario) => {
+          const Icon = scenarioIconById[scenario.id];
+          const scenarioProviders = featuredProvidersForScenario(
+            props.providers.filter((provider) => providerScenario(provider) === scenario.id),
+            scenario,
+          );
+
+          return (
+            <Button
+              key={scenario.id}
+              type="button"
+              variant="ghost"
+              className="provider-scenario-card"
+              onClick={() => props.onSelect(scenario.id)}
+            >
+              <span className="provider-scenario-card-main">
+                <span className="provider-scenario-icon" aria-hidden="true">
+                  <Icon />
+                </span>
+                <span className="provider-scenario-copy">
+                  <span className="provider-scenario-title">{t(scenario.titleKey)}</span>
+                  <span className="provider-scenario-description">{t(scenario.descriptionKey)}</span>
+                </span>
+                <span className="provider-scenario-count">
+                  {compactProviderCount(props.counts.get(scenario.id) ?? 0)}
+                </span>
+              </span>
+              <span className="provider-scenario-card-footer">
+                <span className="provider-scenario-featured" aria-hidden="true">
+                  {scenarioProviders.map((provider) => (
+                    <ProviderIcon key={provider.service} provider={provider} />
+                  ))}
+                </span>
+                <span className="provider-scenario-action">{t("providers.discovery.explore")}</span>
+              </span>
+            </Button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ProviderCatalog(props: ProviderCatalogProps): ReactNode {
+  const t = useTranslate();
+
+  return (
+    <section className="provider-browser-panel">
+      <div className="provider-browser-header">
+        <h2>{t("providers.catalogTitle")}</h2>
+        <label className="relative flex w-full max-w-80 items-center sm:w-80">
+          <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+          <Input
+            className="h-8 pl-9 text-sm"
+            value={props.query}
+            onChange={(event) => props.onQueryChange(event.target.value)}
+            placeholder={t("providers.searchPlaceholder")}
+            aria-label={t("providers.searchPlaceholder")}
+          />
+        </label>
+      </div>
+      <div className="provider-collection-bar">
+        {props.showStatusFilters ? (
+          <ToggleGroup
+            className="provider-filter-list"
+            type="single"
+            value={props.selected}
+            onValueChange={(value) => {
+              if (value) props.onStatusFilterChange?.(value as ProviderStatusFilter);
+            }}
+            aria-label={t("providers.statusFilterLabel")}
           >
-            <span>{t(option.labelKey)}</span>
-            <span>{compactProviderCount(option.count)}</span>
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-      <Select value={props.categoryFilter} onValueChange={props.onSelectCategory}>
-        <SelectTrigger
-          className="h-8 w-48 rounded-md border px-3 text-sm"
-          size="sm"
-          aria-label={t("providers.categoryFilterLabel")}
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="p-1" position="popper" align="start">
-          <SelectItem value="all">{t("providers.categories.all")}</SelectItem>
-          {props.categoryOptions.map((option) => (
-            <SelectItem key={option.category} value={option.category}>
-              {option.category} ({compactProviderCount(option.count)})
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div className="provider-result-meta">
-        <span>
-          {t("providers.resultCount", {
-            shown: props.providerCount,
-            total: props.totalProviderCount,
-          })}
-        </span>
-        {props.filtersActive ? (
-          <Button variant="ghost" size="xs" type="button" onClick={props.onReset}>
-            <X size={13} />
-            {t("providers.resetFilters")}
+            {props.counts.map((option) => (
+              <ToggleGroupItem
+                key={option.id}
+                value={option.id}
+                className="h-8 gap-2 rounded-md border px-3 text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:[&>span:last-child]:text-primary-foreground/70 [&>span:last-child]:min-w-8 [&>span:last-child]:text-right [&>span:last-child]:text-xs [&>span:last-child]:text-muted-foreground [&>span:last-child]:tabular-nums"
+                disabled={option.count === 0 && option.id !== "all"}
+              >
+                <span>{t(option.labelKey)}</span>
+                <span>{compactProviderCount(option.count)}</span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : null}
+        <Select value={props.categoryFilter} onValueChange={props.onCategoryFilterChange}>
+          <SelectTrigger
+            className="h-8 w-48 rounded-md border px-3 text-sm"
+            size="sm"
+            aria-label={t("providers.categoryFilterLabel")}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="p-1" position="popper" align="start">
+            <SelectItem value="all">{t("providers.categories.all")}</SelectItem>
+            {props.categoryOptions.map((option) => (
+              <SelectItem key={option.category} value={option.category}>
+                {option.category} ({compactProviderCount(option.count)})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {props.scenarioFilter && props.scenarioFilter !== "all" ? (
+          <Button variant="outline" size="xs" type="button" onClick={props.onScenarioFilterClear}>
+            {t(`providers.discovery.scenarios.${scenarioTranslationKey(props.scenarioFilter)}.title`)}
+            <X data-icon="inline-end" />
           </Button>
         ) : null}
+        <div className="provider-result-meta">
+          <span>
+            {t("providers.resultCount", {
+              shown: props.providerCount,
+              total: props.totalProviderCount,
+            })}
+          </span>
+          {props.filtersActive ? (
+            <Button variant="ghost" size="xs" type="button" onClick={props.onReset}>
+              <X data-icon="inline-start" />
+              {t("providers.resetFilters")}
+            </Button>
+          ) : null}
+        </div>
       </div>
-    </div>
+
+      <p className="provider-brand-notice">{t("providers.brandNotice")}</p>
+
+      {props.providers.length === 0 ? (
+        <div className="provider-empty-row">
+          <EmptyState title={t("providers.noProvidersTitle")} description={t("providers.noProvidersDescription")} />
+          {props.filtersActive ? (
+            <Button variant="outline" size="sm" type="button" onClick={props.onReset}>
+              <X data-icon="inline-start" />
+              {t("providers.resetFilters")}
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <div className="provider-card-grid">
+          {props.providers.map((provider) => (
+            <ProviderCard
+              key={provider.service}
+              provider={provider}
+              status={props.statusByService.get(provider.service) ?? resolveProviderConnectionStatus(provider, [], [])}
+            />
+          ))}
+          {props.hasMoreProviders ? (
+            <div ref={props.loadMoreProvidersRef} className="provider-show-more">
+              <Button variant="outline" size="sm" type="button" onClick={props.loadMoreProviders}>
+                {t("providers.showMore")}
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </section>
   );
+}
+
+function scenarioTranslationKey(scenario: ProviderDiscoveryScenario): string {
+  return scenario === "cross-border-ecommerce"
+    ? "crossBorderEcommerce"
+    : scenario === "data-storage"
+      ? "dataStorage"
+      : scenario;
 }
 
 function ProviderCard(props: ProviderCardProps): ReactNode {
@@ -1428,8 +1637,22 @@ function countProvidersForStatus(
   return filterProvidersByStatus(providers, status, statusByService).length;
 }
 
-export function providerBrowserResetKey(query: string, status: ProviderStatusFilter, category: string): string {
-  return `${query}\u0000${status}\u0000${category}`;
+export function providerBrowserResetKey(
+  query: string,
+  status: ProviderStatusFilter,
+  category: string,
+  scenario: ProviderDiscoveryScenario | "all" = "all",
+  view: ProviderBrowserView = "discover",
+): string {
+  return `${query}\u0000${status}\u0000${category}\u0000${scenario}\u0000${view}`;
+}
+
+function defaultProviderBrowserView(connections: ConnectionRecord[]): ProviderBrowserView {
+  return connections.some(
+    (connection) => connection.authType !== "no_auth" && connection.virtual !== true && connection.configured !== false,
+  )
+    ? "manage"
+    : "discover";
 }
 
 function compactProviderCount(value: number): string {

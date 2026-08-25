@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { JotformActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -82,7 +82,7 @@ type NormalizedJotformUserStringField =
   | "language"
   | "avatarUrl";
 
-export const jotformActionHandlers: Record<JotformActionName, JotformActionHandler> = {
+export const jotformActionHandlers: ProviderActionHandlers<"jotform", JotformActionHandler> = {
   async get_current_user(_input, context) {
     const envelope = await requestJotformEnvelope({
       ...context,

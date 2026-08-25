@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ForemActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -40,7 +40,7 @@ interface ForemRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const foremActionHandlers: Record<ForemActionName, ForemActionHandler> = {
+export const foremActionHandlers: ProviderActionHandlers<"forem", ForemActionHandler> = {
   async get_current_user(_input, context) {
     const raw = await requestForemJson<Record<string, unknown>>(context, {
       path: "/users/me",

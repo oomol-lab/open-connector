@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "geoapify";
 
-export type GeoapifyActionName =
-  | "forward_geocode"
-  | "reverse_geocode"
-  | "address_autocomplete"
-  | "get_route"
-  | "get_route_matrix";
-
 const locationTypeSchema = s.stringEnum("The Geoapify place type filter.", [
   "country",
   "state",

@@ -5,21 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "kommo";
 
-export type KommoActionName =
-  | "get_account"
-  | "list_leads"
-  | "get_lead"
-  | "list_contacts"
-  | "get_contact"
-  | "list_companies"
-  | "get_company"
-  | "list_tasks"
-  | "get_task"
-  | "list_users"
-  | "get_user"
-  | "list_pipelines"
-  | "get_pipeline";
-
 const idSchema = s.positiveInteger("The Kommo numeric identifier.");
 const pageSchema = s.positiveInteger("The 1-based Kommo result page to fetch.");
 const limitSchema = s.positiveInteger("The number of Kommo records to fetch per request.", {

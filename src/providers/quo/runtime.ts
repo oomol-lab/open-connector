@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { QuoActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, requiredString } from "../../core/cast.ts";
@@ -12,7 +12,7 @@ type QuoActionHandler = (input: Record<string, unknown>, context: QuoActionConte
 
 export const quoApiBaseUrl = "https://api.openphone.com";
 
-export const quoActionHandlers: Record<QuoActionName, QuoActionHandler> = {
+export const quoActionHandlers: ProviderActionHandlers<"quo", QuoActionHandler> = {
   list_phone_numbers(input, context) {
     return quoRequest(
       {

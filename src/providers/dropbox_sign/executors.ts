@@ -1,11 +1,18 @@
-import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DropboxSignActionName } from "./actions.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  ResolvedCredential,
+} from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  defineApiKeyProviderExecutors,
+  defineProviderExecutors,
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
@@ -15,9 +22,17 @@ const service = "dropbox_sign";
 export const dropboxSignApiBaseUrl = "https://api.hellosign.com/v3";
 
 type DropboxSignRequestPhase = "validate" | "execute";
-type DropboxSignActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const dropboxSignActionHandlers: Record<DropboxSignActionName, DropboxSignActionHandler> = {
+interface DropboxSignContext {
+  authorization: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
+}
+
+export const dropboxSignActionHandlers: ProviderActionHandlers<
+  "dropbox_sign",
+  ProviderRuntimeHandler<DropboxSignContext>
+> = {
   get_account(input, context) {
     return executeGetAccount(input, context);
   },
@@ -35,43 +50,81 @@ export const dropboxSignActionHandlers: Record<DropboxSignActionName, DropboxSig
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, dropboxSignActionHandlers);
+export const executors: ProviderExecutors = defineProviderExecutors<DropboxSignContext>({
+  service,
+  handlers: dropboxSignActionHandlers,
+  createContext(context, fetcher) {
+    return resolveDropboxSignContext(context, fetcher);
+  },
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: dropboxSignApiBaseUrl,
-  auth: { type: "api_key_basic", suffix: ":" },
+  auth: { type: "none" },
+  async customizeRequest({ context, headers }) {
+    headers.set("authorization", await resolveDropboxSignAuthorization(context));
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const payload = await dropboxSignRequest("/account", {
-      apiKey: input.apiKey,
+    return validateDropboxSignCredential({
+      authorization: buildDropboxSignApiKeyAuthorization(input.apiKey),
+      fallbackAccountId: "dropbox_sign:api_key",
+      fallbackDisplayName: "Dropbox Sign API Key",
       fetcher,
-      method: "GET",
-      phase: "validate",
       signal,
     });
-    const account = normalizeAccount(readWrappedObject(payload, "account"));
-    return {
-      profile: {
-        accountId: account.accountId ? `dropbox_sign:${account.accountId}` : "dropbox_sign:api_key",
-        displayName: account.emailAddress ?? account.accountId ?? "Dropbox Sign API Key",
-      },
-      grantedScopes: [],
-      metadata: compactObject({
-        apiBaseUrl: dropboxSignApiBaseUrl,
-        accountId: account.accountId ?? undefined,
-        emailAddress: account.emailAddress ?? undefined,
-        validationEndpoint: "/account",
-      }),
-    };
+  },
+  async oauth2(input, { fetcher, signal }) {
+    return validateDropboxSignCredential({
+      authorization: `${input.tokenType} ${input.accessToken}`,
+      fallbackAccountId: "dropbox_sign:oauth2",
+      fallbackDisplayName: "Dropbox Sign OAuth",
+      fetcher,
+      grantedScopes: input.profile.grantedScopes,
+      signal,
+    });
   },
 };
 
-async function executeGetAccount(input: Record<string, unknown>, context: ApiKeyProviderContext) {
+interface DropboxSignValidationInput {
+  authorization: string;
+  fallbackAccountId: string;
+  fallbackDisplayName: string;
+  fetcher: typeof fetch;
+  grantedScopes?: string[];
+  signal?: AbortSignal;
+}
+
+async function validateDropboxSignCredential(input: DropboxSignValidationInput): Promise<CredentialValidationResult> {
   const payload = await dropboxSignRequest("/account", {
-    apiKey: context.apiKey,
+    authorization: input.authorization,
+    fetcher: input.fetcher,
+    method: "GET",
+    phase: "validate",
+    signal: input.signal,
+  });
+  const account = normalizeAccount(readWrappedObject(payload, "account"));
+  return {
+    profile: {
+      accountId: account.accountId ? `dropbox_sign:${account.accountId}` : input.fallbackAccountId,
+      displayName: account.emailAddress ?? account.accountId ?? input.fallbackDisplayName,
+    },
+    grantedScopes: input.grantedScopes ?? [],
+    metadata: compactObject({
+      apiBaseUrl: dropboxSignApiBaseUrl,
+      accountId: account.accountId ?? undefined,
+      emailAddress: account.emailAddress ?? undefined,
+      validationEndpoint: "/account",
+    }),
+  };
+}
+
+async function executeGetAccount(input: Record<string, unknown>, context: DropboxSignContext) {
+  const payload = await dropboxSignRequest("/account", {
+    authorization: context.authorization,
     fetcher: context.fetcher,
     method: "GET",
     phase: "execute",
@@ -87,9 +140,9 @@ async function executeGetAccount(input: Record<string, unknown>, context: ApiKey
   };
 }
 
-async function executeListSignatureRequests(input: Record<string, unknown>, context: ApiKeyProviderContext) {
+async function executeListSignatureRequests(input: Record<string, unknown>, context: DropboxSignContext) {
   const payload = await dropboxSignRequest("/signature_request/list", {
-    apiKey: context.apiKey,
+    authorization: context.authorization,
     fetcher: context.fetcher,
     method: "GET",
     phase: "execute",
@@ -105,10 +158,10 @@ async function executeListSignatureRequests(input: Record<string, unknown>, cont
   };
 }
 
-async function executeGetSignatureRequest(input: Record<string, unknown>, context: ApiKeyProviderContext) {
+async function executeGetSignatureRequest(input: Record<string, unknown>, context: DropboxSignContext) {
   const signatureRequestId = readRequiredTrimmedString(input.signatureRequestId, "signatureRequestId");
   const payload = await dropboxSignRequest(`/signature_request/${encodeURIComponent(signatureRequestId)}`, {
-    apiKey: context.apiKey,
+    authorization: context.authorization,
     fetcher: context.fetcher,
     method: "GET",
     phase: "execute",
@@ -120,9 +173,9 @@ async function executeGetSignatureRequest(input: Record<string, unknown>, contex
   };
 }
 
-async function executeListTemplates(input: Record<string, unknown>, context: ApiKeyProviderContext) {
+async function executeListTemplates(input: Record<string, unknown>, context: DropboxSignContext) {
   const payload = await dropboxSignRequest("/template/list", {
-    apiKey: context.apiKey,
+    authorization: context.authorization,
     fetcher: context.fetcher,
     method: "GET",
     phase: "execute",
@@ -138,10 +191,10 @@ async function executeListTemplates(input: Record<string, unknown>, context: Api
   };
 }
 
-async function executeGetTemplate(input: Record<string, unknown>, context: ApiKeyProviderContext) {
+async function executeGetTemplate(input: Record<string, unknown>, context: DropboxSignContext) {
   const templateId = readRequiredTrimmedString(input.templateId, "templateId");
   const payload = await dropboxSignRequest(`/template/${encodeURIComponent(templateId)}`, {
-    apiKey: context.apiKey,
+    authorization: context.authorization,
     fetcher: context.fetcher,
     method: "GET",
     phase: "execute",
@@ -156,7 +209,7 @@ async function executeGetTemplate(input: Record<string, unknown>, context: ApiKe
 async function dropboxSignRequest(
   path: string,
   input: {
-    apiKey: string;
+    authorization: string;
     fetcher: typeof fetch;
     method: "GET";
     phase: DropboxSignRequestPhase;
@@ -176,7 +229,7 @@ async function dropboxSignRequest(
   try {
     response = await input.fetcher(url, {
       method: input.method,
-      headers: dropboxSignHeaders(input.apiKey),
+      headers: dropboxSignHeaders(input.authorization),
       signal: input.signal,
     });
     payload = await readDropboxSignPayload(response);
@@ -194,16 +247,41 @@ async function dropboxSignRequest(
   return payload;
 }
 
-function dropboxSignHeaders(apiKey: string) {
+function dropboxSignHeaders(authorization: string) {
   return {
     accept: "application/json",
-    authorization: buildDropboxSignAuthorizationHeader(apiKey),
+    authorization,
     "user-agent": providerUserAgent,
   };
 }
 
-export function buildDropboxSignAuthorizationHeader(apiKey: string) {
+export function buildDropboxSignApiKeyAuthorization(apiKey: string): string {
   return `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`;
+}
+
+async function resolveDropboxSignContext(
+  context: ExecutionContext,
+  fetcher: typeof fetch,
+): Promise<DropboxSignContext> {
+  return {
+    authorization: await resolveDropboxSignAuthorization(context),
+    fetcher,
+    signal: context.signal,
+  };
+}
+
+async function resolveDropboxSignAuthorization(context: ExecutionContext): Promise<string> {
+  return buildDropboxSignCredentialAuthorization(await context.getCredential(service));
+}
+
+function buildDropboxSignCredentialAuthorization(credential: ResolvedCredential | undefined): string {
+  if (credential?.authType === "oauth2") {
+    return `${credential.tokenType} ${credential.accessToken}`;
+  }
+  if (credential?.authType === "api_key") {
+    return buildDropboxSignApiKeyAuthorization(credential.apiKey);
+  }
+  throw new ProviderRequestError(401, "Configure Dropbox Sign OAuth or API key credentials first.");
 }
 
 function buildDropboxSignUrl(path: string) {

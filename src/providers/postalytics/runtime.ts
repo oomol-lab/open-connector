@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -26,7 +27,10 @@ interface PostalyticsRequestInput {
   query?: Record<string, number | undefined>;
 }
 
-export const postalyticsActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const postalyticsActionHandlers: ProviderActionHandlers<
+  "postalytics",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_campaigns(_input, context): Promise<unknown> {
     return requireArrayPayload(
       await requestPostalyticsJson({

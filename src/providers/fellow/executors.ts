@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { FellowActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface FellowActionContext {
 
 type FellowActionHandler = (input: Record<string, unknown>, context: FellowActionContext) => Promise<unknown>;
 
-export const fellowActionHandlers: Record<FellowActionName, FellowActionHandler> = {
+export const fellowActionHandlers: ProviderActionHandlers<"fellow", FellowActionHandler> = {
   get_current_user(_input, context) {
     return requestFellowJson({
       context,

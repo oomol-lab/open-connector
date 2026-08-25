@@ -194,15 +194,6 @@ const createPostOutputSchema = s.object("A Discourse created post response.", {
   raw: s.looseObject("The raw Discourse created post payload."),
 });
 
-export type DiscourseActionName =
-  | "list_latest_topics"
-  | "list_categories"
-  | "list_category_topics"
-  | "get_topic"
-  | "search"
-  | "create_topic"
-  | "create_post";
-
 export const discourseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_latest_topics",

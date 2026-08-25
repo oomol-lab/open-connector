@@ -1,5 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -7,17 +8,18 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
+  optionalStringArray,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "webflow";
 const webflowApiBaseUrl = "https://api.webflow.com/v2";
 
 type WebflowRequestPhase = "validate" | "execute";
-type WebflowActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
+type WebflowActionHandler = ProviderRuntimeHandler<BearerProviderContext>;
 
-const webflowActionHandlers: Record<string, WebflowActionHandler> = {
+const webflowActionHandlers: ProviderActionHandlers<"webflow", WebflowActionHandler> = {
   list_sites(_input, context): Promise<unknown> {
     return executeListSites(context);
   },
@@ -53,40 +55,78 @@ const webflowActionHandlers: Record<string, WebflowActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, webflowActionHandlers);
+export const executors: ProviderExecutors = defineBearerProviderExecutors(service, webflowActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    const payload = await webflowGetJson("/token/authorized_by", input.apiKey, fetcher, signal, "validate");
-    const authorizedBy = optionalRecord(payload);
-    const user = optionalRecord(authorizedBy?.user);
-    const workspace = optionalRecord(authorizedBy?.workspace);
-    const label =
-      optionalString(user?.email) ??
-      optionalString(user?.displayName) ??
-      optionalString(workspace?.name) ??
-      "Webflow API Token";
-
-    return {
-      profile: {
-        accountId: optionalString(user?.id) ?? optionalString(workspace?.id) ?? "webflow:api_token",
-        displayName: label,
-      },
-      grantedScopes: [],
-      metadata: compactObject({
-        apiBaseUrl: webflowApiBaseUrl,
-        validationEndpoint: "/token/authorized_by",
-        userId: optionalString(user?.id),
-        userEmail: optionalString(user?.email),
-        workspaceId: optionalString(workspace?.id),
-        workspaceName: optionalString(workspace?.name),
-      }),
-    };
+    return validateWebflowApiKeyCredential(input.apiKey, fetcher, signal);
+  },
+  async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
+    return validateWebflowOAuthCredential(input.accessToken, input.metadata.scope, fetcher, signal);
   },
 };
 
-async function executeListSites(context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
-  const payload = await webflowGetJson("/sites", context.apiKey, context.fetcher, context.signal, "execute");
+async function validateWebflowApiKeyCredential(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const payload = await webflowGetJson("/token/authorized_by", accessToken, fetcher, signal, "validate");
+  const user = optionalRecord(payload);
+  const userId = optionalString(user?.id);
+  const userEmail = optionalString(user?.email);
+  const userName = [optionalString(user?.firstName), optionalString(user?.lastName)].filter(Boolean).join(" ");
+
+  return {
+    profile: {
+      accountId: userId ?? "webflow:credential",
+      displayName: (userEmail ?? userName) || "Webflow credential",
+    },
+    grantedScopes: [],
+    metadata: compactObject({
+      apiBaseUrl: webflowApiBaseUrl,
+      validationEndpoint: "/token/authorized_by",
+      userId,
+      userEmail,
+    }),
+  };
+}
+
+async function validateWebflowOAuthCredential(
+  accessToken: string,
+  tokenResponseScope: unknown,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const payload = await webflowGetJson("/token/introspect", accessToken, fetcher, signal, "validate");
+  const root = optionalRecord(payload);
+  const authorization = optionalRecord(root?.authorization);
+  const authorizedTo = optionalRecord(authorization?.authorizedTo);
+  const application = optionalRecord(root?.application);
+  const userId = optionalStringArray(authorizedTo?.userIds)?.[0];
+  const authorizationId = optionalString(authorization?.id);
+  const grantedScopes = parseWebflowScopes(authorization?.scope) ?? parseWebflowScopes(tokenResponseScope);
+  const result: CredentialValidationResult = {
+    profile: {
+      accountId: userId ?? authorizationId ?? "webflow:credential",
+      displayName: optionalString(application?.displayName) ?? "Webflow OAuth credential",
+    },
+    metadata: compactObject({
+      apiBaseUrl: webflowApiBaseUrl,
+      validationEndpoint: "/token/introspect",
+      authorizationId,
+      applicationId: optionalString(application?.id),
+      userId,
+    }),
+  };
+  if (grantedScopes) {
+    result.grantedScopes = grantedScopes;
+  }
+  return result;
+}
+
+async function executeListSites(context: BearerProviderContext): Promise<Record<string, unknown>> {
+  const payload = await webflowGetJson("/sites", context.accessToken, context.fetcher, context.signal, "execute");
   return {
     sites: normalizeArrayPayload(payload, "sites").map(normalizeSite),
   };
@@ -94,12 +134,12 @@ async function executeListSites(context: ApiKeyProviderContext): Promise<Record<
 
 async function executeGetSite(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const siteId = readRequiredInputString(input.siteId, "siteId");
   const payload = await webflowGetJson(
     `/sites/${encodeURIComponent(siteId)}`,
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
     "execute",
@@ -111,7 +151,7 @@ async function executeGetSite(
 
 async function executePublishSite(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const siteId = readRequiredInputString(input.siteId, "siteId");
   const body = compactObject({
@@ -121,7 +161,7 @@ async function executePublishSite(
   const payload = await webflowPostJson(
     `/sites/${encodeURIComponent(siteId)}/publish`,
     body,
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
   );
@@ -133,12 +173,12 @@ async function executePublishSite(
 
 async function executeListCollections(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const siteId = readRequiredInputString(input.siteId, "siteId");
   const payload = await webflowGetJson(
     `/sites/${encodeURIComponent(siteId)}/collections`,
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
     "execute",
@@ -150,12 +190,12 @@ async function executeListCollections(
 
 async function executeGetCollection(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const payload = await webflowGetJson(
     `/collections/${encodeURIComponent(collectionId)}`,
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
     "execute",
@@ -169,13 +209,13 @@ async function executeGetCollection(
 
 async function executeListCollectionItems(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const url = new URL(`/v2/collections/${encodeURIComponent(collectionId)}/items`, webflowApiBaseUrl);
   setOptionalSearchParam(url, "limit", input.limit);
   setOptionalSearchParam(url, "offset", input.offset);
-  const payload = await webflowFetchJson(url, context.apiKey, context.fetcher, context.signal, "execute", {
+  const payload = await webflowFetchJson(url, context.accessToken, context.fetcher, context.signal, "execute", {
     method: "GET",
   });
   const record = optionalRecord(payload) ?? {};
@@ -192,7 +232,7 @@ async function executeListCollectionItems(
 
 async function executeGetCollectionItem(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const itemId = readRequiredInputString(input.itemId, "itemId");
@@ -201,7 +241,7 @@ async function executeGetCollectionItem(
     webflowApiBaseUrl,
   );
   setOptionalSearchParam(url, "cmsLocaleId", input.cmsLocaleId);
-  const payload = await webflowFetchJson(url, context.apiKey, context.fetcher, context.signal, "execute", {
+  const payload = await webflowFetchJson(url, context.accessToken, context.fetcher, context.signal, "execute", {
     method: "GET",
   });
   return {
@@ -211,14 +251,14 @@ async function executeGetCollectionItem(
 
 async function executeCreateCollectionItem(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const live = optionalBoolean(input.live) === true;
   const payload = await webflowPostJson(
     `/collections/${encodeURIComponent(collectionId)}/items${live ? "/live" : ""}`,
     buildCollectionItemBody(input),
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
   );
@@ -229,7 +269,7 @@ async function executeCreateCollectionItem(
 
 async function executeUpdateCollectionItem(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const itemId = readRequiredInputString(input.itemId, "itemId");
@@ -237,7 +277,7 @@ async function executeUpdateCollectionItem(
   const payload = await webflowPatchJson(
     `/collections/${encodeURIComponent(collectionId)}/items/${encodeURIComponent(itemId)}${live ? "/live" : ""}`,
     buildCollectionItemBody(input),
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
   );
@@ -248,13 +288,13 @@ async function executeUpdateCollectionItem(
 
 async function executeDeleteCollectionItem(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const itemId = readRequiredInputString(input.itemId, "itemId");
   await webflowFetchJson(
     `/collections/${encodeURIComponent(collectionId)}/items/${encodeURIComponent(itemId)}`,
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
     "execute",
@@ -268,7 +308,7 @@ async function executeDeleteCollectionItem(
 
 async function executePublishCollectionItems(
   input: Record<string, unknown>,
-  context: ApiKeyProviderContext,
+  context: BearerProviderContext,
 ): Promise<Record<string, unknown>> {
   const collectionId = readRequiredInputString(input.collectionId, "collectionId");
   const payload = await webflowPostJson(
@@ -276,7 +316,7 @@ async function executePublishCollectionItems(
     {
       itemIds: input.itemIds,
     },
-    context.apiKey,
+    context.accessToken,
     context.fetcher,
     context.signal,
   );
@@ -294,22 +334,22 @@ async function executePublishCollectionItems(
 
 async function webflowGetJson(
   path: string,
-  apiKey: string,
+  accessToken: string,
   fetcher: typeof fetch,
   signal: AbortSignal | undefined,
   phase: WebflowRequestPhase,
 ): Promise<unknown> {
-  return webflowFetchJson(path, apiKey, fetcher, signal, phase, { method: "GET" });
+  return webflowFetchJson(path, accessToken, fetcher, signal, phase, { method: "GET" });
 }
 
 async function webflowPostJson(
   path: string,
   body: Record<string, unknown>,
-  apiKey: string,
+  accessToken: string,
   fetcher: typeof fetch,
   signal: AbortSignal | undefined,
 ): Promise<unknown> {
-  return webflowFetchJson(path, apiKey, fetcher, signal, "execute", {
+  return webflowFetchJson(path, accessToken, fetcher, signal, "execute", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -318,11 +358,11 @@ async function webflowPostJson(
 async function webflowPatchJson(
   path: string,
   body: Record<string, unknown>,
-  apiKey: string,
+  accessToken: string,
   fetcher: typeof fetch,
   signal: AbortSignal | undefined,
 ): Promise<unknown> {
-  return webflowFetchJson(path, apiKey, fetcher, signal, "execute", {
+  return webflowFetchJson(path, accessToken, fetcher, signal, "execute", {
     method: "PATCH",
     body: JSON.stringify(body),
   });
@@ -330,7 +370,7 @@ async function webflowPatchJson(
 
 async function webflowFetchJson(
   pathOrUrl: string | URL,
-  apiKey: string,
+  accessToken: string,
   fetcher: typeof fetch,
   signal: AbortSignal | undefined,
   phase: WebflowRequestPhase,
@@ -343,7 +383,7 @@ async function webflowFetchJson(
   try {
     response = await fetcher(url, {
       ...init,
-      headers: webflowHeaders(apiKey, init.body === undefined ? undefined : "application/json"),
+      headers: webflowHeaders(accessToken, init.body === undefined ? undefined : "application/json"),
       signal,
     });
     payload = await readWebflowPayload(response);
@@ -364,13 +404,19 @@ async function webflowFetchJson(
   return payload;
 }
 
-function webflowHeaders(apiKey: string, contentType?: string): Record<string, string> {
+function webflowHeaders(accessToken: string, contentType?: string): Record<string, string> {
   return compactObject({
     accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    authorization: `Bearer ${accessToken}`,
     "content-type": contentType,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;
+}
+
+function parseWebflowScopes(value: unknown): string[] | undefined {
+  return optionalString(value)
+    ?.split(/[,\s]+/u)
+    .filter(Boolean);
 }
 
 async function readWebflowPayload(response: Response): Promise<unknown> {

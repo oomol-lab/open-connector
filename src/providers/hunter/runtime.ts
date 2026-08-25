@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HunterActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -21,7 +21,7 @@ interface HunterRequestInput {
   phase?: "validate" | "execute";
 }
 
-export const hunterActionHandlers: Record<HunterActionName, HunterActionHandler> = {
+export const hunterActionHandlers: ProviderActionHandlers<"hunter", HunterActionHandler> = {
   account_information(_input, context) {
     return requestHunter({
       ...context,

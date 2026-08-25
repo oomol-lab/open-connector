@@ -3,6 +3,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
+  ResolvedCredential,
 } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -15,13 +16,13 @@ import {
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 import {
-  buildWordpressApiBaseUrl,
+  buildWordpressAuthorization,
   createWordpressContext,
   validateWordpressCredential,
+  validateWordpressOAuthCredential,
   wordpressActionHandlers,
 } from "./runtime.ts";
 
@@ -34,23 +35,18 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   handlers: wordpressActionHandlers,
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
-    const credential = await requireApiKeyCredential(context, service);
-    return createWordpressContext(credential.apiKey, credential.values, fetcher, context.signal);
+    const credential = await requireWordpressCredential(context);
+    return createWordpressContext(credential, fetcher, context.signal);
   },
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
-    const credential = await requireApiKeyCredential(context, service);
-    const wordpressContext = createWordpressContext(
-      credential.apiKey,
-      credential.values,
-      guardedProviderFetch,
-      context.signal,
-    );
-    const url = createProviderProxyUrl(buildWordpressApiBaseUrl(wordpressContext.siteUrl), input.endpoint, input.query);
+    const credential = await requireWordpressCredential(context);
+    const wordpressContext = createWordpressContext(credential, guardedProviderFetch, context.signal);
+    const url = createProviderProxyUrl(wordpressContext.apiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("authorization", `Basic ${btoa(`${wordpressContext.username}:${wordpressContext.apiKey}`)}`);
+    headers.set("authorization", buildWordpressAuthorization(wordpressContext));
     headers.set("user-agent", providerUserAgent);
 
     const init: RequestInit = {
@@ -81,4 +77,19 @@ export const credentialValidators: CredentialValidators = {
     const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     return validateWordpressCredential(input, guardedFetcher, signal);
   },
+  oauth2(input, { fetcher, signal }) {
+    return validateWordpressOAuthCredential(input, fetcher, signal);
+  },
 };
+
+type WordpressCredential =
+  | Extract<ResolvedCredential, { authType: "api_key" }>
+  | Extract<ResolvedCredential, { authType: "oauth2" }>;
+
+async function requireWordpressCredential(context: ExecutionContext): Promise<WordpressCredential> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key" || credential?.authType === "oauth2") {
+    return credential;
+  }
+  throw new ProviderRequestError(401, "Connect wordpress with OAuth or configure an application password first.");
+}

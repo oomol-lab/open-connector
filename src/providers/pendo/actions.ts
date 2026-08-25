@@ -39,8 +39,6 @@ function idsInput(description: string, fieldDescription: string) {
   });
 }
 
-export type PendoActionName = "identify" | "list_pages" | "get_pages" | "list_features" | "get_features";
-
 export const pendoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify",

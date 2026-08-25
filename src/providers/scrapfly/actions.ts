@@ -135,6 +135,4 @@ const getMonitoringMetricsAction = defineProviderAction(service, {
   }),
 });
 
-export type ScrapflyActionName = "scrape" | "get_monitoring_metrics";
-
 export const scrapflyActions: ActionDefinition[] = [scrapeAction, getMonitoringMetricsAction];

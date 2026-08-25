@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ContentfulGraphqlActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -54,7 +54,10 @@ interface ContentfulGraphqlResponse {
   rateLimitReset?: number;
 }
 
-export const contentfulGraphqlActionHandlers: Record<ContentfulGraphqlActionName, ContentfulGraphqlActionHandler> = {
+export const contentfulGraphqlActionHandlers: ProviderActionHandlers<
+  "contentful_graphql",
+  ContentfulGraphqlActionHandler
+> = {
   execute_query(input, context) {
     return executeContentfulGraphqlQuery(input, context);
   },

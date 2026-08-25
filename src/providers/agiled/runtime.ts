@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { AgiledActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -26,7 +26,7 @@ interface AgiledRequestOptions {
 
 type AgiledActionHandler = (input: Record<string, unknown>, context: AgiledActionContext) => Promise<unknown>;
 
-export const agiledActionHandlers: Record<AgiledActionName, AgiledActionHandler> = {
+export const agiledActionHandlers: ProviderActionHandlers<"agiled", AgiledActionHandler> = {
   list_contacts(_input, context) {
     return listAgiledItems("contacts", "/contacts", context);
   },

@@ -32,15 +32,6 @@ const supportedLanguage = s.object("One language supported by Tisane.", {
   raw: rawObject,
 });
 
-export type TisaneActionName =
-  | "analyze_text"
-  | "detect_language"
-  | "list_supported_languages"
-  | "extract_text"
-  | "calculate_similarity"
-  | "transform_text"
-  | "compare_entities";
-
 export const tisaneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "analyze_text",

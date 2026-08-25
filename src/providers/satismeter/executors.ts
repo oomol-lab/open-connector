@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SatismeterActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -20,7 +20,7 @@ const satismeterValidationPath = `/projects/${satismeterValidationProbeProjectId
 type SatismeterMode = "validate" | "execute";
 type SatismeterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const satismeterActionHandlers: Record<SatismeterActionName, SatismeterActionHandler> = {
+export const satismeterActionHandlers: ProviderActionHandlers<"satismeter", SatismeterActionHandler> = {
   get_project(input, context) {
     return getProject(input, context);
   },

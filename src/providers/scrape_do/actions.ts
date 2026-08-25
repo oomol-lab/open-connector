@@ -138,8 +138,6 @@ const accountInfoSchema = s.looseRequiredObject("The account information and usa
   remaining_monthly_request: s.integer("The remaining monthly request count for the account."),
 });
 
-export type ScrapeDoActionName = "fetch_html" | "fetch_json" | "take_screenshot" | "get_account_info";
-
 export const scrapeDoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_html",

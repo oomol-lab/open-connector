@@ -66,6 +66,7 @@ describe("catalog store", () => {
     expect(summarizedAction?.requiredScopes).toEqual(["read"]);
     expect(summarizedAction?.execution.locallyExecutable).toBe(true);
     expect(summary?.execution.actionCount).toBe(1);
+    expect(summary?.scenario).toBe("developer");
     // The full catalog still carries schemas for /api/actions/:actionId.
     expect(catalog.actionsById.get("example.ping")?.inputSchema).toEqual({
       type: "object",

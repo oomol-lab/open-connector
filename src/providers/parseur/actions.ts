@@ -156,10 +156,3 @@ export const parseurActions: ProviderActionDefinition[] = [
     outputSchema: s.object("Parseur document details.", { document }),
   }),
 ];
-
-export type ParseurActionName =
-  | "list_mailboxes"
-  | "get_mailbox"
-  | "get_mailbox_schema"
-  | "list_mailbox_documents"
-  | "get_document";

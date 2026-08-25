@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type {
   ApiKeyProviderContext,
   ProviderFetch,
@@ -22,7 +23,10 @@ const photoroomShadowModeByStyle: Record<string, string> = {
 
 type PhotoroomRequestPhase = "validate" | "execute";
 
-export const photoroomActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const photoroomActionHandlers: ProviderActionHandlers<
+  "photoroom",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   edit_product_image(input, context) {
     return editPhotoroomProductImage(input, context);
   },

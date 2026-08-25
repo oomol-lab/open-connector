@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -8,7 +9,7 @@ const tripadvisorApiBaseUrl = "https://api.content.tripadvisor.com/api/v1";
 
 type TripadvisorActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const tripadvisorActionHandlers: Record<string, TripadvisorActionHandler> = {
+export const tripadvisorActionHandlers: ProviderActionHandlers<"tripadvisor", TripadvisorActionHandler> = {
   search_locations(input, context) {
     return listLocations("/location/search", buildSearchLocationsQuery(input), context);
   },

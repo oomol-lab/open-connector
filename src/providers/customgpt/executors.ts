@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CustomgptActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ type CustomgptRequestPhase = "validate" | "execute";
 type CustomgptActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CustomgptActionHandler = (input: Record<string, unknown>, context: CustomgptActionContext) => Promise<unknown>;
 
-export const customgptActionHandlers: Record<CustomgptActionName, CustomgptActionHandler> = {
+export const customgptActionHandlers: ProviderActionHandlers<"customgpt", CustomgptActionHandler> = {
   list_agents(input, context) {
     return executeListAgents(input, context);
   },

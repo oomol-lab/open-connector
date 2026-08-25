@@ -263,13 +263,6 @@ const retrieveTaskRunResultAction = defineProviderAction(service, {
   }),
 });
 
-export type ParallelActionName =
-  | "search"
-  | "extract"
-  | "create_task_run"
-  | "retrieve_task_run"
-  | "retrieve_task_run_result";
-
 export const parallelActions: ActionDefinition[] = [
   searchAction,
   extractAction,

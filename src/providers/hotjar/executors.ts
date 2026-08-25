@@ -5,6 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -59,7 +60,7 @@ interface HotjarPage {
   nextCursor: string | null;
 }
 
-export const hotjarActionHandlers: Record<string, HotjarActionHandler> = {
+export const hotjarActionHandlers: ProviderActionHandlers<"hotjar", HotjarActionHandler> = {
   async list_surveys(input, context) {
     const accessToken = await exchangeHotjarAccessToken(context.credential, context.fetcher, "execute", context.signal);
     const siteId = requiredString(input.siteId, "siteId");

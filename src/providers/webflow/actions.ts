@@ -2,6 +2,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { webflowCmsReadScope, webflowCmsWriteScope, webflowSitesReadScope, webflowSitesWriteScope } from "./scopes.ts";
 
 const service = "webflow";
 
@@ -69,6 +70,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sites",
     description: "List Webflow sites available to the connected token.",
+    requiredScopes: [webflowSitesReadScope],
+    providerPermissions: [webflowSitesReadScope],
     inputSchema: s.actionInput({}, [], "No input is required to list Webflow sites."),
     outputSchema: s.actionOutput(
       {
@@ -80,6 +83,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_site",
     description: "Get details for a single Webflow site.",
+    requiredScopes: [webflowSitesReadScope],
+    providerPermissions: [webflowSitesReadScope],
     inputSchema: s.actionInput(
       {
         siteId: siteIdField,
@@ -98,6 +103,8 @@ export const webflowActions: ProviderActionDefinition[] = [
     name: "publish_site",
     description:
       "Publish a Webflow site to all domains or selected custom domains and return Webflow's publish result.",
+    requiredScopes: [webflowSitesWriteScope],
+    providerPermissions: [webflowSitesWriteScope],
     inputSchema: s.actionInput(
       {
         siteId: siteIdField,
@@ -121,6 +128,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collections",
     description: "List CMS collections for a Webflow site.",
+    requiredScopes: [webflowCmsReadScope],
+    providerPermissions: [webflowCmsReadScope],
     inputSchema: s.actionInput(
       {
         siteId: siteIdField,
@@ -138,6 +147,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_collection",
     description: "Get a Webflow CMS collection including its field definitions.",
+    requiredScopes: [webflowCmsReadScope],
+    providerPermissions: [webflowCmsReadScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,
@@ -156,6 +167,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collection_items",
     description: "List items in a Webflow CMS collection.",
+    requiredScopes: [webflowCmsReadScope],
+    providerPermissions: [webflowCmsReadScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,
@@ -176,6 +189,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_collection_item",
     description: "Get a single item from a Webflow CMS collection.",
+    requiredScopes: [webflowCmsReadScope],
+    providerPermissions: [webflowCmsReadScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,
@@ -195,6 +210,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_collection_item",
     description: "Create a draft or live item in a Webflow CMS collection.",
+    requiredScopes: [webflowCmsWriteScope],
+    providerPermissions: [webflowCmsWriteScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,
@@ -217,6 +234,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_collection_item",
     description: "Update a draft or live item in a Webflow CMS collection.",
+    requiredScopes: [webflowCmsWriteScope],
+    providerPermissions: [webflowCmsWriteScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,
@@ -240,6 +259,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "delete_collection_item",
     description: "Delete a draft CMS item from a Webflow collection.",
+    requiredScopes: [webflowCmsWriteScope],
+    providerPermissions: [webflowCmsWriteScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,
@@ -259,6 +280,8 @@ export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "publish_collection_items",
     description: "Publish one or more Webflow CMS collection items.",
+    requiredScopes: [webflowCmsWriteScope],
+    providerPermissions: [webflowCmsWriteScope],
     inputSchema: s.actionInput(
       {
         collectionId: collectionIdField,

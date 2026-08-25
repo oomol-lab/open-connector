@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { StayAiActionName } from "./actions.ts";
 
 import { compactObject, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const stayAiApiBaseUrl = "https://api.retextion.com/api/v2";
 type StayAiRequestPhase = "validate" | "execute";
 type StayAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const stayAiActionHandlers: Record<StayAiActionName, StayAiActionHandler> = {
+const stayAiActionHandlers: ProviderActionHandlers<"stay_ai", StayAiActionHandler> = {
   async get_account_settings(input, context) {
     const payload = await requestStayAiJson({
       path: "/settings",

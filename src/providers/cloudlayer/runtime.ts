@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { CloudlayerActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -21,7 +21,10 @@ const cloudlayerAccountPath = "/v2/account";
 const cloudlayerJobsPath = "/v2/jobs";
 const cloudlayerAssetsPath = "/v2/assets";
 
-export const cloudlayerActionHandlers: Record<CloudlayerActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const cloudlayerActionHandlers: ProviderActionHandlers<
+  "cloudlayer",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_account(_input, context) {
     const payload = await requestCloudlayerJson({
       path: cloudlayerAccountPath,

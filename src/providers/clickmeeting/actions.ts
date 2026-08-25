@@ -273,27 +273,6 @@ const phoneGatewaySchema = s.object(
   { optional: ["code", "location", "value", "geo"] },
 );
 
-export type ClickMeetingActionName =
-  | "ping"
-  | "list_conferences"
-  | "create_conference"
-  | "get_conference"
-  | "update_conference"
-  | "delete_conference"
-  | "generate_access_tokens"
-  | "list_access_tokens"
-  | "list_sessions"
-  | "get_session"
-  | "list_session_attendees"
-  | "list_registrations"
-  | "register_participant"
-  | "list_session_registrations"
-  | "list_time_zones"
-  | "list_phone_gateways"
-  | "list_all_recordings"
-  | "list_conference_recordings"
-  | "list_chats";
-
 export const clickMeetingActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "ping",

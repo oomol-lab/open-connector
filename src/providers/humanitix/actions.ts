@@ -94,5 +94,3 @@ export const humanitixActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HumanitixActionName = "list_events" | "get_event" | "list_tags";

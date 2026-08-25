@@ -8,12 +8,14 @@
  */
 interface FeishuProviderScopes {
   offlineAccess: string;
+  userIdRead: string;
   docxReadonly: string;
   bitableAppReadonly: string;
 }
 
 export const feishuProviderScopes: FeishuProviderScopes = {
   offlineAccess: "offline_access",
+  userIdRead: "auth:user.id:read",
   docxReadonly: "docx:document:readonly",
   bitableAppReadonly: "bitable:app:readonly",
 };

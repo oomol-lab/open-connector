@@ -93,14 +93,6 @@ const currencySchema = s.object("Normalized currency returned by Marketstack.", 
   symbolNative: s.nullableString("Native currency symbol."),
 });
 
-export type MarketstackActionName =
-  | "list_tickers"
-  | "get_ticker_info"
-  | "get_latest_eod"
-  | "get_historical_eod"
-  | "list_exchanges"
-  | "list_currencies";
-
 export const marketstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tickers",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ParsehubActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ type ParsehubRequestPhase = "validate" | "execute";
 type ParsehubActionContext = ApiKeyProviderContext;
 type ParsehubActionHandler = (input: Record<string, unknown>, context: ParsehubActionContext) => Promise<unknown>;
 
-export const parsehubActionHandlers: Record<ParsehubActionName, ParsehubActionHandler> = {
+export const parsehubActionHandlers: ProviderActionHandlers<"parsehub", ParsehubActionHandler> = {
   list_projects(input, context) {
     return listParsehubProjects(input, context);
   },

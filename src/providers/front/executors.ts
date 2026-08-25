@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FrontActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -49,7 +49,7 @@ interface FrontTeammate {
   customFields: Record<string, unknown>;
 }
 
-export const frontActionHandlers: Record<FrontActionName, FrontActionHandler> = {
+export const frontActionHandlers: ProviderActionHandlers<"front", FrontActionHandler> = {
   list_contacts(input, context) {
     return listContacts(input, context);
   },

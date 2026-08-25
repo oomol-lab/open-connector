@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
-import type { CalendlyActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -25,7 +25,7 @@ type CalendlyRequestOptions = {
 export const calendlyApiOrigin: string = "https://api.calendly.com";
 const calendlyValidationPath = "/users/me";
 
-export const calendlyActionHandlers: Record<CalendlyActionName, CalendlyActionHandler> = {
+export const calendlyActionHandlers: ProviderActionHandlers<"calendly", CalendlyActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

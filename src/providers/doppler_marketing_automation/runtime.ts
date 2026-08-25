@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DopplerMarketingAutomationActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -37,8 +38,8 @@ interface DopplerMarketingRequest {
 
 type DopplerMarketingActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof fetch) => Promise<unknown>;
 
-export const dopplerMarketingAutomationActionHandlers: Record<
-  DopplerMarketingAutomationActionName,
+export const dopplerMarketingAutomationActionHandlers: ProviderActionHandlers<
+  "doppler_marketing_automation",
   DopplerMarketingActionHandler
 > = {
   async list_lists(input, fetcher) {
@@ -172,7 +173,7 @@ export const dopplerMarketingAutomationActionHandlers: Record<
     });
     return normalizeMessageResult(payload);
   },
-} satisfies Record<DopplerMarketingAutomationActionName, DopplerMarketingActionHandler>;
+};
 
 function readTrimmedInputString(value: unknown, fieldName: string): string {
   if (typeof value !== "string" || !value.trim()) {

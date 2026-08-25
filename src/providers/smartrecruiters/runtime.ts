@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SmartRecruitersActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface SmartRecruitersRequestInput {
   query?: Partial<SmartRecruitersQuery>;
 }
 
-export const smartrecruitersActionHandlers: Record<SmartRecruitersActionName, SmartRecruitersActionHandler> = {
+export const smartrecruitersActionHandlers: ProviderActionHandlers<"smartrecruiters", SmartRecruitersActionHandler> = {
   async list_jobs(input, context) {
     const raw = await requestSmartRecruitersJson(
       {

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RocketlaneActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -18,7 +18,7 @@ interface RocketlaneListEnvelope {
   pagination: Record<string, unknown>;
 }
 
-export const rocketlaneActionHandlers: Record<RocketlaneActionName, RocketlaneActionHandler> = {
+export const rocketlaneActionHandlers: ProviderActionHandlers<"rocketlane", RocketlaneActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },

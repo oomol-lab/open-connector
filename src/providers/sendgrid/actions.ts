@@ -147,8 +147,6 @@ sendEmailInputSchema.allOf = [
   },
 ];
 
-export type SendgridActionName = "get_account_info" | "get_user_scopes" | "list_transactional_templates" | "send_email";
-
 export const sendgridActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

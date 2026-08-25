@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SignwellActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const signwellDefaultTimeoutMs = 30_000;
 type SignwellPhase = "validate" | "execute";
 type SignwellActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const signwellActionHandlers: Record<SignwellActionName, SignwellActionHandler> = {
+export const signwellActionHandlers: ProviderActionHandlers<"signwell", SignwellActionHandler> = {
   get_me(_input, context) {
     return getMe(context);
   },

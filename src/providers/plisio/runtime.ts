@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -24,7 +25,7 @@ interface PlisioLinksPayload {
 
 export const plisioApiBaseUrl = "https://api.plisio.net";
 
-export const plisioActionHandlers: Record<string, PlisioActionHandler> = {
+export const plisioActionHandlers: ProviderActionHandlers<"plisio", PlisioActionHandler> = {
   create_invoice(input, context) {
     return createInvoice(input, context);
   },

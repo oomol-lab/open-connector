@@ -105,10 +105,3 @@ export const wizaActions: ActionDefinition[] = [
     outputSchema: wizaGenericResponseSchema,
   }),
 ];
-
-export type WizaActionName =
-  | "get_credits"
-  | "get_individual_reveal"
-  | "get_list"
-  | "prospect_search"
-  | "start_individual_reveal";

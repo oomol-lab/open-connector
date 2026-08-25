@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -35,7 +36,7 @@ interface ScopusResponse {
 
 type ScopusActionHandler = (input: Record<string, unknown>, context: ScopusContext) => Promise<unknown>;
 
-export const scopusActionHandlers: Record<string, ScopusActionHandler> = {
+export const scopusActionHandlers: ProviderActionHandlers<"scopus", ScopusActionHandler> = {
   async search_documents(input, context) {
     validateDocumentSearchInput(input);
     const response = await requestScopusJson(

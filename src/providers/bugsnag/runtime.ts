@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BugsnagActionName } from "./actions.ts";
 
 import { optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ interface BugsnagJsonResponse {
   headers: Headers;
 }
 
-export const bugsnagActionHandlers: Record<BugsnagActionName, BugsnagActionHandler> = {
+export const bugsnagActionHandlers: ProviderActionHandlers<"bugsnag", BugsnagActionHandler> = {
   list_organizations(input, context) {
     return listOrganizations(input, context);
   },
@@ -53,37 +53,29 @@ export async function validateBugsnagCredential(input: {
 }): Promise<CredentialValidationResult> {
   const { payload } = await requestBugsnagJson({
     apiKey: input.apiKey,
-    path: "/user/organizations",
+    path: "/user",
     fetcher: input.fetcher,
     signal: input.signal,
     phase: "validate",
   });
 
-  const organizations = requireArrayPayload(payload, "bugsnag organizations");
-  if (organizations.length === 0) {
-    throw new ProviderRequestError(
-      502,
-      "bugsnag organizations response did not include an accessible organization",
-      payload,
-    );
-  }
-
-  const organization = requireResponseRecord(organizations[0], "bugsnag organization");
-  const organizationId = requiredString(organization.id, "bugsnag organization id", providerOutputError);
-  const organizationSlug = optionalString(organization.slug);
-  const accountLabel = optionalString(organization.name) ?? organizationSlug ?? "Bugsnag Personal Auth Token";
+  const user = requireResponseRecord(payload, "bugsnag user");
+  const userId = requiredString(user.id, "bugsnag user id", providerOutputError);
+  const email = optionalString(user.email);
+  const name = optionalString(user.name);
 
   return {
     profile: {
-      accountId: organizationId,
-      displayName: accountLabel,
+      accountId: userId,
+      displayName: name ?? email ?? "Bugsnag Personal Auth Token",
     },
     grantedScopes: [],
     metadata: {
       apiBaseUrl: bugsnagApiBaseUrl,
-      validationEndpoint: "/user/organizations",
-      organizationId,
-      ...(organizationSlug ? { organizationSlug } : {}),
+      validationEndpoint: "/user",
+      userId,
+      ...(email ? { email } : {}),
+      ...(name ? { name } : {}),
     },
   };
 }

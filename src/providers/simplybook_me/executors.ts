@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -39,7 +40,7 @@ interface JsonRpcErrorPayload {
 
 type SimplybookMeActionHandler = (input: Record<string, unknown>, context: SimplybookMeContext) => Promise<unknown>;
 
-export const simplybookMeActionHandlers: Record<string, SimplybookMeActionHandler> = {
+export const simplybookMeActionHandlers: ProviderActionHandlers<"simplybook_me", SimplybookMeActionHandler> = {
   async get_company_info(_input, context) {
     const company = await callPublicMethod(context, "getCompanyInfo", []);
     return { company: requireObjectPayload(company, "SimplyBook.me company info response") };

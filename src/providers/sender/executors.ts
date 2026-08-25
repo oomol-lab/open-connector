@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SenderActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -38,7 +38,7 @@ const subscriberUpdateKeys = [
   "transactional_email_status",
 ];
 
-const senderActionHandlers: Record<SenderActionName, SenderActionHandler> = {
+const senderActionHandlers: ProviderActionHandlers<"sender", SenderActionHandler> = {
   async list_subscribers(input, context) {
     return normalizePaginatedResponse(
       await senderRequest(context, "/subscribers", { method: "GET", query: paginationQuery(input) }, "execute"),

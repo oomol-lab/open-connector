@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OctaveActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -26,7 +26,7 @@ interface OctaveRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const octaveActionHandlers: Record<OctaveActionName, OctaveActionHandler> = {
+export const octaveActionHandlers: ProviderActionHandlers<"octave", OctaveActionHandler> = {
   validate_api_key(_input, context) {
     return validateApiKeyAction(context);
   },

@@ -5,8 +5,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ChartmogulActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -42,7 +42,7 @@ interface ChartmogulAccount {
   raw: Record<string, unknown>;
 }
 
-export const chartmogulActionHandlers: Record<ChartmogulActionName, ChartmogulActionHandler> = {
+export const chartmogulActionHandlers: ProviderActionHandlers<"chartmogul", ChartmogulActionHandler> = {
   get_account(input, context) {
     return getAccount(input, context);
   },

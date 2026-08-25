@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { TapfiliateActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -21,7 +21,7 @@ interface TapfiliateJsonResponse {
   headers: Headers;
 }
 
-export const tapfiliateActionHandlers: Record<TapfiliateActionName, TapfiliateActionHandler> = {
+export const tapfiliateActionHandlers: ProviderActionHandlers<"tapfiliate", TapfiliateActionHandler> = {
   async list_affiliates(input, context) {
     const response = await requestTapfiliateJson({
       path: "/affiliates/",

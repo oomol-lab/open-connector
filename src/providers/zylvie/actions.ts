@@ -209,4 +209,3 @@ const actions: ActionDefinition[] = [
 ];
 
 export const zylvieActions: ActionDefinition[] = actions;
-export type ZylvieActionName = (typeof actions)[number]["name"];

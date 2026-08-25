@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { FaradayActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -15,7 +15,7 @@ interface FaradayActionContext {
 
 type FaradayActionHandler = (input: Record<string, unknown>, context: FaradayActionContext) => Promise<unknown>;
 
-export const faradayActionHandlers: Record<FaradayActionName, FaradayActionHandler> = {
+export const faradayActionHandlers: ProviderActionHandlers<"faraday", FaradayActionHandler> = {
   async get_current_account(_input, context) {
     const account = await requestFaradayObject("/accounts/current", context);
     return {

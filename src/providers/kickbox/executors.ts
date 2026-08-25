@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KickboxActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -20,7 +20,7 @@ const kickboxValidationEmail = "hello@example.com";
 type KickboxRequestPhase = "validate" | "execute";
 type KickboxActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const kickboxActionHandlers: Record<KickboxActionName, KickboxActionHandler> = {
+export const kickboxActionHandlers: ProviderActionHandlers<"kickbox", KickboxActionHandler> = {
   verify_email(input, context) {
     return requestKickboxVerify({
       apiKey: context.apiKey,

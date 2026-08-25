@@ -66,23 +66,6 @@ const deletionOutput = s.actionOutput(
   "The Cyberimpact deletion response.",
 );
 
-export type CyberimpactActionName =
-  | "list_members"
-  | "get_member"
-  | "create_member"
-  | "update_member"
-  | "delete_member"
-  | "list_groups"
-  | "get_group"
-  | "create_group"
-  | "update_group"
-  | "delete_group"
-  | "list_templates"
-  | "get_template"
-  | "create_template"
-  | "replace_template"
-  | "delete_template";
-
 export const cyberimpactActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_members",

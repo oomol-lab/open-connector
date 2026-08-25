@@ -83,13 +83,6 @@ const categorySchema = s.actionOutput(
   "One contextual category returned by Rosette Text Analytics.",
 );
 
-export type RosetteTextAnalyticsActionName =
-  | "identify_language"
-  | "extract_entities"
-  | "analyze_sentiment"
-  | "identify_categories"
-  | "identify_tokens";
-
 export const rosetteTextAnalyticsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify_language",

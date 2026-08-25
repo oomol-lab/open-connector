@@ -108,11 +108,4 @@ const wecomBotWebhookActions: ActionDefinition[] = [
   }),
 ];
 
-export type WecomBotActionName =
-  | "send_text_message"
-  | "send_markdown_message"
-  | "send_markdown_v2_message"
-  | "send_image_message"
-  | "send_news_message";
-
 export const wecomBotActions: ActionDefinition[] = [...wecomBotWebhookActions, ...wecomSmartBotActions];

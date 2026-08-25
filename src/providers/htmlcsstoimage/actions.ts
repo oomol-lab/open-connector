@@ -195,10 +195,3 @@ export const htmlcsstoimageActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HtmlCssToImageActionName =
-  | "create_image"
-  | "create_batch_images"
-  | "delete_image"
-  | "delete_batch_images"
-  | "get_usage";

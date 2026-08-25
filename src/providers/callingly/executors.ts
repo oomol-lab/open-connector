@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CallinglyActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type CallinglyPhase = "validate" | "execute";
 type QueryValue = string | number | undefined;
 type CallinglyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const callinglyActionHandlers: Record<CallinglyActionName, CallinglyActionHandler> = {
+const callinglyActionHandlers: ProviderActionHandlers<"callingly", CallinglyActionHandler> = {
   get_call(input, context) {
     return executeGetCall(input, context);
   },

@@ -7,7 +7,12 @@ import type {
 import type { JumpServerMcpContext } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderFetch, defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import {
+  createProviderFetch,
+  defineProviderExecutors,
+  mapProviderActionNames,
+  requireCustomCredential,
+} from "../provider-runtime.ts";
 import { jumpServerMcpToolNames } from "./actions.ts";
 
 const service = "jumpserver";
@@ -22,11 +27,13 @@ function loadJumpServerRuntime(): Promise<JumpServerRuntime> {
   return runtimeModule;
 }
 
-const handlers: Record<string, JumpServerActionHandler> = {};
-for (const toolName of jumpServerMcpToolNames) {
-  handlers[toolName] = async (input: Record<string, unknown>, context: JumpServerMcpContext): Promise<unknown> =>
-    (await loadJumpServerRuntime()).jumpServerActionHandlers[toolName](input, context);
-}
+const handlers = mapProviderActionNames(
+  service,
+  jumpServerMcpToolNames,
+  (toolName): JumpServerActionHandler =>
+    async (input, context) =>
+      (await loadJumpServerRuntime()).jumpServerActionHandlers[toolName](input, context),
+);
 
 export const executors: ProviderExecutors = defineProviderExecutors<JumpServerMcpContext>({
   service,

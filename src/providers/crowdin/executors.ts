@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { CrowdinActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   base64Bytes,
@@ -32,7 +32,7 @@ interface CrowdinActionContext {
 
 type CrowdinActionHandler = (input: Record<string, unknown>, context: CrowdinActionContext) => Promise<unknown>;
 
-export const crowdinActionHandlers: Record<CrowdinActionName, CrowdinActionHandler> = {
+export const crowdinActionHandlers: ProviderActionHandlers<"crowdin", CrowdinActionHandler> = {
   list_projects(input, context) {
     return crowdinListProjects(input, context);
   },

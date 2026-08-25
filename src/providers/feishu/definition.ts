@@ -6,6 +6,7 @@ import { feishuProviderScopes } from "./scopes.ts";
 const service = "feishu";
 const feishuOAuthScopes = [
   feishuProviderScopes.offlineAccess,
+  feishuProviderScopes.userIdRead,
   ...new Set(feishuActions.flatMap((action) => action.providerPermissions)),
 ];
 

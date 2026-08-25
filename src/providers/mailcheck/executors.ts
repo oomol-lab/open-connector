@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailcheckActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -25,7 +25,7 @@ const mailcheckDefaultRequestTimeoutMs = 30_000;
 type MailcheckRequestPhase = "validate" | "execute";
 type MailcheckActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const mailcheckActionHandlers: Record<MailcheckActionName, MailcheckActionHandler> = {
+export const mailcheckActionHandlers: ProviderActionHandlers<"mailcheck", MailcheckActionHandler> = {
   async get_status(_input, context) {
     return {
       status: await requestMailcheckStatus({

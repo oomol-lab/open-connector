@@ -1,0 +1,82 @@
+Thanks for installing {{ .Chart.Name }} {{ .Chart.Version }} (app version {{ .Chart.AppVersion }}).
+
+==========================================================================
+  Local try-out (mirrors `docker compose up`)
+==========================================================================
+
+The release is configured with a single replica and a ClusterIP service.
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward \
+    svc/{{ include "open-connector.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+
+Then open:
+
+  - Web console:  http://localhost:{{ .Values.service.port }}
+  - API docs:     http://localhost:{{ .Values.service.port }}/docs
+  - OpenAPI:      http://localhost:{{ .Values.service.port }}/openapi.json
+  - Health:       http://localhost:{{ .Values.service.port }}/health
+
+{{- if and (not .Values.secret.adminToken) (not .Values.secret.existingSecret) }}
+
+WARNING: insecureDevelopment is enabled and no admin token is set. The
+admin API, docs, and web console are completely unauthenticated. Set
+`secret.adminToken` (or wire an existing Secret) before exposing this
+release outside the loopback.
+{{- else }}
+
+The admin surfaces (/api, /docs, web console) require the configured
+admin token.
+{{- end }}
+
+==========================================================================
+  First-call smoke test
+==========================================================================
+
+{{- if .Values.database.enabled }}
+
+This release uses PostgreSQL. The migration Job ran as a Helm hook
+(pre-install/pre-upgrade). A successful Job is cleaned up automatically,
+so an empty list here is expected on success - only failed Jobs stick
+around for debugging:
+
+  kubectl --namespace {{ .Release.Namespace }} get jobs \
+    -l "app.kubernetes.io/component=migrate,app.kubernetes.io/instance={{ .Release.Name }}"
+
+{{- else }}
+
+SQLite is the default backend. The runtime migrates the local SQLite
+database automatically on first start.
+
+{{- end }}
+
+Smoke-test a no-auth Action:
+
+  curl -s -X POST http://localhost:{{ .Values.service.port }}/v1/actions/hackernews.get_top_stories \
+    -H 'content-type: application/json' \
+    -d '{"input":{}}'
+
+==========================================================================
+  Production checklist
+==========================================================================
+
+Before exposing this runtime to the public:
+
+  [ ] Set `secret.encryptionKey` to a long random value.
+  [ ] Set `secret.adminToken` and gate /api, /docs, / via Ingress + auth.
+  [ ] Set `image.tag` (e.g. "v1.4.0") or `imageDigest` to a pinned
+      version, not "latest".
+  [ ] Enable `ingress` and `networkPolicy` (with an
+      `ingressNamespaceSelector` for your ingress controller).
+  [ ] Switch to PostgreSQL (`database.enabled=true`) and S3 transit files
+      (`config.transitFileBackend=s3`), then set `persistence.enabled=false`
+      before raising `replicaCount` / enabling `autoscaling` - the default
+      ReadWriteOnce data volume cannot be shared between replicas.
+  [ ] Enable `podDisruptionBudget` once you run 2+ replicas.
+  [ ] Move `secret.*` out of values.yaml and into a Secret manager
+      (`secret.existingSecret`) or External Secrets Operator.
+  [ ] Set `config.origin` to your public https origin (used for OAuth redirects).
+  [ ] Set `config.allowedActions` / `allowedProxies` to the explicit list
+      your agents need.
+
+For more, see:
+  https://github.com/oomol-lab/open-connector/blob/main/docs/configuration.md

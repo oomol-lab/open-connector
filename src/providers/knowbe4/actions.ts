@@ -156,5 +156,3 @@ export const knowbe4Actions: ActionDefinition[] = [
     outputSchema: getGroupOutputSchema,
   }),
 ];
-
-export type Knowbe4ActionName = "get_account" | "list_users" | "get_user" | "list_groups" | "get_group";

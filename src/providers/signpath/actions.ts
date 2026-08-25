@@ -169,5 +169,3 @@ export const signpathActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type SignpathActionName = "list_signing_policies" | "get_signing_request" | "fast_sign_hash";

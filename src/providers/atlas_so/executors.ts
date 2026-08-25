@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -26,7 +27,7 @@ type AtlasSoListResponse<TKey extends string> = Record<TKey, Array<Record<string
   raw: Record<string, unknown>;
 };
 
-export const atlasSoActionHandlers: Record<string, AtlasSoActionHandler> = {
+export const atlasSoActionHandlers: ProviderActionHandlers<"atlas_so", AtlasSoActionHandler> = {
   async list_accounts(input, context) {
     return normalizeAtlasSoListResponse({
       payload: await requestAtlasSoJson({

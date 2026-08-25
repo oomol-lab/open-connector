@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ParadymActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ type ParadymRequestMode = "validate" | "execute";
 type ParadymActionContext = ApiKeyProviderContext;
 type ParadymActionHandler = (input: Record<string, unknown>, context: ParadymActionContext) => Promise<unknown>;
 
-export const paradymActionHandlers: Record<ParadymActionName, ParadymActionHandler> = {
+export const paradymActionHandlers: ProviderActionHandlers<"paradym", ParadymActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },

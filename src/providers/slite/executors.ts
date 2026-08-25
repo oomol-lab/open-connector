@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SliteActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface SliteRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const sliteActionHandlers: Record<SliteActionName, SliteActionHandler> = {
+export const sliteActionHandlers: ProviderActionHandlers<"slite", SliteActionHandler> = {
   list_notes: listNotes,
   get_note: getNote,
   create_note: createNote,

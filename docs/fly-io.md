@@ -1,8 +1,9 @@
 # Fly.io Deployment
 
-OpenConnector can run on Fly.io as the Node Docker runtime with persistent SQLite storage. Fly
-provides TLS termination, remote Docker builds, health checks, rolling deploys, and optional custom
-domains.
+OpenConnector can run on Fly.io as the Node Docker runtime. The repository defaults to persistent
+SQLite storage; external PostgreSQL and S3-compatible transit storage are available for
+multi-machine deployments. Fly provides TLS termination, remote Docker builds, health checks,
+rolling deploys, and optional custom domains.
 
 This deployment uses the repository's `docker/Dockerfile`, the Fly app config in `fly.toml`, and a
 Fly volume mounted at `/app/data`.
@@ -64,7 +65,7 @@ fly secrets set \
 
 Keep `OOMOL_CONNECT_ENCRYPTION_KEY` in a password manager or another external secrets vault. If the
 key is lost, encrypted credentials, OAuth client configuration, and completed idempotent Action
-responses in the SQLite database cannot be recovered.
+responses in the runtime database cannot be recovered.
 
 Optional runtime policy can also be set as secrets:
 
@@ -91,6 +92,34 @@ The Fly config uses:
 - `internal_port = 3000` for the Node runtime.
 - `/health` for HTTP health checks.
 - `/app/data` as the mounted persistent data directory.
+
+## PostgreSQL And Multiple Machines
+
+To use external PostgreSQL, set `OOMOL_CONNECT_DATABASE_URL` as a Fly secret. PostgreSQL migrations
+are never applied by application startup, so run them from a trusted deployment environment before
+the first deploy and before deploying a version with new migrations:
+
+```bash
+OOMOL_CONNECT_DATABASE_URL="postgresql://migrator:password@db.example.com/open_connector?sslmode=verify-full" \
+npm run runtime:migrate
+
+fly secrets set \
+  OOMOL_CONNECT_DATABASE_URL="postgresql://app:password@db.example.com/open_connector?sslmode=verify-full" \
+  --app my-open-connector
+```
+
+The migration and application URLs may use separate PostgreSQL roles. Application instances only
+check migration readiness and refuse to start when a required migration is missing.
+
+Multiple machines also need shared transit-file storage. Configure the S3 backend and the same
+bucket, endpoint, credentials, and `OOMOL_CONNECT_ENCRYPTION_KEY` on every machine. See
+[configuration.md](configuration.md#s3-compatible-transit-files) for the required settings.
+
+The default `fly.toml` mount exists for SQLite. For a PostgreSQL and S3 deployment, remove the
+`[mounts]` section from the deployment config so Fly does not require a per-machine volume. The
+container filesystem still provides temporary upload staging, but no runtime state depends on that
+filesystem. Size `OOMOL_CONNECT_DATABASE_POOL_MAX` so the combined pools of all machines leave
+database capacity for migrations and administration.
 
 ## Verify The Runtime
 
@@ -155,7 +184,7 @@ fly certs check api.example.com --app my-open-connector
 
 ## Updating
 
-Deploy new versions from the repository root:
+For SQLite, deploy new versions from the repository root:
 
 ```bash
 git pull
@@ -163,6 +192,8 @@ fly deploy --config fly.toml --remote-only
 ```
 
 The mounted volume keeps `connect.sqlite` and transit files across deployments.
+
+For PostgreSQL, run `npm run runtime:migrate` with the migration database URL before `fly deploy`.
 
 ## Scaling
 
@@ -181,5 +212,6 @@ min_machines_running = 1
 ```
 
 Keep the machine count at one for the default SQLite deployment. Fly volumes are attached to
-individual machines, so horizontal scaling requires a separate shared storage design. For this
-repository's default Fly setup, prefer increasing the VM size before adding more machines.
+individual machines, so horizontal scaling requires PostgreSQL and shared S3-compatible transit
+storage as described above. For the default Fly setup, prefer increasing the VM size before adding
+more machines.

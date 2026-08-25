@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
@@ -57,6 +58,94 @@ async function request(
 function id(input: Record<string, unknown>): string {
   return encodeURIComponent(String(input.ticketId));
 }
+const handlers: ProviderActionHandlers<"zammad", ProviderRuntimeHandler<Context>> = {
+  async get_current_user(_input, context) {
+    return { user: await request("/api/v1/users/me", "GET", {}, context) };
+  },
+  async list_tickets(input, context) {
+    return {
+      tickets: await request(
+        "/api/v1/tickets",
+        "GET",
+        { page: input.page, per_page: input.perPage, expand: input.expand },
+        context,
+      ),
+    };
+  },
+  async search_tickets(input, context) {
+    return {
+      tickets: await request(
+        "/api/v1/tickets/search",
+        "GET",
+        {
+          query: input.query,
+          page: input.page,
+          per_page: input.perPage,
+          sort_by: input.sortBy,
+          order_by: input.orderBy,
+        },
+        context,
+      ),
+    };
+  },
+  async get_ticket(input, context) {
+    return { ticket: await request(`/api/v1/tickets/${id(input)}`, "GET", { expand: input.expand }, context) };
+  },
+  async create_ticket(input, context) {
+    const { body, articleType, contentType, internal, subject, sender, ...ticket } = input;
+    return {
+      ticket: await request(
+        "/api/v1/tickets",
+        "POST",
+        {
+          ...ticket,
+          article: {
+            body,
+            type: articleType ?? "note",
+            content_type: contentType ?? "text/plain",
+            internal: internal ?? false,
+            subject,
+            sender,
+          },
+        },
+        context,
+      ),
+    };
+  },
+  async update_ticket(input, context) {
+    const { ticketId: _ticketId, pendingTime, ...body } = input;
+    if (Object.keys(body).length === 0 && pendingTime === undefined)
+      throw new ProviderRequestError(400, "update_ticket requires a field to update");
+    return {
+      ticket: await request(`/api/v1/tickets/${id(input)}`, "PUT", { ...body, pending_time: pendingTime }, context),
+    };
+  },
+  async list_ticket_articles(input, context) {
+    return { articles: await request(`/api/v1/ticket_articles/by_ticket/${id(input)}`, "GET", {}, context) };
+  },
+  async create_ticket_article(input, context) {
+    const { ticketId, articleType, contentType, ...article } = input;
+    return {
+      article: await request(
+        "/api/v1/ticket_articles",
+        "POST",
+        { ...article, ticket_id: ticketId, type: articleType ?? "note", content_type: contentType ?? "text/plain" },
+        context,
+      ),
+    };
+  },
+  async search_users(input, context) {
+    return {
+      users: await request(
+        "/api/v1/users/search",
+        "GET",
+        { query: input.query, page: input.page, per_page: input.perPage },
+        context,
+      ),
+    };
+  },
+};
+
 export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "zammad",
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
@@ -64,93 +153,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<Context>({
     const credential = await requireApiKeyCredential(context, "zammad");
     return { baseUrl: baseUrl(credential.values.baseUrl), apiKey: credential.apiKey, fetcher, signal: context.signal };
   },
-  handlers: {
-    async get_current_user(_input, context) {
-      return { user: await request("/api/v1/users/me", "GET", {}, context) };
-    },
-    async list_tickets(input, context) {
-      return {
-        tickets: await request(
-          "/api/v1/tickets",
-          "GET",
-          { page: input.page, per_page: input.perPage, expand: input.expand },
-          context,
-        ),
-      };
-    },
-    async search_tickets(input, context) {
-      return {
-        tickets: await request(
-          "/api/v1/tickets/search",
-          "GET",
-          {
-            query: input.query,
-            page: input.page,
-            per_page: input.perPage,
-            sort_by: input.sortBy,
-            order_by: input.orderBy,
-          },
-          context,
-        ),
-      };
-    },
-    async get_ticket(input, context) {
-      return { ticket: await request(`/api/v1/tickets/${id(input)}`, "GET", { expand: input.expand }, context) };
-    },
-    async create_ticket(input, context) {
-      const { body, articleType, contentType, internal, subject, sender, ...ticket } = input;
-      return {
-        ticket: await request(
-          "/api/v1/tickets",
-          "POST",
-          {
-            ...ticket,
-            article: {
-              body,
-              type: articleType ?? "note",
-              content_type: contentType ?? "text/plain",
-              internal: internal ?? false,
-              subject,
-              sender,
-            },
-          },
-          context,
-        ),
-      };
-    },
-    async update_ticket(input, context) {
-      const { ticketId: _ticketId, pendingTime, ...body } = input;
-      if (Object.keys(body).length === 0 && pendingTime === undefined)
-        throw new ProviderRequestError(400, "update_ticket requires a field to update");
-      return {
-        ticket: await request(`/api/v1/tickets/${id(input)}`, "PUT", { ...body, pending_time: pendingTime }, context),
-      };
-    },
-    async list_ticket_articles(input, context) {
-      return { articles: await request(`/api/v1/ticket_articles/by_ticket/${id(input)}`, "GET", {}, context) };
-    },
-    async create_ticket_article(input, context) {
-      const { ticketId, articleType, contentType, ...article } = input;
-      return {
-        article: await request(
-          "/api/v1/ticket_articles",
-          "POST",
-          { ...article, ticket_id: ticketId, type: articleType ?? "note", content_type: contentType ?? "text/plain" },
-          context,
-        ),
-      };
-    },
-    async search_users(input, context) {
-      return {
-        users: await request(
-          "/api/v1/users/search",
-          "GET",
-          { query: input.query, page: input.page, per_page: input.perPage },
-          context,
-        ),
-      };
-    },
-  },
+  handlers,
 });
 
 export const credentialValidators: CredentialValidators = {

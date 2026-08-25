@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BettercontactActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -44,7 +44,7 @@ interface BettercontactEnrichmentResultRecord {
   raw: Record<string, unknown>;
 }
 
-export const bettercontactActionHandlers: Record<BettercontactActionName, BettercontactActionHandler> = {
+export const bettercontactActionHandlers: ProviderActionHandlers<"bettercontact", BettercontactActionHandler> = {
   async get_account_balance(input, context) {
     const email = readNonEmptyString(input.email) ?? context.accountEmail;
     if (!email) {

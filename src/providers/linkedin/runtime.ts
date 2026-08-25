@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { LinkedinActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -14,7 +14,7 @@ export const linkedinApiVersion = "202605";
 type LinkedinActionContext = OAuthProviderContext;
 type LinkedinActionHandler = (input: Record<string, unknown>, context: LinkedinActionContext) => Promise<unknown>;
 
-export const linkedinActionHandlers: Record<LinkedinActionName, LinkedinActionHandler> = {
+export const linkedinActionHandlers: ProviderActionHandlers<"linkedin", LinkedinActionHandler> = {
   get_current_member(_input, context) {
     return getCurrentLinkedinMember(context);
   },

@@ -13,7 +13,25 @@ export type AuthDefinition =
       scopes: string[];
       tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
       clientConfigFields?: CredentialField[];
+      clientSetup?: OAuthClientSetup;
     };
+
+export type ProviderScenario =
+  | "ai"
+  | "cross-border-ecommerce"
+  | "communication"
+  | "docs"
+  | "productivity"
+  | "marketing"
+  | "data-storage"
+  | "developer"
+  | "other";
+
+/** How to register the provider OAuth app, shown while configuring the client. */
+export interface OAuthClientSetup {
+  docsUrl?: string;
+  steps: string[];
+}
 
 export interface CredentialField {
   key: string;
@@ -62,6 +80,7 @@ export interface ProviderDefinition {
   displayName: string;
   description?: string;
   categories: string[];
+  scenario?: ProviderScenario;
   authTypes: string[];
   auth: AuthDefinition[];
   homepageUrl?: string;
@@ -101,6 +120,7 @@ export interface RuntimeTokenSummary {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
+  allowedConnections: string[];
   createdAt: string;
   lastUsedAt?: string;
 }

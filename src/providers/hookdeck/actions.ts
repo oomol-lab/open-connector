@@ -408,20 +408,3 @@ export const hookdeckActions: ActionDefinition[] = [
     outputSchema: deleteOutputSchema,
   }),
 ];
-
-export type HookdeckActionName =
-  | "list_connections"
-  | "get_connection"
-  | "create_connection"
-  | "update_connection"
-  | "delete_connection"
-  | "list_sources"
-  | "get_source"
-  | "create_source"
-  | "update_source"
-  | "delete_source"
-  | "list_destinations"
-  | "get_destination"
-  | "create_destination"
-  | "update_destination"
-  | "delete_destination";

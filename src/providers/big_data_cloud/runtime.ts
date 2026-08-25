@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BigDataCloudActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { isAbortLikeError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -16,7 +16,7 @@ const validationLocalityLanguage = "en";
 type BigDataCloudRequestPhase = "validate" | "execute";
 type BigDataCloudActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const bigDataCloudActionHandlers: Record<BigDataCloudActionName, BigDataCloudActionHandler> = {
+export const bigDataCloudActionHandlers: ProviderActionHandlers<"big_data_cloud", BigDataCloudActionHandler> = {
   get_country_by_ip(input, context) {
     return requestBigDataCloudJson({
       path: countryByIpPath,

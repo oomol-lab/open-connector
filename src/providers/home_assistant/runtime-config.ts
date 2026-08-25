@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./runtime.ts";
 
 import { optionalRecord, optionalString, optionalStringOrNull, requiredRecord } from "../../core/cast.ts";
@@ -39,7 +40,10 @@ const sceneDomain: HomeAssistantConfigDomain = {
 
 const slugPattern = /^[a-z0-9_]+$/;
 
-export const homeAssistantConfigActionHandlers: Record<string, HomeAssistantActionHandler> = {
+export const homeAssistantConfigActionHandlers: ProviderActionHandlerSubset<
+  "home_assistant",
+  HomeAssistantActionHandler
+> = {
   get_automation_config: (input, context) => readConfig(automationDomain, input, context),
   save_automation_config: (input, context) => writeConfig(automationDomain, input, context),
   delete_automation_config: (input, context) => removeConfig(automationDomain, input, context),

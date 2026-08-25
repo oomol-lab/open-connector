@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -21,7 +22,7 @@ interface AnchorBrowserContext {
 
 type AnchorBrowserActionHandler = (input: Record<string, unknown>, context: AnchorBrowserContext) => Promise<unknown>;
 
-export const anchorBrowserActionHandlers: Record<string, AnchorBrowserActionHandler> = {
+export const anchorBrowserActionHandlers: ProviderActionHandlers<"anchor_browser", AnchorBrowserActionHandler> = {
   async get_billing_info(_input, context) {
     const raw = await requestAnchorBrowserJson<Record<string, unknown>>(
       {

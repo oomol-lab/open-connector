@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RenderformActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ const screenshotPath = "/api/v1/screenshots";
 type RenderformPhase = "validate" | "execute";
 type RenderformActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const renderformActionHandlers: Record<RenderformActionName, RenderformActionHandler> = {
+export const renderformActionHandlers: ProviderActionHandlers<"renderform", RenderformActionHandler> = {
   get_usage(_input, context) {
     return executeGetUsage(context);
   },

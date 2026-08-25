@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { AgentqlActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -21,7 +21,7 @@ interface AgentqlActionContext {
 
 type AgentqlActionHandler = (input: Record<string, unknown>, context: AgentqlActionContext) => Promise<unknown>;
 
-export const agentqlActionHandlers: Record<AgentqlActionName, AgentqlActionHandler> = {
+export const agentqlActionHandlers: ProviderActionHandlers<"agentql", AgentqlActionHandler> = {
   query_data(input, context) {
     return executeQueryData(input, context);
   },

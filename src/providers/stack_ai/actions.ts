@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "stack_ai";
 
-export type StackAiActionName = "run_flow" | "get_run_metadata";
-
 const nullableText = (description: string) => s.nullable(s.string(description, { minLength: 1 }));
 
 const runResultSchema = s.object("The normalized StackAI run payload returned by the deployed flow API.", {

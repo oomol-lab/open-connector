@@ -66,13 +66,6 @@ const issuanceSchema = s.looseObject(
   { description: "A certificate issuance object returned by the Cert Spotter CT Search API." },
 );
 
-export type CertSpotterActionName =
-  | "list_certificate_issuances"
-  | "list_monitored_domains"
-  | "get_monitored_domain"
-  | "upsert_monitored_domain"
-  | "delete_monitored_domain";
-
 export const certSpotterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_certificate_issuances",

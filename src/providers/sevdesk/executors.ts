@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { SevdeskActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalIntegerLike, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -38,7 +38,7 @@ interface SevdeskListPayload {
   total: number | null;
 }
 
-export const sevdeskActionHandlers: Record<SevdeskActionName, SevdeskActionHandler> = {
+export const sevdeskActionHandlers: ProviderActionHandlers<"sevdesk", SevdeskActionHandler> = {
   async list_contacts(input, context): Promise<unknown> {
     const payload = await requestSevdeskJson({
       context,

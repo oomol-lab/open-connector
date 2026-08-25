@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "geokeo";
 
-export type GeokeoActionName = "geocode_forward" | "geocode_reverse";
-
 const coordinatesSchema = s.looseRequiredObject("A latitude and longitude point returned by Geokeo.", {
   lat: s.nonEmptyString("Latitude in WGS 84 format returned by Geokeo."),
   lng: s.nonEmptyString("Longitude in WGS 84 format returned by Geokeo."),

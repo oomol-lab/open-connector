@@ -1,4 +1,4 @@
-import type { HtmlCssToImageActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -52,7 +52,7 @@ interface HtmlCssToImageRequestInput {
   phase: HtmlCssToImageRequestPhase;
 }
 
-export const htmlCssToImageActionHandlers: Record<HtmlCssToImageActionName, HtmlCssToImageActionHandler> = {
+export const htmlCssToImageActionHandlers: ProviderActionHandlers<"htmlcsstoimage", HtmlCssToImageActionHandler> = {
   create_image(input, context) {
     return createHtmlCssToImage(input, context);
   },

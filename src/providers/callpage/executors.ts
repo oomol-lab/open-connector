@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CallpageActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ const callpageCreateWidgetCallPath = "/api/v1/external/widgets/call";
 type CallpagePhase = "validate" | "execute";
 type CallpageActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const callpageActionHandlers: Record<CallpageActionName, CallpageActionHandler> = {
+const callpageActionHandlers: ProviderActionHandlers<"callpage", CallpageActionHandler> = {
   list_calls(input, context) {
     return executeListCalls(input, context);
   },

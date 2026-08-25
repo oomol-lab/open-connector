@@ -1,5 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -30,7 +31,7 @@ interface SoftrRequestOptions {
 
 type SoftrActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const softrActionHandlers: Record<string, SoftrActionHandler> = {
+export const softrActionHandlers: ProviderActionHandlers<"softr", SoftrActionHandler> = {
   async list_databases(_input, context) {
     const payload = await requestSoftrJson({ path: "/databases", context, mode: "execute" });
     return { databases: readDataArray(payload, "databases") };

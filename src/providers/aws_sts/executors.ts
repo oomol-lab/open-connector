@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import {
@@ -30,7 +31,7 @@ const stsApiVersion = "2011-06-15";
 const awsServiceName = "sts";
 const defaultRegion = "ap-southeast-1";
 const defaultRoleSessionName = "oomol-connect";
-const awsStsFetch = createProviderFetch({ skipDnsValidation: true });
+const awsStsFetch = createProviderFetch();
 
 interface AwsStsContext {
   values: Record<string, string>;
@@ -78,7 +79,7 @@ interface StsXmlNode {
 
 type AwsStsActionHandler = (input: Record<string, unknown>, context: AwsStsContext) => Promise<unknown>;
 
-export const awsStsActionHandlers: Record<string, AwsStsActionHandler> = {
+export const awsStsActionHandlers: ProviderActionHandlers<"aws_sts", AwsStsActionHandler> = {
   assume_role(input, context) {
     return executeAssumeRole(input, context);
   },
@@ -87,7 +88,6 @@ export const awsStsActionHandlers: Record<string, AwsStsActionHandler> = {
 export const executors: ProviderExecutors = defineProviderExecutors<AwsStsContext>({
   service,
   handlers: awsStsActionHandlers,
-  skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<AwsStsContext> {
     const credential = await context.getCredential(service);
     if (credential?.authType !== "custom_credential") {

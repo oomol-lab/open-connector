@@ -257,12 +257,10 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_teams",
-    description: "List Monday teams with official filters and pagination.",
+    description: "List Monday teams, optionally filtering by team IDs.",
     providerPermissions: ["teams:read"],
     inputSchema: input("The input payload for listing Monday teams.", {
       ids: idArraySchema,
-      limit: s.positiveInteger("The number of teams to return."),
-      page: s.positiveInteger("The 1-based page number of teams to return."),
     }),
     outputSchema: output("The output payload for listing Monday teams.", {
       teams: s.array("The Monday teams returned by the query.", teamSchema),

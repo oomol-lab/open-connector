@@ -88,8 +88,6 @@ const updateAssetInputSchema = s.object(
 ) as JsonSchema;
 updateAssetInputSchema.anyOf = [{ required: ["displayName"] }, { required: ["assetFolder"] }, { required: ["tags"] }];
 
-export type CloudinaryActionName = "upload_asset" | "update_asset" | "rename_asset" | "list_assets" | "get_asset";
-
 export const cloudinaryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upload_asset",

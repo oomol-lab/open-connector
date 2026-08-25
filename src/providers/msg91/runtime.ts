@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ interface Msg91RequestInput {
   authPlacement: AuthPlacement;
 }
 
-export const msg91ActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const msg91ActionHandlers: ProviderActionHandlers<"msg91", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   send_flow_sms(input, context) {
     return sendFlowSms(input, context);
   },

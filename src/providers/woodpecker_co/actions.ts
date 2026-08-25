@@ -206,12 +206,3 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type WoodpeckerCoActionName =
-  | "list_users"
-  | "list_campaigns"
-  | "get_campaign"
-  | "get_campaign_statistics"
-  | "list_prospects"
-  | "list_mailboxes"
-  | "get_mailbox";

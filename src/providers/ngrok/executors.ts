@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NgrokActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -21,7 +21,7 @@ const ngrokValidationPath = "/endpoints";
 type NgrokRequestPhase = "validate" | "execute";
 type NgrokActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const ngrokActionHandlers: Record<NgrokActionName, NgrokActionHandler> = {
+export const ngrokActionHandlers: ProviderActionHandlers<"ngrok", NgrokActionHandler> = {
   list_endpoints(input, context) {
     return requestNgrokJson({
       context,

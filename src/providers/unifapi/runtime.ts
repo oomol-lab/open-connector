@@ -1,14 +1,15 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
+  mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
-import { unifapiOperationByActionName } from "./operations.ts";
+import { unifapiOperations } from "./operations.ts";
 
 export const unifapiApiBaseUrl = "https://api.unifapi.com";
 export const unifapiApiVersion = "2026-07-01";
@@ -29,10 +30,14 @@ interface UnifapiRequestInput {
   signal?: AbortSignal;
 }
 
-export const unifapiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = Object.fromEntries(
-  [...unifapiOperationByActionName].map(([actionName, operation]) => [
-    actionName,
-    async (input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> => {
+export const unifapiActionHandlers: ProviderActionHandlers<
+  "unifapi",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = mapProviderActionHandlers(
+  "unifapi",
+  unifapiOperations,
+  (operation): ProviderRuntimeHandler<ApiKeyProviderContext> =>
+    async (input, context) => {
       const path = buildPath(operation.path, operation.pathFields, input);
       return requestUnifapiJson({
         path,
@@ -45,7 +50,6 @@ export const unifapiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKey
         signal: context.signal,
       });
     },
-  ]),
 );
 
 export async function validateUnifapiCredential(

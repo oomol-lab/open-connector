@@ -193,15 +193,6 @@ const createWidgetCallInputSchema: JsonSchema = {
   },
 };
 
-export type CallpageActionName =
-  | "list_calls"
-  | "get_call"
-  | "list_users"
-  | "get_user"
-  | "list_widgets"
-  | "get_widget"
-  | "create_widget_call";
-
 export const callpageActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_calls",

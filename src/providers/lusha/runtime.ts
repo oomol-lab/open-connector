@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LushaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ const lushaApiBaseUrl = "https://api.lusha.com";
 
 type LushaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lushaActionHandlers: Record<LushaActionName, LushaActionHandler> = {
+export const lushaActionHandlers: ProviderActionHandlers<"lusha", LushaActionHandler> = {
   get_account_usage(_input, context) {
     return requestLusha({
       context,

@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { DigitalOceanActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   optionalIntegerLike,
@@ -30,7 +30,7 @@ interface DigitalOceanContext {
 
 type DigitalOceanActionHandler = (input: Record<string, unknown>, context: DigitalOceanContext) => Promise<unknown>;
 
-export const digitalOceanActionHandlers: Record<DigitalOceanActionName, DigitalOceanActionHandler> = {
+export const digitalOceanActionHandlers: ProviderActionHandlers<"digital_ocean", DigitalOceanActionHandler> = {
   get_account(_input, context) {
     return getAccount(context);
   },

@@ -206,7 +206,7 @@ Fly app 创建、volume、secret、部署、自定义域名和扩缩容步骤见
 ## Docker 镜像（GHCR）
 
 可以直接用 GitHub Packages（GHCR）上的预构建镜像运行 OpenConnector：`ghcr.io/oomol-lab/open-connector`。最新
-release 用 `latest`，生产环境固定版本号（如 `v1.0.0`），想用最新 `main` 构建则用 `tip`。
+release 用 `latest`，生产环境固定具体的 release 版本号，想用最新 `main` 构建则用 `tip`。
 
 镜像标签、拉取和运行的说明见 [docker-ghcr.zh-CN.md](docker-ghcr.zh-CN.md)。
 

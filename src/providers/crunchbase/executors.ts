@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -17,7 +18,7 @@ const crunchbaseRequestTimeoutMs = 30_000;
 type CrunchbasePhase = "validate" | "execute";
 type CrunchbaseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const crunchbaseActionHandlers: Record<string, CrunchbaseActionHandler> = {
+export const crunchbaseActionHandlers: ProviderActionHandlers<"crunchbase", CrunchbaseActionHandler> = {
   async autocomplete_entities(input, context) {
     const payload = await requestCrunchbaseJson({
       context,

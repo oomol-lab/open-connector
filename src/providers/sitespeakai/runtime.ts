@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SitespeakaiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const sitespeakaiApiVersion = "v1";
 type SitespeakaiRequestPhase = "validate" | "execute";
 type SitespeakaiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const sitespeakaiActionHandlers: Record<SitespeakaiActionName, SitespeakaiActionHandler> = {
+export const sitespeakaiActionHandlers: ProviderActionHandlers<"sitespeakai", SitespeakaiActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestSitespeakai("/me", { method: "GET" }, context, "execute");
     const response = requireObjectRecord(payload, "SiteSpeakAI /me response");

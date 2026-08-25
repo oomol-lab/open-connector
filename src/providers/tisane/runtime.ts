@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TisaneActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ export const tisaneApiKeyHeader: string = "Ocp-Apim-Subscription-Key";
 type TisaneRequestPhase = "validate" | "execute";
 type TisaneResponseMode = "json" | "text" | "number";
 
-export const tisaneActionHandlers: Record<TisaneActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const tisaneActionHandlers: ProviderActionHandlers<"tisane", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   analyze_text(input, context) {
     return executeAnalyzeText(input, context);
   },

@@ -168,12 +168,3 @@ export const hotspotsystemActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HotspotsystemActionName =
-  | "get_current_owner"
-  | "list_locations"
-  | "list_location_options"
-  | "list_customers"
-  | "list_location_customers"
-  | "list_subscribers"
-  | "list_location_subscribers";

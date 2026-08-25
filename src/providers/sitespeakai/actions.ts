@@ -143,16 +143,3 @@ export const sitespeakaiActions: ActionDefinition[] = [
     outputSchema: rawObjectSchema,
   }),
 ];
-
-export type SitespeakaiActionName =
-  | "get_current_user"
-  | "list_chatbots"
-  | "get_chatbot"
-  | "list_sources"
-  | "list_suggested_messages"
-  | "list_conversations"
-  | "list_leads"
-  | "query_chatbot"
-  | "list_updated_answers"
-  | "upsert_updated_answer"
-  | "delete_updated_answer";

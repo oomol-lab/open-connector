@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GristActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -22,7 +22,7 @@ const gristValidationPath = "/profile/user";
 type GristRequestPhase = "validate" | "execute";
 type GristActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const gristActionHandlers: Record<GristActionName, GristActionHandler> = {
+export const gristActionHandlers: ProviderActionHandlers<"grist", GristActionHandler> = {
   list_workspaces(_input, context) {
     return listGristWorkspaces(context);
   },

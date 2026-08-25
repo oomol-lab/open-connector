@@ -113,14 +113,6 @@ const listScorecardsInputFields = {
   pageNumber: s.integer("The one-indexed page of scorecards to return.", { minimum: 1 }),
 } as const satisfies Record<string, JsonSchema>;
 
-export type ChorusActionName =
-  | "get_current_user"
-  | "list_teams"
-  | "get_team"
-  | "list_engagements"
-  | "get_conversation"
-  | "list_scorecards";
-
 export const chorusActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

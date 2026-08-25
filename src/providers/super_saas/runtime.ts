@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord } from "../../core/cast.ts";
@@ -12,7 +13,7 @@ interface SuperSaasContext extends Pick<ApiKeyProviderContext, "apiKey" | "fetch
 
 type SuperSaasActionHandler = (input: Record<string, unknown>, context: SuperSaasContext) => Promise<unknown>;
 
-export const superSaasActionHandlers: Record<string, SuperSaasActionHandler> = {
+export const superSaasActionHandlers: ProviderActionHandlers<"super_saas", SuperSaasActionHandler> = {
   list_schedules(input, context) {
     return requestTupleList(input, context, "/api/schedules.json", "schedules");
   },

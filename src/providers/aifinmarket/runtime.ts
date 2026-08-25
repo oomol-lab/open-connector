@@ -1,6 +1,6 @@
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { AifinMarketServerType } from "./actions.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
 import { withMcpClient } from "../mcp-client.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -119,9 +119,12 @@ export async function callTool(
 
   const result = await runWindRequest("execute", context.apiKey, () =>
     withClient(context, serverType, actionTimeoutMs, async (client) => {
-      const response = await client.callTool({ name: toolName, arguments: args }, undefined, {
-        timeout: actionTimeoutMs,
-      });
+      const response = await client.callTool(
+        { name: toolName, arguments: args },
+        {
+          timeout: actionTimeoutMs,
+        },
+      );
       if (response.isError) {
         const message = readToolErrorMessage(response) ?? `Wind AIFin Market tool ${toolName} returned an error`;
         throw new ProviderRequestError(502, message, response);

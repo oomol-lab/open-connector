@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -17,7 +18,7 @@ export interface BrowserbaseContext {
   signal?: AbortSignal;
 }
 
-export const browserbaseActionHandlers: Record<string, BrowserbaseActionHandler> = {
+export const browserbaseActionHandlers: ProviderActionHandlers<"browserbase", BrowserbaseActionHandler> = {
   list_projects(_input, context) {
     return listBrowserbaseProjects(context);
   },

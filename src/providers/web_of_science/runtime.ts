@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -18,7 +19,7 @@ type WebOfSciencePhase = "validate" | "execute";
 type WebOfScienceContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type WebOfScienceActionHandler = (input: Record<string, unknown>, context: WebOfScienceContext) => Promise<unknown>;
 
-export const webOfScienceActionHandlers: Record<string, WebOfScienceActionHandler> = {
+export const webOfScienceActionHandlers: ProviderActionHandlers<"web_of_science", WebOfScienceActionHandler> = {
   async search_documents(input, context) {
     validateDocumentSearchInput(input);
     const payload = await requestWebOfScienceJson(

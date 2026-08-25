@@ -1,10 +1,11 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError, SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -99,7 +100,7 @@ class LingxingRequestError extends ProviderRequestError {
   }
 }
 
-export const lingxingActionHandlers: Record<string, ProviderRuntimeHandler<LingxingContext>> = {
+export const lingxingActionHandlers: ProviderActionHandlers<"lingxing", ProviderRuntimeHandler<LingxingContext>> = {
   list_tools(_input, context) {
     return listLingxingTools(context);
   },
@@ -216,7 +217,6 @@ export async function callLingxingTool(
           name: toolName,
           arguments: argumentsValue,
         },
-        undefined,
         {
           timeout: lingxingRequestTimeoutMs,
           signal: context.signal,
@@ -347,8 +347,8 @@ function mapLingxingMcpError(error: unknown): ProviderRequestError {
   if (error instanceof UnauthorizedError) {
     return new ProviderRequestError(401, "Lingxing MCP token is invalid or expired", error);
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     return new ProviderRequestError(
       status === 401 || status === 403
         ? 401
@@ -361,10 +361,11 @@ function mapLingxingMcpError(error: unknown): ProviderRequestError {
       error,
     );
   }
-  if (error instanceof McpError) {
-    return error.code === ErrorCode.RequestTimeout
-      ? new ProviderRequestError(504, "Lingxing MCP request timed out", error)
-      : new ProviderRequestError(502, `Lingxing MCP request failed: ${error.message}`, error);
+  if (error instanceof SdkError && error.code === SdkErrorCode.RequestTimeout) {
+    return new ProviderRequestError(504, "Lingxing MCP request timed out", error);
+  }
+  if (error instanceof ProtocolError) {
+    return new ProviderRequestError(502, `Lingxing MCP request failed: ${error.message}`, error);
   }
   if (isAbortError(error)) {
     return new ProviderRequestError(504, "Lingxing MCP request timed out", error);

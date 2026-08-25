@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { ValyuActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ export const valyuApiBaseUrl = "https://api.valyu.ai";
 
 type ValyuActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const valyuActionHandlers: Record<ValyuActionName, ValyuActionHandler> = {
+export const valyuActionHandlers: ProviderActionHandlers<"valyu", ValyuActionHandler> = {
   async search(input, context) {
     const payload = await valyuRequest({
       path: "/v1/search",

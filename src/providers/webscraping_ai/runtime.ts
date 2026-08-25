@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { WebscrapingAiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -30,7 +30,7 @@ interface WebscrapingAiRequestInput {
 
 export const webscrapingAiApiBaseUrl = "https://api.webscraping.ai";
 
-export const webscrapingAiActionHandlers: Record<WebscrapingAiActionName, WebscrapingAiActionHandler> = {
+export const webscrapingAiActionHandlers: ProviderActionHandlers<"webscraping_ai", WebscrapingAiActionHandler> = {
   async get_account_info(_input, context) {
     return {
       account: await requestWebscrapingAiAccount(context.apiKey, context.fetcher, context.signal, "execute"),

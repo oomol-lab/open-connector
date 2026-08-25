@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GetformActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ type GetformErrorPayload = {
   message?: unknown;
 };
 
-export const getformActionHandlers: Record<GetformActionName, GetformActionHandler> = {
+export const getformActionHandlers: ProviderActionHandlers<"getform", GetformActionHandler> = {
   submit_form(input, context) {
     return submitForm(input, context);
   },

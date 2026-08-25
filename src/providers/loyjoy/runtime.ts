@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -6,8 +7,8 @@ import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts"
 export const loyjoyApiBaseUrl = "https://app-stable.loyjoy.com/api";
 type Phase = "validate" | "execute";
 
-export const loyjoyActionHandlers: Record<
-  string,
+export const loyjoyActionHandlers: ProviderActionHandlers<
+  "loyjoy",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   async list_processes(_input, context) {

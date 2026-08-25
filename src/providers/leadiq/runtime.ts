@@ -1,4 +1,4 @@
-import type { LeadiqActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -96,7 +96,7 @@ query GroupedAdvancedSearch($input: GroupedSearchInput!) {
   }
 }`;
 
-export const leadiqActionHandlers: Record<LeadiqActionName, LeadiqActionHandler> = {
+export const leadiqActionHandlers: ProviderActionHandlers<"leadiq", LeadiqActionHandler> = {
   async get_account(input, fetcher) {
     const data = await leadiqRequest(input.apiKey, { query: accountQuery }, fetcher, "execute");
     return requireGraphqlObject(data, "account");

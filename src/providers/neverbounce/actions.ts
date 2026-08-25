@@ -235,16 +235,6 @@ const jobResultsOutputSchema = s.requiredObject("The NeverBounce paginated job r
   execution_time: s.nonNegativeInteger("The server execution time in milliseconds."),
 });
 
-export type NeverBounceActionName =
-  | "get_account_info"
-  | "single_check"
-  | "create_job"
-  | "parse_job"
-  | "start_job"
-  | "get_job_status"
-  | "get_job_results"
-  | "download_job_results";
-
 export const neverbounceActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "fly";
 
-export type FlyActionName =
-  | "list_apps"
-  | "get_app"
-  | "list_machines"
-  | "create_machine"
-  | "get_machine"
-  | "start_machine"
-  | "stop_machine"
-  | "restart_machine"
-  | "wait_for_machine";
-
 const unixSignalValues = ["SIGHUP", "SIGINT", "SIGQUIT", "SIGKILL", "SIGUSR1", "SIGUSR2", "SIGTERM"];
 const waitStateValues = ["started", "stopped", "suspended", "destroyed", "failed", "settled"];
 

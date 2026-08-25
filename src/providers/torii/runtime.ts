@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ToriiActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface ToriiRequestOptions {
   apiVersion?: string;
 }
 
-export const toriiActionHandlers: Record<ToriiActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const toriiActionHandlers: ProviderActionHandlers<"torii", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_organization(_input, context) {
     const body = await requestToriiObject(
       {

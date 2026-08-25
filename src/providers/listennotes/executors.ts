@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ListennotesActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -30,7 +30,7 @@ const listennotesValidationPath = "/languages";
 
 type ListennotesActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const listennotesActionHandlers: Record<ListennotesActionName, ListennotesActionHandler> = {
+export const listennotesActionHandlers: ProviderActionHandlers<"listennotes", ListennotesActionHandler> = {
   async search(input, context) {
     const resultType = readSearchType(input.type);
     const payload = await requestListennotesJson({

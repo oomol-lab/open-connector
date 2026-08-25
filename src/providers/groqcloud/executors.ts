@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GroqcloudActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -22,7 +22,7 @@ const groqcloudAudioAttachmentMaxBytes = 25 * 1024 * 1024;
 type GroqcloudRequestPhase = "validate" | "execute";
 type GroqcloudActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const groqcloudActionHandlers: Record<GroqcloudActionName, GroqcloudActionHandler> = {
+export const groqcloudActionHandlers: ProviderActionHandlers<"groqcloud", GroqcloudActionHandler> = {
   list_models(_input, context) {
     return groqcloudRequest({
       context,

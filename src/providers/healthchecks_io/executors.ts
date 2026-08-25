@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HealthchecksIoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -29,7 +29,7 @@ type HealthchecksIoActionHandler = (
   context: HealthchecksIoActionContext,
 ) => Promise<unknown>;
 
-export const healthchecksIoActionHandlers: Record<HealthchecksIoActionName, HealthchecksIoActionHandler> = {
+export const healthchecksIoActionHandlers: ProviderActionHandlers<"healthchecks_io", HealthchecksIoActionHandler> = {
   async list_checks(input, context) {
     const payload = await requestHealthchecksIoJson({
       context,

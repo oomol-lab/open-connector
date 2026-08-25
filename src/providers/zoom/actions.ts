@@ -6,8 +6,6 @@ import { zoomMeetingListScope, zoomMeetingUpdateScope, zoomMeetingWriteScope, zo
 
 const service = "zoom";
 
-export type ZoomActionName = "get_user" | "list_meetings" | "create_meeting" | "update_meeting";
-
 const userIdSchema = s.nonEmptyString(
   "The Zoom user ID or email address. Use me when the credential can act on the current app user.",
 );

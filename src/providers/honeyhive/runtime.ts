@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -22,7 +23,10 @@ interface HoneyhiveRequestOptions extends ApiKeyProviderContext {
   body?: unknown;
 }
 
-export const honeyhiveActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const honeyhiveActionHandlers: ProviderActionHandlers<
+  "honeyhive",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_datasets(input, context) {
     const payload = await requestHoneyhiveJson({
       ...context,

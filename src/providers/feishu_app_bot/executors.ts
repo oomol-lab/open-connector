@@ -6,6 +6,7 @@ import type {
   TransitFileWriter,
 } from "../../core/types.ts";
 import type { FeishuActionRuntimeContext } from "../feishu/shared/client.ts";
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -37,6 +38,8 @@ import { createFeishuWikiActionHandlers } from "../feishu/shared/wiki-runtime.ts
 import {
   createProviderProxyUrl,
   defineProviderExecutors,
+  getProviderActionHandler,
+  mapProviderActionHandlers,
   normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
@@ -109,7 +112,7 @@ interface FeishuActionHandler {
 
 const feishuTenantAccessTokenCache = new Map<string, FeishuTenantAccessTokenCacheEntry>();
 
-export const feishuAppBotActionHandlers: Record<string, FeishuActionHandler> = {
+export const feishuAppBotActionHandlers: ProviderActionHandlerSubset<"feishu_app_bot", FeishuActionHandler> = {
   get_app_info(_input, context) {
     return getAppInfo(context);
   },
@@ -178,11 +181,12 @@ export const feishuAppBotActionHandlers: Record<string, FeishuActionHandler> = {
   },
 };
 
-const allFeishuAppBotActionHandlers: Record<string, FeishuActionHandler> = Object.fromEntries(
-  feishuAppBotActions.map((action) => [
-    action.name,
-    async (input: Record<string, unknown>, context: FeishuAppBotActionContext): Promise<unknown> => {
-      const nativeHandler = feishuAppBotActionHandlers[action.name];
+const allFeishuAppBotActionHandlers = mapProviderActionHandlers(
+  service,
+  feishuAppBotActions,
+  (action): FeishuActionHandler =>
+    async (input, context) => {
+      const nativeHandler = getProviderActionHandler(feishuAppBotActionHandlers, action.name);
       if (nativeHandler) {
         return nativeHandler(input, context);
       }
@@ -193,7 +197,6 @@ const allFeishuAppBotActionHandlers: Record<string, FeishuActionHandler> = Objec
       }
       return sharedHandler(input);
     },
-  ]),
 );
 
 export const executors: ProviderExecutors = defineProviderExecutors<FeishuAppBotActionContext>({

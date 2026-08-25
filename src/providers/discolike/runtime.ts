@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DiscolikeActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -27,7 +27,7 @@ type DiscolikeQueryValue = string | number | boolean | readonly string[] | undef
 type DiscolikeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type DiscolikeActionHandler = (input: Record<string, unknown>, context: DiscolikeContext) => Promise<unknown>;
 
-export const discolikeActionHandlers: Record<DiscolikeActionName, DiscolikeActionHandler> = {
+export const discolikeActionHandlers: ProviderActionHandlers<"discolike", DiscolikeActionHandler> = {
   async discover_companies(input, context) {
     const payload = await requestDiscolikeJson({
       path: "/discover",

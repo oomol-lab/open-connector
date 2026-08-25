@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProductlaneActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
@@ -38,7 +39,7 @@ type ProductlaneRequestOptions = {
   body?: unknown;
 };
 
-export const productlaneActionHandlers: Record<ProductlaneActionName, ProductlaneActionHandler> = {
+export const productlaneActionHandlers: ProviderActionHandlers<"productlane", ProductlaneActionHandler> = {
   get_authenticated_identity(_input, context) {
     return requestProductlaneJson({
       path: productlaneValidationPath,
@@ -141,7 +142,7 @@ export const productlaneActionHandlers: Record<ProductlaneActionName, Productlan
       method: "DELETE",
     });
   },
-} satisfies Record<ProductlaneActionName, ProductlaneActionHandler>;
+};
 
 function requireAtMostOneCompanySelector(input: Record<string, unknown>): void {
   const selectorCount = ["company_id", "company_name", "company_external_id"].filter(
@@ -270,7 +271,7 @@ function mapProductlaneError(status: number, payload: unknown, phase: "validate"
   }
 
   if (status === 403) {
-    // Productlane 官方错误契约区分 scope_required 与 forbidden：https://productlane.mintlify.dev/docs/api-v2/errors
+    // Productlane's official error contract distinguishes scope_required from forbidden: https://productlane.mintlify.dev/docs/api-v2/errors
     if (phase === "execute" && providerCode === "scope_required") {
       return new ProviderRequestError(403, message);
     }

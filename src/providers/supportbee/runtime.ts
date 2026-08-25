@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SupportbeeActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -32,7 +32,7 @@ type SupportbeeActionHandler = ProviderRuntimeHandler<SupportbeeActionContext>;
 const service = "supportbee";
 const validationPath = "/users";
 
-export const supportbeeActionHandlers: Record<SupportbeeActionName, SupportbeeActionHandler> = {
+export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", SupportbeeActionHandler> = {
   list_tickets(input, context) {
     return listSupportbeeTickets(input, context, "/tickets");
   },

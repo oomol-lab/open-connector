@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -16,7 +17,7 @@ const streakApiBaseUrl = "https://api.streak.com/api/v1";
 type StreakRequestPhase = "validate" | "execute";
 type StreakActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const streakActionHandlers: Record<string, StreakActionHandler> = {
+export const streakActionHandlers: ProviderActionHandlers<"streak", StreakActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestStreakJson("/users/me", context, "execute");
     return {

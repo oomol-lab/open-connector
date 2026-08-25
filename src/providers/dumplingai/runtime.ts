@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { DumplingaiActionName } from "./actions.ts";
 
@@ -30,7 +31,10 @@ const handler =
   (name: DumplingaiActionName): ProviderRuntimeHandler<ApiKeyProviderContext> =>
   (input, context) =>
     execute(name, input, context);
-export const dumplingaiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const dumplingaiActionHandlers: ProviderActionHandlers<
+  "dumplingai",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   search_catalog: handler("search_catalog"),
   get_catalog_details: handler("get_catalog_details"),
   run: handler("run"),

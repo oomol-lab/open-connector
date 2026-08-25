@@ -25,19 +25,6 @@ const predictionInputSchema = s.object("Input for selecting a Replicate predicti
 });
 const jsonObjectSchema: JsonSchema = s.looseObject("A JSON-serializable model input object.");
 
-export type ReplicateActionName =
-  | "get_account"
-  | "list_models"
-  | "get_model"
-  | "list_model_versions"
-  | "get_model_version"
-  | "list_collections"
-  | "get_collection"
-  | "create_prediction"
-  | "get_prediction"
-  | "list_predictions"
-  | "cancel_prediction";
-
 export const replicateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MarketstackActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -18,7 +18,7 @@ type MarketstackActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher"
 type MarketstackActionHandler = (input: Record<string, unknown>, context: MarketstackActionContext) => Promise<unknown>;
 type MarketstackQueryValue = string | number | undefined;
 
-export const marketstackActionHandlers: Record<MarketstackActionName, MarketstackActionHandler> = {
+export const marketstackActionHandlers: ProviderActionHandlers<"marketstack", MarketstackActionHandler> = {
   list_tickers(input, context) {
     return listTickers(input, context);
   },

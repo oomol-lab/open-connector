@@ -72,5 +72,3 @@ export const googleRoutesActions: ActionDefinition[] = [
     outputSchema: computeRouteMatrixOutputSchema,
   }),
 ];
-
-export type GoogleRoutesActionName = "compute_routes" | "compute_route_matrix";

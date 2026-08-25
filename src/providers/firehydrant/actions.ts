@@ -253,12 +253,3 @@ export const firehydrantActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FirehydrantActionName =
-  | "list_incidents"
-  | "get_incident"
-  | "create_incident"
-  | "list_services"
-  | "get_service"
-  | "list_environments"
-  | "get_environment";

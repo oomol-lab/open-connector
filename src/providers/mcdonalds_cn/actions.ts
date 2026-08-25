@@ -185,15 +185,6 @@ const productSearchDataSchema = s.object(
   },
 );
 
-export type McdonaldsCnActionName =
-  | "get_cities"
-  | "search_stores"
-  | "get_store"
-  | "get_store_business"
-  | "get_menu"
-  | "get_product_detail"
-  | "search_products";
-
 export const mcdonaldsCnActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_cities",

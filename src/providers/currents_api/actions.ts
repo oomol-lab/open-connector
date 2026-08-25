@@ -91,13 +91,6 @@ const taxonomyDescriptionSchema = nonEmptyString(
   "Human-readable description returned by Currents for this taxonomy payload.",
 );
 
-export type CurrentsApiActionName =
-  | "get_latest_news"
-  | "search_news"
-  | "list_available_languages"
-  | "list_available_regions"
-  | "list_available_categories";
-
 export const currentsApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_latest_news",

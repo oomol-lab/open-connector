@@ -183,8 +183,6 @@ const inquiryOutputSchema = s.object("The normalized Persona inquiry response.",
   raw: s.looseObject("The raw Persona response payload."),
 });
 
-export type PersonaActionName = "list_inquiries" | "get_inquiry" | "create_inquiry" | "update_inquiry";
-
 export const personaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_inquiries",

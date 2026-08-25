@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -23,7 +24,7 @@ interface MinimaxActionContext {
 }
 type MinimaxActionHandler = (input: Record<string, unknown>, context: MinimaxActionContext) => Promise<unknown>;
 
-export const minimaxActionHandlers: Record<string, MinimaxActionHandler> = {
+export const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxActionHandler> = {
   list_models(_input, context) {
     return minimaxGetJson("/v1/models", context);
   },
@@ -65,6 +66,10 @@ export const minimaxActionHandlers: Record<string, MinimaxActionHandler> = {
   download_video(input, context) {
     const fileId = readInputString(input.file_id, "file_id");
     return minimaxGetJson(`/v1/files/retrieve?file_id=${encodeURIComponent(fileId)}`, context);
+  },
+  text_to_audio(input, context) {
+    assertStreamingDisabled(input);
+    return minimaxPostJson("/v1/t2a_v2", normalizeMinimaxAudioBody(input), context);
   },
 };
 
@@ -232,6 +237,16 @@ function normalizeMinimaxVideoV2Body(input: Record<string, unknown>): Record<str
   });
 }
 
+function normalizeMinimaxAudioBody(input: Record<string, unknown>): Record<string, unknown> {
+  return compactObject({
+    ...input,
+    model: trimString(input.model),
+    text: trimString(input.text),
+    language_boost: trimString(input.language_boost),
+    output_format: trimString(input.output_format),
+  });
+}
+
 function createVideoGenerationV2ListPath(input: Record<string, unknown>): string {
   const search = new URLSearchParams();
   appendQueryValue(search, "page_num", input.page_num);
@@ -288,7 +303,7 @@ function mapMinimaxError(status: number, payload: Record<string, unknown>): Prov
   if (status === 401 || status === 403 || errorCode === "1004" || errorCode === "2049") {
     return new ProviderRequestError(401, message, payload);
   }
-  if (status === 429 || errorCode === "1002" || errorCode === "1008") {
+  if (status === 429 || errorCode === "1002" || errorCode === "1008" || errorCode === "1039") {
     return new ProviderRequestError(429, message, payload);
   }
   if (status >= 400 && status < 500) {

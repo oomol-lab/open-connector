@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { StabilityAiActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -33,7 +33,7 @@ interface StabilityAiRequestInput {
   accept?: string;
 }
 
-export const stabilityaiActionHandlers: Record<StabilityAiActionName, StabilityAiActionHandler> = {
+export const stabilityaiActionHandlers: ProviderActionHandlers<"stabilityai", StabilityAiActionHandler> = {
   text_to_audio(input, context) {
     return stabilityAiTextToAudio(input, context);
   },

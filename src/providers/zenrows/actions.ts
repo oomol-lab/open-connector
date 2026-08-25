@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "zenrows";
 
-export type ZenrowsActionName = "fetch_html" | "fetch_plaintext" | "extract_css" | "get_usage";
-
 const urlSchema = s.string({
   description: "The public URL ZenRows should request.",
   format: "uri",

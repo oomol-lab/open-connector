@@ -118,12 +118,3 @@ export const monicaCrmActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type MonicaCrmActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "list_notes"
-  | "get_note"
-  | "create_note"
-  | "update_note"
-  | "delete_note";

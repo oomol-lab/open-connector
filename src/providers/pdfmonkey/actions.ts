@@ -105,15 +105,6 @@ const documentTemplateSchema = s.object("A normalized full PDFMonkey document te
   checksum: s.nullableString("The checksum returned for this template."),
 });
 
-export type PdfmonkeyActionName =
-  | "get_current_user"
-  | "create_document"
-  | "get_document_card"
-  | "list_document_cards"
-  | "get_document"
-  | "list_document_template_cards"
-  | "get_document_template";
-
 export const pdfmonkeyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

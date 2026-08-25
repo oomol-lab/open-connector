@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -21,7 +22,7 @@ const removeBgSupportedResultMimeTypes = new Set(["image/png", "image/jpeg", "im
 
 type RemoveBgActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const removeBgActionHandlers: Record<string, RemoveBgActionHandler> = {
+export const removeBgActionHandlers: ProviderActionHandlers<"remove_bg", RemoveBgActionHandler> = {
   remove_background(input, context) {
     return removeBgRemoveBackground(input, context);
   },

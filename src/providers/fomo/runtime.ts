@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FomoActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import {
@@ -16,7 +16,7 @@ const fomoRequestTimeoutMs = 30_000;
 type FomoRequestMode = "validate" | "execute";
 type FomoEventPayload = Record<string, unknown>;
 
-export const fomoActionHandlers: Record<FomoActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const fomoActionHandlers: ProviderActionHandlers<"fomo", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_events(input, context) {
     const page = readOptionalPositiveInteger(input.page);
     const perPage = readOptionalPositiveInteger(input.per_page);

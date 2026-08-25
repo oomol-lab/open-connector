@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { KeeperScimActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -40,7 +40,10 @@ interface KeeperScimActionContext {
   signal?: AbortSignal;
 }
 
-export const keeperScimActionHandlers: Record<KeeperScimActionName, ProviderRuntimeHandler<KeeperScimActionContext>> = {
+export const keeperScimActionHandlers: ProviderActionHandlers<
+  "keeper_scim",
+  ProviderRuntimeHandler<KeeperScimActionContext>
+> = {
   async get_service_provider_config(_input, context) {
     const payload = await requestKeeperScimJson({
       path: keeperScimConfigPath,

@@ -280,13 +280,3 @@ export const esignaturesIoActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type EsignaturesIoActionName =
-  | "create_template"
-  | "list_templates"
-  | "get_template"
-  | "get_template_content"
-  | "create_contract"
-  | "get_contract"
-  | "get_contract_content"
-  | "withdraw_contract";

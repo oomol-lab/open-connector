@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -38,7 +39,7 @@ interface VecteraRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const vecteraActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const vecteraActionHandlers: ProviderActionHandlers<"vectera", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_current_user(input, context) {
     const response = await requestVecteraJson({
       context,

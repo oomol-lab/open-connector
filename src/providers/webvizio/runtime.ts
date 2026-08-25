@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { WebvizioActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface WebvizioRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const webvizioActionHandlers: Record<WebvizioActionName, WebvizioActionHandler> = {
+export const webvizioActionHandlers: ProviderActionHandlers<"webvizio", WebvizioActionHandler> = {
   async create_rest_hook_subscription(input, context) {
     const url = requiredString(input.url, "url", providerInputError);
     const event = requiredString(input.event, "event", providerInputError);

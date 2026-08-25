@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "make";
 
-export type MakeActionName =
-  | "get_current_user"
-  | "get_current_authorization"
-  | "list_teams"
-  | "list_scenarios"
-  | "get_scenario"
-  | "activate_scenario"
-  | "deactivate_scenario"
-  | "run_scenario_once"
-  | "get_scenario_usage";
-
 const makeIdField = s.positiveInteger("Make resource ID.");
 const scenarioIdField = s.positiveInteger("Make scenario ID.");
 const teamIdField = s.positiveInteger("Make team ID.");

@@ -59,16 +59,6 @@ const sourceDocumentOptionsSchema = {
   ...httpAuthSchema,
 };
 
-export type PdfCoActionName =
-  | "get_account_balance"
-  | "html_to_pdf"
-  | "url_to_pdf"
-  | "get_pdf_info"
-  | "merge_pdfs"
-  | "split_pdf"
-  | "compress_pdf"
-  | "pdf_to_text";
-
 export const pdfCoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",

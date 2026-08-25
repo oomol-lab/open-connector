@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { StatusCakeActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ const statuscakeDefaultRequestTimeoutMs = 30_000;
 type StatuscakePhase = "validate" | "execute";
 type StatuscakeActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const statuscakeActionHandlers: Record<StatusCakeActionName, StatuscakeActionHandler> = {
+export const statuscakeActionHandlers: ProviderActionHandlers<"statuscake", StatuscakeActionHandler> = {
   list_uptime_tests(input, context) {
     return listUptimeTests(input, context);
   },

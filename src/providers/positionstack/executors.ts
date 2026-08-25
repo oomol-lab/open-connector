@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { PositionstackActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -31,7 +31,7 @@ type PositionstackActionHandler = (
   context: PositionstackActionContext,
 ) => Promise<unknown>;
 
-export const positionstackActionHandlers: Record<PositionstackActionName, PositionstackActionHandler> = {
+export const positionstackActionHandlers: ProviderActionHandlers<"positionstack", PositionstackActionHandler> = {
   forward_geocode(input, context) {
     return positionstackRequest("/forward", buildQuery(input), context, "execute");
   },

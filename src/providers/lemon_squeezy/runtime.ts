@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LemonSqueezyActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -31,7 +31,7 @@ interface LemonSqueezySingleResponse {
   data: unknown;
 }
 
-export const lemonSqueezyActionHandlers: Record<LemonSqueezyActionName, LemonSqueezyActionHandler> = {
+export const lemonSqueezyActionHandlers: ProviderActionHandlers<"lemon_squeezy", LemonSqueezyActionHandler> = {
   async retrieve_authenticated_user(_input, context) {
     const response = await requestLemonSqueezyJson<LemonSqueezySingleResponse>({
       context,

@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { oktaGroupsManageScope, oktaGroupsReadScope, oktaUsersManageScope, oktaUsersReadScope } from "./constants.ts";
 
 const service = "okta";
 
@@ -81,26 +82,11 @@ const groupProfile = s.looseRequiredObject(
   { optional: ["description"] },
 );
 
-export type OktaActionName =
-  | "list_users"
-  | "get_user"
-  | "create_user"
-  | "update_user"
-  | "delete_user"
-  | "lifecycle_user"
-  | "list_groups"
-  | "get_group"
-  | "create_group"
-  | "update_group"
-  | "delete_group"
-  | "list_group_users"
-  | "add_user_to_group"
-  | "remove_user_from_group";
-
 export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
     description: "List Okta users with search, filtering, sorting, field projection, and cursor pagination.",
+    requiredScopes: [oktaUsersReadScope],
     inputSchema: s.object(
       "Options for listing Okta users.",
       {
@@ -132,12 +118,14 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
     description: "Get one Okta user by ID, login, or login shortname.",
+    requiredScopes: [oktaUsersReadScope],
     inputSchema: s.object("The user to retrieve.", { userId }),
     outputSchema: userOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_user",
     description: "Create an Okta user with profile, credentials, group assignments, and activation options.",
+    requiredScopes: [oktaUsersManageScope],
     inputSchema: s.object(
       "The Okta user creation request.",
       {
@@ -158,6 +146,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_user",
     description: "Partially update an Okta user's profile or credentials.",
+    requiredScopes: [oktaUsersManageScope],
     inputSchema: s.object(
       "The Okta user partial update request.",
       {
@@ -173,6 +162,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "delete_user",
     description: "Deactivate an active Okta user, or permanently delete a user that is already deactivated.",
+    requiredScopes: [oktaUsersManageScope],
     inputSchema: s.object(
       "The Okta user deletion request.",
       {
@@ -193,6 +183,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lifecycle_user",
     description: "Activate, reactivate, deactivate, suspend, unsuspend, unlock, or expire an Okta user's password.",
+    requiredScopes: [oktaUsersManageScope],
     inputSchema: s.object(
       "The Okta user lifecycle request.",
       {
@@ -226,6 +217,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_groups",
     description: "List Okta groups with search, filtering, sorting, expansion, and cursor pagination.",
+    requiredScopes: [oktaGroupsReadScope],
     inputSchema: s.object(
       "Options for listing Okta groups.",
       {
@@ -253,24 +245,28 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_group",
     description: "Get one Okta group by ID.",
+    requiredScopes: [oktaGroupsReadScope],
     inputSchema: s.object("The group to retrieve.", { groupId }),
     outputSchema: groupOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_group",
     description: "Create an Okta-managed group.",
+    requiredScopes: [oktaGroupsManageScope],
     inputSchema: s.object("The Okta group creation request.", { profile: groupProfile }),
     outputSchema: groupOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_group",
     description: "Replace an Okta-managed group's profile.",
+    requiredScopes: [oktaGroupsManageScope],
     inputSchema: s.object("The Okta group replacement request.", { groupId, profile: groupProfile }),
     outputSchema: groupOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_group",
     description: "Delete an Okta-managed group by ID.",
+    requiredScopes: [oktaGroupsManageScope],
     inputSchema: s.object("The group to delete.", { groupId }),
     outputSchema: s.object("The Okta group deletion result.", {
       groupId: s.string("The deleted Okta group ID."),
@@ -280,6 +276,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_group_users",
     description: "List the users that are members of an Okta group.",
+    requiredScopes: [oktaGroupsReadScope],
     inputSchema: s.object(
       "Options for listing Okta group members.",
       {
@@ -294,6 +291,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_user_to_group",
     description: "Assign an Okta user to an Okta-managed group.",
+    requiredScopes: [oktaGroupsManageScope],
     inputSchema: s.object("The Okta group membership to create.", { groupId, userId }),
     outputSchema: s.object("The Okta group membership assignment result.", {
       groupId: s.string("The Okta group ID."),
@@ -304,6 +302,7 @@ export const oktaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "remove_user_from_group",
     description: "Unassign an Okta user from an Okta-managed group.",
+    requiredScopes: [oktaGroupsManageScope],
     inputSchema: s.object("The Okta group membership to remove.", { groupId, userId }),
     outputSchema: s.object("The Okta group membership removal result.", {
       groupId: s.string("The Okta group ID."),

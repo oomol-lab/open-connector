@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZyteApiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -25,7 +25,7 @@ export interface ZyteApiContext {
   signal?: AbortSignal;
 }
 
-export const zyteApiActionHandlers: Record<ZyteApiActionName, ZyteApiActionHandler> = {
+export const zyteApiActionHandlers: ProviderActionHandlers<"zyte_api", ZyteApiActionHandler> = {
   async fetch_browser_html(input, context) {
     const payload = await requestZyteApiJson(
       compactObject({

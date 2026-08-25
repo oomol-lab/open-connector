@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -32,7 +33,10 @@ export interface UpstashRedisContext {
   signal?: AbortSignal;
 }
 
-export const upstashRedisActionHandlers: Record<string, ProviderRuntimeHandler<UpstashRedisContext>> = {
+export const upstashRedisActionHandlers: ProviderActionHandlers<
+  "upstash_redis",
+  ProviderRuntimeHandler<UpstashRedisContext>
+> = {
   async get(input, context) {
     const result = await executeUpstashCommand(context, ["GET", readKey(input)], "execute");
     return { value: readStringOrNullResult(result, "GET") };

@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "tanium";
 
-export type TaniumActionName = "execute_graphql";
-
 const graphqlVariableValueSchema = s.unknown("A JSON value passed as a GraphQL variable.");
 const graphqlVariablesSchema = s.record("GraphQL variables keyed by variable name.", graphqlVariableValueSchema);
 const graphqlErrorSchema = s.looseObject("A GraphQL error returned by Tanium Gateway.", {

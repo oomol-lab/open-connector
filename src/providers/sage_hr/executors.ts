@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -22,7 +23,7 @@ interface SageHrContext {
 
 type Handler = ProviderRuntimeHandler<SageHrContext>;
 
-export const sageHrActionHandlers: Record<string, Handler> = {
+export const sageHrActionHandlers: ProviderActionHandlers<"sage_hr", Handler> = {
   async list_employees(input, context) {
     return listOutput("employees", await sageHrRequest("/employees", context, employeeQuery(input)));
   },

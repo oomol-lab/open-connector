@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { VerifiedemailActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface VerifiedemailRequestInput {
   query?: Record<string, VerifiedemailQueryValue>;
 }
 
-export const verifiedemailActionHandlers: Record<VerifiedemailActionName, VerifiedemailActionHandler> = {
+export const verifiedemailActionHandlers: ProviderActionHandlers<"verifiedemail", VerifiedemailActionHandler> = {
   get_entitlements(_input, context) {
     return requestVerifiedemailJson({
       ...context,

@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FirstbaseActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -11,7 +11,10 @@ const firstbaseValidationPath = "/api/v1/inventory?page=1&size=1";
 type FirstbaseRequestMode = "validate" | "execute";
 type FirstbaseQueryValue = string | string[];
 
-export const firstbaseActionHandlers: Record<FirstbaseActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const firstbaseActionHandlers: ProviderActionHandlers<
+  "firstbase",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_inventory(input, context) {
     validateListInventoryInput(input);
     return {

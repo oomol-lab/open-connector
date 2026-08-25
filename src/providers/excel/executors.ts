@@ -1,8 +1,8 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, mapProviderActionHandlers } from "../provider-runtime.ts";
 import { excelActions } from "./actions.ts";
 import { excelJsonRequest, executeExcelAction } from "./runtime.ts";
 
@@ -10,20 +10,20 @@ const service = "excel";
 
 type ExcelActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
 
-export const excelActionHandlers: Record<string, ExcelActionHandler> = Object.fromEntries(
-  excelActions.map((action) => [
-    action.name,
-    (input: Record<string, unknown>, context: OAuthProviderContext) =>
+export const excelActionHandlers: ProviderActionHandlers<"excel", ExcelActionHandler> = mapProviderActionHandlers(
+  service,
+  excelActions,
+  (action): ExcelActionHandler =>
+    (input, context) =>
       executeExcelAction(
         {
-          actionName: action.name as string,
+          actionName: action.name,
           input,
           accessToken: context.accessToken,
         },
         context.fetcher,
       ),
-  ]),
-) as Record<string, ExcelActionHandler>;
+);
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, excelActionHandlers);
 

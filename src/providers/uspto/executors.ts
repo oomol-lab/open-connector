@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineApiKeyProviderExecutors,
@@ -24,54 +25,56 @@ async function get(
     throw new ProviderRequestError(response.status, text || `USPTO request failed with status ${response.status}`);
   return response.status === 204 ? null : text;
 }
+const handlers: ProviderActionHandlers<"uspto", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async get_trademark_case_status(input, context) {
+    const xml = await get(
+      `/ts/cd/casestatus/sn${input.serialNumber}/info.xml`,
+      "application/xml",
+      context.apiKey,
+      context.fetcher,
+      context.signal,
+    );
+    return xml === null ? null : { xml };
+  },
+  async get_trademark_documents_metadata(input, context) {
+    const query = new URLSearchParams({ sn: String(input.serialNumber) });
+    if (input.fromDate) query.set("fromDate", String(input.fromDate));
+    if (input.toDate) query.set("toDate", String(input.toDate));
+    if (input.sort) query.set("sort", `date:${input.sort === "asc" ? "A" : "D"}`);
+    const xml = await get(
+      `/ts/cd/casedocs/bundle.xml?${query}`,
+      "application/xml",
+      context.apiKey,
+      context.fetcher,
+      context.signal,
+    );
+    return xml === null ? null : { xml };
+  },
+  async get_trademark_case_last_update(input, context) {
+    const text = await get(
+      `/last-update/info.json?sn=${input.serialNumber}`,
+      "application/json",
+      context.apiKey,
+      context.fetcher,
+      context.signal,
+    );
+    if (text === null) return null;
+    const payload = JSON.parse(text) as { caseUpdateInfo?: Record<string, unknown>[] };
+    const update = payload.caseUpdateInfo?.[0];
+    return {
+      serialNumber: update?.serialNumber ?? String(input.serialNumber),
+      lastModifiedDate: null,
+      statusLastModifiedDate: null,
+      prosecutionLastModifiedDate: null,
+      documentsLastModifiedDate: null,
+      raw: update ?? {},
+    };
+  },
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
   "uspto",
-  {
-    async get_trademark_case_status(input, context) {
-      const xml = await get(
-        `/ts/cd/casestatus/sn${input.serialNumber}/info.xml`,
-        "application/xml",
-        context.apiKey,
-        context.fetcher,
-        context.signal,
-      );
-      return xml === null ? null : { xml };
-    },
-    async get_trademark_documents_metadata(input, context) {
-      const query = new URLSearchParams({ sn: String(input.serialNumber) });
-      if (input.fromDate) query.set("fromDate", String(input.fromDate));
-      if (input.toDate) query.set("toDate", String(input.toDate));
-      if (input.sort) query.set("sort", `date:${input.sort === "asc" ? "A" : "D"}`);
-      const xml = await get(
-        `/ts/cd/casedocs/bundle.xml?${query}`,
-        "application/xml",
-        context.apiKey,
-        context.fetcher,
-        context.signal,
-      );
-      return xml === null ? null : { xml };
-    },
-    async get_trademark_case_last_update(input, context) {
-      const text = await get(
-        `/last-update/info.json?sn=${input.serialNumber}`,
-        "application/json",
-        context.apiKey,
-        context.fetcher,
-        context.signal,
-      );
-      if (text === null) return null;
-      const payload = JSON.parse(text) as { caseUpdateInfo?: Record<string, unknown>[] };
-      const update = payload.caseUpdateInfo?.[0];
-      return {
-        serialNumber: update?.serialNumber ?? String(input.serialNumber),
-        lastModifiedDate: null,
-        statusLastModifiedDate: null,
-        prosecutionLastModifiedDate: null,
-        documentsLastModifiedDate: null,
-        raw: update ?? {},
-      };
-    },
-  },
+  handlers,
   { skipDnsValidation: true },
 );
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

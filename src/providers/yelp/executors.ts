@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { YelpActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ const yelpValidationPath = "/v3/businesses/search";
 type YelpQueryValue = string | number | boolean | undefined;
 type YelpActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const yelpActionHandlers: Record<YelpActionName, YelpActionHandler> = {
+export const yelpActionHandlers: ProviderActionHandlers<"yelp", YelpActionHandler> = {
   async search_businesses(input, context) {
     validateSearchInput(input);
     const payload = await requestYelpJson({

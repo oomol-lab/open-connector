@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gamma";
 
-export type GammaActionName =
-  | "create_generation"
-  | "get_generation"
-  | "create_generation_and_wait"
-  | "wait_for_generation"
-  | "create_generation_from_template"
-  | "create_generation_from_template_and_wait"
-  | "list_themes"
-  | "list_folders";
-
 const themeIdSchema = s.nonEmptyString(
   "The Gamma theme ID returned by the List Themes API or copied from the Gamma app.",
 );

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { InstantlyAiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -21,7 +21,7 @@ type InstantlyAiMethod = "GET" | "POST";
 type InstantlyAiContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type InstantlyAiActionHandler = (input: Record<string, unknown>, context: InstantlyAiContext) => Promise<unknown>;
 
-export const instantlyAiActionHandlers: Record<InstantlyAiActionName, InstantlyAiActionHandler> = {
+export const instantlyAiActionHandlers: ProviderActionHandlers<"instantly_ai", InstantlyAiActionHandler> = {
   list_campaigns(input, context) {
     return instantlyAiGetJson(buildListCampaignsPath(input), context, "execute");
   },

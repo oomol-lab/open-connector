@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -63,54 +63,54 @@ function pageNumber(value: unknown, field: string, minimum: number): number {
   return number;
 }
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  service,
-  {
-    async list_shops(_input, context) {
-      const payload = await request("shops.json", {}, context);
-      return { shops: Array.isArray(payload) ? payload : [] };
-    },
-    async list_products(input, context) {
-      return page(
-        await request(
-          `shops/${positive(input.shopId, "shopId")}/products.json`,
-          { page: input.page, limit: input.limit },
-          context,
-        ),
-        "products",
-      );
-    },
-    async get_product(input, context) {
-      return {
-        product: await request(
-          `shops/${positive(input.shopId, "shopId")}/products/${encodeURIComponent(requiredString(input.productId, "productId"))}.json`,
-          {},
-          context,
-        ),
-      };
-    },
-    async list_orders(input, context) {
-      return page(
-        await request(
-          `shops/${positive(input.shopId, "shopId")}/orders.json`,
-          { page: input.page, limit: input.limit, status: input.status, sku: input.sku },
-          context,
-        ),
-        "orders",
-      );
-    },
-    async get_order(input, context) {
-      return {
-        order: await request(
-          `shops/${positive(input.shopId, "shopId")}/orders/${encodeURIComponent(requiredString(input.orderId, "orderId"))}.json`,
-          {},
-          context,
-        ),
-      };
-    },
+const handlers: ProviderActionHandlers<"printify", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async list_shops(_input, context) {
+    const payload = await request("shops.json", {}, context);
+    return { shops: Array.isArray(payload) ? payload : [] };
   },
-  { skipDnsValidation: true },
-);
+  async list_products(input, context) {
+    return page(
+      await request(
+        `shops/${positive(input.shopId, "shopId")}/products.json`,
+        { page: input.page, limit: input.limit },
+        context,
+      ),
+      "products",
+    );
+  },
+  async get_product(input, context) {
+    return {
+      product: await request(
+        `shops/${positive(input.shopId, "shopId")}/products/${encodeURIComponent(requiredString(input.productId, "productId"))}.json`,
+        {},
+        context,
+      ),
+    };
+  },
+  async list_orders(input, context) {
+    return page(
+      await request(
+        `shops/${positive(input.shopId, "shopId")}/orders.json`,
+        { page: input.page, limit: input.limit, status: input.status, sku: input.sku },
+        context,
+      ),
+      "orders",
+    );
+  },
+  async get_order(input, context) {
+    return {
+      order: await request(
+        `shops/${positive(input.shopId, "shopId")}/orders/${encodeURIComponent(requiredString(input.orderId, "orderId"))}.json`,
+        {},
+        context,
+      ),
+    };
+  },
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,

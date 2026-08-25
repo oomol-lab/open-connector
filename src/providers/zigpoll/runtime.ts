@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ZigpollActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface ZigpollRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const zigpollActionHandlers: Record<ZigpollActionName, ZigpollActionHandler> = {
+export const zigpollActionHandlers: ProviderActionHandlers<"zigpoll", ZigpollActionHandler> = {
   get_current_user(_input, context) {
     return requestZigpollJson({ path: "/me" }, context, "execute");
   },

@@ -48,8 +48,6 @@ function data247ListOutput(resultSchema: JsonSchema, description: string, result
   );
 }
 
-export type Data247ActionName = "check_balance" | "get_carrier_type" | "verify_phone" | "check_dnc" | "append_gender";
-
 export const data247Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "check_balance",

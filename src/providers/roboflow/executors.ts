@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RoboflowActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -33,7 +33,7 @@ const validationPath = "/";
 
 type RoboflowActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const roboflowActionHandlers: Record<RoboflowActionName, RoboflowActionHandler> = {
+export const roboflowActionHandlers: ProviderActionHandlers<"roboflow", RoboflowActionHandler> = {
   list_projects(_input, context) {
     return executeListProjects(context);
   },

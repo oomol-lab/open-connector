@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "claid_ai";
 
-export type ClaidAiActionName = "edit_image" | "submit_edit_image" | "get_edit_task";
-
 const stringOrNullSchema = s.nullable(s.string("A string value."));
 const processingImageSchema = s.object(
   "The Claid image metadata object returned for an input or output image.",

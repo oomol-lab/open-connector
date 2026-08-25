@@ -145,12 +145,6 @@ const reverseGeocodeWithTimezoneOutputSchema = s.object(
   { optional: ["postcode"], additionalProperties: true },
 );
 
-export type BigDataCloudActionName =
-  | "get_country_by_ip"
-  | "get_network_by_ip"
-  | "get_timezone_by_ip"
-  | "reverse_geocode_with_timezone";
-
 export const bigDataCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_country_by_ip",

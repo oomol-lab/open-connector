@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { LoopReturnsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -24,7 +24,7 @@ interface LoopReturnsRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const loopReturnsActionHandlers: Record<LoopReturnsActionName, LoopReturnsActionHandler> = {
+export const loopReturnsActionHandlers: ProviderActionHandlers<"loop_returns", LoopReturnsActionHandler> = {
   async list_returns(input, context) {
     const payload = await requestLoopReturnsJson({
       apiKey: context.apiKey,

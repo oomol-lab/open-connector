@@ -111,5 +111,3 @@ export const fraudlabsproActions: ActionDefinition[] = [
     outputSchema: feedbackOrderOutputSchema,
   }),
 ];
-
-export type FraudlabsproActionName = "screen_order" | "get_order_result" | "feedback_order";

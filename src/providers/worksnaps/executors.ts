@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WorksnapsActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalString } from "../../core/cast.ts";
@@ -25,7 +25,7 @@ interface XmlNode {
 
 type WorksnapsActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const worksnapsActionHandlers: Record<WorksnapsActionName, WorksnapsActionHandler> = {
+export const worksnapsActionHandlers: ProviderActionHandlers<"worksnaps", WorksnapsActionHandler> = {
   async get_current_user(_input, context) {
     const root = await requestWorksnapsXml({
       path: worksnapsValidationPath,

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IpdataCoActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -15,45 +15,7 @@ const ipdataMainApiBaseUrl = "https://api.ipdata.co";
 const ipdataEuApiBaseUrl = "https://eu-api.ipdata.co";
 const ipdataLookupPath = "/v1/";
 const ipdataBulkLookupPath = "/v1/bulk";
-const ipdataScalarActionFieldMap: Record<IpdataScalarActionName, IpdataScalarFieldName> = {
-  get_ip: "ip",
-  get_is_eu: "is_eu",
-  get_city: "city",
-  get_region: "region",
-  get_region_code: "region_code",
-  get_country_name: "country_name",
-  get_country_code: "country_code",
-  get_continent_name: "continent_name",
-  get_continent_code: "continent_code",
-  get_latitude: "latitude",
-  get_longitude: "longitude",
-  get_postal: "postal",
-  get_calling_code: "calling_code",
-  get_flag: "flag",
-  get_emoji_flag: "emoji_flag",
-  get_emoji_unicode: "emoji_unicode",
-  get_count: "count",
-};
-
 type IpdataRequestPhase = "validate" | "execute";
-type IpdataScalarActionName =
-  | "get_ip"
-  | "get_is_eu"
-  | "get_city"
-  | "get_region"
-  | "get_region_code"
-  | "get_country_name"
-  | "get_country_code"
-  | "get_continent_name"
-  | "get_continent_code"
-  | "get_latitude"
-  | "get_longitude"
-  | "get_postal"
-  | "get_calling_code"
-  | "get_flag"
-  | "get_emoji_flag"
-  | "get_emoji_unicode"
-  | "get_count";
 type IpdataScalarFieldName =
   | "ip"
   | "is_eu"
@@ -75,7 +37,7 @@ type IpdataScalarFieldName =
 type IpdataActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type IpdataActionHandler = (input: Record<string, unknown>, context: IpdataActionContext) => Promise<unknown>;
 
-export const ipdataCoActionHandlers: Record<IpdataCoActionName, IpdataActionHandler> = {
+export const ipdataCoActionHandlers: ProviderActionHandlers<"ipdata_co", IpdataActionHandler> = {
   lookup_current_ip(_input, context) {
     return ipdataGetJson(ipdataMainApiBaseUrl, context);
   },
@@ -120,15 +82,23 @@ export const ipdataCoActionHandlers: Record<IpdataCoActionName, IpdataActionHand
   get_languages_by_ip(input, context) {
     return ipdataGetField(context, "languages", optionalString(input.ip));
   },
-  ...(Object.fromEntries(
-    Object.entries(ipdataScalarActionFieldMap).map(([actionName, fieldName]) => [
-      actionName,
-      async (input: Record<string, unknown>, context: IpdataActionContext): Promise<unknown> => {
-        const payload = await ipdataGetField(context, fieldName, optionalString(input.ip));
-        return normalizeScalarFieldResponse(fieldName, payload);
-      },
-    ]),
-  ) as Record<IpdataScalarActionName, IpdataActionHandler>),
+  get_ip: ipdataScalarHandler("ip"),
+  get_is_eu: ipdataScalarHandler("is_eu"),
+  get_city: ipdataScalarHandler("city"),
+  get_region: ipdataScalarHandler("region"),
+  get_region_code: ipdataScalarHandler("region_code"),
+  get_country_name: ipdataScalarHandler("country_name"),
+  get_country_code: ipdataScalarHandler("country_code"),
+  get_continent_name: ipdataScalarHandler("continent_name"),
+  get_continent_code: ipdataScalarHandler("continent_code"),
+  get_latitude: ipdataScalarHandler("latitude"),
+  get_longitude: ipdataScalarHandler("longitude"),
+  get_postal: ipdataScalarHandler("postal"),
+  get_calling_code: ipdataScalarHandler("calling_code"),
+  get_flag: ipdataScalarHandler("flag"),
+  get_emoji_flag: ipdataScalarHandler("emoji_flag"),
+  get_emoji_unicode: ipdataScalarHandler("emoji_unicode"),
+  get_count: ipdataScalarHandler("count"),
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ipdataCoActionHandlers);
@@ -161,6 +131,13 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+function ipdataScalarHandler(fieldName: IpdataScalarFieldName): IpdataActionHandler {
+  return async (input, context) => {
+    const payload = await ipdataGetField(context, fieldName, optionalString(input.ip));
+    return normalizeScalarFieldResponse(fieldName, payload);
+  };
+}
 
 async function ipdataGetJson(
   baseUrl: string,

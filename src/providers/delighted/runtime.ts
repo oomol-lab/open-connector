@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DelightedActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -41,7 +41,7 @@ interface DelightedResponse {
   headers: Headers;
 }
 
-export const delightedActionHandlers: Record<DelightedActionName, DelightedActionHandler> = {
+export const delightedActionHandlers: ProviderActionHandlers<"delighted", DelightedActionHandler> = {
   create_or_update_person(input, context) {
     return delightedCreateOrUpdatePerson(input, context);
   },

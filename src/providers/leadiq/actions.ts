@@ -237,10 +237,3 @@ export const leadiqActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type LeadiqActionName =
-  | "get_account"
-  | "search_people"
-  | "search_company"
-  | "flat_advanced_search"
-  | "grouped_advanced_search";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CodaActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -26,7 +26,7 @@ type CodaQueryValue = string | number | boolean | string[] | undefined;
 type CodaRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CodaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const codaActionHandlers: Record<CodaActionName, CodaActionHandler> = {
+export const codaActionHandlers: ProviderActionHandlers<"coda", CodaActionHandler> = {
   async get_current_user(_input, context) {
     const user = await requestCodaObject({
       context,

@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { executeLineAction, lineApiBaseUrl, validateLineCredential } from "./runtime.ts";
@@ -19,7 +20,7 @@ interface ProviderContext {
 
 type Handler = (input: Record<string, unknown>, context: ProviderContext) => Promise<unknown>;
 
-const handlers: Record<string, Handler> = {
+const handlers: ProviderActionHandlers<"line", Handler> = {
   get_bot_info(input, context) {
     return executeLineAction("get_bot_info", input, context.apiKey, context.fetcher);
   },

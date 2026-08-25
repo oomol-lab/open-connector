@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import {
   compactObject,
   optionalBoolean,
@@ -8,7 +10,7 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { queryFlag, queryParams } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, queryFlag, queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -35,7 +37,7 @@ export type HomeAssistantActionHandler = (
   context: HomeAssistantActionContext,
 ) => Promise<unknown>;
 
-export const homeAssistantActionHandlers: Record<string, HomeAssistantActionHandler> = {
+export const homeAssistantActionHandlers: ProviderActionHandlerSubset<"home_assistant", HomeAssistantActionHandler> = {
   async get_config(_input, context) {
     return {
       config: await requestHomeAssistantJson({
@@ -393,20 +395,16 @@ function normalizeServiceCallResponse(payload: unknown): {
   };
 }
 
-function normalizeBaseUrl(value: unknown): string {
+function normalizeBaseUrl(value: unknown, allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed()): string {
   const raw = typeof value === "string" ? value.trim() : "";
   if (!raw) {
     throw new ProviderRequestError(400, "baseUrl is required");
   }
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new ProviderRequestError(400, "baseUrl must be a valid http(s) URL");
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new ProviderRequestError(400, "baseUrl must be a valid http(s) URL");
-  }
+  const url = assertPublicHttpUrl(raw, {
+    fieldName: "baseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
   if (url.username || url.password || url.search || url.hash) {
     throw new ProviderRequestError(400, "baseUrl must be a clean instance root URL");
   }

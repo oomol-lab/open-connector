@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WorldNewsApiActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const worldNewsApiBaseUrl = "https://api.worldnewsapi.com";
 type WorldNewsApiQueryValue = string | number | undefined;
 type WorldNewsApiActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const worldNewsApiActionHandlers: Record<WorldNewsApiActionName, WorldNewsApiActionHandler> = {
+export const worldNewsApiActionHandlers: ProviderActionHandlers<"world_news_api", WorldNewsApiActionHandler> = {
   search_news(input, context) {
     validateSearchNewsInput(input);
     return requestWorldNewsApiJson(

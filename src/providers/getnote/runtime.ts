@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GetnoteActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   nullableString,
@@ -71,7 +71,7 @@ export async function validateGetnoteCredential(
   };
 }
 
-export const getnoteActionHandlers: Record<GetnoteActionName, GetnoteActionHandler> = {
+export const getnoteActionHandlers: ProviderActionHandlers<"getnote", GetnoteActionHandler> = {
   save_note: saveNote,
   get_save_task: getSaveTask,
   list_notes: listNotes,

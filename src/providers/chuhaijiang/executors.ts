@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -67,41 +68,41 @@ function listRanking(
     context,
   ).then(normalize);
 }
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  "chuhaijiang",
-  {
-    async search_products(input, context) {
-      return normalize(
-        await request(
-          "/open/v1/products/search",
-          { ...input, sort: sort(input), sort_field: undefined, sort_direction: undefined },
-          context,
-        ),
-      );
-    },
-    async get_product(input, context) {
-      const payload = normalize(
-        await request(
-          `/open/v1/products/${encodeURIComponent(String(input.product_id))}`,
-          { country: input.country, include: Array.isArray(input.include) ? input.include.join(",") : undefined },
-          context,
-        ),
-      );
-      const items = payload.items as unknown[];
-      if (!items[0]) throw new ProviderRequestError(502, "Chuhaijiang product response omitted product");
-      return { product: items[0], requestId: payload.requestId, ...(payload.usage ? { usage: payload.usage } : {}) };
-    },
-    list_product_creators: (input, context) => listRelated("creators", input, context),
-    list_product_videos: (input, context) => listRelated("videos", input, context),
-    list_product_lives: (input, context) => listRelated("lives", input, context),
-    list_product_reviews: (input, context) => listRelated("reviews", input, context),
-    list_similar_products: (input, context) => listRelated("similar", input, context),
-    list_top_selling_products: (input, context) => listRanking("top-selling", input, context),
-    list_most_promoted_products: (input, context) => listRanking("most-promoted", input, context),
-    list_new_arrival_products: (input, context) => listRanking("new-arrivals", input, context),
+const handlers: ProviderActionHandlers<"chuhaijiang", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async search_products(input, context) {
+    return normalize(
+      await request(
+        "/open/v1/products/search",
+        { ...input, sort: sort(input), sort_field: undefined, sort_direction: undefined },
+        context,
+      ),
+    );
   },
-  { skipDnsValidation: true },
-);
+  async get_product(input, context) {
+    const payload = normalize(
+      await request(
+        `/open/v1/products/${encodeURIComponent(String(input.product_id))}`,
+        { country: input.country, include: Array.isArray(input.include) ? input.include.join(",") : undefined },
+        context,
+      ),
+    );
+    const items = payload.items as unknown[];
+    if (!items[0]) throw new ProviderRequestError(502, "Chuhaijiang product response omitted product");
+    return { product: items[0], requestId: payload.requestId, ...(payload.usage ? { usage: payload.usage } : {}) };
+  },
+  list_product_creators: (input, context) => listRelated("creators", input, context),
+  list_product_videos: (input, context) => listRelated("videos", input, context),
+  list_product_lives: (input, context) => listRelated("lives", input, context),
+  list_product_reviews: (input, context) => listRelated("reviews", input, context),
+  list_similar_products: (input, context) => listRelated("similar", input, context),
+  list_top_selling_products: (input, context) => listRanking("top-selling", input, context),
+  list_most_promoted_products: (input, context) => listRanking("most-promoted", input, context),
+  list_new_arrival_products: (input, context) => listRanking("new-arrivals", input, context),
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("chuhaijiang", handlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "chuhaijiang",

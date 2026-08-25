@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -28,7 +29,7 @@ const uptimerobotProxyFetch = createProviderFetch({ skipDnsValidation: true });
 type UptimerobotRequestPhase = "validate" | "execute";
 type UptimerobotActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const uptimerobotActionHandlers: Record<string, UptimerobotActionHandler> = {
+export const uptimerobotActionHandlers: ProviderActionHandlers<"uptimerobot", UptimerobotActionHandler> = {
   async get_account_details(_input, context) {
     const payload = await requestUptimerobotJson({ context, endpoint: "getAccountDetails", phase: "execute" });
     return { account: requireObjectPayload(payload.account, "uptimerobot account details response") };

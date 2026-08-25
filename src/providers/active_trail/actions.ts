@@ -244,22 +244,6 @@ const deleteOutputSchema = s.object("The response returned after deleting an Act
   data: s.unknown("The raw delete response returned by ActiveTrail, if any."),
 });
 
-export type ActiveTrailActionName =
-  | "get_account_balance"
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "list_groups"
-  | "get_group"
-  | "create_group"
-  | "update_group"
-  | "delete_group"
-  | "list_group_members"
-  | "add_group_member"
-  | "remove_group_member";
-
 export const activeTrailActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",

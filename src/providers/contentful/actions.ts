@@ -176,13 +176,3 @@ export const contentfulActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ContentfulActionName =
-  | "get_current_user"
-  | "list_spaces"
-  | "list_environments"
-  | "list_content_types"
-  | "list_entries"
-  | "get_entry"
-  | "create_entry"
-  | "update_entry";

@@ -10,11 +10,13 @@ class FakeSocket {
   static opened: FakeSocket[] = [];
 
   readonly url: string;
+  readonly protocols?: string | string[];
   closed = false;
   private readonly listeners = new Map<string, Listener[]>();
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url;
+    this.protocols = protocols;
     FakeSocket.opened.push(this);
   }
 
@@ -42,8 +44,8 @@ class FakeSocket {
 
 /** Constructor that reports the socket back so the test can drive its events. */
 function fakeConstructor(onCreate?: (socket: FakeSocket) => void): WebSocketConstructor {
-  return function FakeWebSocket(url: string) {
-    const socket = new FakeSocket(url);
+  return function FakeWebSocket(url: string, protocols?: string | string[]) {
+    const socket = new FakeSocket(url, protocols);
     // Open on the next tick so the caller has attached its handshake listeners.
     globalThis.setTimeout(() => onCreate?.(socket), 0);
     return socket;
@@ -201,6 +203,15 @@ describe("openGuardedWebSocket scheme mapping", () => {
       webSocketConstructor: openingConstructor(),
     });
     expect(FakeSocket.opened[0]?.url).toBe("wss://ha.example.com/api/websocket");
+  });
+
+  it("forwards WebSocket subprotocols to the guarded constructor", async () => {
+    FakeSocket.opened = [];
+    await openGuardedWebSocket("wss://broker.example.com/mqtt", {
+      webSocketConstructor: openingConstructor(),
+      protocols: ["mqtt"],
+    });
+    expect(FakeSocket.opened[0]?.protocols).toEqual(["mqtt"]);
   });
 });
 

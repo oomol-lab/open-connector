@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WitAiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -49,7 +49,7 @@ interface NormalizedUtteranceTrait {
   value: string;
 }
 
-export const witAiActionHandlers: Record<WitAiActionName, WitAiActionHandler> = {
+export const witAiActionHandlers: ProviderActionHandlers<"wit_ai", WitAiActionHandler> = {
   analyze_message(input, context) {
     return analyzeMessage(input, context);
   },

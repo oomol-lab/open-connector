@@ -126,6 +126,28 @@
   },
   "providers": {
     "catalogTitle": "Провайдеры",
+    "viewLabel": "Представление провайдеров",
+    "views": { "manage": "Мои подключения", "discover": "Найти приложения" },
+    "discovery": {
+      "browseByTask": "Поиск по задаче",
+      "explore": "Смотреть приложения",
+      "scenarios": {
+        "ai": { "title": "ИИ и агенты", "description": "Модели, агенты, поиск и генерация медиа" },
+        "crossBorderEcommerce": {
+          "title": "Операции e-commerce",
+          "description": "Витрины, заказы, исполнение и рыночные данные"
+        },
+        "communication": { "title": "Командная работа", "description": "Сообщения, почта, встречи и уведомления" },
+        "docs": { "title": "Документы и знания", "description": "Документы, базы знаний, диски и таблицы" },
+        "productivity": {
+          "title": "Проекты и продуктивность",
+          "description": "Проекты, задачи, расписания и автоматизация"
+        },
+        "marketing": { "title": "Маркетинг и рост", "description": "Реклама, контент, лиды и данные роста" },
+        "dataStorage": { "title": "Данные и аналитика", "description": "Хранилища, базы данных, BI и storage" },
+        "developer": { "title": "Разработка и облако", "description": "Код, деплой, облачные сервисы и наблюдаемость" }
+      }
+    },
     "brandNotice": "Названия, логотипы и товарные знаки третьих лиц принадлежат их соответствующим владельцам и отображаются только для идентификации провайдеров. Проект не претендует на права на них. Пользователи, распространяющие или коммерциализирующие проект, обязаны самостоятельно изучить применимые правила использования бренда и получить необходимые для их целей разрешения.",
     "searchPlaceholder": "Искать провайдеры",
     "statusFilterLabel": "Статус провайдера",
@@ -241,6 +263,9 @@
       "resetOAuthClient": "Сбросить App по умолчанию"
     },
     "oauthClientSettings": {
+      "setupTitle": "Создайте приложение OAuth",
+      "setupIntro": "Зарегистрируйте приложение OAuth в {{name}}, затем вставьте его учётные данные ниже.",
+      "setupDocsLink": "Открыть портал разработчика {{name}}",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -420,6 +445,8 @@
       },
       "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
       "tokenSummary": "Action allow rules: {{allowed}} · Action block rules: {{blocked}} · Proxy grants: {{proxies}} · Дополнительно ограничено runtime-базой",
+      "connectionsUnrestricted": "Все подключения",
+      "connectionsRestricted": "Подключения: {{names}}",
       "editor": {
         "title": "Изменить runtime policy",
         "description": "Перед сохранением изменения проверяются вместе с ограничениями deployment.",
@@ -463,7 +490,15 @@
         "noRules": "В этом списке нет rules.",
         "actionAllowRequired": "Добавьте action allow rule или выберите отсутствие дополнительных ограничений.",
         "proxyAllowRequired": "Добавьте provider allow rule или выберите отсутствие дополнительных ограничений.",
-        "tokenHint": "Action rules и proxy grants независимы. Пустой список proxy grants запрещает token отправлять provider proxy requests.",
+        "connectionsTitle": "Доступ к connections",
+        "connectionsUnrestrictedHint": "Этот token может использовать любое сохраненное connection, включая default, если в запросе нет имени.",
+        "connectionsRestrictedHint": "Этот token может использовать только выбранные connections провайдеров.",
+        "connectionsList": "Разрешенные connections",
+        "connectionsRequired": "Выберите хотя бы одно connection или отсутствие дополнительных ограничений.",
+        "tooManyConnections": "Список connections не может содержать больше 128 connections.",
+        "connectionCount": "{{count}} connections",
+        "noConnections": "В этом списке нет connections.",
+        "connectionsDefaultHint": "Выберите default connection провайдера, чтобы разрешить его HTTP, MCP или proxy запросы без имени.",
         "discard": "Отменить изменения",
         "preview": "Предпросмотр влияния"
       },

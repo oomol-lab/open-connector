@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -29,7 +30,7 @@ interface AnydbActionContext extends AnydbCredentials {
 
 type AnydbActionHandler = (input: Record<string, unknown>, context: AnydbActionContext) => Promise<unknown>;
 
-export const anydbActionHandlers: Record<string, AnydbActionHandler> = {
+export const anydbActionHandlers: ProviderActionHandlers<"anydb", AnydbActionHandler> = {
   async list_teams(_input, context) {
     return { teams: await requestAnydb(context, "/integrations/ext/listteams") };
   },

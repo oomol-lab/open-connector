@@ -204,8 +204,6 @@ const paginatedTaskOutputSchema = s.object("A page of Jamie tasks.", {
   nextCursor: s.nullable(s.string("Cursor for the next page, or null if there are no more pages.")),
 });
 
-export type JamieActionName = "list_meetings" | "get_meeting" | "list_tasks" | "search_meetings" | "list_tags";
-
 export const jamieActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_meetings",

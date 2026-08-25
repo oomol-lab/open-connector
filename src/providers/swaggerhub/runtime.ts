@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SwaggerHubActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type SwaggerhubPhase = "validate" | "execute";
 type SwaggerhubResponseType = "json" | "text";
 type SwaggerhubActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const swaggerhubActionHandlers: Record<SwaggerHubActionName, SwaggerhubActionHandler> = {
+export const swaggerhubActionHandlers: ProviderActionHandlers<"swaggerhub", SwaggerhubActionHandler> = {
   search_registry_specs(input, context) {
     return getRegistryListing(context, "/specs", buildSearchQuery(input));
   },

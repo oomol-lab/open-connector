@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CompanycamActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -33,7 +33,7 @@ interface CompanycamRequest {
   currentUserEmail?: string;
 }
 
-export const companycamActionHandlers: Record<CompanycamActionName, CompanycamActionHandler> = {
+export const companycamActionHandlers: ProviderActionHandlers<"companycam", CompanycamActionHandler> = {
   async get_company(_input, context) {
     const payload = await requestCompanycamJson({ ...context, method: "GET", path: "/company", phase: "execute" });
     const company = normalizeCompany(optionalRecord(payload) ?? {});

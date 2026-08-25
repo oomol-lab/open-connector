@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { SmsAlertActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -32,7 +32,7 @@ interface SmsAlertActionContext {
 
 type SmsAlertActionHandler = (input: Record<string, unknown>, context: SmsAlertActionContext) => Promise<unknown>;
 
-export const smsAlertActionHandlers: Record<SmsAlertActionName, SmsAlertActionHandler> = {
+export const smsAlertActionHandlers: ProviderActionHandlers<"sms_alert", SmsAlertActionHandler> = {
   get_credit_balance(_input, context) {
     return requestCreditBalance(context, "execute");
   },

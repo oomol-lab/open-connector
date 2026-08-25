@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FluxguardActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface FluxguardRequestInput {
   phase: FluxguardPhase;
 }
 
-export const fluxguardActionHandlers: Record<FluxguardActionName, FluxguardActionHandler> = {
+export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", FluxguardActionHandler> = {
   async get_account(_input, context) {
     const payload = await requestFluxguardJson(context, {
       method: "GET",

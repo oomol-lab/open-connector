@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { RepairshoprActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -44,7 +44,7 @@ interface RepairshoprActionContext {
   signal?: AbortSignal;
 }
 
-export const repairshoprActionHandlers: Record<RepairshoprActionName, RepairshoprActionHandler> = {
+export const repairshoprActionHandlers: ProviderActionHandlers<"repairshopr", RepairshoprActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context, "execute");
   },

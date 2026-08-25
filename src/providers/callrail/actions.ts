@@ -87,14 +87,6 @@ const formSubmissionSchema = s.object("A CallRail form submission.", {
   raw: rawObjectSchema,
 });
 
-export type CallrailActionName =
-  | "list_accounts"
-  | "list_companies"
-  | "list_calls"
-  | "get_call"
-  | "list_form_submissions"
-  | "get_form_submission";
-
 export const callrailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",

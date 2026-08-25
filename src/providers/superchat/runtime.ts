@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SuperchatActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -30,7 +30,7 @@ interface SuperchatRequestInput {
 
 type SuperchatActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const superchatActionHandlers: Record<SuperchatActionName, SuperchatActionHandler> = {
+export const superchatActionHandlers: ProviderActionHandlers<"superchat", SuperchatActionHandler> = {
   async get_me(_input, context) {
     return {
       profile: requiredRecord(

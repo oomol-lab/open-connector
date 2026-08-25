@@ -848,35 +848,3 @@ export const firecrawlActions: ActionDefinition[] = [
     outputSchema: historicalUsageSchema,
   }),
 ];
-
-export type FirecrawlActionName =
-  | "scrape"
-  | "batch_scrape"
-  | "batch_scrape_get"
-  | "batch_scrape_get_errors"
-  | "batch_scrape_cancel"
-  | "crawl"
-  | "crawl_v2"
-  | "crawl_get"
-  | "get_the_status_of_a_crawl_job"
-  | "crawl_get_errors"
-  | "crawl_cancel"
-  | "crawl_delete"
-  | "crawl_list_active"
-  | "crawl_params_preview"
-  | "extract"
-  | "extract_get"
-  | "search"
-  | "map_multiple_urls_based_on_options"
-  | "start_agent"
-  | "get_agent_status"
-  | "agent_cancel"
-  | "deep_research"
-  | "get_deep_research_status"
-  | "llms_txt_generate"
-  | "llms_txt_get"
-  | "queue_get"
-  | "credit_usage_get"
-  | "credit_usage_get_historical"
-  | "token_usage_get"
-  | "token_usage_get_historical";

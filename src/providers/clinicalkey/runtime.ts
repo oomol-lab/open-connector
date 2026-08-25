@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -18,7 +20,7 @@ interface ClinicalKeyActionContext {
 }
 type ClinicalKeyActionHandler = (input: Record<string, unknown>, context: ClinicalKeyActionContext) => Promise<unknown>;
 
-export const clinicalKeyActionHandlers: Record<string, ClinicalKeyActionHandler> = {
+export const clinicalKeyActionHandlers: ProviderActionHandlers<"clinicalkey", ClinicalKeyActionHandler> = {
   async get_service_status(_input, context) {
     return {
       status: requireObjectPayload(

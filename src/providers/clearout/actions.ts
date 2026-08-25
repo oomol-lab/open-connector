@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "clearout";
 
-export type ClearoutActionName =
-  | "get_available_credits"
-  | "instant_verify_email"
-  | "verify_catch_all_email"
-  | "verify_disposable_email"
-  | "verify_free_account_email"
-  | "verify_role_account_email"
-  | "verify_gibberish_email"
-  | "verify_business_account_email";
-
 const emptyInputSchema = s.actionInput({}, [], "This action does not require any input.");
 const timeoutFieldSchema = s.integer("Request wait time in milliseconds.", { minimum: 1, maximum: 180000 });
 const verifyEmailInputSchema = s.object(

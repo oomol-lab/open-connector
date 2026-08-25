@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { PayrexxActionName } from "./actions.ts";
 
 import {
@@ -45,7 +46,7 @@ interface PayrexxResponse {
   message?: unknown;
 }
 
-export const payrexxActionHandlers: Record<PayrexxActionName, PayrexxHandler> = {
+export const payrexxActionHandlers: ProviderActionHandlers<"payrexx", PayrexxHandler> = {
   async list_payment_providers(input, fetcher) {
     const payload = await requestPayrexxJson({
       path: "/PaymentProvider/",
@@ -233,7 +234,7 @@ async function readResponseBody(response: Response): Promise<PayrexxResponse> {
       return payload;
     }
   } catch {
-    // 下方使用统一的 provider error。
+    // Use the normalized provider error below.
   }
   return { message: response.statusText || "Payrexx returned an invalid response" };
 }

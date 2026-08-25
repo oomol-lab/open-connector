@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
@@ -39,7 +40,7 @@ interface LiveagentContext {
 
 type LiveagentActionHandler = (input: Record<string, unknown>, context: LiveagentContext) => Promise<unknown>;
 
-export const liveagentActionHandlers: Record<string, LiveagentActionHandler> = {
+export const liveagentActionHandlers: ProviderActionHandlers<"liveagent", LiveagentActionHandler> = {
   async list_tickets(input, context) {
     const payload = await requestLiveagentJson({
       ...context,

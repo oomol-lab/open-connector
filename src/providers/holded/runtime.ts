@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HoldedActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface HoldedRequestInput {
   phase: HoldedPhase;
 }
 
-export const holdedActionHandlers: Record<HoldedActionName, HoldedActionHandler> = {
+export const holdedActionHandlers: ProviderActionHandlers<"holded", HoldedActionHandler> = {
   async list_contacts(input, context) {
     const payload = await requestHoldedJson({
       method: "GET",

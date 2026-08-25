@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -31,7 +32,7 @@ interface QuintaDbRequestInput extends QuintaDbContext {
   phase: "validate" | "execute";
 }
 
-export const quintaDbActionHandlers: Record<string, ProviderRuntimeHandler<QuintaDbContext>> = {
+export const quintaDbActionHandlers: ProviderActionHandlers<"quintadb", ProviderRuntimeHandler<QuintaDbContext>> = {
   async list_databases(input, context) {
     const payload = await requestQuintaDbJson({
       ...context,

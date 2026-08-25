@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +26,7 @@ interface RefinerRequestOptions {
   mode: "validate" | "execute";
 }
 
-export const refinerActionHandlers: Record<string, RefinerActionHandler> = {
+export const refinerActionHandlers: ProviderActionHandlers<"refiner", RefinerActionHandler> = {
   get_account_info(_input, context) {
     return refinerGetAccountInfo(context);
   },

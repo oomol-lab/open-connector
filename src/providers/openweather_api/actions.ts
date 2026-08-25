@@ -644,29 +644,6 @@ const submitStationMeasurementsInputSchema = s.object(
   { required: ["measurements"] },
 );
 
-export type OpenweatherApiActionName =
-  | "get_geocoding_direct"
-  | "get_geocoding_reverse"
-  | "get_geocoding_by_zip"
-  | "get_current_weather"
-  | "get_5_day_forecast"
-  | "get_circle_city_weather"
-  | "get_air_pollution_current"
-  | "get_air_pollution_forecast"
-  | "get_air_pollution_history"
-  | "get_uv_index"
-  | "get_uv_index_forecast"
-  | "get_uv_index_history"
-  | "get_weather_map_tile"
-  | "add_weather_station"
-  | "update_weather_station"
-  | "delete_weather_station"
-  | "list_weather_stations"
-  | "get_weather_station"
-  | "submit_station_measurements"
-  | "get_station_measurements"
-  | "get_weather_triggers";
-
 export const openweatherApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_geocoding_direct",

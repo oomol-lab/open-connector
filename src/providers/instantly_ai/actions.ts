@@ -271,5 +271,3 @@ export const instantlyAiActions: ActionDefinition[] = [
     outputSchema: leadSummarySchema,
   }),
 ];
-
-export type InstantlyAiActionName = "list_campaigns" | "get_campaign" | "list_leads" | "create_lead";

@@ -34,7 +34,61 @@ const messageSchema = s.object("The normalized Twilio message payload.", {
   from: s.nullableString("The sender phone number."),
   body: s.nullableString("The text body of the message."),
 });
+const callSchema = s.object("The normalized Twilio call payload.", {
+  callSid: s.string("The Twilio call SID."),
+  accountSid: s.nullableString("The Twilio account SID that owns the call."),
+  status: s.nullableString("The current or final call status."),
+  direction: s.nullableString("The direction of the call."),
+  to: s.nullableString("The called phone number, SIP address, or client identifier."),
+  from: s.nullableString("The caller phone number or client identifier."),
+  duration: s.nullableString("The call duration in seconds."),
+  price: s.nullableString("The price charged for the call."),
+  priceUnit: s.nullableString("The currency used for the call price."),
+  startTime: s.nullableString("The time when the call started."),
+  endTime: s.nullableString("The time when the call ended."),
+  dateCreated: s.nullableString("The time when the call resource was created."),
+  dateUpdated: s.nullableString("The time when the call resource was last updated."),
+  phoneNumberSid: s.nullableString("The SID of the Twilio phone number used for the call."),
+  parentCallSid: s.nullableString("The parent call SID when this is a child call."),
+  queueTime: s.nullableString("The estimated queue time in milliseconds."),
+  uri: s.nullableString("The relative URI of the Twilio call resource."),
+});
 const pageSizeSchema = s.integer("The maximum number of records to return in one page.", { minimum: 1 });
+const callStatusSchema = s.stringEnum("The Twilio call status to filter by.", [
+  "queued",
+  "ringing",
+  "in-progress",
+  "canceled",
+  "completed",
+  "busy",
+  "no-answer",
+  "failed",
+]);
+const httpMethodSchema = s.stringEnum("The HTTP method Twilio should use.", ["GET", "POST"]);
+const callProgressEventSchema = s.stringEnum("One Twilio call progress event.", [
+  "initiated",
+  "ringing",
+  "answered",
+  "completed",
+]);
+
+const createCallInputSchema = s.actionInput(
+  {
+    to: s.nonEmptyString("The phone number, SIP address, or client identifier to call."),
+    from: s.nonEmptyString("The Twilio phone number or client identifier to use as caller ID."),
+    url: s.url("The absolute URL that returns TwiML instructions for the call."),
+    twiml: s.nonWhitespaceString("Inline TwiML instructions for the call."),
+    method: httpMethodSchema,
+    fallbackUrl: s.url("The fallback URL to request when the primary TwiML URL fails."),
+    fallbackMethod: httpMethodSchema,
+    statusCallback: s.url("The URL that receives asynchronous call status callbacks."),
+    statusCallbackEvent: s.array("Call progress events to send to the status callback.", callProgressEventSchema),
+    statusCallbackMethod: httpMethodSchema,
+  },
+  ["to", "from"],
+  "The input payload for creating a Twilio call.",
+);
+createCallInputSchema.oneOf = [{ required: ["url"] }, { required: ["twiml"] }];
 
 export const twilioActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -116,6 +170,51 @@ export const twilioActions: ActionDefinition[] = [
     ),
     outputSchema: messageSchema,
   }),
+  defineProviderAction(service, {
+    name: "list_calls",
+    description: "List Twilio voice calls with optional recipient, status, date, and pagination filters.",
+    requiredScopes: [],
+    inputSchema: s.actionInput(
+      {
+        to: s.string("Only include calls made to this phone number, SIP address, or client identifier."),
+        from: s.string("Only include calls made from this phone number, SIP address, or client identifier."),
+        status: callStatusSchema,
+        startTime: s.date("Only include calls that started on or after this date."),
+        endTime: s.date("Only include calls that started before this date."),
+        parentCallSid: s.string("Only include child calls of this parent call SID."),
+        pageSize: pageSizeSchema,
+        pageToken: s.string("The Twilio page token used to continue a previous listing."),
+      },
+      [],
+      "The input payload for listing Twilio calls.",
+    ),
+    outputSchema: s.actionOutput(
+      {
+        calls: s.array("The normalized Twilio calls.", callSchema),
+        page: s.nullableInteger("The current Twilio result page."),
+        pageSize: s.nullableInteger("The Twilio page size for this result."),
+        nextPageUri: s.nullableString("The next page URI returned by Twilio, if any."),
+        previousPageUri: s.nullableString("The previous page URI returned by Twilio, if any."),
+      },
+      "The output payload for listing Twilio calls.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "get_call",
+    description: "Fetch one Twilio voice call by call SID.",
+    requiredScopes: [],
+    inputSchema: s.actionInput(
+      { callSid: s.nonEmptyString("The Twilio call SID to fetch.") },
+      ["callSid"],
+      "The input payload for fetching one Twilio call.",
+    ),
+    outputSchema: callSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_call",
+    description: "Create an outbound Twilio voice call using a TwiML URL or inline TwiML.",
+    requiredScopes: [],
+    inputSchema: createCallInputSchema,
+    outputSchema: callSchema,
+  }),
 ];
-
-export type TwilioActionName = "get_account" | "list_usage_records" | "list_messages" | "get_message" | "send_message";

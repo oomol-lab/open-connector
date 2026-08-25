@@ -217,12 +217,3 @@ export const gumloopActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type GumloopActionName =
-  | "list_saved_flows"
-  | "list_workbooks"
-  | "get_input_schema"
-  | "list_run_history"
-  | "start_flow_run"
-  | "get_run_details"
-  | "kill_flow_run";

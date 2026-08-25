@@ -1,13 +1,17 @@
 import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
+import type { ProviderActionHandlers, ProviderActionSources } from "./provider-runtime.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
   createProviderTimeout,
+  createProviderProxyUrl,
   defineOAuthProviderExecutors,
   defineProviderExecutors,
   defineProviderProxy,
+  mapProviderActionSources,
   providerFetch,
+  readProviderJson,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
 
@@ -24,6 +28,26 @@ describe("toProviderExecutionError", () => {
         code: "internal_error",
         message: "Provider request failed.",
       },
+    });
+  });
+});
+
+describe("readProviderJson", () => {
+  it("includes bounded non-ok response text in provider errors", async () => {
+    await expect(readProviderJson(new Response('{"error":"nope"}', { status: 400 }), "provider")).rejects.toMatchObject(
+      {
+        status: 400,
+        message: '{"error":"nope"}',
+      },
+    );
+  });
+
+  it("does not read unbounded non-ok response bodies", async () => {
+    await expect(
+      readProviderJson(new Response("x".repeat(65 * 1024), { status: 500 }), "provider"),
+    ).rejects.toMatchObject({
+      status: 500,
+      message: "provider request failed",
     });
   });
 });
@@ -80,6 +104,23 @@ describe("defineProviderExecutors", () => {
   });
 });
 
+describe("provider action contracts", () => {
+  it("maps every configured action to a handler", async () => {
+    const sources: ProviderActionSources<"mqtt", number> = {
+      publish_message: 1,
+      receive_messages: 2,
+    };
+    const handlers: ProviderActionHandlers<"mqtt", () => Promise<number>> = mapProviderActionSources(
+      "mqtt",
+      sources,
+      (_name, value) => async () => value,
+    );
+
+    await expect(handlers.publish_message()).resolves.toBe(1);
+    await expect(handlers.receive_messages()).resolves.toBe(2);
+  });
+});
+
 describe("createProviderTimeout", () => {
   it("inherits an already-aborted parent signal", () => {
     const parent = new AbortController();
@@ -93,6 +134,27 @@ describe("createProviderTimeout", () => {
     } finally {
       timeout.cleanup();
     }
+  });
+});
+
+describe("createProviderProxyUrl", () => {
+  it("rejects endpoints that can escape the provider origin", () => {
+    for (const endpoint of [
+      "/https://evil.example/steal",
+      "/https:///evil.example/",
+      "/http://169.254.169.254/latest/meta-data/",
+      "/http:/169.254.169.254/",
+    ]) {
+      expect(() => createProviderProxyUrl("https://api.example.com/v1/", endpoint)).toThrow(
+        "endpoint must be a relative path",
+      );
+    }
+  });
+
+  it("joins normal endpoints below an API path prefix", () => {
+    expect(createProviderProxyUrl("https://api.example.com/v1/", "/items").toString()).toBe(
+      "https://api.example.com/v1/items",
+    );
   });
 });
 
@@ -122,6 +184,113 @@ function stubFetchSequence(responses: Response[]): Array<{ url: string; init: Re
 }
 
 describe("provider egress SSRF guard", () => {
+  it("does not fetch when a proxy endpoint escapes its provider origin", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/https://evil.example/steal" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("endpoint must be a relative path");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("keeps Z-API-style path rewrites on the provider origin", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const origins: string[] = [];
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      customizeRequest({ url }) {
+        origins.push(url.origin);
+        url.pathname = `/instances/instance/token/token${url.pathname}`;
+      },
+    });
+
+    await expect(proxy({ method: "GET", endpoint: "/items" }, executionContext)).resolves.toMatchObject({ ok: true });
+
+    expect(origins).toEqual(["https://api.example.com"]);
+    expect(calls[0]?.url).toBe("https://api.example.com/instances/instance/token/token/v1/items");
+  });
+
+  it("does not fetch when customizeRequest rewrites the URL off the provider origin", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      customizeRequest({ url }) {
+        url.hostname = "evil.example";
+      },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("endpoint must stay on the provider origin");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("allows customizeRequest to select an exact code-controlled origin", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      allowedOrigins: ["https://eu.api.example.com"],
+      customizeRequest({ url }) {
+        url.hostname = "eu.api.example.com";
+      },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.url).toBe("https://eu.api.example.com/v1/items");
+  });
+
+  it("strips the configured proxy API key header from cross-origin redirects", async () => {
+    const calls = stubFetchSequence([
+      new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_header", name: "X-Provider-Credential" },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(new Headers(calls[0]?.init?.headers).get("x-provider-credential")).toBe("test-key");
+    expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
+  });
+
+  it("rejects origin-escaping endpoints even when DNS validation is skipped", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      skipDnsValidation: true,
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/https://evil.example/steal" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("endpoint must be a relative path");
+    expect(calls).toHaveLength(0);
+  });
+
   it("blocks proxy responses redirecting to metadata targets", async () => {
     const calls = stubFetchSequence([
       new Response(null, { status: 302, headers: { location: "http://169.254.169.254/latest/meta-data/" } }),

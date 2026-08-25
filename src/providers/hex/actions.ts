@@ -228,11 +228,3 @@ export const hexActions: ActionDefinition[] = [
     outputSchema: cancelRunOutputSchema,
   }),
 ];
-
-export type HexActionName =
-  | "list_projects"
-  | "get_project"
-  | "run_project"
-  | "list_project_runs"
-  | "get_run_status"
-  | "cancel_run";

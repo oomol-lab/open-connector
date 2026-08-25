@@ -1,7 +1,13 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  getProviderActionHandler,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const centralStationCrmCredentialHelpUrl = "https://centralstationcrm.com/api-basics";
 
@@ -38,7 +44,10 @@ interface CentralStationCrmRequestInput {
   signal?: AbortSignal;
 }
 
-export const centralStationCrmActionHandlers: Record<string, CentralStationCrmActionHandler> = {
+export const centralStationCrmActionHandlers: ProviderActionHandlers<
+  "central_station_crm",
+  CentralStationCrmActionHandler
+> = {
   async get_user(input, fetcher) {
     const payload = await requestCentralStationCrmJson({
       apiBaseUrl: readCentralStationCrmApiBaseUrl(input.providerMetadata),
@@ -279,7 +288,7 @@ export async function executeCentralStationCrmAction(
   input: CentralStationCrmActionInput,
   fetcher: typeof fetch,
 ): Promise<unknown> {
-  const handler = centralStationCrmActionHandlers[input.actionName];
+  const handler = getProviderActionHandler(centralStationCrmActionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(400, `unknown central_station_crm action: ${input.actionName}`);
   }

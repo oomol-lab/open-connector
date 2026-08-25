@@ -1,13 +1,12 @@
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { compactObject } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { hubspotConnectorScopes } from "./actions.ts";
 
 interface OAuthClientConfig {
   clientId: string;
@@ -104,88 +103,6 @@ const directMcpToolNames = new Set([
   "submit_feedback",
 ]);
 
-interface HubspotObjectScopeMapping {
-  mcpObjectType: string;
-  read: string;
-  write?: string;
-  crmObject: boolean;
-}
-
-const objectScopeMappings: readonly HubspotObjectScopeMapping[] = [
-  {
-    mcpObjectType: "CONTACT",
-    read: hubspotConnectorScopes.contactsRead,
-    write: hubspotConnectorScopes.contactsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "COMPANY",
-    read: hubspotConnectorScopes.companiesRead,
-    write: hubspotConnectorScopes.companiesWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "DEAL",
-    read: hubspotConnectorScopes.dealsRead,
-    write: hubspotConnectorScopes.dealsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "TICKET",
-    read: hubspotConnectorScopes.ticketsRead,
-    write: hubspotConnectorScopes.ticketsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "LINE_ITEM",
-    read: hubspotConnectorScopes.lineItemsRead,
-    write: hubspotConnectorScopes.lineItemsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "PRODUCT",
-    read: hubspotConnectorScopes.productsRead,
-    write: hubspotConnectorScopes.productsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "CALL",
-    read: hubspotConnectorScopes.callsRead,
-    write: hubspotConnectorScopes.callsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "EMAIL",
-    read: hubspotConnectorScopes.emailsRead,
-    write: hubspotConnectorScopes.emailsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "MEETING_EVENT",
-    read: hubspotConnectorScopes.meetingsRead,
-    write: hubspotConnectorScopes.meetingsWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "NOTE",
-    read: hubspotConnectorScopes.notesRead,
-    write: hubspotConnectorScopes.notesWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "TASK",
-    read: hubspotConnectorScopes.tasksRead,
-    write: hubspotConnectorScopes.tasksWrite,
-    crmObject: true,
-  },
-  {
-    mcpObjectType: "CAMPAIGN",
-    read: hubspotConnectorScopes.campaignsRead,
-    write: hubspotConnectorScopes.campaignsWrite,
-    crmObject: false,
-  },
-];
-
 export async function exchangeHubspotCode(
   input: {
     code: string;
@@ -245,20 +162,14 @@ export async function fetchHubspotCurrentAccount(
   accessToken: string,
   fetcher: typeof fetch,
 ): Promise<HubspotCurrentAccount> {
-  const userDetails = await callHubspotMcpTool({
-    accessToken,
-    fetcher,
-    toolName: "get_user_details",
-    arguments: {},
-  });
-  const profile = buildHubspotAccountProfile(userDetails, accessToken);
-
+  await listHubspotMcpTools({ accessToken, fetcher });
+  const tokenHash = hashHubspotToken(accessToken);
+  const providerAccountId = `hubspot-mcp:${tokenHash}`;
   return {
-    ...profile,
+    providerAccountId,
+    accountLabel: `HubSpot MCP · ${tokenHash.slice(-6)}`,
     providerMetadata: {
-      ...profile.providerMetadata,
-      userDetails,
-      connectorScopes: mapHubspotMcpDetailsToConnectorScopes(userDetails),
+      mcpEndpoint: hubspotMcpEndpoint,
     },
   };
 }
@@ -309,67 +220,6 @@ export async function executeHubspotAction(input: ExecuteHubspotActionInput, fet
   }
 
   throw new HubspotRequestError("invalid_input", `unknown hubspot action: ${input.actionName}`, 400);
-}
-
-export function mapHubspotMcpDetailsToConnectorScopes(details: unknown): string[] {
-  const accessContainer = findHubspotAccessContainer(details);
-  if (!accessContainer) {
-    return [];
-  }
-
-  const scopes = new Set<string>();
-  for (const mapping of objectScopeMappings) {
-    addObjectScopes(scopes, accessContainer, mapping);
-  }
-
-  const hasCrmRead = objectScopeMappings.some((mapping) => mapping.crmObject && scopes.has(mapping.read));
-  const hasCrmWrite = objectScopeMappings.some(
-    (mapping) => mapping.crmObject && mapping.write && scopes.has(mapping.write),
-  );
-
-  if (hasCrmRead) {
-    scopes.add(hubspotConnectorScopes.crmRead);
-    scopes.add(hubspotConnectorScopes.ownersRead);
-    scopes.add(hubspotConnectorScopes.schemasRead);
-  }
-  if (hasCrmWrite) {
-    scopes.add(hubspotConnectorScopes.crmWrite);
-  }
-
-  return [...scopes];
-}
-
-function addObjectScopes(scopes: Set<string>, container: Record<string, unknown>, mapping: HubspotObjectScopeMapping) {
-  const objectAccess = asObject(container[mapping.mcpObjectType]);
-  if (!objectAccess) {
-    return;
-  }
-
-  if (hasAvailableAccess(objectAccess.read)) {
-    scopes.add(mapping.read);
-  }
-  if (mapping.write && hasAvailableAccess(objectAccess.write)) {
-    scopes.add(mapping.write);
-  }
-}
-
-function findHubspotAccessContainer(details: unknown) {
-  const body = asObject(details);
-  if (!body) {
-    return null;
-  }
-
-  const toolInformation = asObject(body.toolInformation);
-  const crmObjectTypeAvailability = asObject(toolInformation?.crmObjectTypeAvailability);
-  if (crmObjectTypeAvailability) {
-    return crmObjectTypeAvailability;
-  }
-
-  return null;
-}
-
-function hasAvailableAccess(value: unknown) {
-  return typeof value === "string" && value.trim().toUpperCase() === "AVAILABLE";
 }
 
 async function callDirectHubspotMcpTool(
@@ -609,6 +459,27 @@ async function getHubspotProperty(input: Record<string, unknown>, context: Hubsp
   };
 }
 
+async function listHubspotMcpTools(input: { accessToken: string; fetcher: typeof fetch }): Promise<void> {
+  const headers = new Headers();
+  headers.set("authorization", `Bearer ${input.accessToken}`);
+  headers.set("user-agent", providerUserAgent);
+  return withMcpClient(
+    {
+      endpoint: new URL(hubspotMcpEndpoint),
+      transport: "streamable_http",
+      fetcher: input.fetcher,
+      headers,
+      mapError: (error) => mapHubspotMcpError("hubspot", error),
+    },
+    async (client) => {
+      const result = await client.listTools({}, { timeout: hubspotMcpRequestTimeoutMs });
+      if (!result.tools.some((tool) => directMcpToolNames.has(tool.name) || tool.name === "get_user_details")) {
+        throw new ProviderRequestError(502, "hubspot MCP did not advertise any supported tools");
+      }
+    },
+  );
+}
+
 async function callHubspotMcpTool(input: HubspotMcpToolCallInput) {
   try {
     const output = await callStreamableHttpMcpTool({
@@ -656,7 +527,6 @@ async function callStreamableHttpMcpTool(input: {
           name: input.toolName,
           arguments: input.arguments,
         },
-        undefined,
         {
           timeout: input.requestTimeoutMs,
         },
@@ -671,15 +541,15 @@ function mapHubspotMcpError(service: string, error: unknown): ProviderRequestErr
   if (error instanceof UnauthorizedError) {
     return new HubspotRequestError("credential_expired", `${service} MCP token is invalid or expired`, 401, error);
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     return new ProviderRequestError(
       status === 401 || status === 403 ? 401 : status && status >= 400 && status < 500 ? 400 : 502,
       `${service} MCP request failed: ${error.message}`,
       error,
     );
   }
-  if (error instanceof McpError) {
+  if (error instanceof ProtocolError) {
     return new ProviderRequestError(502, `${service} MCP request failed: ${error.message}`, error);
   }
   return new ProviderRequestError(
@@ -783,79 +653,6 @@ function parseHubspotProviderScopes(body: Record<string, unknown>) {
   }
 
   return [];
-}
-
-function buildHubspotAccountProfile(userDetails: unknown, accessToken: string) {
-  const body = asObject(userDetails) ?? {};
-  const user = asObject(body.user) ?? asObject(body.authenticatedUser) ?? body;
-  const userInformation = asObject(body.userInformation) ?? user;
-  const account = asObject(body.account) ?? asObject(body.portal) ?? asObject(body.hub) ?? body;
-  const hubId =
-    asString(account.hubId) ??
-    asString(account.hub_id) ??
-    asString(account.portalId) ??
-    asString(account.accountId) ??
-    asString(account.id) ??
-    asString(body.accountId) ??
-    asString(body.hubId) ??
-    asString(body.portalId);
-  const userId =
-    asString(user.userId) ??
-    asString(user.user_id) ??
-    asString(user.id) ??
-    asString(userInformation.userId) ??
-    asString(userInformation.ownerId) ??
-    asString(body.userId) ??
-    asString(body.user_id);
-  const userEmail =
-    asString(user.email) ??
-    asString(user.userEmail) ??
-    asString(user.user) ??
-    asString(userInformation.email) ??
-    asString(body.email) ??
-    asString(body.userEmail);
-  const hubDomain =
-    asString(account.domain) ??
-    asString(account.hubDomain) ??
-    asString(account.hub_domain) ??
-    asString(account.portalDomain) ??
-    asString(body.hubDomain) ??
-    asString(body.hub_domain);
-  const tokenHash = hashHubspotToken(accessToken);
-  const providerAccountId =
-    hubId && userId ? `${hubId}:${userId}` : hubId && userEmail ? `${hubId}:${userEmail}` : `hubspot-mcp:${tokenHash}`;
-
-  return {
-    providerAccountId,
-    accountLabel: buildHubspotAccountLabel({ hubId, hubDomain, userEmail }, providerAccountId),
-    providerMetadata: compactObject({
-      hubId,
-      hubDomain,
-      userId,
-      userEmail,
-      tokenHash,
-    }),
-  };
-}
-
-function buildHubspotAccountLabel(
-  payload: {
-    hubId?: string;
-    hubDomain?: string;
-    userEmail?: string;
-  },
-  providerAccountId: string,
-) {
-  if (payload.userEmail && payload.hubDomain) {
-    return `${payload.userEmail} (${payload.hubDomain})`;
-  }
-  if (payload.userEmail && payload.hubId) {
-    return `${payload.userEmail} (${payload.hubId})`;
-  }
-  if (payload.hubDomain) {
-    return payload.hubDomain;
-  }
-  return providerAccountId;
 }
 
 function normalizeSearchOutput(output: unknown) {

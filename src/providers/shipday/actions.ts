@@ -239,15 +239,6 @@ const trackingProgressOutputSchema = s.actionOutput(
   "The Shipday delivery progress response.",
 );
 
-export type ShipdayActionName =
-  | "list_active_orders"
-  | "get_order"
-  | "create_order"
-  | "edit_order"
-  | "delete_order"
-  | "list_carriers"
-  | "get_order_progress";
-
 export const shipdayActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_active_orders",

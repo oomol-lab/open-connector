@@ -67,16 +67,6 @@ const workpathObjectSchema = (description: string): JsonSchema => s.unknownObjec
 const workpathArraySchema = (description: string, itemDescription: string): JsonSchema =>
   s.array(description, workpathObjectSchema(itemDescription));
 
-export type WorkpathActionName =
-  | "list_goals"
-  | "get_goal"
-  | "list_goal_key_results"
-  | "get_goal_key_result"
-  | "list_users"
-  | "get_user"
-  | "list_teams"
-  | "get_team";
-
 export const workpathActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_goals",

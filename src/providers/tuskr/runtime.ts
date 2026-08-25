@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -21,7 +22,7 @@ export interface TuskrActionContext {
   signal?: AbortSignal;
 }
 
-export const tuskrActionHandlers: Record<string, ProviderRuntimeHandler<TuskrActionContext>> = {
+export const tuskrActionHandlers: ProviderActionHandlers<"tuskr", ProviderRuntimeHandler<TuskrActionContext>> = {
   list_projects(input, context) {
     return tuskrGet("/project", buildProjectListQuery(input), context);
   },

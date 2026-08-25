@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { WecomBotActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { objectArray, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -33,7 +33,7 @@ interface WecomBotRequestResult {
   rawText: string;
 }
 
-export const wecomBotActionHandlers: Record<WecomBotActionName, WecomBotActionHandler> = {
+export const wecomBotActionHandlers: ProviderActionHandlerSubset<"wecom_bot", WecomBotActionHandler> = {
   send_text_message(input, context) {
     const content = requireUtf8Content(input.content, "content", 2048);
     return sendWecomBotMessage(

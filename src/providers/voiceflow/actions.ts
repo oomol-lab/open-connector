@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "voiceflow";
 
-export type VoiceflowActionName = "start_session" | "interact" | "query_knowledge_base" | "list_environments";
-
 const environmentSchema = s.looseObject("A Voiceflow project environment.", {
   id: s.string("The Voiceflow environment ID."),
   name: s.string("The environment display name."),

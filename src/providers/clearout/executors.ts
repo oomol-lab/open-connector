@@ -4,7 +4,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
-import type { ClearoutActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -30,7 +30,7 @@ interface ClearoutContext {
 type ClearoutRequestPhase = "validate" | "execute";
 type ClearoutActionHandler = (input: Record<string, unknown>, context: ClearoutContext) => Promise<unknown>;
 
-export const clearoutActionHandlers: Record<ClearoutActionName, ClearoutActionHandler> = {
+export const clearoutActionHandlers: ProviderActionHandlers<"clearout", ClearoutActionHandler> = {
   get_available_credits(_input, context) {
     return requestClearoutJson({
       path: "/email_verify/getcredits",

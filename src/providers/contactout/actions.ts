@@ -277,20 +277,3 @@ export const contactoutActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ContactoutActionName =
-  | "enrich_linkedin_profile"
-  | "enrich_email_profile"
-  | "enrich_person"
-  | "get_linkedin_contact_info"
-  | "enrich_companies_by_domain"
-  | "search_people"
-  | "count_people"
-  | "find_decision_makers"
-  | "search_companies"
-  | "get_linkedin_profile_by_email"
-  | "check_personal_email_available"
-  | "check_work_email_available"
-  | "check_phone_available"
-  | "verify_email"
-  | "get_usage_stats";

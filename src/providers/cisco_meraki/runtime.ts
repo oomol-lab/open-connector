@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -25,7 +26,10 @@ interface CiscoMerakiListResult {
   link: string | null;
 }
 
-export const ciscoMerakiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const ciscoMerakiActionHandlers: ProviderActionHandlers<
+  "cisco_meraki",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_organizations(input, context) {
     const result = await requestCiscoMerakiList(
       {

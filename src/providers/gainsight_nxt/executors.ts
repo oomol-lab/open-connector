@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -35,7 +36,7 @@ type GainsightNxtActionHandler = (
   context: GainsightNxtActionContext,
 ) => Promise<unknown>;
 
-export const gainsightNxtActionHandlers: Record<string, GainsightNxtActionHandler> = {
+export const gainsightNxtActionHandlers: ProviderActionHandlers<"gainsight_nxt", GainsightNxtActionHandler> = {
   async insert_companies(input, context) {
     const payload = await requestGainsightJson({
       ...context,

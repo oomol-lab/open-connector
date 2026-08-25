@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { OnePasswordActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -34,7 +34,7 @@ interface OnePasswordRequestInput {
   query?: Record<string, string | number | boolean | undefined>;
 }
 
-export const onePasswordActionHandlers: Record<OnePasswordActionName, OnePasswordActionHandler> = {
+export const onePasswordActionHandlers: ProviderActionHandlers<"one_password", OnePasswordActionHandler> = {
   async get_health(_input, context) {
     const health = await requestOnePasswordJson({
       context,

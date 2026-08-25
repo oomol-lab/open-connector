@@ -51,7 +51,7 @@ export class KVTransitFileService implements ITransitFileService {
       sizeBytes: file.size,
     };
     const buffer = await file.arrayBuffer();
-    // KV 原生 TTL：写入时直接指定过期时间，无需 cleanupExpired
+    // KV applies its native TTL when the entry is written, so no cleanup pass is needed.
     await this.namespace.put(objectKey(fileId), buffer, {
       expirationTtl: this.ttlSeconds,
     });
@@ -95,7 +95,7 @@ export class KVTransitFileService implements ITransitFileService {
     return existing != null;
   }
 
-  // KV 依赖原生 TTL 自动过期，无需手动清理
+  // KV expires entries through its native TTL without manual cleanup.
   async cleanupExpired(): Promise<void> {}
 
   private async readObject(fileId: string): Promise<{
@@ -133,7 +133,7 @@ export class KVTransitFileService implements ITransitFileService {
   }
 }
 
-// 以下工具函数与 r2-transit-files.ts 保持一致
+// Keep these helpers aligned with r2-transit-files.ts.
 function objectKey(fileId: string): string {
   return `transit/${fileId}`;
 }

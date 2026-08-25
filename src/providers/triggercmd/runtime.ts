@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TriggercmdActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -31,7 +31,7 @@ interface TriggercmdRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const triggercmdActionHandlers: Record<TriggercmdActionName, TriggercmdActionHandler> = {
+export const triggercmdActionHandlers: ProviderActionHandlers<"triggercmd", TriggercmdActionHandler> = {
   async list_commands(_input, context) {
     return requireResponseObject(
       await requestTriggercmdPayload({

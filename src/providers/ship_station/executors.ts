@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ShipStationActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ interface ShipStationRequestInput {
 
 type ShipStationActionHandler = (input: Record<string, unknown>, context: ShipStationActionContext) => Promise<unknown>;
 
-export const shipStationActionHandlers: Record<ShipStationActionName, ShipStationActionHandler> = {
+export const shipStationActionHandlers: ProviderActionHandlers<"ship_station", ShipStationActionHandler> = {
   list_inventory_levels(input, context) {
     return listInventoryLevels(input, context);
   },

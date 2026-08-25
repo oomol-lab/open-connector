@@ -87,16 +87,6 @@ const assetSchema = s.object("The normalized cloudlayer.io asset payload.", {
   timestamp: s.integer("The Unix epoch timestamp in milliseconds when the asset was created."),
 });
 
-export type CloudlayerActionName =
-  | "get_account"
-  | "create_html_pdf_job"
-  | "create_url_pdf_job"
-  | "create_template_pdf_job"
-  | "get_job"
-  | "list_jobs"
-  | "get_asset"
-  | "list_assets";
-
 export const cloudlayerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

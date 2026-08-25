@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BrandfetchActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ const brandfetchValidationPath = `/v2/brands/${brandfetchValidationIdentifier}`;
 type BrandfetchPhase = "validate" | "execute";
 type BrandfetchActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const brandfetchActionHandlers: Record<BrandfetchActionName, BrandfetchActionHandler> = {
+export const brandfetchActionHandlers: ProviderActionHandlers<"brandfetch", BrandfetchActionHandler> = {
   async get_brand(input, context) {
     const identifier = requiredInputString(input.identifier, "identifier");
     const payload = await requestBrandfetchJson({

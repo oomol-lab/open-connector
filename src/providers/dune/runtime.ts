@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ interface DuneRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const duneActionHandlers: Record<string, DuneActionHandler> = {
+export const duneActionHandlers: ProviderActionHandlers<"dune", DuneActionHandler> = {
   list_queries(input, context) {
     return duneRequest(
       "/queries",

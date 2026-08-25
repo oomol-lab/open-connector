@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -22,7 +23,7 @@ const tpscheckDefaultRequestTimeoutMs = 30_000;
 type TpscheckRequestPhase = "validate" | "execute";
 type TpscheckActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const tpscheckActionHandlers: Record<string, TpscheckActionHandler> = {
+export const tpscheckActionHandlers: ProviderActionHandlers<"tpscheck", TpscheckActionHandler> = {
   get_credits(_input, context) {
     return requestTpscheckJson(context, {
       method: "GET",

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -20,7 +21,7 @@ const trentClientInfo = {
 
 type TrentRequestPhase = "validate" | "execute";
 
-export const trentActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const trentActionHandlers: ProviderActionHandlers<"trent", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   send_chat(input, context) {
     return sendTrentChat(input, context);
   },

@@ -1,5 +1,5 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OpenfootballWorldcupActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   createProviderTimeout,
@@ -28,8 +28,8 @@ type OpenfootballWorldcupActionHandler = (
   context: OpenfootballWorldcupContext,
 ) => Promise<unknown>;
 
-export const openfootballWorldcupActionHandlers: Record<
-  OpenfootballWorldcupActionName,
+export const openfootballWorldcupActionHandlers: ProviderActionHandlers<
+  "openfootball_worldcup",
   OpenfootballWorldcupActionHandler
 > = {
   async list_matches(input, context) {

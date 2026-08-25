@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { XataActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -23,7 +23,7 @@ export interface XataContext {
 type XataPhase = "validate" | "execute";
 type XataActionHandler = ProviderRuntimeHandler<XataContext>;
 
-export const xataActionHandlers: Record<XataActionName, XataActionHandler> = {
+export const xataActionHandlers: ProviderActionHandlers<"xata", XataActionHandler> = {
   async list_organizations(_input, context) {
     return {
       organizations: readArrayField(

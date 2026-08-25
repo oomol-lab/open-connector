@@ -202,11 +202,3 @@ export const filloutActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FilloutActionName =
-  | "list_forms"
-  | "get_form_metadata"
-  | "list_submissions"
-  | "get_submission"
-  | "create_submissions"
-  | "delete_submission";

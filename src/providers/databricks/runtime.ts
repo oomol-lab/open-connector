@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { DatabricksActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -39,7 +39,7 @@ interface DatabricksRequestInput {
   body?: unknown;
 }
 
-export const databricksActionHandlers: Record<DatabricksActionName, DatabricksHandler> = {
+export const databricksActionHandlers: ProviderActionHandlers<"databricks", DatabricksHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

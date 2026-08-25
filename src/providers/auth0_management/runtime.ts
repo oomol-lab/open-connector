@@ -1,4 +1,4 @@
-import type { Auth0ManagementActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -40,7 +40,7 @@ interface Auth0ManagementRequest {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const auth0ManagementActionHandlers: Record<Auth0ManagementActionName, Auth0ActionHandler> = {
+export const auth0ManagementActionHandlers: ProviderActionHandlers<"auth0_management", Auth0ActionHandler> = {
   list_users(input, context) {
     return listUsers(input, context);
   },

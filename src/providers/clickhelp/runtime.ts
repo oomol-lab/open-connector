@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ClickhelpActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -45,7 +46,7 @@ type ClickhelpActionHandler = (input: ClickhelpActionInput, fetcher: typeof fetc
 
 const clickhelpRequestTimeoutMs = 60_000;
 
-export const clickhelpActionHandlers: Record<ClickhelpActionName, ClickhelpActionHandler> = {
+export const clickhelpActionHandlers: ProviderActionHandlers<"clickhelp", ClickhelpActionHandler> = {
   async list_projects(input, fetcher) {
     const projects = requireObjectArray(
       await requestActionJson(input, fetcher, "projects", {

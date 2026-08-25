@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
@@ -14,7 +15,7 @@ import {
   mondayProviderError,
 } from "./runtime-common.ts";
 
-export const mondayCollaborationActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayCollaborationActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   list_updates(input, fetcher) {
     return mondayListUpdates(input, fetcher);
   },
@@ -337,7 +338,7 @@ async function mondayUpdateDocName(input: MondayProviderActionInput, fetcher: ty
     input.apiKey,
     {
       query: `
-        mutation UpdateDocName($docId: Int!, $name: String!) {
+        mutation UpdateDocName($docId: ID!, $name: String!) {
           update_doc_name(docId: $docId, name: $name)
         }
       `,

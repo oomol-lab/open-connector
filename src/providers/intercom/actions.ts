@@ -490,29 +490,3 @@ export const intercomActions: ActionDefinition[] = [
     outputSchema: getArticleOutputSchema,
   }),
 ];
-
-export type IntercomActionName =
-  | "get_current_admin"
-  | "list_admins"
-  | "get_admin"
-  | "list_contacts"
-  | "search_contacts"
-  | "get_contact"
-  | "get_contact_by_external_id"
-  | "create_contact"
-  | "update_contact"
-  | "list_companies"
-  | "get_company"
-  | "list_conversations"
-  | "get_conversation"
-  | "reply_to_conversation"
-  | "close_conversation"
-  | "reopen_conversation"
-  | "list_events"
-  | "list_tags"
-  | "get_counts"
-  | "get_ticket"
-  | "search_tickets"
-  | "get_job_status"
-  | "list_articles"
-  | "get_article";

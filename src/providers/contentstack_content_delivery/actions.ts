@@ -216,10 +216,3 @@ export const contentstackContentDeliveryActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ContentstackContentDeliveryActionName =
-  | "list_content_types"
-  | "get_content_type"
-  | "list_entries"
-  | "get_entry"
-  | "list_assets";

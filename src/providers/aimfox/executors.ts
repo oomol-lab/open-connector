@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -38,7 +39,7 @@ const leadSearchBodyKeys = [
 type AimfoxPhase = "validate" | "execute";
 type AimfoxActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const aimfoxActionHandlers: Record<string, AimfoxActionHandler> = {
+export const aimfoxActionHandlers: ProviderActionHandlers<"aimfox", AimfoxActionHandler> = {
   async list_campaigns(input, context) {
     const payload = await requestAimfoxJson({
       path: "/campaigns",

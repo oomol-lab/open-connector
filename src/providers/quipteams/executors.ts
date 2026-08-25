@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRawString, optionalRecord, requiredString } from "../../core/cast.ts";
@@ -17,7 +18,7 @@ const quipteamsRequestTimeoutMs = 30_000;
 type QuipteamsRequestPhase = "validate" | "execute";
 type QuipteamsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const quipteamsActionHandlers: Record<string, QuipteamsActionHandler> = {
+export const quipteamsActionHandlers: ProviderActionHandlers<"quipteams", QuipteamsActionHandler> = {
   list_quotes(input, context) {
     return requestQuipteamsList("quotes", "/api/v1/quotes", input, context);
   },

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -23,7 +24,7 @@ import {
 
 type PixellabCharacterHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pixellabCharacterActionHandlers: Record<string, PixellabCharacterHandler> = {
+export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabCharacterHandler> = {
   async start_create_character_4_directions(input, context) {
     return createDirectionalCharacter("/create-character-with-4-directions", input, context);
   },

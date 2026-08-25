@@ -122,14 +122,6 @@ const runIdOutputSchema = s.object("A Trigger.dev run identifier response.", {
   id: runIdSchema,
 });
 
-export type TriggerDevActionName =
-  | "list_runs"
-  | "get_run"
-  | "get_run_result"
-  | "trigger_task"
-  | "cancel_run"
-  | "replay_run";
-
 export const triggerDevActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_runs",

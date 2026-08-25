@@ -1,30 +1,41 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { sellerSpriteMcpOfficialActions } from "./official-actions.ts";
+import {
+  defineApiKeyProviderExecutors,
+  mapProviderActionHandlers,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
+import { sellerspriteMcpActions } from "./actions.ts";
 
 const service = "sellersprite_mcp";
 const endpoint = "https://mcp.sellersprite.com/mcp";
 const timeoutMs = 60_000;
 type Context = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ToolResult = Awaited<ReturnType<Client["callTool"]>>;
-const handlers: Record<string, (input: Record<string, unknown>, context: Context) => Promise<unknown>> = {
-  async list_tools(_input, context) {
-    return { tools: await discover(context) };
+type SellerSpriteMcpHandler = (input: Record<string, unknown>, context: Context) => Promise<unknown>;
+
+const handlers: ProviderActionHandlers<"sellersprite_mcp", SellerSpriteMcpHandler> = mapProviderActionHandlers(
+  service,
+  sellerspriteMcpActions,
+  (_action, name): SellerSpriteMcpHandler => {
+    if (name === "list_tools") {
+      return async (_input, context) => ({ tools: await discover(context) });
+    }
+    if (name === "call_tool") {
+      return (input, context) => call(context, required(input.toolName, "toolName"), object(input.arguments));
+    }
+    return (input, context) => call(context, name, input);
   },
-  call_tool(input, context) {
-    return call(context, required(input.toolName, "toolName"), object(input.arguments));
-  },
-};
-for (const action of sellerSpriteMcpOfficialActions)
-  handlers[action.name] = (input, context) => call(context, action.name, input);
+);
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {
   skipDnsValidation: true,
 });
@@ -57,7 +68,7 @@ async function discover(context: Context): Promise<unknown[]> {
 }
 async function call(context: Context, name: string, argumentsInput: Record<string, unknown>): Promise<unknown> {
   return withClient(context, async (client) => {
-    const result = await client.callTool({ name, arguments: argumentsInput }, undefined, { timeout: timeoutMs });
+    const result = await client.callTool({ name, arguments: argumentsInput }, { timeout: timeoutMs });
     return { result: normalize(result) };
   });
 }
@@ -125,13 +136,13 @@ function mapError(error: unknown): ProviderRequestError {
   if (error instanceof ProviderRequestError) return error;
   if (error instanceof UnauthorizedError)
     return new ProviderRequestError(401, "SellerSprite MCP Secret Key is invalid, expired, or inactive", error);
-  if (error instanceof StreamableHTTPError)
+  if (error instanceof SdkHttpError)
     return new ProviderRequestError(
-      error.code === 401 || error.code === 403 ? 401 : error.code === 429 ? 429 : 502,
+      error.status === 401 || error.status === 403 ? 401 : error.status === 429 ? 429 : 502,
       `SellerSprite MCP request failed: ${error.message}`,
       error,
     );
-  if (error instanceof McpError)
+  if (error instanceof ProtocolError)
     return new ProviderRequestError(502, `SellerSprite MCP request failed: ${error.message}`, error);
   return new ProviderRequestError(
     502,

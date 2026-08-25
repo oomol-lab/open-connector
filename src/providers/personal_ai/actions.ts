@@ -68,13 +68,6 @@ const conversationInputFields = {
   sourceName: s.nonEmptyString("The source application name for the inbound message."),
 };
 
-export type PersonalAiActionName =
-  | "send_message"
-  | "send_instruction"
-  | "upload_memory"
-  | "upload_text_document"
-  | "upload_url";
-
 export const personalAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",

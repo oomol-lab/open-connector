@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { KeywordActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -16,8 +16,8 @@ const keywordDefaultRequestTimeoutMs = 30_000;
 
 type KeywordRequestPhase = "validate" | "execute";
 
-export const keywordActionHandlers: Record<
-  KeywordActionName,
+export const keywordActionHandlers: ProviderActionHandlers<
+  "keyword",
   (input: Record<string, unknown>, context: KeywordRequestContext) => Promise<unknown>
 > = {
   get_current_user: (_input, context) =>

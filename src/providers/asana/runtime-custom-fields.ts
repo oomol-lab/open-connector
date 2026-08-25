@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler } from "./runtime.ts";
 
 import {
@@ -72,7 +73,7 @@ const enumColors = new Set(asanaEnumOptionColors);
 const referenceInputRestrictions = new Set(asanaCustomFieldInputRestrictions);
 const numberOnlyInputFields = ["precision", "format", "currencyCode", "customLabel", "customLabelPosition"];
 
-export const customFieldActionHandlers: Record<string, AsanaActionHandler> = {
+export const customFieldActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActionHandler> = {
   create_custom_field(input, context) {
     return writeAsanaResource("/custom_fields", buildCustomFieldCreateBody(input), "customField", context, {
       method: "POST",

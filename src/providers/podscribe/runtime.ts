@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ type PodscribePhase = "validate" | "execute";
 type PodscribeActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 type PodscribeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
-export const podscribeActionHandlers: Record<string, PodscribeActionHandler> = {
+export const podscribeActionHandlers: ProviderActionHandlers<"podscribe", PodscribeActionHandler> = {
   get_integration_health(input, context) {
     if (input.withPixels === true && !optionalString(input.advertiserName)) {
       throw new ProviderRequestError(400, "advertiserName is required when withPixels is true");

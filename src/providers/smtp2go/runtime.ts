@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Smtp2goActionName } from "./actions.ts";
 
 import { compactObject, optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const smtp2goDefaultRequestTimeoutMs = 30_000;
 type Smtp2goPhase = "validate" | "execute";
 type Smtp2goActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const smtp2goActionHandlers: Record<Smtp2goActionName, Smtp2goActionHandler> = {
+export const smtp2goActionHandlers: ProviderActionHandlers<"smtp2go", Smtp2goActionHandler> = {
   async send_email(input, context) {
     validateSendEmailInput(input);
     const payload = await requestSmtp2goJson({

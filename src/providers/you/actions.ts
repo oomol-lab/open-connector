@@ -93,8 +93,6 @@ const researchOutputSchema = s.object("The research answer and its supporting so
   raw: rawObjectSchema,
 });
 
-export type YouActionName = "search" | "fetch_contents" | "research" | "finance_research" | "get_account_balance";
-
 export const youActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",

@@ -151,11 +151,3 @@ export const contentstackContentManagementActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ContentstackContentManagementActionName =
-  | "list_content_types"
-  | "get_content_type"
-  | "list_entries"
-  | "get_entry"
-  | "create_entry"
-  | "update_entry";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PaystackActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -28,7 +28,7 @@ interface PaystackRequestInput {
 type PaystackActionContext = ApiKeyProviderContext;
 type PaystackActionHandler = (input: Record<string, unknown>, context: PaystackActionContext) => Promise<unknown>;
 
-export const paystackActionHandlers: Record<PaystackActionName, PaystackActionHandler> = {
+export const paystackActionHandlers: ProviderActionHandlers<"paystack", PaystackActionHandler> = {
   create_customer(input, context) {
     return createCustomer(input, context);
   },

@@ -30,8 +30,6 @@ const paginationSchema = s.object("Pagination information returned with the temp
   totalPages: s.integer("The total number of pages."),
 });
 
-export type PdflessActionName = "get_workspace" | "list_document_templates";
-
 export const pdflessActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_workspace",

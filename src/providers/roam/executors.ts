@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RoamActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const roamApiBaseUrl = "https://api.ro.am/v1";
 type RoamRequestPhase = "validate" | "execute";
 type RoamActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const roamActionHandlers: Record<RoamActionName, RoamActionHandler> = {
+export const roamActionHandlers: ProviderActionHandlers<"roam", RoamActionHandler> = {
   async list_groups(_input, context) {
     const payload = await requestRoamJson({
       context,

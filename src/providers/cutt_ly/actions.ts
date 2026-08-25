@@ -29,8 +29,6 @@ const botClicksSchema = s.object(
   { required: ["name", "clicks"], description: "Single Cuttly bot breakdown entry." },
 );
 
-export type CuttLyActionName = "shorten_url" | "get_link_analytics";
-
 export const cuttLyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "shorten_url",

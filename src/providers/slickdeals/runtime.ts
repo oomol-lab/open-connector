@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ type SlickdealsPhase = "validate" | "execute";
 type QueryValue = string | number | boolean | readonly number[] | undefined;
 type SlickdealsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const slickdealsActionHandlers: Record<string, SlickdealsActionHandler> = {
+export const slickdealsActionHandlers: ProviderActionHandlers<"slickdeals", SlickdealsActionHandler> = {
   async list_articles(input, { apiKey: token, fetcher, signal }) {
     const payload = await requestSlickdealsJson({
       path: "/articles",

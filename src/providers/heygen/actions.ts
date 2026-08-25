@@ -405,27 +405,8 @@ export const heygenActions: ActionDefinition[] = [
   ),
 ];
 
-export type HeygenActionName =
-  | "get_current_user"
-  | "get_remaining_quota"
-  | "list_avatars"
-  | "get_avatar"
-  | "list_voices"
-  | "list_templates"
-  | "get_template"
-  | "generate_video"
-  | "generate_template_video"
-  | "get_video_status"
-  | "get_shareable_video_url"
-  | "upload_asset"
-  | "list_assets"
-  | "delete_asset"
-  | "list_videos"
-  | "delete_video"
-  | "list_folders";
-
 function action(
-  name: HeygenActionName,
+  name: string,
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,

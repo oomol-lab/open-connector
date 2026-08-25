@@ -409,20 +409,3 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
     outputSchema: s.actionOutput({ report: reportSchema }, "The GTmetrix report lookup result."),
   }),
 ];
-
-export type GtmetrixActionName =
-  | "get_account_status"
-  | "list_locations"
-  | "get_location"
-  | "list_browsers"
-  | "get_browser"
-  | "list_simulated_devices"
-  | "get_simulated_device"
-  | "start_test"
-  | "list_tests"
-  | "get_test"
-  | "list_pages"
-  | "get_page"
-  | "list_page_reports"
-  | "get_latest_page_report"
-  | "get_report";

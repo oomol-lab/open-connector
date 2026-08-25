@@ -152,10 +152,3 @@ export const what3wordsActions: ActionDefinition[] = [
     outputSchema: availableLanguagesResponseSchema,
   }),
 ];
-
-export type What3wordsActionName =
-  | "convert_to_coordinates"
-  | "convert_to_3wa"
-  | "autosuggest"
-  | "grid_section"
-  | "available_languages";

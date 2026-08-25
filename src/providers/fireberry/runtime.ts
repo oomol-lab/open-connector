@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FireberryActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -13,7 +13,7 @@ type FireberryObjectName = "account" | "contact";
 type FireberryActionContext = ApiKeyProviderContext;
 type FireberryActionHandler = (input: Record<string, unknown>, context: FireberryActionContext) => Promise<unknown>;
 
-export const fireberryActionHandlers: Record<FireberryActionName, FireberryActionHandler> = {
+export const fireberryActionHandlers: ProviderActionHandlers<"fireberry", FireberryActionHandler> = {
   async query_records(input, context) {
     const payload = await requestFireberryJson({
       path: "/api/v3/query",

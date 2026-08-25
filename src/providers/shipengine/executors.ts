@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShipengineActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -23,7 +23,7 @@ interface ShipengineRequestInput {
 type ShipengineRequestPhase = "validate" | "execute";
 type ShipengineActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const shipengineActionHandlers: Record<ShipengineActionName, ShipengineActionHandler> = {
+export const shipengineActionHandlers: ProviderActionHandlers<"shipengine", ShipengineActionHandler> = {
   validate_addresses(input, context) {
     return validateAddresses(input, context);
   },

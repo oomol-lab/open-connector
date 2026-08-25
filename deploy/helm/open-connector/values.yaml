@@ -1,0 +1,272 @@
+# ============================================================================
+# OpenConnector Helm chart - values.yaml
+# ----------------------------------------------------------------------------
+# Defaults are tuned for a single-replica deployment on
+# `kubectl port-forward`, mirroring `docker compose up`. The chart refuses
+# to install until you set `secret.adminToken` or `secret.existingSecret`
+# (or explicitly opt in to `insecureDevelopment: true` for local
+# experimentation). Flip the toggles at the bottom for production use.
+# ============================================================================
+
+# Number of Deployment replicas (ignored when autoscaling is enabled).
+replicaCount: 1
+
+image:
+  repository: ghcr.io/oomol-lab/open-connector
+  # Tag is the upstream image tag. Common choices:
+  #   "latest"   - latest released version (use with caution in production)
+  #   "tip"      - latest main-branch build
+  #   "v1.4.0"   - pin to a specific released version (recommended; release
+  #                tags carry the leading "v")
+  #   "<sha>"    - pin to a specific commit
+  # Leave empty to fall back to the chart's appVersion.
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Image pull secrets. GHCR is public for this image, so usually not needed.
+imagePullSecrets: []
+
+# Override the image reference with a digest for immutable deployment.
+imageDigest: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+  # The runtime does not call the Kubernetes API.
+  automountServiceAccountToken: false
+
+# Hardened by default. The upstream image runs as root; these settings
+# switch the workload to a dedicated non-root user.
+podSecurityContext:
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  capabilities:
+    drop:
+      - ALL
+
+# Spread replicas across nodes (soft preference via topologySpreadConstraints).
+topologySpread:
+  enabled: true
+
+# ClusterIP matches docker-compose's port-published container. Use NodePort
+# or LoadBalancer if you don't front it with an Ingress.
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+
+# Off by default - same shape as `docker compose up` exposing port 3000.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: connector.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Probes target GET /health on port 3000 (matches the Dockerfile HEALTHCHECK).
+probes:
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  startup:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+
+# Mirrors the `connector-data` named volume in docker-compose. SQLite and
+# transit-file staging live under /app/data. (Mail-attachment staging uses
+# the OS temp dir; the chart mounts an emptyDir at /tmp for that, since the
+# root filesystem is read-only.)
+#
+# NOTE: the PVC is ReadWriteOnce by default and cannot be shared across
+# replicas on different nodes. To scale beyond one replica, switch to
+# PostgreSQL (database.enabled=true) plus S3 transit files
+# (config.transitFileBackend=s3) and set persistence.enabled=false - the
+# chart enforces this at install time.
+persistence:
+  enabled: true
+  mountPath: /app/data
+  existingClaim: ""
+  size: 5Gi
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  annotations: {}
+
+# Non-secret runtime configuration. Each key is exposed as the matching
+# OOMOL_CONNECT_<UPPER_SNAKE> environment variable. See
+# https://github.com/oomol-lab/open-connector/blob/main/docs/configuration.md
+# Keys left as empty strings are omitted from the ConfigMap entirely so the
+# runtime's built-in defaults apply (an empty-string env var would override
+# them).
+config:
+  origin: ""
+  # Defaults to persistence.mountPath when left empty.
+  dataDir: ""
+  allowedActions: ""
+  blockedActions: ""
+  allowedProxies: ""
+  blockedProxies: ""
+  allowedCustomOAuth: ""
+  egressTrustedHosts: ""
+  allowPrivateNetwork: false
+  logLevel: info
+  runLimit: 5000
+  transitFileBackend: local # local | s3
+  transitFileTTLSeconds: 86400
+  transitFileMaxBytes: 104857600
+  s3Bucket: ""
+  s3Region: us-east-1
+  s3Endpoint: ""
+  s3ForcePathStyle: false
+
+# SECURITY: by default, helm install refuses to render unless the chart
+# can authenticate the /api, /docs, and web console surfaces. Provide
+# either `secret.adminToken` or `secret.existingSecret`, or set
+# `insecureDevelopment: true` to bypass for local experimentation only.
+#
+# Do NOT set `insecureDevelopment: true` in any environment reachable
+# from outside the loopback - the admin API and web console will be
+# completely unauthenticated.
+insecureDevelopment: false
+
+# Secret runtime configuration. Leave empty values blank to skip the
+# corresponding env var entirely. The runtime will use its built-in defaults.
+secret:
+  # Reference an externally-managed Secret (sealed-secrets, ESO, Vault).
+  # When set, the auto-generated Secret is NOT created and the keys below
+  # are ignored. The Secret must contain every key listed in `secretKeys`.
+  #
+  # NOTE: rotating an externally-managed Secret does not restart pods (the
+  # chart can only checksum the Secret it renders itself). Trigger a rollout
+  # from your secret manager, e.g. run stakater/Reloader and set
+  # `podAnnotations: {reloader.stakater.com/auto: "true"}`, or bump any
+  # podAnnotations value after a rotation. The same applies to
+  # `database.existingUrlSecret`.
+  existingSecret: ""
+  secretKeys:
+    - encryptionKey
+    - adminToken
+    - runtimeToken
+    - jwksUri
+    - jwtIssuer
+    - jwtAudience
+    - s3AccessKeyId
+    - s3SecretAccessKey
+    - s3SessionToken
+  annotations: {}
+  encryptionKey: ""
+  adminToken: ""
+  runtimeToken: ""
+  jwksUri: ""
+  jwtIssuer: ""
+  jwtAudience: ""
+  s3AccessKeyId: ""
+  s3SecretAccessKey: ""
+  s3SessionToken: ""
+
+# SQLite by default (matches docker-compose). Set enabled=true and provide
+# a URL (either `url` or `existingUrlSecret`, not both) to switch to
+# PostgreSQL - also enables the migration Job. When `url` is used it is
+# stored in the chart-managed Secret, not the ConfigMap.
+database:
+  enabled: false
+  url: ""
+  poolMax: 10
+  connectTimeoutMs: 10000
+  existingUrlSecret: ""
+  existingUrlSecretKey: ""
+  migration:
+    enabled: true
+    backoffLimit: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: ""
+
+# NOTE: enabling this with a single replica blocks voluntary node drains
+# (minAvailable 1 of 1). Only enable it once you run 2+ replicas.
+podDisruptionBudget:
+  enabled: false
+  minAvailable: ""
+  maxUnavailable: ""
+
+# When enabled together with an Ingress, add a namespace selector matching
+# your ingress controller's namespace (e.g.
+# ingressNamespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress-nginx}})
+# or the controller cannot reach the pods.
+networkPolicy:
+  enabled: false
+  ingressNamespaceSelector: {}
+  additionalIngressNamespaceSelector: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podLabels: {}
+
+# Recreate by default: the data volume is ReadWriteOnce, so a RollingUpdate
+# surge pod scheduled on another node can never mount it and the rollout
+# deadlocks (and SQLite must not be opened by two pods at once). Switch to
+# RollingUpdate only after moving to PostgreSQL + S3 transit files with
+# persistence disabled. The rollingUpdate block is ignored unless
+# type is RollingUpdate.
+updateStrategy:
+  type: Recreate
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+
+# Free-form OOMOL_CONNECT_* overrides.
+extraEnv: []
+extraVolumes: []
+extraVolumeMounts: []
+
+terminationGracePeriodSeconds: 30

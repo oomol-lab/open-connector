@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -46,7 +47,7 @@ const updateDestinationFieldNames = [
   "s3_secret_access_key",
 ];
 
-export const asinDataApiActionHandlers: Record<string, AsinDataApiActionHandler> = {
+export const asinDataApiActionHandlers: ProviderActionHandlers<"asin_data_api", AsinDataApiActionHandler> = {
   async clear_collection_requests(input, context) {
     const collectionId = requiredString(input.collection_id, "collection_id", invalidInputError);
     const requestIds = stringArray(input.request_ids, "request_ids", invalidInputError).map((requestId, index) =>

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CockroachLabsActionName } from "./actions.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ type CockroachLabsRequestPhase = "validate" | "execute";
 type CockroachLabsRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CockroachLabsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const cockroachLabsActionHandlers: Record<CockroachLabsActionName, CockroachLabsActionHandler> = {
+export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs", CockroachLabsActionHandler> = {
   async get_organization(_input, context) {
     return {
       organization: await requestCockroachLabsObject({

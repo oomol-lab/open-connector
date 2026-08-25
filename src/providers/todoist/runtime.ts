@@ -1,12 +1,12 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TodoistActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { todoistOAuthScopes } from "./scopes.ts";
 
 const todoistApiBaseUrl = "https://api.todoist.com/api/v1";
 const todoistUserPath = "/user";
-const todoistApiKeyGrantedScopes = ["todoist.read", "todoist.write"];
 
 type TodoistRequestPhase = "validate" | "execute";
 
@@ -22,7 +22,7 @@ interface TodoistRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const todoistActionHandlers: Record<TodoistActionName, ProviderRuntimeHandler<BearerProviderContext>> = {
+export const todoistActionHandlers: ProviderActionHandlers<"todoist", ProviderRuntimeHandler<BearerProviderContext>> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },
@@ -94,7 +94,7 @@ export async function validateTodoistCredential(
   const validation = await fetchTodoistCurrentAccount(accessToken, fetcher, signal, "validate");
   return {
     ...validation,
-    grantedScopes: todoistApiKeyGrantedScopes,
+    grantedScopes: todoistOAuthScopes,
   };
 }
 

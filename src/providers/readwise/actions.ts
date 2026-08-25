@@ -210,11 +210,3 @@ export const readwiseActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type ReadwiseActionName =
-  | "create_highlights"
-  | "export_highlights"
-  | "list_books"
-  | "list_documents"
-  | "save_document"
-  | "update_document";

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SerpapiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ type SerpapiPhase = "validate" | "execute";
 type SerpapiQueryValue = string | number | boolean | undefined;
 type SerpapiActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const serpapiActionHandlers: Record<SerpapiActionName, SerpapiActionHandler> = {
+export const serpapiActionHandlers: ProviderActionHandlers<"serpapi", SerpapiActionHandler> = {
   async google_search(input, context) {
     const payload = requirePayloadRecord(
       await requestSerpApiJson(

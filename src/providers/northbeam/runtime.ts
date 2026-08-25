@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { NorthbeamActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -38,7 +38,7 @@ interface NorthbeamRequestOptions {
   phase: NorthbeamPhase;
 }
 
-export const northbeamActionHandlers: Record<NorthbeamActionName, NorthbeamActionHandler> = {
+export const northbeamActionHandlers: ProviderActionHandlers<"northbeam", NorthbeamActionHandler> = {
   async list_metrics(_input, context) {
     const payload = await requestNorthbeamJson({
       context,

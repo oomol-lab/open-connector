@@ -65,15 +65,6 @@ const documentListOutputSchema = s.object("A page of indexed CustomGPT documents
   raw: looseCustomgptObjectSchema,
 });
 
-export type CustomgptActionName =
-  | "list_agents"
-  | "get_agent"
-  | "list_conversations"
-  | "create_conversation"
-  | "send_message"
-  | "list_messages"
-  | "list_documents";
-
 export const customgptActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_agents",

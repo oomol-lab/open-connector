@@ -5,6 +5,7 @@ import type {
   ProxyRequestInput,
   ProviderExecutors,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ type PrerenderPhase = "validate" | "execute";
 
 type PrerenderActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const prerenderActionHandlers: Record<string, PrerenderActionHandler> = {
+export const prerenderActionHandlers: ProviderActionHandlers<"prerender", PrerenderActionHandler> = {
   async recache_urls(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
     const response = await requestPrerender({
       path: "/recache",

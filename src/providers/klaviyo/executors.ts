@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KlaviyoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ const klaviyoFetch = createProviderFetch({ skipDnsValidation: true });
 
 type KlaviyoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const klaviyoActionHandlers: Record<KlaviyoActionName, KlaviyoActionHandler> = {
+export const klaviyoActionHandlers: ProviderActionHandlers<"klaviyo", KlaviyoActionHandler> = {
   validate_account(_input, context) {
     return executeValidateAccount(context);
   },

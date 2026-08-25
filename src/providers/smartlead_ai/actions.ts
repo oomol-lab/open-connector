@@ -81,8 +81,6 @@ const campaignLeadSchema = s.looseRequiredObject("A Smartlead lead inside a camp
   raw: s.looseObject("The raw campaign lead object returned by Smartlead."),
 });
 
-export type SmartleadAiActionName = "list_campaigns" | "get_campaign" | "list_email_accounts" | "list_campaign_leads";
-
 export const smartleadAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",

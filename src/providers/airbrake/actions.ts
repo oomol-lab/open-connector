@@ -97,16 +97,6 @@ const noticeStatusInputSchema = s.actionInput(
   "Input parameters for an Airbrake notice status.",
 );
 
-export type AirbrakeActionName =
-  | "list_projects"
-  | "get_project"
-  | "list_deploys"
-  | "get_deploy"
-  | "list_groups"
-  | "get_group"
-  | "list_notices"
-  | "get_notice_status";
-
 export const airbrakeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",

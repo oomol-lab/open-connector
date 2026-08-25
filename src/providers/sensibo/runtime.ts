@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SensiboActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -20,7 +20,7 @@ const defaultDeviceFields = "id,name,room,measurements,acState,connectionStatus,
 type SensiboPhase = "validate" | "execute";
 type SensiboActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const sensiboActionHandlers: Record<SensiboActionName, SensiboActionHandler> = {
+export const sensiboActionHandlers: ProviderActionHandlers<"sensibo", SensiboActionHandler> = {
   async list_devices(input, context) {
     const payload = await requestSensiboJson({
       apiKey: context.apiKey,

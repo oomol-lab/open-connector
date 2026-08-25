@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { KeygenActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -64,7 +64,7 @@ const keygenResources = {
   processes: { path: "processes", type: "processes" },
 } satisfies Record<KeygenResourceKey, KeygenResourceConfig>;
 
-export const keygenActionHandlers: Record<KeygenActionName, KeygenActionHandler> = {
+export const keygenActionHandlers: ProviderActionHandlers<"keygen", KeygenActionHandler> = {
   whoami(_input, context) {
     return keygenGetJson(["me"], {}, context, "execute");
   },

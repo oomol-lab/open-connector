@@ -1,18 +1,30 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { SseError } from "@modelcontextprotocol/sdk/client/sse.js";
-import { CallToolResultSchema, ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SseError } from "@modelcontextprotocol/client";
+import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { posix } from "node:path";
 import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
-import { baiduNetdiskFileCategories, baiduNetdiskSemanticMatchSources, isBaiduNetdiskAbsolutePath } from "./actions.ts";
+import {
+  baiduNetdiskFileCategories,
+  baiduNetdiskListTypes,
+  baiduNetdiskSemanticMatchSources,
+  isBaiduNetdiskAbsolutePath,
+} from "./actions.ts";
 import { normalizeBaiduNetdiskError, parseBaiduNetdiskJson } from "./runtime.ts";
 
 const baiduNetdiskMcpEndpoint = new URL("https://mcp-pan.baidu.com/sse");
 const requestTimeoutMs = 30_000;
+type BaiduNetdiskListType = (typeof baiduNetdiskListTypes)[number];
+const baiduNetdiskListToolByType = {
+  all: "file_list",
+  document: "file_doc_list",
+  image: "file_image_list",
+  video: "file_video_list",
+} as const satisfies Record<BaiduNetdiskListType, string>;
 const requiredToolNames = [
   "file_list",
   "file_keyword_search",
@@ -82,8 +94,8 @@ export async function executeBaiduNetdiskMcpAction(
     case "list_files": {
       const page = requireSafeInteger(input.page, "page");
       const payload = await callBaiduNetdiskMcpTool(
-        "file_list",
-        { dir: encodeURIComponent(String(input.path)), page },
+        toBaiduNetdiskListTool(input.type),
+        { dir: String(input.path), page },
         "read",
         context,
       );
@@ -146,17 +158,18 @@ export async function executeBaiduNetdiskMcpAction(
       );
       return normalizeBaiduNetdiskFile(unwrapDataObject(payload), "file");
     }
-    case "create_folder": {
+    case "create_share_link": {
       const payload = await callBaiduNetdiskMcpTool(
-        "make_dir",
+        "file_sharelink_set",
         {
-          path: encodeURIComponent(String(input.path)),
-          rtype: toMcpRtype(input.conflictStrategy),
+          fsid_list: JSON.stringify(input.fileIds),
+          period: requireSafeInteger(input.periodDays, "periodDays"),
+          pwd: String(input.accessCode),
         },
         "write",
         context,
       );
-      return normalizeBaiduNetdiskFile(unwrapDataObject(payload), "folder");
+      return normalizeShareLink(payload);
     }
     case "copy":
     case "move":
@@ -164,6 +177,13 @@ export async function executeBaiduNetdiskMcpAction(
     case "rename":
       return executeRename(input, context);
   }
+}
+
+function toBaiduNetdiskListTool(value: unknown): string {
+  if (!baiduNetdiskListTypes.includes(value as BaiduNetdiskListType)) {
+    throw new ProviderRequestError(400, "invalid baidu_netdisk list type");
+  }
+  return baiduNetdiskListToolByType[value as BaiduNetdiskListType];
 }
 
 function validateBaiduNetdiskMcpInput(actionName: string, input: Record<string, unknown>): void {
@@ -226,14 +246,10 @@ async function callBaiduNetdiskMcpTool(
   context: BaiduNetdiskMcpContext,
 ) {
   return withBaiduNetdiskMcpClient(context.accessToken, context.fetcher, async (client) => {
-    const result = CallToolResultSchema.parse(
-      await client.callTool({ name, arguments: args }, undefined, {
-        timeout: requestTimeoutMs,
-      }),
-    );
+    const result = await client.callTool({ name, arguments: args }, { timeout: requestTimeoutMs });
     const payload =
       result.structuredContent && !hasUnsafeBaiduId(result.structuredContent)
-        ? result.structuredContent
+        ? requireObject(result.structuredContent)
         : parseMcpTextResult(result.content);
     const errno = readOptionalInteger(payload.errno ?? payload.error_no ?? payload.error_code);
     if (errno != null && errno !== 0) {
@@ -253,7 +269,26 @@ function parseMcpTextResult(content: Array<{ type: string; [key: string]: unknow
   if (!text) {
     throw new ProviderRequestError(502, "baidu_netdisk MCP returned no JSON result");
   }
-  return parseBaiduNetdiskJson(text.trim(), "baidu_netdisk MCP returned invalid JSON");
+  const trimmedText = text.trim();
+  try {
+    return parseBaiduNetdiskJson(trimmedText, "baidu_netdisk MCP returned invalid JSON");
+  } catch (error) {
+    return parseEmbeddedMcpError(trimmedText, error);
+  }
+}
+
+function parseEmbeddedMcpError(text: string, originalError: unknown): Record<string, unknown> {
+  const marker = "response.body:";
+  const markerIndex = text.indexOf(marker);
+  if (markerIndex < 0) throw originalError;
+  const jsonStart = text.indexOf("{", markerIndex + marker.length);
+  const jsonEnd = text.lastIndexOf("}");
+  if (jsonStart < 0 || jsonEnd < jsonStart) throw originalError;
+  try {
+    return parseBaiduNetdiskJson(text.slice(jsonStart, jsonEnd + 1), "baidu_netdisk MCP returned invalid JSON");
+  } catch {
+    throw originalError;
+  }
 }
 
 function hasUnsafeBaiduId(value: unknown, key?: string): boolean {
@@ -452,8 +487,42 @@ function requireSafeInteger(value: unknown, fieldName: string) {
   throw new ProviderRequestError(400, `${fieldName} must be an integer`);
 }
 
-function toMcpRtype(value: unknown) {
-  return value === "rename" ? "1" : "0";
+function normalizeShareLink(payload: Record<string, unknown>): Record<string, unknown> {
+  const share = unwrapDataObject(payload);
+  const periodDays = readOptionalInteger(share.period);
+  const accessCode = optionalString(share.pwd);
+  if (periodDays == null || periodDays < 1) {
+    throw new ProviderRequestError(502, "baidu_netdisk MCP share response is missing period");
+  }
+  if (!accessCode || accessCode.length !== 4) {
+    throw new ProviderRequestError(502, "baidu_netdisk MCP share response has invalid pwd");
+  }
+  const link = requireShareUrl(share.link, "link");
+  return {
+    link,
+    shortUrl: optionalShareUrl(share.short_url) ?? link,
+    periodDays,
+    accessCode,
+  };
+}
+
+function requireShareUrl(value: unknown, fieldName: string): string {
+  const url = optionalShareUrl(value);
+  if (url) return url;
+  throw new ProviderRequestError(502, `baidu_netdisk MCP share response is missing ${fieldName}`);
+}
+
+function optionalShareUrl(value: unknown): string | undefined {
+  const url = optionalString(value);
+  if (url) {
+    try {
+      const protocol = new URL(url).protocol;
+      if (protocol === "http:" || protocol === "https:") return url;
+    } catch {
+      // Map malformed provider URLs to one stable upstream response error.
+    }
+  }
+  return undefined;
 }
 
 function toMcpOnDuplicate(value: unknown) {
@@ -474,7 +543,7 @@ function normalizeBaiduNetdiskMcpTransportError(error: unknown): ProviderRequest
     }
     return new ProviderRequestError(502, "baidu_netdisk MCP connection failed");
   }
-  if (error instanceof McpError && error.code === ErrorCode.RequestTimeout) {
+  if (error instanceof SdkError && error.code === SdkErrorCode.RequestTimeout) {
     return new ProviderRequestError(504, "baidu_netdisk MCP request timed out");
   }
   return new ProviderRequestError(502, "baidu_netdisk MCP request failed");

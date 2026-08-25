@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { XAiActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const xAiApiBaseUrl = "https://api.x.ai/v1";
 
 type XAiActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const xAiActionHandlers: Record<XAiActionName, XAiActionHandler> = {
+export const xAiActionHandlers: ProviderActionHandlers<"x_ai", XAiActionHandler> = {
   list_models(_input, context) {
     return xAiRequest(context, { path: "/models", mode: "execute" });
   },

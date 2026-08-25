@@ -5,24 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "manatal";
 
-export type ManatalActionName =
-  | "list_candidates"
-  | "get_candidate"
-  | "create_candidate"
-  | "update_candidate"
-  | "list_jobs"
-  | "get_job"
-  | "create_job"
-  | "update_job"
-  | "list_organizations"
-  | "get_organization"
-  | "create_organization"
-  | "update_organization"
-  | "list_matches"
-  | "get_match"
-  | "create_match"
-  | "update_match";
-
 const nonEmptyString = (description: string, options: { maxLength?: number } = {}) =>
   s.string({ description, minLength: 1, maxLength: options.maxLength });
 

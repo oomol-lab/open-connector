@@ -100,5 +100,3 @@ export const prtgClassicActions: ActionDefinition[] = [
     outputSchema: listDevicesOutputSchema,
   }),
 ];
-
-export type PrtgClassicActionName = "list_sensors" | "list_devices";

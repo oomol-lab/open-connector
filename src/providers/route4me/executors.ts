@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Route4meActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -14,7 +14,7 @@ type Route4meMethod = "GET" | "POST" | "DELETE";
 type Route4meQueryValue = string | number | boolean | undefined;
 type Route4meActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const route4meActionHandlers: Record<Route4meActionName, Route4meActionHandler> = {
+export const route4meActionHandlers: ProviderActionHandlers<"route4me", Route4meActionHandler> = {
   create_optimization(input, context) {
     return createOptimization(input, context);
   },

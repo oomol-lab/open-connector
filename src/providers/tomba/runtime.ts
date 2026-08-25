@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TombaActionName } from "./actions.ts";
 
 import { compactObject, optionalIntegerLike, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -33,7 +33,7 @@ interface TombaRequestInput {
   mode: TombaMode;
 }
 
-export const tombaActionHandlers: Record<TombaActionName, ProviderRuntimeHandler<TombaActionContext>> = {
+export const tombaActionHandlers: ProviderActionHandlers<"tomba", ProviderRuntimeHandler<TombaActionContext>> = {
   async get_account(_input, context) {
     const payload = await requestTombaJson({ method: "GET", path: "/me", mode: "execute" }, context);
     return normalizeAccount(payload);

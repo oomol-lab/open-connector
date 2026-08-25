@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ export interface WaiverForeverUserInfo {
   raw: Record<string, unknown>;
 }
 
-export const waiverforeverActionHandlers: Record<string, WaiverForeverActionHandler> = {
+export const waiverforeverActionHandlers: ProviderActionHandlers<"waiverforever", WaiverForeverActionHandler> = {
   get_user_info(_input, context) {
     return getWaiverForeverUserInfo(context.apiKey, context.fetcher, context.signal);
   },

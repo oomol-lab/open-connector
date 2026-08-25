@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { GtmetrixActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
@@ -40,7 +40,10 @@ interface GtmetrixRequestInput {
   allowedStatuses?: number[];
 }
 
-export const gtmetrixActionHandlers: Record<GtmetrixActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const gtmetrixActionHandlers: ProviderActionHandlers<
+  "gtmetrix",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_account_status(_input, context): Promise<unknown> {
     const { payload } = await requestGtmetrixJson({
       apiKey: context.apiKey,

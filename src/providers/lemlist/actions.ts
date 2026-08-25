@@ -90,8 +90,6 @@ const teamSchema = s.looseRequiredObject(
   },
 );
 
-export type LemlistActionName = "get_team" | "list_campaigns" | "get_campaign" | "list_campaign_leads";
-
 export const lemlistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_team",

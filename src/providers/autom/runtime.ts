@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -21,7 +22,7 @@ interface AutomRequestOptions {
   signal?: AbortSignal;
 }
 
-export const automActionHandlers: Record<string, AutomActionHandler> = {
+export const automActionHandlers: ProviderActionHandlers<"autom", AutomActionHandler> = {
   async get_usage(_input, context): Promise<unknown> {
     const payload = await requestAutomJson({
       path: automUsagePath,

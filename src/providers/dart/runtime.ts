@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { DartActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -49,7 +49,7 @@ const listTaskQueryKeys = [
   "offset",
 ];
 
-export const dartActionHandlers: Record<DartActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const dartActionHandlers: ProviderActionHandlers<"dart", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   get_config(_input, context) {
     return requestDart({ path: "/config", method: "GET", context, phase: "execute" });
   },

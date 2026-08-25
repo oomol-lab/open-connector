@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RebrandlyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ const validationPath = "/account";
 type RebrandlyQueryValue = string | number | boolean | undefined;
 type RebrandlyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const rebrandlyActionHandlers: Record<RebrandlyActionName, RebrandlyActionHandler> = {
+export const rebrandlyActionHandlers: ProviderActionHandlers<"rebrandly", RebrandlyActionHandler> = {
   async get_account(_input, context) {
     return {
       account: optionalRecord(await requestRebrandlyJson({ path: "/account", context, mode: "execute" })) ?? {},

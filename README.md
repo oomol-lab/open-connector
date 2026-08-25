@@ -56,8 +56,9 @@ HTTP/OpenAPI from custom clients, and the Web Console for administration and deb
   source.
 - Runtime controls for connection identity, scopes, runtime tokens, action allow/block policies,
   temporary file transit, and redacted run logs.
-- Deployment options for local Docker or Node.js, Fly.io with persistent SQLite storage,
-  Cloudflare Workers with D1/R2/Static Assets, and OOMOL's hosted runtime.
+- Deployment options for local Docker or Node.js with SQLite or PostgreSQL state and local or
+  S3-compatible transit storage, Fly.io, Cloudflare Workers with D1/R2/Static Assets, and OOMOL's
+  hosted runtime.
 
 ## Where It Fits
 
@@ -126,12 +127,13 @@ safe account labels, and execution results needed for the run.
 
 ## Usage Paths
 
-| Path                            | Best for                                                | Includes                                                                                                                                                                                           |
-| ------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Open-source self-host           | Developers and teams that want full control             | Local Docker or Node runtime, SQLite storage, MCP, HTTP, OpenAPI, and Web Console                                                                                                                  |
-| Fly.io self-host                | Teams that want a hosted Docker runtime                 | Node Docker runtime, SQLite storage on a Fly volume, TLS, health checks, MCP, HTTP, OpenAPI, and Web Console                                                                                       |
-| Cloudflare-compatible deploy    | Teams that want a lightweight hosted runtime            | Workers runtime, D1 state, R2 transit files, and Static Assets for the console                                                                                                                     |
-| [OOMOL](https://oomol.com/apps) | Teams that want users to authorize accounts immediately | OOMOL-provided OAuth apps, monthly included Connect credits, and hosted runtime infrastructure; the same provider and Action contracts keep a path open to later private or self-hosted deployment |
+| Path                                                      | Best for                                                | Includes                                                                                                                                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open-source self-host                                     | Developers and teams that want full control             | Local Docker or Node runtime, SQLite or PostgreSQL state, local or S3-compatible transit files, MCP, HTTP, OpenAPI, and Web Console                                                                |
+| [Kubernetes (Helm)](deploy/helm/open-connector/README.md) | Teams that run their own clusters                       | Hardened Helm chart with PVC-backed SQLite or PostgreSQL plus migration hooks, Ingress, autoscaling, and NetworkPolicy toggles                                                                     |
+| Fly.io self-host                                          | Teams that want a hosted Docker runtime                 | Node Docker runtime, SQLite on a Fly volume or external PostgreSQL, TLS, health checks, MCP, HTTP, OpenAPI, and Web Console                                                                        |
+| Cloudflare-compatible deploy                              | Teams that want a lightweight hosted runtime            | Workers runtime, D1 state, R2 transit files, and Static Assets for the console                                                                                                                     |
+| [OOMOL](https://oomol.com/apps)                           | Teams that want users to authorize accounts immediately | OOMOL-provided OAuth apps, monthly included Connect credits, and hosted runtime infrastructure; the same provider and Action contracts keep a path open to later private or self-hosted deployment |
 
 ## Cloudflare Quick Start Video
 
@@ -216,6 +218,16 @@ files, and Static Assets for the Web Console.
 See [docs/cloudflare.md](docs/cloudflare.md) for resource creation, migrations, secrets, local Worker
 preview, and remote deployment.
 
+## PostgreSQL Runtime Storage
+
+The Node runtime uses SQLite by default and can use PostgreSQL 15 or newer when
+`OOMOL_CONNECT_DATABASE_URL` is configured. PostgreSQL migrations are explicit: run
+`npm run runtime:migrate` before starting a version with pending migrations. Server startup only
+checks schema readiness and never applies PostgreSQL DDL. See
+[docs/configuration.md](docs/configuration.md#runtime-database) for configuration, permissions, TLS,
+and multi-instance requirements. The Docker image exposes the same runner as its `migrate`
+subcommand; see [docs/docker-ghcr.md](docs/docker-ghcr.md#postgresql-migrations).
+
 ## Fly.io Deployment
 
 OpenConnector can also run on Fly.io with the Node Docker runtime and persistent SQLite storage on a
@@ -227,8 +239,8 @@ domains, and scaling.
 ## Docker Image (GHCR)
 
 Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomol-lab/open-connector`. Use
-`latest` for the newest release, a pinned version like `v1.0.0` for production, or `tip` for the
-latest `main` build.
+`latest` for the newest release, a pinned released version for production, or `tip` for the latest
+`main` build.
 
 See [docs/docker-ghcr.md](docs/docker-ghcr.md) for tags, pulling, and running.
 

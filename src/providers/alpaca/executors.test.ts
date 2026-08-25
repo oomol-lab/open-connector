@@ -1,0 +1,199 @@
+import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
+import { credentialValidators, executors, proxy } from "./executors.ts";
+
+afterEach(() => {
+  setDefaultGuardedFetchDnsLookup(null);
+  vi.unstubAllGlobals();
+});
+
+describe("Alpaca credentials", () => {
+  it("validates OAuth credentials against a live account and records scopes", async () => {
+    const result = await credentialValidators.oauth2!(oauthCredential(), {
+      fetcher: async (url, init) => {
+        expect(url.toString()).toBe("https://api.alpaca.markets/v2/account");
+        const headers = new Headers(init?.headers);
+        expect(headers.get("authorization")).toBe("Bearer alpaca-oauth-token");
+        expect(headers.get("apca-api-key-id")).toBeNull();
+        return Response.json({ id: "account-1", account_number: "PA123" });
+      },
+    });
+
+    expect(result).toMatchObject({
+      profile: { accountId: "account-1", displayName: "PA123" },
+      grantedScopes: ["data"],
+      metadata: { environment: "live", apiBaseUrl: "https://api.alpaca.markets" },
+    });
+  });
+
+  it("falls back to a paper account when the OAuth token cannot access live trading", async () => {
+    const requestedUrls: string[] = [];
+    const result = await credentialValidators.oauth2!(oauthCredential(), {
+      fetcher: async (url) => {
+        requestedUrls.push(url.toString());
+        if (url.toString().startsWith("https://api.alpaca.markets/")) {
+          return Response.json({ message: "not authorized" }, { status: 401 });
+        }
+        return Response.json({ id: "paper-account", account_number: "PA-PAPER" });
+      },
+    });
+
+    expect(requestedUrls).toEqual([
+      "https://api.alpaca.markets/v2/account",
+      "https://paper-api.alpaca.markets/v2/account",
+    ]);
+    expect(result).toMatchObject({
+      profile: { accountId: "paper-account", displayName: "PA-PAPER" },
+      metadata: { environment: "paper", apiBaseUrl: "https://paper-api.alpaca.markets" },
+    });
+  });
+
+  it("executes market-data actions with OAuth bearer credentials", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(input.toString()).toBe("https://data.alpaca.markets/v2/stocks/bars?symbols=AAPL&timeframe=1Day");
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer alpaca-oauth-token");
+      return Response.json({ bars: { AAPL: [] } });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const context: ExecutionContext = { getCredential: async () => oauthCredential({ environment: "paper" }) };
+
+    const result = await executors["alpaca.get_stock_bars"]!({ symbols: ["AAPL"], timeframe: "1Day" }, context);
+
+    expect(result).toMatchObject({ ok: true, output: { bars: { AAPL: [] } } });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("retries OAuth environment discovery before execution when connection metadata is missing", async () => {
+    const requestedUrls: string[] = [];
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      requestedUrls.push(url);
+      if (url === "https://api.alpaca.markets/v2/account") {
+        return Response.json({ message: "not authorized" }, { status: 401 });
+      }
+      return Response.json({ id: "paper-account", account_number: "PA-PAPER" });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const context: ExecutionContext = { getCredential: async () => oauthCredential() };
+
+    const result = await executors["alpaca.get_account"]!({}, context);
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: { account: { id: "paper-account", account_number: "PA-PAPER" } },
+    });
+    expect(requestedUrls).toEqual([
+      "https://api.alpaca.markets/v2/account",
+      "https://paper-api.alpaca.markets/v2/account",
+      "https://paper-api.alpaca.markets/v2/account",
+    ]);
+  });
+
+  it("uses OAuth bearer credentials for paper Trading API proxy requests", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(input.toString()).toBe("https://paper-api.alpaca.markets/v2/account");
+      const headers = new Headers(init?.headers);
+      expect(headers.get("authorization")).toBe("Bearer alpaca-oauth-token");
+      expect(headers.get("apca-api-secret-key")).toBeNull();
+      return Response.json({ id: "paper-account" });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const context: ExecutionContext = { getCredential: async () => oauthCredential({ environment: "paper" }) };
+
+    const result = await proxy!({ endpoint: "/v2/account", method: "GET" }, context);
+
+    expect(result).toMatchObject({ ok: true, response: { status: 200, data: { id: "paper-account" } } });
+  });
+
+  it.each([
+    { endpoint: "/v2/options/contracts", data: { option_contracts: [] } },
+    { endpoint: "/v2/options/contracts/AAPL250117C00200000", data: { symbol: "AAPL250117C00200000" } },
+  ])("routes $endpoint proxy requests to the paper Trading API", async ({ endpoint, data }) => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(input.toString()).toBe(`https://paper-api.alpaca.markets${endpoint}`);
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer alpaca-oauth-token");
+      return Response.json(data);
+    });
+    vi.stubGlobal("fetch", fetch);
+    const context: ExecutionContext = { getCredential: async () => oauthCredential({ environment: "paper" }) };
+
+    const result = await proxy!({ endpoint, method: "GET" }, context);
+
+    expect(result).toMatchObject({
+      ok: true,
+      response: { status: 200, data },
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("keeps API key validation on Alpaca's key-pair headers", async () => {
+    await credentialValidators.apiKey!(
+      { apiKey: "secret", values: { apiKeyId: "key-id", environment: "paper" } },
+      {
+        fetcher: async (_url, init) => {
+          const headers = new Headers(init?.headers);
+          expect(headers.get("apca-api-key-id")).toBe("key-id");
+          expect(headers.get("apca-api-secret-key")).toBe("secret");
+          expect(headers.get("authorization")).toBeNull();
+          return Response.json({ id: "paper-account" });
+        },
+      },
+    );
+  });
+});
+
+describe("Alpaca environment resolver DNS", () => {
+  it("rejects an environment host that resolves to cloud metadata before any fetch", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "169.254.169.254", family: 4 }]);
+    const context: ExecutionContext = { getCredential: async () => apiKeyCredential() };
+
+    const result = await executors["alpaca.get_account"]!({}, context);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: expect.stringContaining("must not resolve to private or reserved IP addresses") },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a proxy request to an environment host that resolves to cloud metadata", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "169.254.169.254", family: 4 }]);
+    const context: ExecutionContext = { getCredential: async () => apiKeyCredential() };
+
+    const result = await proxy!({ endpoint: "/v2/account", method: "GET" }, context);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: expect.stringContaining("must not resolve to private or reserved IP addresses") },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+function apiKeyCredential(): Extract<ResolvedCredential, { authType: "api_key" }> {
+  return {
+    authType: "api_key",
+    apiKey: "alpaca-secret-key",
+    values: { apiKeyId: "alpaca-key-id", environment: "live" },
+    profile: { accountId: "alpaca", displayName: "Alpaca", grantedScopes: [] },
+    metadata: {},
+  };
+}
+
+function oauthCredential(
+  metadata: Record<string, unknown> = { scope: "data" },
+): Extract<ResolvedCredential, { authType: "oauth2" }> {
+  return {
+    authType: "oauth2",
+    accessToken: "alpaca-oauth-token",
+    tokenType: "Bearer",
+    profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
+    metadata,
+  };
+}

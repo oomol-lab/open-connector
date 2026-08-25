@@ -183,5 +183,3 @@ export const chartmogulActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type ChartmogulActionName = "get_account" | "list_sources" | "list_customers" | "get_customer" | "list_contacts";

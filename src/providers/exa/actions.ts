@@ -294,5 +294,3 @@ export const exaActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type ExaActionName = "search" | "get_contents" | "answer" | "find_similar";

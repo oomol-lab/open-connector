@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { SerplyActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface SerplyActionContext {
 
 type SerplyActionHandler = (input: Record<string, unknown>, context: SerplyActionContext) => Promise<unknown>;
 
-export const serplyActionHandlers: Record<SerplyActionName, SerplyActionHandler> = {
+export const serplyActionHandlers: ProviderActionHandlers<"serply", SerplyActionHandler> = {
   async google_search(input, context): Promise<unknown> {
     const payload = await requestSerplyJson(
       "/v1/search",

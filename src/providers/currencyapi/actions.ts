@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "currencyapi";
 
-export type CurrencyapiActionName =
-  | "get_api_status"
-  | "get_supported_currencies"
-  | "get_latest_rates"
-  | "get_historical_rates"
-  | "convert_currency";
-
 const currencyCodeSchema = s.stringPattern("^[A-Z0-9]{3,10}$", {
   description: "Currency code using uppercase ASCII letters or digits.",
 });

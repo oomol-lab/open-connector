@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BigpictureIoActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -20,7 +20,7 @@ const bigpictureRequestTimeoutMs = 30_000;
 type BigpictureRequestPhase = "validate" | "execute";
 type BigpictureActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const bigpictureIoActionHandlers: Record<BigpictureIoActionName, BigpictureActionHandler> = {
+export const bigpictureIoActionHandlers: ProviderActionHandlers<"bigpicture_io", BigpictureActionHandler> = {
   async find_company_by_domain(input, context) {
     const payload = await requestBigpictureJson({
       context,

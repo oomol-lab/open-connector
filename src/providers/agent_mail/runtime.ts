@@ -1,10 +1,10 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
 import type { AgentMailOperationDefinition } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { agentMailOperationByActionName } from "./actions.ts";
+import { mapProviderActionHandlers, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { agentMailOperations } from "./actions.ts";
 
 export const agentMailApiBaseUrl = "https://api.agentmail.to";
 
@@ -18,13 +18,14 @@ interface AgentMailActionContext {
   signal?: AbortSignal;
 }
 
-export const agentMailActionHandlers = Object.fromEntries(
-  Object.keys(agentMailOperationByActionName).map((actionName) => [
-    actionName,
-    (input: Record<string, unknown>, context: AgentMailActionContext) =>
-      executeAgentMailOperation(input, context, agentMailOperationByActionName[actionName as string]),
-  ]),
-) as Record<string, AgentMailActionHandler>;
+export const agentMailActionHandlers: ProviderActionHandlers<"agent_mail", AgentMailActionHandler> =
+  mapProviderActionHandlers(
+    "agent_mail",
+    agentMailOperations,
+    ({ operation }): AgentMailActionHandler =>
+      (input, context) =>
+        executeAgentMailOperation(input, context, operation),
+  );
 
 export async function validateAgentMailCredential(
   apiKey: string,

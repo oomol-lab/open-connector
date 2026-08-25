@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ interface ChatpdfRequestInput {
   context: ApiKeyProviderContext;
 }
 
-export const chatpdfActionHandlers: Record<string, ChatpdfActionHandler> = {
+export const chatpdfActionHandlers: ProviderActionHandlers<"chatpdf", ChatpdfActionHandler> = {
   async add_source_url(input, context): Promise<unknown> {
     const payload = await requestChatpdf({
       path: "/sources/add-url",

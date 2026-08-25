@@ -49,5 +49,3 @@ export const realPhoneValidationActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type RealPhoneValidationActionName = "validate_phone_standard" | "validate_phone_v3";

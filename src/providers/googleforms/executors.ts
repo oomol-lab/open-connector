@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { GoogleFormsActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -10,7 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleFormsApiBaseUrl = "https://forms.googleapis.com/v1/forms";
@@ -77,7 +77,7 @@ interface ListResponsesPayload {
   nextPageToken?: string | null;
 }
 
-export const googleFormsActionHandlers: Record<GoogleFormsActionName, GoogleFormsActionHandler> = {
+export const googleFormsActionHandlers: ProviderActionHandlers<"googleforms", GoogleFormsActionHandler> = {
   create_form: createForm,
   get_form: getForm,
   batch_update_form: batchUpdateForm,

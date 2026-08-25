@@ -5,8 +5,8 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { NyneAiActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -42,7 +42,7 @@ interface NyneAiRequestInput {
   mode: NyneAiMode;
 }
 
-export const nyneAiActionHandlers: Record<NyneAiActionName, NyneAiActionHandler> = {
+export const nyneAiActionHandlers: ProviderActionHandlers<"nyne_ai", NyneAiActionHandler> = {
   async get_usage(input, context) {
     const payload = await requestNyneAiJson(
       {

@@ -1,41 +1,81 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ZhihuActionName } from "./actions.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { createWriteStream, openAsBlob } from "node:fs";
+import { mkdtemp, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, extname, join } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { compactObject, optionalRecord } from "../../core/cast.ts";
+import {
+  createProviderFetch,
+  createProviderTimeout,
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
-const service = "zhihu";
-const zhihuApiBaseUrl = "https://developer.zhihu.com";
+type ZhihuActionHandler = (
+  input: Record<string, unknown>,
+  context: {
+    apiKey: string;
+    fetcher: typeof fetch;
+  },
+) => Promise<unknown>;
 
 interface ZhihuRequestInput {
   method?: "GET" | "POST";
   path: string;
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;
-  phase?: ZhihuRequestPhase;
+  rawBody?: BodyInit;
+  headers?: Record<string, string | undefined>;
+  mode?: "validate" | "execute";
 }
 
-type ZhihuRequestPhase = "validate" | "execute";
-type ZhihuActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type ZhihuActionHandler = (input: Record<string, unknown>, context: ZhihuActionContext) => Promise<unknown>;
+const zhihuApiBaseUrl = "https://developer.zhihu.com";
+const zhihuUserAgent = providerUserAgent;
+const maximumZhihuUploadBytes = 100 * 1024 * 1024;
+const zhihuUploadDownloadTimeoutMs = 5 * 60 * 1000;
+const supportedKnowledgeFileExtensions = new Set([
+  ".pdf",
+  ".md",
+  ".txt",
+  ".ppt",
+  ".pptx",
+  ".xlsx",
+  ".xls",
+  ".docx",
+  ".doc",
+  ".webp",
+  ".png",
+  ".jpg",
+  ".mobi",
+  ".epub",
+  ".csv",
+  ".azw3",
+]);
 
-export const zhihuActionHandlers: Record<ZhihuActionName, ZhihuActionHandler> = {
+const zhihuActionHandlers: Record<string, ZhihuActionHandler> = {
   zhihu_search(input, context) {
-    return requestZhihuJson(
+    return zhihuRequest(
+      context.apiKey,
       {
+        method: "GET",
         path: "/api/v1/content/zhihu_search",
         query: {
           Query: input.query,
           Count: input.count,
         },
       },
-      context,
+      context.fetcher,
     );
   },
   global_search(input, context) {
-    return requestZhihuJson(
+    return zhihuRequest(
+      context.apiKey,
       {
+        method: "GET",
         path: "/api/v1/content/global_search",
         query: {
           Query: input.query,
@@ -44,22 +84,25 @@ export const zhihuActionHandlers: Record<ZhihuActionName, ZhihuActionHandler> = 
           SearchDB: input.searchDB,
         },
       },
-      context,
+      context.fetcher,
     );
   },
   hot_list(input, context) {
-    return requestZhihuJson(
+    return zhihuRequest(
+      context.apiKey,
       {
+        method: "GET",
         path: "/api/v1/content/hot_list",
         query: {
           Limit: input.limit,
         },
       },
-      context,
+      context.fetcher,
     );
   },
   zhida(input, context) {
-    return requestZhihuJson(
+    return zhihuRequest(
+      context.apiKey,
       {
         method: "POST",
         path: "/v1/chat/completions",
@@ -68,61 +111,217 @@ export const zhihuActionHandlers: Record<ZhihuActionName, ZhihuActionHandler> = 
           stream: false,
         },
       },
-      context,
+      context.fetcher,
     );
   },
-};
-
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, zhihuActionHandlers);
-
-export const credentialValidators: CredentialValidators = {
-  async apiKey(input, { fetcher, signal }) {
-    await requestZhihuJson(
+  user_contents(input, context) {
+    return zhihuRequest(
+      context.apiKey,
       {
-        path: "/api/v1/content/hot_list",
+        path: "/api/v1/user/contents",
         query: {
-          Limit: 1,
+          ContentType: input.contentType,
+          Offset: input.offset,
+          Limit: input.limit,
+          SortField: input.sortField,
+          SortOrder: input.sortOrder,
         },
-        phase: "validate",
       },
-      {
-        apiKey: input.apiKey,
-        fetcher,
-        signal,
-      },
+      context.fetcher,
     );
-
-    return {
-      profile: {
-        accountId: "zhihu",
-        displayName: "Zhihu Access Secret",
+  },
+  user_followees(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      { path: "/api/v1/user/followees", query: { Offset: input.offset, Limit: input.limit } },
+      context.fetcher,
+    );
+  },
+  user_collections(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      { path: "/api/v1/user/collections", query: { Limit: input.limit } },
+      context.fetcher,
+    );
+  },
+  user_favlists(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      { path: "/api/v1/user/favlists", query: { Limit: input.limit } },
+      context.fetcher,
+    );
+  },
+  favlist_contents(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      {
+        path: "/api/v1/user/favlist_contents",
+        query: { FavlistUrlToken: input.favlistUrlToken, Offset: input.offset, Limit: input.limit },
       },
-      grantedScopes: [],
-      metadata: compactObject({
-        apiBaseUrl: zhihuApiBaseUrl,
-        validationEndpoint: "/api/v1/content/hot_list",
-      }),
-    };
+      context.fetcher,
+    );
+  },
+  knowledge_bases(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      { path: "/api/v1/knowledge/bases", query: { Scope: input.scope } },
+      context.fetcher,
+    );
+  },
+  knowledge_base_items(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      {
+        path: `/api/v1/knowledge/bases/${encodeURIComponent(String(input.knowledgeBaseId))}/items`,
+        query: { Cursor: input.cursor, Limit: input.limit },
+      },
+      context.fetcher,
+    );
+  },
+  knowledge_search(input, context) {
+    const knowledgeBaseIds = Array.isArray(input.knowledgeBaseIds) ? input.knowledgeBaseIds : [];
+    const recallScopes = Array.isArray(input.recallScopes) ? input.recallScopes : [];
+    if (knowledgeBaseIds.length === 0 && recallScopes.length === 0) {
+      throw new ProviderRequestError(400, "knowledgeBaseIds or recallScopes must contain at least one value");
+    }
+    return zhihuRequest(
+      context.apiKey,
+      {
+        method: "POST",
+        path: "/api/v1/knowledge/search",
+        body: {
+          Query: input.query,
+          KnowledgeBaseIDs: knowledgeBaseIds,
+          RecallScopes: recallScopes,
+          Limit: input.limit,
+        },
+      },
+      context.fetcher,
+    );
+  },
+  knowledge_file_upload(input, context) {
+    const fileName = requireUploadFileName(input.fileName, supportedKnowledgeFileExtensions);
+    return withDownloadedZhihuFile(input.fileUrl, fileName, context.fetcher, async (filePath) => {
+      const form = new FormData();
+      form.set("File", await openAsBlob(filePath), fileName);
+      if (typeof input.knowledgeBaseId === "string") form.set("KnowledgeBaseID", input.knowledgeBaseId);
+      return zhihuRequest(
+        context.apiKey,
+        { method: "POST", path: "/api/v1/knowledge/files", rawBody: form },
+        context.fetcher,
+      );
+    });
+  },
+  submit_pdf_parse(input, context) {
+    const fileName = requireUploadFileName(input.fileName, new Set([".pdf"]));
+    return withDownloadedZhihuFile(input.fileUrl, fileName, context.fetcher, async (filePath) => {
+      const form = new FormData();
+      form.set("file", await openAsBlob(filePath), fileName);
+      const upload = await zhihuRequest(
+        context.apiKey,
+        { method: "POST", path: "/resources/v1/files", rawBody: form },
+        context.fetcher,
+      );
+      const fileId = readRequiredNestedString(upload, ["Data", "file_id"]);
+      return zhihuRequest(
+        context.apiKey,
+        {
+          method: "POST",
+          path: "/api/v1/pdf-parse/tasks",
+          headers: {
+            "idempotency-key": typeof input.idempotencyKey === "string" ? input.idempotencyKey : undefined,
+          },
+          body: { file_id: fileId },
+        },
+        context.fetcher,
+      );
+    });
+  },
+  get_pdf_parse(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      { path: `/api/v1/pdf-parse/tasks/${encodeURIComponent(String(input.taskId))}` },
+      context.fetcher,
+    );
+  },
+  submit_ppt_generation(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      {
+        method: "POST",
+        path: "/api/v1/ppt-generation/tasks",
+        headers: {
+          "idempotency-key": typeof input.idempotencyKey === "string" ? input.idempotencyKey : undefined,
+        },
+        body: { resource_url: input.resourceUrl, num_pages: input.numPages },
+      },
+      context.fetcher,
+    );
+  },
+  get_ppt_generation(input, context) {
+    return zhihuRequest(
+      context.apiKey,
+      { path: `/api/v1/ppt-generation/tasks/${encodeURIComponent(String(input.taskId))}` },
+      context.fetcher,
+    );
   },
 };
 
-async function requestZhihuJson(input: ZhihuRequestInput, context: ZhihuActionContext): Promise<unknown> {
-  const response = await rawZhihuRequest(input, context);
-  const payload = await readZhihuPayload(response);
-  if (!response.ok) {
-    throw createZhihuHttpError(response.status, payload, input.phase ?? "execute");
-  }
+async function validateZhihuCredential(
+  apiKey: string,
+  fetcher: typeof fetch,
+): Promise<{ accountLabel: string; providerMetadata: Record<string, unknown> }> {
+  await zhihuRequest(
+    apiKey,
+    {
+      method: "GET",
+      path: "/api/v1/content/hot_list",
+      query: {
+        Limit: 1,
+      },
+      mode: "validate",
+    },
+    fetcher,
+  );
 
-  const payloadObject = optionalRecord(payload);
-  const code = optionalNumber(payloadObject?.Code);
-  if (code !== undefined && code !== 0) {
-    throw createZhihuPayloadError(payload, input.phase ?? "execute");
-  }
-
-  return payload;
+  return {
+    accountLabel: "Zhihu Access Secret",
+    providerMetadata: compactObject({
+      apiBaseUrl: zhihuApiBaseUrl,
+      validationEndpoint: "/api/v1/content/hot_list",
+    }),
+  };
 }
 
-async function rawZhihuRequest(input: ZhihuRequestInput, context: ZhihuActionContext): Promise<Response> {
+async function zhihuRequest(apiKey: string, input: ZhihuRequestInput, fetcher: typeof fetch) {
+  const response = await zhihuRawRequest(apiKey, input, fetcher);
+
+  if (!response.ok) {
+    throw await buildZhihuError(response, input.mode ?? "execute");
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return {};
+  }
+
+  try {
+    const payload = JSON.parse(text) as unknown;
+    const payloadObject = optionalRecord(payload);
+    const code = readOptionalNumber(payloadObject?.Code);
+    if (code !== undefined && code !== 0) {
+      throw buildZhihuPayloadError(payload, input.mode ?? "execute");
+    }
+    return payload;
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    throw new ProviderRequestError(502, "Zhihu 返回了无法解析的 JSON 响应");
+  }
+}
+
+async function zhihuRawRequest(apiKey: string, input: ZhihuRequestInput, fetcher: typeof fetch) {
   const url = new URL(input.path, zhihuApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {
@@ -131,16 +330,19 @@ async function rawZhihuRequest(input: ZhihuRequestInput, context: ZhihuActionCon
   }
 
   try {
-    return await context.fetcher(url, {
+    const headers = new Headers({
+      authorization: `Bearer ${apiKey}`,
+      "user-agent": zhihuUserAgent,
+      "x-request-timestamp": String(Math.floor(Date.now() / 1000)),
+    });
+    if (!input.rawBody) headers.set("content-type", "application/json");
+    for (const [name, value] of Object.entries(input.headers ?? {})) {
+      if (value !== undefined) headers.set(name, value);
+    }
+    return await fetcher(url, {
       method: input.method ?? "GET",
-      headers: {
-        authorization: `Bearer ${context.apiKey}`,
-        "content-type": "application/json",
-        "user-agent": providerUserAgent,
-        "x-request-timestamp": String(Math.floor(Date.now() / 1000)),
-      },
-      body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: context.signal,
+      headers,
+      body: input.rawBody ?? (input.body ? JSON.stringify(input.body) : undefined),
     });
   } catch (error) {
     throw new ProviderRequestError(
@@ -150,60 +352,67 @@ async function rawZhihuRequest(input: ZhihuRequestInput, context: ZhihuActionCon
   }
 }
 
-async function readZhihuPayload(response: Response): Promise<unknown> {
+async function buildZhihuError(response: Response, mode: "validate" | "execute") {
+  const payload = await readZhihuPayload(response);
+  const message = extractZhihuErrorMessage(payload) ?? `Zhihu request failed with ${response.status}`;
+
+  if (response.status === 429) {
+    return new ProviderRequestError(429, message);
+  }
+
+  if (mode === "validate" && (response.status === 400 || response.status === 401 || response.status === 403)) {
+    return new ProviderRequestError(400, message);
+  }
+
+  if (mode === "execute" && (response.status === 401 || response.status === 403)) {
+    return new ProviderRequestError(401, message);
+  }
+
+  if (mode === "execute" && (response.status === 400 || response.status === 404)) {
+    return new ProviderRequestError(400, message);
+  }
+
+  return new ProviderRequestError(response.status || 500, message);
+}
+
+function buildZhihuPayloadError(payload: unknown, mode: "validate" | "execute") {
+  const record = optionalRecord(payload);
+  const code = readOptionalNumber(record?.Code);
+  const message = extractZhihuErrorMessage(payload) ?? "Zhihu request failed";
+
+  if (code === 30001) {
+    return new ProviderRequestError(429, message);
+  }
+
+  if (mode === "validate" && (code === 10001 || code === 20001)) {
+    return new ProviderRequestError(400, message);
+  }
+
+  if (mode === "execute" && code === 20001) {
+    return new ProviderRequestError(401, message);
+  }
+
+  if (mode === "execute" && code === 10001) {
+    return new ProviderRequestError(400, message);
+  }
+
+  return new ProviderRequestError(502, message);
+}
+
+async function readZhihuPayload(response: Response) {
   const text = await response.text();
   if (!text) {
-    return {};
+    return null;
   }
 
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new ProviderRequestError(502, "Zhihu returned invalid JSON response");
+    return text;
   }
 }
 
-function createZhihuHttpError(status: number, payload: unknown, phase: ZhihuRequestPhase): ProviderRequestError {
-  const message = extractZhihuErrorMessage(payload) ?? `Zhihu request failed with ${status}`;
-
-  if (status === 429) {
-    return new ProviderRequestError(429, message, payload);
-  }
-  if (phase === "validate" && (status === 400 || status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (phase === "execute" && (status === 400 || status === 404)) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (phase === "execute" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(401, message, payload);
-  }
-
-  return new ProviderRequestError(status || 502, message, payload);
-}
-
-function createZhihuPayloadError(payload: unknown, phase: ZhihuRequestPhase): ProviderRequestError {
-  const record = optionalRecord(payload);
-  const code = optionalNumber(record?.Code);
-  const message = extractZhihuErrorMessage(payload) ?? "Zhihu request failed";
-
-  if (code === 30001) {
-    return new ProviderRequestError(429, message, payload);
-  }
-  if (phase === "validate" && (code === 10001 || code === 20001)) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (phase === "execute" && code === 10001) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (phase === "execute" && code === 20001) {
-    return new ProviderRequestError(401, message, payload);
-  }
-
-  return new ProviderRequestError(502, message, payload);
-}
-
-function extractZhihuErrorMessage(payload: unknown): string | undefined {
+function extractZhihuErrorMessage(payload: unknown) {
   if (typeof payload === "string" && payload.trim() !== "") {
     return payload;
   }
@@ -215,9 +424,94 @@ function extractZhihuErrorMessage(payload: unknown): string | undefined {
 
   const error = optionalRecord(record.error);
   return (
-    optionalString(record.Message) ??
-    optionalString(record.msg) ??
-    optionalString(record.message) ??
-    optionalString(error?.message)
+    readOptionalString(record.Message) ??
+    readOptionalString(record.msg) ??
+    readOptionalString(record.message) ??
+    readOptionalString(error?.message)
   );
 }
+
+function readOptionalString(value: unknown) {
+  return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+function readOptionalNumber(value: unknown) {
+  return typeof value === "number" ? value : undefined;
+}
+
+async function withDownloadedZhihuFile<T>(
+  fileUrl: unknown,
+  fileName: string,
+  fetcher: typeof fetch,
+  consume: (filePath: string) => Promise<T>,
+) {
+  if (typeof fileUrl !== "string") throw new ProviderRequestError(400, "fileUrl is required");
+  const directory = await mkdtemp(join(tmpdir(), "oomol-zhihu-upload-"));
+  const filePath = join(directory, fileName);
+  const timeout = createProviderTimeout(undefined, zhihuUploadDownloadTimeoutMs);
+  try {
+    const guardedFetch = createProviderFetch({ fetch: fetcher });
+    const response = await guardedFetch(fileUrl, { signal: timeout.signal });
+    if (!response.ok)
+      throw new ProviderRequestError(502, `Zhihu upload source download failed with status ${response.status}`);
+    if (!response.body) throw new ProviderRequestError(502, "Zhihu upload source response body is missing");
+    const declaredBytes = Number(response.headers.get("content-length"));
+    if (Number.isFinite(declaredBytes) && declaredBytes > maximumZhihuUploadBytes) {
+      await response.body.cancel().catch(() => undefined);
+      throw zhihuUploadTooLargeError();
+    }
+    await pipeline(Readable.from(limitZhihuUploadBody(response.body)), createWriteStream(filePath));
+    if ((await stat(filePath)).size === 0) throw new ProviderRequestError(400, "fileUrl returned an empty file");
+    return await consume(filePath);
+  } finally {
+    timeout.cleanup();
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+async function* limitZhihuUploadBody(body: ReadableStream<Uint8Array>) {
+  let sizeBytes = 0;
+  for await (const chunk of body) {
+    sizeBytes += chunk.byteLength;
+    if (sizeBytes > maximumZhihuUploadBytes) throw zhihuUploadTooLargeError();
+    yield chunk;
+  }
+}
+
+function requireUploadFileName(value: unknown, extensions: ReadonlySet<string>) {
+  if (typeof value !== "string" || !value.trim()) throw new ProviderRequestError(400, "fileName is required");
+  const fileName = value.trim();
+  if (basename(fileName) !== fileName || [...fileName].some((character) => character.charCodeAt(0) < 32)) {
+    throw new ProviderRequestError(400, "fileName is invalid");
+  }
+  if (!extensions.has(extname(fileName).toLowerCase()))
+    throw new ProviderRequestError(400, "fileName has an unsupported extension");
+  return fileName;
+}
+
+function readRequiredNestedString(value: unknown, path: string[]) {
+  let current = value;
+  for (const field of path) current = optionalRecord(current)?.[field];
+  if (typeof current !== "string" || !current)
+    throw new ProviderRequestError(502, `Zhihu response is missing ${path.join(".")}`);
+  return current;
+}
+
+function zhihuUploadTooLargeError() {
+  return new ProviderRequestError(413, "fileUrl exceeds the 100 MB Zhihu upload limit");
+}
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("zhihu", zhihuActionHandlers, {
+  skipDnsValidation: true,
+});
+
+export const credentialValidators: CredentialValidators = {
+  async apiKey(input, { fetcher }) {
+    const result = await validateZhihuCredential(input.apiKey, fetcher);
+    return {
+      profile: { accountId: "zhihu", displayName: result.accountLabel },
+      grantedScopes: [],
+      metadata: result.providerMetadata,
+    };
+  },
+};

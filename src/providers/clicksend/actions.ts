@@ -92,21 +92,6 @@ const contactInputSchema = s.object("A ClickSend contact payload.", contactField
   optional: Object.keys(contactFields),
 });
 
-export type ClicksendActionName =
-  | "get_account"
-  | "send_sms"
-  | "calculate_sms_price"
-  | "list_contact_lists"
-  | "create_contact_list"
-  | "get_contact_list"
-  | "update_contact_list"
-  | "delete_contact_list"
-  | "list_contacts"
-  | "create_contact"
-  | "get_contact"
-  | "update_contact"
-  | "delete_contact";
-
 export const clicksendActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

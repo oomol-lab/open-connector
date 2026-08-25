@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BunnycdnActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -24,7 +24,7 @@ interface BunnyRequestInput {
   body?: unknown;
 }
 
-export const bunnycdnActionHandlers: Record<BunnycdnActionName, BunnyActionHandler> = {
+export const bunnycdnActionHandlers: ProviderActionHandlers<"bunnycdn", BunnyActionHandler> = {
   list_pull_zones(input, context) {
     return bunnyListPullZones(input, context);
   },

@@ -122,15 +122,6 @@ const branchInputSchema = s.object(
   { required: ["organizationID", "projectID", "branchID"] },
 );
 
-export type XataActionName =
-  | "list_organizations"
-  | "get_organization"
-  | "list_projects"
-  | "get_project"
-  | "list_branches"
-  | "get_branch"
-  | "list_available_regions";
-
 export const xataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",

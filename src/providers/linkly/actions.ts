@@ -195,14 +195,6 @@ const updateLinkInputSchema = s.object(
 );
 updateLinkInputSchema.anyOf = updateLinkFieldNames.map((field) => ({ required: [field] }));
 
-export type LinklyActionName =
-  | "list_workspaces"
-  | "list_links"
-  | "get_link"
-  | "create_link"
-  | "update_link"
-  | "delete_link";
-
 export const linklyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",

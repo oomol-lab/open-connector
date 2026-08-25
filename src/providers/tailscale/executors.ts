@@ -5,6 +5,7 @@ import type { TailscaleOperationDefinition } from "./operations.ts";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  mapProviderActionHandlers,
   ProviderRequestError,
   readProviderJsonBody,
   readProviderTextBody,
@@ -33,10 +34,7 @@ interface TailscaleAccessToken {
   grantedScopes: string[];
 }
 
-const tailscaleActionHandlers: Record<string, ProviderRuntimeHandler<TailscaleContext>> = {};
-for (const operation of tailscaleOperations) {
-  tailscaleActionHandlers[operation.name] = createOperationHandler(operation);
-}
+const tailscaleActionHandlers = mapProviderActionHandlers(service, tailscaleOperations, createOperationHandler);
 
 export const executors: ProviderExecutors = defineProviderExecutors<TailscaleContext>({
   service,

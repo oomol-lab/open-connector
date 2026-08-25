@@ -1,11 +1,12 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 export const handelsregisterAiApiBaseUrl = "https://handelsregister.ai/api";
 
-export const handelsregisterAiActionHandlers: Record<
-  string,
+export const handelsregisterAiActionHandlers: ProviderActionHandlers<
+  "handelsregister_ai",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   search_organizations(input, context) {

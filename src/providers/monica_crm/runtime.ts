@@ -1,4 +1,4 @@
-import type { MonicaCrmActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ interface MonicaCrmActionContext {
 
 type MonicaCrmActionHandler = (input: Record<string, unknown>, context: MonicaCrmActionContext) => Promise<unknown>;
 
-export const monicaCrmActionHandlers: Record<MonicaCrmActionName, MonicaCrmActionHandler> = {
+export const monicaCrmActionHandlers: ProviderActionHandlers<"monica_crm", MonicaCrmActionHandler> = {
   list_contacts(input, context) {
     return requestMonicaCrmJson(
       {
@@ -115,7 +115,7 @@ export const monicaCrmActionHandlers: Record<MonicaCrmActionName, MonicaCrmActio
       "execute",
     );
   },
-} satisfies Record<MonicaCrmActionName, MonicaCrmActionHandler>;
+};
 
 export async function validateMonicaCrmCredential(
   input: Record<string, string>,

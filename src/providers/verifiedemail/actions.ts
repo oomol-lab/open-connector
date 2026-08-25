@@ -238,14 +238,6 @@ const getDownloadOutputSchema = s.object("VerifiedEmail single download response
   download: downloadSchema,
 });
 
-export type VerifiedemailActionName =
-  | "get_entitlements"
-  | "verify_emails"
-  | "list_lists"
-  | "get_list"
-  | "list_downloads"
-  | "get_download";
-
 export const verifiedemailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_entitlements",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LoyverseActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
@@ -11,7 +11,7 @@ const loyverseApiBaseUrl = "https://api.loyverse.com/v1.0";
 
 type LoyverseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const loyverseActionHandlers: Record<LoyverseActionName, LoyverseActionHandler> = {
+export const loyverseActionHandlers: ProviderActionHandlers<"loyverse", LoyverseActionHandler> = {
   get_merchant(_input, context) {
     return requestLoyverseItem(context, "/merchant/", "merchant");
   },

@@ -1,12 +1,13 @@
 import type { CredentialValidationResult, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PushoverActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  mapProviderActionSources,
   ProviderRequestError,
   providerUserAgent,
   readTransitFileInput,
@@ -84,7 +85,7 @@ function createTimeoutSignal(input: { timeoutMs: number }): {
   };
 }
 
-export const pushoverActionHandlers: Record<PushoverActionName, PushoverActionHandler> = {
+export const pushoverActionHandlers: ProviderActionHandlers<"pushover", PushoverActionHandler> = {
   send_message(input, fetcher) {
     return sendPushoverMessage(input, fetcher);
   },
@@ -174,6 +175,16 @@ export const pushoverActionHandlers: Record<PushoverActionName, PushoverActionHa
   },
 };
 
+const pushoverExecutorHandlers: ProviderActionHandlers<
+  "pushover",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = mapProviderActionSources<"pushover", typeof pushoverActionHandlers, ProviderRuntimeHandler<ApiKeyProviderContext>>(
+  "pushover",
+  pushoverActionHandlers,
+  (_name, handler) => (input, context) =>
+    handler({ apiKey: context.apiKey, values: {}, input, transitFiles: context.transitFiles }, context.fetcher),
+);
+
 export async function validatePushoverCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
@@ -225,17 +236,9 @@ export async function validatePushoverCredential(
   };
 }
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  "pushover",
-  Object.fromEntries(
-    Object.entries(pushoverActionHandlers).map(([name, handler]) => [
-      name,
-      (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
-        handler({ apiKey: context.apiKey, values: {}, input, transitFiles: context.transitFiles }, context.fetcher),
-    ]),
-  ) as Record<string, (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>>,
-  { skipDnsValidation: true },
-);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("pushover", pushoverExecutorHandlers, {
+  skipDnsValidation: true,
+});
 
 async function sendPushoverMessage(input: PushoverActionInput, fetcher: typeof fetch) {
   const parsed = input.input as {

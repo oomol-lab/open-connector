@@ -1,7 +1,7 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OpenweatherApiActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -51,7 +51,7 @@ interface OpenweatherBinaryRequestInput {
   query?: Record<string, QueryValue>;
 }
 
-export const openweatherApiActionHandlers: Record<OpenweatherApiActionName, OpenweatherActionHandler> = {
+export const openweatherApiActionHandlers: ProviderActionHandlers<"openweather_api", OpenweatherActionHandler> = {
   get_geocoding_direct(input, context) {
     return executeDirectGeocoding(input, context);
   },

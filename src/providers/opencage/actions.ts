@@ -116,8 +116,6 @@ const geojsonResponseSchema = s.object("GeoJSON geocoding response returned by O
   timestamp: timestampSchema,
 });
 
-export type OpencageActionName = "geocode_forward" | "geocode_reverse" | "geocode_geojson";
-
 export const opencageActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "geocode_forward",

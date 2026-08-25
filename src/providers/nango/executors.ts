@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NangoActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ type NangoMethod = "GET" | "POST" | "PATCH" | "DELETE";
 type QueryValue = string | number | boolean | readonly string[] | Record<string, string> | undefined;
 type NangoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const nangoActionHandlers: Record<NangoActionName, NangoActionHandler> = {
+export const nangoActionHandlers: ProviderActionHandlers<"nango", NangoActionHandler> = {
   list_providers(_input, context) {
     return requestNangoJson({ method: "GET", path: "/providers", context });
   },

@@ -17,6 +17,11 @@ export interface AgentMailOperationDefinition {
   notFoundAsInvalidInput?: boolean;
 }
 
+export interface AgentMailOperation {
+  name: string;
+  operation: AgentMailOperationDefinition;
+}
+
 interface AgentMailActionDefinition {
   name: string;
   description: string;
@@ -2209,6 +2214,7 @@ export const agentMailActions: ActionDefinition[] = actionDefinitions.map((defin
   }),
 );
 
-export const agentMailOperationByActionName = Object.fromEntries(
-  actionDefinitions.map((definition) => [definition.name, definition.operation] as const),
-) as Record<string, AgentMailOperationDefinition>;
+export const agentMailOperations: readonly AgentMailOperation[] = actionDefinitions.map((definition) => ({
+  name: definition.name,
+  operation: definition.operation,
+}));

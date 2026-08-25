@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ScrapingdogActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ type ScrapingdogPhase = "validate" | "execute";
 type ScrapingdogQueryValue = string | number | boolean | undefined;
 type ScrapingdogActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const scrapingdogActionHandlers: Record<ScrapingdogActionName, ScrapingdogActionHandler> = {
+export const scrapingdogActionHandlers: ProviderActionHandlers<"scrapingdog", ScrapingdogActionHandler> = {
   async fetch_html(input, context): Promise<unknown> {
     const response = await requestScrapingdogRaw(
       "scrape",

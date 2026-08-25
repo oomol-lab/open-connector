@@ -4,8 +4,8 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CronitorActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -35,7 +35,7 @@ type CronitorPhase = "validate" | "execute";
 type CronitorMethod = "GET" | "POST" | "DELETE";
 type CronitorActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const cronitorActionHandlers: Record<CronitorActionName, CronitorActionHandler> = {
+export const cronitorActionHandlers: ProviderActionHandlers<"cronitor", CronitorActionHandler> = {
   async list_monitors(_input, context) {
     const payload = await requestCronitorJson({ context, path: "/monitors", phase: "execute" });
     return { monitors: readMonitorsPayload(payload) };

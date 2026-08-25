@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { MailgunActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -38,7 +38,7 @@ export interface MailgunContext {
   signal?: AbortSignal;
 }
 
-export const mailgunActionHandlers: Record<MailgunActionName, MailgunActionHandler> = {
+export const mailgunActionHandlers: ProviderActionHandlers<"mailgun", MailgunActionHandler> = {
   list_domains(input, context) {
     return mailgunGetJson("/v4/domains", context, {
       limit: optionalInteger(input.limit),

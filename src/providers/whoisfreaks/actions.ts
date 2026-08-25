@@ -113,10 +113,3 @@ export const whoisfreaksActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type WhoisfreaksActionName =
-  | "check_domain_availability"
-  | "get_domain_whois"
-  | "list_subdomains"
-  | "get_ip_whois"
-  | "get_asn_whois";

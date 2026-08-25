@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "juniper_mist";
 
-export type JuniperMistActionName = "get_self" | "list_org_sites" | "list_site_devices";
-
 function nonEmptyString(description: string) {
   return s.nonEmptyString(description);
 }

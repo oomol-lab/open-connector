@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { VectorshiftActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const fetchPipelinePath = "/pipeline";
 
 type VectorshiftActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const vectorshiftActionHandlers: Record<VectorshiftActionName, VectorshiftActionHandler> = {
+export const vectorshiftActionHandlers: ProviderActionHandlers<"vectorshift", VectorshiftActionHandler> = {
   list_pipelines(input, context) {
     return executeListPipelines(input, context);
   },

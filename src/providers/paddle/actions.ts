@@ -175,20 +175,6 @@ const updateCustomerInputSchema = s.object(
   { optional: ["name", "email", "locale", "custom_data", "status"] },
 );
 
-export type PaddleActionName =
-  | "list_products"
-  | "get_product"
-  | "create_product"
-  | "update_product"
-  | "list_prices"
-  | "get_price"
-  | "create_price"
-  | "update_price"
-  | "list_customers"
-  | "get_customer"
-  | "create_customer"
-  | "update_customer";
-
 export const paddleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",

@@ -212,11 +212,3 @@ export const fidelApiActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FidelApiActionName =
-  | "list_brands"
-  | "get_brand"
-  | "list_cards"
-  | "get_card"
-  | "list_transactions"
-  | "get_transaction";

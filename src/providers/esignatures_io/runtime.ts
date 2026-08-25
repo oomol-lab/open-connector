@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EsignaturesIoActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -19,8 +19,8 @@ export const esignaturesIoApiBaseUrl = "https://esignatures.com/api";
 
 type EsignaturesIoRequestPhase = "validate" | "execute";
 
-export const esignaturesIoActionHandlers: Record<
-  EsignaturesIoActionName,
+export const esignaturesIoActionHandlers: ProviderActionHandlers<
+  "esignatures_io",
   ProviderRuntimeHandler<ApiKeyProviderContext>
 > = {
   create_template(input, context) {

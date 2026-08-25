@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KlazifyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -37,7 +37,7 @@ interface NormalizedKlazifyResponse {
   raw: Record<string, unknown>;
 }
 
-export const klazifyActionHandlers: Record<KlazifyActionName, KlazifyActionHandler> = {
+export const klazifyActionHandlers: ProviderActionHandlers<"klazify", KlazifyActionHandler> = {
   categorize_url(input, context) {
     return runKlazifyLookup({
       input,

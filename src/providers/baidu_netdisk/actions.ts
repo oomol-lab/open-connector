@@ -35,6 +35,8 @@ export const baiduNetdiskSemanticMatchSources: string[] = [
   "card",
 ];
 
+export const baiduNetdiskListTypes = ["all", "document", "image", "video"] as const;
+
 export function isBaiduNetdiskAbsolutePath(value: unknown, allowRoot = true): value is string {
   if (
     typeof value !== "string" ||
@@ -64,6 +66,14 @@ const conflictStrategySchema = s.withDefault(
   s.stringEnum("How Baidu Netdisk should handle a destination name conflict.", ["fail", "rename"]),
   "fail",
 );
+const shareFileIdSchema = s.string("A lossless Baidu Netdisk fs_id decimal string.", {
+  minLength: 1,
+  pattern: "^[0-9]+$",
+});
+const shareAccessCodeSchema = s.string("The four-character access code for the share link.", {
+  minLength: 4,
+  maxLength: 4,
+});
 
 const fileSchema = s.object("A normalized Baidu Netdisk file or folder.", {
   id: s.string("The lossless Baidu Netdisk fs_id decimal string."),
@@ -93,6 +103,20 @@ const emptyInputSchema = s.object("No input is required.", {});
 const managementOutputSchema = s.object("The result of one file operation.", {
   sourcePath: s.string("The absolute source path supplied by the caller."),
   path: nullableString("The resulting absolute path, or null when Baidu omits it."),
+});
+
+const downloadedFileSchema = s.requiredObject("A downloaded Baidu Netdisk file stored in local transit storage.", {
+  fileId: s.nonEmptyString("The Baidu Netdisk fs_id decimal string."),
+  name: s.nonEmptyString("The original Baidu Netdisk file name."),
+  mimeType: s.nonEmptyString("The downloaded file MIME type."),
+  sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+  file: s.requiredObject("The downloaded content in local transit file storage.", {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored file."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: s.nonEmptyString("The stored transit file name."),
+    mimeType: s.nonEmptyString("The stored transit file MIME type."),
+  }),
 });
 
 const relocateInputSchema = (operation: string) =>
@@ -137,7 +161,8 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "list_files",
-    description: "List files and folders from the user's Baidu Netdisk root.",
+    description:
+      "List all files and folders, or only documents, images, or videos, from the user's Baidu Netdisk root.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
@@ -145,8 +170,14 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
       {
         path: s.optional(s.withDefault(absolutePath("The absolute directory path to list."), "/")),
         page: s.optional(pageSchema),
+        type: s.optional(
+          s.withDefault(
+            s.stringEnum("The file type to list through the matching Baidu MCP tool.", [...baiduNetdiskListTypes]),
+            "all",
+          ),
+        ),
       },
-      { optional: ["path", "page"] },
+      { optional: ["path", "page", "type"] },
     ),
     outputSchema: s.object("One page of normalized Baidu Netdisk items.", {
       items: s.array("The files and folders in this page.", fileSchema),
@@ -205,6 +236,20 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     }),
   }),
   defineProviderAction("baidu_netdisk", {
+    name: "download_file",
+    description: "Download one Baidu Netdisk file by fs_id into local transit file storage.",
+    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
+    providerPermissions: [baiduNetdiskProviderScopes.netdisk],
+    inputSchema: s.requiredObject("Input for downloading one Baidu Netdisk file.", {
+      fsId: s.string({
+        minLength: 1,
+        pattern: "^[0-9]+$",
+        description: "The lossless Baidu Netdisk fs_id decimal string.",
+      }),
+    }),
+    outputSchema: downloadedFileSchema,
+  }),
+  defineProviderAction("baidu_netdisk", {
     name: "upload_file_from_url",
     description: "Ask Baidu Netdisk to fetch one public URL into an absolute destination path.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
@@ -240,6 +285,31 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
       { optional: ["conflictStrategy"] },
     ),
     outputSchema: fileSchema,
+  }),
+  defineProviderAction("baidu_netdisk", {
+    name: "create_share_link",
+    description: "Create one Baidu Netdisk share link for one or more files or folders.",
+    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    providerPermissions: [baiduNetdiskProviderScopes.netdisk],
+    inputSchema: s.object(
+      "Input for creating one Baidu Netdisk share link.",
+      {
+        fileIds: s.array("The file and folder IDs to include in the share.", shareFileIdSchema, {
+          minItems: 1,
+        }),
+        periodDays: s.optional(s.withDefault(s.integer("The share validity period in days.", { minimum: 1 }), 7)),
+        accessCode: shareAccessCodeSchema,
+      },
+      { required: ["fileIds", "accessCode"] },
+    ),
+    outputSchema: s.object("The created Baidu Netdisk share link.", {
+      link: s.url("The full Baidu Netdisk share URL."),
+      shortUrl: s.url(
+        "The shortened Baidu Netdisk share URL, or the full URL when Baidu omits or returns an invalid short URL.",
+      ),
+      periodDays: s.integer("The share validity period in days.", { minimum: 1 }),
+      accessCode: shareAccessCodeSchema,
+    }),
   }),
   defineProviderAction("baidu_netdisk", {
     name: "copy",

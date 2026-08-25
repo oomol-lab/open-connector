@@ -43,8 +43,6 @@ const sendSmsMessageSchema = s.looseRequiredObject(
   { optional: ["receiver", "messageId", "errorMessage"] },
 );
 
-export type MoceanActionName = "get_balance" | "list_pricing" | "get_message_status" | "lookup_number" | "send_sms";
-
 export const moceanActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_balance",

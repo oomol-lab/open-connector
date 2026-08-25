@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { GoogleTasksActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -10,7 +10,7 @@ import {
   pickOptionalInteger,
   pickOptionalString,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleTasksApiBaseUrl = "https://tasks.googleapis.com/tasks/v1";
@@ -102,7 +102,7 @@ interface NormalizedTaskList {
   selfLink: string | null;
 }
 
-export const googleTasksActionHandlers: Record<GoogleTasksActionName, GoogleTasksActionHandler> = {
+export const googleTasksActionHandlers: ProviderActionHandlers<"googletasks", GoogleTasksActionHandler> = {
   list_task_lists: listTaskLists,
   get_task_list: getTaskList,
   create_task_list: createTaskList,

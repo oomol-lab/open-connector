@@ -1,6 +1,6 @@
 {
   "name": "@oomol-lab/open-connector",
-  "version": "1.3.5",
+  "version": "1.4.0",
   "private": true,
   "workspaces": [
     "web"
@@ -21,6 +21,7 @@
     "generate:catalog": "node scripts/generate-catalog.ts",
     "export:feishu-permissions": "node scripts/export-feishu-permissions.ts",
     "generate:provider": "node scripts/generate-provider.ts",
+    "runtime:migrate": "node scripts/runtime-data.ts migrate",
     "runtime:data": "node scripts/runtime-data.ts",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
@@ -30,11 +31,14 @@
     "fix-check": "npm run fix && npm run typecheck"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1111.0",
     "@cfworker/json-schema": "^4.1.1",
     "@hono/node-server": "^2.0.10",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@scalar/hono-api-reference": "^0.11.7",
     "ali-oss": "^6.23.0",
+    "busboy": "^1.6.0",
     "fast-xml-builder": "^1.3.0",
     "fast-xml-parser": "^5.10.1",
     "fast-xml-validator": "^1.4.1",
@@ -47,18 +51,24 @@
     "mdast-util-to-markdown": "^2.1.2",
     "micromark-extension-gfm": "^3.0.0",
     "minisearch": "^7.2.0",
+    "mqtt": "^5.15.2",
     "nodemailer": "^9.0.3",
+    "pg": "^8.23.0",
     "pino": "^10.3.1",
     "rss-parser": "^3.13.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.5",
+    "@electric-sql/pglite-socket": "^0.2.8",
     "@hyrious/configs": "^0.1.6",
     "@types/ali-oss": "^6.23.3",
+    "@types/busboy": "^1.5.4",
     "@types/mailparser": "^3.4.6",
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.0.1",
     "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.23.1",
     "oxfmt": "^0.56.0",
     "oxlint": "^1.71.0",
     "pino-pretty": "^13.1.3",

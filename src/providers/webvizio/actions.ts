@@ -58,5 +58,3 @@ export const webvizioActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type WebvizioActionName = "create_rest_hook_subscription" | "delete_rest_hook_subscription";

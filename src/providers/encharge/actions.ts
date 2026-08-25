@@ -24,8 +24,6 @@ const recipientSchema = s.anyOf("Recipient email address string or an existing E
   }),
 ]);
 
-export type EnchargeActionName = "send_email";
-
 export const enchargeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_email",

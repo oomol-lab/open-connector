@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -23,7 +24,7 @@ interface ValidateKnockCredentialInput {
   signal?: AbortSignal;
 }
 
-export const knockActionHandlers: Record<string, KnockActionHandler> = {
+export const knockActionHandlers: ProviderActionHandlers<"knock", KnockActionHandler> = {
   async list_users(input, context) {
     const payload = await requestKnockJson(
       {

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BuildkiteActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface PaginationLinks {
   last: string | null;
 }
 
-export const buildkiteActionHandlers: Record<BuildkiteActionName, BuildkiteActionHandler> = {
+export const buildkiteActionHandlers: ProviderActionHandlers<"buildkite", BuildkiteActionHandler> = {
   get_current_access_token(input, context) {
     return getCurrentAccessToken(input, context);
   },

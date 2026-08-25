@@ -193,14 +193,6 @@ const currentUserOutputSchema = s.object("The current Snipe-IT API user.", {
   user: looseRowSchema,
 });
 
-export type SnipeItActionName =
-  | "get_current_user"
-  | "list_hardware"
-  | "list_users"
-  | "list_companies"
-  | "list_categories"
-  | "list_status_labels";
-
 export const snipeItActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { HasdataActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, stringArray } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ const hasdataGoogleSerpPath = "/scrape/google/serp";
 const hasdataDefaultRequestTimeoutMs = 300_000;
 const maxNonJsonErrorMessageLength = 300;
 
-export const hasdataActionHandlers: Record<HasdataActionName, HasdataActionHandler> = {
+export const hasdataActionHandlers: ProviderActionHandlers<"hasdata", HasdataActionHandler> = {
   async scrape_web(input, context) {
     return {
       payload: await requestHasdataJson({

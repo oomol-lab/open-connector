@@ -1,6 +1,8 @@
+import type { ResolvedCredential } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { credentialValidators, xeroActionHandlers } from "./executors.ts";
 
 interface RecordedRequest {
@@ -40,6 +42,13 @@ function createFetcher(routes: Record<string, unknown | ((request: RecordedReque
 }
 
 const accessToken = "test-access-token";
+const oauthCredential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+  authType: "oauth2",
+  accessToken,
+  tokenType: "Bearer",
+  profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
+  metadata: {},
+};
 const connectionsFixture = [{ tenantId: "tenant-123", tenantName: "Demo Company", tenantType: "ORG" }];
 const contactsFixture = [
   {
@@ -79,31 +88,42 @@ const invoiceFixture = {
   ],
 };
 
+const userinfoFixture = {
+  sub: "f7a1382e-c791-4cae-93be-1b912c6a7c6e",
+  xero_userid: "f7a1382e-c791-4cae-93be-1b912c6a7c6e",
+  name: "Ada Lovelace",
+  preferred_username: "ada@example.com",
+  email: "ada@example.com",
+};
+
 describe("credentialValidators", () => {
-  it("maps the first connection to the credential profile", async () => {
-    const { fetcher } = createFetcher({ "https://api.xero.com/connections": connectionsFixture });
-    await expect(
-      credentialValidators.oauth2?.(
-        { authType: "oauth2", accessToken, profile: null as never, metadata: {} } as never,
-        {
-          fetcher,
-        } as never,
-      ),
-    ).resolves.toEqual({
-      profile: { accountId: "tenant-123", displayName: "Demo Company" },
+  it("accepts a valid identity when no organisation is connected", async () => {
+    const { fetcher, requests } = createFetcher({
+      "https://identity.xero.com/connect/userinfo": userinfoFixture,
+      "https://api.xero.com/connections": [],
     });
+    await expect(credentialValidators.oauth2!(oauthCredential, { fetcher })).resolves.toEqual({
+      profile: { accountId: "f7a1382e-c791-4cae-93be-1b912c6a7c6e", displayName: "Ada Lovelace" },
+      metadata: { validationEndpoint: "https://identity.xero.com/connect/userinfo" },
+    });
+    expect(requests.map((request) => request.url)).toEqual(["https://identity.xero.com/connect/userinfo"]);
   });
 
-  it("leaves profile defaults to the connection service when no organisation is connected", async () => {
-    const { fetcher } = createFetcher({ "https://api.xero.com/connections": [] });
-    await expect(
-      credentialValidators.oauth2?.(
-        { authType: "oauth2", accessToken, profile: null as never, metadata: {} } as never,
-        {
-          fetcher,
-        } as never,
-      ),
-    ).resolves.toBeUndefined();
+  it("rejects userinfo payloads that are missing an identity", async () => {
+    const { fetcher } = createFetcher({
+      "https://identity.xero.com/connect/userinfo": { name: "Ada Lovelace", email: "ada@example.com" },
+    });
+    await expect(credentialValidators.oauth2!(oauthCredential, { fetcher })).rejects.toEqual(
+      new ProviderRequestError(502, "Xero userinfo response is missing sub"),
+    );
+  });
+
+  it("rejects unauthorized userinfo responses", async () => {
+    const fetcher: ProviderFetch = async () => Response.json({ error: "invalid_token" }, { status: 401 });
+    await expect(credentialValidators.oauth2!(oauthCredential, { fetcher })).rejects.toMatchObject({
+      status: 400,
+      message: "invalid_token",
+    });
   });
 });
 

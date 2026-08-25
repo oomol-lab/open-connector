@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { coinbaseActions } from "./actions.ts";
+import { coinbaseOAuthScopes } from "./scopes.ts";
 
 const service = "coinbase";
 
@@ -8,8 +9,19 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Coinbase",
   categories: ["Finance"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://login.coinbase.com/oauth2/auth",
+      tokenUrl: "https://login.coinbase.com/oauth2/token",
+      scopes: coinbaseOAuthScopes,
+      scopeSeparator: ",",
+      tokenEndpointAuthMethod: "client_secret_post",
+      pkce: {
+        method: "S256",
+      },
+    },
     {
       type: "api_key",
       label: "API Private Key",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GemActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ type GemResponse = {
 };
 type GemActionHandler = (input: Record<string, unknown>, context: GemActionContext) => Promise<unknown>;
 
-export const gemActionHandlers: Record<GemActionName, GemActionHandler> = {
+export const gemActionHandlers: ProviderActionHandlers<"gem", GemActionHandler> = {
   list_users(input, context) {
     return gemList(buildListUsersPath(input), "users", context);
   },

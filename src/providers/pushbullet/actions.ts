@@ -121,19 +121,3 @@ export const pushbulletActions: ProviderActionDefinition[] = [
     outputSchema: deleteOutput,
   }),
 ];
-
-export type PushbulletActionName =
-  | "get_current_user"
-  | "list_devices"
-  | "create_device"
-  | "update_device"
-  | "delete_device"
-  | "list_pushes"
-  | "create_push"
-  | "update_push"
-  | "delete_push"
-  | "delete_all_pushes"
-  | "list_chats"
-  | "create_chat"
-  | "update_chat"
-  | "delete_chat";

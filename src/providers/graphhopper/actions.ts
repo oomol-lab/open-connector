@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "graphhopper";
 
-export type GraphhopperActionName =
-  | "calculate_route"
-  | "geocode"
-  | "compute_matrix"
-  | "compute_isochrone"
-  | "list_profiles";
-
 const coordinateStringSchema = s.string("A coordinate string in `latitude,longitude` format.", {
   minLength: 3,
 });

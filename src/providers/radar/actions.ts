@@ -146,8 +146,6 @@ const addressesOutputSchema = s.object(
   { required: ["meta", "addresses"] },
 );
 
-export type RadarActionName = "forward_geocode" | "reverse_geocode" | "ip_geocode" | "autocomplete" | "search_places";
-
 export const radarActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "forward_geocode",

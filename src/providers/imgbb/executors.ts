@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ImgbbActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -23,7 +23,7 @@ interface ImgbbHostedVariant {
   url: string;
 }
 
-export const imgbbActionHandlers: Record<ImgbbActionName, ImgbbActionHandler> = {
+export const imgbbActionHandlers: ProviderActionHandlers<"imgbb", ImgbbActionHandler> = {
   async upload_image(input, context) {
     const payload = await requestImgbbUpload(buildImgbbUploadFormData(input), context, "execute");
     return {

@@ -5,19 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "clerk";
 
-export type ClerkActionName =
-  | "list_users"
-  | "count_users"
-  | "get_user"
-  | "create_user"
-  | "update_user"
-  | "update_user_metadata"
-  | "delete_user"
-  | "ban_user"
-  | "unban_user"
-  | "lock_user"
-  | "unlock_user";
-
 const clerkUserIdSchema = s.nonEmptyString("The Clerk user ID.");
 const clerkEmailSchema = s.email("An email address attached to the Clerk user.");
 const clerkPhoneNumberSchema = s.nonEmptyString("A phone number attached to the Clerk user.");

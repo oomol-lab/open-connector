@@ -61,8 +61,6 @@ const orttoMergePeopleOutputSchema = s.actionOutput(
   "The normalized Ortto merge people result.",
 );
 
-export type OrttoActionName = "list_people" | "get_people_by_ids" | "merge_people";
-
 export const orttoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_people",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NextDnsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ const nextDnsValidationPath = "/profiles";
 type NextDnsRequestPhase = "validate" | "execute";
 type NextDnsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const nextDnsActionHandlers: Record<NextDnsActionName, NextDnsActionHandler> = {
+export const nextDnsActionHandlers: ProviderActionHandlers<"next_dns", NextDnsActionHandler> = {
   async list_profiles(_input, context) {
     return normalizeNextDnsListPayload(
       await requestNextDnsJson({

@@ -6,8 +6,8 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { GosquaredActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -45,7 +45,7 @@ interface GosquaredRequestOptions {
 
 type GosquaredActionHandler = (input: Record<string, unknown>, context: GosquaredActionContext) => Promise<unknown>;
 
-export const gosquaredActionHandlers: Record<GosquaredActionName, GosquaredActionHandler> = {
+export const gosquaredActionHandlers: ProviderActionHandlers<"gosquared", GosquaredActionHandler> = {
   async get_token_info(_input, context) {
     const payload = await requestGosquaredJson({
       path: gosquaredTokenInfoPath,

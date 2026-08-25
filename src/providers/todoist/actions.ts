@@ -2,11 +2,10 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { todoistOAuthScopes } from "./scopes.ts";
 
 const service = "todoist";
 
-const readScope = ["todoist.read"];
-const writeScope = ["todoist.write"];
 const colorNames = [
   "berry_red",
   "red",
@@ -232,158 +231,137 @@ const listLabelsInput = s.object(
   { optional: ["cursor", "limit"] },
 );
 
-export type TodoistActionName =
-  | "get_current_user"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "list_sections"
-  | "get_section"
-  | "create_section"
-  | "update_section"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "close_task"
-  | "list_comments"
-  | "get_comment"
-  | "create_comment"
-  | "update_comment"
-  | "list_labels";
-
 export const todoistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
     description: "Get the current Todoist user profile.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: noInput,
     outputSchema: s.object({ user: rawObject }),
   }),
   defineProviderAction(service, {
     name: "list_projects",
     description: "List Todoist projects visible to the connected account.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: listProjectsInput,
     outputSchema: paginated("projects", "A Todoist project."),
   }),
   defineProviderAction(service, {
     name: "get_project",
     description: "Get one Todoist project by ID.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: projectLookup,
     outputSchema: s.object({ project: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_project",
     description: "Create a Todoist project.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: createProjectInput,
     outputSchema: s.object({ project: rawObject }),
   }),
   defineProviderAction(service, {
     name: "update_project",
     description: "Update a Todoist project.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: updateProjectInput,
     outputSchema: s.object({ project: rawObject }),
   }),
   defineProviderAction(service, {
     name: "list_sections",
     description: "List Todoist sections, optionally scoped to a project.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: listSectionsInput,
     outputSchema: paginated("sections", "A Todoist section."),
   }),
   defineProviderAction(service, {
     name: "get_section",
     description: "Get one Todoist section by ID.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: sectionLookup,
     outputSchema: s.object({ section: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_section",
     description: "Create a Todoist section.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: createSectionInput,
     outputSchema: s.object({ section: rawObject }),
   }),
   defineProviderAction(service, {
     name: "update_section",
     description: "Update a Todoist section.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: updateSectionInput,
     outputSchema: s.object({ section: rawObject }),
   }),
   defineProviderAction(service, {
     name: "list_tasks",
     description: "List Todoist tasks using the API v1 filters.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: listTasksInput,
     outputSchema: paginated("tasks", "A Todoist task."),
   }),
   defineProviderAction(service, {
     name: "get_task",
     description: "Get one Todoist task by ID.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: taskLookup,
     outputSchema: s.object({ task: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_task",
     description: "Create a Todoist task.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: createTaskInput,
     outputSchema: s.object({ task: rawObject }),
   }),
   defineProviderAction(service, {
     name: "update_task",
     description: "Update a Todoist task.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: updateTaskInput,
     outputSchema: s.object({ task: rawObject }),
   }),
   defineProviderAction(service, {
     name: "close_task",
     description: "Close a Todoist task.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: taskLookup,
     outputSchema: s.object({ success: s.literal(true) }),
   }),
   defineProviderAction(service, {
     name: "list_comments",
     description: "List Todoist comments by task or project.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: listCommentsInput,
     outputSchema: paginated("comments", "A Todoist comment."),
   }),
   defineProviderAction(service, {
     name: "get_comment",
     description: "Get one Todoist comment by ID.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: commentLookup,
     outputSchema: s.object({ comment: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_comment",
     description: "Create a Todoist comment on a task or project.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: createCommentInput,
     outputSchema: s.object({ comment: rawObject }),
   }),
   defineProviderAction(service, {
     name: "update_comment",
     description: "Update a Todoist comment.",
-    requiredScopes: writeScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: updateCommentInput,
     outputSchema: s.object({ comment: rawObject }),
   }),
   defineProviderAction(service, {
     name: "list_labels",
     description: "List Todoist labels visible to the connected account.",
-    requiredScopes: readScope,
+    requiredScopes: todoistOAuthScopes,
     inputSchema: listLabelsInput,
     outputSchema: paginated("labels", "A Todoist label."),
   }),

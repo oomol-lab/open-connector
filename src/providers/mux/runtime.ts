@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -28,7 +29,7 @@ export interface MuxContext {
 
 type MuxActionHandler = (input: Record<string, unknown>, context: MuxContext) => Promise<unknown>;
 
-export const muxActionHandlers: Record<string, MuxActionHandler> = {
+export const muxActionHandlers: ProviderActionHandlers<"mux", MuxActionHandler> = {
   create_asset: createAsset,
   list_assets: listAssets,
   get_asset: getAsset,

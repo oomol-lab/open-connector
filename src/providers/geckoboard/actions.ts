@@ -5,12 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "geckoboard";
 
-export type GeckoboardActionName =
-  | "find_or_create_dataset"
-  | "append_dataset_data"
-  | "replace_dataset_data"
-  | "delete_dataset";
-
 const datasetIdSchema = s.string({
   description: "The Geckoboard dataset identifier, such as sales.by_day.",
   minLength: 1,

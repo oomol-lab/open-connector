@@ -1,7 +1,11 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { GitHubActionContext } from "./runtime-shared.ts";
+import type { GitHubActionContext, GitHubActionHandler } from "./runtime-shared.ts";
 
-import { defineProviderExecutors, requireBearerCredential } from "../provider-runtime.ts";
+import {
+  combineProviderActionHandlers,
+  defineProviderExecutors,
+  requireBearerCredential,
+} from "../provider-runtime.ts";
 import { activityActionHandlers } from "./runtime-activity.ts";
 import { issueActionHandlers } from "./runtime-issue.ts";
 import { pullRequestActionHandlers } from "./runtime-pull-request.ts";
@@ -14,8 +18,8 @@ const service = "github";
 
 export const executors: ProviderExecutors = defineProviderExecutors<GitHubActionContext>({
   service,
-  handlers: Object.assign(
-    {},
+  handlers: combineProviderActionHandlers<"github", GitHubActionHandler>(
+    service,
     activityActionHandlers,
     repositoryActionHandlers,
     issueActionHandlers,

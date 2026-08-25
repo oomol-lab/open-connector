@@ -145,10 +145,3 @@ export const godialActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type GodialActionName =
-  | "list_accounts"
-  | "list_lists"
-  | "list_contacts_in_list"
-  | "get_contact"
-  | "create_contact";

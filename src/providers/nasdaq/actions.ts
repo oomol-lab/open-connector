@@ -136,15 +136,6 @@ const quoteInputSchema = s.object(
   { optional: ["dateGte", "dateLte", "perPage", "cursorId"] },
 );
 
-export type NasdaqActionName =
-  | "get_datatable_metadata"
-  | "get_datatable"
-  | "get_table_row"
-  | "get_dividend_history"
-  | "get_analyst_ratings"
-  | "get_end_of_day_quote"
-  | "get_real_time_quote";
-
 export const nasdaqActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_datatable_metadata",

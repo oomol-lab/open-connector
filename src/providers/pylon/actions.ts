@@ -536,20 +536,5 @@ export const pylonActions: ProviderActionDefinition[] = [
   createContactAction,
 ];
 
-export type PylonActionName =
-  | "get_me"
-  | "list_issues"
-  | "get_issue"
-  | "create_issue"
-  | "update_issue"
-  | "list_issue_messages"
-  | "create_issue_note"
-  | "get_account"
-  | "search_accounts"
-  | "create_account"
-  | "get_contact"
-  | "search_contacts"
-  | "create_contact";
-
 export const pylonRawObjectOutputSchema: JsonSchema = pylonRawObjectSchema;
 export const pylonRawObjectArrayOutputSchema: JsonSchema = pylonRawObjectArraySchema;

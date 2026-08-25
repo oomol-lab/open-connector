@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "klipfolio";
 
-export type KlipfolioActionName =
-  | "list_clients"
-  | "get_client"
-  | "list_dashboards"
-  | "get_dashboard"
-  | "list_klips"
-  | "get_klip"
-  | "list_data_sources"
-  | "get_data_source";
-
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const positiveInteger = (description: string) => s.positiveInteger(description);
 

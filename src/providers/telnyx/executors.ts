@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TelnyxActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ const validationPath = "/messaging_profiles";
 type TelnyxRequestPhase = "validate" | "execute";
 type TelnyxActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const telnyxActionHandlers: Record<TelnyxActionName, TelnyxActionHandler> = {
+export const telnyxActionHandlers: ProviderActionHandlers<"telnyx", TelnyxActionHandler> = {
   send_message(input, context) {
     return sendMessage(input, context);
   },

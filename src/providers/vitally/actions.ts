@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "vitally";
 
-export type VitallyActionName =
-  | "list_accounts"
-  | "get_account"
-  | "create_account"
-  | "update_account"
-  | "delete_account";
-
 const rawAccountSchema = s.looseObject("A raw Vitally account object returned by the REST API.");
 const traitsSchema = s.looseObject(
   "Vitally account traits keyed by trait name. Values are forwarded using Vitally's documented trait inference rules.",

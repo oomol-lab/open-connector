@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -29,7 +30,7 @@ interface NozbeRequestInput {
   allowEmpty?: boolean;
 }
 
-export const nozbeTeamsActionHandlers: Record<string, NozbeActionHandler> = {
+export const nozbeTeamsActionHandlers: ProviderActionHandlers<"nozbe_teams", NozbeActionHandler> = {
   list_teams(input, context) {
     return requestNozbeArray({ method: "GET", path: "/teams", query: input }, context, "execute");
   },

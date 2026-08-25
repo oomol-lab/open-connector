@@ -19,8 +19,83 @@ describe("policy input", () => {
   });
 
   it("allows omitted token rules only during creation", () => {
-    expect(readTokenPolicy({}, true)).toEqual({ allowedActions: [], blockedActions: [], allowedProxies: [] });
+    expect(readTokenPolicy({}, true)).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    });
     expect(() => readTokenPolicy({})).toThrow("allowedActions must be an array of strings");
+  });
+
+  it("treats omitted and empty allowedConnections as unrestricted on create", () => {
+    expect(readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [] }, true)).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    });
+    expect(
+      readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: [] }),
+    ).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+    });
+  });
+
+  it("requires allowedConnections on update so a PUT cannot drop an existing grant", () => {
+    expect(() => readTokenPolicy({ allowedActions: [], blockedActions: [], allowedProxies: [] })).toThrow(
+      "allowedConnections must be an array of strings",
+    );
+  });
+
+  it("trims and stably deduplicates allowed connection IDs", () => {
+    expect(
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [" connection-work ", "connection-work", "01J0CONNECTIONPERSONAL"],
+      }),
+    ).toEqual({
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["connection-work", "01J0CONNECTIONPERSONAL"],
+    });
+  });
+
+  it.each(["", " "])("rejects empty allowedConnections value %s", (connectionId) => {
+    expect(() =>
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [connectionId],
+      }),
+    ).toThrow(/empty/);
+  });
+
+  it("enforces allowedConnections item and UTF-8 byte limits", () => {
+    const connectionIds = Array.from({ length: policyRuleListMaxItems + 1 }, (_, index) => `connection-${index}`);
+    expect(() =>
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: connectionIds,
+      }),
+    ).toThrow(`more than ${policyRuleListMaxItems}`);
+    expect(() =>
+      readTokenPolicy({
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["a".repeat(policyRuleMaxBytes + 1)],
+      }),
+    ).toThrow(`${policyRuleMaxBytes} UTF-8 bytes`);
   });
 
   it.each(["github*", "github.*.issues", "github.", ".create_issue", "github create_issue"])(

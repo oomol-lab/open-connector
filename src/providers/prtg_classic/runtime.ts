@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PrtgClassicActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -36,7 +36,7 @@ interface PrtgClassicRequestOptions {
 
 type PrtgClassicActionHandler = (input: Record<string, unknown>, context: PrtgClassicActionContext) => Promise<unknown>;
 
-export const prtgClassicActionHandlers: Record<PrtgClassicActionName, PrtgClassicActionHandler> = {
+export const prtgClassicActionHandlers: ProviderActionHandlers<"prtg_classic", PrtgClassicActionHandler> = {
   async list_sensors(input, context) {
     const payload = await requestPrtgClassicTableJson({
       apiKey: context.apiKey,

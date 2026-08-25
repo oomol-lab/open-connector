@@ -1,4 +1,5 @@
 import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -22,7 +23,7 @@ interface ActionContext {
 }
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
 
-const handlers: Record<string, ActionHandler> = {
+const handlers: ProviderActionHandlers<"biorxiv_medrxiv", ActionHandler> = {
   list_preprints: (input, context) => executeBiorxivMedrxivAction("list_preprints", input, context.fetcher),
   get_preprint: (input, context) => executeBiorxivMedrxivAction("get_preprint", input, context.fetcher),
   list_published_articles: (input, context) =>

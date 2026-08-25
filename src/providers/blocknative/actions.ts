@@ -169,12 +169,6 @@ const gasPriceDistributionOutputSchema = s.actionOutput(
   "The normalized output payload for the Blocknative gas-price distribution.",
 );
 
-export type BlocknativeActionName =
-  | "list_supported_chains"
-  | "list_gas_oracles"
-  | "get_gas_prices"
-  | "get_gas_price_distribution";
-
 export const blocknativeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_supported_chains",

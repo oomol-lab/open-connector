@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "builder_io";
 
-export type BuilderIoActionName =
-  | "list_content"
-  | "get_content"
-  | "create_content"
-  | "update_content"
-  | "delete_content";
-
 const builderObjectSchema = s.looseObject("A Builder.io object with provider-defined fields.");
 const builderDataObjectSchema = s.looseObject("The Builder.io content data object.");
 const queryObjectSchema = s.looseObject(

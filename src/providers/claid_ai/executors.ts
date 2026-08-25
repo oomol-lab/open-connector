@@ -1,6 +1,6 @@
 import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ClaidAiActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -14,7 +14,7 @@ const claidAiEditAsyncPath = "/image/edit/async";
 type ClaidAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type ClaidAiRequestPhase = "validate" | "execute";
 
-export const claidAiActionHandlers: Record<ClaidAiActionName, ClaidAiActionHandler> = {
+export const claidAiActionHandlers: ProviderActionHandlers<"claid_ai", ClaidAiActionHandler> = {
   async edit_image(input, context) {
     const payload = await requestClaidAi(
       claidAiEditPath,

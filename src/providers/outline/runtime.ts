@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { OutlineActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -43,7 +43,7 @@ interface OutlineNavigationNode {
   children: OutlineNavigationNode[];
 }
 
-export const outlineActionHandlers: Record<OutlineActionName, OutlineActionHandler> = {
+export const outlineActionHandlers: ProviderActionHandlers<"outline", OutlineActionHandler> = {
   list_collections(input: Record<string, unknown>, context: OutlineActionContext): Promise<unknown> {
     return listCollections(input, context);
   },

@@ -1,6 +1,8 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { SplunkHttpEventCollectorActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
@@ -51,8 +53,8 @@ type SplunkHecActionHandler = (input: SplunkHecActionInput, fetcher: typeof fetc
 
 const splunkHecRequestTimeoutMs = 30_000;
 
-export const splunkHttpEventCollectorActionHandlers: Record<
-  SplunkHttpEventCollectorActionName,
+export const splunkHttpEventCollectorActionHandlers: ProviderActionHandlers<
+  "splunk_http_event_collector",
   SplunkHecActionHandler
 > = {
   send_event(input, fetcher) {
@@ -215,18 +217,20 @@ function resolveCredential(apiKey: string, baseUrlInput: unknown): SplunkHecCred
   };
 }
 
-function normalizeSplunkHecBaseUrl(value: unknown) {
+export function normalizeSplunkHecBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const rawValue = optionalString(value)?.trim();
   if (!rawValue) {
     throw new ProviderRequestError(400, "baseUrl is required");
   }
 
-  let url: URL;
-  try {
-    url = new URL(rawValue);
-  } catch {
-    throw new ProviderRequestError(400, "baseUrl must be a valid URL");
-  }
+  const url = assertPublicHttpUrl(rawValue, {
+    fieldName: "baseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
   if (url.protocol !== "https:") {
     throw new ProviderRequestError(400, "baseUrl must be an HTTPS URL");
   }

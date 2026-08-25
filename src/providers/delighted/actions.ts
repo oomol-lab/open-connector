@@ -81,16 +81,6 @@ const pageWindow = {
   until: timestamp,
 };
 
-export type DelightedActionName =
-  | "create_or_update_person"
-  | "list_people"
-  | "list_unsubscribed_people"
-  | "list_bounced_people"
-  | "unsubscribe_person"
-  | "delete_person"
-  | "list_survey_responses"
-  | "get_metrics";
-
 export const delightedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_or_update_person",

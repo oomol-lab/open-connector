@@ -11,14 +11,14 @@ ghcr.io/oomol-lab/open-connector
 
 ## Choose A Tag
 
-| Tag           | Points at                            | Use it when                                                    |
-| ------------- | ------------------------------------ | -------------------------------------------------------------- |
-| `latest`      | the newest published release         | you want the current stable runtime                            |
-| `v1.0.0`      | a specific release (immutable)       | you deploy to production and want a pinned, reproducible build |
-| `tip`         | the latest commit on `main`          | you want to try changes that are not released yet              |
-| `<short-sha>` | a specific `main` commit (immutable) | you want to pin an exact pre-release build                     |
+| Tag                 | Points at                            | Use it when                                                    |
+| ------------------- | ------------------------------------ | -------------------------------------------------------------- |
+| `latest`            | the newest published release         | you want the current stable runtime                            |
+| `<release-version>` | a specific release (immutable)       | you deploy to production and want a pinned, reproducible build |
+| `tip`               | the latest commit on `main`          | you want to try changes that are not released yet              |
+| `<short-sha>`       | a specific `main` commit (immutable) | you want to pin an exact pre-release build                     |
 
-For production, pin a released version such as `v1.0.0`.
+For production, pin a specific released version instead of `latest`.
 
 ## Pull
 
@@ -70,6 +70,28 @@ docker run -d \
 See [configuration.md](configuration.md) for the full environment variable reference and
 [credentials.md](credentials.md) for connecting providers.
 
+### PostgreSQL Migrations
+
+When using PostgreSQL, run the image's explicit `migrate` command before the first server start and
+before starting a newer image that contains pending migrations. Use the same image tag that you
+will deploy:
+
+```bash
+OPEN_CONNECTOR_VERSION="<release-version>"
+
+docker run --rm \
+  -e OOMOL_CONNECT_DATABASE_URL="postgresql://migration_user:password@db.example.com:5432/open_connector?sslmode=verify-full" \
+  "ghcr.io/oomol-lab/open-connector:${OPEN_CONNECTOR_VERSION}" \
+  migrate
+```
+
+Replace `<release-version>` with the exact release tag used by the server you will deploy. The
+migration image and server image must use the same tag.
+
+The command exits after applying migrations and does not start the HTTP server. Starting the image
+without a command still starts the server, which only checks schema readiness and never applies
+PostgreSQL DDL.
+
 ### Docker Compose
 
 The repository ships a [`docker-compose.yml`](../docker-compose.yml) that runs this published image.
@@ -77,6 +99,12 @@ From a checkout, export the secrets shown above and start it:
 
 ```bash
 docker compose up
+```
+
+With `OOMOL_CONNECT_DATABASE_URL` exported, run PostgreSQL migrations as a one-off Compose command:
+
+```bash
+docker compose run --rm connector migrate
 ```
 
 To build from source instead of pulling, add the build overlay:

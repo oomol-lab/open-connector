@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FlyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
@@ -11,7 +11,7 @@ const flyValidationPath = "tokens/current";
 type FlyRequestPhase = "validate" | "execute";
 type FlyQueryValue = string | number | boolean | undefined;
 
-export const flyActionHandlers: Record<FlyActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_apps(input, context) {
     return requestFlyJson({
       ...requestContext(context),

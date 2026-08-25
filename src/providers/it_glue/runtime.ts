@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ItGlueActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -30,7 +30,7 @@ interface ItGlueRequestOptions extends ItGlueActionContext {
   query?: Record<string, unknown>;
 }
 
-export const itGlueActionHandlers: Record<ItGlueActionName, ProviderRuntimeHandler<ItGlueActionContext>> = {
+export const itGlueActionHandlers: ProviderActionHandlers<"it_glue", ProviderRuntimeHandler<ItGlueActionContext>> = {
   async list_organizations(input, context) {
     const payload = await requestItGlueJson({
       ...context,

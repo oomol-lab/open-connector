@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineApiKeyProviderExecutors,
@@ -91,34 +92,34 @@ async function execute(name: string, input: Record<string, unknown>, context: Co
     throw new ProviderRequestError(response.status, `Parma request failed with status ${response.status}`, payload);
   return route.deleted ? { deleted: true } : payload;
 }
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  "parma",
-  {
-    list_deals: (input, context) => execute("list_deals", input, context),
-    get_deal: (input, context) => execute("get_deal", input, context),
-    list_groups: (input, context) => execute("list_groups", input, context),
-    list_notes: (input, context) => execute("list_notes", input, context),
-    create_note: (input, context) => execute("create_note", input, context),
-    update_note: (input, context) => execute("update_note", input, context),
-    list_pipelines: (input, context) => execute("list_pipelines", input, context),
-    get_pipeline: (input, context) => execute("get_pipeline", input, context),
-    list_relationship_groups: (input, context) => execute("list_relationship_groups", input, context),
-    add_relationship_to_group: (input, context) => execute("add_relationship_to_group", input, context),
-    remove_relationship_from_group: (input, context) => execute("remove_relationship_from_group", input, context),
-    list_relationship_notes: (input, context) => execute("list_relationship_notes", input, context),
-    list_relationships: (input, context) => execute("list_relationships", input, context),
-    create_relationship: (input, context) => execute("create_relationship", input, context),
-    get_relationship: (input, context) => execute("get_relationship", input, context),
-    update_relationship: (input, context) => execute("update_relationship", input, context),
-    delete_relationship: (input, context) => execute("delete_relationship", input, context),
-    list_stages: (input, context) => execute("list_stages", input, context),
-    get_stage: (input, context) => execute("get_stage", input, context),
-    list_users: (input, context) => execute("list_users", input, context),
-    get_user: (input, context) => execute("get_user", input, context),
-    get_current_user: (input, context) => execute("get_current_user", input, context),
-  },
-  { skipDnsValidation: true },
-);
+const handlers: ProviderActionHandlers<"parma", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  list_deals: (input, context) => execute("list_deals", input, context),
+  get_deal: (input, context) => execute("get_deal", input, context),
+  list_groups: (input, context) => execute("list_groups", input, context),
+  list_notes: (input, context) => execute("list_notes", input, context),
+  create_note: (input, context) => execute("create_note", input, context),
+  update_note: (input, context) => execute("update_note", input, context),
+  list_pipelines: (input, context) => execute("list_pipelines", input, context),
+  get_pipeline: (input, context) => execute("get_pipeline", input, context),
+  list_relationship_groups: (input, context) => execute("list_relationship_groups", input, context),
+  add_relationship_to_group: (input, context) => execute("add_relationship_to_group", input, context),
+  remove_relationship_from_group: (input, context) => execute("remove_relationship_from_group", input, context),
+  list_relationship_notes: (input, context) => execute("list_relationship_notes", input, context),
+  list_relationships: (input, context) => execute("list_relationships", input, context),
+  create_relationship: (input, context) => execute("create_relationship", input, context),
+  get_relationship: (input, context) => execute("get_relationship", input, context),
+  update_relationship: (input, context) => execute("update_relationship", input, context),
+  delete_relationship: (input, context) => execute("delete_relationship", input, context),
+  list_stages: (input, context) => execute("list_stages", input, context),
+  get_stage: (input, context) => execute("get_stage", input, context),
+  list_users: (input, context) => execute("list_users", input, context),
+  get_user: (input, context) => execute("get_user", input, context),
+  get_current_user: (input, context) => execute("get_current_user", input, context),
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("parma", handlers, {
+  skipDnsValidation: true,
+});
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "parma",
   baseUrl: "https://app.parma.ai",

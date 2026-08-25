@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GiftUpActionName } from "./actions.ts";
 
 import {
   optionalBoolean,
@@ -28,7 +28,7 @@ type GiftUpRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "
 type GiftUpActionHandler = (input: Record<string, unknown>, context: GiftUpRuntimeContext) => Promise<unknown>;
 type GiftUpQueryValue = string | number | boolean | readonly string[] | undefined;
 
-export const giftUpActionHandlers: Record<GiftUpActionName, GiftUpActionHandler> = {
+export const giftUpActionHandlers: ProviderActionHandlers<"gift_up", GiftUpActionHandler> = {
   get_company(_input, context) {
     return getCompany(context);
   },

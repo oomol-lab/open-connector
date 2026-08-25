@@ -215,12 +215,3 @@ export const gigasheetActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type GigasheetActionName =
-  | "list_home_files"
-  | "list_exports"
-  | "search_library"
-  | "get_library_path"
-  | "describe_dataset"
-  | "get_space_used"
-  | "get_enrichment_credits";

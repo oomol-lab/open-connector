@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CodacyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ type CodacyQueryValue = string | number | boolean | undefined;
 type CodacyRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CodacyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const codacyActionHandlers: Record<CodacyActionName, CodacyActionHandler> = {
+export const codacyActionHandlers: ProviderActionHandlers<"codacy", CodacyActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestCodacyJson<{ data?: unknown }>({
       context,

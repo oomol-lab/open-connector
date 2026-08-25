@@ -1,45 +1,38 @@
-import { escapeHtml } from "./http-utils.ts";
-
 const oauthCompletionChannelName = "oomol-connect-oauth";
 const oauthCompletedType = "oauth.completed";
 
 // Client-side translations. English is also the server-rendered default in the
-// markup below, so the page stays meaningful without JavaScript. `bodyBefore`
-// and `bodyAfter` wrap the (already-escaped) service <code> element, which the
-// script never rewrites, so no service value is ever injected as HTML.
+// markup below, so the page stays meaningful without JavaScript. The copy stays
+// host-neutral because this runtime can be embedded by more than one product.
 const oauthCompletionStrings = {
   en: {
     badge: "Connected",
-    title: "Connection ready",
-    bodyBefore: "OAuth finished for ",
-    bodyAfter: ". Return to OOMOL Connect to continue.",
+    title: "Connection complete",
+    body: "Close this window to continue where you started.",
     closeButton: "Close window",
     autoClose: "Automatically closing in %N% seconds.",
     manualClose: "You can now close this window.",
   },
   "zh-CN": {
     badge: "已连接",
-    title: "连接已就绪",
-    bodyBefore: "已完成 ",
-    bodyAfter: " 的授权，返回 OOMOL Connect 继续。",
+    title: "连接完成",
+    body: "关闭此窗口，然后回到刚才的应用继续。",
     closeButton: "关闭窗口",
     autoClose: "%N% 秒后自动关闭。",
     manualClose: "现在可以手动关闭此窗口。",
   },
   "zh-TW": {
     badge: "已連線",
-    title: "連線已就緒",
-    bodyBefore: "已完成 ",
-    bodyAfter: " 的授權，返回 OOMOL Connect 繼續。",
+    title: "連線完成",
+    body: "關閉此視窗，然後回到剛才的應用繼續。",
     closeButton: "關閉視窗",
     autoClose: "%N% 秒後自動關閉。",
     manualClose: "現在可以手動關閉此視窗。",
   },
   ja: {
     badge: "接続済み",
-    title: "接続の準備が完了しました",
-    bodyBefore: "",
-    bodyAfter: " の認証が完了しました。OOMOL Connect に戻って続行してください。",
+    title: "接続が完了しました",
+    body: "このウィンドウを閉じて、元のアプリに戻って続行してください。",
     closeButton: "ウィンドウを閉じる",
     autoClose: "%N% 秒後に自動的に閉じます。",
     manualClose: "このウィンドウを閉じても問題ありません。",
@@ -51,13 +44,12 @@ export function renderOAuthCompletionPage(service: string): string {
     type: oauthCompletedType,
     service,
   });
-  const escapedService = escapeHtml(service);
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Connected ${escapedService}</title>
+<title>Connection complete</title>
 <style>
 :root {
   --background: hsl(0 0% 100%);
@@ -169,8 +161,8 @@ code {
 <main class="card" role="status" aria-live="polite">
   <div class="header">
     <span class="badge" data-t="badge">Connected</span>
-    <h1 data-t="title">Connection ready</h1>
-    <p><span data-t="bodyBefore">OAuth finished for </span><code>${escapedService}</code><span data-t="bodyAfter">. Return to OOMOL Connect to continue.</span></p>
+    <h1 data-t="title">Connection complete</h1>
+    <p data-t="body">Close this window to continue where you started.</p>
   </div>
   <div class="actions">
     <button class="button" type="button" data-t="closeButton">Close window</button>

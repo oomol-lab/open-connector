@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ByteformsActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ interface ByteformsEnvelope<T> {
 type ByteformsMode = "validate" | "execute";
 type ByteformsActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const byteformsActionHandlers: Record<ByteformsActionName, ByteformsActionHandler> = {
+export const byteformsActionHandlers: ProviderActionHandlers<"byteforms", ByteformsActionHandler> = {
   list_forms(_input, context) {
     return listForms(context);
   },

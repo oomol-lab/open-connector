@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LumosActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ const lumosDefaultPageSize = 50;
 type LumosRequestPhase = "validate" | "execute";
 type LumosActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lumosActionHandlers: Record<LumosActionName, LumosActionHandler> = {
+export const lumosActionHandlers: ProviderActionHandlers<"lumos", LumosActionHandler> = {
   async list_appstore_apps(input, context) {
     const payload = await requestLumosJson({
       apiKey: context.apiKey,

@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "groqcloud";
 
-export type GroqcloudActionName =
-  | "list_models"
-  | "get_model"
-  | "create_chat_completion"
-  | "create_audio_transcription"
-  | "create_audio_translation";
-
 const nullSchema: JsonSchema = { type: "null", description: "Null value." };
 const unknownJsonValueSchema = s.unknown("Any JSON value accepted by the upstream API.");
 const jsonObjectSchema = s.record("Any JSON object.", unknownJsonValueSchema);

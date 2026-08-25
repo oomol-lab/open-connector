@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { McdonaldsCnActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { integer, optionalIntegerLike, optionalScalarString, optionalString, requiredString } from "../../core/cast.ts";
@@ -39,7 +39,7 @@ interface McdonaldsCnEnvelope {
   success?: unknown;
 }
 
-export const mcdonaldsCnActionHandlers: Record<McdonaldsCnActionName, McdonaldsCnActionHandler> = {
+export const mcdonaldsCnActionHandlers: ProviderActionHandlers<"mcdonalds_cn", McdonaldsCnActionHandler> = {
   get_cities(input, context) {
     return requestMcdonaldsCnJson(context, {
       method: "GET",

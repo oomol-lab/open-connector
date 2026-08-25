@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { FaktooraActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
@@ -38,7 +39,7 @@ interface FaktooraActionHandler {
   (input: Record<string, unknown>, context: FaktooraContext): Promise<unknown>;
 }
 
-export const faktooraActionHandlers: Record<FaktooraActionName, FaktooraActionHandler> = {
+export const faktooraActionHandlers: ProviderActionHandlers<"faktoora", FaktooraActionHandler> = {
   async list_projects(input, context) {
     return requestFaktooraJson({
       ...context,

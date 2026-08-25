@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gender_api";
 
-export type GenderApiActionName =
-  | "query_gender_by_first_name"
-  | "query_gender_by_full_name"
-  | "query_gender_by_email_address"
-  | "get_country_of_origin"
-  | "get_statistics";
-
 const countrySchema = s.string({
   description: "The optional ISO 3166-1 alpha-2 country code used to localize the query.",
   minLength: 2,

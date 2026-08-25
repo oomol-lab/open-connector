@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { executeMailsoftlyAction, mailsoftlyApiBaseUrl, validateMailsoftlyCredential } from "./runtime.ts";
@@ -19,7 +20,7 @@ interface ProviderContext {
 
 type Handler = (input: Record<string, unknown>, context: ProviderContext) => Promise<unknown>;
 
-const handlers: Record<string, Handler> = {
+const handlers: ProviderActionHandlers<"mailsoftly", Handler> = {
   get_contacts(input, context) {
     return executeMailsoftlyAction("get_contacts", input, context.apiKey, context.fetcher);
   },

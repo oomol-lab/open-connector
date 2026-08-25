@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ElorusActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -26,7 +26,7 @@ interface ElorusActionContext {
 type ElorusRequestPhase = "validate" | "execute";
 type ElorusActionHandler = ProviderRuntimeHandler<ElorusActionContext>;
 
-export const elorusActionHandlers: Record<ElorusActionName, ElorusActionHandler> = {
+export const elorusActionHandlers: ProviderActionHandlers<"elorus", ElorusActionHandler> = {
   list_contacts(input, context) {
     return requestElorusList({
       context,

@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { CustomerioActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -37,7 +37,7 @@ type CustomerioActionHandler = (
   context: CustomerioCredentialContext,
 ) => Promise<unknown>;
 
-export const customerioActionHandlers: Record<CustomerioActionName, CustomerioActionHandler> = {
+export const customerioActionHandlers: ProviderActionHandlers<"customerio", CustomerioActionHandler> = {
   identify_customer(input, context) {
     return customerioRequest({
       context,

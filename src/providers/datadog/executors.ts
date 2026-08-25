@@ -4,8 +4,10 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
   ProxyExecutionResult,
+  ResolvedCredential,
 } from "../../core/types.ts";
-import type { DatadogActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,38 +19,37 @@ import {
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
+import { datadogApiKeySites, datadogOAuthSites } from "./sites.ts";
 
 const service = "datadog";
 const datadogDefaultRequestTimeoutMs = 30_000;
 const datadogCredentialHelpUrl = "https://docs.datadoghq.com/account_management/api-app-keys/";
-const datadogSites: Record<string, string> = {
-  us1: "https://api.datadoghq.com",
-  us3: "https://api.us3.datadoghq.com",
-  us5: "https://api.us5.datadoghq.com",
-  eu: "https://api.datadoghq.eu",
-  ap1: "https://api.ap1.datadoghq.com",
-  ap2: "https://api.ap2.datadoghq.com",
-  gov: "https://api.ddog-gov.com",
-  gov2: "https://api.us2.ddog-gov.com",
-};
 
 type DatadogRequestPhase = "validate" | "execute";
 
 interface DatadogActionContext {
   baseUrl: string;
-  apiKey: string;
+  apiKey?: string;
   applicationKey?: string;
+  authorization?: string;
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }
 
-type DatadogActionHandler = (input: Record<string, unknown>, context: DatadogActionContext) => Promise<unknown>;
-
-export const datadogActionHandlers: Record<DatadogActionName, DatadogActionHandler> = {
+export const datadogActionHandlers: ProviderActionHandlers<"datadog", ProviderRuntimeHandler<DatadogActionContext>> = {
   validate_api_key(_input, context) {
+    if (context.authorization) {
+      return datadogRequestJson(
+        "/api/v2/current_user",
+        { method: "GET" },
+        { ...context, requireApplicationKey: false },
+      ).then((payload) => ({
+        valid: true,
+        raw: optionalRecord(payload) ?? {},
+      }));
+    }
     return datadogRequestJson("/api/v1/validate", { method: "GET" }, { ...context, requireApplicationKey: false }).then(
       (payload) => ({
         valid: optionalRecord(payload)?.valid === true,
@@ -170,29 +171,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<DatadogActio
   service,
   handlers: datadogActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<DatadogActionContext> {
-    const credential = await requireApiKeyCredential(context, service);
-    const site = normalizeDatadogSite(credential.values.site ?? credential.metadata.site);
-    const baseUrl = requireStoredBaseUrl(credential.metadata, site);
-    return {
-      baseUrl,
-      apiKey: credential.apiKey,
-      applicationKey: optionalString(credential.values.applicationKey),
-      fetcher,
-      signal: context.signal,
-    };
+    return resolveDatadogActionContext(context, fetcher);
   },
 });
 
 export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
   try {
-    const credential = await requireApiKeyCredential(context, service);
-    const site = normalizeDatadogSite(credential.values.site ?? credential.metadata.site);
-    const url = createProviderProxyUrl(requireStoredBaseUrl(credential.metadata, site), input.endpoint, input.query);
+    const providerContext = await resolveDatadogActionContext(context, providerFetch);
+    const url = createProviderProxyUrl(providerContext.baseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
-    const applicationKey = optionalString(credential.values.applicationKey);
-    headers.set("dd-api-key", credential.apiKey);
-    if (applicationKey) {
-      headers.set("dd-application-key", applicationKey);
+    for (const [name, value] of Object.entries(datadogHeaders(providerContext))) {
+      headers.set(name, value);
     }
     headers.set("user-agent", providerUserAgent);
     if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
@@ -220,6 +209,9 @@ export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     return validateDatadogCredential(input.apiKey, input.values, fetcher, signal);
   },
+  async oauth2(input, { fetcher, signal }) {
+    return validateDatadogOAuthCredential(input, fetcher, signal);
+  },
 };
 
 async function validateDatadogCredential(
@@ -233,7 +225,7 @@ async function validateDatadogCredential(
     "/api/v1/validate",
     { method: "GET" },
     {
-      baseUrl: datadogSites[site]!,
+      baseUrl: datadogApiKeySites[site]!,
       apiKey,
       fetcher,
       signal,
@@ -251,11 +243,112 @@ async function validateDatadogCredential(
     grantedScopes: [],
     metadata: {
       site,
-      baseUrl: datadogSites[site]!,
+      baseUrl: datadogApiKeySites[site]!,
       valid: record.valid === true,
       credentialHelpUrl: datadogCredentialHelpUrl,
     },
   };
+}
+
+async function validateDatadogOAuthCredential(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<Awaited<ReturnType<NonNullable<CredentialValidators["oauth2"]>>>> {
+  const site = resolveDatadogOAuthSite(credential.metadata);
+  const payload = await datadogRequestJson(
+    "/api/v2/current_user",
+    { method: "GET" },
+    {
+      baseUrl: site.baseUrl,
+      authorization: `${credential.tokenType} ${credential.accessToken}`,
+      fetcher,
+      signal,
+      phase: "validate",
+      requireApplicationKey: false,
+    },
+  );
+  const data = optionalRecord(optionalRecord(payload)?.data);
+  const attributes = optionalRecord(data?.attributes);
+  const userId = optionalString(data?.id);
+  const email = optionalString(attributes?.email);
+  const handle = optionalString(attributes?.handle);
+  const name = optionalString(attributes?.name);
+
+  return {
+    profile: {
+      accountId: `datadog:${site.site}:${userId ?? handle ?? "user"}`,
+      displayName: name ?? email ?? handle ?? `Datadog ${site.site}`,
+    },
+    grantedScopes: parseDatadogScopes(credential.metadata.scope),
+    metadata: compactObject({
+      site: site.site,
+      baseUrl: site.baseUrl,
+      validationEndpoint: "/api/v2/current_user",
+      userId,
+      email,
+      handle,
+    }),
+  };
+}
+
+async function resolveDatadogActionContext(
+  context: ExecutionContext,
+  fetcher: typeof fetch,
+): Promise<DatadogActionContext> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key") {
+    const site = normalizeDatadogSite(credential.values.site ?? credential.metadata.site);
+    return {
+      baseUrl: requireStoredBaseUrl(credential.metadata, site),
+      apiKey: credential.apiKey,
+      applicationKey: optionalString(credential.values.applicationKey),
+      fetcher,
+      signal: context.signal,
+    };
+  }
+  if (credential?.authType === "oauth2") {
+    const site = resolveDatadogOAuthSite(credential.metadata);
+    return {
+      baseUrl: site.baseUrl,
+      authorization: `${credential.tokenType} ${credential.accessToken}`,
+      fetcher,
+      signal: context.signal,
+    };
+  }
+  throw new ProviderRequestError(401, "Configure Datadog credentials first.");
+}
+
+interface DatadogOAuthSite {
+  site: string;
+  baseUrl: string;
+}
+
+function resolveDatadogOAuthSite(metadata: Record<string, unknown>): DatadogOAuthSite {
+  const clientExtra = optionalRecord(metadata.oauthClientExtra);
+  const site = normalizeDatadogOAuthSite(metadata.site ?? clientExtra?.site);
+  return {
+    site,
+    baseUrl: datadogOAuthSites[site]!,
+  };
+}
+
+function normalizeDatadogOAuthSite(value: unknown): string {
+  const site = optionalString(value)?.toLowerCase();
+  if (site && site in datadogOAuthSites) {
+    return site;
+  }
+  throw new ProviderRequestError(
+    400,
+    "site must be a supported Datadog domain such as datadoghq.com, datadoghq.eu, or us3.datadoghq.com",
+  );
+}
+
+function parseDatadogScopes(value: unknown): string[] {
+  return (optionalString(value) ?? "")
+    .split(/[ ,]+/u)
+    .map((scope) => scope.trim())
+    .filter(Boolean);
 }
 
 async function datadogRequestJson(
@@ -270,7 +363,7 @@ async function datadogRequestJson(
     requireApplicationKey: boolean;
   },
 ): Promise<unknown> {
-  if (context.requireApplicationKey && !context.applicationKey) {
+  if (context.requireApplicationKey && !context.authorization && !context.applicationKey) {
     throw new ProviderRequestError(400, "applicationKey is required");
   }
 
@@ -322,6 +415,7 @@ function datadogHeaders(context: DatadogActionContext): Record<string, string> {
     "user-agent": providerUserAgent,
     "DD-API-KEY": context.apiKey,
     "DD-APPLICATION-KEY": context.applicationKey,
+    authorization: context.authorization,
   }) as Record<string, string>;
 }
 
@@ -358,14 +452,14 @@ function mapDatadogError(response: Response, payload: unknown, phase: DatadogReq
 
 function normalizeDatadogSite(value: unknown): string {
   const site = (optionalString(value) ?? "us1").trim().toLowerCase();
-  if (site in datadogSites) {
+  if (site in datadogApiKeySites) {
     return site;
   }
-  throw new ProviderRequestError(400, "site must be one of us1, us3, us5, eu, ap1, ap2, gov, or gov2");
+  throw new ProviderRequestError(400, "site must be one of us1, us3, us5, eu, ap1, ap2, uk1, gov, or gov2");
 }
 
 function requireStoredBaseUrl(providerMetadata: Record<string, unknown>, site: string): string {
-  const expectedBaseUrl = datadogSites[site]!;
+  const expectedBaseUrl = datadogApiKeySites[site]!;
   const storedBaseUrl = optionalString(providerMetadata.baseUrl);
   if (!storedBaseUrl) {
     throw new ProviderRequestError(401, "datadog baseUrl metadata is required");

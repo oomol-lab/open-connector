@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BuilderIoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -16,7 +16,7 @@ const builderIoDefaultRequestTimeoutMs = 30_000;
 
 type BuilderIoActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const builderIoActionHandlers: Record<BuilderIoActionName, BuilderIoActionHandler> = {
+export const builderIoActionHandlers: ProviderActionHandlers<"builder_io", BuilderIoActionHandler> = {
   async list_content(input, context) {
     const model = requireInputString(input, "model");
     const publicKey = pickPublicKey(context.apiKey, input);

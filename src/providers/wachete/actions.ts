@@ -91,14 +91,6 @@ const monitorIdInputSchema: JsonSchema = s.actionInput(
   "A Wachete monitor identifier.",
 );
 
-export type WacheteActionName =
-  | "create_or_update_monitor"
-  | "get_monitor"
-  | "delete_monitor"
-  | "list_folder_content"
-  | "get_monitor_history"
-  | "list_notifications";
-
 export const wacheteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_or_update_monitor",

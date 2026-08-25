@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "mapbox";
 
-export type MapboxActionName =
-  | "forward_geocode"
-  | "reverse_geocode"
-  | "batch_geocode"
-  | "get_directions"
-  | "get_matrix";
-
 const longitudeSchema = (description: string): JsonSchema => s.number(description, { minimum: -180, maximum: 180 });
 const latitudeSchema = (description: string): JsonSchema => s.number(description, { minimum: -90, maximum: 90 });
 

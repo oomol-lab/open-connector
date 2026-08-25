@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler } from "./runtime.ts";
 
 import {
@@ -54,7 +55,7 @@ const defaultTeamMembershipFields = [
 ];
 const defaultFavoriteFields = ["name"];
 
-export const workspaceUserTeamActionHandlers: Record<string, AsanaActionHandler> = {
+export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActionHandler> = {
   list_workspaces(input, context) {
     return listAsanaResources(
       "/workspaces",

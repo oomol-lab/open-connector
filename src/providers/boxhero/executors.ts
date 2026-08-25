@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BoxheroActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ const boxheroValidationPath = "/v1/team";
 type BoxheroRequestPhase = "validate" | "execute";
 type BoxheroActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const boxheroActionHandlers: Record<BoxheroActionName, BoxheroActionHandler> = {
+export const boxheroActionHandlers: ProviderActionHandlers<"boxhero", BoxheroActionHandler> = {
   get_team_info(_input, context) {
     return requestBoxheroJson({
       apiKey: context.apiKey,

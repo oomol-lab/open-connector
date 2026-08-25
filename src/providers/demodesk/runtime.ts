@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DemodeskActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -23,7 +23,7 @@ interface DemodeskRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const demodeskActionHandlers: Record<DemodeskActionName, DemodeskHandler> = {
+export const demodeskActionHandlers: ProviderActionHandlers<"demodesk", DemodeskHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestDemodeskJson({
       path: "/me",

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord } from "../../core/cast.ts";
@@ -31,7 +32,7 @@ interface AmbivoRequestOptions {
 
 type AmbivoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const ambivoActionHandlers: Record<string, AmbivoActionHandler> = {
+export const ambivoActionHandlers: ProviderActionHandlers<"ambivo", AmbivoActionHandler> = {
   list_leads(input, context) {
     return listPaginatedRecords(input, context, {
       path: "/crm/leads",

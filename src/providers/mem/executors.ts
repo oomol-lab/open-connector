@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +26,7 @@ interface MemActionContext {
 
 type MemActionHandler = (input: Record<string, unknown>, context: MemActionContext) => Promise<unknown>;
 
-export const memActionHandlers: Record<string, MemActionHandler> = {
+export const memActionHandlers: ProviderActionHandlers<"mem", MemActionHandler> = {
   create_note(input, context) {
     validateContentBytes(input.content);
     validateCollectionTitles(input.collection_titles);

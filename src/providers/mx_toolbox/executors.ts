@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { MxToolboxActionName, MxToolboxLookupActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -49,36 +49,18 @@ interface MxToolboxLookupInput {
 
 type MxToolboxActionHandler = (input: Record<string, unknown>, context: MxToolboxActionContext) => Promise<unknown>;
 
-const mxToolboxLookupActions = {
-  lookup_dns: { command: "dns", inputKey: "domain" },
-  lookup_mx: { command: "mx", inputKey: "domain" },
-  lookup_dkim: { command: "dkim", inputKey: "domain" },
-  lookup_dmarc: { command: "dmarc", inputKey: "domain" },
-  lookup_spf: { command: "spf", inputKey: "domain" },
-  lookup_blacklist: { command: "blacklist", inputKey: "domain_or_ip" },
-  lookup_http: { command: "http", inputKey: "domain" },
-  lookup_smtp: { command: "smtp", inputKey: "domain" },
-  lookup_ping: { command: "ping", inputKey: "domain_or_ip" },
-  lookup_mta_sts_record: { command: "mta-sts", inputKey: "domain" },
-  lookup_bimi_record: { command: "bimi", inputKey: "domain" },
-} as const satisfies Record<
-  MxToolboxLookupActionName,
-  {
-    command: MxToolboxLookupCommand;
-    inputKey: LookupInputKey;
-  }
->;
-
-const mxToolboxLookupActionHandlers = Object.fromEntries(
-  Object.keys(mxToolboxLookupActions).map((actionName) => [
-    actionName,
-    (input: Record<string, unknown>, context: MxToolboxActionContext) =>
-      executeMxToolboxLookupAction(actionName as MxToolboxLookupActionName, input, context),
-  ]),
-) as Record<MxToolboxLookupActionName, MxToolboxActionHandler>;
-
-export const mxToolboxActionHandlers: Record<MxToolboxActionName, MxToolboxActionHandler> = {
-  ...mxToolboxLookupActionHandlers,
+export const mxToolboxActionHandlers: ProviderActionHandlers<"mx_toolbox", MxToolboxActionHandler> = {
+  lookup_dns: mxToolboxLookupHandler("dns", "domain"),
+  lookup_mx: mxToolboxLookupHandler("mx", "domain"),
+  lookup_dkim: mxToolboxLookupHandler("dkim", "domain"),
+  lookup_dmarc: mxToolboxLookupHandler("dmarc", "domain"),
+  lookup_spf: mxToolboxLookupHandler("spf", "domain"),
+  lookup_blacklist: mxToolboxLookupHandler("blacklist", "domain_or_ip"),
+  lookup_http: mxToolboxLookupHandler("http", "domain"),
+  lookup_smtp: mxToolboxLookupHandler("smtp", "domain"),
+  lookup_ping: mxToolboxLookupHandler("ping", "domain_or_ip"),
+  lookup_mta_sts_record: mxToolboxLookupHandler("mta-sts", "domain"),
+  lookup_bimi_record: mxToolboxLookupHandler("bimi", "domain"),
   usage_check(_input, context) {
     return executeMxToolboxAccountRequest(mxToolboxUsagePath, context, "execute");
   },
@@ -132,20 +114,11 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function executeMxToolboxLookupAction(
-  actionName: MxToolboxLookupActionName,
-  input: Record<string, unknown>,
-  context: MxToolboxActionContext,
-): Promise<unknown> {
-  const definition = mxToolboxLookupActions[actionName];
-  const argument = requiredString(input[definition.inputKey], definition.inputKey, providerInputError);
-  return executeMxToolboxLookup(
-    {
-      command: definition.command,
-      argument,
-    },
-    context,
-  );
+function mxToolboxLookupHandler(command: MxToolboxLookupCommand, inputKey: LookupInputKey): MxToolboxActionHandler {
+  return (input, context) => {
+    const argument = requiredString(input[inputKey], inputKey, providerInputError);
+    return executeMxToolboxLookup({ command, argument }, context);
+  };
 }
 
 function executeMxToolboxLookup(input: MxToolboxLookupInput, context: MxToolboxActionContext): Promise<unknown> {

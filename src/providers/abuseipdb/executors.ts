@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { AbuseipdbActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { isIP } from "node:net";
 import { nullableString, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +25,7 @@ interface AbuseipdbActionContext {
 
 type AbuseipdbActionHandler = (input: Record<string, unknown>, context: AbuseipdbActionContext) => Promise<unknown>;
 
-export const abuseipdbActionHandlers: Record<AbuseipdbActionName, AbuseipdbActionHandler> = {
+export const abuseipdbActionHandlers: ProviderActionHandlers<"abuseipdb", AbuseipdbActionHandler> = {
   check_ip(input, context) {
     return executeCheckIp(input, context);
   },

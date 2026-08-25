@@ -8,8 +8,15 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "WordPress",
   categories: ["Productivity", "Marketing"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://public-api.wordpress.com/oauth2/authorize",
+      tokenUrl: "https://public-api.wordpress.com/oauth2/token",
+      scopes: [],
+      tokenEndpointAuthMethod: "client_secret_post",
+    },
     {
       type: "api_key",
       label: "Application Password",

@@ -198,14 +198,3 @@ export const eventzillaActions: ActionDefinition[] = [
     outputSchema: s.object("The Eventzilla single attendee response.", { attendee: s.nullable(attendeeSchema) }),
   }),
 ];
-
-export type EventzillaActionName =
-  | "list_events"
-  | "get_event"
-  | "list_event_tickets"
-  | "list_event_transactions"
-  | "list_event_attendees"
-  | "list_users"
-  | "get_user"
-  | "get_transaction"
-  | "get_attendee";

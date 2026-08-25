@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -42,7 +43,10 @@ type CastingwordsPhase = "validate" | "execute";
 type CastingwordsResponseMode = "json" | "text";
 type CastingwordsNormalizedStatus = "running" | "succeeded" | "failed" | "cancelled" | "refunded";
 
-export const castingwordsActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const castingwordsActionHandlers: ProviderActionHandlers<
+  "castingwords",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async submit_transcription(input, context) {
     const serviceTier = requiredString(input.serviceTier, "serviceTier", inputError);
     const addons = optionalStringArray(input.addons) ?? [];

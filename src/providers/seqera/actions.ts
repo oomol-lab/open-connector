@@ -177,16 +177,6 @@ const workflowListElementSchema = s.object(
   },
 );
 
-export type SeqeraActionName =
-  | "get_current_user"
-  | "list_user_workspaces"
-  | "get_workspace"
-  | "list_pipelines"
-  | "get_pipeline"
-  | "list_workflows"
-  | "get_workflow"
-  | "launch_workflow";
-
 export const seqeraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

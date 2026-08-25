@@ -1,5 +1,7 @@
+import type { ProviderActionHandlers, ProviderActionName, ProviderActionSources } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const jungleScoutApiBaseUrl = "https://developer.junglescout.com/api/";
 
@@ -15,7 +17,7 @@ interface Endpoint {
   bodyType?: string;
 }
 
-const endpointByActionName: Record<string, Endpoint> = {
+const endpointByActionName: ProviderActionSources<"junglescout", Endpoint> = {
   get_keywords_by_asin: { method: "POST", path: "keywords/keywords_by_asin_query", bodyType: "keywords_by_asin_query" },
   get_keywords_by_keyword: {
     method: "POST",
@@ -28,15 +30,15 @@ const endpointByActionName: Record<string, Endpoint> = {
   get_share_of_voice: { method: "GET", path: "share_of_voice" },
 };
 
-export const jungleScoutActionHandlers: Record<
-  string,
+export const jungleScoutActionHandlers: ProviderActionHandlers<
+  "junglescout",
   (input: Record<string, unknown>, context: JungleScoutContext) => Promise<unknown>
-> = Object.fromEntries(
-  Object.keys(endpointByActionName).map((actionName) => [
-    actionName,
-    (input: Record<string, unknown>, context: JungleScoutContext) =>
+> = mapProviderActionSources(
+  "junglescout",
+  endpointByActionName,
+  (actionName): ((input: Record<string, unknown>, context: JungleScoutContext) => Promise<unknown>) =>
+    (input, context) =>
       executeJungleScoutAction(actionName, input, context),
-  ]),
 );
 
 export function validateJungleScoutCredential(
@@ -58,7 +60,7 @@ export function validateJungleScoutCredential(
 }
 
 async function executeJungleScoutAction(
-  actionName: string,
+  actionName: ProviderActionName<"junglescout">,
   input: Record<string, unknown>,
   context: JungleScoutContext,
 ): Promise<unknown> {

@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gem";
 
-export type GemActionName =
-  | "list_users"
-  | "list_candidates"
-  | "get_candidate"
-  | "list_projects"
-  | "get_project"
-  | "list_project_candidates"
-  | "list_sequences"
-  | "get_sequence"
-  | "list_custom_fields";
-
 const objectIdSchema = (description: string) => s.nonEmptyString(description);
 const unixTimestampSchema = (description: string) => s.positiveInteger(description);
 const sortSchema = s.stringEnum("The sort direction for Gem results.", ["asc", "desc"]);

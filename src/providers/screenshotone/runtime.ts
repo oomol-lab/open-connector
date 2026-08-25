@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { ScreenshotoneActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
@@ -15,7 +15,7 @@ const screenshotoneAnimatePath = "/animate";
 
 type ScreenshotoneActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const screenshotoneActionHandlers: Record<ScreenshotoneActionName, ScreenshotoneActionHandler> = {
+export const screenshotoneActionHandlers: ProviderActionHandlers<"screenshotone", ScreenshotoneActionHandler> = {
   take_screenshot(input, context) {
     return takeScreenshotoneScreenshot(input, context);
   },

@@ -126,10 +126,3 @@ export const dingtalkBotActions: ActionDefinition[] = [
     outputSchema: sendResultSchema,
   }),
 ];
-
-export type DingtalkBotActionName =
-  | "send_text_message"
-  | "send_link_message"
-  | "send_markdown_message"
-  | "send_action_card_message"
-  | "send_feed_card_message";

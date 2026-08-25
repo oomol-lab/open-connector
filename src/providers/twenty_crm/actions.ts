@@ -53,14 +53,6 @@ const updateRecordInputSchema = s.object("Input parameters for updating a Twenty
   data: jsonObjectSchema,
 });
 
-export type TwentyCrmActionName =
-  | "list_metadata_objects"
-  | "list_records"
-  | "retrieve_record"
-  | "create_record"
-  | "update_record"
-  | "delete_record";
-
 export const twentyCrmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_metadata_objects",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PartnerStackPartnerActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -21,8 +21,8 @@ type PartnerStackPartnerActionHandler = (
   context: PartnerStackPartnerContext,
 ) => Promise<unknown>;
 
-export const partnerStackPartnerActionHandlers: Record<
-  PartnerStackPartnerActionName,
+export const partnerStackPartnerActionHandlers: ProviderActionHandlers<
+  "partner_stack_partner",
   PartnerStackPartnerActionHandler
 > = {
   list_marketplace_programs(input, context) {

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { SignalbaseActionName } from "./actions.ts";
 
@@ -18,7 +19,7 @@ const signalbaseActionPathByName: Record<SignalbaseActionName, string> = {
   list_investors: "/signals/investors",
 };
 
-export const signalbaseActionHandlers: Record<SignalbaseActionName, SignalbaseActionHandler> = {
+export const signalbaseActionHandlers: ProviderActionHandlers<"signalbase", SignalbaseActionHandler> = {
   list_companies(input, context) {
     return requestSignalbase(context, signalbaseActionPathByName.list_companies, input, "execute");
   },

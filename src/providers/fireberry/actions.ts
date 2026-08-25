@@ -317,16 +317,3 @@ export const fireberryActions: ActionDefinition[] = [
     outputSchema: deleteOutputSchema,
   }),
 ];
-
-export type FireberryActionName =
-  | "query_records"
-  | "list_accounts"
-  | "get_account"
-  | "create_account"
-  | "update_account"
-  | "delete_account"
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact";

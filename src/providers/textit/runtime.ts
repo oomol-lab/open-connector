@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TextitActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ const textitApiBaseUrl = "https://textit.com/api/v2";
 type TextitResource = "broadcasts" | "contacts" | "groups" | "messages";
 type TextitActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const textitActionHandlers: Record<TextitActionName, TextitActionHandler> = {
+export const textitActionHandlers: ProviderActionHandlers<"textit", TextitActionHandler> = {
   async get_workspace(_input, context) {
     const workspace = await requestTextitJson({
       path: "/workspace.json",

@@ -30,6 +30,18 @@ const exampleProvider: ProviderDefinition = {
   auth: [{ type: "no_auth" }],
   actions: [echoAction],
 };
+const authenticatedProvider: ProviderDefinition = {
+  ...exampleProvider,
+  authTypes: ["no_auth", "api_key"],
+  auth: [{ type: "no_auth" }, { type: "api_key" }],
+};
+const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
+  authType: "api_key",
+  apiKey: "example-key",
+  values: { apiKey: "example-key" },
+  profile: { accountId: "example", displayName: "Example", grantedScopes: [] },
+  metadata: {},
+};
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -117,6 +129,124 @@ describe("ActionRunner", () => {
     expect(JSON.stringify(entries)).not.toContain("secret-in-executor");
   });
 
+  it("propagates cancellation to the execution context and records it without a warning", async () => {
+    const runs = new MemoryRunLogStore();
+    const { entries, logger } = createTestLogger();
+    const controller = new AbortController();
+    let executionStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      executionStarted = resolve;
+    });
+    const runner = createRunner({
+      runs,
+      logger,
+      providerLoader: new TestProviderLoader(async (_input, context) => {
+        expect(context.signal).toBe(controller.signal);
+        executionStarted?.();
+        await new Promise<void>((_resolve, reject) => {
+          context.signal?.addEventListener("abort", () => reject(new Error("request aborted")), { once: true });
+        }).catch(() => undefined);
+        return {
+          ok: false,
+          error: { code: "internal_error", message: "provider request failed" },
+        };
+      }),
+    });
+
+    const runPromise = runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      signal: controller.signal,
+    });
+    await started;
+    controller.abort();
+    const run = await runPromise;
+
+    expect(run?.result).toEqual({
+      ok: false,
+      error: { code: "execution_cancelled", message: "Action execution was cancelled." },
+    });
+    expect(runs.items[0]).toMatchObject({ ok: false, errorCode: "execution_cancelled" });
+    expect(entries).toContainEqual({
+      fields: expect.objectContaining({ ok: false, errorCode: "execution_cancelled" }),
+      message: "action run cancelled",
+    });
+  });
+
+  it("does not resolve a connection or load an executor for an already cancelled run", async () => {
+    const runs = new MemoryRunLogStore();
+    const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const controller = new AbortController();
+    controller.abort();
+    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader });
+
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      signal: controller.signal,
+    });
+
+    expect(run?.result).toMatchObject({ ok: false, error: { code: "execution_cancelled" } });
+    expect(resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(runs.items[0]).toMatchObject({ ok: false, errorCode: "execution_cancelled" });
+  });
+
+  it("does not continue resource loading when cancelled during connection lookup", async () => {
+    const runs = new MemoryRunLogStore();
+    const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    let finishLookup: (() => void) | undefined;
+    const lookupPending = new Promise<void>((resolve) => {
+      finishLookup = resolve;
+    });
+    const getConnectionSummary = vi
+      .spyOn(ConnectionService.prototype, "getConnectionSummary")
+      .mockImplementationOnce(async () => {
+        await lookupPending;
+        return undefined;
+      });
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const controller = new AbortController();
+    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader });
+
+    const runPromise = runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(getConnectionSummary).toHaveBeenCalledOnce());
+    controller.abort();
+    finishLookup?.();
+    const run = await runPromise;
+
+    expect(run?.result).toMatchObject({ ok: false, error: { code: "execution_cancelled" } });
+    expect(resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(runs.items[0]).toMatchObject({ ok: false, errorCode: "execution_cancelled" });
+  });
+
+  it("does not create a cancellation signal for callers that omit one", async () => {
+    const runs = new MemoryRunLogStore();
+    const runner = createRunner({
+      runs,
+      logger: createTestLogger().logger,
+      providerLoader: new TestProviderLoader(async (_input, context) => {
+        expect(context.signal).toBeUndefined();
+        return { ok: true, output: {} };
+      }),
+    });
+
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "web" });
+
+    expect(run?.result.ok).toBe(true);
+  });
+
   it("records policy denial before resolving a connection or loading an executor", async () => {
     const runs = new MemoryRunLogStore();
     const { logger } = createTestLogger();
@@ -148,6 +278,103 @@ describe("ActionRunner", () => {
       },
     });
   });
+
+  it("does not apply connection grants to no-auth actions", async () => {
+    const runs = new MemoryRunLogStore();
+    const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const actionPolicy = new ActionPolicyService();
+    const policy = actionPolicy.createSnapshot(undefined, {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["ungranted-connection-id"],
+    });
+    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader, actionPolicy });
+
+    const omitted = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      policy,
+      runtimeTokenId: "token-1",
+    });
+    const hidden = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      connectionName: "hidden",
+      policy,
+      runtimeTokenId: "token-1",
+    });
+
+    expect(omitted?.result).toMatchObject({ ok: true });
+    expect(hidden?.result).toMatchObject({ ok: true });
+    expect(resolveConnection).toHaveBeenCalledTimes(2);
+    expect(loadExecutor).toHaveBeenCalledTimes(2);
+    expect(runs.items[0]).toMatchObject({
+      runtimeTokenId: "token-1",
+      policy: { allowed: true },
+    });
+  });
+
+  it("uses stable IDs for credential connections on a provider that also supports no-auth", async () => {
+    const runs = new MemoryRunLogStore();
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const actionPolicy = new ActionPolicyService();
+    const store = new MemoryConnectionStore();
+    const connection = await store.set("example", "work", credential);
+    const runner = createRunner({
+      runs,
+      logger: createTestLogger().logger,
+      actionPolicy,
+      provider: authenticatedProvider,
+      store,
+    });
+
+    const allowed = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      connectionName: " work ",
+      policy: actionPolicy.createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [connection.id],
+      }),
+    });
+    const unrestricted = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "mcp",
+      connectionName: "work",
+      policy: actionPolicy.createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: [],
+      }),
+    });
+    const denied = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      connectionName: "work",
+      policy: actionPolicy.createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["another-connection-id"],
+      }),
+    });
+
+    expect(allowed?.result).toMatchObject({ ok: true });
+    expect(unrestricted?.result).toMatchObject({ ok: true });
+    expect(denied?.result).toMatchObject({ ok: false, error: { code: "connection_not_allowed" } });
+    expect(resolveConnection).toHaveBeenCalledTimes(2);
+  });
 });
 
 function createRunner(options: {
@@ -155,14 +382,20 @@ function createRunner(options: {
   logger: Logger;
   providerLoader?: IProviderLoader;
   actionPolicy?: ActionPolicyService;
+  provider?: ProviderDefinition;
+  store?: IConnectionStore;
 }): ActionRunner {
-  const catalog = createCatalogStore([exampleProvider], { executableActionIds: [echoAction.id] });
+  const catalog = createCatalogStore([options.provider ?? exampleProvider], { executableActionIds: [echoAction.id] });
   const providerLoader =
     options.providerLoader ?? new TestProviderLoader(async () => ({ ok: true, output: { message: "ok" } }));
   return new ActionRunner({
     catalog,
     providerLoader,
-    connections: new ConnectionService({ catalog, providerLoader, store: new MemoryConnectionStore() }),
+    connections: new ConnectionService({
+      catalog,
+      providerLoader,
+      store: options.store ?? new MemoryConnectionStore(),
+    }),
     runs: options.runs,
     actionPolicy: options.actionPolicy,
     logger: options.logger,
@@ -190,22 +423,35 @@ class TestProviderLoader implements IProviderLoader {
 }
 
 class MemoryConnectionStore implements IConnectionStore {
-  async get(): Promise<StoredConnection | undefined> {
-    return undefined;
+  private readonly connections = new Map<string, StoredConnection>();
+
+  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
+    return this.connections.get(`${service}:${connectionName}`);
   }
 
   async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    return { id: crypto.randomUUID(), revision: crypto.randomUUID(), service, connectionName, credential };
+    const key = `${service}:${connectionName}`;
+    const connection = {
+      id: this.connections.get(key)?.id ?? crypto.randomUUID(),
+      revision: crypto.randomUUID(),
+      service,
+      connectionName,
+      credential,
+    };
+    this.connections.set(key, connection);
+    return connection;
   }
 
   async updateCredential(): Promise<boolean> {
     return false;
   }
 
-  async delete(): Promise<void> {}
+  async delete(service: string, connectionName: string): Promise<void> {
+    this.connections.delete(`${service}:${connectionName}`);
+  }
 
   async list(): Promise<StoredConnection[]> {
-    return [];
+    return [...this.connections.values()];
   }
 }
 

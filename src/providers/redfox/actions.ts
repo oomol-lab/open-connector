@@ -175,8 +175,17 @@ export const redfoxActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_xiaohongshu_works",
-    description: "Search Xiaohongshu works through RedFoxHub and return the upstream result payload.",
-    inputSchema: searchInputSchema("Input parameters for searching Xiaohongshu works through RedFoxHub."),
+    description: "Search Xiaohongshu works in the RedFoxHub curated database and return matching works.",
+    inputSchema: s.object(
+      {
+        keyword: s.nonEmptyString("Search keyword sent to RedFoxHub."),
+        noteTime: s.optional(s.nonEmptyString("Publish time range accepted by RedFoxHub, such as 一周内 or 不限.")),
+        sort: s.optional(s.nonEmptyString("Sort order accepted by RedFoxHub, such as 最多点赞 or 综合.")),
+        page: s.optional(s.positiveInteger("Page number to return.")),
+        noteType: s.optional(s.nonEmptyString("Xiaohongshu note type accepted by RedFoxHub, such as 不限.")),
+      },
+      { description: "Input parameters for searching Xiaohongshu works in the RedFoxHub curated database." },
+    ),
     outputSchema: redfoxOutputSchema,
   }),
   defineProviderAction(service, {

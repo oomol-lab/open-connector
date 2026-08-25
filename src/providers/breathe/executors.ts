@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { BreatheActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ const breatheDefaultRequestTimeoutMs = 30_000;
 type BreathePhase = "validate" | "execute";
 type BreatheActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const breatheActionHandlers: Record<BreatheActionName, BreatheActionHandler> = {
+export const breatheActionHandlers: ProviderActionHandlers<"breathe", BreatheActionHandler> = {
   async list_employees(input, context) {
     const payload = await requestBreatheJson({
       path: "/employees",

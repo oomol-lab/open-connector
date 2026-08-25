@@ -70,5 +70,3 @@ export const imgbbActions: ActionDefinition[] = [
     outputSchema: uploadImageOutputSchema,
   }),
 ];
-
-export type ImgbbActionName = "upload_image";

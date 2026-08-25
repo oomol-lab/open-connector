@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { SalesmateActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -45,7 +45,7 @@ interface SalesmateRequestInput {
   phase: SalesmatePhase;
 }
 
-export const salesmateActionHandlers: Record<SalesmateActionName, SalesmateActionHandler> = {
+export const salesmateActionHandlers: ProviderActionHandlers<"salesmate", SalesmateActionHandler> = {
   async create_company(input, context) {
     const payload = await requestSalesmateJson(
       { method: "POST", path: "/apis/company/v4", body: buildBodyWithCustomFields(input), phase: "execute" },

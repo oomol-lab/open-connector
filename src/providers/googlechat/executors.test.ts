@@ -1,6 +1,7 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
+import { getProviderActionHandler } from "../provider-runtime.ts";
 import { googleChatActionHandlers } from "./executors.ts";
 
 const accessToken = "test-token";
@@ -18,7 +19,9 @@ describe("Google Chat resource names", () => {
     ["a double-dot space ID in a message name", "get_message", { message: "spaces/../messages/B" }],
     ["a double-dot message ID in a message name", "get_message", { message: "spaces/A/messages/.." }],
   ])("rejects %s", async (_description, action, input) => {
-    await expect(googleChatActionHandlers[action](input, context)).rejects.toMatchObject({ status: 400 });
+    await expect(getProviderActionHandler(googleChatActionHandlers, action)!(input, context)).rejects.toMatchObject({
+      status: 400,
+    });
   });
 });
 

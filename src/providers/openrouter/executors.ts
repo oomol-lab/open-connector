@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalString } from "../../core/cast.ts";
@@ -21,7 +22,7 @@ interface OpenrouterRequestInput {
   mode?: "validate" | "execute";
 }
 
-export const openrouterActionHandlers: Record<string, OpenrouterActionHandler> = {
+export const openrouterActionHandlers: ProviderActionHandlers<"openrouter", OpenrouterActionHandler> = {
   create_chat_completion(input, context) {
     assertStreamingDisabled(input);
     return openrouterRequest(

@@ -3,9 +3,10 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const rootDir = process.cwd();
-const registryPaths = [
+const generatedPaths = [
   join(process.cwd(), "src/providers/registry.generated.ts"),
   join(process.cwd(), "src/providers/registry.cloudflare.generated.ts"),
+  join(process.cwd(), "src/providers/action-contracts.generated.ts"),
 ];
 const catalogDir = join(process.cwd(), "catalog/apps");
 const sourcePaths = [
@@ -15,18 +16,18 @@ const sourcePaths = [
   join(rootDir, "scripts/generate-provider-registry.ts"),
   join(rootDir, "scripts/provider-source.ts"),
 ];
-const generatedPaths = new Set(registryPaths);
+const generatedPathSet = new Set(generatedPaths);
 
 const sourceMtimeMs = await newestMtimeMs(sourcePaths);
 
-const [registriesPresent, catalogFresh] = await Promise.all([
-  Promise.all(registryPaths.map((path) => isFile(path))),
+const [generatedFilesPresent, catalogFresh] = await Promise.all([
+  Promise.all(generatedPaths.map((path) => isFile(path))),
   isFreshCatalog(sourceMtimeMs),
 ]);
-// A fresh catalog proves both registries were generated from the same provider source set.
+// A fresh catalog proves all generated provider files were produced from the same source set.
 if (!catalogFresh) {
   runNodeScript("scripts/generate-catalog.ts");
-} else if (registriesPresent.some((present) => !present)) {
+} else if (generatedFilesPresent.some((present) => !present)) {
   runNodeScript("scripts/generate-provider-registry.ts");
 }
 
@@ -102,7 +103,7 @@ async function newestMtimeMs(paths: string[]): Promise<number> {
 }
 
 async function newestPathMtimeMs(path: string): Promise<number> {
-  if (generatedPaths.has(path)) {
+  if (generatedPathSet.has(path)) {
     return 0;
   }
 

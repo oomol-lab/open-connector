@@ -125,19 +125,6 @@ const listReceiptsInputSchema = s.object(
   },
 );
 
-export type LoyverseActionName =
-  | "get_merchant"
-  | "list_stores"
-  | "get_store"
-  | "list_items"
-  | "get_item"
-  | "list_categories"
-  | "get_category"
-  | "list_customers"
-  | "get_customer"
-  | "list_receipts"
-  | "get_receipt";
-
 export const loyverseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_merchant",

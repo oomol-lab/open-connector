@@ -1,9 +1,11 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProductiveActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  getProviderActionHandler,
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
@@ -19,7 +21,7 @@ type ProductiveActionHandler = (
   context: { apiKey: string; organizationId: string; fetcher: typeof fetch },
 ) => Promise<unknown>;
 
-export const productiveActionHandlers: Record<ProductiveActionName, ProductiveActionHandler> = {
+export const productiveActionHandlers: ProviderActionHandlers<"productive", ProductiveActionHandler> = {
   list_tasks(input, context) {
     return listTasks(input, context);
   },
@@ -94,7 +96,7 @@ export async function executeProductiveAction(
     throw new ProviderRequestError(400, "organizationId is required");
   }
 
-  const handler = (productiveActionHandlers as Record<ProductiveActionName, ProductiveActionHandler>)[input.actionName];
+  const handler = getProviderActionHandler(productiveActionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(400, `unknown productive action: ${String(input.actionName)}`);
   }

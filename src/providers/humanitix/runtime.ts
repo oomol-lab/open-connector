@@ -1,4 +1,4 @@
-import type { HumanitixActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   objectArray,
@@ -31,7 +31,7 @@ interface HumanitixRequestInput {
 
 type HumanitixActionHandler = (input: Record<string, unknown>, context: HumanitixActionContext) => Promise<unknown>;
 
-export const humanitixActionHandlers: Record<HumanitixActionName, HumanitixActionHandler> = {
+export const humanitixActionHandlers: ProviderActionHandlers<"humanitix", HumanitixActionHandler> = {
   async list_events(input, context) {
     const payload = await requestHumanitix({
       ...context,

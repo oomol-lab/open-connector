@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -52,7 +53,7 @@ interface QuentnCredentialInput {
   metadata?: Record<string, unknown>;
 }
 
-export const quentnActionHandlers: Record<string, QuentnActionHandler> = {
+export const quentnActionHandlers: ProviderActionHandlers<"quentn", QuentnActionHandler> = {
   list_users(input, context) {
     return requestQuentnObjectAction({
       context,

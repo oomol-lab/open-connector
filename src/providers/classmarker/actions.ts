@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "classmarker";
 
-export type ClassmarkerActionName =
-  | "list_groups_links_and_tests"
-  | "list_recent_group_results"
-  | "list_recent_link_results"
-  | "list_recent_results_for_group_test"
-  | "list_recent_results_for_link_test";
-
 const assignedTestSchema = s.object("A ClassMarker test assigned to a group or link.", {
   testId: s.integer("The ClassMarker test identifier."),
   testName: s.nonEmptyString("The ClassMarker test name."),

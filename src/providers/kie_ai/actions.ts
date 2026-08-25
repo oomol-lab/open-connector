@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "kie_ai";
 
-export type KieAiActionName = "get_account_credits" | "get_download_url";
-
 const responseCodeSchema = s.integer("The response status code returned by KIE.AI.");
 const responseMessageSchema = s.string("The response message returned by KIE.AI.");
 

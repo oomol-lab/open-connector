@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { PendoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import {
@@ -32,7 +32,7 @@ interface PendoRequestInput extends PendoActionContext {
   searchParams?: URLSearchParams;
 }
 
-export const pendoActionHandlers: Record<PendoActionName, PendoActionHandler> = {
+export const pendoActionHandlers: ProviderActionHandlers<"pendo", PendoActionHandler> = {
   async identify(_input, context) {
     const raw = await pendoRequest("/api/v1/token/verify", { ...context, phase: "execute" });
     const object = optionalRecord(raw) ?? {};

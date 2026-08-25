@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HoneybadgerActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -24,7 +24,7 @@ interface HoneybadgerResponse {
   headers: Headers;
 }
 
-export const honeybadgerActionHandlers: Record<HoneybadgerActionName, HoneybadgerActionHandler> = {
+export const honeybadgerActionHandlers: ProviderActionHandlers<"honeybadger", HoneybadgerActionHandler> = {
   report_exception(input, context) {
     return reportException(input, context);
   },

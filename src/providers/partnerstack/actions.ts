@@ -191,15 +191,6 @@ const dealListInputSchema = s.object(
   },
 );
 
-export type PartnerstackActionName =
-  | "list_customers"
-  | "get_customer"
-  | "create_customer"
-  | "list_partnerships"
-  | "get_partnership"
-  | "list_leads"
-  | "list_deals";
-
 export const partnerstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",

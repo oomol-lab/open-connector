@@ -205,15 +205,6 @@ const getGroupInfoAction = defineProviderAction(service, {
   ),
 });
 
-export type UploadcareActionName =
-  | "get_project_info"
-  | "list_files"
-  | "get_file_info"
-  | "store_file"
-  | "delete_file"
-  | "list_groups"
-  | "get_group_info";
-
 export const uploadcareActions: ActionDefinition[] = [
   getProjectInfoAction,
   listFilesAction,

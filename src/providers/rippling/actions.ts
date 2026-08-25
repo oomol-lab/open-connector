@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "rippling";
 
-export type RipplingActionName = "list_companies" | "list_workers" | "get_worker" | "list_departments";
-
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 
 const optionalPaginationFields = {

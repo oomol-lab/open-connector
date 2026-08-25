@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ExecutionContext } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -46,7 +47,7 @@ interface DocugenerateRequestInput {
   signal?: AbortSignal;
 }
 
-export const docugenerateActionHandlers: Record<string, DocugenerateActionHandler> = {
+export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", DocugenerateActionHandler> = {
   async list_templates(input, context): Promise<unknown> {
     const payload = await requestDocugenerate({
       ...context,

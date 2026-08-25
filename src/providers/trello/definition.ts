@@ -21,7 +21,7 @@ export const provider: ProviderDefinition = {
           secret: true,
           placeholder: "Trello API key",
           description:
-            "Trello API Key from the Key field at https://trello.com/power-ups/admin. Do not use the API Secret or an Atlassian API token here.",
+            "Trello API Key from the API Key tab at https://trello.com/apps/admin. Do not use the API Secret or an Atlassian API token here.",
         },
         {
           key: "apiToken",
@@ -31,7 +31,7 @@ export const provider: ProviderDefinition = {
           secret: true,
           placeholder: "Trello API token",
           description:
-            "Trello API token generated from the Token link beside your API Key at https://trello.com/power-ups/admin. This is different from the API Secret.",
+            "Trello API token generated from the Token link beside your API Key at https://trello.com/apps/admin. This is different from the API Secret.",
         },
       ],
       testAction: {

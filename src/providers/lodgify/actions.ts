@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "lodgify";
 
-export type LodgifyActionName =
-  | "list_properties"
-  | "get_property"
-  | "list_property_rooms"
-  | "get_property_availability"
-  | "get_quote"
-  | "list_bookings"
-  | "get_booking";
-
 const positiveIntegerSchema = (description: string) => s.positiveInteger(description);
 const nullableStringSchema = (description: string) => s.nullable(s.string(description));
 const nullableIntegerSchema = (description: string) => s.nullable(s.integer(description));

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DevinActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -11,7 +11,7 @@ export const devinApiBaseUrl = "https://api.devin.ai";
 type JsonObject = Record<string, unknown>;
 type DevinActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const devinActionHandlers: Record<DevinActionName, DevinActionHandler> = {
+export const devinActionHandlers: ProviderActionHandlers<"devin", DevinActionHandler> = {
   async get_self(_input, context) {
     return normalizeSelf(await requestDevin({ path: "/v3/self" }, context));
   },

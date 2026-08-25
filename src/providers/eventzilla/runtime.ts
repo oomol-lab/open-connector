@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EventzillaActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface EventzillaRequestInput {
   phase: EventzillaPhase;
 }
 
-export const eventzillaActionHandlers: Record<EventzillaActionName, EventzillaActionHandler> = {
+export const eventzillaActionHandlers: ProviderActionHandlers<"eventzilla", EventzillaActionHandler> = {
   async list_events(input, context) {
     const payload = await requestEventzillaJson(
       {

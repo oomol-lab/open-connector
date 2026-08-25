@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
-import type { N8nActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -36,7 +36,7 @@ interface N8nRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const n8nActionHandlers: Record<N8nActionName, N8nActionHandler> = {
+export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> = {
   list_workflows(input, context) {
     return requestN8nJson({
       context,

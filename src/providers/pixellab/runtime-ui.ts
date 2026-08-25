@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -22,7 +23,7 @@ import {
 
 type PixellabUiHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pixellabUiActionHandlers: Record<string, PixellabUiHandler> = {
+export const pixellabUiActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabUiHandler> = {
   async start_create_ui_asset(input, context) {
     const styleImage =
       input.styleImage === undefined ? undefined : await encodeTransitImage(input.styleImage, "styleImage", context);

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GlobalpingActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -39,7 +39,7 @@ const measurementOptionsValidators: Record<GlobalpingMeasurementType, (options: 
   },
 };
 
-export const globalpingActionHandlers: Record<GlobalpingActionName, GlobalpingActionHandler> = {
+export const globalpingActionHandlers: ProviderActionHandlers<"globalping", GlobalpingActionHandler> = {
   get_limits(_input, context) {
     return getLimits(context);
   },

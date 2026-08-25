@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { WebscraperIoActionName } from "./actions.ts";
 
 import {
   objectArray,
@@ -31,7 +31,7 @@ interface WebscraperIoRequestInput {
   phase: WebscraperIoPhase;
 }
 
-export const webscraperIoActionHandlers: Record<WebscraperIoActionName, WebscraperIoActionHandler> = {
+export const webscraperIoActionHandlers: ProviderActionHandlers<"webscraper_io", WebscraperIoActionHandler> = {
   async get_account_info(_input, context) {
     const payload = await requestWebscraperIoJson({ path: "/account", phase: "execute" }, context);
     return normalizeAccountInfo(requireDataObject(payload, "Web Scraper Cloud account"));

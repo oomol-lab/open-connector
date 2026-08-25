@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "fomo";
 
-export type FomoActionName = "list_events" | "get_event" | "create_event" | "update_event" | "delete_event";
-
 const eventIdSchema = s.oneOf(
   [s.positiveInteger("The numeric Fomo event identifier."), s.nonEmptyString("The string Fomo event identifier.")],
   { description: "The Fomo event identifier." },

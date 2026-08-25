@@ -1,9 +1,10 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { optionalBoolean, optionalInteger, optionalRawString, optionalString } from "../../core/cast.ts";
 import { compactObject, githubRequestJson, githubRequestNoContent } from "./runtime-shared.ts";
 
-export const releaseActionHandlers: Record<string, GitHubActionHandler> = {
+export const releaseActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
   list_releases(input, { accessToken, fetcher }) {
     return listReleases(input, accessToken, fetcher);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Validator } from "@cfworker/json-schema";
@@ -35,7 +36,7 @@ const httpsmsRequestTimeoutMs = 30_000;
 const httpsmsEmailValidator = new Validator({ type: "string", format: "email" }, "2020-12");
 export const httpsmsApiBaseUrl = "https://api.httpsms.com/v1";
 
-export const httpsmsActionHandlers: Record<string, HttpsmsActionHandler> = {
+export const httpsmsActionHandlers: ProviderActionHandlers<"httpsms", HttpsmsActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

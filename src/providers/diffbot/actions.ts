@@ -111,5 +111,3 @@ export const diffbotActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type DiffbotActionName = "extract_article";

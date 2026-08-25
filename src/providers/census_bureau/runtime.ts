@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CensusBureauActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ type CensusBureauPhase = "validate" | "execute";
 type CensusBureauQueryValue = string | number | boolean;
 type CensusBureauActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const censusBureauActionHandlers: Record<CensusBureauActionName, CensusBureauActionHandler> = {
+export const censusBureauActionHandlers: ProviderActionHandlers<"census_bureau", CensusBureauActionHandler> = {
   list_datasets: listDatasets,
   list_variables: listVariables,
   list_groups: listGroups,

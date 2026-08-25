@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -28,7 +29,7 @@ interface WorkdayRequestInput extends WorkdayContext {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const workdayActionHandlers: Record<string, ProviderRuntimeHandler<WorkdayContext>> = {
+export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRuntimeHandler<WorkdayContext>> = {
   async get_current_user(_input, context): Promise<unknown> {
     return { worker: normalizeWorker(await requestWorkdayJson({ ...context, path: "/workers/me", phase: "execute" })) };
   },

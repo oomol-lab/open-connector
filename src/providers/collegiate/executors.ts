@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CollegiateActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
@@ -16,7 +16,7 @@ const collegiateValidationTerm = "test";
 type CollegiateContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CollegiateActionHandler = (input: Record<string, unknown>, context: CollegiateContext) => Promise<unknown>;
 
-export const collegiateActionHandlers: Record<CollegiateActionName, CollegiateActionHandler> = {
+export const collegiateActionHandlers: ProviderActionHandlers<"collegiate", CollegiateActionHandler> = {
   async lookup_word(input, context) {
     const term = requiredString(input.term, "term", (message) => new ProviderRequestError(400, message));
     const payload = await collegiateLookup(term, context, "execute");

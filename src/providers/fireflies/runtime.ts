@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FirefliesActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -203,7 +203,7 @@ interface FirefliesGraphQLResponse<T> {
 
 type FirefliesActionHandler = (input: Record<string, unknown>, context: FirefliesActionContext) => Promise<unknown>;
 
-export const firefliesActionHandlers: Record<FirefliesActionName, FirefliesActionHandler> = {
+export const firefliesActionHandlers: ProviderActionHandlers<"fireflies", FirefliesActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

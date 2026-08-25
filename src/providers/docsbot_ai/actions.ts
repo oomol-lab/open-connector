@@ -75,14 +75,6 @@ const searchInputSchema = s.object(
   },
 );
 
-export type DocsbotAiActionName =
-  | "list_teams"
-  | "get_team"
-  | "list_bots"
-  | "get_bot"
-  | "semantic_search"
-  | "fetch_document";
-
 export const docsbotAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_teams",

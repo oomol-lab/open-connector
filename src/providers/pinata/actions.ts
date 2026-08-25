@@ -279,17 +279,3 @@ export const pinataActions: readonly ActionDefinition[] = [
     outputSchema: emptyOutputSchema,
   }),
 ];
-
-export type PinataActionName =
-  | "list_files"
-  | "get_file"
-  | "update_file"
-  | "delete_file"
-  | "pin_by_cid"
-  | "query_pin_requests"
-  | "list_groups"
-  | "get_group"
-  | "create_group"
-  | "update_group"
-  | "add_file_to_group"
-  | "remove_file_from_group";

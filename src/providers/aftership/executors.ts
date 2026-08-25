@@ -6,8 +6,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { AftershipActionName } from "./actions.ts";
 
 import { CastError, compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -33,7 +33,7 @@ interface AftershipRequest {
   body?: Record<string, unknown>;
 }
 
-export const aftershipActionHandlers: Record<AftershipActionName, AftershipActionHandler> = {
+export const aftershipActionHandlers: ProviderActionHandlers<"aftership", AftershipActionHandler> = {
   async create_tracking(input, context) {
     const payload = await requestAftership(
       { method: "POST", path: "/trackings", body: compactObject(input) },

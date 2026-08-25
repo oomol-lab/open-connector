@@ -223,24 +223,6 @@ const deleteTaskAction = defineProviderAction(service, {
   outputSchema: deleteOutputSchema,
 });
 
-export type PaymoActionName =
-  | "get_current_user"
-  | "list_clients"
-  | "get_client"
-  | "create_client"
-  | "update_client"
-  | "delete_client"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "delete_project"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "delete_task";
-
 export const paymoActions: ActionDefinition[] = [
   accountAction,
   listClientsAction,

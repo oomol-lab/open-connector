@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FolkActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -31,7 +31,7 @@ interface FolkRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const folkActionHandlers: Record<FolkActionName, FolkActionHandler> = {
+export const folkActionHandlers: ProviderActionHandlers<"folk", FolkActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestFolkJson(context, {
       path: folkCurrentUserPath,

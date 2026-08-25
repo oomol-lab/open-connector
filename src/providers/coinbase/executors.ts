@@ -1,14 +1,24 @@
 import type {
+  CredentialValidationResult,
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
+  ResolvedCredential,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createPrivateKey, createSign, randomBytes } from "node:crypto";
-import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+  requiredString,
+} from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import {
   createProviderFetch,
@@ -19,23 +29,26 @@ import {
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
+import { readCoinbaseGrantedScopes } from "./scopes.ts";
 
 const service = "coinbase";
 const coinbaseApiBaseUrl = "https://api.coinbase.com";
 const accountsPath = "/api/v3/brokerage/accounts";
+const oauthUserPath = "/v2/user";
 const coinbaseFetch = createProviderFetch({ skipDnsValidation: true });
 
 type CoinbaseRequestPhase = "validate" | "execute";
 type CoinbaseJwtBuilder = (input: { method: string; path: string }) => string;
-interface CoinbaseActionContext extends ApiKeyProviderContext {
-  keyName: string;
+interface CoinbaseActionContext {
+  authorization(method: string, path: string): string;
+  fetcher: ProviderFetch;
+  signal?: AbortSignal;
 }
 type CoinbaseActionHandler = (input: Record<string, unknown>, context: CoinbaseActionContext) => Promise<unknown>;
 
-export const coinbaseActionHandlers: Record<string, CoinbaseActionHandler> = {
+export const coinbaseActionHandlers: ProviderActionHandlers<"coinbase", CoinbaseActionHandler> = {
   list_accounts(input, context) {
     return coinbaseGetJson(
       accountsPath,
@@ -64,16 +77,10 @@ export const executors: ProviderExecutors = defineProviderExecutors<CoinbaseActi
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
-    const credential = await requireApiKeyCredential(context, service);
-    const jwtBuilder = createCoinbaseJwtBuilder({
-      apiKey: credential.apiKey,
-      keyName: requiredString(credential.values.keyName, "keyName", providerInputError),
-      now: () => Date.now(),
-      nonce: () => randomBytes(16).toString("hex"),
-    });
+    const providerContext = await createCoinbaseContext(context, coinbaseFetch);
     const url = createProviderProxyUrl(coinbaseApiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("authorization", `Bearer ${jwtBuilder({ method: input.method, path: url.pathname + url.search })}`);
+    headers.set("authorization", providerContext.authorization(input.method, url.pathname + url.search));
     headers.set("user-agent", providerUserAgent);
 
     const init: RequestInit = {
@@ -102,27 +109,17 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const context: CoinbaseActionContext = {
-      apiKey: input.apiKey,
-      keyName: requiredString(input.values.keyName, "keyName", providerInputError),
-      fetcher,
-      signal,
-    };
-    const payload = await coinbaseGetJson(accountsPath, {}, context, "validate");
-    const accounts = readAccountsArray(payload);
-    const firstAccount = accounts[0];
-    return {
-      profile: {
-        accountId: optionalString(firstAccount?.uuid),
-        displayName: optionalString(firstAccount?.name) ?? "Coinbase API Key",
-      },
-      grantedScopes: [],
-      metadata: {
-        validationEndpoint: accountsPath,
-        apiBaseUrl: coinbaseApiBaseUrl,
-        accountCount: accounts.length,
-      },
-    };
+    return validateCoinbaseCredential(
+      createCoinbaseApiKeyContext(input.apiKey, input.values.keyName, fetcher, signal),
+      [],
+      "Coinbase API Key",
+    );
+  },
+  async oauth2(input, { fetcher, signal }) {
+    return validateCoinbaseOAuthCredential(
+      createCoinbaseOAuthContext(input, fetcher, signal),
+      readCoinbaseGrantedScopes(input.metadata.scope),
+    );
   },
 };
 
@@ -132,12 +129,6 @@ async function coinbaseGetJson(
   context: CoinbaseActionContext,
   phase: CoinbaseRequestPhase,
 ): Promise<unknown> {
-  const jwtBuilder = createCoinbaseJwtBuilder({
-    apiKey: context.apiKey,
-    keyName: context.keyName,
-    now: () => Date.now(),
-    nonce: () => randomBytes(16).toString("hex"),
-  });
   const url = new URL(path, coinbaseApiBaseUrl);
   for (const [key, value] of Object.entries(query)) {
     url.searchParams.set(key, value);
@@ -150,7 +141,7 @@ async function coinbaseGetJson(
       method: "GET",
       headers: {
         accept: "application/json",
-        authorization: `Bearer ${jwtBuilder({ method: "GET", path: requestPath })}`,
+        authorization: context.authorization("GET", requestPath),
         "user-agent": providerUserAgent,
       },
       signal: context.signal,
@@ -171,17 +162,99 @@ async function coinbaseGetJson(
 }
 
 async function createCoinbaseContext(context: ExecutionContext, fetcher: typeof fetch): Promise<CoinbaseActionContext> {
-  const credential = await requireApiKeyCredential(context, service);
-  const providerContext: CoinbaseActionContext = {
-    apiKey: credential.apiKey,
-    keyName: requiredString(credential.values.keyName, "keyName", providerInputError),
-    fetcher,
-    signal: context.signal,
-  };
-  if (context.transitFiles) {
-    providerContext.transitFiles = context.transitFiles;
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key") {
+    return createCoinbaseApiKeyContext(credential.apiKey, credential.values.keyName, fetcher, context.signal);
   }
-  return providerContext;
+  if (credential?.authType === "oauth2") {
+    return createCoinbaseOAuthContext(credential, fetcher, context.signal);
+  }
+  throw new ProviderRequestError(401, "Configure Coinbase credentials first.");
+}
+
+function createCoinbaseApiKeyContext(
+  apiKey: string,
+  keyNameInput: unknown,
+  fetcher: ProviderFetch,
+  signal?: AbortSignal,
+): CoinbaseActionContext {
+  const jwtBuilder = createCoinbaseJwtBuilder({
+    apiKey,
+    keyName: requiredString(keyNameInput, "keyName", providerInputError),
+    now: () => Date.now(),
+    nonce: () => randomBytes(16).toString("hex"),
+  });
+  return {
+    authorization(method, path) {
+      return `Bearer ${jwtBuilder({ method, path })}`;
+    },
+    fetcher,
+    signal,
+  };
+}
+
+function createCoinbaseOAuthContext(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  fetcher: ProviderFetch,
+  signal?: AbortSignal,
+): CoinbaseActionContext {
+  return {
+    authorization() {
+      return `${credential.tokenType} ${credential.accessToken}`;
+    },
+    fetcher,
+    signal,
+  };
+}
+
+async function validateCoinbaseOAuthCredential(
+  context: CoinbaseActionContext,
+  grantedScopes: string[],
+): Promise<CredentialValidationResult> {
+  const payload = requiredRecord(
+    await coinbaseGetJson(oauthUserPath, {}, context, "validate"),
+    "coinbase user response",
+    providerResponseError,
+  );
+  const user = optionalRecord(payload.data) ?? payload;
+  const userId = optionalString(user.id);
+  if (!userId) {
+    throw new ProviderRequestError(502, "coinbase user response is missing id");
+  }
+  return {
+    profile: {
+      accountId: userId,
+      displayName: optionalString(user.name) ?? optionalString(user.username) ?? "Coinbase OAuth",
+    },
+    grantedScopes,
+    metadata: compactObject({
+      validationEndpoint: oauthUserPath,
+      apiBaseUrl: coinbaseApiBaseUrl,
+      userId,
+    }),
+  };
+}
+
+async function validateCoinbaseCredential(
+  context: CoinbaseActionContext,
+  grantedScopes: string[],
+  fallbackDisplayName: string,
+): Promise<CredentialValidationResult> {
+  const payload = await coinbaseGetJson(accountsPath, {}, context, "validate");
+  const accounts = readAccountsArray(payload);
+  const firstAccount = accounts[0];
+  return {
+    profile: {
+      accountId: optionalString(firstAccount?.uuid),
+      displayName: optionalString(firstAccount?.name) ?? fallbackDisplayName,
+    },
+    grantedScopes,
+    metadata: {
+      validationEndpoint: accountsPath,
+      apiBaseUrl: coinbaseApiBaseUrl,
+      accountCount: accounts.length,
+    },
+  };
 }
 
 function createCoinbaseJwtBuilder(input: {

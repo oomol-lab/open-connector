@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GoogleRoutesActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const googleRoutesApiBaseUrl = "https://routes.googleapis.com";
 type GoogleRoutesRequestPhase = "validate" | "execute";
 type GoogleRoutesActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const googleRoutesActionHandlers: Record<GoogleRoutesActionName, GoogleRoutesActionHandler> = {
+export const googleRoutesActionHandlers: ProviderActionHandlers<"google_routes", GoogleRoutesActionHandler> = {
   compute_routes(input, context) {
     const { fieldMask, body } = prepareGoogleRoutesBody(input);
     return googleRoutesRequest("/directions/v2:computeRoutes", fieldMask, body, context, "execute");

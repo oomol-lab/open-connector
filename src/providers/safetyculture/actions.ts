@@ -53,13 +53,6 @@ const fieldValueSchema = s.looseRequiredObject("A SafetyCulture custom field val
   field_id: s.string("The custom field ID."),
 });
 
-export type SafetycultureActionName =
-  | "search_inspections"
-  | "get_inspection"
-  | "list_actions"
-  | "get_action"
-  | "create_action";
-
 export const safetycultureActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_inspections",

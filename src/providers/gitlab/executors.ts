@@ -1,10 +1,12 @@
 import type {
+  CredentialValidationResult,
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
+  ResolvedCredential,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -20,7 +22,6 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const defaultGitlabApiBaseUrl = "https://gitlab.com/api/v4";
@@ -30,17 +31,21 @@ type GitlabRequestPhase = "validate" | "execute";
 type GitlabActionInput = Record<string, unknown>;
 type GitlabActionHandler = (input: GitlabActionInput, context: GitlabActionContext) => Promise<unknown>;
 
-interface GitlabActionContext extends ApiKeyProviderContext {
+interface GitlabActionContext {
+  accessToken: string;
+  tokenType: string;
   apiBaseUrl: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
 }
 
 interface GitlabRequestOptions {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;
 }
 
-export const gitlabActionHandlers: Record<string, GitlabActionHandler> = {
+export const gitlabActionHandlers: ProviderActionHandlers<"gitlab", GitlabActionHandler> = {
   get_current_user(_input, context) {
     return gitlabRequestJson("/user", context);
   },
@@ -57,23 +62,55 @@ export const gitlabActionHandlers: Record<string, GitlabActionHandler> = {
   create_project_issue(input, context) {
     return createGitlabProjectIssue(input, context);
   },
+  get_project_issue(input, context) {
+    return gitlabRequestJson(
+      `/projects/${readProjectId(input)}/issues/${readRequiredPositiveInteger(input.issueIid, "issueIid")}`,
+      context,
+    );
+  },
+  update_project_issue(input, context) {
+    return updateGitlabProjectIssue(input, context);
+  },
+  delete_project_issue(input, context) {
+    return deleteGitlabResource(
+      `/projects/${readProjectId(input)}/issues/${readRequiredPositiveInteger(input.issueIid, "issueIid")}`,
+      context,
+    );
+  },
+  create_project(input, context) {
+    return createGitlabProject(input, context);
+  },
+  update_project(input, context) {
+    return updateGitlabProject(input, context);
+  },
+  delete_project(input, context) {
+    return deleteGitlabResource(`/projects/${readProjectId(input)}`, context);
+  },
+  list_project_merge_requests(input, context) {
+    return listGitlabProjectMergeRequests(input, context);
+  },
+  create_merge_request(input, context) {
+    return createGitlabMergeRequest(input, context);
+  },
+  update_merge_request(input, context) {
+    return updateGitlabMergeRequest(input, context);
+  },
+  merge_merge_request(input, context) {
+    return mergeGitlabMergeRequest(input, context);
+  },
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<GitlabActionContext>({
   service,
   handlers: gitlabActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<GitlabActionContext> {
-    const credential = await requireApiKeyCredential(context, service);
-    const providerContext: GitlabActionContext = {
-      apiKey: credential.apiKey,
-      apiBaseUrl: normalizeGitlabApiBaseUrl(credential.values.baseUrl),
+    const credential = await requireGitlabCredential(context);
+    return {
+      ...resolveGitlabBearerCredential(credential),
+      apiBaseUrl: resolveGitlabApiBaseUrl(credential),
       fetcher,
       signal: context.signal,
     };
-    if (context.transitFiles) {
-      providerContext.transitFiles = context.transitFiles;
-    }
-    return providerContext;
   },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
@@ -81,11 +118,9 @@ export const executors: ProviderExecutors = defineProviderExecutors<GitlabAction
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: async (context) => {
-    const credential = await requireApiKeyCredential(context, service);
-    const value = asOptionalString(credential.metadata.apiBaseUrl) ?? asOptionalString(credential.values.baseUrl);
-    return normalizeGitlabApiBaseUrl(value);
+    return resolveGitlabApiBaseUrl(await requireGitlabCredential(context));
   },
-  auth: { type: "api_key_header", name: "private-token" },
+  auth: { type: "bearer" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
@@ -100,38 +135,57 @@ export const credentialValidators: CredentialValidators = {
       fetch: fetcher,
       allowPrivateNetwork: isPrivateNetworkAccessAllowed,
     });
-    const user = await gitlabRequestJson(
-      "/user",
-      { apiKey: input.apiKey, apiBaseUrl, fetcher: guardedFetcher },
-      "validate",
+    return validateGitlabCredential(input.apiKey, "Bearer", apiBaseUrl, [], guardedFetcher);
+  },
+  async oauth2(input, { fetcher }) {
+    const apiBaseUrl = resolveGitlabApiBaseUrl(input);
+    const guardedFetcher = createProviderFetch({
+      fetch: fetcher,
+      allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+    });
+    return validateGitlabCredential(
+      input.accessToken,
+      input.tokenType,
+      apiBaseUrl,
+      readGitlabScopes(input.metadata.scope),
+      guardedFetcher,
     );
-    const userObject = asGitlabObject(user);
-    const userId = readOptionalPrimitive(userObject.id);
-    const username = asOptionalString(userObject.username);
-    const name = asOptionalString(userObject.name);
-    // Scope the account id by instance host for self-hosted connections so the
-    // same numeric user id on different instances never collides.
-    const instanceHost = apiBaseUrl === defaultGitlabApiBaseUrl ? undefined : new URL(apiBaseUrl).host;
-
-    return {
-      profile: {
-        accountId: instanceHost
-          ? `gitlab:${instanceHost}:${userId ?? username ?? "user"}`
-          : userId
-            ? `gitlab:${userId}`
-            : (username ?? "gitlab:user"),
-        displayName: name ?? username ?? "GitLab User",
-      },
-      metadata: compactObject({
-        apiBaseUrl,
-        validationEndpoint: "/user",
-        userId,
-        username,
-        webUrl: asOptionalString(userObject.web_url),
-      }),
-    };
   },
 };
+
+async function validateGitlabCredential(
+  accessToken: string,
+  tokenType: string,
+  apiBaseUrl: string,
+  grantedScopes: string[],
+  fetcher: typeof fetch,
+): Promise<CredentialValidationResult> {
+  const user = await gitlabRequestJson("/user", { accessToken, tokenType, apiBaseUrl, fetcher }, "validate");
+  const userObject = asGitlabObject(user);
+  const userId = readOptionalPrimitive(userObject.id);
+  const username = asOptionalString(userObject.username);
+  const name = asOptionalString(userObject.name);
+  // Scope the account id by instance host for self-hosted connections so the
+  // same numeric user id on different instances never collides.
+  const instanceHost = apiBaseUrl === defaultGitlabApiBaseUrl ? undefined : new URL(apiBaseUrl).host;
+
+  return {
+    profile: {
+      accountId: instanceHost
+        ? `gitlab:${instanceHost}:${userId ?? username ?? "user"}`
+        : `gitlab:${userId ?? username ?? "user"}`,
+      displayName: name ?? username ?? "GitLab User",
+    },
+    grantedScopes,
+    metadata: compactObject({
+      apiBaseUrl,
+      validationEndpoint: "/user",
+      userId,
+      username,
+      webUrl: asOptionalString(userObject.web_url),
+    }),
+  };
+}
 
 /**
  * Resolves the GitLab API base URL for a connection. Empty input targets
@@ -255,6 +309,166 @@ function createGitlabProjectIssue(input: GitlabActionInput, context: GitlabActio
   });
 }
 
+function updateGitlabProjectIssue(input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  const body = compactObject({
+    title: asOptionalString(input.title),
+    description: asClearableString(input.description),
+    labels: asClearableString(input.labels),
+    add_labels: asClearableString(input.addLabels),
+    remove_labels: asClearableString(input.removeLabels),
+    assignee_ids: Array.isArray(input.assigneeIds) ? input.assigneeIds : undefined,
+    confidential: optionalBoolean(input.confidential),
+    discussion_locked: optionalBoolean(input.discussionLocked),
+    due_date: asOptionalString(input.dueDate),
+    state_event: asOptionalString(input.stateEvent),
+  });
+  ensureUpdateFields(body, "update_project_issue");
+  return gitlabRequestJson(
+    `/projects/${readProjectId(input)}/issues/${readRequiredPositiveInteger(input.issueIid, "issueIid")}`,
+    context,
+    "execute",
+    { method: "PUT", body },
+  );
+}
+
+function createGitlabProject(input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  return gitlabRequestJson("/projects", context, "execute", {
+    method: "POST",
+    body: compactObject({
+      name: asOptionalString(input.name),
+      path: asOptionalString(input.path),
+      namespace_id: optionalIntegerLike(input.namespaceId, "namespaceId"),
+      description: asOptionalString(input.description),
+      visibility: asOptionalString(input.visibility),
+      initialize_with_readme: optionalBoolean(input.initializeWithReadme),
+      default_branch: asOptionalString(input.defaultBranch),
+    }),
+  });
+}
+
+function updateGitlabProject(input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  const archived = optionalBoolean(input.archived);
+  const body = compactObject({
+    name: asOptionalString(input.name),
+    path: asOptionalString(input.path),
+    description: asClearableString(input.description),
+    visibility: asOptionalString(input.visibility),
+    default_branch: asOptionalString(input.defaultBranch),
+    issues_access_level: asOptionalString(input.issuesAccessLevel),
+    merge_requests_access_level: asOptionalString(input.mergeRequestsAccessLevel),
+  });
+  if (archived !== undefined) {
+    if (Object.keys(body).length > 0) {
+      throw new ProviderRequestError(400, "archived cannot be combined with other project updates");
+    }
+    const operation = archived ? "archive" : "unarchive";
+    return gitlabRequestJson(`/projects/${readProjectId(input)}/${operation}`, context, "execute", { method: "POST" });
+  }
+  ensureUpdateFields(body, "update_project");
+  return gitlabRequestJson(`/projects/${readProjectId(input)}`, context, "execute", { method: "PUT", body });
+}
+
+async function listGitlabProjectMergeRequests(
+  input: GitlabActionInput,
+  context: GitlabActionContext,
+): Promise<{ mergeRequests: unknown[]; total: number | null; nextPage: number | null }> {
+  const response = await gitlabRequest(`/projects/${readProjectId(input)}/merge_requests`, context, {
+    query: compactObject({
+      state: asOptionalString(input.state),
+      search: asOptionalString(input.search),
+      source_branch: asOptionalString(input.sourceBranch),
+      target_branch: asOptionalString(input.targetBranch),
+      order_by: asOptionalString(input.orderBy),
+      sort: asOptionalString(input.sort),
+      page: asOptionalPositiveInteger(input.page, "page"),
+      per_page: asOptionalPositiveInteger(input.perPage, "perPage"),
+    }),
+  });
+  const payload = await readGitlabPayload(response);
+  if (!response.ok) {
+    throw createGitlabError(response, payload, "execute");
+  }
+  if (!Array.isArray(payload)) {
+    throw new ProviderRequestError(502, "gitlab merge requests response is not an array", payload);
+  }
+  return { mergeRequests: payload, ...readPagination(response.headers) };
+}
+
+function createGitlabMergeRequest(input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  return gitlabRequestJson(`/projects/${readProjectId(input)}/merge_requests`, context, "execute", {
+    method: "POST",
+    body: compactObject({
+      source_branch: asOptionalString(input.sourceBranch),
+      target_branch: asOptionalString(input.targetBranch),
+      title: asOptionalString(input.title),
+      description: asOptionalString(input.description),
+      target_project_id: optionalIntegerLike(input.targetProjectId, "targetProjectId"),
+      assignee_ids: Array.isArray(input.assigneeIds) ? input.assigneeIds : undefined,
+      reviewer_ids: Array.isArray(input.reviewerIds) ? input.reviewerIds : undefined,
+      labels: asOptionalString(input.labels),
+      remove_source_branch: optionalBoolean(input.removeSourceBranch),
+      squash: optionalBoolean(input.squash),
+    }),
+  });
+}
+
+function updateGitlabMergeRequest(input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  const body = compactObject({
+    title: asOptionalString(input.title),
+    description: asClearableString(input.description),
+    target_branch: asOptionalString(input.targetBranch),
+    state_event: asOptionalString(input.stateEvent),
+    labels: asClearableString(input.labels),
+    assignee_ids: Array.isArray(input.assigneeIds) ? input.assigneeIds : undefined,
+    reviewer_ids: Array.isArray(input.reviewerIds) ? input.reviewerIds : undefined,
+    milestone_id: optionalIntegerLike(input.milestoneId, "milestoneId"),
+    remove_source_branch: optionalBoolean(input.removeSourceBranch),
+    squash: optionalBoolean(input.squash),
+    allow_collaboration: optionalBoolean(input.allowCollaboration),
+  });
+  ensureUpdateFields(body, "update_merge_request");
+  return gitlabRequestJson(
+    `/projects/${readProjectId(input)}/merge_requests/${readRequiredPositiveInteger(input.mergeRequestIid, "mergeRequestIid")}`,
+    context,
+    "execute",
+    { method: "PUT", body },
+  );
+}
+
+function mergeGitlabMergeRequest(input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  return gitlabRequestJson(
+    `/projects/${readProjectId(input)}/merge_requests/${readRequiredPositiveInteger(input.mergeRequestIid, "mergeRequestIid")}/merge`,
+    context,
+    "execute",
+    {
+      method: "PUT",
+      body: compactObject({
+        auto_merge: optionalBoolean(input.autoMerge),
+        sha: asOptionalString(input.sha),
+        should_remove_source_branch: optionalBoolean(input.shouldRemoveSourceBranch),
+        squash: optionalBoolean(input.squash),
+        merge_commit_message: asOptionalString(input.mergeCommitMessage),
+        squash_commit_message: asOptionalString(input.squashCommitMessage),
+      }),
+    },
+  );
+}
+
+async function deleteGitlabResource(path: string, context: GitlabActionContext): Promise<{ deleted: boolean }> {
+  await gitlabRequestJson(path, context, "execute", { method: "DELETE" });
+  return { deleted: true };
+}
+
+function ensureUpdateFields(body: Record<string, unknown>, actionName: string): void {
+  if (Object.keys(body).length === 0) {
+    throw new ProviderRequestError(400, `${actionName} requires at least one field to update`);
+  }
+}
+
+function asClearableString(value: unknown): string | undefined {
+  return typeof value === "string" ? value.trim() : undefined;
+}
+
 async function gitlabRequestJson(
   path: string,
   context: GitlabActionContext,
@@ -281,13 +495,14 @@ async function gitlabRequest(
     }
   }
 
-  const headers = gitlabHeaders(context.apiKey, Boolean(options.body));
+  const headers = gitlabHeaders(context.accessToken, context.tokenType, Boolean(options.body));
 
   try {
     return await context.fetcher(url, {
       method: options.method ?? "GET",
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: context.signal,
     });
   } catch (error) {
     throw new ProviderRequestError(
@@ -297,16 +512,55 @@ async function gitlabRequest(
   }
 }
 
-function gitlabHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
+function gitlabHeaders(accessToken: string, tokenType: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
     "user-agent": providerUserAgent,
-    "PRIVATE-TOKEN": apiKey,
+    authorization: `${tokenType} ${accessToken}`,
   };
   if (hasBody) {
     headers["content-type"] = "application/json";
   }
   return headers;
+}
+
+async function requireGitlabCredential(
+  context: ExecutionContext,
+): Promise<Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key" || credential?.authType === "oauth2") {
+    return credential;
+  }
+  throw new ProviderRequestError(401, "Configure gitlab OAuth or access token credentials first.");
+}
+
+function resolveGitlabBearerCredential(
+  credential: Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>,
+): { accessToken: string; tokenType: string } {
+  return credential.authType === "oauth2"
+    ? { accessToken: credential.accessToken, tokenType: credential.tokenType }
+    : { accessToken: credential.apiKey, tokenType: "Bearer" };
+}
+
+function resolveGitlabApiBaseUrl(
+  credential: Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>,
+): string {
+  if (credential.authType === "oauth2") {
+    const oauthClientExtra = optionalRecord(credential.metadata.oauthClientExtra);
+    return normalizeGitlabApiBaseUrl(oauthClientExtra?.instanceUrl);
+  }
+  const validatedApiBaseUrl = asOptionalString(credential.metadata.apiBaseUrl);
+  if (validatedApiBaseUrl) {
+    return normalizeGitlabApiBaseUrl(validatedApiBaseUrl);
+  }
+  return normalizeGitlabApiBaseUrl(credential.values.baseUrl);
+}
+
+function readGitlabScopes(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((scope): scope is string => typeof scope === "string" && scope.length > 0);
+  }
+  return asOptionalString(value)?.split(/\s+/u).filter(Boolean) ?? [];
 }
 
 async function readGitlabPayload(response: Response): Promise<unknown> {
@@ -366,7 +620,24 @@ function readProjectId(input: GitlabActionInput): string {
   if (!projectId) {
     throw new ProviderRequestError(400, "projectId is required");
   }
+  if (
+    /^(?:\.|%2e){1,2}$/iu.test(projectId) ||
+    projectId.includes("/") ||
+    projectId.includes("\\") ||
+    projectId.includes("?") ||
+    projectId.includes("#")
+  ) {
+    throw new ProviderRequestError(400, "projectId must be a numeric ID or URL-encoded project path");
+  }
   return projectId;
+}
+
+function readRequiredPositiveInteger(value: unknown, fieldName: string): number {
+  const parsed = asOptionalPositiveInteger(value, fieldName);
+  if (parsed === undefined) {
+    throw new ProviderRequestError(400, `${fieldName} is required`);
+  }
+  return parsed;
 }
 
 function trimOptionalString(value: unknown): string | undefined {

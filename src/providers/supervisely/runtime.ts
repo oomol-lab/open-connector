@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SuperviselyActionName } from "./actions.ts";
 
 import { compactObject, nullableInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ export const superviselyApiBaseUrl = "https://app.supervisely.com/public/api/v3"
 type SuperviselyMode = "validate" | "execute";
 type SuperviselyActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const superviselyActionHandlers: Record<SuperviselyActionName, SuperviselyActionHandler> = {
+export const superviselyActionHandlers: ProviderActionHandlers<"supervisely", SuperviselyActionHandler> = {
   async get_current_user(_input, context) {
     const user = requireRecord(
       await requestSupervisely(context.apiKey, "users.me", {}, context.fetcher, "execute", context.signal),

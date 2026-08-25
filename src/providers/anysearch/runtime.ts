@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -49,7 +50,10 @@ const invalidInputErrorSymbols = new Set([
 ]);
 const inputError = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
 
-export const anySearchActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const anySearchActionHandlers: ProviderActionHandlers<
+  "anysearch",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   search(input, context) {
     return requestAnySearchRest(buildSearchInput(input), context, "execute");
   },

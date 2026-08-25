@@ -92,8 +92,6 @@ const parseraMarkdownOutputSchema = s.object("The normalized Markdown extraction
 
 const parseraListOutputSchema = s.looseObject("The list payload returned by Parsera.");
 
-export type ParseraActionName = "extract" | "parse" | "extract_markdown" | "list_llm_specs" | "list_proxy_countries";
-
 export const parseraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "extract",

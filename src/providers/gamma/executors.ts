@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GammaActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -42,7 +42,7 @@ interface GammaGeneration {
   status?: string;
 }
 
-export const gammaActionHandlers: Record<GammaActionName, GammaActionHandler> = {
+export const gammaActionHandlers: ProviderActionHandlers<"gamma", GammaActionHandler> = {
   create_generation(input, context) {
     return createGeneration(input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import { executeClickhelpAction, validateClickhelpCredential } from "./runtime.ts";
@@ -14,7 +15,7 @@ interface ProviderContext {
 
 type Handler = (input: Record<string, unknown>, context: ProviderContext) => Promise<unknown>;
 
-const handlers: Record<string, Handler> = {
+const handlers: ProviderActionHandlers<"clickhelp", Handler> = {
   list_projects(input, context) {
     return executeClickhelpAction(
       {

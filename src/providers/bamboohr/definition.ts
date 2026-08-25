@@ -1,6 +1,14 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { bamboohrActions } from "./actions.ts";
+import {
+  bamboohrCompanyInfoScope,
+  bamboohrEmployeeScope,
+  bamboohrFieldScope,
+  bamboohrOAuthAuthorizationUrl,
+  bamboohrOAuthTokenUrl,
+  bamboohrOfflineAccessScope,
+} from "./constants.ts";
 
 const service = "bamboohr";
 
@@ -8,8 +16,30 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "BambooHR",
   categories: ["Productivity", "Data"],
-  authTypes: ["api_key"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: bamboohrOAuthAuthorizationUrl,
+      tokenUrl: bamboohrOAuthTokenUrl,
+      refreshTokenUrl: bamboohrOAuthTokenUrl,
+      scopes: [bamboohrOfflineAccessScope, bamboohrCompanyInfoScope, bamboohrEmployeeScope, bamboohrFieldScope],
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationParams: {
+        request: "authorize",
+      },
+      clientConfigFields: [
+        {
+          key: "companyDomain",
+          label: "Company Domain",
+          inputType: "text",
+          placeholder: "acme",
+          description: "The subdomain from your BambooHR company URL. For https://acme.bamboohr.com, enter acme.",
+          required: true,
+          secret: false,
+        },
+      ],
+    },
     {
       type: "api_key",
       label: "API Key",

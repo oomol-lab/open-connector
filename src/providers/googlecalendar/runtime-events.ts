@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import {
   compactObject,
   pickOptionalBoolean,
@@ -78,24 +80,8 @@ const attendeeKeys = [
 ] as const;
 const timeZoneFormatterById = new Map<string, Intl.DateTimeFormat>();
 
-export type GooglecalendarEventActionName =
-  | "list_events"
-  | "get_event"
-  | "create_event"
-  | "update_event"
-  | "patch_event"
-  | "delete_event"
-  | "import_event"
-  | "move_event"
-  | "list_event_instances"
-  | "quick_add_event"
-  | "sync_events"
-  | "list_events_all_calendars"
-  | "find_event"
-  | "remove_attendee";
-
-export const googlecalendarEventActionHandlers: Record<
-  GooglecalendarEventActionName,
+export const googlecalendarEventActionHandlers: ProviderActionHandlerSubset<
+  "googlecalendar",
   GooglecalendarEventActionHandler
 > = {
   list_events(input, deps) {
@@ -137,6 +123,9 @@ export const googlecalendarEventActionHandlers: Record<
   find_event(input, deps) {
     return findEvent(input, deps);
   },
+  add_attendee(input, deps) {
+    return addAttendee(input, deps);
+  },
   remove_attendee(input, deps) {
     return removeAttendee(input, deps);
   },
@@ -160,62 +149,75 @@ async function getEvent(input: Record<string, unknown>, { accessToken, fetcher }
 }
 
 async function createEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   const event = pickEventWritableFields(asObject(input.event));
   return googlecalendarJsonRequest(eventsUrl(resolveCalendarId(input)), {
     accessToken,
     fetcher,
-    query: buildEventWriteQuery(event),
+    query: buildEventWriteQuery(event, sendUpdates),
     body: event,
   });
 }
 
 async function updateEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   const url = eventUrl(resolveCalendarId(input), resolveEventId(input));
-  const current = await googlecalendarJsonRequest<Record<string, unknown>>(url, {
-    accessToken,
-    fetcher,
-  });
   const next = pickEventWritableFields(asObject(input.event));
-  const currentWritable = pickEventWritableFields(current);
-
-  if (next.conferenceData === undefined && currentWritable.conferenceData !== undefined) {
-    currentWritable.conferenceData = pickKnownFields(asObject(currentWritable.conferenceData), conferenceDataKeys);
-  }
-  if (next.source === undefined && currentWritable.source !== undefined) {
-    currentWritable.source = pickKnownFields(asObject(currentWritable.source), sourceKeys);
-  }
-
-  const body = {
-    ...currentWritable,
-    ...next,
-  };
-
-  return googlecalendarJsonRequest(url, {
+  let current = await googlecalendarJsonRequest<Record<string, unknown>>(url, {
     accessToken,
     fetcher,
-    method: "PUT",
-    query: buildEventWriteQuery(body),
-    body,
   });
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const etag = optionalString(current.etag);
+    if (!etag) {
+      throw new ProviderRequestError(502, "googlecalendar returned an event without an etag");
+    }
+
+    const body = mergeEventUpdate(current, next);
+    try {
+      return await googlecalendarJsonRequest(url, {
+        accessToken,
+        fetcher,
+        method: "PUT",
+        query: buildEventWriteQuery(body, sendUpdates),
+        headers: { "If-Match": etag },
+        body,
+      });
+    } catch (error) {
+      if (attempt > 0 || !(error instanceof ProviderRequestError) || error.status !== 412) {
+        throw error;
+      }
+      current = await googlecalendarJsonRequest<Record<string, unknown>>(url, {
+        accessToken,
+        fetcher,
+      });
+    }
+  }
+
+  throw new ProviderRequestError(412, "event changed while updating");
 }
 
 async function patchEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   const event = pickEventWritableFields(asObject(input.event));
   return googlecalendarJsonRequest(eventUrl(resolveCalendarId(input), resolveEventId(input)), {
     accessToken,
     fetcher,
     method: "PATCH",
-    query: buildEventWriteQuery(event),
+    query: buildEventWriteQuery(event, sendUpdates),
     body: event,
   });
 }
 
 async function deleteEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   try {
     await googlecalendarRequest(eventUrl(resolveCalendarId(input), resolveEventId(input)), {
       accessToken,
       fetcher,
       method: "DELETE",
+      query: { sendUpdates },
     });
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status === 404) {
@@ -236,12 +238,14 @@ async function importEvent(input: Record<string, unknown>, { accessToken, fetche
 }
 
 async function moveEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   return googlecalendarJsonRequest(`${eventUrl(resolveCalendarId(input), resolveEventId(input))}/move`, {
     accessToken,
     fetcher,
     method: "POST",
     query: {
       destination: requireInputString(input, "destinationCalendarId", "destinationCalendarId"),
+      sendUpdates,
     },
   });
 }
@@ -266,12 +270,14 @@ async function listEventInstances(
 }
 
 async function quickAddEvent(input: Record<string, unknown>, { accessToken, fetcher }: GooglecalendarEventRuntimeDeps) {
+  const sendUpdates = pickSendUpdates(input);
   return googlecalendarJsonRequest(`${eventsUrl(resolveCalendarId(input))}/quickAdd`, {
     accessToken,
     fetcher,
     method: "POST",
     query: {
       text: requireInputString(input, "text", "text"),
+      sendUpdates,
     },
   });
 }
@@ -410,41 +416,126 @@ async function listEventsAllCalendars(input: Record<string, unknown>, deps: Goog
   };
 }
 
-async function removeAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
-  const calendarId = pickOptionalString(input, "calendarId") ?? "primary";
-  const eventId = resolveEventId(input);
-  const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail").toLowerCase();
-  const event = (await getEvent(
-    {
-      calendarId,
-      eventId,
-    },
-    deps,
-  )) as Record<string, unknown>;
-  const attendees = Array.isArray(event.attendees)
-    ? event.attendees
-        .filter((attendee): attendee is Record<string, unknown> => !!attendee && typeof attendee === "object")
-        .map((attendee) => pickKnownFields(attendee, attendeeKeys))
-    : [];
-  const remaining = attendees.filter((attendee) => optionalString(attendee.email)?.toLowerCase() !== attendeeEmail);
+async function addAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
+  const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail");
+  const addedAttendee = compactObject({
+    email: attendeeEmail,
+    displayName: pickOptionalString(input, "displayName"),
+    optional: pickOptionalBoolean(input, "optional"),
+  });
 
-  if (remaining.length === attendees.length) {
-    throw new ProviderRequestError(
-      400,
-      `attendee not found: ${requireInputString(input, "attendeeEmail", "attendeeEmail")}`,
-    );
-  }
-
-  return patchEvent(
+  return patchEventAttendees(
     {
-      calendarId,
-      eventId,
-      event: {
-        attendees: remaining,
+      calendarId: pickOptionalString(input, "calendarId") ?? "primary",
+      eventId: resolveEventId(input),
+      sendUpdates: pickSendUpdates(input, "all"),
+      conflictMessage: "event changed while adding attendee",
+      apply(attendees) {
+        if (
+          attendees.some((attendee) => optionalString(attendee.email)?.toLowerCase() === attendeeEmail.toLowerCase())
+        ) {
+          return { kind: "skip" };
+        }
+        return { kind: "patch", attendees: [...attendees, addedAttendee] };
       },
     },
     deps,
   );
+}
+
+async function removeAttendee(input: Record<string, unknown>, deps: GooglecalendarEventRuntimeDeps) {
+  const attendeeEmail = requireInputString(input, "attendeeEmail", "attendeeEmail");
+
+  return patchEventAttendees(
+    {
+      calendarId: pickOptionalString(input, "calendarId") ?? "primary",
+      eventId: resolveEventId(input),
+      sendUpdates: pickSendUpdates(input),
+      conflictMessage: "event changed while removing attendee",
+      apply(attendees) {
+        const remaining = attendees.filter(
+          (attendee) => optionalString(attendee.email)?.toLowerCase() !== attendeeEmail.toLowerCase(),
+        );
+        if (remaining.length === attendees.length) {
+          throw new ProviderRequestError(400, `attendee not found: ${attendeeEmail}`);
+        }
+        return { kind: "patch", attendees: remaining };
+      },
+    },
+    deps,
+  );
+}
+
+interface PatchEventAttendeesInput {
+  calendarId: string;
+  eventId: string;
+  sendUpdates: string | undefined;
+  conflictMessage: string;
+  apply(
+    attendees: Array<Record<string, unknown>>,
+  ): { kind: "skip" } | { kind: "patch"; attendees: Array<Record<string, unknown>> };
+}
+
+async function patchEventAttendees(
+  input: PatchEventAttendeesInput,
+  deps: GooglecalendarEventRuntimeDeps,
+): Promise<Record<string, unknown>> {
+  let event = await fetchCalendarEvent(input.calendarId, input.eventId, deps);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    assertCompleteAttendeeList(event);
+    const decision = input.apply(readEventAttendees(event));
+    if (decision.kind === "skip") {
+      return event;
+    }
+
+    const etag = optionalString(event.etag);
+    if (!etag) {
+      throw new ProviderRequestError(502, "googlecalendar returned an event without an etag");
+    }
+
+    try {
+      return await googlecalendarJsonRequest(eventUrl(input.calendarId, input.eventId), {
+        accessToken: deps.accessToken,
+        fetcher: deps.fetcher,
+        method: "PATCH",
+        query: { sendUpdates: input.sendUpdates },
+        headers: { "If-Match": etag },
+        body: {
+          attendees: decision.attendees,
+        },
+      });
+    } catch (error) {
+      if (attempt > 0 || !(error instanceof ProviderRequestError) || error.status !== 412) {
+        throw error;
+      }
+      event = await fetchCalendarEvent(input.calendarId, input.eventId, deps);
+    }
+  }
+
+  throw new ProviderRequestError(412, input.conflictMessage);
+}
+
+function readEventAttendees(event: Record<string, unknown>) {
+  return Array.isArray(event.attendees)
+    ? event.attendees
+        .filter((attendee): attendee is Record<string, unknown> => !!attendee && typeof attendee === "object")
+        .map((attendee) => pickKnownFields(attendee, attendeeKeys))
+    : [];
+}
+
+async function fetchCalendarEvent(
+  calendarId: string,
+  eventId: string,
+  deps: GooglecalendarEventRuntimeDeps,
+): Promise<Record<string, unknown>> {
+  return (await getEvent({ calendarId, eventId }, deps)) as Record<string, unknown>;
+}
+
+function assertCompleteAttendeeList(event: Record<string, unknown>): void {
+  // events.patch replaces the whole attendees array, so refuse when Google omitted guests.
+  if (event.attendeesOmitted === true) {
+    throw new ProviderRequestError(502, "googlecalendar returned an event with some attendees omitted");
+  }
 }
 
 function buildListEventsQuery(input: Record<string, unknown>, options?: { syncMode?: boolean }) {
@@ -485,15 +576,43 @@ function buildListEventsQuery(input: Record<string, unknown>, options?: { syncMo
   });
 }
 
-function buildEventWriteQuery(event: Record<string, unknown>) {
+function buildEventWriteQuery(event: Record<string, unknown>, sendUpdates: string | undefined) {
   return compactObject({
     conferenceDataVersion: event.conferenceData === undefined ? undefined : "1",
     supportsAttachments: event.attachments === undefined ? undefined : "true",
+    sendUpdates,
   });
+}
+
+function pickSendUpdates(input: Record<string, unknown>, fallback?: string): string | undefined {
+  const sendUpdates = input.sendUpdates;
+  if (sendUpdates === undefined) {
+    return fallback;
+  }
+  if (sendUpdates !== "all" && sendUpdates !== "externalOnly" && sendUpdates !== "none") {
+    throw new ProviderRequestError(400, "sendUpdates must be all, externalOnly, or none");
+  }
+  return sendUpdates;
 }
 
 function pickEventWritableFields(input: Record<string, unknown>) {
   return pickKnownFields(input, eventWritableKeys);
+}
+
+function mergeEventUpdate(current: Record<string, unknown>, next: Record<string, unknown>) {
+  const currentWritable = pickEventWritableFields(current);
+
+  if (next.conferenceData === undefined && currentWritable.conferenceData !== undefined) {
+    currentWritable.conferenceData = pickKnownFields(asObject(currentWritable.conferenceData), conferenceDataKeys);
+  }
+  if (next.source === undefined && currentWritable.source !== undefined) {
+    currentWritable.source = pickKnownFields(asObject(currentWritable.source), sourceKeys);
+  }
+
+  return {
+    ...currentWritable,
+    ...next,
+  };
 }
 
 function pickKnownFields<const T extends readonly string[]>(input: Record<string, unknown>, keys: T) {

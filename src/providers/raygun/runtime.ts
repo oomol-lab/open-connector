@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { RaygunActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
@@ -34,7 +35,7 @@ const deploymentFields = [
   "deployedAt",
 ] as const;
 
-export const raygunActionHandlers: Record<RaygunActionName, RaygunActionHandler> = {
+export const raygunActionHandlers: ProviderActionHandlers<"raygun", RaygunActionHandler> = {
   async list_applications(input, context) {
     const response = await raygunRequest(
       {
@@ -150,7 +151,7 @@ export const raygunActionHandlers: Record<RaygunActionName, RaygunActionHandler>
     );
     return { errorGroup: normalizeObject(response.payload, "Raygun error group") };
   },
-} satisfies Record<RaygunActionName, RaygunActionHandler>;
+};
 
 export async function validateRaygunCredential(
   input: Record<string, string>,

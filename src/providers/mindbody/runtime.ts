@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MindbodyActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface MindbodyListBusinessesOutput {
 type MindbodyRequestPhase = "validate" | "execute";
 type MindbodyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const mindbodyActionHandlers: Record<MindbodyActionName, MindbodyActionHandler> = {
+export const mindbodyActionHandlers: ProviderActionHandlers<"mindbody", MindbodyActionHandler> = {
   list_businesses(input, context) {
     return executeListBusinesses(input, context, "execute");
   },

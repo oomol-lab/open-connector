@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "here";
 
-export type HereActionName = "geocode" | "reverse_geocode" | "discover" | "autosuggest" | "autocomplete" | "lookup";
-
 const commonQueryFields = {
   lang: s.nonEmptyString("The optional BCP 47 language tag for the response."),
   limit: s.integer("The maximum number of result items to return.", { minimum: 1, maximum: 100 }),

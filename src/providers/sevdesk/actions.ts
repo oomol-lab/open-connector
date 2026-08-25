@@ -128,13 +128,6 @@ const contactWriteOptionalFields = [
   "governmentAgency",
 ];
 
-export type SevdeskActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact";
-
 export const sevdeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

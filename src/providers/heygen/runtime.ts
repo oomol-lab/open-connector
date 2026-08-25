@@ -1,5 +1,5 @@
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HeygenActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -7,12 +7,22 @@ import { ProviderRequestError } from "../provider-runtime.ts";
 const heygenApiBaseUrl = "https://api.heygen.com";
 const heygenUploadBaseUrl = "https://upload.heygen.com";
 
-type HeygenActionContext = ApiKeyProviderContext;
-type HeygenActionHandler = (input: Record<string, unknown>, context: HeygenActionContext) => Promise<unknown>;
+export interface HeygenAuth {
+  apiBaseUrl: string;
+  headerName: "Authorization" | "X-Api-Key";
+  headerValue: string;
+}
+
+export interface HeygenActionContext {
+  auth: HeygenAuth;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
+}
+
 type HeygenRequestMode = "validate" | "execute";
 
 interface HeygenRequestInput {
-  apiKey: string;
+  auth: HeygenAuth;
   baseUrl?: string;
   path: string;
   method?: "GET" | "POST" | "DELETE";
@@ -23,7 +33,7 @@ interface HeygenRequestInput {
   signal?: AbortSignal;
 }
 
-export const heygenActionHandlers: Record<HeygenActionName, HeygenActionHandler> = {
+export const heygenActionHandlers: ProviderActionHandlers<"heygen", ProviderRuntimeHandler<HeygenActionContext>> = {
   get_current_user(_input, context) {
     return heygenGetCurrentUser(context);
   },
@@ -78,19 +88,21 @@ export const heygenActionHandlers: Record<HeygenActionName, HeygenActionHandler>
 };
 
 export async function validateHeygenCredential(
-  input: { apiKey: string },
+  auth: HeygenAuth,
   options: { fetcher: typeof fetch; signal?: AbortSignal },
+  credential: { grantedScopes?: string[] } = {},
 ): Promise<{
   profile: { accountId: string; displayName: string };
   grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
+  const validationEndpoint = auth.headerName === "Authorization" ? "/v3/users/me" : "/v1/user/me";
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: input.apiKey,
+      auth,
       fetcher: options.fetcher,
       signal: options.signal,
-      path: "/v1/user/me",
+      path: validationEndpoint,
     },
     "validate",
   );
@@ -98,25 +110,44 @@ export async function validateHeygenCredential(
   const label = readAccountLabel(data);
   return {
     profile: {
-      accountId: optionalString(data.email) ?? optionalString(data.username) ?? "api_key",
+      accountId:
+        optionalString(data.email) ??
+        optionalString(data.username) ??
+        (auth.headerName === "Authorization" ? "oauth2" : "api_key"),
       displayName: label,
     },
-    grantedScopes: [],
+    grantedScopes: credential.grantedScopes ?? [],
     metadata: {
-      apiBaseUrl: heygenApiBaseUrl,
-      authHeaderName: "X-Api-Key",
-      validationEndpoint: "/v1/user/me",
+      apiBaseUrl: auth.apiBaseUrl,
+      authHeaderName: auth.headerName,
+      validationEndpoint,
     },
+  };
+}
+
+export function createHeygenApiKeyAuth(apiKey: string): HeygenAuth {
+  return {
+    apiBaseUrl: heygenApiBaseUrl,
+    headerName: "X-Api-Key",
+    headerValue: apiKey,
+  };
+}
+
+export function createHeygenOAuthAuth(accessToken: string, tokenType: string): HeygenAuth {
+  return {
+    apiBaseUrl: heygenApiBaseUrl,
+    headerName: "Authorization",
+    headerValue: `${tokenType} ${accessToken}`,
   };
 }
 
 async function heygenGetCurrentUser(context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
-      path: "/v1/user/me",
+      path: context.auth.headerName === "Authorization" ? "/v3/users/me" : "/v1/user/me",
     },
     "execute",
   );
@@ -130,7 +161,7 @@ async function heygenGetCurrentUser(context: HeygenActionContext): Promise<unkno
 async function heygenGetRemainingQuota(context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v2/user/remaining_quota",
@@ -147,7 +178,7 @@ async function heygenGetRemainingQuota(context: HeygenActionContext): Promise<un
 async function heygenListAvatars(context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v2/avatars",
@@ -166,7 +197,7 @@ async function heygenGetAvatar(input: Record<string, unknown>, context: HeygenAc
   const avatarId = readInputString(input.avatarId, "avatarId");
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: `/v2/avatar/${encodeURIComponent(avatarId)}/details`,
@@ -183,7 +214,7 @@ async function heygenGetAvatar(input: Record<string, unknown>, context: HeygenAc
 async function heygenListVoices(context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v2/voices",
@@ -201,7 +232,7 @@ async function heygenListVoices(context: HeygenActionContext): Promise<unknown> 
 async function heygenListTemplates(context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v2/templates",
@@ -219,7 +250,7 @@ async function heygenGetTemplate(input: Record<string, unknown>, context: Heygen
   const templateId = readInputString(input.templateId, "templateId");
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: `/v3/template/${encodeURIComponent(templateId)}`,
@@ -236,7 +267,7 @@ async function heygenGetTemplate(input: Record<string, unknown>, context: Heygen
 async function heygenGenerateVideo(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v2/video/generate",
@@ -266,7 +297,7 @@ async function heygenGenerateTemplateVideo(
   const templateId = readInputString(input.templateId, "templateId");
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: `/v2/template/${encodeURIComponent(templateId)}/generate`,
@@ -294,7 +325,7 @@ async function heygenGenerateTemplateVideo(
 async function heygenGetVideoStatus(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v1/video_status.get",
@@ -321,7 +352,7 @@ async function heygenGetShareableVideoUrl(
 ): Promise<unknown> {
   const data = await heygenRequest<unknown>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v1/video/share",
@@ -340,18 +371,19 @@ async function heygenGetShareableVideoUrl(
 }
 
 async function heygenUploadAsset(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
+  const mimeType = readInputString(input.mimeType, "mimeType");
+  const content = toArrayBuffer(Buffer.from(readInputString(input.contentBase64, "contentBase64"), "base64"));
+  const isOAuth = context.auth.headerName === "Authorization";
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
-      baseUrl: heygenUploadBaseUrl,
-      path: "/v1/asset",
+      baseUrl: isOAuth ? context.auth.apiBaseUrl : heygenUploadBaseUrl,
+      path: isOAuth ? "/v3/assets" : "/v1/asset",
       method: "POST",
-      rawBody: toArrayBuffer(Buffer.from(readInputString(input.contentBase64, "contentBase64"), "base64")),
-      headers: {
-        "content-type": readInputString(input.mimeType, "mimeType"),
-      },
+      rawBody: isOAuth ? createHeygenOAuthAssetForm(content, mimeType) : content,
+      headers: isOAuth ? undefined : { "content-type": mimeType },
     },
     "execute",
   );
@@ -369,10 +401,16 @@ async function heygenUploadAsset(input: Record<string, unknown>, context: Heygen
   };
 }
 
+function createHeygenOAuthAssetForm(content: ArrayBuffer, mimeType: string): FormData {
+  const form = new FormData();
+  form.append("file", new Blob([content], { type: mimeType }), "asset");
+  return form;
+}
+
 async function heygenListAssets(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v1/asset/list",
@@ -398,7 +436,7 @@ async function heygenDeleteAsset(input: Record<string, unknown>, context: Heygen
   const assetId = readInputString(input.assetId, "assetId");
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: `/v1/asset/${encodeURIComponent(assetId)}/delete`,
@@ -418,7 +456,7 @@ async function heygenDeleteAsset(input: Record<string, unknown>, context: Heygen
 async function heygenListVideos(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v1/video.list",
@@ -444,7 +482,7 @@ async function heygenDeleteVideo(input: Record<string, unknown>, context: Heygen
   const videoId = readInputString(input.videoId, "videoId");
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v1/video.delete",
@@ -471,7 +509,7 @@ async function heygenDeleteVideo(input: Record<string, unknown>, context: Heygen
 async function heygenListFolders(input: Record<string, unknown>, context: HeygenActionContext): Promise<unknown> {
   const data = await heygenRequest<Record<string, unknown>>(
     {
-      apiKey: context.apiKey,
+      auth: context.auth,
       fetcher: context.fetcher,
       signal: context.signal,
       path: "/v1/folders",
@@ -498,7 +536,7 @@ async function heygenRequest<T>(
   input: HeygenRequestInput & { fetcher: typeof fetch },
   mode: HeygenRequestMode,
 ): Promise<T> {
-  const url = new URL(input.path, input.baseUrl ?? heygenApiBaseUrl);
+  const url = new URL(input.path, input.baseUrl ?? input.auth.apiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined && value !== null && value !== "") {
       url.searchParams.set(key, String(value));
@@ -511,7 +549,7 @@ async function heygenRequest<T>(
       method: input.method ?? "GET",
       headers: {
         accept: "application/json",
-        "X-Api-Key": input.apiKey,
+        [input.auth.headerName]: input.auth.headerValue,
         ...(input.body ? { "content-type": "application/json" } : {}),
         ...input.headers,
       },

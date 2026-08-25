@@ -215,16 +215,6 @@ const cancelBuildOutputSchema = s.object("Acknowledgement returned after a cance
   already_finished: s.boolean("Whether Codemagic reported that the build had already finished."),
 });
 
-export type CodemagicActionName =
-  | "get_current_user"
-  | "list_user_teams"
-  | "list_user_apps"
-  | "list_team_apps"
-  | "list_team_builds"
-  | "get_build"
-  | "create_build"
-  | "cancel_build";
-
 export const codemagicActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

@@ -5,7 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { VoiceflowActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -72,7 +72,7 @@ interface VoiceflowEnvironment {
   raw: Record<string, unknown>;
 }
 
-export const voiceflowActionHandlers: Record<VoiceflowActionName, VoiceflowActionHandler> = {
+export const voiceflowActionHandlers: ProviderActionHandlers<"voiceflow", VoiceflowActionHandler> = {
   start_session(input, context) {
     return startSession(input, context);
   },

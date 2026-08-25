@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { NewRelicActionName } from "./actions.ts";
 
@@ -47,7 +48,7 @@ type NewRelicCurrentUserPayload = {
   };
 };
 
-export const newRelicActionHandlers: Record<NewRelicActionName, NewRelicActionHandler> = {
+export const newRelicActionHandlers: ProviderActionHandlers<"new_relic", NewRelicActionHandler> = {
   get_current_user(input, context) {
     return newRelicGetCurrentUser(toRuntimeInput("get_current_user", input, context), context.fetcher);
   },

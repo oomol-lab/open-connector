@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RoamScimActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, toProviderExecutionError } from "../provider-runtime.ts";
@@ -35,7 +35,7 @@ export class RoamScimRequestError extends ProviderRequestError {
   }
 }
 
-export const roamScimActionHandlers: Record<RoamScimActionName, RoamScimActionHandler> = {
+export const roamScimActionHandlers: ProviderActionHandlers<"roam_scim", RoamScimActionHandler> = {
   async get_service_provider_config(_input, context) {
     const payload = await requestRoamScimJson({
       path: serviceProviderConfigPath,

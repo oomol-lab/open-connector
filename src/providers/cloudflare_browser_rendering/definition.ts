@@ -8,7 +8,7 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Cloudflare Browser Run",
   categories: ["Developer Tools", "Data"],
-  authTypes: ["api_key"],
+  authTypes: ["api_key", "oauth2"],
   auth: [
     {
       type: "api_key",
@@ -28,6 +28,14 @@ export const provider: ProviderDefinition = {
             "Cloudflare account ID used in Browser Run API paths. Find it from https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/.",
         },
       ],
+    },
+    {
+      type: "oauth2",
+      authorizationUrl: "https://dash.cloudflare.com/oauth2/auth",
+      tokenUrl: "https://dash.cloudflare.com/oauth2/token",
+      refreshTokenUrl: "https://dash.cloudflare.com/oauth2/token",
+      scopes: ["memberships.read", "browser-rendering.read", "browser-rendering.write"],
+      tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],
   homepageUrl: "https://developers.cloudflare.com/browser-run/",

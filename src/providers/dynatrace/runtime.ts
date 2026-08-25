@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { DynatraceActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, queryParams } from "../../core/request.ts";
@@ -55,7 +55,7 @@ const validationChecks: DynatraceValidationCheck[] = [
 type DynatraceRequestPhase = "validate" | "execute";
 type DynatraceActionHandler = (input: Record<string, unknown>, context: DynatraceContext) => Promise<unknown>;
 
-export const dynatraceActionHandlers: Record<DynatraceActionName, DynatraceActionHandler> = {
+export const dynatraceActionHandlers: ProviderActionHandlers<"dynatrace", DynatraceActionHandler> = {
   async list_problems(input, context) {
     const payload = await requestDynatraceJson({
       ...context,

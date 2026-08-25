@@ -74,8 +74,6 @@ const createTokenOutputSchema = s.object(
   { optional: ["raw"] },
 );
 
-export type SkyfireActionName = "get_all_services" | "get_service" | "get_services_by_agent" | "create_token";
-
 export const skyfireActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_all_services",

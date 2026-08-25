@@ -78,13 +78,6 @@ const searchIdInputSchema = {
   }),
 };
 
-export type SearchApiActionName =
-  | "get_account_info"
-  | "search"
-  | "get_locations"
-  | "get_cached_search_json"
-  | "get_cached_search_html";
-
 export const searchApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

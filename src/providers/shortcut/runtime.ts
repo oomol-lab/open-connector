@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ShortcutActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -13,7 +14,7 @@ type ShortcutActionHandler = (
   context: { apiKey: string; fetcher: typeof fetch },
 ) => Promise<unknown>;
 
-export const shortcutActionHandlers: Record<ShortcutActionName, ShortcutActionHandler> = {
+export const shortcutActionHandlers: ProviderActionHandlers<"shortcut", ShortcutActionHandler> = {
   list_members(input, context) {
     return listMembers(input, context);
   },

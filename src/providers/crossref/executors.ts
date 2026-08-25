@@ -1,17 +1,17 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources, ProviderRequestError } from "../provider-runtime.ts";
 import { crossrefActionHandlers, validateCrossrefCredential } from "./runtime.ts";
 const service = "crossref";
 interface CrossrefContext {
   apiKey?: string;
   fetcher: typeof fetch;
 }
-const handlers = Object.fromEntries(
-  Object.entries(crossrefActionHandlers).map(([name, handler]) => [
-    name,
-    (input: Record<string, unknown>, context: CrossrefContext) => handler(input, context.fetcher, context.apiKey),
-  ]),
+const handlers = mapProviderActionSources(
+  service,
+  crossrefActionHandlers,
+  (_name, handler) => (input: Record<string, unknown>, context: CrossrefContext) =>
+    handler(input, context.fetcher, context.apiKey),
 );
 export const executors: ProviderExecutors = defineProviderExecutors<CrossrefContext>({
   service,

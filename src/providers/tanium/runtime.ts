@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { TaniumActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -36,7 +36,7 @@ interface TaniumGraphqlPayload {
   message?: unknown;
 }
 
-export const taniumActionHandlers: Record<TaniumActionName, TaniumActionHandler> = {
+export const taniumActionHandlers: ProviderActionHandlers<"tanium", TaniumActionHandler> = {
   async execute_graphql(input, context) {
     const payload = await requestTaniumGraphql({
       gatewayUrl: context.gatewayUrl,

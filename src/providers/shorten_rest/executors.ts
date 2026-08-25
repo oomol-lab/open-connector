@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShortenRestActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -21,7 +21,7 @@ interface ShortenRestRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const shortenRestActionHandlers: Record<ShortenRestActionName, ShortenRestActionHandler> = {
+export const shortenRestActionHandlers: ProviderActionHandlers<"shorten_rest", ShortenRestActionHandler> = {
   async create_alias(input, context) {
     const payload = await shortenRestRequest({
       method: "POST",

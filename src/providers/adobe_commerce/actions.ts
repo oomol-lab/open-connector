@@ -161,8 +161,6 @@ const categorySchema = s.object("A normalized Adobe Commerce category.", {
   raw: s.looseObject("The raw Adobe Commerce category payload."),
 });
 
-export type AdobeCommerceActionName = "list_products" | "get_product" | "list_categories" | "get_category";
-
 export const adobeCommerceActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",

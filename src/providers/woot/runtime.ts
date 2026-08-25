@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -38,7 +39,7 @@ interface WootJsonRequest {
   phase: WootRequestPhase;
 }
 
-export const wootActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const wootActionHandlers: ProviderActionHandlers<"woot", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_feed(input, context) {
     const feedName = requiredString(input.feedName, "feedName", inputError);
     const page = optionalInteger(input.page);

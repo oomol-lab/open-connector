@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "freshteam";
 
-export type FreshteamActionName =
-  | "list_employees"
-  | "get_employee"
-  | "list_employee_fields"
-  | "list_job_postings"
-  | "get_job_posting"
-  | "list_job_posting_fields"
-  | "list_applicant_fields"
-  | "list_candidate_sources"
-  | "list_candidate_source_categories";
-
 const positiveIntegerSchema = (description: string) => s.positiveInteger(description);
 const pageSchema = positiveIntegerSchema("Page number for the Freshteam list request.");
 const upstreamStringSchema = (description: string) => s.nonEmptyString(description);

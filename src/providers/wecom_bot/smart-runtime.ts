@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -134,7 +135,10 @@ async function executeWecomSmartBotAction(
   return callWecomTool(toolCall.category, toolCall.toolName, toolCall.arguments, runtime);
 }
 
-export const wecomSmartBotActionHandlers: Record<string, ProviderRuntimeHandler<WecomSmartBotRuntime>> = {
+export const wecomSmartBotActionHandlers: ProviderActionHandlerSubset<
+  "wecom_bot",
+  ProviderRuntimeHandler<WecomSmartBotRuntime>
+> = {
   list_tools: smartBotHandler("list_tools"),
   call_tool: smartBotHandler("call_tool"),
   get_userlist: smartBotHandler("get_userlist"),

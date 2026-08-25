@@ -47,14 +47,6 @@ const productFields = {
   directCost: s.number("Direct cost of the product."),
 };
 
-export type SalesmateActionName =
-  | "create_company"
-  | "get_company"
-  | "create_product"
-  | "delete_product"
-  | "list_modules"
-  | "get_active_users";
-
 export const salesmateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_company",

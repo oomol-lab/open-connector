@@ -165,5 +165,3 @@ export const hoopActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HoopActionName = "get_current_user" | "list_connections" | "list_sessions";

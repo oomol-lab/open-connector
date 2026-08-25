@@ -280,14 +280,6 @@ const proposalContentSchema = s.looseRequiredObject(
   },
 );
 
-export type BidsketchActionName =
-  | "list_clients"
-  | "get_client"
-  | "list_proposals"
-  | "list_client_proposals"
-  | "get_proposal"
-  | "get_proposal_content";
-
 export const bidsketchActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_clients",

@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { LangSmithActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -55,7 +55,7 @@ const langSmithRegionBaseUrls: Record<LangSmithRegion, string> = {
   aws_us: "https://aws.api.smith.langchain.com",
 };
 
-export const langSmithActionHandlers: Record<LangSmithActionName, LangSmithActionHandler> = {
+export const langSmithActionHandlers: ProviderActionHandlers<"langsmith", LangSmithActionHandler> = {
   list_workspaces(input, context) {
     return listLangSmithWorkspaces(input, context);
   },
@@ -110,6 +110,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return readLangSmithApiBaseUrl(credential.values.region ?? credential.metadata.region);
   },
   auth: { type: "api_key_header", name: "X-Api-Key" },
+  allowedOrigins: Object.values(langSmithRegionBaseUrls),
   customizeRequest(input) {
     let region = input.url.searchParams.get("region");
     if (region != null) {

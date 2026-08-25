@@ -111,16 +111,6 @@ const addressOutputSchema = s.object("Shippo address action output.", { address:
 const parcelOutputSchema = s.object("Shippo parcel action output.", { parcel: parcelSchema });
 const trackOutputSchema = s.object("Shippo tracking action output.", { track: trackSchema });
 
-export type ShippoActionName =
-  | "list_addresses"
-  | "create_address"
-  | "get_address"
-  | "validate_address"
-  | "list_parcels"
-  | "create_parcel"
-  | "get_parcel"
-  | "get_tracking_status";
-
 export const shippoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_addresses",

@@ -1,10 +1,11 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SdkHttpError } from "@modelcontextprotocol/client";
+import { ProtocolError, SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -32,7 +33,7 @@ type ExcalidrawMcpToolResult = {
 const defaultEndpoint = "https://mcp.excalidraw.com";
 const requestTimeoutMs = 30_000;
 
-export const excalidrawMcpActionHandlers: Record<string, ExcalidrawMcpActionHandler> = {
+export const excalidrawMcpActionHandlers: ProviderActionHandlers<"excalidraw_mcp", ExcalidrawMcpActionHandler> = {
   read_me(_input, context) {
     return callExcalidrawMcpTool(context, "read_me", {});
   },
@@ -118,7 +119,6 @@ export async function callExcalidrawMcpTool(
         name: toolName,
         arguments: args,
       },
-      undefined,
       {
         timeout: requestTimeoutMs,
         signal: context.signal,
@@ -224,18 +224,19 @@ function mapExcalidrawMcpError(error: unknown): ProviderRequestError {
   if (error instanceof UnauthorizedError) {
     return new ProviderRequestError(401, "Excalidraw MCP endpoint requires authorization", error);
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     return new ProviderRequestError(
       status === 401 || status === 403 ? 401 : status && status >= 400 && status < 500 ? 400 : 502,
       `Excalidraw MCP request failed: ${error.message}`,
       error,
     );
   }
-  if (error instanceof McpError) {
-    return error.code === ErrorCode.RequestTimeout
-      ? new ProviderRequestError(504, "Excalidraw MCP request timed out", error)
-      : new ProviderRequestError(502, `Excalidraw MCP request failed: ${error.message}`, error);
+  if (error instanceof SdkError && error.code === SdkErrorCode.RequestTimeout) {
+    return new ProviderRequestError(504, "Excalidraw MCP request timed out", error);
+  }
+  if (error instanceof ProtocolError) {
+    return new ProviderRequestError(502, `Excalidraw MCP request failed: ${error.message}`, error);
   }
   if (isAbortError(error)) {
     return new ProviderRequestError(504, "Excalidraw MCP request timed out", error);

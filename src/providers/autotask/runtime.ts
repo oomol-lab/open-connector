@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -43,7 +44,7 @@ interface AutotaskZoneInformation {
 
 type AutotaskActionHandler = (input: Record<string, unknown>, context: AutotaskActionContext) => Promise<unknown>;
 
-export const autotaskActionHandlers: Record<string, AutotaskActionHandler> = {
+export const autotaskActionHandlers: ProviderActionHandlers<"autotask", AutotaskActionHandler> = {
   get_zone_information(_input, context) {
     return getAutotaskZoneInformation(context.username, context.fetcher, context.signal);
   },

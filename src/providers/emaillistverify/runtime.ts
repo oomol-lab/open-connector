@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EmailListVerifyActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
@@ -20,7 +20,7 @@ type EmailListVerifyRequestPhase = "validate" | "execute";
 type EmailListVerifyResponseType = "auto" | "binary";
 type EmailListVerifyActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const emailListVerifyActionHandlers: Record<EmailListVerifyActionName, EmailListVerifyActionHandler> = {
+export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistverify", EmailListVerifyActionHandler> = {
   async verify_email(input, context) {
     const email = requiredString(input.email, "email", badInput);
     const status = await requestEmailListVerifyStatus({

@@ -33,6 +33,27 @@ const fileEntrySchema = s.looseObject(
 const fileOutputSchema = s.requiredObject("Files.com single file output.", {
   file: fileEntrySchema,
 });
+const downloadFileInputSchema = s.object(
+  "Input for downloading one Files.com file into local transit storage.",
+  {
+    path: pathSchema,
+    fileName: s.nonEmptyString("An optional filename override for the local transit file."),
+  },
+  { optional: ["fileName"] },
+);
+const downloadedFileSchema = s.requiredObject("A Files.com file downloaded into local transit storage.", {
+  fileId: s.nonEmptyString("The Files.com remote path of the downloaded file."),
+  name: s.nonEmptyString("The original Files.com file name."),
+  mimeType: s.nonEmptyString("The downloaded file MIME type."),
+  sizeBytes: s.nonNegativeInteger("The downloaded file size in bytes."),
+  file: s.requiredObject("The downloaded file in local transit storage.", {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local transit URL for downloading the stored file."),
+    sizeBytes: s.nonNegativeInteger("The stored transit file size in bytes."),
+    name: s.nonEmptyString("The stored transit file name."),
+    mimeType: s.nonEmptyString("The stored transit file MIME type."),
+  }),
+});
 const deleteOutputSchema = s.requiredObject("Files.com delete output.", {
   deleted: s.boolean("Whether the Files.com delete request completed successfully."),
   path: s.string("The Files.com path that was deleted."),
@@ -66,6 +87,12 @@ export const filesComActions: ActionDefinition[] = [
     outputSchema: fileOutputSchema,
   }),
   defineProviderAction(service, {
+    name: "download_file",
+    description: "Download one Files.com file into local transit file storage.",
+    inputSchema: downloadFileInputSchema,
+    outputSchema: downloadedFileSchema,
+  }),
+  defineProviderAction(service, {
     name: "create_folder",
     description: "Create a folder at a Files.com path.",
     inputSchema: s.object(
@@ -96,5 +123,3 @@ export const filesComActions: ActionDefinition[] = [
     outputSchema: deleteOutputSchema,
   }),
 ];
-
-export type FilesComActionName = "list_folder" | "get_file" | "create_folder" | "update_metadata" | "delete_file";

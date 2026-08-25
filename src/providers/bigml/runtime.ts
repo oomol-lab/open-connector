@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -33,7 +34,7 @@ interface BigmlStatus {
 
 export const bigmlApiBaseUrl = "https://bigml.io/andromeda";
 const timeoutMs = 30_000;
-export const bigmlActionHandlers: Record<string, ProviderRuntimeHandler<BigmlContext>> = {
+export const bigmlActionHandlers: ProviderActionHandlers<"bigml", ProviderRuntimeHandler<BigmlContext>> = {
   async list_models(input, context) {
     const payload = await request("/model", "GET", buildListQuery(input), undefined, context, "execute");
     const result = normalizeList(payload, "model");

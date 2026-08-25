@@ -14,6 +14,23 @@ export type JsonSchema = {
 export type AuthType = "no_auth" | "api_key" | "custom_credential" | "oauth2";
 
 /**
+ * Broad, task-oriented provider group calculated from catalog source metadata.
+ *
+ * Provider definitions do not need to repeat this field: the catalog builder
+ * adds it to runtime entries through the shared scenario resolver.
+ */
+export type ProviderScenario =
+  | "ai"
+  | "cross-border-ecommerce"
+  | "communication"
+  | "docs"
+  | "productivity"
+  | "marketing"
+  | "data-storage"
+  | "developer"
+  | "other";
+
+/**
  * A single credential field that users can configure for a provider.
  */
 export type CredentialDefinition = {
@@ -46,6 +63,21 @@ export type OAuthClientConfigFieldDefinition = CredentialDefinition & {
   location?: OAuthClientConfigFieldLocation;
   /** Default local value used when the caller omits this OAuth client config field. */
   defaultValue?: string;
+};
+
+/**
+ * Instructions for registering the OAuth app this provider needs.
+ *
+ * The local console shows these where users paste the client id and secret,
+ * because that is the moment they need them. Steps describe the provider's
+ * flow in this project's own words and link to the provider's own
+ * documentation; they never reproduce provider documentation or screenshots.
+ */
+export type OAuthClientSetupDefinition = {
+  /** Provider page where users register the OAuth app. */
+  docsUrl?: string;
+  /** Ordered setup steps, each a single self-contained sentence of plain text. */
+  steps: string[];
 };
 
 /**
@@ -124,6 +156,8 @@ export type OAuth2AuthDefinition = {
       grantType?: string | false;
       code?: string;
       redirectUri?: string | false;
+      /** Provider-specific field name for forwarding the original OAuth state during code exchange. */
+      state?: string | false;
     };
     refresh?: {
       grantType?: string | false;
@@ -153,6 +187,8 @@ export type OAuth2AuthDefinition = {
   };
   /** Extra local OAuth app fields required before starting authorization. */
   clientConfigFields?: OAuthClientConfigFieldDefinition[];
+  /** How to register the provider OAuth app that supplies the client id and secret. */
+  clientSetup?: OAuthClientSetupDefinition;
 };
 
 /**

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -34,7 +35,7 @@ const gets = {
   job: { ...lists.jobs, inputKey: "job" },
 };
 
-export const recruitcrmActionHandlers: Record<string, Handler> = {
+export const recruitcrmActionHandlers: ProviderActionHandlers<"recruitcrm", Handler> = {
   list_candidates(input, context) {
     return listRecruitcrm(lists.candidates, input, context);
   },

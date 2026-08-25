@@ -5,20 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "griptape";
 
-export type GriptapeActionName =
-  | "list_organizations"
-  | "get_organization"
-  | "list_assistants"
-  | "create_assistant"
-  | "get_assistant"
-  | "update_assistant"
-  | "delete_assistant"
-  | "list_assistant_runs"
-  | "create_assistant_run"
-  | "get_assistant_run"
-  | "cancel_assistant_run"
-  | "list_assistant_events";
-
 const rawObjectSchema = s.looseObject("A raw Griptape Cloud object.");
 const rawValueSchema = s.unknown("A raw Griptape Cloud JSON value.");
 const idArraySchema = (description: string) =>

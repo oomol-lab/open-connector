@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ConfigcatActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, nullableString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -35,7 +35,7 @@ interface ConfigcatContext {
 
 type ConfigcatActionHandler = (input: Record<string, unknown>, context: ConfigcatContext) => Promise<unknown>;
 
-export const configcatActionHandlers: Record<ConfigcatActionName, ConfigcatActionHandler> = {
+export const configcatActionHandlers: ProviderActionHandlers<"configcat", ConfigcatActionHandler> = {
   get_me(_input, context) {
     return executeGetMe(context);
   },

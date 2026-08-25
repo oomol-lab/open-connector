@@ -319,10 +319,3 @@ export const foursquareActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FoursquareActionName =
-  | "search_places"
-  | "get_nearby_places"
-  | "get_place"
-  | "get_place_photos"
-  | "get_place_tips";

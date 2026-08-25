@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { todoistActions } from "./actions.ts";
+import { todoistOAuthScopes } from "./scopes.ts";
 
 const service = "todoist";
 
@@ -12,9 +13,9 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://todoist.com/oauth/authorize",
-      tokenUrl: "https://todoist.com/oauth/access_token",
-      scopes: ["todoist.read", "todoist.write"],
+      authorizationUrl: "https://app.todoist.com/oauth/authorize",
+      tokenUrl: "https://api.todoist.com/oauth/access_token",
+      scopes: todoistOAuthScopes,
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
     },

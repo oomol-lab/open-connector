@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { E2bActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -40,7 +40,7 @@ interface E2bRequestOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const e2bActionHandlers: Record<E2bActionName, E2bActionHandler> = {
+export const e2bActionHandlers: ProviderActionHandlers<"e2b", E2bActionHandler> = {
   create_sandbox(input, context) {
     return createSandbox(input, context);
   },

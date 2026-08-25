@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -13,7 +14,10 @@ import {
 export const processplanApiBaseUrl = "https://apius0.processplan.com/api/v4";
 const timeoutMs = 30_000;
 
-export const processplanActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const processplanActionHandlers: ProviderActionHandlers<
+  "processplan",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async list_process_templates(input, context) {
     return {
       processTemplates: readList(

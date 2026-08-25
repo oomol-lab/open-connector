@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { LinearActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import {
@@ -292,7 +292,7 @@ interface LinearConnection<T> {
 
 type LinearActionHandler = (input: Record<string, unknown>, context: LinearActionContext) => Promise<unknown>;
 
-export const linearActionHandlers: Record<LinearActionName, LinearActionHandler> = {
+export const linearActionHandlers: ProviderActionHandlers<"linear", LinearActionHandler> = {
   async create_attachment(input, context) {
     const payload = await linearGraphqlOperation<{
       attachmentCreate?: { success?: boolean; attachment?: { id?: string } };

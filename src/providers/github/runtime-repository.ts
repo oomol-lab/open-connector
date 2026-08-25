@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { optionalBoolean, optionalInteger, optionalRawString, optionalString } from "../../core/cast.ts";
@@ -15,7 +16,7 @@ import {
   resolveGitHubWriteContent,
 } from "./runtime-shared.ts";
 
-export const repositoryActionHandlers: Record<string, GitHubActionHandler> = {
+export const repositoryActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
   get_current_user(_input, { accessToken, fetcher }) {
     return githubRequestJson<Record<string, unknown>>({
       path: "/user",

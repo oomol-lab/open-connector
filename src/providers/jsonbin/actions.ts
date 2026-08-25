@@ -17,8 +17,6 @@ const binOutputSchema = s.object("The normalized JSONBin bin response.", {
   raw: s.looseObject("The raw JSONBin API response."),
 });
 
-export type JsonbinActionName = "create_bin" | "read_bin" | "update_bin" | "delete_bin";
-
 export const jsonbinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_bin",

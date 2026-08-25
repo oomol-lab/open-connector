@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -46,7 +47,10 @@ export interface SonarCloudActionContext {
   signal?: AbortSignal;
 }
 
-export const sonarCloudActionHandlers: Record<string, ProviderRuntimeHandler<SonarCloudActionContext>> = {
+export const sonarCloudActionHandlers: ProviderActionHandlers<
+  "sonarcloud",
+  ProviderRuntimeHandler<SonarCloudActionContext>
+> = {
   async list_projects(input, context) {
     const payload = await requestSonarCloudJson({
       context,

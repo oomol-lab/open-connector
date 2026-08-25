@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "momentum_io";
 
-export type MomentumIoActionName =
-  | "list_users"
-  | "list_meetings"
-  | "list_signal_prompts"
-  | "list_signal_executions"
-  | "list_signal_definitions"
-  | "list_signal_v2_executions";
-
 const pageNumberSchema = s.integer("The page number to retrieve, using 1-based indexing.", {
   minimum: 1,
 });

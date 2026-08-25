@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IncidentIoActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface IncidentIoRequestInput {
   phase: RequestPhase;
 }
 
-export const incidentIoActionHandlers: Record<IncidentIoActionName, IncidentIoActionHandler> = {
+export const incidentIoActionHandlers: ProviderActionHandlers<"incident_io", IncidentIoActionHandler> = {
   list_incidents(input, context) {
     return listIncidents(input, context);
   },

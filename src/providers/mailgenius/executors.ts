@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -29,7 +30,10 @@ interface MailgeniusRequestInput {
   query?: Record<string, string>;
 }
 
-export const mailgeniusActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const mailgeniusActionHandlers: ProviderActionHandlers<
+  "mailgenius",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_daily_limit(_input, context) {
     return {
       dailyLimit: await requestMailgeniusObject(

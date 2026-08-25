@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { MapleBillingActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -44,7 +44,7 @@ export interface MapleBillingActionContext {
   signal?: AbortSignal;
 }
 
-export const mapleBillingActionHandlers: Record<MapleBillingActionName, MapleBillingActionHandler> = {
+export const mapleBillingActionHandlers: ProviderActionHandlers<"maple_billing", MapleBillingActionHandler> = {
   create_customer(input, context) {
     return createCustomer(input, context);
   },

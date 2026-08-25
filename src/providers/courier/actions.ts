@@ -223,19 +223,6 @@ const unsubscribeListSubscriberAction = defineProviderAction(service, {
   }),
 });
 
-export type CourierActionName =
-  | "send_message"
-  | "get_profile"
-  | "merge_profile"
-  | "delete_profile"
-  | "list_lists"
-  | "get_list"
-  | "upsert_list"
-  | "delete_list"
-  | "list_list_subscriptions"
-  | "add_list_subscribers"
-  | "unsubscribe_list_subscriber";
-
 export const courierActions: readonly ActionDefinition[] = [
   sendMessageAction,
   getProfileAction,

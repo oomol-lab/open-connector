@@ -106,8 +106,6 @@ const geocodeResponseSchema = s.looseRequiredObject(
   },
 );
 
-export type PositionstackActionName = "forward_geocode" | "reverse_geocode";
-
 export const positionstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "forward_geocode",

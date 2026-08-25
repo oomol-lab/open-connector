@@ -126,6 +126,22 @@
   },
   "providers": {
     "catalogTitle": "提供商",
+    "viewLabel": "提供商视图",
+    "views": { "manage": "我的连接", "discover": "发现应用" },
+    "discovery": {
+      "browseByTask": "按任务浏览",
+      "explore": "浏览应用",
+      "scenarios": {
+        "ai": { "title": "AI 与 Agent", "description": "模型、Agent、检索与媒体生成" },
+        "crossBorderEcommerce": { "title": "电商运营", "description": "店铺、订单、履约与市场数据" },
+        "communication": { "title": "团队协作", "description": "消息、邮件、会议与通知" },
+        "docs": { "title": "文档与知识", "description": "文档、知识库、网盘与表格" },
+        "productivity": { "title": "项目与效率", "description": "项目、任务、日程与自动化" },
+        "marketing": { "title": "营销与增长", "description": "广告、内容、线索与增长数据" },
+        "dataStorage": { "title": "数据与分析", "description": "数据仓库、数据库、BI 与存储" },
+        "developer": { "title": "开发与云服务", "description": "代码、部署、云服务与可观测性" }
+      }
+    },
     "brandNotice": "第三方名称、标志及商标归其各自权利人所有，此处仅用于识别对应的提供商。本项目不主张拥有相关权利。再分发本项目或将其用于商业用途的用户，应自行查阅适用的品牌规范，并按其具体用途取得所需许可。",
     "searchPlaceholder": "搜索提供商",
     "statusFilterLabel": "提供商状态",
@@ -241,6 +257,9 @@
       "resetOAuthClient": "重置默认 App"
     },
     "oauthClientSettings": {
+      "setupTitle": "创建 OAuth 应用",
+      "setupIntro": "在 {{name}} 注册一个 OAuth 应用，然后将其凭据粘贴到下方。",
+      "setupDocsLink": "打开 {{name}} 开发者门户",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -420,6 +439,8 @@
       },
       "layerSummary": "操作：{{action}} · 代理：{{proxy}}",
       "tokenSummary": "操作允许规则 {{allowed}} 条 · 操作阻止规则 {{blocked}} 条 · Proxy 授权 {{proxies}} 条 · 仍受运行时基线限制",
+      "connectionsUnrestricted": "全部连接",
+      "connectionsRestricted": "连接：{{names}}",
       "editor": {
         "title": "编辑运行时策略",
         "description": "保存前会结合部署约束预览修改影响。",
@@ -463,7 +484,15 @@
         "noRules": "这个列表中暂无规则。",
         "actionAllowRequired": "请至少添加一条操作允许规则，或选择不额外限制。",
         "proxyAllowRequired": "请至少添加一条提供商允许规则，或选择不额外限制。",
-        "tokenHint": "操作规则与 Proxy 授权相互独立。Proxy 授权列表为空时，Token 不能发送提供商代理请求。",
+        "connectionsTitle": "连接访问",
+        "connectionsUnrestrictedHint": "此 Token 可以使用任何已存储的连接；请求未指定名称时使用 default。",
+        "connectionsRestrictedHint": "此 Token 只能使用下方选中的 Provider 连接。",
+        "connectionsList": "允许的连接",
+        "connectionsRequired": "请至少选择一个连接，或选择不额外限制。",
+        "tooManyConnections": "连接列表最多包含 128 个连接。",
+        "connectionCount": "{{count}} 个连接",
+        "noConnections": "这个列表中暂无连接。",
+        "connectionsDefaultHint": "选择某个 Provider 的 default 连接后，Token 才能执行该 Provider 未指定连接名称的 HTTP、MCP 或代理请求。",
         "discard": "放弃修改",
         "preview": "预览影响"
       },

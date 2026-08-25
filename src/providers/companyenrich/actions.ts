@@ -169,14 +169,6 @@ const similarMetadataSchema = s.nullable(
   }),
 );
 
-export type CompanyenrichActionName =
-  | "get_current_user"
-  | "enrich_company_by_domain"
-  | "enrich_company_by_properties"
-  | "search_companies"
-  | "count_companies"
-  | "find_similar_companies";
-
 export const companyenrichActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

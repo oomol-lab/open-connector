@@ -1,6 +1,6 @@
 ---
 name: add-provider
-description: Add or extend an open-source OOMOL Connect provider under src/providers/<service>, including provider definition, action schemas, local executors, credential validation, examples, and generated catalog updates.
+description: Add or extend an open-source OOMOL Connect provider under src/providers, including provider definition, action schemas, local executors, credential validation, examples, and generated catalog updates.
 ---
 
 # Add Provider
@@ -62,7 +62,7 @@ src/providers/<service>/
 Rules:
 
 - Do not create `index.ts` or barrel files.
-- Do not hand-edit generated registry or catalog files. Run generation.
+- Do not hand-edit generated registry, action-contract, or catalog files. Run generation.
 - Keep definitions importable without network, credentials, or executor code.
 - Keep executor modules lazy. `definition.ts` must not import `executors.ts`, and executor modules should not import `definition.ts` just to reuse catalog metadata.
 - Keep provider-local helpers for provider-specific URLs, signing, pagination, envelopes, error extraction, and response normalization. Put generic casts, reads, query building, request helpers, and credential wiring in shared helpers when they are useful across providers.
@@ -76,6 +76,8 @@ Create or update `definition.ts` as catalog source code:
 - Use a stable lowercase service id, usually the product slug.
 - Declare `displayName`, `categories`, `authTypes`, `auth`, optional `homepageUrl` or `iconUrl`, and `actions`.
 - Use `defineProviderAction(service, action)` from `src/core/provider-definition.ts` so action ids stay stable as `<service>.<name>`.
+- Treat the actions in the provider definition as the only hand-maintained source of provider action names. Do not duplicate that list for executor exhaustiveness.
+- After adding a provider or changing its action names, run `npm run generate:registry` so `src/providers/action-contracts.generated.ts` exposes the updated service/action contract before implementing handlers.
 - Use provider-native `requiredScopes` and `providerPermissions`; do not invent private aliases.
 - Keep action descriptions and schema descriptions useful for agents. They should describe the business operation and field meaning, not the implementation.
 
@@ -108,7 +110,10 @@ Create or update `executors.ts` with `ProviderExecutors`:
 - Use `defineProviderExecutors` from `src/providers/provider-runtime.ts`.
 - Prefer `defineApiKeyProviderExecutors`, `defineOAuthProviderExecutors`, or `defineBearerProviderExecutors` when their context shape fits.
 - Resolve credentials through `ExecutionContext` or the shared credential helpers.
-- Keep action handlers keyed by provider action names.
+- Type a complete static handler map as `ProviderActionHandlers<typeof service, Handler>` so missing, misspelled, and extra action names fail typechecking.
+- For handlers split across real module boundaries, use `ProviderActionHandlerSubset` for fragments and `combineProviderActionHandlers` for the complete map.
+- Build dynamic handler maps with the shared `mapProviderActionHandlers`, `mapProviderActionNames`, or `mapProviderActionSources` helpers so the generated contract is preserved through adapters.
+- Do not type a complete provider handler map as `Record<string, Handler>` or use `as Record<...>` to claim completeness. Do not add a provider-local action-name union solely for handler exhaustiveness; keep one only when runtime business logic genuinely needs the narrower type.
 - Preserve provider request semantics: endpoint paths, methods, auth headers, request bodies, query params, pagination, status handling, error mapping, and output normalization.
 - Use `ProviderRequestError` for provider API failures that should become stable execution errors.
 - Use shared request helpers such as `setSearchParams`, `readProviderJson`, and `readProviderText` when they fit existing patterns.
@@ -122,6 +127,7 @@ Previous provider batches needed cleanup for these issues. Check them explicitly
 
 - Do not add catalog-only placeholders or empty `executors`. Add a provider when it has a runnable local executor.
 - Do not commit generated action schema modules. Hand-maintained provider source should own action schemas.
+- Do commit the repository-wide generated `src/providers/action-contracts.generated.ts` when definition changes update it; it is not a provider-local generated schema module.
 - If a credential field contains a user-configured base URL, host, workspace URL, or region-derived URL, normalize and validate it with the current public URL helper from `src/core/request.ts` before any fetch or proxy call. Reject credentials in URLs and unsafe network targets according to that helper.
 - If runtime downloads or uploads files, use existing transit-file and bounded-response helpers. Avoid unbounded `arrayBuffer()` or `text()` reads for file-sized responses.
 - If the upstream API supports streaming, multipart uploads, or very large local files but this runtime only supports JSON-friendly calls, expose the JSON-friendly shape and reject unsupported flags deliberately.
@@ -139,13 +145,15 @@ Do not add tests that only mirror static declarations such as provider labels, a
 
 1. Identify the provider id and the smallest useful runnable action set. Prefer a runnable provider over a catalog-only placeholder.
 2. Read official docs and one or two nearby providers from the pattern picker.
-3. Add or update `definition.ts`, `actions.ts`, `executors.ts`, and provider-local runtime files.
-4. Move genuinely generic helper behavior to shared helper modules only after checking existing APIs and downstream call sites.
-5. Run `npm run generate:catalog`.
-6. Run `npm run fix-check`.
-7. Run targeted tests when you changed shared helpers or added provider logic that is not covered by existing loader tests.
-8. Run `npm run build` when you need CI-parity no-fix typechecking or when the task asks for it.
-9. Review diffs for generated noise, non-public wording, copied assets, placeholder fields, and non-lazy imports.
+3. Add or update `definition.ts` and `actions.ts` first; these files own the action-name contract.
+4. Run `npm run generate:registry` to update the generated service/action contract.
+5. Implement provider-local runtime files and `executors.ts`, with every complete handler map implementing the generated contract.
+6. Move genuinely generic helper behavior to shared helper modules only after checking existing APIs and downstream call sites.
+7. Run `npm run generate:catalog`; this also refreshes registries and the action contract before writing catalog JSON.
+8. Run `npm run fix-check`.
+9. Run targeted tests when you changed shared helpers or added provider logic that is not covered by existing loader tests.
+10. Run `npm run build` when you need CI-parity no-fix typechecking or when the task asks for it.
+11. Review source and generated diffs for missing contract updates, generated noise, non-public wording, copied assets, placeholder fields, and non-lazy imports.
 
 ## Quality Gate
 
@@ -156,9 +164,11 @@ Before finishing, inspect the result against these checks:
 - Runtime fields have a clear public source and consumer.
 - Auth is locally configurable by users.
 - Schemas are useful public contracts for agents, not loose reflections of unknown JSON.
+- Every complete handler map implements the generated service/action contract, including maps built from dynamic sources or module fragments.
+- No duplicate action-name union or cast exists solely to make a handler map appear exhaustive.
 - Generic helper code has a single owner.
 - Provider-local helper code has provider-specific meaning.
-- No generated files were hand-edited.
+- Generated registries, action contracts, and catalog files were updated by their commands, not hand-edited, and all changed generated files are included in the final diff.
 - No third-party rights issue was introduced.
 - No non-public product behavior is mentioned.
 
@@ -169,6 +179,7 @@ State:
 - Which provider and actions were added or updated.
 - Whether each action is locally executable or catalog-only.
 - Main files changed.
+- Generated registry, action-contract, and catalog files changed by the provider definition.
 - Any shared helpers changed and why the behavior belongs there.
 - Tests intentionally omitted or added, with the reason.
 - Exact validation commands run and their result.

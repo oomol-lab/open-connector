@@ -217,5 +217,3 @@ export const elevioActions: ActionDefinition[] = [
     outputSchema: searchArticlesOutputSchema,
   }),
 ];
-
-export type ElevioActionName = "list_categories" | "get_category" | "list_articles" | "get_article" | "search_articles";

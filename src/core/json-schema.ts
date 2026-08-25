@@ -258,6 +258,13 @@ export const jsonSchema = {
     return cloneSchema(schema, { default: defaultValue });
   },
 
+  /** Require at least one named property while preserving the base object schema. */
+  requireAnyProperty(schema: JsonSchema, propertyNames: readonly [string, ...string[]]): JsonSchema {
+    return cloneSchema(schema, {
+      anyOf: propertyNames.map((propertyName) => ({ required: [propertyName] })),
+    });
+  },
+
   tuple(items: JsonSchema[], options: JsonSchemaOptions = {}): JsonSchema {
     return withOptions(
       {

@@ -1,11 +1,12 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 export const rewiserApiBaseUrl = "https://api.rewiser.io/functions/v1";
 
-export const rewiserActionHandlers: Record<
-  string,
+export const rewiserActionHandlers: ProviderActionHandlers<
+  "rewiser",
   (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   async get_folders(_input, context) {

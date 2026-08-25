@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { PartnerstackActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -40,7 +40,7 @@ interface PartnerstackListPayload {
 
 type PartnerstackActionHandler = (input: Record<string, unknown>, context: PartnerstackContext) => Promise<unknown>;
 
-export const partnerstackActionHandlers: Record<PartnerstackActionName, PartnerstackActionHandler> = {
+export const partnerstackActionHandlers: ProviderActionHandlers<"partnerstack", PartnerstackActionHandler> = {
   list_customers(input, context) {
     return listCustomers(input, context);
   },

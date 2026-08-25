@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "simplesat" as const;
 
-export type SimplesatActionName =
-  | "list_surveys"
-  | "list_questions"
-  | "search_responses"
-  | "get_response"
-  | "list_customers"
-  | "get_customer"
-  | "create_or_update_customer"
-  | "send_survey_email";
-
 const requiredIdSchema = (description: string) => s.string(description, { minLength: 1 });
 const pageSchema = s.integer("The one-based page number to request from Simplesat.", {
   minimum: 1,

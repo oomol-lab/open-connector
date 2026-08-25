@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LeigaActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -26,7 +26,7 @@ interface LeigaRequestInput {
   phase: LeigaPhase;
 }
 
-export const leigaActionHandlers: Record<LeigaActionName, LeigaActionHandler> = {
+export const leigaActionHandlers: ProviderActionHandlers<"leiga", LeigaActionHandler> = {
   async list_projects(input, context) {
     const payload = await requestLeigaJson({
       context,

@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "memberstack";
 
-export type MemberstackActionName =
-  | "list_members"
-  | "get_member"
-  | "create_member"
-  | "update_member"
-  | "delete_member"
-  | "add_free_plan"
-  | "remove_free_plan"
-  | "verify_member_token";
-
 const planInputSchema = s.object("A free Memberstack plan assignment.", {
   planId: s.nonEmptyString("The free plan ID to assign or remove. Free plan IDs start with pln_."),
 });

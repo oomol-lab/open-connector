@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ShortpixelActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const shortpixelDefaultRequestTimeoutMs = 30_000;
 type ShortpixelPhase = "validate" | "execute";
 type ShortpixelActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const shortpixelActionHandlers: Record<ShortpixelActionName, ShortpixelActionHandler> = {
+export const shortpixelActionHandlers: ProviderActionHandlers<"shortpixel", ShortpixelActionHandler> = {
   async get_domain_cdn_usage(input, context) {
     const domain = readRequiredDomain(input.domain);
     const payload = await requestShortpixelJson(

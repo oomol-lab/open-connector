@@ -70,13 +70,6 @@ const twochatWebhookSchema = s.object("One normalized 2Chat webhook subscription
   createdAt: isoDateTimeSchema,
 });
 
-export type TwochatActionName =
-  | "test_api_key"
-  | "get_api_usage_info"
-  | "list_webhooks"
-  | "list_contacts"
-  | "create_contact";
-
 export const twochatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "test_api_key",

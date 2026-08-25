@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -90,7 +91,7 @@ type ElasticsearchActionHandler = (
   context: ElasticsearchActionContext,
 ) => Promise<unknown>;
 
-export const elasticsearchActionHandlers: Record<string, ElasticsearchActionHandler> = {
+export const elasticsearchActionHandlers: ProviderActionHandlers<"elasticsearch", ElasticsearchActionHandler> = {
   ping_cluster(_input: Record<string, unknown>, context: ElasticsearchActionContext): Promise<unknown> {
     return pingElasticsearchCluster(context);
   },

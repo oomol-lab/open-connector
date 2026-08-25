@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { BigmailerActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface BigmailerRuntimeContext {
 
 type BigmailerActionHandler = (input: Record<string, unknown>, context: BigmailerRuntimeContext) => Promise<unknown>;
 
-export const bigmailerActionHandlers: Record<BigmailerActionName, BigmailerActionHandler> = {
+export const bigmailerActionHandlers: ProviderActionHandlers<"bigmailer", BigmailerActionHandler> = {
   list_brands: listBrands,
   get_brand: getBrand,
   list_lists: listLists,

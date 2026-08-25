@@ -316,13 +316,6 @@ const listPayoutsOutputSchema = s.object(
   { optional: ["message", "status"] },
 );
 
-export type PartnerStackPartnerActionName =
-  | "list_marketplace_programs"
-  | "get_marketplace_program"
-  | "list_partnerships"
-  | "list_rewards"
-  | "list_payouts";
-
 export const partnerStackPartnerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_marketplace_programs",

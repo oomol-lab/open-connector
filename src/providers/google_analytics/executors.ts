@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -13,7 +14,7 @@ import {
   optionalStringOrNull,
   requiredRecord,
 } from "../../core/cast.ts";
-import { googleJsonRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "google_analytics";
@@ -29,7 +30,7 @@ type GoogleAnalyticsActionHandler = (
   context: GoogleAnalyticsRuntimeDeps,
 ) => Promise<unknown>;
 
-export const googleAnalyticsActionHandlers: Record<string, GoogleAnalyticsActionHandler> = {
+export const googleAnalyticsActionHandlers: ProviderActionHandlers<"google_analytics", GoogleAnalyticsActionHandler> = {
   list_account_summaries: listAccountSummaries,
   list_properties: listProperties,
   get_metadata: getMetadata,

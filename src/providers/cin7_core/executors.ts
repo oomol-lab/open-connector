@@ -4,8 +4,8 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { Cin7CoreActionName } from "./actions.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -40,7 +40,7 @@ interface Cin7CoreContext {
 
 type Cin7CoreActionHandler = (input: Record<string, unknown>, context: Cin7CoreContext) => Promise<unknown>;
 
-const cin7CoreActionHandlers: Record<Cin7CoreActionName, Cin7CoreActionHandler> = {
+const cin7CoreActionHandlers: ProviderActionHandlers<"cin7_core", Cin7CoreActionHandler> = {
   async get_current_account(_input, context) {
     const payload = await requestCin7CoreJson({
       context,

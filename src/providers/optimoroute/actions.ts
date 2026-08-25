@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "optimoroute";
 
-export type OptimorouteActionName = "create_or_update_orders" | "get_orders" | "delete_orders";
-
 const trimmedString = (description: string): JsonSchema => s.string({ description, minLength: 1 });
 
 const orderIdentifierSchema = s.object(

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LangbaseActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ const langbaseRetrievePath = "/v1/memory/retrieve";
 type LangbaseRequestPhase = "validate" | "execute";
 type LangbaseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const langbaseActionHandlers: Record<LangbaseActionName, LangbaseActionHandler> = {
+export const langbaseActionHandlers: ProviderActionHandlers<"langbase", LangbaseActionHandler> = {
   list_memories(_input, context) {
     return listLangbaseMemories(context);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ReplyIoActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -11,7 +11,7 @@ const replyIoApiBaseUrl = "https://api.reply.io";
 
 type ReplyIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const replyIoActionHandlers: Record<ReplyIoActionName, ReplyIoActionHandler> = {
+export const replyIoActionHandlers: ProviderActionHandlers<"reply_io", ReplyIoActionHandler> = {
   async get_current_user(_input, context) {
     return { user: await requestReplyIo(context, { method: "GET", path: "/v3/whoami" }) };
   },

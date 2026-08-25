@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -26,7 +27,7 @@ type DailyRequestPhase = "validate" | "execute";
 
 type DailyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const dailyActionHandlers: Record<string, DailyActionHandler> = {
+export const dailyActionHandlers: ProviderActionHandlers<"daily", DailyActionHandler> = {
   async get_domain_config(_input, context) {
     return {
       domain: await dailyRequestObject({ method: "GET", path: "/" }, context, "execute"),

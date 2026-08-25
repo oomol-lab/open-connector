@@ -203,24 +203,6 @@ const deleteWebhookInputSchema = s.object("Input for deleting a webhook.", {
   webhookId: webhookIdSchema,
 });
 
-export type LemonSqueezyActionName =
-  | "retrieve_authenticated_user"
-  | "list_stores"
-  | "retrieve_store"
-  | "list_products"
-  | "list_variants"
-  | "list_orders"
-  | "list_subscriptions"
-  | "list_customers"
-  | "retrieve_customer"
-  | "create_customer"
-  | "update_customer"
-  | "list_webhooks"
-  | "retrieve_webhook"
-  | "create_webhook"
-  | "update_webhook"
-  | "delete_webhook";
-
 export const lemonSqueezyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "retrieve_authenticated_user",

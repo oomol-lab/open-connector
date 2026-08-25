@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DialMyCallsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -30,7 +31,7 @@ type DialMyCallsActionHandler = (
   apiKey: string,
 ) => Promise<unknown>;
 
-export const dialMyCallsActionHandlers: Record<DialMyCallsActionName, DialMyCallsActionHandler> = {
+export const dialMyCallsActionHandlers: ProviderActionHandlers<"dialmycalls", DialMyCallsActionHandler> = {
   async get_account(_input, fetcher, apiKey) {
     return requestDialMyCallsJson({
       apiKey,
@@ -140,7 +141,7 @@ export const dialMyCallsActionHandlers: Record<DialMyCallsActionName, DialMyCall
       phase: "execute",
     });
   },
-} satisfies Record<DialMyCallsActionName, DialMyCallsActionHandler>;
+};
 
 export async function validateDialMyCallsCredential(
   input: Record<string, string>,

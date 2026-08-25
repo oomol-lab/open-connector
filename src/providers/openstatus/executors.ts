@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OpenstatusActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -33,7 +33,7 @@ const monitorService = "openstatus.monitor.v1.MonitorService";
 type OpenstatusRequestPhase = "validate" | "execute";
 type OpenstatusActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const openstatusActionHandlers: Record<OpenstatusActionName, OpenstatusActionHandler> = {
+export const openstatusActionHandlers: ProviderActionHandlers<"openstatus", OpenstatusActionHandler> = {
   list_monitors(input, context) {
     return listMonitors(input, context);
   },

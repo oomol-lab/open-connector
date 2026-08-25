@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SimlaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -27,7 +27,7 @@ interface SimlaRequestOptions {
   signal?: AbortSignal;
 }
 
-export const simlaActionHandlers: Record<SimlaActionName, SimlaActionHandler> = {
+export const simlaActionHandlers: ProviderActionHandlers<"simla", SimlaActionHandler> = {
   list_orders(input, context) {
     return listOrders(input, context);
   },

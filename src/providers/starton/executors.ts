@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { StartonActionName } from "./actions.ts";
 
 import { nullableString, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ const startonDefaultRequestTimeoutMs = 30_000;
 type StartonPhase = "validate" | "execute";
 type StartonActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const startonActionHandlers: Record<StartonActionName, StartonActionHandler> = {
+export const startonActionHandlers: ProviderActionHandlers<"starton", StartonActionHandler> = {
   async list_pins(input, context) {
     const payload = await requestStartonJson({
       apiKey: context.apiKey,

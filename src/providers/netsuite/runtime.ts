@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { NetsuiteActionName } from "./actions.ts";
 
 import { createHmac, randomBytes } from "node:crypto";
 import {
@@ -69,7 +69,7 @@ interface OAuthHeaderInput {
   url: URL;
 }
 
-export const netsuiteActionHandlers: Record<NetsuiteActionName, NetsuiteActionHandler> = {
+export const netsuiteActionHandlers: ProviderActionHandlers<"netsuite", NetsuiteActionHandler> = {
   run_suiteql(input, context) {
     return runSuiteql(input, context);
   },

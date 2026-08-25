@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -34,7 +35,7 @@ const collectionActionConfig: Record<
   list_countries: { path: "/countries", outputKey: "countries", normalize: normalizeCountry },
 };
 
-export const aviationstackActionHandlers: Record<string, AviationstackActionHandler> = {
+export const aviationstackActionHandlers: ProviderActionHandlers<"aviationstack", AviationstackActionHandler> = {
   search_flights(input, context) {
     return searchFlights(input, context);
   },

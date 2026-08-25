@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -198,7 +199,7 @@ function validateShareholderTradeFilters(input: Record<string, unknown>): void {
   }
 }
 
-export const tushareActionHandlers: Record<string, TushareActionHandler> = {
+export const tushareActionHandlers: ProviderActionHandlers<"tushare", TushareActionHandler> = {
   query_data(input, context) {
     return executeQueryData(input, context);
   },

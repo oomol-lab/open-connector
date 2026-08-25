@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -16,7 +17,7 @@ interface EdenAiRequest {
   mode: "validate" | "execute";
 }
 
-export const edenaiActionHandlers: Record<string, EdenAiActionHandler> = {
+export const edenaiActionHandlers: ProviderActionHandlers<"edenai", EdenAiActionHandler> = {
   list_models(_input, context) {
     return edenaiRequest(context, { path: "/models", mode: "execute" });
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TimecampActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalRawString, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ type TimecampPhase = "validate" | "execute";
 type TimecampQueryValue = string | number | boolean | readonly (string | number)[] | undefined;
 type TimecampActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const timecampActionHandlers: Record<TimecampActionName, TimecampActionHandler> = {
+export const timecampActionHandlers: ProviderActionHandlers<"timecamp", TimecampActionHandler> = {
   async get_current_user(_input, context): Promise<unknown> {
     const payload = await requestTimecampJson({
       path: "/me",

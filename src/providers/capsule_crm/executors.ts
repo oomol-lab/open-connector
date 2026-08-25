@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -16,7 +17,7 @@ const requestTimeoutMs = 30_000;
 
 type CapsuleCrmActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const capsuleCrmActionHandlers: Record<string, CapsuleCrmActionHandler> = {
+export const capsuleCrmActionHandlers: ProviderActionHandlers<"capsule_crm", CapsuleCrmActionHandler> = {
   list_parties(input, context) {
     return requestList(context, "/parties", "parties", buildListQuery(input));
   },

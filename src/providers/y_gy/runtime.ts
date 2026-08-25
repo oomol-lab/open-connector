@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -38,7 +39,7 @@ type YGyMode = "validate" | "execute";
 type YGyMethod = "GET" | "POST" | "PATCH" | "DELETE";
 type YGyPayload = { kind: "empty" } | { kind: "json"; value: unknown } | { kind: "text"; value: string };
 
-export const yGyActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const yGyActionHandlers: ProviderActionHandlers<"y_gy", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async create_link(input, context) {
     const payload = await requestYGyJson(context, {
       path: linksPath,

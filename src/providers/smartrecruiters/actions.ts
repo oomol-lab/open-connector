@@ -151,8 +151,6 @@ const getCandidateAction = defineProviderAction(service, {
   }),
 });
 
-export type SmartRecruitersActionName = "list_jobs" | "get_job" | "search_candidates" | "get_candidate";
-
 export const smartrecruitersActions: ActionDefinition[] = [
   listJobsAction,
   getJobAction,

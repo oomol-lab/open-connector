@@ -163,21 +163,6 @@ const updateRoleFields = {
   permissions: s.array("The updated permissions to assign to the custom role.", permissionSchema),
 };
 
-export type CoderabbitActionName =
-  | "list_users"
-  | "manage_seats"
-  | "get_seat_assignment_mode"
-  | "update_seat_assignment_mode"
-  | "change_roles"
-  | "get_review_metrics"
-  | "list_audit_logs"
-  | "list_roles"
-  | "get_role"
-  | "create_role"
-  | "update_role"
-  | "delete_role"
-  | "list_role_permissions";
-
 export const coderabbitActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",

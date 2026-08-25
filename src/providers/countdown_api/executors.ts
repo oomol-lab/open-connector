@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { CountdownApiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -17,7 +17,7 @@ interface CountdownApiContext {
 
 type CountdownApiActionHandler = (input: Record<string, unknown>, context: CountdownApiContext) => Promise<unknown>;
 
-const countdownApiActionHandlers: Record<CountdownApiActionName, CountdownApiActionHandler> = {
+const countdownApiActionHandlers: ProviderActionHandlers<"countdown_api", CountdownApiActionHandler> = {
   get_account(_input, context) {
     return getAccount(context);
   },

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import {
@@ -19,7 +20,7 @@ import {
   readJsonResponse,
 } from "./runtime-shared.ts";
 
-export const pullRequestActionHandlers: Record<string, GitHubActionHandler> = {
+export const pullRequestActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
   list_pull_requests(input, { accessToken, fetcher }) {
     return listPullRequests(input, accessToken, fetcher);
   },

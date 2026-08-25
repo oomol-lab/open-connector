@@ -447,32 +447,3 @@ export const ipinfoIoActions: ActionDefinition[] = [
     outputSchema: tokenInfoSchema,
   }),
 ];
-
-export type IpinfoIoActionName =
-  | "get_ip_info"
-  | "get_current_ip"
-  | "get_current_ip_info"
-  | "get_current_loc"
-  | "get_current_region"
-  | "get_ip_by_ip"
-  | "get_ip_info_by_ip"
-  | "get_location_by_ip"
-  | "get_geo_by_ip"
-  | "get_city_by_ip"
-  | "get_region_by_ip"
-  | "get_country_by_ip"
-  | "get_postal_by_ip"
-  | "get_timezone_by_ip"
-  | "get_hostname_by_ip"
-  | "get_org_by_ip"
-  | "get_company_info"
-  | "get_carrier_info"
-  | "get_privacy_details"
-  | "get_abuse_contact"
-  | "get_lite_field_by_ip"
-  | "get_core_field_by_me"
-  | "get_plus_field_by_me"
-  | "batch_lookup"
-  | "batch_lite_lookup"
-  | "map_ips"
-  | "get_token_info";

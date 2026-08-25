@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CoderabbitActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -22,7 +22,7 @@ interface CoderabbitCredentialInput {
   apiKey: string;
 }
 
-export const coderabbitActionHandlers: Record<CoderabbitActionName, CoderabbitActionHandler> = {
+export const coderabbitActionHandlers: ProviderActionHandlers<"coderabbit", CoderabbitActionHandler> = {
   async list_users(input, context) {
     return listUsers(input, context);
   },

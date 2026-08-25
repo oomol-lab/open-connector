@@ -72,8 +72,6 @@ const pollDetailSchema = s.object(
   },
 );
 
-export type LoomioActionName = "list_polls" | "get_poll";
-
 export const loomioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_polls",

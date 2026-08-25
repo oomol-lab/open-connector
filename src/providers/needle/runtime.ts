@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NeedleActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -27,7 +27,7 @@ interface NeedleRequestInput {
   mode?: "validate" | "execute";
 }
 
-export const needleActionHandlers: Record<NeedleActionName, NeedleActionHandler> = {
+export const needleActionHandlers: ProviderActionHandlers<"needle", NeedleActionHandler> = {
   list_collections: (_input, context) => listCollections(context),
   create_collection: (input, context) => createCollection(input, context),
   get_collection: (input, context) => getCollection(input, context),

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineProviderProxy,
@@ -37,6 +38,13 @@ async function request(
   if (!response.ok || !payload) throw new ProviderRequestError(response.status || 502, "Z-API request failed", payload);
   return payload;
 }
+const handlers: ProviderActionHandlers<"z_api", ProviderRuntimeHandler<Context>> = {
+  get_instance_status: (input, context) => request("status", input, context, "GET"),
+  send_text: (input, context) => request("send-text", input, context),
+  send_image: (input, context) => request("send-image", input, context),
+  send_location: (input, context) => request("send-location", input, context),
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
   service: "z_api",
   skipDnsValidation: true,
@@ -53,12 +61,7 @@ export const executors: import("../../core/types.ts").ProviderExecutors = define
       signal: context.signal,
     };
   },
-  handlers: {
-    get_instance_status: (input, context) => request("status", input, context, "GET"),
-    send_text: (input, context) => request("send-text", input, context),
-    send_image: (input, context) => request("send-image", input, context),
-    send_location: (input, context) => request("send-location", input, context),
-  },
+  handlers,
 });
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "z_api",

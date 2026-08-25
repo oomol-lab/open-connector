@@ -73,18 +73,6 @@ const exampleSchema = s.object("A LangSmith dataset example.", {
   raw: s.looseObject("The raw example object returned by LangSmith."),
 });
 
-export type LangSmithActionName =
-  | "list_workspaces"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "list_datasets"
-  | "get_dataset"
-  | "create_dataset"
-  | "list_examples"
-  | "get_example"
-  | "create_example";
-
 export const langSmithActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",

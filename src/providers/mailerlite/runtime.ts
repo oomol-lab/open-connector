@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailerliteActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,7 +20,7 @@ interface MailerliteRequestOptions {
   body?: unknown;
 }
 
-export const mailerliteActionHandlers: Record<MailerliteActionName, MailerliteActionHandler> = {
+export const mailerliteActionHandlers: ProviderActionHandlers<"mailerlite", MailerliteActionHandler> = {
   list_subscribers(input, context) {
     return requestMailerliteJson({
       path: "/subscribers",

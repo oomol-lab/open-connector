@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { DadataRuActionName } from "./actions.ts";
 
@@ -20,7 +21,7 @@ const dadataRuEndpointByAction: Record<DadataRuActionName, string> = {
   suggest_email: "/suggest/email",
 };
 
-export const dadataRuActionHandlers: Record<DadataRuActionName, DadataRuActionHandler> = {
+export const dadataRuActionHandlers: ProviderActionHandlers<"dadata_ru", DadataRuActionHandler> = {
   suggest_address(input, context) {
     return dadataRuSuggest("suggest_address", input, context);
   },

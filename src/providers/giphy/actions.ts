@@ -358,20 +358,3 @@ export const giphyActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type GiphyActionName =
-  | "search_gifs"
-  | "list_trending_gifs"
-  | "search_stickers"
-  | "list_trending_stickers"
-  | "translate_gif"
-  | "translate_sticker"
-  | "get_random_gif"
-  | "get_random_sticker"
-  | "get_gif"
-  | "list_gifs_by_ids"
-  | "search_tags"
-  | "list_trending_tags"
-  | "list_related_tags"
-  | "list_categories"
-  | "get_random_id";

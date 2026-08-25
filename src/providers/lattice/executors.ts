@@ -1,6 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { LatticeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -35,7 +35,7 @@ interface LatticeRequestOptions {
 
 type LatticeActionHandler = (input: Record<string, unknown>, context: LatticeActionContext) => Promise<unknown>;
 
-export const latticeActionHandlers: Record<LatticeActionName, LatticeActionHandler> = {
+export const latticeActionHandlers: ProviderActionHandlers<"lattice", LatticeActionHandler> = {
   get_current_user(_input, context) {
     return getSingleLatticeResource("user", latticeValidationPath, context);
   },

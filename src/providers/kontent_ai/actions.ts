@@ -113,11 +113,3 @@ export const kontentAiActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type KontentAiActionName =
-  | "list_content_items"
-  | "get_content_item"
-  | "list_content_types"
-  | "get_content_type"
-  | "list_languages"
-  | "get_language";

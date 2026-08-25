@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ interface UmamiRequestOptions {
   query?: Record<string, string | undefined>;
 }
 
-export const umamiActionHandlers: Record<string, UmamiActionHandler> = {
+export const umamiActionHandlers: ProviderActionHandlers<"umami", UmamiActionHandler> = {
   async get_current_user(_input, context) {
     const user = requireObject(
       await requestUmamiJson({

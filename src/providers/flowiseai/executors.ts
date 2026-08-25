@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { FlowiseaiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -53,7 +53,7 @@ interface FlowiseaiRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const flowiseaiActionHandlers: Record<FlowiseaiActionName, FlowiseaiActionHandler> = {
+export const flowiseaiActionHandlers: ProviderActionHandlers<"flowiseai", FlowiseaiActionHandler> = {
   async get_chatflow(_input, context) {
     const chatflow = normalizeChatflow(
       await requestFlowiseJson({

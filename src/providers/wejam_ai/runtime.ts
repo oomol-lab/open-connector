@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { WejamAiActionName } from "./actions.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
@@ -23,7 +23,7 @@ type WejamAiPhase = "validate" | "execute";
 type WejamAiActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type WejamAiActionHandler = (input: Record<string, unknown>, context: WejamAiActionContext) => Promise<unknown>;
 
-export const wejamAiActionHandlers: Record<WejamAiActionName, WejamAiActionHandler> = {
+export const wejamAiActionHandlers: ProviderActionHandlers<"wejam_ai", WejamAiActionHandler> = {
   async export_data(input, context) {
     const resource = readExportResource(input.resource);
     const payload = await requestWejamAiJson({

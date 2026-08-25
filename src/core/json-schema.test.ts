@@ -121,3 +121,21 @@ describe("jsonSchema.optional", () => {
     expect(jsonSchema.requiredObject("Wrapped optional use.", { id: defaulted })).not.toHaveProperty("required");
   });
 });
+
+describe("jsonSchema.requireAnyProperty", () => {
+  it("requires at least one of the named object properties", () => {
+    const schema = jsonSchema.object(
+      "A partial update.",
+      {
+        name: jsonSchema.string("A new name."),
+        color: jsonSchema.string("A new color."),
+      },
+      { optional: ["name", "color"] },
+    );
+
+    expect(jsonSchema.requireAnyProperty(schema, ["name", "color"])).toMatchObject({
+      anyOf: [{ required: ["name"] }, { required: ["color"] }],
+    });
+    expect(schema).not.toHaveProperty("anyOf");
+  });
+});

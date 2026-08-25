@@ -1,3 +1,5 @@
+import type { QueryValue } from "../../core/request.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { VercelActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -23,14 +25,36 @@ interface VercelTeam {
 
 type VercelActionHandler = (input: VercelActionInput, context: VercelActionContext) => Promise<unknown>;
 
-export interface VercelActionContext {
+export interface VercelTeamScope {
+  teamId?: string;
+  slug?: string;
+}
+
+export interface VercelActionContext extends VercelTeamScope {
   apiKey: string;
   fetcher: typeof fetch;
 }
 
+/**
+ * Stored credential values passed to the Vercel credential validator.
+ */
+export interface VercelCredentialValidationInput {
+  apiKey: string;
+  values: Record<string, string>;
+}
+
+/**
+ * Transport fields shared by the team-resolution helpers.
+ */
+interface VercelTeamLookupOptions {
+  apiKey: string;
+  fetcher: typeof fetch;
+  mode: "validate" | "execute";
+}
+
 type VercelActionInput = Record<string, unknown>;
 
-export const vercelActionHandlers: Record<VercelActionName, VercelActionHandler> = {
+export const vercelActionHandlers: ProviderActionHandlers<"vercel", VercelActionHandler> = {
   get_auth_user(input: VercelActionInput, context: VercelActionContext): Promise<unknown> {
     return vercelGetAuthUser(input, context);
   },
@@ -100,10 +124,13 @@ export const vercelActionHandlers: Record<VercelActionName, VercelActionHandler>
   create_webhook(input: VercelActionInput, context: VercelActionContext): Promise<unknown> {
     return vercelCreateWebhook(input, context);
   },
+  delete_webhook(input: VercelActionInput, context: VercelActionContext): Promise<unknown> {
+    return vercelDeleteWebhook(input, context);
+  },
 };
 
 export async function validateVercelCredential(
-  apiKey: string,
+  input: VercelCredentialValidationInput,
   fetcher: typeof fetch,
 ): Promise<{
   profile: {
@@ -113,26 +140,32 @@ export async function validateVercelCredential(
   grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
-  // TODO(vercel-team-id): restore default team validation when Team ID support returns.
+  const teamScope = readVercelTeamScope(input.values);
   const user = await requestVercelJson<VercelUserResponse>({
     path: "/v2/user",
-    apiKey,
+    apiKey: input.apiKey,
     fetcher,
     mode: "validate",
   }).then((payload) => normalizeVercelUser(payload));
 
+  const team =
+    teamScope.teamId || teamScope.slug ? await validateVercelTeam(input.apiKey, fetcher, teamScope) : undefined;
+
   return {
     profile: {
-      accountId: user.id,
-      displayName: userLabel(user),
+      accountId: team?.id ?? user.id,
+      displayName: team ? (team.name ?? team.slug ?? userLabel(user)) : userLabel(user),
     },
     grantedScopes: [],
     metadata: compactObject({
-      validationEndpoint: "/v2/user",
+      validationEndpoint: team ? `/v2/teams/${team.id}` : "/v2/user",
       userId: user.id,
       username: user.username,
       email: user.email,
       name: user.name,
+      teamId: team?.id,
+      teamSlug: team?.slug,
+      teamName: team?.name,
     }),
   };
 }
@@ -148,6 +181,151 @@ export async function executeVercelAction(
   }
 
   return handler(input, context);
+}
+
+/**
+ * Read optional Vercel `teamId` or `slug` from credential extra fields or action input.
+ *
+ * Vercel accepts either query parameter, so this connector requires exactly one to keep a
+ * contradictory pair from silently resolving to whichever team the API happens to prefer.
+ */
+export function readVercelTeamScope(source: Record<string, unknown> | undefined): VercelTeamScope {
+  const teamId = optionalString(source?.teamId);
+  const slug = optionalString(source?.slug);
+  if (teamId && slug) {
+    throw new ProviderRequestError(400, "teamId and slug cannot both be provided");
+  }
+  return compactObject({ teamId, slug });
+}
+
+const vercelTeamListPageSize = 100;
+const vercelTeamListMaxPages = 20;
+
+async function validateVercelTeam(
+  apiKey: string,
+  fetcher: typeof fetch,
+  teamScope: VercelTeamScope,
+): Promise<VercelTeam> {
+  const teamId = await resolveVercelTeamId({
+    teamScope,
+    apiKey,
+    fetcher,
+    mode: "validate",
+  });
+  return requestVercelTeamById({
+    teamId,
+    apiKey,
+    fetcher,
+    mode: "validate",
+  });
+}
+
+interface VercelTeamIdResolutionOptions extends VercelTeamLookupOptions {
+  teamScope: VercelTeamScope;
+}
+
+async function resolveVercelTeamId(options: VercelTeamIdResolutionOptions): Promise<string> {
+  if (options.teamScope.teamId) {
+    return options.teamScope.teamId;
+  }
+  if (!options.teamScope.slug) {
+    throw new ProviderRequestError(400, "teamId or slug is required");
+  }
+  return findTeamIdBySlug({
+    slug: options.teamScope.slug,
+    apiKey: options.apiKey,
+    fetcher: options.fetcher,
+    mode: options.mode,
+  });
+}
+
+interface VercelTeamSlugLookupOptions extends VercelTeamLookupOptions {
+  slug: string;
+}
+
+async function findTeamIdBySlug(options: VercelTeamSlugLookupOptions): Promise<string> {
+  let until: number | undefined;
+
+  for (let page = 0; page < vercelTeamListMaxPages; page += 1) {
+    const payload = await requestVercelJson<{
+      teams?: unknown[];
+      pagination?: { next?: unknown };
+    }>({
+      path: "/v2/teams",
+      apiKey: options.apiKey,
+      fetcher: options.fetcher,
+      mode: options.mode,
+      query: queryParams({
+        limit: vercelTeamListPageSize,
+        until,
+      }),
+    });
+
+    if (!Array.isArray(payload.teams)) {
+      throw new ProviderRequestError(502, "vercel team list response is missing teams");
+    }
+
+    for (const item of payload.teams) {
+      const team = optionalRecord(item);
+      if (optionalString(team?.slug) !== options.slug) {
+        continue;
+      }
+      const teamId = optionalString(team?.id);
+      if (!teamId) {
+        throw new ProviderRequestError(502, "vercel team response is missing id");
+      }
+      return teamId;
+    }
+
+    const next = optionalNumber(optionalRecord(payload.pagination)?.next);
+    if (next == null || payload.teams.length === 0) {
+      throw new ProviderRequestError(400, "vercel team slug was not found");
+    }
+    until = next;
+  }
+
+  // A non-null `pagination.next` after the last page means the scan stopped short of the
+  // whole team list, so the slug may well exist; do not report it as a bad slug.
+  throw new ProviderRequestError(
+    400,
+    `vercel team list was not fully scanned within ${vercelTeamListMaxPages} pages; set teamId instead of slug`,
+  );
+}
+
+interface VercelTeamByIdOptions extends VercelTeamLookupOptions {
+  teamId: string;
+}
+
+async function requestVercelTeamById(options: VercelTeamByIdOptions): Promise<VercelTeam> {
+  const payload = await requestVercelJson<VercelTeamResponse>({
+    path: `/v2/teams/${encodeURIComponent(options.teamId)}`,
+    apiKey: options.apiKey,
+    fetcher: options.fetcher,
+    mode: options.mode,
+    notFoundAsInvalidInput: true,
+  });
+  return normalizeVercelTeam(payload);
+}
+
+function resolveTeamScope(input: VercelActionInput, context: VercelActionContext): VercelTeamScope {
+  const fromInput = readVercelTeamScope(input);
+  if (fromInput.teamId || fromInput.slug) {
+    return fromInput;
+  }
+  return readVercelTeamScope({ teamId: context.teamId, slug: context.slug });
+}
+
+function teamQuery(
+  input: VercelActionInput,
+  context: VercelActionContext,
+  extra: Record<string, QueryValue> = {},
+): Record<string, string> {
+  const teamScope = resolveTeamScope(input, context);
+  return queryParams({
+    ...extra,
+    teamId: teamScope.teamId,
+    slug: teamScope.slug,
+  });
 }
 
 async function vercelGetAuthUser(_input: VercelActionInput, context: VercelActionContext) {
@@ -185,17 +363,20 @@ async function vercelListTeams(input: VercelActionInput, context: VercelActionCo
 }
 
 async function vercelGetTeam(input: VercelActionInput, context: VercelActionContext) {
-  const teamId = requireString(input.teamId, "teamId");
-  const payload = await requestVercelJson<VercelTeamResponse>({
-    path: `/v2/teams/${encodeURIComponent(teamId)}`,
+  const teamId = await resolveVercelTeamId({
+    teamScope: resolveTeamScope(input, context),
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    notFoundAsInvalidInput: true,
   });
 
   return {
-    team: normalizeVercelTeam(payload),
+    team: await requestVercelTeamById({
+      teamId,
+      apiKey: context.apiKey,
+      fetcher: context.fetcher,
+      mode: "execute",
+    }),
   };
 }
 
@@ -208,7 +389,7 @@ async function vercelListProjects(input: VercelActionInput, context: VercelActio
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    query: queryParams({
+    query: teamQuery(input, context, {
       limit: optionalNumber(input.limit),
       since: optionalNumber(input.since),
       until: optionalNumber(input.until),
@@ -229,6 +410,7 @@ async function vercelGetProject(input: VercelActionInput, context: VercelActionC
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -244,6 +426,7 @@ async function vercelCreateProject(input: VercelActionInput, context: VercelActi
     fetcher: context.fetcher,
     mode: "execute",
     method: "POST",
+    query: teamQuery(input, context),
     body: jsonObject({
       name: optionalString(input.name),
       framework: optionalString(input.framework),
@@ -272,6 +455,7 @@ async function vercelUpdateProject(input: VercelActionInput, context: VercelActi
     fetcher: context.fetcher,
     mode: "execute",
     method: "PATCH",
+    query: teamQuery(input, context),
     body: jsonObject({
       name: optionalString(input.name),
       framework: optionalString(input.framework),
@@ -302,7 +486,7 @@ async function vercelListDeployments(input: VercelActionInput, context: VercelAc
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    query: queryParams({
+    query: teamQuery(input, context, {
       limit: optionalNumber(input.limit),
       projectId: optionalString(input.projectId),
       since: optionalNumber(input.since),
@@ -325,7 +509,7 @@ async function vercelGetDeployment(input: VercelActionInput, context: VercelActi
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    query: queryParams({
+    query: teamQuery(input, context, {
       withGitRepoInfo: optionalBoolean(input.withGitRepoInfo),
     }),
     notFoundAsInvalidInput: true,
@@ -343,7 +527,7 @@ async function vercelGetDeploymentEvents(input: VercelActionInput, context: Verc
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    query: queryParams({
+    query: teamQuery(input, context, {
       builds: queryFlag(optionalBoolean(input.builds)),
       direction: optionalString(input.direction),
       limit: optionalNumber(input.limit),
@@ -366,6 +550,7 @@ async function vercelGetRuntimeLogs(input: VercelActionInput, context: VercelAct
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -381,7 +566,7 @@ async function vercelListProjectEnvs(input: VercelActionInput, context: VercelAc
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    query: queryParams({
+    query: teamQuery(input, context, {
       customEnvironmentId: optionalString(input.customEnvironmentId),
       gitBranch: optionalString(input.gitBranch),
     }),
@@ -402,6 +587,7 @@ async function vercelCreateProjectEnv(input: VercelActionInput, context: VercelA
     fetcher: context.fetcher,
     mode: "execute",
     method: "POST",
+    query: teamQuery(input, context),
     body: jsonObject({
       key: optionalString(input.key),
       value: optionalString(input.value),
@@ -428,6 +614,7 @@ async function vercelUpdateProjectEnv(input: VercelActionInput, context: VercelA
     fetcher: context.fetcher,
     mode: "execute",
     method: "PATCH",
+    query: teamQuery(input, context),
     body: jsonObject({
       key: optionalString(input.key),
       value: optionalString(input.value),
@@ -454,6 +641,7 @@ async function vercelDeleteProjectEnv(input: VercelActionInput, context: VercelA
     fetcher: context.fetcher,
     mode: "execute",
     method: "DELETE",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -472,7 +660,7 @@ async function vercelListProjectDomains(input: VercelActionInput, context: Verce
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
-    query: queryParams({
+    query: teamQuery(input, context, {
       limit: optionalNumber(input.limit),
       since: optionalNumber(input.since),
       until: optionalNumber(input.until),
@@ -496,6 +684,7 @@ async function vercelGetProjectDomain(input: VercelActionInput, context: VercelA
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -512,6 +701,7 @@ async function vercelAddProjectDomain(input: VercelActionInput, context: VercelA
     fetcher: context.fetcher,
     mode: "execute",
     method: "POST",
+    query: teamQuery(input, context),
     body: jsonObject({
       name: optionalString(input.name),
       redirect: optionalString(input.redirect),
@@ -535,6 +725,7 @@ async function vercelVerifyProjectDomain(input: VercelActionInput, context: Verc
     fetcher: context.fetcher,
     mode: "execute",
     method: "POST",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -550,6 +741,7 @@ async function vercelGetDomainConfig(input: VercelActionInput, context: VercelAc
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -567,6 +759,7 @@ async function vercelListWebhooks(input: VercelActionInput, context: VercelActio
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
+    query: teamQuery(input, context),
   });
 
   return {
@@ -581,6 +774,7 @@ async function vercelGetWebhook(input: VercelActionInput, context: VercelActionC
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     mode: "execute",
+    query: teamQuery(input, context),
     notFoundAsInvalidInput: true,
   });
 
@@ -596,6 +790,7 @@ async function vercelCreateWebhook(input: VercelActionInput, context: VercelActi
     fetcher: context.fetcher,
     mode: "execute",
     method: "POST",
+    query: teamQuery(input, context),
     body: jsonObject({
       url: optionalString(input.url),
       events: normalizeStringArray(input.events),
@@ -606,6 +801,21 @@ async function vercelCreateWebhook(input: VercelActionInput, context: VercelActi
   return {
     webhook: mapWebhook(payload),
   };
+}
+
+async function vercelDeleteWebhook(input: VercelActionInput, context: VercelActionContext) {
+  const id = requireString(input.id, "id");
+  await requestVercelNoContent({
+    path: `/v1/webhooks/${encodeURIComponent(id)}`,
+    apiKey: context.apiKey,
+    fetcher: context.fetcher,
+    mode: "execute",
+    method: "DELETE",
+    query: teamQuery(input, context),
+    notFoundAsInvalidInput: true,
+  });
+
+  return { deleted: true };
 }
 
 interface VercelRequestOptions {
@@ -648,11 +858,47 @@ interface VercelTeamResponse {
 }
 
 async function requestVercelJson<T>(options: VercelRequestOptions): Promise<T> {
+  const response = await requestVercel(options);
+
+  if (!response.ok) {
+    throw await mapVercelError(response, options.mode, options.notFoundAsInvalidInput ?? false);
+  }
+
+  if (response.status === 204) {
+    throw new ProviderRequestError(502, "vercel returned 204 No Content for a JSON request");
+  }
+
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new ProviderRequestError(502, "vercel returned an empty response");
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ProviderRequestError(502, "vercel returned an invalid JSON response");
+  }
+}
+
+async function requestVercelNoContent(options: VercelRequestOptions & { method: "DELETE" }): Promise<void> {
+  const response = await requestVercel(options);
+
+  if (response.status === 204) {
+    return;
+  }
+
+  if (!response.ok) {
+    throw await mapVercelError(response, options.mode, options.notFoundAsInvalidInput ?? false);
+  }
+
+  throw new ProviderRequestError(502, "vercel returned a response body for a no-content request");
+}
+
+async function requestVercel(options: VercelRequestOptions): Promise<Response> {
   const url = buildVercelUrl(options.path, options.query);
 
-  let response: Response;
   try {
-    response = await options.fetcher(url, {
+    return await options.fetcher(url, {
       method: options.method ?? "GET",
       headers: vercelHeaders(options.apiKey, options.body !== undefined),
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
@@ -660,12 +906,6 @@ async function requestVercelJson<T>(options: VercelRequestOptions): Promise<T> {
   } catch (error) {
     throw new ProviderRequestError(502, error instanceof Error ? error.message : "vercel request failed");
   }
-
-  if (!response.ok) {
-    throw await mapVercelError(response, options.mode, options.notFoundAsInvalidInput ?? false);
-  }
-
-  return response.json() as Promise<T>;
 }
 
 function buildVercelUrl(path: string, query?: Record<string, string>): string {
@@ -699,7 +939,7 @@ async function mapVercelError(
   if (response.status === 401) {
     return new ProviderRequestError(mode === "validate" ? 400 : 401, error.message, error);
   }
-  if (response.status === 404 && notFoundAsInvalidInput) {
+  if ((response.status === 404 || response.status === 410) && notFoundAsInvalidInput) {
     return new ProviderRequestError(400, error.message, error);
   }
   if (response.status === 429) {

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GeoapifyActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const geoapifyValidationPath = "/v1/geocode/search";
 type GeoapifyActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type GeoapifyActionHandler = (input: Record<string, unknown>, context: GeoapifyActionContext) => Promise<unknown>;
 
-export const geoapifyActionHandlers: Record<GeoapifyActionName, GeoapifyActionHandler> = {
+export const geoapifyActionHandlers: ProviderActionHandlers<"geoapify", GeoapifyActionHandler> = {
   forward_geocode(input, context) {
     return requestGeoapify({
       path: "/v1/geocode/search",

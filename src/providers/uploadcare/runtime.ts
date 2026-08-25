@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { UploadcareActionName } from "./actions.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import {
@@ -37,7 +37,7 @@ export interface UploadcareContext {
 
 type UploadcareActionHandler = ProviderRuntimeHandler<UploadcareContext>;
 
-export const uploadcareActionHandlers: Record<UploadcareActionName, UploadcareActionHandler> = {
+export const uploadcareActionHandlers: ProviderActionHandlers<"uploadcare", UploadcareActionHandler> = {
   async get_project_info(_input, context) {
     const project = await requestUploadcareJson(context, {
       method: "GET",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CompanyenrichActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -19,7 +19,7 @@ interface CompanyenrichRequest {
   body?: Record<string, unknown>;
 }
 
-export const companyenrichActionHandlers: Record<CompanyenrichActionName, CompanyenrichActionHandler> = {
+export const companyenrichActionHandlers: ProviderActionHandlers<"companyenrich", CompanyenrichActionHandler> = {
   async get_current_user(_input, context) {
     return {
       user: asProviderObject(await requestCompanyenrich({ path: "/me", context }), "current user"),

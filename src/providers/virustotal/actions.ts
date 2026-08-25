@@ -205,24 +205,6 @@ const descriptorResponseSchema = singleResponseSchema(
   "Response containing a VirusTotal object descriptor.",
 );
 
-export type VirustotalActionName =
-  | "search"
-  | "get_metadata"
-  | "get_analysis"
-  | "get_file_report"
-  | "upload_file"
-  | "rescan_file"
-  | "scan_url"
-  | "get_url_report"
-  | "get_domain_report"
-  | "get_domain_relationships"
-  | "get_ip_address_report"
-  | "get_ip_address_relationships"
-  | "get_comments"
-  | "add_comment"
-  | "get_votes"
-  | "add_vote";
-
 export const virustotalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",

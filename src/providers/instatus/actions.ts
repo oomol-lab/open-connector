@@ -5,23 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 let service: "instatus" = "instatus";
 
-export type InstatusActionName =
-  | "list_status_pages"
-  | "list_components"
-  | "get_component"
-  | "create_component"
-  | "update_component"
-  | "delete_component"
-  | "list_incidents"
-  | "get_incident"
-  | "create_incident"
-  | "update_incident"
-  | "delete_incident"
-  | "get_incident_update"
-  | "create_incident_update"
-  | "update_incident_update"
-  | "delete_incident_update";
-
 let pageStatusValues: [string, ...string[]] = [
   "UP",
   "HASISSUES",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { AccredibleCertificatesActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -36,8 +36,8 @@ interface AccredibleIssuer {
   email: string | null;
 }
 
-export const accredibleCertificatesActionHandlers: Record<
-  AccredibleCertificatesActionName,
+export const accredibleCertificatesActionHandlers: ProviderActionHandlers<
+  "accredible_certificates",
   AccredibleCertificatesActionHandler
 > = {
   list_groups(_input, context) {

@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { JsonbinActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface JsonbinActionContext {
 
 type JsonbinActionHandler = (input: Record<string, unknown>, context: JsonbinActionContext) => Promise<unknown>;
 
-export const jsonbinActionHandlers: Record<JsonbinActionName, JsonbinActionHandler> = {
+export const jsonbinActionHandlers: ProviderActionHandlers<"jsonbin", JsonbinActionHandler> = {
   create_bin(input, context) {
     return createBin(input, context);
   },

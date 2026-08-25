@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { HighLevelActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -33,7 +33,7 @@ interface HighLevelRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const highLevelActionHandlers: Record<HighLevelActionName, ProviderRuntimeHandler<HighLevelContext>> = {
+export const highLevelActionHandlers: ProviderActionHandlers<"high_level", ProviderRuntimeHandler<HighLevelContext>> = {
   async get_contact(input, context): Promise<unknown> {
     const payload = await requestHighLevelJson({
       path: `/contacts/${readPathId(input.contactId, "contactId")}`,

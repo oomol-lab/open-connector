@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -23,7 +24,7 @@ type HubPlannerExpectedPayload = "array" | "object";
 type HubPlannerQueryValue = number | string | string[] | undefined;
 type HubPlannerActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const hubPlannerActionHandlers: Record<string, HubPlannerActionHandler> = {
+export const hubPlannerActionHandlers: ProviderActionHandlers<"hub_planner", HubPlannerActionHandler> = {
   list_projects(input, context) {
     return listHubPlannerCollection("project", "projects", input, context);
   },

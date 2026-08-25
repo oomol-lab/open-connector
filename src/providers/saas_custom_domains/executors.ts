@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SaasCustomDomainsActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,10 @@ type SaasCustomDomainsActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const saasCustomDomainsActionHandlers: Record<SaasCustomDomainsActionName, SaasCustomDomainsActionHandler> = {
+export const saasCustomDomainsActionHandlers: ProviderActionHandlers<
+  "saas_custom_domains",
+  SaasCustomDomainsActionHandler
+> = {
   list_accounts(_input, context) {
     return listAccounts(context, "execute");
   },

@@ -274,15 +274,6 @@ function wrikeSingleOutput(description: string, outputKey: string, itemSchema: J
   );
 }
 
-export type WrikeActionName =
-  | "list_contacts"
-  | "list_folders"
-  | "get_folders"
-  | "create_folder"
-  | "list_tasks"
-  | "get_tasks"
-  | "create_task";
-
 export const wrikeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

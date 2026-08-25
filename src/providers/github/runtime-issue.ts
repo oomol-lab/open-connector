@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { nullableInteger, optionalInteger, optionalRawString, optionalString } from "../../core/cast.ts";
@@ -9,7 +10,7 @@ import {
   githubRequestNoContent,
 } from "./runtime-shared.ts";
 
-export const issueActionHandlers: Record<string, GitHubActionHandler> = {
+export const issueActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
   list_repository_issues(input, { accessToken, fetcher }) {
     return listRepositoryIssues(input, accessToken, fetcher);
   },

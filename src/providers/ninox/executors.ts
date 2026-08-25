@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NinoxActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -37,7 +37,7 @@ interface NinoxTablePath {
   tableId: string;
 }
 
-export const ninoxActionHandlers: Record<NinoxActionName, NinoxActionHandler> = {
+export const ninoxActionHandlers: ProviderActionHandlers<"ninox", NinoxActionHandler> = {
   list_workspaces(_input, context) {
     return listWorkspaces(context);
   },

@@ -1,12 +1,15 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import {
   createProviderFetch,
   createProviderProxyUrl,
+  combineProviderActionHandlers,
   defineProviderExecutors,
+  mapProviderActionSources,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
@@ -33,29 +36,32 @@ interface MondayActionContext {
   fetcher: ProviderFetch;
 }
 
-const runtimeActionHandlers: Record<string, MondayActionHandler> = {
-  ...mondayAutomationActionHandlers,
-  ...mondayCollaborationActionHandlers,
-  ...mondayDiscoveryActionHandlers,
-  ...mondayEnterpriseActionHandlers,
-  ...mondayFormsActionHandlers,
-  ...mondayStructureActionHandlers,
-  ...mondayItemActionHandlers,
-};
+const runtimeActionHandlers: ProviderActionHandlers<"monday", MondayActionHandler> = combineProviderActionHandlers<
+  "monday",
+  MondayActionHandler
+>(
+  service,
+  mondayAutomationActionHandlers,
+  mondayCollaborationActionHandlers,
+  mondayDiscoveryActionHandlers,
+  mondayEnterpriseActionHandlers,
+  mondayFormsActionHandlers,
+  mondayStructureActionHandlers,
+  mondayItemActionHandlers,
+);
 
-const actionHandlers = Object.fromEntries(
-  Object.entries(runtimeActionHandlers).map(([actionName, handler]) => [
-    actionName,
-    (input: Record<string, unknown>, context: MondayActionContext) =>
-      handler(
-        {
-          apiKey: context.apiKey,
-          actionName,
-          input,
-        },
-        context.fetcher,
-      ),
-  ]),
+const actionHandlers = mapProviderActionSources(
+  service,
+  runtimeActionHandlers,
+  (actionName, handler) => (input: Record<string, unknown>, context: MondayActionContext) =>
+    handler(
+      {
+        apiKey: context.apiKey,
+        actionName,
+        input,
+      },
+      context.fetcher,
+    ),
 );
 
 export const executors: ProviderExecutors = defineProviderExecutors<MondayActionContext>({

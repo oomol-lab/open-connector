@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRawString, optionalRecord } from "../../core/cast.ts";
@@ -87,7 +88,7 @@ interface FlexmailCollection {
 
 type FlexmailActionHandler = (input: Record<string, unknown>, context: FlexmailCredentialContext) => Promise<unknown>;
 
-export const flexmailActionHandlers: Record<string, FlexmailActionHandler> = {
+export const flexmailActionHandlers: ProviderActionHandlers<"flexmail", FlexmailActionHandler> = {
   list_contacts(input, context) {
     return flexmailCollectionRequest({
       context,

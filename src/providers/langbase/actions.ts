@@ -44,8 +44,6 @@ const retrieveMatchSchema = s.object("A single retrieved Langbase memory chunk."
   meta: s.record("Additional metadata returned for the retrieved chunk.", s.string("A metadata value.")),
 });
 
-export type LangbaseActionName = "list_memories" | "create_memory" | "delete_memory" | "retrieve_memory";
-
 export const langbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_memories",

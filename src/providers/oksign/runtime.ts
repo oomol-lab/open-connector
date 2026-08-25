@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { OksignActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -34,7 +34,7 @@ const oksignMetadataV2Path = "/services/rest/v2/metadata/retrieve";
 const oksignLinkedListPath = "/services/rest/v1/linkedlist/retrieve";
 const oksignUsersPath = "/services/rest/v1/users/retrieve";
 
-export const oksignActionHandlers: Record<OksignActionName, OksignActionHandler> = {
+export const oksignActionHandlers: ProviderActionHandlers<"oksign", OksignActionHandler> = {
   get_credits(_input, context) {
     return getCredits(context);
   },

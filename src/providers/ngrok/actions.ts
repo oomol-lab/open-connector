@@ -248,11 +248,3 @@ export const ngrokActions: ActionDefinition[] = [
     outputSchema: reservedDomainSchema,
   }),
 ];
-
-export type NgrokActionName =
-  | "list_endpoints"
-  | "get_endpoint"
-  | "list_tunnels"
-  | "list_tunnel_sessions"
-  | "list_reserved_domains"
-  | "get_reserved_domain";

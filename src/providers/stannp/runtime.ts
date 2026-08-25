@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -21,7 +22,7 @@ const stannpBaseUrlByRegion: Record<StannpRegion, string> = {
   us: "https://api-us1.stannp.com",
 };
 
-export const stannpActionHandlers: Record<string, ProviderRuntimeHandler<StannpActionContext>> = {
+export const stannpActionHandlers: ProviderActionHandlers<"stannp", ProviderRuntimeHandler<StannpActionContext>> = {
   async get_account_balance(_input, context) {
     const data = await stannpGetJson("/v1/accounts/balance", {}, context, "execute");
     const payload = objectFromStannp(data, "stannp account balance response data");

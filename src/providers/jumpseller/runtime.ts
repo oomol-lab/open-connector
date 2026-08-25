@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -82,7 +83,10 @@ export async function validateJumpsellerCredential(
   };
 }
 
-export const jumpsellerActionHandlers: Record<string, ProviderRuntimeHandler<JumpsellerActionContext>> = {
+export const jumpsellerActionHandlers: ProviderActionHandlers<
+  "jumpseller",
+  ProviderRuntimeHandler<JumpsellerActionContext>
+> = {
   async get_store_info(input, context) {
     const payload = await requestJumpsellerJson({
       method: "GET",

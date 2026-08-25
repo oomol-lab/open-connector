@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -18,7 +19,7 @@ const storeLeadsDefaultRequestTimeoutMs = 30_000;
 type StoreLeadsPhase = "validate" | "execute";
 type StoreLeadsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const storeLeadsActionHandlers: Record<string, StoreLeadsActionHandler> = {
+export const storeLeadsActionHandlers: ProviderActionHandlers<"store_leads", StoreLeadsActionHandler> = {
   async get_domain(input, context) {
     const body = await requestStoreLeadsObject({
       context,

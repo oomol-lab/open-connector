@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FormbricksActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -27,7 +27,7 @@ interface FormbricksRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const formbricksActionHandlers: Record<FormbricksActionName, FormbricksActionHandler> = {
+export const formbricksActionHandlers: ProviderActionHandlers<"formbricks", FormbricksActionHandler> = {
   async get_me(_input, context) {
     return normalizeMePayload(
       await requestFormbricksJson(context, {

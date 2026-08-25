@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { JumpcloudActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -51,7 +51,7 @@ interface JumpcloudActionContext {
 
 type JumpcloudActionHandler = (input: Record<string, unknown>, context: JumpcloudActionContext) => Promise<unknown>;
 
-export const jumpcloudActionHandlers: Record<JumpcloudActionName, JumpcloudActionHandler> = {
+export const jumpcloudActionHandlers: ProviderActionHandlers<"jumpcloud", JumpcloudActionHandler> = {
   list_system_users(input, context) {
     return listSystemUsers(input, context);
   },

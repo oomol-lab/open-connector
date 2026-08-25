@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PdflessActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -37,7 +37,7 @@ interface PdflessTemplate {
   updatedAt: string | null;
 }
 
-export const pdflessActionHandlers: Record<PdflessActionName, PdflessActionHandler> = {
+export const pdflessActionHandlers: ProviderActionHandlers<"pdfless", PdflessActionHandler> = {
   get_workspace(_input, context) {
     return pdflessGetWorkspace(context);
   },

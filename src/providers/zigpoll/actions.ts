@@ -139,13 +139,3 @@ export const zigpollActions: ActionDefinition[] = [
     outputSchema: surveyLinkSchema,
   }),
 ];
-
-export type ZigpollActionName =
-  | "get_current_user"
-  | "list_accounts"
-  | "list_polls"
-  | "get_poll"
-  | "list_slides"
-  | "list_participants"
-  | "list_responses"
-  | "generate_survey_link";

@@ -312,17 +312,3 @@ export const quoActions: ProviderActionDefinition[] = [
     outputSchema: dataRecordOutputSchema,
   }),
 ];
-
-export type QuoActionName =
-  | "list_phone_numbers"
-  | "get_phone_number"
-  | "list_users"
-  | "get_user"
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "list_messages"
-  | "get_message"
-  | "send_text_message";

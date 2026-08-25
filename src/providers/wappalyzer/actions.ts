@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "wappalyzer";
 
-export type WappalyzerActionName = "get_credits_balance" | "lookup_technologies" | "find_subdomains" | "verify_email";
-
 const levelValues = ["Very low", "Low", "Medium", "High", "Very high"];
 const reachableValues = ["safe", "risky", "invalid", "unknown"];
 

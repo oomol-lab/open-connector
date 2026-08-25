@@ -109,15 +109,6 @@ const configSettingFormulaSchema = s.object("A normalized ConfigCat bulk Setting
   raw: s.looseObject("The raw bulk Setting value item returned by ConfigCat."),
 });
 
-export type ConfigcatActionName =
-  | "get_me"
-  | "list_products"
-  | "list_configs"
-  | "list_environments"
-  | "list_settings"
-  | "get_setting_value"
-  | "list_setting_values";
-
 export const configcatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",

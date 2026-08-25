@@ -88,10 +88,3 @@ export const eventeeActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type EventeeActionName =
-  | "get_event_content"
-  | "list_reviews"
-  | "list_groups"
-  | "list_participants"
-  | "list_registrations";

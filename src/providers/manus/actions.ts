@@ -5,25 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "manus";
 
-export type ManusActionName =
-  | "create_task"
-  | "get_task"
-  | "list_tasks"
-  | "list_task_messages"
-  | "send_message"
-  | "stop_task"
-  | "delete_task"
-  | "update_task"
-  | "confirm_task_action"
-  | "create_project"
-  | "list_projects"
-  | "list_connectors"
-  | "list_skills"
-  | "list_agents"
-  | "get_agent"
-  | "update_agent"
-  | "list_online_browser_clients";
-
 const nonEmptyString = (description: string): JsonSchema => s.string(description, { minLength: 1 });
 
 const orderSchema = s.stringEnum("Sort direction for cursor-paginated results.", ["asc", "desc"]);

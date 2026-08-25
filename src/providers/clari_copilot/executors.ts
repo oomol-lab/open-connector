@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { ClariCopilotActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface ClariCopilotContext {
 
 type ClariCopilotActionHandler = (input: Record<string, unknown>, context: ClariCopilotContext) => Promise<unknown>;
 
-const clariCopilotActionHandlers: Record<ClariCopilotActionName, ClariCopilotActionHandler> = {
+const clariCopilotActionHandlers: ProviderActionHandlers<"clari_copilot", ClariCopilotActionHandler> = {
   list_users(_input, context) {
     return requestClariCopilotJson({
       path: "/users",

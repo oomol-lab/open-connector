@@ -2,8 +2,4 @@ export const googleDriveReadonlyScope = "https://www.googleapis.com/auth/drive.r
 export const googleDriveMetadataReadonlyScope = "https://www.googleapis.com/auth/drive.metadata.readonly";
 export const googleDriveFullScope = "https://www.googleapis.com/auth/drive";
 
-export const googledriveOAuthScopes: string[] = [
-  googleDriveReadonlyScope,
-  googleDriveMetadataReadonlyScope,
-  googleDriveFullScope,
-];
+export const googledriveOAuthScopes: string[] = [googleDriveFullScope];

@@ -126,6 +126,40 @@
   },
   "providers": {
     "catalogTitle": "Fournisseurs",
+    "viewLabel": "Vue des fournisseurs",
+    "views": { "manage": "Mes connexions", "discover": "Découvrir des apps" },
+    "discovery": {
+      "browseByTask": "Parcourir par tâche",
+      "explore": "Explorer les apps",
+      "scenarios": {
+        "ai": { "title": "IA et agents", "description": "Modèles, agents, recherche et génération de médias" },
+        "crossBorderEcommerce": {
+          "title": "Opérations e-commerce",
+          "description": "Boutiques, commandes, exécution et données de marché"
+        },
+        "communication": {
+          "title": "Collaboration d’équipe",
+          "description": "Messagerie, e-mail, réunions et notifications"
+        },
+        "docs": {
+          "title": "Documents et connaissances",
+          "description": "Documents, bases de connaissances, drives et tableurs"
+        },
+        "productivity": {
+          "title": "Projets et productivité",
+          "description": "Projets, tâches, plannings et automatisation"
+        },
+        "marketing": {
+          "title": "Marketing et croissance",
+          "description": "Publicité, contenu, prospects et données de croissance"
+        },
+        "dataStorage": {
+          "title": "Données et analytique",
+          "description": "Entrepôts, bases de données, BI et stockage"
+        },
+        "developer": { "title": "Développement et cloud", "description": "Code, déploiement, cloud et observabilité" }
+      }
+    },
     "brandNotice": "Les noms, logos et marques de tiers appartiennent à leurs propriétaires respectifs et sont affichés uniquement pour identifier les fournisseurs correspondants. Ce projet ne revendique aucun droit sur ceux-ci. Les utilisateurs qui redistribuent ou commercialisent ce projet doivent consulter les règles applicables aux marques et obtenir les autorisations nécessaires à leur usage.",
     "searchPlaceholder": "Rechercher des fournisseurs",
     "statusFilterLabel": "Statut du fournisseur",
@@ -241,6 +275,9 @@
       "resetOAuthClient": "Réinitialiser l’app par défaut"
     },
     "oauthClientSettings": {
+      "setupTitle": "Créer l'application OAuth",
+      "setupIntro": "Enregistrez une application OAuth auprès de {{name}}, puis collez ses identifiants ci-dessous.",
+      "setupDocsLink": "Ouvrir le portail développeur {{name}}",
       "callbackUrl": "URL de callback",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -420,6 +457,8 @@
       },
       "layerSummary": "Actions : {{action}} · Proxys : {{proxy}}",
       "tokenSummary": "Actions autorisées {{allowed}} · Actions bloquées {{blocked}} · Accès proxy {{proxies}} · Encore limité par la référence runtime",
+      "connectionsUnrestricted": "Toutes les connexions",
+      "connectionsRestricted": "Connexions : {{names}}",
       "editor": {
         "title": "Modifier la politique runtime",
         "description": "L’impact des modifications est prévisualisé avec les contraintes de déploiement.",
@@ -463,7 +502,15 @@
         "noRules": "Aucune règle dans cette liste.",
         "actionAllowRequired": "Ajoutez une règle d’action ou choisissez aucune restriction supplémentaire.",
         "proxyAllowRequired": "Ajoutez une règle de fournisseur ou choisissez aucune restriction supplémentaire.",
-        "tokenHint": "Les règles d’action et les autorisations proxy sont indépendantes. Une liste proxy vide interdit les requêtes proxy du token.",
+        "connectionsTitle": "Accès aux connexions",
+        "connectionsUnrestrictedHint": "Ce token peut utiliser n’importe quelle connexion enregistrée, y compris default lorsque la requête omet un nom.",
+        "connectionsRestrictedHint": "Ce token ne peut utiliser que les connexions de fournisseur sélectionnées.",
+        "connectionsList": "Connexions autorisées",
+        "connectionsRequired": "Sélectionnez au moins une connexion, ou choisissez aucune restriction supplémentaire.",
+        "tooManyConnections": "Une liste de connexions ne peut pas contenir plus de 128 connexions.",
+        "connectionCount": "{{count}} connexions",
+        "noConnections": "Aucune connexion dans cette liste.",
+        "connectionsDefaultHint": "Sélectionnez la connexion default d’un fournisseur pour autoriser ses requêtes HTTP, MCP ou proxy sans nom.",
         "discard": "Abandonner les modifications",
         "preview": "Prévisualiser l’impact"
       },

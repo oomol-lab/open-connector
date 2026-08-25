@@ -150,12 +150,3 @@ export const imagekitActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type ImagekitActionName =
-  | "list_assets"
-  | "get_file_details"
-  | "get_uploaded_file_metadata"
-  | "get_remote_file_metadata"
-  | "delete_file"
-  | "purge_cache"
-  | "get_purge_status";

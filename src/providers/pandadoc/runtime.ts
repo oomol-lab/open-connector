@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -25,7 +26,7 @@ type PandadocPhase = "validate" | "execute";
 type PandadocQueryValue = boolean | number | string | string[] | null | undefined;
 type PandadocActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pandadocActionHandlers: Record<string, PandadocActionHandler> = {
+export const pandadocActionHandlers: ProviderActionHandlers<"pandadoc", PandadocActionHandler> = {
   async list_contacts(input, context) {
     const payload = await requestPandadocJson(context, {
       path: "/public/v1/contacts",

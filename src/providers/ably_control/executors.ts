@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { AblyControlActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -39,7 +39,7 @@ interface AblyControlRequestInput {
 
 type AblyControlActionHandler = (input: Record<string, unknown>, context: AblyControlActionContext) => Promise<unknown>;
 
-export const ablyControlActionHandlers: Record<AblyControlActionName, AblyControlActionHandler> = {
+export const ablyControlActionHandlers: ProviderActionHandlers<"ably_control", AblyControlActionHandler> = {
   async get_current_account(_input, context): Promise<unknown> {
     const payload = await requestAblyControlJson(context, {
       path: "/me",

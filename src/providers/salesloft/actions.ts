@@ -35,15 +35,6 @@ const idInputSchema = s.actionInput(
   "Input parameters for fetching one Salesloft resource.",
 );
 
-export type SalesloftActionName =
-  | "get_current_user"
-  | "list_people"
-  | "get_person"
-  | "list_accounts"
-  | "get_account"
-  | "list_cadences"
-  | "get_cadence";
-
 export const salesloftActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

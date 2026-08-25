@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MemberstackActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -23,7 +23,7 @@ const memberstackDefaultRequestTimeoutMs = 30_000;
 type MemberstackPhase = "validate" | "execute";
 type MemberstackActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const memberstackActionHandlers: Record<MemberstackActionName, MemberstackActionHandler> = {
+export const memberstackActionHandlers: ProviderActionHandlers<"memberstack", MemberstackActionHandler> = {
   list_members(input, context) {
     const first = readOptionalNumberString(input.first);
     return requestMemberstackJson({

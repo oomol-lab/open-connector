@@ -424,20 +424,3 @@ export const agiledActions: ActionDefinition[] = [
     outputSchema: deleteOutputSchema,
   }),
 ];
-
-export type AgiledActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "delete_project"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "delete_task";

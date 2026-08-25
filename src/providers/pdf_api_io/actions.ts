@@ -35,8 +35,6 @@ const transitFileSchema = s.object("A copy of a provider-generated file stored i
   mimeType: s.nonEmptyString("The transit file MIME type."),
 });
 
-export type PdfApiIoActionName = "list_templates" | "get_template" | "render_pdf";
-
 export const pdfApiIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",

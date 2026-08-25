@@ -5,6 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -58,7 +59,7 @@ interface GagelistRequestInput {
   readonly signal?: AbortSignal;
 }
 
-export const gagelistActionHandlers: Record<string, GagelistActionHandler> = {
+export const gagelistActionHandlers: ProviderActionHandlers<"gagelist", GagelistActionHandler> = {
   async get_account_status(_input, context) {
     const accessToken = await exchangeGagelistAccessToken(
       context.credential,

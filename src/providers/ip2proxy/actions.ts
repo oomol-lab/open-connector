@@ -70,5 +70,3 @@ export const ip2proxyActions: ActionDefinition[] = [
     outputSchema: lookupIpOutputSchema,
   }),
 ];
-
-export type Ip2proxyActionName = "lookup_ip";

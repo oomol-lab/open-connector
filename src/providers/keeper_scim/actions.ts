@@ -98,13 +98,6 @@ const getGroupOutputSchema = s.object("Single Keeper SCIM group response.", {
   group: scimGroupSchema,
 });
 
-export type KeeperScimActionName =
-  | "get_service_provider_config"
-  | "list_users"
-  | "get_user"
-  | "list_groups"
-  | "get_group";
-
 export const keeperScimActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_service_provider_config",

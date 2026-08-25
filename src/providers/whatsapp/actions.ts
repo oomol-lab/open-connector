@@ -395,22 +395,3 @@ export const whatsappActions: ActionDefinition[] = [
     outputSchema: messageSendResponse,
   }),
 ];
-
-export type WhatsAppActionName =
-  | "get_phone_numbers"
-  | "get_phone_number"
-  | "get_business_profile"
-  | "get_message_templates"
-  | "get_template_status"
-  | "create_message_template"
-  | "delete_message_template"
-  | "send_message"
-  | "send_template_message"
-  | "send_media"
-  | "send_media_by_id"
-  | "upload_media"
-  | "get_media_info"
-  | "send_location"
-  | "send_contacts"
-  | "send_interactive_buttons"
-  | "send_interactive_list";

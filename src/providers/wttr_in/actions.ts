@@ -62,8 +62,6 @@ const forecastDaySchema = s.object("A normalized wttr.in daily forecast summary.
   astronomy: astronomySchema,
 });
 
-export type WttrInActionName = "get_weather";
-
 export const wttrInActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_weather",

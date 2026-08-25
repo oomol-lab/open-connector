@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -61,7 +62,10 @@ const actionPathByName: Record<string, string> = {
   list_company_news: "/services/open/ps/news/2.0",
 };
 
-export const tianyanchaActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const tianyanchaActionHandlers: ProviderActionHandlers<
+  "tianyancha",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   search_companies: action("search_companies"),
   search_companies_advanced: action("search_companies_advanced"),
   get_company_basic_info: action("get_company_basic_info"),

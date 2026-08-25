@@ -181,5 +181,3 @@ export const kaggleActions: ProviderActionDefinition[] = [
     outputSchema: modelsOutputSchema,
   }),
 ];
-
-export type KaggleActionName = "list_competitions" | "list_datasets" | "list_kernels" | "list_models";

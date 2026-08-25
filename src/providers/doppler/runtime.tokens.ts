@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { nullableString, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, readObject } from "./runtime.shared.ts";
@@ -15,7 +17,8 @@ type DopplerTokenActionHandler = (
 export const dopplerTokenActionHandlers: Record<
   "list_service_tokens" | "create_service_token" | "delete_service_token",
   DopplerTokenActionHandler
-> = {
+> &
+  ProviderActionHandlerSubset<"doppler", DopplerTokenActionHandler> = {
   list_service_tokens(input, context) {
     return dopplerListServiceTokens(input, context.accessToken, context.fetcher);
   },
@@ -25,7 +28,7 @@ export const dopplerTokenActionHandlers: Record<
   delete_service_token(input, context) {
     return dopplerDeleteServiceToken(input, context.accessToken, context.fetcher);
   },
-} satisfies Record<"list_service_tokens" | "create_service_token" | "delete_service_token", DopplerTokenActionHandler>;
+};
 
 async function dopplerListServiceTokens(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
   const payload = await dopplerRequest(

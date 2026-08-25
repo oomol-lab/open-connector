@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EncodianActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -29,7 +29,7 @@ export interface EncodianContext extends ApiKeyProviderContext {
 
 type EncodianActionHandler = ProviderRuntimeHandler<EncodianContext>;
 
-export const encodianActionHandlers: Record<EncodianActionName, EncodianActionHandler> = {
+export const encodianActionHandlers: ProviderActionHandlers<"encodian", EncodianActionHandler> = {
   compress_pdf(input, context) {
     return executeCompressPdf(input, context);
   },

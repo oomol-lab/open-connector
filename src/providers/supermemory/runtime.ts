@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { SupermemoryActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
@@ -32,7 +33,7 @@ type SupermemoryRequestInput = {
 export const supermemoryApiBaseUrl = "https://api.supermemory.ai";
 export const supermemoryUserAgent: string = providerUserAgent;
 
-export const supermemoryActionHandlers: Record<SupermemoryActionName, SupermemoryActionHandler> = {
+export const supermemoryActionHandlers: ProviderActionHandlers<"supermemory", SupermemoryActionHandler> = {
   create_memories(input, context) {
     return supermemoryRequest("/v4/memories", { method: "POST", body: input }, context.apiKey, context.fetcher);
   },
@@ -92,7 +93,7 @@ export const supermemoryActionHandlers: Record<SupermemoryActionName, Supermemor
 
     return { id, deleted: true };
   },
-} satisfies Record<SupermemoryActionName, SupermemoryActionHandler>;
+};
 
 export async function validateSupermemoryApiKey(
   apiKey: string,

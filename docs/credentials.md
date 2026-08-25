@@ -1,8 +1,9 @@
-# Credentials And Local Storage
+# Credentials And Runtime Storage
 
-The local Node runtime stores connections, OAuth client configuration, pending OAuth states, runtime
-tokens, recent run logs, and HTTP Action idempotency claims and responses in SQLite. The Cloudflare
-Workers runtime stores the same runtime records in D1 and temporary transit files in R2.
+The Node runtime stores connections, OAuth client configuration, pending OAuth states, runtime
+tokens, recent run logs, and HTTP Action idempotency claims and responses in SQLite or PostgreSQL.
+The Cloudflare Workers runtime stores the same runtime records in D1 and temporary transit files in
+R2.
 
 By default the database lives at:
 
@@ -11,10 +12,11 @@ By default the database lives at:
 ```
 
 Set `OOMOL_CONNECT_DATA_DIR` to use another directory. The Docker image defaults this to
-`/app/data`, which is intended to be mounted as a volume.
+`/app/data`, which is intended to be mounted as a volume. Set `OOMOL_CONNECT_DATABASE_URL` to use a
+PostgreSQL database instead; see [configuration](configuration.md#runtime-database).
 
 - `no_auth` providers are available as virtual connections and do not store secrets.
-- `api_key` and `custom_credential` providers store their local secrets in SQLite.
+- `api_key` and `custom_credential` providers store their local secrets in the selected runtime database.
 - `oauth2` providers use user-provided OAuth client configuration and a runtime callback URL.
 
 ## Encryption
@@ -35,8 +37,8 @@ stored by OpenConnector; if it is lost, encrypted records cannot be recovered.
 Without `OOMOL_CONNECT_ENCRYPTION_KEY`, the runtime stays usable for local development and prints a
 startup warning. In that mode, credentials, OAuth client configuration, pending OAuth state, and
 completed idempotent Action responses are stored as plaintext. Action responses may contain sensitive provider data, so
-treat `connect.sqlite` or D1 as a sensitive data store even after a response is no longer eligible
-for replay.
+treat `connect.sqlite`, PostgreSQL, or D1 as a sensitive data store even after a response is no
+longer eligible for replay.
 
 Completed idempotent Action responses remain eligible for replay for 24 hours. Expired idempotency
 records are deleted opportunistically when a later idempotent Action request claims a key; the
@@ -208,7 +210,7 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
   -d '{"service":"github","connectionName":"work"}'
 ```
 
-Protect the local SQLite database like any other file containing API keys or OAuth tokens.
+Protect the selected runtime database like any other store containing API keys or OAuth tokens.
 
 ## Selecting A Connection For Execution
 
@@ -237,15 +239,43 @@ curl -s -X POST "http://localhost:3000/v1/actions/github.get_current_user?alias=
   -d '{"input":{}}'
 ```
 
+Persistent runtime tokens may further restrict this selection with `allowedConnections`. An omitted
+or empty list leaves every stored connection available. Entries are the stable, opaque IDs returned
+when connections are created or listed. The alias above selects the `work` connection, whose `id`
+must be granted; an unnamed request selects the default connection and requires its ID. Other
+connections return `403 connection_not_allowed` before the credential is loaded. Virtual `no_auth`
+connections do not require a grant.
+
+Example: keep a shared default GitHub connection and a `work` connection, then issue one
+unrestricted token and one work-only token:
+
+```bash
+curl -s -X PUT http://localhost:3000/api/connections/github \
+  -H 'content-type: application/json' \
+  -d '{"authType":"api_key","values":{"apiKey":"github_pat_default"}}'
+
+curl -s -X PUT http://localhost:3000/api/connections/github \
+  -H 'content-type: application/json' \
+  -d '{"authType":"api_key","connectionName":"work","values":{"apiKey":"github_pat_work"}}'
+
+curl -s -X POST http://localhost:3000/api/runtime-tokens \
+  -H 'content-type: application/json' \
+  -d '{"name":"shared-client","allowedActions":[],"blockedActions":[],"allowedProxies":[]}'
+
+curl -s -X POST http://localhost:3000/api/runtime-tokens \
+  -H 'content-type: application/json' \
+  -d '{"name":"work-client","allowedActions":[],"blockedActions":[],"allowedProxies":[],"allowedConnections":["<work-connection-id>"]}'
+```
+
 ## Reset And Key Rotation
 
-Reset local runtime data:
+Reset Node runtime data in the selected SQLite or PostgreSQL database:
 
 ```bash
 npm run runtime:data -- reset --yes
 ```
 
-Rotate the local SQLite data-encryption key:
+Rotate the Node runtime data-encryption key:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="old-secret" \
@@ -253,25 +283,28 @@ OOMOL_CONNECT_NEW_ENCRYPTION_KEY="new-secret" \
 npm run runtime:data -- rotate-key
 ```
 
-Remove local SQLite data encryption only when you intentionally want plaintext local storage:
+Remove Node runtime data encryption only when you intentionally want plaintext storage:
 
 ```bash
 OOMOL_CONNECT_ENCRYPTION_KEY="old-secret" \
 npm run runtime:data -- rotate-key --plain
 ```
 
-Both commands re-encode stored credentials, OAuth client configuration, and completed idempotent
-Action response payloads. Idempotency key hashes, request fingerprints, claim state, and timestamps
-remain unencrypted metadata.
+For PostgreSQL, set `OOMOL_CONNECT_DATABASE_URL` on the reset or rotate command. The schema must
+already be initialized with `npm run runtime:migrate`. Key rotation re-encodes stored credentials,
+OAuth client configuration, pending OAuth state, and completed idempotent Action response payloads.
+Idempotency key hashes, request fingerprints, claim state, and timestamps remain unencrypted
+metadata. Pause all Node runtime instances before resetting data or rotating a PostgreSQL encryption
+key.
 
-`runtime:data` is for the local SQLite runtime only. For Cloudflare, back up and restore D1/R2
-directly with Cloudflare tooling.
+`runtime:data` supports the Node SQLite and PostgreSQL backends. For Cloudflare, back up and restore
+D1/R2 directly with Cloudflare tooling.
 
 ## OAuth Token Refresh
 
 OAuth access tokens are refreshed automatically when they are expired and the provider issued a
-refresh token. Refreshed credentials are written back to the local SQLite store, using encryption
-when `OOMOL_CONNECT_ENCRYPTION_KEY` is configured.
+refresh token. Refreshed credentials are written back to the selected Node runtime database, using
+encryption when `OOMOL_CONNECT_ENCRYPTION_KEY` is configured.
 
 If a token is expired and no refresh token is available, reconnect the provider from the local
 runtime. Providers such as Google may require authorization parameters that request offline access;
@@ -295,11 +328,18 @@ Authorization: Bearer replace-with-an-admin-token
 ```
 
 Create runtime tokens for `/v1` and `/mcp` callers from the web console Access tab or
-`POST /api/runtime-tokens`. The token is shown once when created; only a hash is stored in SQLite.
+`POST /api/runtime-tokens`. The token is shown once when created; only a hash is stored in the
+selected runtime database.
 Runtime clients should send `Authorization: Bearer oct_...`. Persistent tokens configure Action
-rules and provider proxy grants independently. Their `allowedProxies` list is empty by default,
-which denies `/v1/proxy/:service`; add a provider service or `*` only when that client needs proxy
-access.
+rules, provider proxy grants, and optional connection grants independently. Their `allowedProxies`
+list is empty by default, which denies `/v1/proxy/:service`; add a provider service or `*` only when
+that client needs proxy access. Omit `allowedConnections` or send `[]` on create for unrestricted
+connection access. Updates must send the field so a PUT cannot drop an existing restriction. A
+non-empty list is an exact allowlist of stable, opaque IDs returned by the connection APIs; unnamed
+requests select the provider's default connection and are denied unless its ID is listed. Virtual
+`no_auth` connections do not require a grant. HTTP, MCP, and proxy callers receive
+`connection_not_allowed` before lookup. Runtime discovery is filtered; `GET /api/connections` and
+Action `agent.md` guides are not.
 
 `OOMOL_CONNECT_RUNTIME_TOKEN` is still accepted for bootstrap scripts and backward compatibility.
 

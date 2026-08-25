@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ScraperapiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -31,7 +31,7 @@ const scraperapiMaxResponseBytes = 10 * 1024 * 1024;
 const scraperapiMaxErrorBytes = 64 * 1024;
 const maxNonJsonErrorMessageLength = 300;
 
-export const scraperapiActionHandlers: Record<ScraperapiActionName, ScraperapiActionHandler> = {
+export const scraperapiActionHandlers: ProviderActionHandlers<"scraperapi", ScraperapiActionHandler> = {
   async scrape_url(input, context) {
     const customHeaders = readOptionalStringRecord(input.customHeaders, "customHeaders");
     const response = await requestScraperapiRaw(

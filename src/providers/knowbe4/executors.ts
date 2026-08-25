@@ -4,7 +4,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
-import type { Knowbe4ActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -46,7 +46,7 @@ interface Knowbe4RequestInput extends Knowbe4ActionContext {
   query?: Record<string, string | undefined>;
 }
 
-export const knowbe4ActionHandlers: Record<Knowbe4ActionName, Knowbe4ActionHandler> = {
+export const knowbe4ActionHandlers: ProviderActionHandlers<"knowbe4", Knowbe4ActionHandler> = {
   async get_account(_input, context): Promise<unknown> {
     const account = requireObjectPayload(
       await requestKnowbe4Json({

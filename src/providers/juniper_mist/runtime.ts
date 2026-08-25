@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { JuniperMistActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, optionalStringOrNull } from "../../core/cast.ts";
 import {
@@ -39,7 +39,7 @@ export interface JuniperMistActionContext {
   signal?: AbortSignal;
 }
 
-export const juniperMistActionHandlers: Record<JuniperMistActionName, JuniperMistActionHandler> = {
+export const juniperMistActionHandlers: ProviderActionHandlers<"juniper_mist", JuniperMistActionHandler> = {
   get_self(_input, context) {
     return getSelf(context);
   },

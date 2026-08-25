@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { OpsgenieActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -42,7 +42,7 @@ interface OpsgenieRequestInput {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const opsgenieActionHandlers: Record<OpsgenieActionName, OpsgenieActionHandler> = {
+export const opsgenieActionHandlers: ProviderActionHandlers<"opsgenie", OpsgenieActionHandler> = {
   get_current_account(_input, context) {
     return getCurrentAccount(context);
   },

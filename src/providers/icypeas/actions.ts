@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "icypeas";
 
-export type IcypeasActionName =
-  | "get_subscription_information"
-  | "submit_email_search"
-  | "submit_email_verification"
-  | "submit_domain_scan"
-  | "get_search_item"
-  | "reverse_email_lookup";
-
 const trimmedString = (description: string) => s.nonEmptyString(description);
 const rawObjectSchema = s.looseObject("A raw object returned by Icypeas.");
 const validationErrorSchema = s.looseObject("A validation error returned by Icypeas.", {

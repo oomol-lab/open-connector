@@ -116,10 +116,3 @@ export const pilvioActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type PilvioActionName =
-  | "get_current_user"
-  | "list_locations"
-  | "list_virtual_machines"
-  | "list_billing_accounts"
-  | "get_billing_account";

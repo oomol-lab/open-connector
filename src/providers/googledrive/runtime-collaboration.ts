@@ -1,3 +1,4 @@
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   asObject,
@@ -6,8 +7,6 @@ import {
   asStringRecordOrUndefined,
   compactObject,
   compactUnknownObject,
-  googleJsonRequest,
-  googleRequest,
   optionalBoolean,
   optionalString,
   parseSizeBytes,

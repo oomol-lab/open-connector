@@ -99,5 +99,3 @@ export const flowiseaiActions: ActionDefinition[] = [
     outputSchema: sendMessageOutputSchema,
   }),
 ];
-
-export type FlowiseaiActionName = "get_chatflow" | "send_message";

@@ -222,14 +222,3 @@ export const heyyActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HeyyActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "list_labels"
-  | "create_label"
-  | "list_attributes"
-  | "create_attribute"
-  | "list_channels";

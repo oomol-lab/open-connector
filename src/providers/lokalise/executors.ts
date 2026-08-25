@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LokaliseActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -16,7 +16,7 @@ const lokaliseApiBaseUrl = "https://api.lokalise.com/api2";
 type LokaliseRequestMode = "validate" | "execute";
 type LokaliseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const lokaliseActionHandlers: Record<LokaliseActionName, LokaliseActionHandler> = {
+export const lokaliseActionHandlers: ProviderActionHandlers<"lokalise", LokaliseActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },

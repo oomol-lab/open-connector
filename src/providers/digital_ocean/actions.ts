@@ -170,19 +170,6 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
 ];
 
-export type DigitalOceanActionName =
-  | "get_account"
-  | "list_droplets"
-  | "get_droplet"
-  | "manage_droplet_lifecycle"
-  | "list_apps"
-  | "list_databases"
-  | "list_firewalls"
-  | "list_load_balancers"
-  | "list_domains"
-  | "list_domain_records"
-  | "list_vpcs";
-
 function listOutputSchema(key: string, description: string) {
   return s.object(
     `Paginated DigitalOcean ${key} list.`,

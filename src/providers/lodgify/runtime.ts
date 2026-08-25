@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { LodgifyActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -26,7 +26,7 @@ interface LodgifyRequestInput {
   query?: Record<string, string | undefined>;
 }
 
-export const lodgifyActionHandlers: Record<LodgifyActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const lodgifyActionHandlers: ProviderActionHandlers<"lodgify", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_properties(input, context) {
     return listProperties(input, context);
   },

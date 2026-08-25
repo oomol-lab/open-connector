@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -27,7 +28,10 @@ function listId(input: Record<string, unknown>): string {
   return String(input.contact_list_id);
 }
 
-export const magileadsActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const magileadsActionHandlers: ProviderActionHandlers<
+  "magileads",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_contact_lists: request("GET", () => "/contact-lists"),
   get_contact_list: request("GET", (input) => `/contact-lists/${listId(input)}`),
   create_contact_list: request("POST", () => "/contact-lists", true),

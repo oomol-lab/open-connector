@@ -90,13 +90,6 @@ const securePdfInputSchema = s.object(
   },
 );
 
-export type EncodianActionName =
-  | "compress_pdf"
-  | "extract_pdf_pages"
-  | "get_pdf_text_layer"
-  | "secure_pdf_document"
-  | "unlock_pdf_document";
-
 export const encodianActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "compress_pdf",

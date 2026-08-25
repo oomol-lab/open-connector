@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { CraftmypdfActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -54,7 +54,7 @@ interface CraftmypdfTemplate {
 type CraftmypdfRequestPhase = "validate" | "execute";
 type CraftmypdfActionHandler = (input: Record<string, unknown>, context: CraftmypdfContext) => Promise<unknown>;
 
-const actionHandlers: Record<CraftmypdfActionName, CraftmypdfActionHandler> = {
+const actionHandlers: ProviderActionHandlers<"craftmypdf", CraftmypdfActionHandler> = {
   get_account_info(_input, context) {
     return getAccountInfo(context);
   },

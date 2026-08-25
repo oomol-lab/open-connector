@@ -189,13 +189,3 @@ export const jobnimbusActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type JobnimbusActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "list_jobs"
-  | "get_job"
-  | "create_job"
-  | "update_job";

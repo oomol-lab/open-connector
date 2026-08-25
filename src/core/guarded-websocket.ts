@@ -28,7 +28,7 @@ export interface WebSocketLike {
 }
 
 /** Constructor shape used to open a client WebSocket. */
-export type WebSocketConstructor = new (url: string) => WebSocketLike;
+export type WebSocketConstructor = new (url: string, protocols?: string | string[]) => WebSocketLike;
 
 /**
  * Why {@link openGuardedWebSocket} failed after the URL passed the egress guard.
@@ -69,6 +69,8 @@ export interface GuardedWebSocketOptions {
   fieldName?: string;
   /** Constructor override, for tests. Defaults to `globalThis.WebSocket`. */
   webSocketConstructor?: WebSocketConstructor;
+  /** WebSocket subprotocols offered during the opening handshake. */
+  protocols?: string | string[];
 }
 
 const defaultConnectTimeoutMs = 15_000;
@@ -133,7 +135,7 @@ function openSocket(
   return new Promise<WebSocketLike>((resolve, reject) => {
     let socket: WebSocketLike;
     try {
-      socket = new constructor(target);
+      socket = new constructor(target, options.protocols);
     } catch (error) {
       reject(createFailure("connect", `WebSocket connection failed: ${describeError(error)}`));
       return;

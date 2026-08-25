@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GenderapiIoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -27,7 +27,7 @@ interface GenderapiIoNormalizedPrediction {
   duration: string;
 }
 
-export const genderapiIoActionHandlers: Record<GenderapiIoActionName, GenderapiIoActionHandler> = {
+export const genderapiIoActionHandlers: ProviderActionHandlers<"genderapi_io", GenderapiIoActionHandler> = {
   async get_gender_by_first_name(input, context) {
     const payload = await requestGenderapiIo(
       "/api",

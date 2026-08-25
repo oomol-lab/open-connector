@@ -142,11 +142,3 @@ export const finageActions: ActionDefinition[] = [
     outputSchema: snapshotOutputSchema,
   }),
 ];
-
-export type FinageActionName =
-  | "list_stock_symbols"
-  | "get_last_quote"
-  | "get_last_trade"
-  | "get_aggregates"
-  | "get_previous_close"
-  | "get_snapshot";

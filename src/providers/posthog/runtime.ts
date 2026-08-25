@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -49,7 +50,7 @@ interface PosthogCurrentUser {
   organizations?: unknown;
 }
 
-export const posthogActionHandlers: Record<string, PosthogActionHandler> = {
+export const posthogActionHandlers: ProviderActionHandlers<"posthog", PosthogActionHandler> = {
   get_current_user(input, fetcher) {
     return posthogGetCurrentUser(input, fetcher);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NasaActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ type NasaActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "sig
 type NasaActionHandler = (input: Record<string, unknown>, context: NasaActionContext) => Promise<unknown>;
 type EpicImageKind = "natural" | "enhanced" | "aerosol" | "cloud";
 
-export const nasaActionHandlers: Record<NasaActionName, NasaActionHandler> = {
+export const nasaActionHandlers: ProviderActionHandlers<"nasa", NasaActionHandler> = {
   get_apod(input, context) {
     return executeGetApod(input, context);
   },

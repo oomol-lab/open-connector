@@ -69,8 +69,6 @@ const submitEnrichmentInputSchema: JsonSchema = {
   ],
 };
 
-export type BettercontactActionName = "get_account_balance" | "submit_enrichment" | "get_enrichment_result";
-
 export const bettercontactActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",

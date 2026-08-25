@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EnchargeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface EnchargeRequestOptions {
 
 type EnchargeActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const enchargeActionHandlers: Record<EnchargeActionName, EnchargeActionHandler> = {
+export const enchargeActionHandlers: ProviderActionHandlers<"encharge", EnchargeActionHandler> = {
   send_email(input, context) {
     return sendEmail(input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, nullableString, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -22,7 +23,7 @@ type AffinityPagedResponse = {
   pagination: unknown;
 };
 
-export const affinityActionHandlers: Record<string, AffinityActionHandler> = {
+export const affinityActionHandlers: ProviderActionHandlers<"affinity", AffinityActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

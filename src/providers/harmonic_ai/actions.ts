@@ -141,14 +141,6 @@ const employeesOutputSchema = s.actionOutput(
   "Employee person URNs returned for a company.",
 );
 
-export type HarmonicAiActionName =
-  | "enrich_company"
-  | "enrich_person"
-  | "get_enrichment_status"
-  | "get_company"
-  | "get_company_employees"
-  | "get_person";
-
 export const harmonicAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "enrich_company",

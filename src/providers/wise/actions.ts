@@ -10,8 +10,6 @@ const upstreamCurrencySchema = s.looseObject("One currency object returned by th
 const upstreamRateSchema = s.looseObject("One rate object returned by the Wise Rates API.");
 const optionalQueryStringSchema = (description: string) => s.string(description, { minLength: 1, pattern: "\\S" });
 
-export type WiseActionName = "list_profiles" | "list_currencies" | "get_rates";
-
 export const wiseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_profiles",

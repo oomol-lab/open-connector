@@ -5,12 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gosquared";
 
-export type GosquaredActionName =
-  | "get_token_info"
-  | "get_now_overview"
-  | "get_now_time_series"
-  | "get_trends_aggregate";
-
 const siteTokenSchema = s.nonEmptyString(
   "GoSquared site_token for the project to query. Omit this to use the siteToken saved on the connection.",
 );

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -42,7 +43,7 @@ const baiduMapsInputStatuses = new Set([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 21,
 type RuntimeInput = Record<string, unknown>;
 type BaiduMapsActionHandler = (input: RuntimeInput, context: BaiduMapsActionContext) => Promise<unknown>;
 
-export const baiduMapsActionHandlers: Record<string, BaiduMapsActionHandler> = {
+export const baiduMapsActionHandlers: ProviderActionHandlers<"baidu_maps", BaiduMapsActionHandler> = {
   geocode(input, context) {
     return executeGeocode(input, context);
   },
@@ -119,7 +120,7 @@ function applyBaiduMapsSn(
   sk: string | undefined,
 ): Record<string, QueryValue> {
   // Baidu's SN check is an AK-level toggle configured per key in the console
-  // ("请求校验方式": IP whitelist OR SN), NOT a per-endpoint setting: once
+  // This is an account-level request verification mode (IP whitelist or SN), not a per-endpoint setting: once
   // enabled, EVERY request made with that AK needs a valid `sn`. A user only
   // configures an SK when their AK requires SN, so signing exactly when an `sk`
   // is present is correct — and avoids a fragile per-path allowlist where a

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { YuandianActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -26,7 +26,7 @@ interface YuandianRequestInput {
   headers?: Record<string, string>;
 }
 
-export const yuandianActionHandlers: Record<YuandianActionName, YuandianActionHandler> = {
+export const yuandianActionHandlers: ProviderActionHandlers<"yuandian", YuandianActionHandler> = {
   search_regulations(input, context) {
     return executeListAction("/rh_fg_search", buildRegulationSearchBody(input), context);
   },

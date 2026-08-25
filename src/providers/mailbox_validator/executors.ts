@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailboxValidatorActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -14,7 +14,10 @@ type MailboxValidatorActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const mailboxValidatorActionHandlers: Record<MailboxValidatorActionName, MailboxValidatorActionHandler> = {
+export const mailboxValidatorActionHandlers: ProviderActionHandlers<
+  "mailbox_validator",
+  MailboxValidatorActionHandler
+> = {
   validate_email(input, context) {
     return requestMailboxValidator({
       path: "/v2/validation/single",

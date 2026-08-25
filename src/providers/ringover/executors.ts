@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -32,7 +33,7 @@ interface RingoverContext {
 
 type Handler = ProviderRuntimeHandler<RingoverContext>;
 
-export const ringoverActionHandlers: Record<string, Handler> = {
+export const ringoverActionHandlers: ProviderActionHandlers<"ringover", Handler> = {
   async get_team(_input, context) {
     const raw = await ringoverRequest("/teams", context);
     return { team: objectPayload(raw, "team"), raw };

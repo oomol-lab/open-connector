@@ -123,13 +123,6 @@ const convertCurrencyOutputSchema = s.looseRequiredObject(
   },
 );
 
-export type OpenExchangeRatesActionName =
-  | "get_currencies"
-  | "get_latest_rates"
-  | "get_historical_rates"
-  | "get_timeseries_rates"
-  | "convert_currency";
-
 export const openExchangeRatesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_currencies",

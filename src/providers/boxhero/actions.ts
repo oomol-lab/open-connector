@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "boxhero";
 
-export type BoxheroActionName = "get_team_info" | "list_items" | "get_item" | "list_locations";
-
 const nonNegativeIntegerField = (description: string) => s.integer(description, { minimum: 0 });
 
 const nullableStringField = (description: string) => s.nullable(s.string(description));

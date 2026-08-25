@@ -143,5 +143,3 @@ export const freshdeskActions: ActionDefinition[] = [
     outputSchema: listTicketConversationsOutputSchema,
   }),
 ];
-
-export type FreshdeskActionName = "get_account" | "list_tickets" | "get_ticket" | "list_ticket_conversations";

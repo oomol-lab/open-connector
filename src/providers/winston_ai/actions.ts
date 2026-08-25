@@ -151,5 +151,3 @@ export const winstonAiActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type WinstonAiActionName = "detect_ai_text" | "check_plagiarism" | "fact_check" | "compare_texts";

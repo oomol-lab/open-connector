@@ -454,25 +454,3 @@ export const gistActions: ActionDefinition[] = [
     outputSchema: deletedOutput("The output payload for deleting a gist comment."),
   }),
 ];
-
-export type GistActionName =
-  | "list_my_gists"
-  | "create_gist"
-  | "list_public_gists"
-  | "list_starred_gists"
-  | "get_gist"
-  | "update_gist"
-  | "delete_gist"
-  | "list_gist_commits"
-  | "list_gist_forks"
-  | "fork_gist"
-  | "check_gist_starred"
-  | "star_gist"
-  | "unstar_gist"
-  | "get_gist_revision"
-  | "list_user_gists"
-  | "list_gist_comments"
-  | "create_gist_comment"
-  | "get_gist_comment"
-  | "update_gist_comment"
-  | "delete_gist_comment";

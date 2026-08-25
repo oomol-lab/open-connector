@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DixaActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
@@ -11,7 +11,7 @@ const dixaApiBaseUrl = "https://dev.dixa.io";
 
 type DixaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const dixaActionHandlers: Record<DixaActionName, DixaActionHandler> = {
+export const dixaActionHandlers: ProviderActionHandlers<"dixa", DixaActionHandler> = {
   list_agents(input, context) {
     return dixaGetWrappedList("/v1/agents", buildUserListQuery(input), context);
   },

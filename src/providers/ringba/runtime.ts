@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { RingbaActionName } from "./actions.ts";
 
@@ -20,7 +21,7 @@ const handler =
     const path = buildPath(name, input, context);
     return requestJson(path, context.apiKey, context.fetcher, "execute");
   };
-export const ringbaActionHandlers: Record<string, ProviderRuntimeHandler<RingbaContext>> = {
+export const ringbaActionHandlers: ProviderActionHandlers<"ringba", ProviderRuntimeHandler<RingbaContext>> = {
   get_account: handler("get_account"),
   list_campaigns: handler("list_campaigns"),
   get_campaign: handler("get_campaign"),
@@ -45,9 +46,6 @@ export async function validateRingbaCredential(
     const accountId = optionalString(account.accountId) ?? optionalString(account.id);
     return accountId ? [accountId] : [];
   });
-  if (accessibleAccountIds.length === 0) {
-    throw new ProviderRequestError(502, "Ringba returned no accessible account");
-  }
   const normalizedRequestedAccountId = requestedAccountId?.trim() || undefined;
   if (normalizedRequestedAccountId && !accessibleAccountIds.includes(normalizedRequestedAccountId)) {
     throw new ProviderRequestError(400, "Ringba accountId is not accessible with the provided API token");

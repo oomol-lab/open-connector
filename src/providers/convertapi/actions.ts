@@ -54,8 +54,6 @@ const convertedFileSchema = s.object(
   { optional: ["fileName", "fileExt", "fileSize", "fileId", "url", "transitFile"] },
 );
 
-export type ConvertapiActionName = "convert_pdf_to_docx";
-
 export const convertapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "convert_pdf_to_docx",

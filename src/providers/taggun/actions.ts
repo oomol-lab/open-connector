@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "taggun" as const;
 
-export type TaggunActionName =
-  | "extract_receipt_simple_url"
-  | "extract_receipt_verbose_url"
-  | "list_campaign_ids"
-  | "get_campaign_settings"
-  | "validate_receipt_url";
-
 const languageSchema = s.stringEnum("Optional language hint for Taggun OCR. Leave unset for automatic detection.", [
   "en",
   "es",

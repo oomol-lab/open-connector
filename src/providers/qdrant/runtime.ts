@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -34,7 +35,7 @@ export interface QdrantContext {
   signal?: AbortSignal;
 }
 
-export const qdrantActionHandlers: Record<string, ProviderRuntimeHandler<QdrantContext>> = {
+export const qdrantActionHandlers: ProviderActionHandlers<"qdrant", ProviderRuntimeHandler<QdrantContext>> = {
   async list_collections(_input, context) {
     const payload = await requestQdrantJson(context, "/collections", "GET", undefined, "execute");
     const result = requireObjectResult(payload, "Qdrant collections response");

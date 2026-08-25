@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CrustdataActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -23,7 +23,7 @@ const validatePath = "/company/identify";
 type CrustdataPhase = "validate" | "execute";
 type CrustdataActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const crustdataActionHandlers: Record<CrustdataActionName, CrustdataActionHandler> = {
+export const crustdataActionHandlers: ProviderActionHandlers<"crustdata", CrustdataActionHandler> = {
   identify_companies(input, context) {
     return executeIdentifyLikeAction("/company/identify", input, context);
   },

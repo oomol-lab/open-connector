@@ -1,11 +1,12 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { FusionApiOperation } from "./operations.ts";
 
 import { compactJson, encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
+  mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -17,13 +18,21 @@ const fusionApiValidationPath = "/openapi/qwen-image?hideTaskStateAPI=true";
 
 type FusionApiActionContext = ApiKeyProviderContext;
 
-export const fusionApiActionHandlers = Object.fromEntries(
-  fusionApiOperations.map((operation) => [
-    operation.actionName,
-    (input: Record<string, unknown>, context: FusionApiActionContext) =>
+const fusionApiActionSources = fusionApiOperations.map((operation) => ({
+  name: operation.actionName,
+  operation,
+}));
+
+export const fusionApiActionHandlers: ProviderActionHandlers<
+  "fusion-api",
+  ProviderRuntimeHandler<FusionApiActionContext>
+> = mapProviderActionHandlers(
+  "fusion-api",
+  fusionApiActionSources,
+  ({ operation }) =>
+    (input, context) =>
       executeFusionApiOperation(operation, input, context),
-  ]),
-) as Record<string, ProviderRuntimeHandler<FusionApiActionContext>>;
+);
 
 export async function validateFusionApiCredential(
   apiKey: string,

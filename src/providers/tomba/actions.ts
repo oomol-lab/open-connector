@@ -17,18 +17,6 @@ const account = s.object("The authenticated Tomba account response.", {
   raw: s.looseObject("The raw Tomba account payload."),
 });
 
-export type TombaActionName =
-  | "get_account"
-  | "domain_search"
-  | "email_finder"
-  | "email_verifier"
-  | "email_sources"
-  | "email_count"
-  | "technology"
-  | "linkedin"
-  | "enrich"
-  | "search_companies";
-
 export const tombaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

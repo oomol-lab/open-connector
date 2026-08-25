@@ -5,6 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -53,7 +54,7 @@ interface ErpnextRequestOptions {
 
 type ErpnextActionHandler = (input: Record<string, unknown>, context: ErpnextActionContext) => Promise<unknown>;
 
-const erpnextActionHandlers: Record<string, ErpnextActionHandler> = {
+const erpnextActionHandlers: ProviderActionHandlers<"erpnext", ErpnextActionHandler> = {
   async get_logged_user(_input, context) {
     const payload = await requestErpnext({
       ...context,

@@ -118,12 +118,3 @@ export const interzoidActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type InterzoidActionName =
-  | "get_company_match_key"
-  | "get_full_name_match_key"
-  | "get_full_name_match_score"
-  | "standardize_organization_name"
-  | "get_email_info"
-  | "get_ip_profile"
-  | "get_remaining_credits";

@@ -84,8 +84,6 @@ const spendRowSchema = s.looseObject("A Cursor team member spending row.", {
   monthlyLimitDollars: s.nullableNumber("The monthly spending limit in dollars, or null when none is set."),
 });
 
-export type CursorActionName = "list_team_members" | "list_audit_logs" | "get_daily_usage_data" | "get_team_spend";
-
 export const cursorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_team_members",

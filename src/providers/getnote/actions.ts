@@ -503,28 +503,3 @@ export const getnoteActions: ActionDefinition[] = [
     outputSchema: genericDetailOutputSchema,
   }),
 ];
-
-export type GetnoteActionName =
-  | "save_note"
-  | "get_save_task"
-  | "list_notes"
-  | "get_note"
-  | "update_note"
-  | "delete_note"
-  | "share_note"
-  | "list_note_tags"
-  | "add_note_tags"
-  | "remove_note_tag"
-  | "search_notes"
-  | "list_knowledge_bases"
-  | "list_subscribed_knowledge_bases"
-  | "create_knowledge_base"
-  | "list_knowledge_base_notes"
-  | "add_notes_to_knowledge_base"
-  | "remove_notes_from_knowledge_base"
-  | "list_knowledge_base_bloggers"
-  | "list_blogger_contents"
-  | "get_blogger_content"
-  | "list_knowledge_base_lives"
-  | "get_live_detail"
-  | "follow_live";

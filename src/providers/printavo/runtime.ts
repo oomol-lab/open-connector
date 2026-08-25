@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -240,7 +241,7 @@ query PrintavoOrders(
   }
 }`;
 
-export const printavoActionHandlers: Record<string, PrintavoActionHandler> = {
+export const printavoActionHandlers: ProviderActionHandlers<"printavo", PrintavoActionHandler> = {
   identify(_input, context) {
     return executeIdentify(context);
   },

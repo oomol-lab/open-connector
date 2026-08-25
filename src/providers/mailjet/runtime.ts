@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { MailjetActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -19,7 +19,7 @@ export interface MailjetContext {
   signal?: AbortSignal;
 }
 
-export const mailjetActionHandlers: Record<MailjetActionName, MailjetActionHandler> = {
+export const mailjetActionHandlers: ProviderActionHandlers<"mailjet", MailjetActionHandler> = {
   list_contacts(input, context) {
     return executeListContacts(input, context);
   },

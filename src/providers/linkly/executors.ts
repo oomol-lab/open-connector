@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LinklyActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -56,7 +56,7 @@ type LinklyMethod = "GET" | "POST" | "DELETE";
 type LinklyQuery = Record<string, string | number | boolean | null | undefined>;
 type LinklyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const linklyActionHandlers: Record<LinklyActionName, LinklyActionHandler> = {
+export const linklyActionHandlers: ProviderActionHandlers<"linkly", LinklyActionHandler> = {
   async list_workspaces(_input, context) {
     return {
       workspaces: await fetchWorkspaces(context, "execute"),

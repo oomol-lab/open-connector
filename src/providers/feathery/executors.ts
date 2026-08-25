@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { FeatheryActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -30,7 +30,7 @@ interface FeatheryRequestInput {
 
 type FeatheryActionHandler = (input: Record<string, unknown>, context: FeatheryActionContext) => Promise<unknown>;
 
-export const featheryActionHandlers: Record<FeatheryActionName, FeatheryActionHandler> = {
+export const featheryActionHandlers: ProviderActionHandlers<"feathery", FeatheryActionHandler> = {
   async get_account_info(_input, context) {
     return {
       account: normalizeObjectPayload(

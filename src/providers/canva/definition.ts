@@ -1,6 +1,6 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
-import { canvaActions, canvaProviderScopes } from "./actions.ts";
+import { canvaActions, canvaOAuthScopes } from "./actions.ts";
 
 const service = "canva";
 
@@ -14,16 +14,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://www.canva.com/api/oauth/authorize",
       tokenUrl: "https://api.canva.com/rest/v1/oauth/token",
-      scopes: [
-        canvaProviderScopes.designMetaRead,
-        canvaProviderScopes.designContentRead,
-        canvaProviderScopes.designContentWrite,
-        canvaProviderScopes.assetRead,
-        canvaProviderScopes.assetWrite,
-        canvaProviderScopes.folderRead,
-        canvaProviderScopes.folderWrite,
-        canvaProviderScopes.profileRead,
-      ],
+      scopes: canvaOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_basic",
       pkce: {
         method: "S256",

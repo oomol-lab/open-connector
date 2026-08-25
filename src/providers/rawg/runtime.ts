@@ -1,8 +1,9 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { RawgActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { getProviderActionHandler, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type RawgActionContext = {
   apiKey: string;
@@ -55,7 +56,7 @@ export async function validateRawgCredential(
   };
 }
 
-export const rawgActionHandlers: Record<RawgActionName, RawgActionHandler> = {
+export const rawgActionHandlers: ProviderActionHandlers<"rawg", RawgActionHandler> = {
   list_games(input, context) {
     return listResource("/games", buildListGamesQuery(input), "games", context);
   },
@@ -133,13 +134,11 @@ export const rawgActionHandlers: Record<RawgActionName, RawgActionHandler> = {
   },
 };
 
-const rawgHandlers: Record<RawgActionName, RawgActionHandler> = rawgActionHandlers;
-
 export async function executeRawgAction(
   input: { apiKey: string; actionName: RawgActionName; input: Record<string, unknown> },
   fetcher: typeof fetch,
 ): Promise<unknown> {
-  const handler = rawgHandlers[input.actionName];
+  const handler = getProviderActionHandler(rawgActionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(400, `unknown rawg action: ${input.actionName}`);
   }

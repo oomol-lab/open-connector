@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, objectArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -15,7 +16,7 @@ const stormboardApiBaseUrl = "https://api.stormboard.com";
 type StormboardRequestMode = "validate" | "execute";
 type StormboardActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const stormboardActionHandlers: Record<string, StormboardActionHandler> = {
+export const stormboardActionHandlers: ProviderActionHandlers<"stormboard", StormboardActionHandler> = {
   async get_profile(_input, context) {
     return { profile: await requestStormboardObject("/users/profile", context, "execute") };
   },

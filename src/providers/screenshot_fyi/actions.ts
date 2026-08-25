@@ -7,8 +7,6 @@ const service = "screenshot_fyi";
 
 const positiveIntegerSchema = (description: string) => s.integer(description, { minimum: 1 });
 
-export type ScreenshotFyiActionName = "take_screenshot";
-
 export const screenshotFyiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "take_screenshot",

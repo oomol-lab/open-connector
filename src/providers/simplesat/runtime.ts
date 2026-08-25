@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SimplesatActionName } from "./actions.ts";
 
 import { optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -57,7 +57,7 @@ const customerBodyMappings = [
   { input: "customAttributes", body: "custom_attributes" },
 ] satisfies BodyFieldMapping[];
 
-export const simplesatActionHandlers: Record<SimplesatActionName, SimplesatActionHandler> = {
+export const simplesatActionHandlers: ProviderActionHandlers<"simplesat", SimplesatActionHandler> = {
   async list_surveys(input, context) {
     const payload = await requestSimplesatJson({
       apiKey: context.apiKey,

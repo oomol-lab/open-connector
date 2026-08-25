@@ -5,19 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gleap";
 
-export type GleapActionName =
-  | "get_current_user"
-  | "list_contacts"
-  | "get_contact_by_user_id"
-  | "create_contact"
-  | "update_contact"
-  | "list_tickets"
-  | "get_ticket"
-  | "create_ticket"
-  | "create_ticket_with_message"
-  | "update_ticket"
-  | "delete_ticket";
-
 const emptyInputSchema = s.actionInput({}, [], "No input is required for this Gleap action.");
 const rawPayloadSchema = s.unknown("Raw payload returned by the official Gleap API.");
 const customDataSchema = s.looseObject("Custom data object accepted by Gleap.");

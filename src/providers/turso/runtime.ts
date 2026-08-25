@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TursoActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -24,7 +24,7 @@ interface TursoRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const tursoActionHandlers: Record<TursoActionName, TursoActionHandler> = {
+export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHandler> = {
   async list_organizations(_input, context) {
     const payload = await requestTursoJson({ path: "/v1/organizations", method: "GET", phase: "execute" }, context);
     return { organizations: extractResourceList(payload, ["organizations"]) };

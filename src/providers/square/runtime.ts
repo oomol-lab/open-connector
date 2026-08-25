@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { SquareActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -21,7 +21,7 @@ interface SquareRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const squareActionHandlers: Record<SquareActionName, SquareActionHandler> = {
+export const squareActionHandlers: ProviderActionHandlers<"square", SquareActionHandler> = {
   async list_locations(_input, context) {
     const payload = await requestSquareJson({
       path: "/v2/locations",

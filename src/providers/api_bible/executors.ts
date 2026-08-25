@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -22,7 +23,7 @@ interface ApiBibleActionContext {
 
 type ApiBibleActionHandler = (input: Record<string, unknown>, context: ApiBibleActionContext) => Promise<unknown>;
 
-export const apiBibleActionHandlers: Record<string, ApiBibleActionHandler> = {
+export const apiBibleActionHandlers: ProviderActionHandlers<"api_bible", ApiBibleActionHandler> = {
   list_bibles(input, context) {
     return listBibles(input, context);
   },

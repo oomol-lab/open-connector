@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ReadwiseActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
@@ -12,7 +12,7 @@ const validationPath = "/v2/auth/";
 
 type ReadwiseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const readwiseActionHandlers: Record<ReadwiseActionName, ReadwiseActionHandler> = {
+export const readwiseActionHandlers: ProviderActionHandlers<"readwise", ReadwiseActionHandler> = {
   async create_highlights(input, context) {
     const payload = await requestReadwiseJson({
       path: "/v2/highlights/",

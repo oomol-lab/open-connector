@@ -81,8 +81,6 @@ const newsFeedSchema = s.looseObject("The Google News feed object returned by Se
   ),
 });
 
-export type SerplyActionName = "google_search" | "google_news_search" | "google_video_search" | "google_scholar_search";
-
 export const serplyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "google_search",

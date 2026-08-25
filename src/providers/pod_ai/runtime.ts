@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ interface PodAiRequestOptions {
   body?: unknown;
 }
 
-export const podAiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const podAiActionHandlers: ProviderActionHandlers<"pod_ai", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async create_outbound_call(input, context) {
     const call = await requestPodAiJson({
       apiKey: normalizePodAiApiKey(context.apiKey),

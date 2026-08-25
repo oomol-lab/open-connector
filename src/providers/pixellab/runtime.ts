@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderTransitFile } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -47,7 +48,7 @@ export interface NormalizedPixellabUsage {
 const pixellabValidationPath = "/characters?limit=1&offset=0";
 const maxAnimationFrames = 64;
 
-export const pixellabActionHandlers: Record<string, PixellabActionHandler> = {
+export const pixellabActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabActionHandler> = {
   async start_text_animation(input, context) {
     const frameCount = optionalInteger(input.frameCount);
     if (frameCount !== undefined && frameCount % 2 !== 0) {

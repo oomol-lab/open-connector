@@ -152,8 +152,6 @@ const optimizeImageOutputSchema = s.object(
   { optional: ["originalWidth", "originalHeight"] },
 );
 
-export type KrakenIoActionName = "get_user_status" | "optimize_image";
-
 export const krakenIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_status",

@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { AblyActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -30,7 +30,7 @@ interface AblyJsonResponse {
 
 type AblyActionHandler = (input: Record<string, unknown>, context: AblyActionContext) => Promise<unknown>;
 
-export const ablyActionHandlers: Record<AblyActionName, AblyActionHandler> = {
+export const ablyActionHandlers: ProviderActionHandlers<"ably", AblyActionHandler> = {
   async batch_presence(input, context): Promise<unknown> {
     const separator = optionalString(input.separator) ?? defaultChannelSeparator;
     const channels = normalizeChannels(input.channels, separator);

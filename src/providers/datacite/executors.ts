@@ -1,18 +1,18 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionHandlers, ProviderRequestError } from "../provider-runtime.ts";
+import { dataciteActions } from "./actions.ts";
 import { executeDataciteAction, validateDataciteCredential } from "./runtime.ts";
 const service = "datacite";
 interface DataciteContext {
   apiKey?: string;
   fetcher: typeof fetch;
 }
-const handlers = Object.fromEntries(
-  ["get_doi", "list_dois"].map((name) => [
-    name,
-    (input: Record<string, unknown>, context: DataciteContext) =>
-      executeDataciteAction(name, input, context.fetcher, context.apiKey),
-  ]),
+const handlers: ProviderActionHandlers<"datacite", ProviderRuntimeHandler<DataciteContext>> = mapProviderActionHandlers(
+  service,
+  dataciteActions,
+  (_action, name) => (input, context) => executeDataciteAction(name, input, context.fetcher, context.apiKey),
 );
 export const executors: ProviderExecutors = defineProviderExecutors<DataciteContext>({
   service,

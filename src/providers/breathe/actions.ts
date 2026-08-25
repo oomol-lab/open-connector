@@ -5,13 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "breathe";
 
-export type BreatheActionName =
-  | "list_employees"
-  | "get_employee"
-  | "list_departments"
-  | "list_locations"
-  | "get_account";
-
 const positiveInteger = (description: string) => s.integer(description, { minimum: 1 });
 
 const paginationInputSchema = s.object(

@@ -127,13 +127,6 @@ const verifyEmailOutputSchema = responseSchema(
   }),
 );
 
-export type ApiVoidActionName =
-  | "get_account_info"
-  | "check_ip_reputation"
-  | "check_domain_reputation"
-  | "check_url_reputation"
-  | "verify_email";
-
 export const apiVoidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",

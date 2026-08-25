@@ -141,13 +141,6 @@ const getGroupOutputSchema = s.object(
   { required: ["group"] },
 );
 
-export type LucidScimActionName =
-  | "get_service_provider_config"
-  | "list_users"
-  | "get_user"
-  | "list_groups"
-  | "get_group";
-
 export const lucidScimActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_service_provider_config",

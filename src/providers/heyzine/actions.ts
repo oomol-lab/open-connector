@@ -184,14 +184,3 @@ export const heyzineActions: ActionDefinition[] = [
     outputSchema: operationSchema,
   }),
 ];
-
-export type HeyzineActionName =
-  | "list_flipbooks"
-  | "get_flipbook"
-  | "delete_flipbook"
-  | "list_bookshelves"
-  | "list_bookshelf_flipbooks"
-  | "add_flipbook_to_bookshelf"
-  | "remove_flipbook_from_bookshelf"
-  | "set_flipbook_social_data"
-  | "set_bookshelf_social_data";

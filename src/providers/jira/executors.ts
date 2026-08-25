@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { JiraActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -84,7 +84,7 @@ const defaultIssueFieldIds = [
   "duedate",
 ];
 
-export const jiraActionHandlers: Record<JiraActionName, JiraActionHandler> = {
+export const jiraActionHandlers: ProviderActionHandlers<"jira", JiraActionHandler> = {
   list_projects(input, context) {
     return listProjects(input, context);
   },
@@ -141,23 +141,10 @@ async function fetchJiraCurrentAccount(
   const siteAvatarUrl = asOptionalString(primaryResource.avatarUrl);
   const resourceScopes = readScopeArray(primaryResource.scopes);
 
-  const currentUser = await jiraJsonRequest<JiraCurrentUserPayload>({
-    accessToken,
-    fetcher,
-    providerMetadata: { cloudId },
-    path: jiraCurrentUserPath,
-    signal,
-  });
-
-  const accountId = requireNonEmptyString(currentUser.accountId, "jira accountId");
-  const displayName = asOptionalString(currentUser.displayName);
-  const emailAddress = asOptionalString(currentUser.emailAddress);
-  const accountLabel = displayName ?? emailAddress ?? accountId;
-
   return {
     profile: {
-      accountId: `jira:${cloudId}:${accountId}`,
-      displayName: `${accountLabel} (${siteName})`,
+      accountId: `jira:${cloudId}`,
+      displayName: siteName,
     },
     grantedScopes: mapJiraGrantedScopes(resourceScopes),
     metadata: compactObject({
@@ -168,13 +155,7 @@ async function fetchJiraCurrentAccount(
       resourceScopes,
       resourceCount: resources.length,
       apiBaseUrl: buildJiraApiBaseUrl(cloudId),
-      validationEndpoint: jiraCurrentUserPath,
-      accountId,
-      displayName,
-      emailAddress,
-      accountType: asOptionalString(currentUser.accountType),
-      active: optionalBoolean(currentUser.active),
-      timeZone: asOptionalString(currentUser.timeZone),
+      validationEndpoint: "/oauth/token/accessible-resources",
     }),
   };
 }

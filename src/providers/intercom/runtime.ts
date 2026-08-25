@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
-import type { IntercomActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -56,7 +56,7 @@ interface IntercomPaginationSummary {
   totalCount: number | null;
 }
 
-export const intercomActionHandlers: Record<IntercomActionName, IntercomActionHandler> = {
+export const intercomActionHandlers: ProviderActionHandlers<"intercom", IntercomActionHandler> = {
   async get_current_admin(_input, context) {
     const admin = await intercomRequestJson<Record<string, unknown>>({
       accessToken: context.accessToken,

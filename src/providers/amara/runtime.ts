@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -30,7 +31,7 @@ interface AmaraActionContext {
 
 type AmaraActionHandler = (input: Record<string, unknown>, context: AmaraActionContext) => Promise<unknown>;
 
-export const amaraActionHandlers: Record<string, AmaraActionHandler> = {
+export const amaraActionHandlers: ProviderActionHandlers<"amara", AmaraActionHandler> = {
   list_languages(_input, context) {
     return amaraListAvailableLanguages(context);
   },

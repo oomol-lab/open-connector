@@ -87,18 +87,6 @@ const resultsSortBySchema = s.stringEnum("The timestamp field used to sort multi
 ]);
 const resultsSortOrderSchema = s.stringEnum("The sort direction used for multiple-document results.", ["ASC", "DESC"]);
 
-export type DocparserActionName =
-  | "ping"
-  | "list_parsers"
-  | "get_parser_models"
-  | "upload_document_by_content"
-  | "fetch_document_from_url"
-  | "get_document_status"
-  | "get_document_result"
-  | "get_multiple_document_results"
-  | "reparse_documents"
-  | "reintegrate_documents";
-
 export const docparserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "ping",

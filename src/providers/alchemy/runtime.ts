@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
@@ -11,7 +12,7 @@ type AlchemyActionHandler = (input: Record<string, unknown>, context: ApiKeyProv
 export const alchemyRpcBaseUrl = "https://eth-mainnet.g.alchemy.com/v2";
 export const alchemyNftBaseUrl = "https://eth-mainnet.g.alchemy.com/nft/v3";
 
-export const alchemyActionHandlers: Record<string, AlchemyActionHandler> = {
+export const alchemyActionHandlers: ProviderActionHandlers<"alchemy", AlchemyActionHandler> = {
   get_token_balances(input, context) {
     return executeGetTokenBalances(input, context);
   },

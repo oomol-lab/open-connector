@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { StatsigActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -24,7 +24,7 @@ interface StatsigRequestOptions {
   signal?: AbortSignal;
 }
 
-export const statsigActionHandlers: Record<StatsigActionName, StatsigActionHandler> = {
+export const statsigActionHandlers: ProviderActionHandlers<"statsig", StatsigActionHandler> = {
   get_project(_input, context) {
     return readSingleStatsigData({
       path: "/console/v1/project",

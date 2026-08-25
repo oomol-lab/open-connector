@@ -82,8 +82,6 @@ type RailwayActionDefinitions = readonly [
   ProviderActionDefinition<"rollback_deployment">,
 ];
 
-export type RailwayActionName = RailwayActionDefinitions[number]["name"];
-
 export const railwayActions: RailwayActionDefinitions = [
   defineProviderAction(service, {
     name: "list_projects",

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ConductorActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -18,7 +18,7 @@ type ConductorRequestPhase = "validate" | "execute";
 type ConductorContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ConductorActionHandler = (input: Record<string, unknown>, context: ConductorContext) => Promise<unknown>;
 
-export const conductorActionHandlers: Record<ConductorActionName, ConductorActionHandler> = {
+export const conductorActionHandlers: ProviderActionHandlers<"conductor", ConductorActionHandler> = {
   list_websites(_input, context) {
     return requestWrappedConductorJson({
       path: conductorWebsitesPath,

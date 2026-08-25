@@ -135,8 +135,6 @@ const writeResultSchema = s.object("A normalized Smartsheet write result.", {
   raw: s.looseObject("The raw write response returned by Smartsheet."),
 });
 
-export type SmartsheetActionName = "list_sheets" | "get_sheet" | "add_rows" | "update_rows" | "delete_rows";
-
 export const smartsheetActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sheets",

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -44,7 +45,7 @@ interface TextmagicRequestInput {
 
 type TextmagicActionHandler = (input: Record<string, unknown>, context: TextmagicActionContext) => Promise<unknown>;
 
-export const textmagicActionHandlers: Record<string, TextmagicActionHandler> = {
+export const textmagicActionHandlers: ProviderActionHandlers<"textmagic", TextmagicActionHandler> = {
   get_current_user(_input, context) {
     return requestTextmagicJson({ path: textmagicValidationPath, phase: "execute" }, context);
   },

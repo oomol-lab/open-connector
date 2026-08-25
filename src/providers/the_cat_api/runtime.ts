@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TheCatApiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -23,8 +23,8 @@ const theCatApiDefaultTimeoutMs = 30_000;
 type TheCatApiRequestPhase = "validate" | "execute";
 type TheCatApiContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
-export const theCatApiActionHandlers: Record<
-  TheCatApiActionName,
+export const theCatApiActionHandlers: ProviderActionHandlers<
+  "the_cat_api",
   (input: Record<string, unknown>, context: TheCatApiContext) => Promise<unknown>
 > = {
   search_images(input, context) {

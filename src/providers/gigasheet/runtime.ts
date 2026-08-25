@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GigasheetActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ interface GigasheetActionContext {
 
 type GigasheetActionHandler = (input: Record<string, unknown>, context: GigasheetActionContext) => Promise<unknown>;
 
-export const gigasheetActionHandlers: Record<GigasheetActionName, GigasheetActionHandler> = {
+export const gigasheetActionHandlers: ProviderActionHandlers<"gigasheet", GigasheetActionHandler> = {
   list_home_files(_input, context) {
     return listHomeFiles(context);
   },

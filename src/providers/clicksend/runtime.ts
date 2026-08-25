@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ClicksendActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -38,7 +38,7 @@ export interface ClicksendActionContext {
   signal?: AbortSignal;
 }
 
-export const clicksendActionHandlers: Record<ClicksendActionName, ClicksendActionHandler> = {
+export const clicksendActionHandlers: ProviderActionHandlers<"clicksend", ClicksendActionHandler> = {
   get_account(_input, context) {
     return requestClicksendJson({
       method: "GET",

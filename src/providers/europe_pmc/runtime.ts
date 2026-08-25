@@ -1,5 +1,7 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { combineProviderActionHandlers, ProviderRequestError } from "../provider-runtime.ts";
 import { requestEuropePmcObject, requestEuropePmcText } from "./request.ts";
 import { europePmcAnnotationActionHandlers } from "./runtime-annotations.ts";
 import { europePmcGrantActionHandlers } from "./runtime-grants.ts";
@@ -10,147 +12,148 @@ const defaultResultType = "lite";
 
 type EuropePmcActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch) => Promise<unknown>;
 
-export const europePmcActionHandlers: Record<string, EuropePmcActionHandler> = {
-  async search_publications(input, fetcher) {
-    const payload = await requestEuropePmcObject({
-      path: "/search",
-      params: {
-        query: readRequiredString(input.query, "query"),
-        resultType: readOptionalString(input.resultType) ?? defaultResultType,
-        synonym: readOptionalBooleanString(input.synonym),
-        cursorMark: readOptionalString(input.cursorMark),
-        pageSize: readOptionalIntegerString(input.pageSize),
-        sort: readOptionalString(input.sort),
-        format: "json",
-      },
-      fetcher,
-    });
-    const rawResults = readNestedRecordArray(payload.resultList, "result");
+export const europePmcActionHandlers: ProviderActionHandlers<"europe_pmc", EuropePmcActionHandler> =
+  combineProviderActionHandlers<"europe_pmc", EuropePmcActionHandler>("europe_pmc", {
+    async search_publications(input, fetcher) {
+      const payload = await requestEuropePmcObject({
+        path: "/search",
+        params: {
+          query: readRequiredString(input.query, "query"),
+          resultType: readOptionalString(input.resultType) ?? defaultResultType,
+          synonym: readOptionalBooleanString(input.synonym),
+          cursorMark: readOptionalString(input.cursorMark),
+          pageSize: readOptionalIntegerString(input.pageSize),
+          sort: readOptionalString(input.sort),
+          format: "json",
+        },
+        fetcher,
+      });
+      const rawResults = readNestedRecordArray(payload.resultList, "result");
 
-    return {
-      version: readNullableString(payload.version),
-      hitCount: readNonNegativeInteger(payload.hitCount, "hitCount"),
-      nextCursorMark: readNullableString(payload.nextCursorMark),
-      publications: rawResults.map(normalizePublication),
-      request: optionalRecord(payload.request) ?? {},
-      rawResults,
-    };
-  },
+      return {
+        version: readNullableString(payload.version),
+        hitCount: readNonNegativeInteger(payload.hitCount, "hitCount"),
+        nextCursorMark: readNullableString(payload.nextCursorMark),
+        publications: rawResults.map(normalizePublication),
+        request: optionalRecord(payload.request) ?? {},
+        rawResults,
+      };
+    },
 
-  async get_publication(input, fetcher) {
-    const source = readRequiredString(input.source, "source");
-    const id = readRequiredString(input.id, "id");
-    const payload = await requestEuropePmcObject({
-      path: `/article/${encodeURIComponent(source)}/${encodeURIComponent(id)}`,
-      params: {
-        resultType: readOptionalString(input.resultType) ?? "core",
-        format: "json",
-      },
-      fetcher,
-    });
-    const rawPublication = optionalRecord(payload.result);
-    const publication =
-      rawPublication && readOptionalString(rawPublication.id) && readOptionalString(rawPublication.source)
-        ? normalizePublication(rawPublication)
-        : null;
+    async get_publication(input, fetcher) {
+      const source = readRequiredString(input.source, "source");
+      const id = readRequiredString(input.id, "id");
+      const payload = await requestEuropePmcObject({
+        path: `/article/${encodeURIComponent(source)}/${encodeURIComponent(id)}`,
+        params: {
+          resultType: readOptionalString(input.resultType) ?? "core",
+          format: "json",
+        },
+        fetcher,
+      });
+      const rawPublication = optionalRecord(payload.result);
+      const publication =
+        rawPublication && readOptionalString(rawPublication.id) && readOptionalString(rawPublication.source)
+          ? normalizePublication(rawPublication)
+          : null;
 
-    return {
-      found: publication != null,
-      version: readNullableString(payload.version),
-      publication,
-      request: optionalRecord(payload.request) ?? {},
-    };
-  },
+      return {
+        found: publication != null,
+        version: readNullableString(payload.version),
+        publication,
+        request: optionalRecord(payload.request) ?? {},
+      };
+    },
 
-  async get_references(input, fetcher) {
-    return getRelatedPublications("references", input, fetcher);
-  },
+    async get_references(input, fetcher) {
+      return getRelatedPublications("references", input, fetcher);
+    },
 
-  async get_citations(input, fetcher) {
-    return getRelatedPublications("citations", input, fetcher);
-  },
+    async get_citations(input, fetcher) {
+      return getRelatedPublications("citations", input, fetcher);
+    },
 
-  async get_data_links(input, fetcher) {
-    const source = readRequiredString(input.source, "source");
-    const id = readRequiredString(input.id, "id");
-    const payload = await requestEuropePmcObject({
-      path: `/${encodeURIComponent(source)}/${encodeURIComponent(id)}/datalinks`,
-      params: {
-        category: readOptionalString(input.category),
-        obtainedBy: readOptionalString(input.obtainedBy),
-        fromDate: readOptionalString(input.fromDate),
-        tags: readOptionalStringArray(input.tags)?.join(","),
-        sectionLimit: readOptionalIntegerString(input.sectionLimit),
-        format: "json",
-      },
-      fetcher,
-    });
-    const dataLinkList = optionalRecord(payload.dataLinkList) ?? {};
+    async get_data_links(input, fetcher) {
+      const source = readRequiredString(input.source, "source");
+      const id = readRequiredString(input.id, "id");
+      const payload = await requestEuropePmcObject({
+        path: `/${encodeURIComponent(source)}/${encodeURIComponent(id)}/datalinks`,
+        params: {
+          category: readOptionalString(input.category),
+          obtainedBy: readOptionalString(input.obtainedBy),
+          fromDate: readOptionalString(input.fromDate),
+          tags: readOptionalStringArray(input.tags)?.join(","),
+          sectionLimit: readOptionalIntegerString(input.sectionLimit),
+          format: "json",
+        },
+        fetcher,
+      });
+      const dataLinkList = optionalRecord(payload.dataLinkList) ?? {};
 
-    return {
-      version: readNullableString(payload.version),
-      hitCount: readNonNegativeInteger(payload.hitCount, "hitCount"),
-      categories: readRecordArray(dataLinkList.Category),
-      request: optionalRecord(payload.request) ?? {},
-      raw: payload,
-    };
-  },
+      return {
+        version: readNullableString(payload.version),
+        hitCount: readNonNegativeInteger(payload.hitCount, "hitCount"),
+        categories: readRecordArray(dataLinkList.Category),
+        request: optionalRecord(payload.request) ?? {},
+        raw: payload,
+      };
+    },
 
-  async get_full_text_xml(input, fetcher) {
-    const pmcid = readRequiredString(input.pmcid, "pmcid");
-    const response = await requestEuropePmcText({
-      path: `/${encodeURIComponent(pmcid)}/fullTextXML`,
-      accept: "application/xml, text/xml",
-      fetcher,
-    });
+    async get_full_text_xml(input, fetcher) {
+      const pmcid = readRequiredString(input.pmcid, "pmcid");
+      const response = await requestEuropePmcText({
+        path: `/${encodeURIComponent(pmcid)}/fullTextXML`,
+        accept: "application/xml, text/xml",
+        fetcher,
+      });
 
-    if (!response.body.includes("<article")) {
-      throw new ProviderRequestError(502, "Europe PMC returned malformed full text XML");
-    }
+      if (!response.body.includes("<article")) {
+        throw new ProviderRequestError(502, "Europe PMC returned malformed full text XML");
+      }
 
-    return {
-      pmcid,
-      contentType: response.contentType,
-      contentLength: response.body.length,
-      xml: response.body,
-    };
-  },
-  async get_evaluations(input, fetcher) {
-    const source = readRequiredString(input.source, "source");
-    const id = readRequiredString(input.id, "id");
-    const payload = await requestEuropePmcObject({
-      path: `/evaluations/${encodeURIComponent(source)}/${encodeURIComponent(id)}`,
-      params: { format: "json" },
-      fetcher,
-    });
-    const rawEvaluations = readNestedRecordArray(payload.evaluationList, "evaluation");
+      return {
+        pmcid,
+        contentType: response.contentType,
+        contentLength: response.body.length,
+        xml: response.body,
+      };
+    },
+    async get_evaluations(input, fetcher) {
+      const source = readRequiredString(input.source, "source");
+      const id = readRequiredString(input.id, "id");
+      const payload = await requestEuropePmcObject({
+        path: `/evaluations/${encodeURIComponent(source)}/${encodeURIComponent(id)}`,
+        params: { format: "json" },
+        fetcher,
+      });
+      const rawEvaluations = readNestedRecordArray(payload.evaluationList, "evaluation");
 
-    return {
-      version: readNullableString(payload.version),
-      evaluations: rawEvaluations.map(normalizeEvaluation),
-      rawEvaluations,
-    };
-  },
-  async check_article_status(input, fetcher) {
-    const ids = readArticleIds(input.ids);
-    const payload = await requestEuropePmcObject({
-      path: "/status-update-search",
-      params: { format: "json" },
-      method: "POST",
-      jsonBody: { ids },
-      fetcher,
-    });
-    const rawUpdates = readRecordArray(payload.articlesWithStatusUpdate);
+      return {
+        version: readNullableString(payload.version),
+        evaluations: rawEvaluations.map(normalizeEvaluation),
+        rawEvaluations,
+      };
+    },
+    async check_article_status(input, fetcher) {
+      const ids = readArticleIds(input.ids);
+      const payload = await requestEuropePmcObject({
+        path: "/status-update-search",
+        params: { format: "json" },
+        method: "POST",
+        jsonBody: { ids },
+        fetcher,
+      });
+      const rawUpdates = readRecordArray(payload.articlesWithStatusUpdate);
 
-    return {
-      metrics: optionalRecord(payload.metrics) ?? {},
-      updates: rawUpdates.map(normalizeArticleStatusUpdate),
-      rawUpdates,
-    };
-  },
-  ...europePmcAnnotationActionHandlers,
-  ...europePmcGrantActionHandlers,
-} satisfies Record<string, EuropePmcActionHandler>;
+      return {
+        metrics: optionalRecord(payload.metrics) ?? {},
+        updates: rawUpdates.map(normalizeArticleStatusUpdate),
+        rawUpdates,
+      };
+    },
+    ...europePmcAnnotationActionHandlers,
+    ...europePmcGrantActionHandlers,
+  });
 
 async function getRelatedPublications(
   relation: "citations" | "references",

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -21,7 +22,7 @@ interface TavilyRequestInput {
   phase?: "validate" | "execute";
 }
 
-export const tavilyActionHandlers: Record<string, TavilyActionHandler> = {
+export const tavilyActionHandlers: ProviderActionHandlers<"tavily", TavilyActionHandler> = {
   search(input, context) {
     return tavilyRequest(context, { method: "POST", path: "/search", body: input });
   },

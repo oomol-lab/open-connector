@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LoomioActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -13,7 +13,7 @@ const loomioPollsPath = "/polls";
 type LoomioRequestPhase = "validate" | "execute";
 type LoomioActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const loomioActionHandlers: Record<LoomioActionName, LoomioActionHandler> = {
+export const loomioActionHandlers: ProviderActionHandlers<"loomio", LoomioActionHandler> = {
   list_polls(input, context) {
     return listLoomioPolls(input, context);
   },

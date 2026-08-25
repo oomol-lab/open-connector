@@ -192,9 +192,6 @@ export interface MxToolboxLookupActionDefinition {
   inputObjectDescription: string;
 }
 
-export type MxToolboxLookupActionName = MxToolboxLookupActionDefinition["name"];
-export type MxToolboxActionName = MxToolboxLookupActionName | "usage_check" | "monitor_status";
-
 export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDefinition[] = [
   {
     name: "lookup_dns",

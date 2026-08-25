@@ -85,8 +85,6 @@ function metricsOutput(description: string, itemDescription: string): JsonSchema
   );
 }
 
-export type DialpadWfmActionName = "get_schedule" | "list_agent_metrics" | "list_activity_metrics";
-
 export const dialpadWfmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_schedule",

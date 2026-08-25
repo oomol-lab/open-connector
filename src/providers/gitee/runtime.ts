@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { GiteeActionName } from "./actions.ts";
 
 import { compactObject, optionalIntegerLike, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
@@ -14,7 +14,7 @@ interface GiteeRequestOptions {
   query?: Record<string, string | number | boolean | null | undefined>;
 }
 
-export const giteeActionHandlers: Record<GiteeActionName, ProviderRuntimeHandler<BearerProviderContext>> = {
+export const giteeActionHandlers: ProviderActionHandlers<"gitee", ProviderRuntimeHandler<BearerProviderContext>> = {
   async get_current_user(_input, context) {
     return requireGiteeObject(await giteeRequestJson("/user", context), "current user");
   },

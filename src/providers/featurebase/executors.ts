@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { FeaturebaseActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
@@ -20,7 +20,7 @@ interface FeaturebaseActionContext {
 
 type FeaturebaseActionHandler = (input: Record<string, unknown>, context: FeaturebaseActionContext) => Promise<unknown>;
 
-export const featurebaseActionHandlers: Record<FeaturebaseActionName, FeaturebaseActionHandler> = {
+export const featurebaseActionHandlers: ProviderActionHandlers<"featurebase", FeaturebaseActionHandler> = {
   list_boards(_input, context) {
     return listFeaturebaseObjects("/v2/boards", {}, context);
   },

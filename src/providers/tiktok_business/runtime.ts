@@ -1,11 +1,12 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
-import type { TikTokBusinessActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 const tiktokBusinessApiBaseUrl = "https://business-api.tiktok.com";
+const tiktokBusinessUserInfoUrl = `${tiktokBusinessApiBaseUrl}/open_api/v1.3/user/info/`;
 const tiktokBusinessAdvertiserUrl = `${tiktokBusinessApiBaseUrl}/open_api/v1.3/oauth2/advertiser/get/`;
 
 const tiktokBusinessPermissionScopeHint =
@@ -37,7 +38,7 @@ type TikTokBusinessQueryValue =
 
 type TikTokBusinessApiVersion = "v1.3" | "v2.0";
 
-export const tiktokBusinessActionHandlers: Record<TikTokBusinessActionName, TikTokBusinessActionHandler> = {
+export const tiktokBusinessActionHandlers: ProviderActionHandlers<"tiktok_business", TikTokBusinessActionHandler> = {
   list_advertisers(input, context) {
     return listAdvertisers(input, context);
   },
@@ -90,31 +91,36 @@ export async function validateTikTokBusinessCredential(
   fetcher: typeof fetch,
 ): Promise<CredentialValidationResult> {
   const envelope = await tiktokBusinessJsonEnvelopeRequest<{
-    list?: unknown[];
-    advertiser_list?: unknown[];
+    core_user_id?: unknown;
+    display_name?: unknown;
+    email?: unknown;
+    avatar_url?: unknown;
+    id?: unknown;
   }>({
-    url: tiktokBusinessAdvertiserUrl,
+    url: tiktokBusinessUserInfoUrl,
     fetcher,
     accessToken: input.accessToken,
   });
-  const advertisers = readTikTokBusinessAdvertisers(dataObject(envelope.data));
-  const firstAdvertiser = advertisers[0];
-  if (!firstAdvertiser) {
-    throw new ProviderRequestError(502, "tiktok business advertiser discovery returned no advertisers");
+  const user = dataObject(envelope.data);
+  const userId = stringOrUndefined(user.core_user_id) ?? stringOrUndefined(user.id);
+  if (!userId) {
+    throw new ProviderRequestError(502, "tiktok business user info is missing core_user_id");
   }
 
+  const displayName = stringOrUndefined(user.display_name) || userId;
   const grantedScopes = normalizeProviderScopes(input.metadata.scope);
   return {
     profile: {
-      accountId: firstAdvertiser.advertiserId,
-      displayName: firstAdvertiser.advertiserName || firstAdvertiser.advertiserId,
+      accountId: userId,
+      displayName,
       grantedScopes,
     },
     grantedScopes,
-    metadata: {
-      advertisers,
-      selectedAdvertiserId: firstAdvertiser.advertiserId,
-    },
+    metadata: compactObject({
+      coreUserId: userId,
+      email: stringOrUndefined(user.email),
+      avatarUrl: stringOrUndefined(user.avatar_url),
+    }),
   };
 }
 

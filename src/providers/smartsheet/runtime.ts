@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SmartsheetActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ const smartsheetIntegrationSource = "AI,OOMOL,oomol-connect";
 type SmartsheetPhase = "validate" | "execute";
 type SmartsheetActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const smartsheetActionHandlers: Record<SmartsheetActionName, SmartsheetActionHandler> = {
+export const smartsheetActionHandlers: ProviderActionHandlers<"smartsheet", SmartsheetActionHandler> = {
   async list_sheets(input, context) {
     const payload = await requestSmartsheetJson({
       method: "GET",

@@ -5,7 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { DingtalkBotActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, objectArray, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
@@ -53,7 +53,7 @@ interface DingtalkBotRequestResult {
 
 type DingtalkBotActionHandler = (input: Record<string, unknown>, context: DingtalkBotContext) => Promise<unknown>;
 
-export const dingtalkBotActionHandlers: Record<DingtalkBotActionName, DingtalkBotActionHandler> = {
+export const dingtalkBotActionHandlers: ProviderActionHandlers<"dingtalk_bot", DingtalkBotActionHandler> = {
   send_text_message(input, context) {
     return sendDingtalkBotMessage(
       compactObject({

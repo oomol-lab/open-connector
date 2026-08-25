@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KustomerActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ interface KustomerRequestInput {
   body?: unknown;
 }
 
-export const kustomerActionHandlers: Record<KustomerActionName, KustomerActionHandler> = {
+export const kustomerActionHandlers: ProviderActionHandlers<"kustomer", KustomerActionHandler> = {
   async list_customers(input, context): Promise<unknown> {
     const payload = await requestKustomerJson({
       ...context,

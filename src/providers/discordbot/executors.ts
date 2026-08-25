@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -16,7 +17,7 @@ interface DiscordbotContext {
 
 type DiscordbotActionHandler = (input: Record<string, unknown>, context: DiscordbotContext) => Promise<unknown>;
 
-export const discordbotActionHandlers: Record<string, DiscordbotActionHandler> = {
+export const discordbotActionHandlers: ProviderActionHandlers<"discordbot", DiscordbotActionHandler> = {
   test_auth(_input, context) {
     return testAuth(context);
   },

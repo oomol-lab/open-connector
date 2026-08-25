@@ -1,4 +1,5 @@
 import type { ExecutionContext } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
@@ -30,8 +31,8 @@ export async function createEvervaultContext(
     signal: context.signal,
   };
 }
-export const evervaultActionHandlers: Record<
-  string,
+export const evervaultActionHandlers: ProviderActionHandlers<
+  "evervault",
   (input: Record<string, unknown>, context: EvervaultContext) => Promise<unknown>
 > = {
   async encrypt_json(input, context) {

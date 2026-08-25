@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { Buffer } from "node:buffer";
 import { compactObject, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -33,7 +35,7 @@ type DataForSeoRequestInput = {
 export const dataForSeoApiBaseUrl: string = "https://api.dataforseo.com/v3";
 const dataForSeoApiBase = new URL(`${dataForSeoApiBaseUrl}/`);
 
-export const dataForSeoActionHandlers: Record<string, DataForSeoActionHandler> = {
+export const dataForSeoActionHandlers: ProviderActionHandlers<"dataforseo", DataForSeoActionHandler> = {
   async get_user_data(_input, context) {
     return requestDataForSeoUserData(context, "execute");
   },

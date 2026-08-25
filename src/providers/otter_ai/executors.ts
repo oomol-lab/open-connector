@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OtterAiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ const otterAiValidationPath = "/v1/workspace";
 type OtterAiRequestPhase = "validate" | "execute";
 type OtterAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const otterAiActionHandlers: Record<OtterAiActionName, OtterAiActionHandler> = {
+export const otterAiActionHandlers: ProviderActionHandlers<"otter_ai", OtterAiActionHandler> = {
   async get_workspace(_input, context): Promise<unknown> {
     const payload = await requestOtterAi(context, otterAiUrl("/v1/workspace"), "execute");
     const wrapper = asOtterWrapper(payload, "Otter.ai workspace response");

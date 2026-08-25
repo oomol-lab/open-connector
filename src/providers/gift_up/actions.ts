@@ -5,25 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "gift_up";
 
-export type GiftUpActionName =
-  | "get_company"
-  | "list_gift_cards"
-  | "get_gift_card"
-  | "reactivate_gift_card"
-  | "void_gift_card"
-  | "top_up_gift_card"
-  | "redeem_gift_card"
-  | "redeem_gift_card_in_full"
-  | "undo_gift_card_redemption"
-  | "list_items"
-  | "get_item"
-  | "list_orders"
-  | "get_order"
-  | "list_locations"
-  | "list_promotions"
-  | "list_report_transactions"
-  | "get_report_transaction";
-
 const nonEmptyStringSchema = (description: string) => s.nonEmptyString(description);
 const codeSchema = nonEmptyStringSchema("The Gift Up gift card code.");
 const idSchema = s.uuid("The Gift Up object ID.");

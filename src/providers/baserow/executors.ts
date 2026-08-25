@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -16,7 +17,7 @@ const baserowValidationPath = "/api/database/tables/all-tables/";
 type BaserowPhase = "validate" | "execute";
 type BaserowActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const baserowActionHandlers: Record<string, BaserowActionHandler> = {
+export const baserowActionHandlers: ProviderActionHandlers<"baserow", BaserowActionHandler> = {
   async list_tables(_input, context) {
     const tables = asObjectArray(
       await requestBaserowJson({

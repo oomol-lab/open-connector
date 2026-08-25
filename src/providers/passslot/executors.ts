@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Validator } from "@cfworker/json-schema";
@@ -36,7 +37,7 @@ type PassslotRequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" |
 
 const emptyPassslotResponse = Symbol("empty PassSlot response");
 
-export const passslotActionHandlers: Record<string, PassslotActionHandler> = {
+export const passslotActionHandlers: ProviderActionHandlers<"passslot", PassslotActionHandler> = {
   async list_templates(_input, context) {
     return {
       templates: (await requestPassslotArray({ path: "/templates" }, context)).map(validatePassslotTemplate),

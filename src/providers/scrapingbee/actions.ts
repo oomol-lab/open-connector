@@ -71,8 +71,6 @@ const usageSchema = s.object("The current ScrapingBee usage snapshot.", {
   renewal_subscription_date: s.string("The renewal timestamp for the current subscription period."),
 });
 
-export type ScrapingbeeActionName = "fetch_html" | "extract_data" | "get_usage_stats";
-
 export const scrapingbeeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_html",

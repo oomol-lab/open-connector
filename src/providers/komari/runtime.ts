@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { KomariOperation } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -6,6 +7,7 @@ import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/reques
 import {
   createProviderTimeout,
   isAbortLikeError,
+  mapProviderActionHandlers,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -80,11 +82,12 @@ const safeAdminNodeFields = [
   "expired_at",
 ];
 
-export const komariActionHandlers: Record<string, KomariActionHandler> = Object.fromEntries(
-  komariOperations.map((operation) => [
-    operation.name,
-    (input: Record<string, unknown>, context: KomariActionContext) => executeKomariOperation(operation, input, context),
-  ]),
+export const komariActionHandlers: ProviderActionHandlers<"komari", KomariActionHandler> = mapProviderActionHandlers(
+  "komari",
+  komariOperations,
+  (operation): KomariActionHandler =>
+    (input, context) =>
+      executeKomariOperation(operation, input, context),
 );
 
 export function createKomariContext(

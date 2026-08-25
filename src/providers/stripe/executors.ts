@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { StripeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { ProviderRequestError, defineApiKeyProviderExecutors, providerUserAgent } from "../provider-runtime.ts";
@@ -22,7 +22,7 @@ const stripeApiBaseUrl = "https://api.stripe.com";
 const stripeApiVersion = "2024-06-20";
 const stripeAccountPath = "/v1/account";
 
-export const stripeActionHandlers: Record<StripeActionName, StripeActionHandler> = {
+export const stripeActionHandlers: ProviderActionHandlers<"stripe", StripeActionHandler> = {
   identify_account(_input, context) {
     return executeIdentifyAccount(context);
   },

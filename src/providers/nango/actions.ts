@@ -253,17 +253,6 @@ const successOutputSchema = s.object(
   { optional: ["success"], additionalProperties: true },
 );
 
-export type NangoActionName =
-  | "list_providers"
-  | "get_provider"
-  | "list_integrations"
-  | "get_integration"
-  | "list_connections"
-  | "get_connection"
-  | "set_connection_metadata"
-  | "patch_connection_tags"
-  | "delete_connection";
-
 export const nangoActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_providers",

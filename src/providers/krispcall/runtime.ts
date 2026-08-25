@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -49,7 +50,10 @@ interface KrispCallEnvelope {
   readonly raw: Record<string, unknown>;
 }
 
-export const krispcallActionHandlers: Record<string, ProviderRuntimeHandler<KrispCallActionContext>> = {
+export const krispcallActionHandlers: ProviderActionHandlers<
+  "krispcall",
+  ProviderRuntimeHandler<KrispCallActionContext>
+> = {
   async get_workspace(_input, context) {
     const payload = readEnvelope(
       await requestKrispCallJson({

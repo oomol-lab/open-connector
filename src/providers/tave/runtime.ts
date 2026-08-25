@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalNumber, optionalRecord } from "../../core/cast.ts";
@@ -16,7 +17,7 @@ const defaultTimeoutMs = 30_000;
 type TaveActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type TaveContactKind = "person" | "company" | "location" | "employee";
 
-export const taveActionHandlers: Record<string, TaveActionHandler> = {
+export const taveActionHandlers: ProviderActionHandlers<"tave", TaveActionHandler> = {
   async list_contacts(input, context): Promise<unknown> {
     const payload = await requestTaveJson({
       context,

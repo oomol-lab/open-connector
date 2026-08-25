@@ -172,5 +172,3 @@ export const flagsmithActions: ProviderActionDefinition[] = [
     outputSchema: identityOutputSchema,
   }),
 ];
-
-export type FlagsmithActionName = "list_flags" | "get_feature_flag" | "get_identity_flags" | "identify_identity";

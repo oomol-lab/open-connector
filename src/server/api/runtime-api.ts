@@ -1,9 +1,10 @@
 import type { RuntimeActionDefinition } from "../../catalog-store.ts";
 import type { ConnectionError, ConnectionSummary } from "../../connection-service.ts";
-import type { ExecutionResult, ProviderDefinition } from "../../core/types.ts";
+import type { ExecutionResult, ProviderDefinition, ProviderScenario } from "../../core/types.ts";
 import type { Context } from "hono";
 
 import { requiredRecord } from "../../core/cast.ts";
+import { resolveProviderScenario } from "../../core/provider-scenarios.ts";
 
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
@@ -30,6 +31,7 @@ export interface RuntimeProviderMetadata {
   iconUrl: string | null;
   homepageUrl: string | null;
   categories: RuntimeProviderCategory[];
+  scenario: ProviderScenario;
   authTypes: string[];
 }
 
@@ -102,6 +104,7 @@ export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeP
       id: category,
       displayName: category,
     })),
+    scenario: resolveProviderScenario(provider),
     authTypes: provider.authTypes,
   };
 }
@@ -155,6 +158,16 @@ export function writeRuntimeSuccess<TData>(context: Context, data: TData, meta?:
 
 export function writeRuntimeFailure(context: Context, input: RuntimeFailureInput): Response {
   return writeRuntimeActionHttpResult(context, serializeRuntimeFailure(input));
+}
+
+/** Public 404 used when an action id is missing from the catalog. */
+export function unknownActionFailure(actionId: string): RuntimeFailureInput {
+  return {
+    status: 404,
+    errorCode: "unknown_action",
+    message: `Unknown action: ${actionId}`,
+    meta: { actionId },
+  };
 }
 
 /** Build a runtime failure response without writing it to the HTTP context. */
@@ -239,10 +252,10 @@ function mapExecutionErrorStatus(code: string | undefined): RuntimeStatus {
   if (code === "oauth_token_expired" || code === "oauth_refresh_unavailable") {
     return 409;
   }
-  if (code === "connection_not_found" || code === "unknown_service") {
+  if (code === "connection_not_found" || code === "unknown_service" || code === "unknown_action") {
     return 404;
   }
-  if (code === "authorization_failed") {
+  if (code === "authorization_failed" || code === "connection_not_allowed") {
     return 403;
   }
   if (code === "rate_limited") {

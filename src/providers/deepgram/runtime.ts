@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   optionalNumber,
@@ -20,7 +21,7 @@ type DeepgramActionHandler = (
   apiKey: string,
 ) => Promise<unknown>;
 
-export const deepgramActionHandlers: Record<string, DeepgramActionHandler> = {
+export const deepgramActionHandlers: ProviderActionHandlers<"deepgram", DeepgramActionHandler> = {
   async list_projects(_input, fetcher, apiKey) {
     const payload = await requestDeepgramJson({
       path: "/projects",

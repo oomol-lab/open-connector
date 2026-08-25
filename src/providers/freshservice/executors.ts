@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { FreshserviceActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -43,7 +43,7 @@ type FreshserviceActionHandler = (
   context: FreshserviceActionContext,
 ) => Promise<unknown>;
 
-export const freshserviceActionHandlers: Record<FreshserviceActionName, FreshserviceActionHandler> = {
+export const freshserviceActionHandlers: ProviderActionHandlers<"freshservice", FreshserviceActionHandler> = {
   async list_tickets(input, context) {
     validateListTicketsInput(input);
     const perPage = optionalInteger(input.perPage) ?? freshserviceDefaultPageSize;

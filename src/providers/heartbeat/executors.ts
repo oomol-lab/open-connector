@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -19,7 +20,7 @@ const credentialHelpUrl = "https://help.heartbeat.chat/hc/en-us/articles/3325771
 type HeartbeatRequestPhase = "validate" | "execute";
 type HeartbeatActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const heartbeatActionHandlers: Record<string, HeartbeatActionHandler> = {
+export const heartbeatActionHandlers: ProviderActionHandlers<"heartbeat", HeartbeatActionHandler> = {
   async list_users(_input, context) {
     return {
       users: requireResourceArray(

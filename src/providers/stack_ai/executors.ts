@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { StackAiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -40,7 +40,7 @@ interface StackAiContext {
 
 type StackAiActionHandler = (input: Record<string, unknown>, context: StackAiContext) => Promise<unknown>;
 
-export const stackAiActionHandlers: Record<StackAiActionName, StackAiActionHandler> = {
+export const stackAiActionHandlers: ProviderActionHandlers<"stack_ai", StackAiActionHandler> = {
   run_flow(input, context) {
     return runStackAiFlow(input, context);
   },

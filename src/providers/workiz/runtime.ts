@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -34,7 +35,7 @@ const handler =
   (name: string): ProviderRuntimeHandler<ApiKeyProviderContext> =>
   (input, context) =>
     execute(name, input, context);
-export const workizActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const workizActionHandlers: ProviderActionHandlers<"workiz", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_jobs: handler("list_jobs"),
   get_job: handler("get_job"),
   list_leads: handler("list_leads"),

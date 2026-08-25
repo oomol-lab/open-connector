@@ -28,7 +28,8 @@ export type VercelActionName =
   | "get_domain_config"
   | "list_webhooks"
   | "get_webhook"
-  | "create_webhook";
+  | "create_webhook"
+  | "delete_webhook";
 
 interface VercelActionSource {
   name: VercelActionName;
@@ -216,9 +217,29 @@ const envWriteFields = {
   customEnvironmentIds: s.stringArray("Custom environment IDs that should receive this environment variable."),
 };
 
-const emptyInput = s.object({}, { description: "Vercel action input." });
-const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
+const teamScopeFields = {
+  teamId: s.nonEmptyString(
+    "The Team identifier to perform the request on behalf of. Provide this or slug, not both. Defaults to the team configured on the connection.",
+  ),
+  slug: s.nonEmptyString(
+    "The Team slug to perform the request on behalf of. Provide this or teamId, not both. Defaults to the team configured on the connection.",
+  ),
+};
+
+const unscopedInput = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema =>
   s.actionInput(properties, required, "Vercel action input.");
+
+const emptyInput = unscopedInput({});
+
+/**
+ * Action input with the optional team scope. The `not` clause rejects a contradictory
+ * `teamId` + `slug` pair during input validation instead of at request time.
+ */
+const input = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema => {
+  const schema = unscopedInput({ ...teamScopeFields, ...properties }, required);
+  schema.not = { required: ["teamId", "slug"] };
+  return schema;
+};
 
 const actionSources: readonly VercelActionSource[] = [
   {
@@ -230,7 +251,7 @@ const actionSources: readonly VercelActionSource[] = [
   {
     name: "list_teams",
     description: "List Vercel teams available to the authenticated user.",
-    inputSchema: input({ limit: pageSize, since }),
+    inputSchema: unscopedInput({ limit: pageSize, since }),
     outputSchema: s.object({
       teams: s.array(team, { description: "Vercel teams available to the authenticated user." }),
       pagination: pagination,
@@ -238,8 +259,8 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_team",
-    description: "Get a Vercel team by id or slug.",
-    inputSchema: input({ teamId: s.nonEmptyString("Vercel team ID or team slug.") }, ["teamId"]),
+    description: "Get a Vercel team by team ID or slug, defaulting to the team configured on the connection.",
+    inputSchema: input({}),
     outputSchema: s.object({ team }, { required: ["team"] }),
   },
   {
@@ -421,7 +442,7 @@ const actionSources: readonly VercelActionSource[] = [
   {
     name: "list_webhooks",
     description: "List Vercel webhooks.",
-    inputSchema: emptyInput,
+    inputSchema: input({}),
     outputSchema: s.object({ webhooks: s.array(webhook, { description: "Vercel webhooks." }) }),
   },
   {
@@ -444,6 +465,20 @@ const actionSources: readonly VercelActionSource[] = [
       ["url", "events"],
     ),
     outputSchema: s.object({ webhook }, { required: ["webhook"] }),
+  },
+  {
+    name: "delete_webhook",
+    description:
+      "Delete a Vercel webhook. The returned acknowledgement is generated locally because Vercel responds with 204 No Content.",
+    inputSchema: input({ id: s.nonEmptyString("Vercel webhook ID.") }, ["id"]),
+    outputSchema: s.object(
+      {
+        deleted: s.boolean({
+          description: "Whether Vercel accepted the deletion request. True when the API returns 204 No Content.",
+        }),
+      },
+      { required: ["deleted"], description: "A normalized Vercel webhook deletion response." },
+    ),
   },
 ];
 

@@ -1,9 +1,8 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GivebutterActionName } from "./actions.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const givebutterApiBaseUrl = "https://api.givebutter.com/v1";
 const givebutterValidationPath = "/campaigns";
@@ -12,34 +11,55 @@ type GivebutterPhase = "validate" | "execute";
 type GivebutterQueryValue = string | number | boolean | undefined;
 type GivebutterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-const listResources = {
-  list_campaigns: { path: "/campaigns", outputKey: "campaigns" },
-  list_contacts: { path: "/contacts", outputKey: "contacts" },
-  list_transactions: { path: "/transactions", outputKey: "transactions" },
-  list_funds: { path: "/funds", outputKey: "funds" },
-  list_recurring_plans: { path: "/plans", outputKey: "recurringPlans" },
-  list_chapters: { path: "/chapters", outputKey: "chapters" },
-} satisfies Partial<Record<GivebutterActionName, { path: string; outputKey: string }>>;
+interface GivebutterListSource {
+  kind: "list";
+  path: string;
+  outputKey: string;
+}
 
-const getResources = {
-  get_campaign: { path: "/campaigns", inputKey: "campaignId", outputKey: "campaign" },
-  get_contact: { path: "/contacts", inputKey: "contactId", outputKey: "contact" },
-  get_transaction: { path: "/transactions", inputKey: "transactionId", outputKey: "transaction" },
-  get_fund: { path: "/funds", inputKey: "fundId", outputKey: "fund" },
-  get_recurring_plan: { path: "/plans", inputKey: "recurringPlanId", outputKey: "recurringPlan" },
-  get_chapter: { path: "/chapters", inputKey: "chapterId", outputKey: "chapter" },
-} satisfies Partial<Record<GivebutterActionName, { path: string; inputKey: string; outputKey: string }>>;
+interface GivebutterGetSource {
+  kind: "get";
+  path: string;
+  inputKey: string;
+  outputKey: string;
+}
 
-export const givebutterActionHandlers = Object.fromEntries([
-  ...Object.entries(listResources).map(([name, config]) => [
-    name,
-    (input: Record<string, unknown>, context: ApiKeyProviderContext) => listGivebutterResource(input, context, config),
-  ]),
-  ...Object.entries(getResources).map(([name, config]) => [
-    name,
-    (input: Record<string, unknown>, context: ApiKeyProviderContext) => getGivebutterResource(input, context, config),
-  ]),
-]) as Record<GivebutterActionName, GivebutterActionHandler>;
+type GivebutterActionSource = GivebutterListSource | GivebutterGetSource;
+
+const givebutterActionSources: ProviderActionSources<"givebutter", GivebutterActionSource> = {
+  list_campaigns: { kind: "list", path: "/campaigns", outputKey: "campaigns" },
+  get_campaign: { kind: "get", path: "/campaigns", inputKey: "campaignId", outputKey: "campaign" },
+  list_contacts: { kind: "list", path: "/contacts", outputKey: "contacts" },
+  get_contact: { kind: "get", path: "/contacts", inputKey: "contactId", outputKey: "contact" },
+  list_transactions: { kind: "list", path: "/transactions", outputKey: "transactions" },
+  get_transaction: {
+    kind: "get",
+    path: "/transactions",
+    inputKey: "transactionId",
+    outputKey: "transaction",
+  },
+  list_funds: { kind: "list", path: "/funds", outputKey: "funds" },
+  get_fund: { kind: "get", path: "/funds", inputKey: "fundId", outputKey: "fund" },
+  list_recurring_plans: { kind: "list", path: "/plans", outputKey: "recurringPlans" },
+  get_recurring_plan: {
+    kind: "get",
+    path: "/plans",
+    inputKey: "recurringPlanId",
+    outputKey: "recurringPlan",
+  },
+  list_chapters: { kind: "list", path: "/chapters", outputKey: "chapters" },
+  get_chapter: { kind: "get", path: "/chapters", inputKey: "chapterId", outputKey: "chapter" },
+};
+
+export const givebutterActionHandlers: ProviderActionHandlers<"givebutter", GivebutterActionHandler> =
+  mapProviderActionSources(
+    "givebutter",
+    givebutterActionSources,
+    (_name, source): GivebutterActionHandler =>
+      source.kind === "list"
+        ? (input, context) => listGivebutterResource(input, context, source)
+        : (input, context) => getGivebutterResource(input, context, source),
+  );
 
 export async function validateGivebutterCredential(
   input: { apiKey: string },

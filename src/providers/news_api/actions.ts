@@ -149,8 +149,6 @@ const topHeadlinesInputSchema = {
   anyOf: [{ required: ["q"] }, { required: ["country"] }, { required: ["category"] }, { required: ["sources"] }],
 } satisfies JsonSchema;
 
-export type NewsApiActionName = "get_everything" | "get_top_headlines" | "get_sources" | "get_v1_articles";
-
 export const newsApiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_everything",

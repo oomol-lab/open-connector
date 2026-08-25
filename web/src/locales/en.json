@@ -126,6 +126,34 @@
   },
   "providers": {
     "catalogTitle": "Providers",
+    "viewLabel": "Provider view",
+    "views": { "manage": "My connections", "discover": "Discover apps" },
+    "discovery": {
+      "browseByTask": "Browse by task",
+      "explore": "Explore apps",
+      "scenarios": {
+        "ai": { "title": "AI & agents", "description": "Models, agents, search, and media generation" },
+        "crossBorderEcommerce": {
+          "title": "E-commerce operations",
+          "description": "Storefronts, orders, fulfillment, and market data"
+        },
+        "communication": {
+          "title": "Team collaboration",
+          "description": "Messaging, email, meetings, and notifications"
+        },
+        "docs": { "title": "Docs & knowledge", "description": "Documents, knowledge bases, drives, and spreadsheets" },
+        "productivity": {
+          "title": "Projects & productivity",
+          "description": "Projects, tasks, schedules, and automation"
+        },
+        "marketing": { "title": "Marketing & growth", "description": "Ads, content, leads, and growth data" },
+        "dataStorage": { "title": "Data & analytics", "description": "Warehouses, databases, BI, and storage" },
+        "developer": {
+          "title": "Development & cloud",
+          "description": "Code, deployment, cloud services, and observability"
+        }
+      }
+    },
     "brandNotice": "Third-party names, logos, and trademarks belong to their respective owners and are displayed only to identify the corresponding providers. This project does not claim ownership of them. Users who redistribute or commercialize this project are responsible for reviewing the applicable brand guidelines and obtaining any permissions required for their intended use.",
     "searchPlaceholder": "Search providers",
     "statusFilterLabel": "Provider status",
@@ -241,6 +269,9 @@
       "resetOAuthClient": "Reset Default App"
     },
     "oauthClientSettings": {
+      "setupTitle": "Create the OAuth app",
+      "setupIntro": "Register an OAuth app with {{name}}, then paste its credentials below.",
+      "setupDocsLink": "Open {{name}} developer portal",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -420,6 +451,8 @@
       },
       "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
       "tokenSummary": "Action allow rules {{allowed}} · Action block rules {{blocked}} · Proxy grants {{proxies}} · Further limited by the runtime baseline",
+      "connectionsUnrestricted": "All connections",
+      "connectionsRestricted": "Connections: {{names}}",
       "editor": {
         "title": "Edit runtime policy",
         "description": "Changes are previewed against deployment constraints before you save.",
@@ -463,7 +496,15 @@
         "noRules": "No rules in this list.",
         "actionAllowRequired": "Add at least one action allow rule, or choose no additional restriction.",
         "proxyAllowRequired": "Add at least one provider allow rule, or choose no additional restriction.",
-        "tokenHint": "Action rules and proxy grants are independent. An empty proxy grant list denies provider proxy requests.",
+        "connectionsTitle": "Connection access",
+        "connectionsUnrestrictedHint": "This token can use any stored connection, including default when the request omits a name.",
+        "connectionsRestrictedHint": "This token can use only the selected provider connections.",
+        "connectionsList": "Allowed connections",
+        "connectionsRequired": "Select at least one connection, or choose no additional restriction.",
+        "tooManyConnections": "A connection list cannot contain more than 128 connections.",
+        "connectionCount": "{{count}} connections",
+        "noConnections": "No connections in this list.",
+        "connectionsDefaultHint": "Select a provider's default connection to allow its unnamed HTTP, MCP, or proxy requests.",
         "discard": "Discard changes",
         "preview": "Preview impact"
       },

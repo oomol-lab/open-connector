@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "dovetail";
 
-export type DovetailActionName =
-  | "get_token_info"
-  | "list_projects"
-  | "list_data"
-  | "get_data"
-  | "create_data"
-  | "update_data"
-  | "export_data";
-
 const tokenSchema = s.object("Dovetail token metadata.", {
   id: s.nonEmptyString("Unique identifier of the current Dovetail personal API key."),
   subdomain: s.nonEmptyString("Workspace subdomain associated with the current API key."),

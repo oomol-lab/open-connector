@@ -100,16 +100,6 @@ const messageOutputSchema = s.object("Rocket.Chat message response.", {
   success: s.boolean("Whether Rocket.Chat reported success."),
 });
 
-export type RocketChatActionName =
-  | "get_me"
-  | "list_rooms"
-  | "get_room"
-  | "list_channel_messages"
-  | "get_message"
-  | "post_message"
-  | "update_message"
-  | "delete_message";
-
 export const rocketChatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",

@@ -1,8 +1,8 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PostmanActionName } from "./actions.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-runtime.ts";
 import { postmanActions } from "./actions.ts";
 import { executePostmanAction, validatePostmanCredential } from "./runtime.ts";
 
@@ -12,13 +12,13 @@ type PostmanActionContext = ApiKeyProviderContext;
 
 type PostmanActionHandler = (input: Record<string, unknown>, context: PostmanActionContext) => Promise<unknown>;
 
-export const postmanActionHandlers: Record<PostmanActionName, PostmanActionHandler> = Object.fromEntries(
-  postmanActions.map((action) => [
-    action.name,
-    (input: Record<string, unknown>, context: PostmanActionContext) =>
-      executePostmanAction(action.name as PostmanActionName, input, context),
-  ]),
-) as Record<PostmanActionName, PostmanActionHandler>;
+export const postmanActionHandlers: ProviderActionHandlers<"postman", PostmanActionHandler> = mapProviderActionHandlers(
+  service,
+  postmanActions,
+  (_action, name): PostmanActionHandler =>
+    (input, context) =>
+      executePostmanAction(name, input, context),
+);
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, postmanActionHandlers);
 

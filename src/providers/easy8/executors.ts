@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
   defineProviderExecutors,
@@ -19,7 +19,7 @@ interface Context {
   signal?: AbortSignal;
 }
 const inputError = (message: string) => new ProviderRequestError(400, message);
-function normalizeBaseUrl(value: unknown): string {
+export function normalizeBaseUrl(value: unknown): string {
   const text = requiredString(value, "baseUrl", inputError);
   let url: URL;
   try {
@@ -29,6 +29,12 @@ function normalizeBaseUrl(value: unknown): string {
   }
   if (!["http:", "https:"].includes(url.protocol) || url.pathname !== "/")
     throw inputError("baseUrl must be the Easy8 instance root URL without a path");
+  assertPublicHttpUrl(url.toString(), {
+    fieldName: "baseUrl",
+    createError: inputError,
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+  });
+  if (url.username || url.password) throw inputError("baseUrl must not include credentials");
   url.search = "";
   url.hash = "";
   const normalized = url.toString();

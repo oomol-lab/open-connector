@@ -1,5 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
@@ -14,7 +15,7 @@ const reservedQueryKeys = new Set(["token", "limit", "offset", "isExternal"]);
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const upsalesActionHandlers: Record<string, Handler> = {
+export const upsalesActionHandlers: ProviderActionHandlers<"upsales", Handler> = {
   async get_current_user(_input, context) {
     return entityOutput("user", await upsalesRequest("/self", context));
   },

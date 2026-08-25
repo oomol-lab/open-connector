@@ -101,10 +101,3 @@ export const findymailActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FindymailActionName =
-  | "get_credits"
-  | "verify_email"
-  | "search_by_name"
-  | "search_domain"
-  | "search_employees";

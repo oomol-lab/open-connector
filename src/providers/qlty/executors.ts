@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { QltyActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -23,7 +23,7 @@ interface QltyActionContext {
 
 type QltyActionHandler = (input: Record<string, unknown>, context: QltyActionContext) => Promise<unknown>;
 
-export const qltyActionHandlers: Record<QltyActionName, QltyActionHandler> = {
+export const qltyActionHandlers: ProviderActionHandlers<"qlty", QltyActionHandler> = {
   async get_authenticated_user(_input, context): Promise<unknown> {
     const user = await requestQlty({ path: "/user" }, context);
     return { user, raw: user };

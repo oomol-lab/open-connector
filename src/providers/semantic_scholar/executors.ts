@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { SemanticScholarActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -12,6 +12,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
+  mapProviderActionSources,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
   providerUserAgent,
@@ -38,7 +39,7 @@ interface SemanticScholarActionContext {
   signal?: AbortSignal;
 }
 
-export const semanticScholarActionHandlers: Record<SemanticScholarActionName, SemanticScholarActionHandler> = {
+export const semanticScholarActionHandlers: ProviderActionHandlers<"semantic_scholar", SemanticScholarActionHandler> = {
   async get_paper(input, fetcher, apiKey) {
     const paper = await requestSemanticScholarJson({
       family: "graph",
@@ -279,18 +280,14 @@ export const semanticScholarActionHandlers: Record<SemanticScholarActionName, Se
 
     return normalizePaperList(payload);
   },
-} satisfies Record<SemanticScholarActionName, SemanticScholarActionHandler>;
+};
 
-const semanticScholarExecutorHandlers = Object.fromEntries(
-  Object.entries(semanticScholarActionHandlers).map(([name, handler]) => [
-    name,
-    (input: Record<string, unknown>, context: SemanticScholarActionContext) =>
-      handler(input, context.fetcher, context.apiKey),
-  ]),
-) as Record<
-  SemanticScholarActionName,
-  (input: Record<string, unknown>, context: SemanticScholarActionContext) => Promise<unknown>
->;
+const semanticScholarExecutorHandlers = mapProviderActionSources(
+  service,
+  semanticScholarActionHandlers,
+  (_name, handler) => (input: Record<string, unknown>, context: SemanticScholarActionContext) =>
+    handler(input, context.fetcher, context.apiKey),
+);
 
 export const executors: ProviderExecutors = defineProviderExecutors<SemanticScholarActionContext>({
   service,

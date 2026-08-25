@@ -1,11 +1,12 @@
 import type {
   CredentialValidationResult,
   CredentialValidators,
+  ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailchimpActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
@@ -19,24 +20,27 @@ import {
 } from "../../core/cast.ts";
 import {
   createProviderProxyUrl,
-  defineApiKeyProviderExecutors,
+  defineProviderExecutors,
   normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
 type MailchimpJsonObject = Record<string, unknown>;
 type MailchimpRequestMode = "validate" | "execute";
-type MailchimpActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
+interface MailchimpActionContext {
+  apiBaseUrl: string;
+  authorization: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
+}
 
 interface MailchimpRequestOptions {
-  apiKey: string;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: MailchimpActionContext;
   path: string;
   mode: MailchimpRequestMode;
   method?: string;
@@ -46,11 +50,14 @@ interface MailchimpRequestOptions {
 
 const service = "mailchimp";
 const mailchimpValidationPath = "/";
+const mailchimpOAuthMetadataUrl = "https://login.mailchimp.com/oauth2/metadata";
 
-export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActionHandler> = {
+export const mailchimpActionHandlers: ProviderActionHandlers<
+  "mailchimp",
+  ProviderRuntimeHandler<MailchimpActionContext>
+> = {
   list_lists(input, context) {
     return requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: "/lists",
       query: compactObject({
@@ -62,7 +69,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   async get_list(input, context) {
     const payload = await requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: `/lists/${encodeURIComponent(requireInputString(input.list_id, "list_id"))}`,
       mode: "execute",
@@ -72,7 +78,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   list_members(input, context) {
     return requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: `/lists/${encodeURIComponent(requireInputString(input.list_id, "list_id"))}/members`,
       query: compactObject({
@@ -85,7 +90,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   async get_member(input, context) {
     const payload = await requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: memberPath(input),
       mode: "execute",
@@ -96,7 +100,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   async upsert_member(input, context) {
     const emailAddress = requireInputString(input.email_address, "email_address");
     const payload = await requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: `/lists/${encodeURIComponent(requireInputString(input.list_id, "list_id"))}/members/${subscriberHash(
         emailAddress,
@@ -121,7 +124,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   async update_member(input, context) {
     const payload = await requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: memberPath(input),
       method: "PATCH",
@@ -142,7 +144,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   async archive_member(input, context) {
     await requestMailchimpNoContent({
-      apiKey: context.apiKey,
       context,
       path: memberPath(input),
       method: "DELETE",
@@ -153,7 +154,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   async delete_member_permanently(input, context) {
     await requestMailchimpNoContent({
-      apiKey: context.apiKey,
       context,
       path: `${memberPath(input)}/actions/delete-permanent`,
       method: "POST",
@@ -164,7 +164,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   list_member_tags(input, context) {
     return requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: `${memberPath(input)}/tags`,
       mode: "execute",
@@ -172,7 +171,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   async update_member_tags(input, context) {
     await requestMailchimpNoContent({
-      apiKey: context.apiKey,
       context,
       path: `${memberPath(input)}/tags`,
       method: "POST",
@@ -186,7 +184,6 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
   list_merge_fields(input, context) {
     return requestMailchimpJson({
-      apiKey: context.apiKey,
       context,
       path: `/lists/${encodeURIComponent(requireInputString(input.list_id, "list_id"))}/merge-fields`,
       query: compactObject({
@@ -198,14 +195,20 @@ export const mailchimpActionHandlers: Record<MailchimpActionName, MailchimpActio
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, mailchimpActionHandlers);
+export const executors: ProviderExecutors = defineProviderExecutors<MailchimpActionContext>({
+  service,
+  handlers: mailchimpActionHandlers,
+  createContext(context, fetcher) {
+    return resolveMailchimpActionContext(context, fetcher);
+  },
+});
 
 export const proxy: ProviderProxyExecutor = async (input, context) => {
   try {
-    const credential = await requireApiKeyCredential(context, service);
-    const url = createProviderProxyUrl(mailchimpApiBaseUrl(credential.apiKey), input.endpoint, input.query);
+    const providerContext = await resolveMailchimpActionContext(context, providerFetch);
+    const url = createProviderProxyUrl(providerContext.apiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
-    for (const [name, value] of Object.entries(mailchimpHeaders(credential.apiKey, input.body !== undefined))) {
+    for (const [name, value] of Object.entries(mailchimpHeaders(providerContext, input.body !== undefined))) {
       headers.set(name, value);
     }
 
@@ -232,24 +235,31 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    return validateMailchimpCredential(input.apiKey, fetcher, signal);
+    return validateMailchimpApiKeyCredential(input.apiKey, fetcher, signal);
+  },
+  async oauth2(input, { fetcher, signal }) {
+    return validateMailchimpOAuthCredential(input.accessToken, fetcher, signal);
   },
 };
 
-async function validateMailchimpCredential(
+async function validateMailchimpApiKeyCredential(
   apiKey: string,
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
+  const dataCenter = extractMailchimpDataCenter(apiKey);
+  const apiBaseUrl = mailchimpApiBaseUrl(dataCenter);
   const payload = await requestMailchimpJson({
-    apiKey,
-    context: { fetcher, signal },
+    context: {
+      apiBaseUrl,
+      authorization: mailchimpApiKeyAuthorization(apiKey),
+      fetcher,
+      signal,
+    },
     path: mailchimpValidationPath,
     mode: "validate",
   });
 
-  const dataCenter = extractMailchimpDataCenter(apiKey);
-  const apiBaseUrl = mailchimpApiBaseUrl(apiKey);
   const accountId = optionalString(payload.account_id);
   const loginId = optionalString(payload.login_id);
   const accountName = optionalString(payload.account_name);
@@ -268,6 +278,36 @@ async function validateMailchimpCredential(
       validationEndpoint: mailchimpValidationPath,
       email,
       role,
+    }),
+  };
+}
+
+async function validateMailchimpOAuthCredential(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const metadata = await requestMailchimpOAuthMetadata(accessToken, fetcher, signal);
+  const dataCenter = readMailchimpDataCenter(metadata.dc);
+  const apiBaseUrl = mailchimpApiBaseUrl(dataCenter);
+  assertMailchimpApiEndpoint(metadata.api_endpoint, apiBaseUrl);
+  const login = optionalRecord(metadata.login);
+  const accountId = readMailchimpIdentifier(metadata.user_id) ?? readMailchimpIdentifier(login?.login_id);
+  const accountName = optionalString(metadata.accountname) ?? optionalString(metadata.account_name);
+  const email = optionalString(login?.email) ?? optionalString(login?.login_email);
+
+  return {
+    profile: {
+      accountId: accountId ?? `mailchimp:${dataCenter}`,
+      displayName: accountName ?? email ?? `Mailchimp ${dataCenter}`,
+    },
+    grantedScopes: [],
+    metadata: compactObject({
+      apiBaseUrl,
+      dataCenter,
+      validationEndpoint: mailchimpOAuthMetadataUrl,
+      email,
+      role: optionalString(metadata.role),
     }),
   };
 }
@@ -295,13 +335,13 @@ async function requestMailchimpNoContent(input: MailchimpRequestOptions): Promis
 }
 
 async function mailchimpFetch(input: MailchimpRequestOptions): Promise<Response> {
-  const url = buildMailchimpUrl(input.apiKey, input.path, input.query);
+  const url = buildMailchimpUrl(input.context.apiBaseUrl, input.path, input.query);
   const method = input.method ?? "GET";
 
   try {
     return await input.context.fetcher(url, {
       method,
-      headers: mailchimpHeaders(input.apiKey, input.body !== undefined),
+      headers: mailchimpHeaders(input.context, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
       signal: input.context.signal,
     });
@@ -311,8 +351,7 @@ async function mailchimpFetch(input: MailchimpRequestOptions): Promise<Response>
   }
 }
 
-function buildMailchimpUrl(apiKey: string, path: string, query?: MailchimpRequestOptions["query"]): URL {
-  const apiBaseUrl = mailchimpApiBaseUrl(apiKey);
+function buildMailchimpUrl(apiBaseUrl: string, path: string, query?: MailchimpRequestOptions["query"]): URL {
   const url = new URL(path.startsWith("/") ? `${apiBaseUrl}${path}` : `${apiBaseUrl}/${path}`);
 
   for (const [key, value] of Object.entries(query ?? {})) {
@@ -324,10 +363,10 @@ function buildMailchimpUrl(apiKey: string, path: string, query?: MailchimpReques
   return url;
 }
 
-function mailchimpHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
+function mailchimpHeaders(context: MailchimpActionContext, hasBody: boolean): Record<string, string> {
   return {
     accept: "application/json",
-    authorization: `Basic ${Buffer.from(`connect:${apiKey}`).toString("base64")}`,
+    authorization: context.authorization,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };
@@ -421,9 +460,12 @@ function extractMailchimpErrorMessage(payload: MailchimpJsonObject): string | un
   return undefined;
 }
 
-function mailchimpApiBaseUrl(apiKey: string): string {
-  const dataCenter = extractMailchimpDataCenter(apiKey);
+function mailchimpApiBaseUrl(dataCenter: string): string {
   return `https://${dataCenter}.api.mailchimp.com/3.0`;
+}
+
+function mailchimpApiKeyAuthorization(apiKey: string): string {
+  return `Basic ${Buffer.from(`connect:${apiKey}`).toString("base64")}`;
 }
 
 function extractMailchimpDataCenter(apiKey: string): string {
@@ -433,12 +475,83 @@ function extractMailchimpDataCenter(apiKey: string): string {
     throw new ProviderRequestError(400, "Mailchimp apiKey must include a data center suffix such as us1");
   }
 
-  const dataCenter = trimmed.slice(separatorIndex + 1);
-  if (!/^[a-z0-9]+$/i.test(dataCenter)) {
-    throw new ProviderRequestError(400, "Mailchimp apiKey has an invalid data center suffix");
-  }
+  return readMailchimpDataCenter(
+    trimmed.slice(separatorIndex + 1),
+    "Mailchimp apiKey has an invalid data center suffix",
+  );
+}
 
-  return dataCenter.toLowerCase();
+async function resolveMailchimpActionContext(
+  context: ExecutionContext,
+  fetcher: typeof fetch,
+): Promise<MailchimpActionContext> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key") {
+    const dataCenter = extractMailchimpDataCenter(credential.apiKey);
+    return {
+      apiBaseUrl: mailchimpApiBaseUrl(dataCenter),
+      authorization: mailchimpApiKeyAuthorization(credential.apiKey),
+      fetcher,
+      signal: context.signal,
+    };
+  }
+  if (credential?.authType === "oauth2") {
+    const storedDataCenter = optionalString(credential.metadata.dataCenter);
+    const dataCenter = storedDataCenter
+      ? readMailchimpDataCenter(storedDataCenter)
+      : readMailchimpDataCenter(
+          (await requestMailchimpOAuthMetadata(credential.accessToken, fetcher, context.signal)).dc,
+        );
+    return {
+      apiBaseUrl: mailchimpApiBaseUrl(dataCenter),
+      authorization: `${credential.tokenType} ${credential.accessToken}`,
+      fetcher,
+      signal: context.signal,
+    };
+  }
+  throw new ProviderRequestError(401, "Configure Mailchimp credentials first.");
+}
+
+async function requestMailchimpOAuthMetadata(
+  accessToken: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<MailchimpJsonObject> {
+  const response = await fetcher(mailchimpOAuthMetadataUrl, {
+    headers: {
+      accept: "application/json",
+      authorization: `OAuth ${accessToken}`,
+      "user-agent": providerUserAgent,
+    },
+    signal,
+  });
+  const payload = await parseMailchimpJson(response);
+  if (!response.ok) {
+    throw toMailchimpError(response, payload, "validate");
+  }
+  return payload;
+}
+
+function readMailchimpDataCenter(
+  value: unknown,
+  message = "Mailchimp OAuth metadata has an invalid data center",
+): string {
+  const dataCenter = optionalString(value)?.toLowerCase();
+  if (!dataCenter || !/^[a-z0-9]+$/u.test(dataCenter)) {
+    throw new ProviderRequestError(400, message);
+  }
+  return dataCenter;
+}
+
+function assertMailchimpApiEndpoint(value: unknown, expectedApiBaseUrl: string): void {
+  const endpoint = optionalString(value)?.replace(/\/+$/u, "");
+  if (endpoint && endpoint !== expectedApiBaseUrl) {
+    throw new ProviderRequestError(400, "Mailchimp OAuth metadata returned an unexpected API endpoint");
+  }
+}
+
+function readMailchimpIdentifier(value: unknown): string | undefined {
+  return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 }
 
 function memberPath(input: Record<string, unknown>): string {

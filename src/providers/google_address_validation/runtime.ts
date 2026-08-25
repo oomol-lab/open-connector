@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GoogleAddressValidationActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -12,8 +12,8 @@ type GoogleAddressValidationActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const googleAddressValidationActionHandlers: Record<
-  GoogleAddressValidationActionName,
+export const googleAddressValidationActionHandlers: ProviderActionHandlers<
+  "google_address_validation",
   GoogleAddressValidationActionHandler
 > = {
   validate_address(input, context) {

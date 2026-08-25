@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
@@ -10,7 +12,7 @@ type QingflowRequestPhase = "validate" | "execute";
 type QingflowActionContext = { accessToken: string; fetcher: typeof fetch };
 type QingflowActionHandler = (input: Record<string, unknown>, context: QingflowActionContext) => Promise<unknown>;
 
-export const qingflowActionHandlers: Record<string, QingflowActionHandler> = {
+export const qingflowActionHandlers: ProviderActionHandlers<"qingflow", QingflowActionHandler> = {
   list_apps(input, context) {
     if (input.favoritesOnly === true && !optionalString(input.userId)?.trim()) {
       throw new ProviderRequestError(400, "userId is required when favoritesOnly is true");

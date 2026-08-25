@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -114,7 +115,10 @@ interface HashnodeGraphqlRequest {
   signal?: AbortSignal;
 }
 
-export const hashnodeActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const hashnodeActionHandlers: ProviderActionHandlers<
+  "hashnode",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_current_user(_input, context) {
     const user = await requestCurrentUser(context, "execute");
     return { user: parseCurrentUser(user, "Hashnode me response") };

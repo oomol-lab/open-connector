@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DocraptorActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -31,7 +31,7 @@ const docraptorValidationBody = {
 type DocraptorRequestPhase = "validate" | "execute";
 type DocraptorActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const docraptorActionHandlers: Record<DocraptorActionName, DocraptorActionHandler> = {
+export const docraptorActionHandlers: ProviderActionHandlers<"docraptor", DocraptorActionHandler> = {
   create_hosted_document(input, context) {
     return executeCreateHostedDocument(input, context);
   },

@@ -151,11 +151,3 @@ export const footballDataActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FootballDataActionName =
-  | "list_competitions"
-  | "list_matches"
-  | "list_all_matches"
-  | "get_match"
-  | "get_standings"
-  | "list_teams";

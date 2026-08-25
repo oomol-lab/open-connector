@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -24,7 +25,10 @@ interface NutrientContext {
 
 type NutrientActionHandler = (input: Record<string, unknown>, context: NutrientContext) => Promise<unknown>;
 
-export const nutrientDocumentWebServicesApiActionHandlers: Record<string, NutrientActionHandler> = {
+export const nutrientDocumentWebServicesApiActionHandlers: ProviderActionHandlers<
+  "nutrient_document_web_services_api",
+  NutrientActionHandler
+> = {
   async get_account_info(_input, context) {
     return {
       account: normalizeAccountInfo(

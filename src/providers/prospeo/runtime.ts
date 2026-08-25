@@ -1,9 +1,15 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { ProspeoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  getProviderActionHandler,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const prospeoApiBaseUrl = "https://api.prospeo.io";
 
@@ -25,7 +31,7 @@ interface ProspeoRequestInput {
   mode: ProspeoMode;
 }
 
-export const prospeoActionHandlers: Record<ProspeoActionName, ProspeoActionHandler> = {
+export const prospeoActionHandlers: ProviderActionHandlers<"prospeo", ProspeoActionHandler> = {
   async get_account_information(_input, context) {
     const payload = await requestProspeoJson(
       {
@@ -165,7 +171,7 @@ export async function executeProspeoAction(
   },
   fetcher: typeof fetch,
 ): Promise<unknown> {
-  const handler = (prospeoActionHandlers as Record<ProspeoActionName, ProspeoActionHandler>)[input.actionName];
+  const handler = getProviderActionHandler(prospeoActionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(400, `unknown prospeo action: ${input.actionName}`);
   }

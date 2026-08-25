@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -63,20 +64,20 @@ async function execute(
     throw new ProviderRequestError(400, "VBOUT returned an unsuccessful response", payload);
   return { status: header?.status, data: envelope?.data ?? {}, rateLimit: payload["rate-limit"] ?? {} };
 }
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
-  "vbout",
-  {
-    get_account: (input, context) => execute("get_account", input, context),
-    list_lists: (input, context) => execute("list_lists", input, context),
-    get_list: (input, context) => execute("get_list", input, context),
-    list_contacts: (input, context) => execute("list_contacts", input, context),
-    get_contact: (input, context) => execute("get_contact", input, context),
-    create_contact: (input, context) => execute("create_contact", input, context),
-    update_contact: (input, context) => execute("update_contact", input, context),
-    delete_contact: (input, context) => execute("delete_contact", input, context),
-  },
-  { skipDnsValidation: true },
-);
+const handlers: ProviderActionHandlers<"vbout", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  get_account: (input, context) => execute("get_account", input, context),
+  list_lists: (input, context) => execute("list_lists", input, context),
+  get_list: (input, context) => execute("get_list", input, context),
+  list_contacts: (input, context) => execute("list_contacts", input, context),
+  get_contact: (input, context) => execute("get_contact", input, context),
+  create_contact: (input, context) => execute("create_contact", input, context),
+  update_contact: (input, context) => execute("update_contact", input, context),
+  delete_contact: (input, context) => execute("delete_contact", input, context),
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("vbout", handlers, {
+  skipDnsValidation: true,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "vbout",

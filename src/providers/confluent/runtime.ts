@@ -1,3 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -20,8 +22,8 @@ interface RequestInput {
   mode: "validate" | "execute";
 }
 
-export const confluentActionHandlers: Record<
-  string,
+export const confluentActionHandlers: ProviderActionHandlers<
+  "confluent",
   (input: Record<string, unknown>, context: ConfluentContext) => Promise<unknown>
 > = {
   list_organizations: (input, context) => listResources(input, context, "/org/v2/organizations", "organizations"),

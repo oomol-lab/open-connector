@@ -235,17 +235,6 @@ export const postgridActions: ActionDefinition[] = [
   }),
 ];
 
-export type PostgridActionName =
-  | "create_contact"
-  | "list_contacts"
-  | "get_contact"
-  | "delete_contact"
-  | "create_template"
-  | "list_templates"
-  | "get_template"
-  | "update_template"
-  | "delete_template";
-
 function requireAnyContactName(schema: JsonSchema): JsonSchema {
   return {
     ...schema,

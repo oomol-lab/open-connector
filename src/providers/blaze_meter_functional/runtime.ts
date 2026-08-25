@@ -1,5 +1,5 @@
 import type { BlazeMeterActionHandler, BlazeMeterContext } from "../blaze_meter_performance/shared-runtime.ts";
-import type { BlazeMeterFunctionalActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   buildBlazeMeterPaginationQuery,
@@ -9,7 +9,10 @@ import {
   validateBlazeMeterCredential,
 } from "../blaze_meter_performance/shared-runtime.ts";
 
-export const blazeMeterFunctionalActionHandlers: Record<BlazeMeterFunctionalActionName, BlazeMeterActionHandler> = {
+export const blazeMeterFunctionalActionHandlers: ProviderActionHandlers<
+  "blaze_meter_functional",
+  BlazeMeterActionHandler
+> = {
   list_multi_tests(input, context) {
     return requestBlazeMeterJson(context, {
       path: "/multi-tests",

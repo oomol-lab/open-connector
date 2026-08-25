@@ -66,12 +66,6 @@ const certificateInputSchema = s.object("Input for retrieving one EPC certificat
   certificateNumber: certificateNumberSchema,
 });
 
-export type EnergyPerformanceCertificatesActionName =
-  | "search_domestic_certificates"
-  | "get_certificate"
-  | "search_non_domestic_certificates"
-  | "search_display_certificates";
-
 export const energyPerformanceCertificatesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_domestic_certificates",

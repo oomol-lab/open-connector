@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EverhourActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface EverhourRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const everhourActionHandlers: Record<EverhourActionName, EverhourActionHandler> = {
+export const everhourActionHandlers: ProviderActionHandlers<"everhour", EverhourActionHandler> = {
   async get_current_user(_input, context) {
     return {
       user: requireEverhourObject(

@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -26,7 +27,10 @@ interface ElasticemailRequestOptions {
   body?: unknown;
 }
 
-export const elasticemailActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const elasticemailActionHandlers: ProviderActionHandlers<
+  "elasticemail",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   list_contacts: listContacts,
   get_contact: getContact,
   add_contacts: addContacts,

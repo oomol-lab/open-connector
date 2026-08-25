@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { NewsApiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const newsApiBaseUrl = "https://newsapi.org";
 
 type NewsApiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const newsApiActionHandlers: Record<NewsApiActionName, NewsApiActionHandler> = {
+export const newsApiActionHandlers: ProviderActionHandlers<"news_api", NewsApiActionHandler> = {
   get_everything(input, context) {
     return executeNewsApiGet("/v2/everything", input, context, {
       q: optionalString(input.q),

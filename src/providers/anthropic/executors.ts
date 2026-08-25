@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -15,7 +16,7 @@ const anthropicApiVersion = "2023-06-01";
 
 type AnthropicActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const anthropicActionHandlers: Record<string, AnthropicActionHandler> = {
+export const anthropicActionHandlers: ProviderActionHandlers<"anthropic", AnthropicActionHandler> = {
   list_models(input, context) {
     return anthropicListModels(input, context);
   },

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -37,7 +38,7 @@ type MeituanContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal
 
 const invalidInput = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
 
-const meituanActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+const meituanActionHandlers: ProviderActionHandlers<"meituan", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   query_travel(input, context) {
     const query = requiredString(input.query, "query", invalidInput);
     const city = optionalString(input.city) ?? meituanDefaultCity;

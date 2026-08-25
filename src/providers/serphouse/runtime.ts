@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { SerphouseActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, stringArray } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type SerphouseActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 const serphouseBaseUrl = "https://api.serphouse.com";
 
-export const serphouseActionHandlers: Record<SerphouseActionName, SerphouseActionHandler> = {
+export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", SerphouseActionHandler> = {
   async account_info(_input, context) {
     const payload = requiredRecord(
       await requestSerphouseJson({

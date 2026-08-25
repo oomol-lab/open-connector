@@ -220,12 +220,3 @@ export const statsigActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type StatsigActionName =
-  | "get_project"
-  | "list_gates"
-  | "get_gate"
-  | "list_dynamic_configs"
-  | "get_dynamic_config"
-  | "list_segments"
-  | "get_segment";

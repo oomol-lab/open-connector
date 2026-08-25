@@ -1,12 +1,12 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { slackActions } from "./actions.ts";
-import { slackOAuthScopes, slackUserOAuthScopes } from "./scopes.ts";
+import { slackUserOAuthScopes } from "./scopes.ts";
 
 const service = "slack";
 
 /**
- * Slack provider backed by the Slack Web API and a user-provided Slack OAuth app.
+ * User-authorized Slack provider backed by the Slack Web API.
  */
 export const provider: ProviderDefinition = {
   service,
@@ -16,13 +16,11 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "https://slack.com/oauth/v2/authorize",
-      tokenUrl: "https://slack.com/api/oauth.v2.access",
-      scopes: slackOAuthScopes,
+      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+      refreshTokenUrl: "https://slack.com/api/oauth.v2.access",
+      scopes: slackUserOAuthScopes,
       scopeSeparator: ",",
-      authorizationParams: {
-        user_scope: slackUserOAuthScopes.join(","),
-      },
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

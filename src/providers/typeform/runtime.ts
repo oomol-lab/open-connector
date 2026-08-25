@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TypeformActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -19,7 +19,7 @@ type TypeformRequestPhase = "validate" | "execute";
 type TypeformQueryValue = string | number | undefined;
 type TypeformActionHandler = ProviderRuntimeHandler<BearerProviderContext>;
 
-export const typeformActionHandlers: Record<TypeformActionName, TypeformActionHandler> = {
+export const typeformActionHandlers: ProviderActionHandlers<"typeform", TypeformActionHandler> = {
   async get_current_user(_input, context) {
     return {
       user: await requestTypeformObject({

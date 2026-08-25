@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OwlProtocolActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -48,7 +48,7 @@ interface OwlProtocolToken {
   metadata?: Record<string, unknown>;
 }
 
-export const owlProtocolActionHandlers: Record<OwlProtocolActionName, OwlProtocolActionHandler> = {
+export const owlProtocolActionHandlers: ProviderActionHandlers<"owl_protocol", OwlProtocolActionHandler> = {
   async get_project_info(_input, context) {
     const project = normalizeProject(
       await requestOwlProtocolJson({

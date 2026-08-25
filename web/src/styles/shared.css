@@ -377,7 +377,7 @@ pre,
 .run-action-dialog,
 .token-dialog {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
   max-height: min(820px, calc(100svh - 32px));
 }
 

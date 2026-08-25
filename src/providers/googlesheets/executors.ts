@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { GooglesheetsActionName } from "./actions.ts";
 
 import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import {
@@ -53,13 +53,11 @@ import {
 
 const service = "googlesheets";
 
-const sheetsApiBaseUrl = "https://sheets.googleapis.com/v4";
-
 type ActionContext = OAuthProviderContext;
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
 
-const implementedActionHandlers: Record<GooglesheetsActionName, ActionHandler> = {
+const implementedActionHandlers: ProviderActionHandlers<"googlesheets", ActionHandler> = {
   search_spreadsheets(input, { accessToken, fetcher }) {
     return searchSpreadsheets(input, accessToken, fetcher);
   },
@@ -182,17 +180,14 @@ const implementedActionHandlers: Record<GooglesheetsActionName, ActionHandler> =
   },
 };
 
-export const googlesheetsActionHandlers: Record<GooglesheetsActionName, ActionHandler> = implementedActionHandlers;
+export const googlesheetsActionHandlers: ProviderActionHandlers<"googlesheets", ActionHandler> =
+  implementedActionHandlers;
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googlesheetsActionHandlers);
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
-    const profile: {
-      email?: string;
-      name?: string;
-      sub?: string;
-    } = await googleJsonRequest<{
+    const profile = await googleJsonRequest<{
       email?: string;
       name?: string;
       sub?: string;
@@ -200,20 +195,7 @@ export const credentialValidators: CredentialValidators = {
       accessToken: input.accessToken,
       fetcher,
       signal,
-    }).catch(
-      async (): Promise<{
-        email?: string;
-        name?: string;
-        sub?: string;
-      }> => {
-        await googleJsonRequest<Record<string, unknown>>(`${sheetsApiBaseUrl}/spreadsheets`, {
-          accessToken: input.accessToken,
-          fetcher,
-          signal,
-        });
-        return {};
-      },
-    );
+    });
 
     return {
       profile: {

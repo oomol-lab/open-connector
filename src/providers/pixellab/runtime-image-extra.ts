@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -23,7 +24,7 @@ import {
 
 type PixellabImageExtraHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pixellabImageExtraActionHandlers: Record<string, PixellabImageExtraHandler> = {
+export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabImageExtraHandler> = {
   async start_pixflux_background(input, context) {
     const payload = await pixellabRequestJson(
       "POST",

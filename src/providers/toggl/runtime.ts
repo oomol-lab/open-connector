@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TogglActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ const defaultCreatedWith = "oomol-connect";
 
 type TogglRequestPhase = "validate" | "execute";
 
-export const togglActionHandlers: Record<TogglActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const togglActionHandlers: ProviderActionHandlers<"toggl", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

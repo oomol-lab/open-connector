@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { TinybirdActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -65,7 +65,7 @@ interface TinybirdRequestInput {
   notFoundAsInvalidInput?: boolean;
 }
 
-export const tinybirdActionHandlers: Record<TinybirdActionName, TinybirdActionHandler> = {
+export const tinybirdActionHandlers: ProviderActionHandlers<"tinybird", TinybirdActionHandler> = {
   run_sql_query(input, context) {
     return runSqlQuery(input, context);
   },

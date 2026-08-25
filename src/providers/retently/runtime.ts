@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { RetentlyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -29,7 +29,7 @@ interface RetentlyRequestOptions {
   signal?: AbortSignal;
 }
 
-export const retentlyActionHandlers: Record<RetentlyActionName, RetentlyActionHandler> = {
+export const retentlyActionHandlers: ProviderActionHandlers<"retently", RetentlyActionHandler> = {
   async get_account_status(_input, context) {
     const payload = await requestRetentlyJson({
       ...context,

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MoceanActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const moceanApiBaseUrl = "https://rest.moceanapi.com/rest/2";
 type MoceanRequestPhase = "validate" | "execute";
 type MoceanActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const moceanActionHandlers: Record<MoceanActionName, MoceanActionHandler> = {
+export const moceanActionHandlers: ProviderActionHandlers<"mocean", MoceanActionHandler> = {
   get_balance(_input, context) {
     return requestMocean("GET", "/account/balance", context, {}, "execute").then(normalizeBalance);
   },

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ContactoutActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -9,7 +9,7 @@ const contactoutApiBaseUrl = "https://api.contactout.com";
 
 type ContactoutActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const contactoutActionHandlers: Record<ContactoutActionName, ContactoutActionHandler> = {
+export const contactoutActionHandlers: ProviderActionHandlers<"contactout", ContactoutActionHandler> = {
   enrich_linkedin_profile(input, context) {
     return getContactoutObject("/v1/linkedin/enrich", input, context, "enrich_linkedin_profile");
   },

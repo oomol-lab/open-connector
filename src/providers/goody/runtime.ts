@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GoodyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const goodyApiBaseUrl = "https://api.ongoody.com";
 type GoodyRequestPhase = "validate" | "execute";
 type GoodyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const goodyActionHandlers: Record<GoodyActionName, GoodyActionHandler> = {
+export const goodyActionHandlers: ProviderActionHandlers<"goody", GoodyActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

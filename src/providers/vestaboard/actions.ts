@@ -57,8 +57,6 @@ const transitionStateSchema = s.object("The Vestaboard transition settings.", {
   transitionSpeed: transitionSpeedSchema,
 });
 
-export type VestaboardActionName = "get_current_message" | "send_message" | "get_transition" | "set_transition";
-
 export const vestaboardActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_message",

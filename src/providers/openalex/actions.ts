@@ -112,8 +112,6 @@ const listInputSchema = s.object(
   },
 );
 
-export type OpenAlexActionName = "list_entities" | "list_works" | "get_entity" | "get_work" | "autocomplete";
-
 export const openalexActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_entities",

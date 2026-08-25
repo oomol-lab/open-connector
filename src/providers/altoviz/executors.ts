@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -22,7 +23,7 @@ const altovizApiBaseUrl = "https://api.altoviz.com";
 type AltovizPhase = "validate" | "execute";
 type AltovizActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const altovizActionHandlers: Record<string, AltovizActionHandler> = {
+export const altovizActionHandlers: ProviderActionHandlers<"altoviz", AltovizActionHandler> = {
   list_customers: listCustomers,
   get_customer: getCustomer,
   find_customers: findCustomers,

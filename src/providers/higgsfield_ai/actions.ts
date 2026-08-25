@@ -99,9 +99,3 @@ export const higgsfieldAiActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type HiggsfieldAiActionName =
-  | "submit_image_generation"
-  | "submit_video_generation"
-  | "get_request_status"
-  | "cancel_request";

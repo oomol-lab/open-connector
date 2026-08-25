@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ClerkActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
@@ -12,7 +12,7 @@ const clerkApiBaseUrl = "https://api.clerk.com/v1";
 type ClerkRequestPhase = "validate" | "execute";
 type ClerkActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const clerkActionHandlers: Record<ClerkActionName, ClerkActionHandler> = {
+export const clerkActionHandlers: ProviderActionHandlers<"clerk", ClerkActionHandler> = {
   async list_users(input, context) {
     const payload = await requestClerk({
       path: "/users",

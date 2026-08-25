@@ -1,4 +1,5 @@
 import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { XMLParser } from "fast-xml-parser";
 import { positiveInteger } from "../../core/cast.ts";
@@ -26,7 +27,7 @@ interface DealNewsContext {
 
 type DealNewsActionHandler = (input: Record<string, unknown>, context: DealNewsContext) => Promise<unknown>;
 
-export const dealNewsActionHandlers: Record<string, DealNewsActionHandler> = {
+export const dealNewsActionHandlers: ProviderActionHandlers<"dealnews", DealNewsActionHandler> = {
   list_latest_deals(_input, context) {
     return requestFeed(new URL("/?rss=1&sort=time", dealNewsBaseUrl), context);
   },

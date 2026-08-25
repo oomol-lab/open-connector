@@ -4,7 +4,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
-import type { KontentAiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -36,7 +36,7 @@ interface KontentAiRequestResult {
   continuationToken: string | null;
 }
 
-export const kontentAiActionHandlers: Record<KontentAiActionName, KontentAiActionHandler> = {
+export const kontentAiActionHandlers: ProviderActionHandlers<"kontent_ai", KontentAiActionHandler> = {
   list_content_items(input, context) {
     return listKontentAiContentItems(input, context);
   },

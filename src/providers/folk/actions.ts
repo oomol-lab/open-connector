@@ -409,22 +409,5 @@ export const folkActions: ActionDefinition[] = [
   }),
 ];
 
-export type FolkActionName =
-  | "get_current_user"
-  | "list_users"
-  | "get_user"
-  | "list_groups"
-  | "list_group_custom_fields"
-  | "list_people"
-  | "get_person"
-  | "create_person"
-  | "update_person"
-  | "delete_person"
-  | "list_companies"
-  | "get_company"
-  | "create_company"
-  | "update_company"
-  | "delete_company";
-
 export const folkPersonMutableKeys: readonly string[] = personMutableKeys;
 export const folkCompanyMutableKeys: readonly string[] = companyMutableKeys;

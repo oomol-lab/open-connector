@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EveniumActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalIntegerLike, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +25,7 @@ interface EveniumRequestOptions {
   mode: EveniumRequestMode;
 }
 
-export const eveniumActionHandlers: Record<EveniumActionName, EveniumActionHandler> = {
+export const eveniumActionHandlers: ProviderActionHandlers<"evenium", EveniumActionHandler> = {
   async list_events(input, context) {
     const payload = await requestEveniumObject(
       {

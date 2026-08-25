@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -23,7 +24,7 @@ interface ZepRequestInput {
   phase?: "validate" | "execute";
 }
 
-export const zepActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const zepActionHandlers: ProviderActionHandlers<"zep", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   get_project(_input, context) {
     return requestZepJson(context, { path: validationEndpoint });
   },

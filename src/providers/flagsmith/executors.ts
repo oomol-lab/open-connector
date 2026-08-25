@@ -5,8 +5,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FlagsmithActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
@@ -27,7 +27,7 @@ const flagsmithDefaultRequestTimeoutMs = 30_000;
 type FlagsmithRequestPhase = "validate" | "execute";
 type FlagsmithActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const flagsmithActionHandlers: Record<FlagsmithActionName, FlagsmithActionHandler> = {
+export const flagsmithActionHandlers: ProviderActionHandlers<"flagsmith", FlagsmithActionHandler> = {
   async list_flags(input, context) {
     const payload = await requestFlagsmithJson({
       path: "/flags/",

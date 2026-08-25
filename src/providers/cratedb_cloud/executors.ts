@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -33,7 +34,7 @@ interface CratedbCloudContext {
 }
 type CratedbCloudActionHandler = (input: Record<string, unknown>, context: CratedbCloudContext) => Promise<unknown>;
 
-export const cratedbCloudActionHandlers: Record<string, CratedbCloudActionHandler> = {
+export const cratedbCloudActionHandlers: ProviderActionHandlers<"cratedb_cloud", CratedbCloudActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestCratedbCloudJsonForAction({
       context,

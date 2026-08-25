@@ -1,4 +1,5 @@
 import type { TransitFileWriter } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -285,7 +286,7 @@ async function downloadBookFile(
   };
 }
 
-export const zlibraryActionHandlers: Record<string, ZLibraryActionHandler> = {
+export const zlibraryActionHandlers: ProviderActionHandlers<"zlibrary", ZLibraryActionHandler> = {
   async search_books(input, context) {
     const data: Record<string, string | string[]> = {
       message: requiredString(input.message, "message", (message) => new ProviderRequestError(400, message)),

@@ -153,18 +153,6 @@ const searchCompaniesInputSchema: JsonSchema = {
   anyOf: [{ required: ["query"] }, { required: ["name"] }, { required: ["domain"] }, { required: ["id"] }],
 };
 
-export type RocketReachActionName =
-  | "get_account"
-  | "search_people"
-  | "lookup_person"
-  | "lookup_person_and_company"
-  | "check_person_status"
-  | "search_companies"
-  | "lookup_company"
-  | "get_company_size"
-  | "get_company_funding"
-  | "get_company_industries";
-
 export const rocketReachActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "freshsales";
 
-export type FreshsalesActionName =
-  | "list_contact_filters"
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact";
-
 const positiveIdSchema = (description: string) => s.positiveInteger(description);
 const pageSchema = s.positiveInteger("One-based Freshsales page number.");
 

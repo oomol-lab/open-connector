@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "kickbox";
 
-export type KickboxActionName = "verify_email" | "check_disposable_email";
-
 const verifyEmailInputSchema = s.object("The input payload for verifying a single email address with Kickbox.", {
   email: s.email("The email address to verify."),
 });

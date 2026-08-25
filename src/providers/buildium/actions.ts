@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "buildium";
 
-export type BuildiumActionName =
-  | "list_properties"
-  | "get_property"
-  | "list_units"
-  | "get_unit"
-  | "list_owners"
-  | "get_owner"
-  | "list_property_notes";
-
 const positiveInteger = (description: string) => s.positiveInteger(description);
 
 const optionalListFields = {

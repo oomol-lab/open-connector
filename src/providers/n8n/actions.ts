@@ -518,44 +518,6 @@ const insightsSummaryInputSchema = s.object(
   { optional: ["startDate", "endDate", "projectId"] },
 );
 
-export type N8nActionName =
-  | "list_workflows"
-  | "get_workflow"
-  | "activate_workflow"
-  | "deactivate_workflow"
-  | "archive_workflow"
-  | "unarchive_workflow"
-  | "list_executions"
-  | "get_execution"
-  | "retry_execution"
-  | "stop_execution"
-  | "list_tags"
-  | "create_tag"
-  | "update_tag"
-  | "delete_tag"
-  | "get_workflow_tags"
-  | "update_workflow_tags"
-  | "get_execution_tags"
-  | "update_execution_tags"
-  | "list_variables"
-  | "create_variable"
-  | "update_variable"
-  | "delete_variable"
-  | "list_data_tables"
-  | "create_data_table"
-  | "get_data_table"
-  | "update_data_table"
-  | "delete_data_table"
-  | "list_data_table_columns"
-  | "create_data_table_column"
-  | "update_data_table_column"
-  | "delete_data_table_column"
-  | "list_data_table_rows"
-  | "insert_data_table_rows"
-  | "update_data_table_rows"
-  | "upsert_data_table_row"
-  | "get_insights_summary";
-
 export const n8nActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workflows",

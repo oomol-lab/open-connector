@@ -35,8 +35,6 @@ const entitySchema = s.object("A normalized Dynatrace monitored entity.", {
   raw: rawObjectSchema,
 });
 
-export type DynatraceActionName = "list_problems" | "list_entities" | "get_entity";
-
 export const dynatraceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_problems",

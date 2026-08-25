@@ -110,19 +110,6 @@ const successOutputSchema = s.object(
   { required: ["success"] },
 );
 
-export type MailchimpActionName =
-  | "list_lists"
-  | "get_list"
-  | "list_members"
-  | "get_member"
-  | "upsert_member"
-  | "update_member"
-  | "archive_member"
-  | "delete_member_permanently"
-  | "list_member_tags"
-  | "update_member_tags"
-  | "list_merge_fields";
-
 export const mailchimpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_lists",

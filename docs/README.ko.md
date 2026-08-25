@@ -221,7 +221,7 @@ OpenConnector는 Node Docker runtime과 Fly volume의 영구 SQLite storage를 �
 ## Docker 이미지(GHCR)
 
 GitHub Packages(GHCR)의 사전 빌드된 이미지 `ghcr.io/oomol-lab/open-connector`로 OpenConnector를
-실행할 수 있습니다. 최신 release에는 `latest`, 재현 가능한 production 배포에는 `v1.0.0` 같은 고정
+실행할 수 있습니다. 최신 release에는 `latest`, 재현 가능한 production 배포에는 고정된 release
 version, 최신 `main` build에는 `tip`을 사용하세요.
 
 Image tag, 가져오기, 실행 방법은 [docker-ghcr.md](docker-ghcr.md)를 참조하세요.

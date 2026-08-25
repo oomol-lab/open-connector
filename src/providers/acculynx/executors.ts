@@ -1,4 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,7 +29,7 @@ interface AcculynxActionContext {
 
 type AcculynxActionHandler = (input: Record<string, unknown>, context: AcculynxActionContext) => Promise<unknown>;
 
-export const acculynxActionHandlers: Record<string, AcculynxActionHandler> = {
+export const acculynxActionHandlers: ProviderActionHandlers<"acculynx", AcculynxActionHandler> = {
   get_company_settings: async (_input, context) => {
     const payload = await acculynxRequestJson({
       path: companySettingsPath,

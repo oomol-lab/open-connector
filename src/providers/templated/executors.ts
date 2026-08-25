@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TemplatedActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -20,7 +20,7 @@ const templatedApiBaseUrl = "https://api.templated.io/v1";
 type TemplatedRequestPhase = "validate" | "execute";
 type TemplatedActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const templatedActionHandlers: Record<TemplatedActionName, TemplatedActionHandler> = {
+export const templatedActionHandlers: ProviderActionHandlers<"templated", TemplatedActionHandler> = {
   async get_account(_input, context): Promise<unknown> {
     const payload = await requestTemplatedJson({
       apiKey: context.apiKey,

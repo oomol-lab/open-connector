@@ -5,12 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "geocodio";
 
-export type GeocodioActionName =
-  | "single_geocode"
-  | "geocode_batch"
-  | "single_reverse_geocode"
-  | "batch_reverse_geocode";
-
 const looseObjectSchema = s.record(
   "A JSON-like object with arbitrary string keys.",
   s.unknown("A property value in a JSON-like object."),

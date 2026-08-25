@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { WorkpathActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, positiveInteger, requiredRecord } from "../../core/cast.ts";
 import {
@@ -39,7 +39,7 @@ interface WorkpathPagination {
   link: string | null;
 }
 
-export const workpathActionHandlers: Record<WorkpathActionName, WorkpathActionHandler> = {
+export const workpathActionHandlers: ProviderActionHandlers<"workpath", WorkpathActionHandler> = {
   async list_goals(input, context) {
     assertDateRangePair(input);
     const result = await workpathRequest(context, {

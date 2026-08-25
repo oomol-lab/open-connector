@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ElevenreaderActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -30,7 +30,7 @@ interface NormalizedElevenreaderUser extends Record<string, unknown> {
   subscription: NormalizedElevenreaderSubscription;
 }
 
-export const elevenreaderActionHandlers: Record<ElevenreaderActionName, ElevenreaderActionHandler> = {
+export const elevenreaderActionHandlers: ProviderActionHandlers<"elevenreader", ElevenreaderActionHandler> = {
   get_user_info(_input, context) {
     return getElevenreaderUserInfo(context);
   },

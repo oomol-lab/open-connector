@@ -206,14 +206,3 @@ export const simlaActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type SimlaActionName =
-  | "list_orders"
-  | "get_order"
-  | "create_order"
-  | "edit_order"
-  | "get_order_statuses"
-  | "list_customers"
-  | "get_customer"
-  | "create_customer"
-  | "edit_customer";

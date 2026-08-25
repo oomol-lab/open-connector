@@ -52,6 +52,9 @@ const waitForSelectorSchema = s.object(
 );
 
 const commonQuickActionFields: Record<string, JsonSchema> = {
+  accountId: s.nonEmptyString(
+    "The Cloudflare account ID. OAuth connections that can access multiple accounts must provide this value.",
+  ),
   url: s.string({
     format: "uri",
     minLength: 1,
@@ -72,6 +75,7 @@ const commonQuickActionFields: Record<string, JsonSchema> = {
 };
 
 const commonQuickActionOptionalFields = [
+  "accountId",
   "url",
   "html",
   "cacheTtl",
@@ -147,14 +151,14 @@ export const cloudflareBrowserRenderingActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
     description:
-      "List Cloudflare accounts accessible to the API token so callers can confirm account IDs used by Browser Run actions.",
+      "List Cloudflare accounts accessible to the current connection so callers can confirm account IDs used by Browser Run actions.",
     inputSchema: paginationInputSchema,
     outputSchema: s.actionOutput(
       {
-        accounts: s.array("Cloudflare accounts visible to the API token.", cloudflareAccountSchema),
+        accounts: s.array("Cloudflare accounts visible to the current connection.", cloudflareAccountSchema),
         resultInfo: cloudflareResultInfoSchema,
       },
-      "The Cloudflare accounts visible to the API token.",
+      "The Cloudflare accounts visible to the current connection.",
     ),
   }),
   defineProviderAction(service, {
@@ -228,14 +232,6 @@ export const cloudflareBrowserRenderingActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type CloudflareBrowserRenderingActionName =
-  | "list_accounts"
-  | "get_html_content"
-  | "get_markdown"
-  | "get_links"
-  | "get_json"
-  | "scrape_elements";
 
 function quickActionInputSchema(
   description: string,

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FernActionName } from "./actions.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const fernValidationPath = "/customers?pageSize=1";
 
 type FernRequestPhase = "validate" | "execute";
 
-export const fernActionHandlers: Record<FernActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const fernActionHandlers: ProviderActionHandlers<"fern", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_customers(input, context) {
     return fernGetJson(buildListCustomersPath(input), context, "execute");
   },

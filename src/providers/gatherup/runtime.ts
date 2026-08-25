@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -28,7 +29,7 @@ interface GatherupRequestInput {
   query?: Record<string, GatherupQueryValue>;
 }
 
-export const gatherupActionHandlers: Record<string, ProviderRuntimeHandler<GatherupContext>> = {
+export const gatherupActionHandlers: ProviderActionHandlers<"gatherup", ProviderRuntimeHandler<GatherupContext>> = {
   async list_businesses(input, context) {
     return requestGatherupJson({
       ...context,

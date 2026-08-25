@@ -115,14 +115,6 @@ const commonListFields = {
   match: matchSchema,
 };
 
-export type RocketlaneActionName =
-  | "list_projects"
-  | "get_project"
-  | "list_tasks"
-  | "get_task"
-  | "list_users"
-  | "get_user";
-
 export const rocketlaneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",

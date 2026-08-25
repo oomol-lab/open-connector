@@ -133,11 +133,3 @@ export const keywordActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type KeywordActionName =
-  | "get_current_user"
-  | "list_projects"
-  | "get_project"
-  | "list_keywords"
-  | "get_keyword"
-  | "list_project_regions";

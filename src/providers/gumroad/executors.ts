@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { GumroadActionName } from "./actions.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -15,7 +15,7 @@ type GumroadMethod = "GET" | "PUT" | "POST";
 type GumroadActionContext = ApiKeyProviderContext;
 type GumroadActionHandler = (input: Record<string, unknown>, context: GumroadActionContext) => Promise<unknown>;
 
-export const gumroadActionHandlers: Record<GumroadActionName, GumroadActionHandler> = {
+export const gumroadActionHandlers: ProviderActionHandlers<"gumroad", GumroadActionHandler> = {
   get_current_user(_input, context) {
     return requestGumroad({
       method: "GET",

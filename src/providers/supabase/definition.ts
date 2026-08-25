@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
-import { supabaseActions, supabaseProviderScopes } from "./actions.ts";
+import { supabaseActions } from "./actions.ts";
+import { supabaseProviderScopes } from "./scopes.ts";
 
 const service = "supabase";
 

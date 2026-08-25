@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PayhipActionName } from "./actions.ts";
 
 import {
   optionalIntegerLike,
@@ -30,7 +30,7 @@ interface PayhipRequestOptions {
   signal?: AbortSignal;
 }
 
-export const payhipActionHandlers: Record<PayhipActionName, PayhipActionHandler> = {
+export const payhipActionHandlers: ProviderActionHandlers<"payhip", PayhipActionHandler> = {
   create_coupon(input, context) {
     return createCoupon(input, context);
   },

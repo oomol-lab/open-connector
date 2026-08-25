@@ -4,13 +4,16 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  mapProviderActionHandlers,
   providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
+import { gangtiseActions } from "./actions.ts";
 import {
   createGangtiseSession,
   executeGangtiseAction,
@@ -25,31 +28,18 @@ type GangtiseContext = {
   fetcher: typeof fetch;
 };
 
-export const executors: ProviderExecutors = defineProviderExecutors({
+type GangtiseHandler = (input: Record<string, unknown>, context: GangtiseContext) => Promise<unknown>;
+
+const handlers: ProviderActionHandlers<"gangtise", GangtiseHandler> = mapProviderActionHandlers(
   service,
-  handlers: Object.fromEntries(
-    [
-      "search_securities",
-      "get_realtime_quotes",
-      "get_daily_kline",
-      "get_minute_kline",
-      "get_financial_statements",
-      "get_valuation_metrics",
-      "get_earnings_forecast",
-      "get_main_business_breakdown",
-      "get_top_shareholders",
-      "get_fund_flow",
-      "search_company_indicators",
-      "get_company_indicators",
-      "search_reports",
-      "search_meeting_summaries",
-      "search_announcements",
-    ].map((actionName) => [
-      actionName,
-      (input: Record<string, unknown>, context: GangtiseContext) =>
-        executeGangtiseAction({ apiKey: context.apiKey, values: context.values, actionName, input }, context.fetcher),
-    ]),
-  ),
+  gangtiseActions,
+  (_action, name) => (input, context) =>
+    executeGangtiseAction({ apiKey: context.apiKey, values: context.values, actionName: name, input }, context.fetcher),
+);
+
+export const executors: ProviderExecutors = defineProviderExecutors<GangtiseContext>({
+  service,
+  handlers,
   skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher): Promise<GangtiseContext> {
     const credential = await requireApiKeyCredential(context, service);

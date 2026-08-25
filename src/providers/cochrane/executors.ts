@@ -1,18 +1,18 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionHandlers, ProviderRequestError } from "../provider-runtime.ts";
+import { cochraneActions } from "./actions.ts";
 import { executeCochraneAction, validateCochraneCredential } from "./runtime.ts";
 const service = "cochrane";
 interface CochraneContext {
   values: Record<string, string>;
   fetcher: typeof fetch;
 }
-const handlers = Object.fromEntries(
-  ["get_review_metadata", "list_review_versions", "get_review_roles", "list_review_translations"].map((name) => [
-    name,
-    (input: Record<string, unknown>, context: CochraneContext) =>
-      executeCochraneAction(name, input, context.values, context.fetcher),
-  ]),
+const handlers: ProviderActionHandlers<"cochrane", ProviderRuntimeHandler<CochraneContext>> = mapProviderActionHandlers(
+  service,
+  cochraneActions,
+  (_action, name) => (input, context) => executeCochraneAction(name, input, context.values, context.fetcher),
 );
 export const executors: ProviderExecutors = defineProviderExecutors<CochraneContext>({
   service,

@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "grafana_cloud";
 
-export type GrafanaCloudActionName = "list_regions" | "list_stacks" | "get_stack_connectivity" | "get_billed_usage";
-
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const rawObjectSchema = s.looseObject("The raw Grafana Cloud API object.");
 

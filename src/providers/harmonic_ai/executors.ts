@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HarmonicAiActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, stringRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -27,7 +27,7 @@ interface HarmonicAiStatusPayload {
   status: number;
 }
 
-export const harmonicAiActionHandlers: Record<HarmonicAiActionName, HarmonicAiActionHandler> = {
+export const harmonicAiActionHandlers: ProviderActionHandlers<"harmonic_ai", HarmonicAiActionHandler> = {
   enrich_company(input, context) {
     return harmonicAiEnrich(input, context, "/companies");
   },

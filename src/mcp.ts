@@ -6,9 +6,9 @@ import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 import type { ActionRunner, ActionRunResult } from "./server/actions/action-runner.ts";
 import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult } from "@modelcontextprotocol/server";
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { ConnectionError } from "./connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "./core/action-policy.ts";
@@ -27,6 +27,7 @@ export interface IMcpServerOptions {
   actionSearch?: ActionSearchIndexProvider;
   getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
   runtimeGrant?: RuntimeGrant;
+  signal?: AbortSignal;
 }
 
 /**
@@ -117,7 +118,7 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
         query: z.string().optional().describe("Optional case-insensitive app name, service, category, or auth filter."),
       },
     },
-    async ({ query }) => toolResult(successPayload(await listApps(options, query))),
+    async ({ query }) => toolResult(await listApps(options, query)),
   );
 
   server.registerTool(
@@ -190,42 +191,62 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
 }
 
 async function listConnections(options: IMcpServerOptions, service: string | undefined): Promise<ToolPayload> {
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
   try {
     const connections = service
       ? await options.connections.listConnectionsByService(service)
       : await options.connections.listConnections();
-    return successPayload(connections.filter((connection) => !connection.virtual).map(serializeConnection));
+    return successPayload(
+      connections
+        .filter((connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed)
+        .map(serializeConnection),
+    );
   } catch (error) {
-    return connectionErrorPayload(error);
+    return connectionErrorPayload(error, policy);
   }
 }
 
-async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<unknown> {
+async function listApps(options: IMcpServerOptions, query: string | undefined): Promise<ToolPayload> {
+  let policy: ActionPolicySnapshot;
+  try {
+    policy = await getPolicySnapshot(options);
+  } catch {
+    return errorPayload("internal_error", "Runtime policy is unavailable.");
+  }
   const normalized = query?.trim().toLowerCase();
-  const connections = await options.connections.listConnections();
+  const connections = (await options.connections.listConnections()).filter(
+    (connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed,
+  );
   const defaultConnections = new Map(
     connections.filter((connection) => connection.default).map((connection) => [connection.service, connection]),
   );
-  return options.catalog.providers
-    .filter((provider) => {
-      if (!normalized) {
-        return true;
-      }
+  return successPayload(
+    options.catalog.providers
+      .filter((provider) => {
+        if (!normalized) {
+          return true;
+        }
 
-      return [provider.service, provider.displayName, provider.categories.join(" "), provider.authTypes.join(" ")]
-        .join(" ")
-        .toLowerCase()
-        .includes(normalized);
-    })
-    .map((provider) => ({
-      service: provider.service,
-      displayName: provider.displayName,
-      categories: provider.categories,
-      authTypes: provider.authTypes,
-      actionCount: provider.actions.length,
-      executableActionCount: provider.actions.filter((action) => action.execution.locallyExecutable).length,
-      connection: defaultConnections.get(provider.service),
-    }));
+        return [provider.service, provider.displayName, provider.categories.join(" "), provider.authTypes.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalized);
+      })
+      .map((provider) => ({
+        service: provider.service,
+        displayName: provider.displayName,
+        categories: provider.categories,
+        authTypes: provider.authTypes,
+        actionCount: provider.actions.length,
+        executableActionCount: provider.actions.filter((action) => action.execution.locallyExecutable).length,
+        connection: defaultConnections.get(provider.service),
+      })),
+  );
 }
 
 async function searchActions(
@@ -276,6 +297,11 @@ async function getActionGuide(
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
+    const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+    const connectionDecision = evaluateConnectionGrant(policy, connection);
+    if (!connectionDecision.allowed) {
+      return errorPayload(connectionDecision.code, connectionDecision.message);
+    }
     return successPayload({
       capability: await describeActionCapability(options, action, connectionName, policy),
       markdown: renderActionMarkdown(
@@ -284,7 +310,7 @@ async function getActionGuide(
       ),
     });
   } catch (error) {
-    return connectionErrorPayload(error);
+    return connectionErrorPayload(error, policy);
   }
 }
 
@@ -307,9 +333,13 @@ async function executeAction(
   }
   if (connectionName && policy.evaluate(action).allowed) {
     try {
-      await getSelectedConnectionSummary(options, action.service, connectionName);
+      const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+      const connectionDecision = evaluateConnectionGrant(policy, connection);
+      if (!connectionDecision.allowed) {
+        return errorPayload(connectionDecision.code, connectionDecision.message);
+      }
     } catch (error) {
-      return connectionErrorPayload(error);
+      return connectionErrorPayload(error, policy);
     }
   }
   const run = await options.actions.run({
@@ -319,6 +349,7 @@ async function executeAction(
     connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    signal: options.signal,
   });
   if (!run) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
@@ -371,14 +402,16 @@ async function describeActionCapability(
   connectionName?: string,
   policy?: ActionPolicySnapshot,
 ): Promise<ActionCapability> {
+  const snapshot = policy ?? (await getPolicySnapshot(options));
   const provider = options.catalog.providers.find((candidate) => candidate.service === action.service);
+  const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
   return {
     execution: action.execution,
     authTypes: provider?.authTypes ?? [],
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
-    policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),
-    connection: await getSelectedConnectionSummary(options, action.service, connectionName),
+    policy: snapshot.evaluate(action),
+    connection: evaluateConnectionGrant(snapshot, connection).allowed ? connection : undefined,
   };
 }
 
@@ -388,10 +421,12 @@ async function describeActionMarkdownContext(
   connectionName?: string,
   policy?: ActionPolicySnapshot,
 ): Promise<{ connection?: ConnectionSummary; providerPermissions: string[]; policy: ActionPolicyDecision }> {
+  const snapshot = policy ?? (await getPolicySnapshot(options));
+  const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
   return {
-    connection: await getSelectedConnectionSummary(options, action.service, connectionName),
+    connection: evaluateConnectionGrant(snapshot, connection).allowed ? connection : undefined,
     providerPermissions: action.providerPermissions,
-    policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),
+    policy: snapshot.evaluate(action),
   };
 }
 
@@ -412,6 +447,13 @@ async function getSelectedConnectionSummary(
     throw new ConnectionError("connection_not_found", `${service} connection not found: ${connection.connectionName}.`);
   }
   return connection;
+}
+
+function evaluateConnectionGrant(
+  policy: ActionPolicySnapshot,
+  connection: ConnectionSummary | undefined,
+): ActionPolicyDecision {
+  return connection?.authType === "no_auth" ? { allowed: true, checks: [] } : policy.evaluateConnection(connection?.id);
 }
 
 function describeSchemaType(schema: JsonSchema | undefined): string {
@@ -461,8 +503,12 @@ function errorPayload(code: string, message: string): ToolPayload {
   };
 }
 
-function connectionErrorPayload(error: unknown): ToolPayload {
+function connectionErrorPayload(error: unknown, policy?: ActionPolicySnapshot): ToolPayload {
   if (error instanceof ConnectionError) {
+    const missingConnectionDecision = error.code === "connection_not_found" ? policy?.evaluateConnection() : undefined;
+    if (missingConnectionDecision && !missingConnectionDecision.allowed) {
+      return errorPayload(missingConnectionDecision.code, missingConnectionDecision.message);
+    }
     return errorPayload(error.code, error.message);
   }
   throw error;

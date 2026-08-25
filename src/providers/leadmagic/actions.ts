@@ -49,14 +49,6 @@ const enrichCompanyInputSchema: JsonSchema = {
   anyOf: [{ required: ["companyDomain"] }, { required: ["profileUrl"] }, { required: ["companyName"] }],
 };
 
-export type LeadmagicActionName =
-  | "get_credits"
-  | "validate_email"
-  | "find_work_email"
-  | "find_mobile"
-  | "enrich_profile"
-  | "enrich_company";
-
 export const leadmagicActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",

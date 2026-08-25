@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { IpgeolocationIoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ type IpgeolocationIoActionHandler = (
   context: IpgeolocationIoActionContext,
 ) => Promise<unknown>;
 
-export const ipgeolocationIoActionHandlers: Record<IpgeolocationIoActionName, IpgeolocationIoActionHandler> = {
+export const ipgeolocationIoActionHandlers: ProviderActionHandlers<"ipgeolocation_io", IpgeolocationIoActionHandler> = {
   async lookup_ip(input, context) {
     const payload = await requestIpgeolocationIoJson(
       {

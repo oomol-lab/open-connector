@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -65,7 +66,7 @@ const proposalSendFields = [
   "sender_email",
 ];
 
-export const nusiiProposalsActionHandlers: Record<string, NusiiProposalsActionHandler> = {
+export const nusiiProposalsActionHandlers: ProviderActionHandlers<"nusii_proposals", NusiiProposalsActionHandler> = {
   get_account(_input, context) {
     return requestNusiiJson({
       path: "account/me",

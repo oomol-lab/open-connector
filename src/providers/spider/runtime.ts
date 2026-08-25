@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -16,7 +17,7 @@ interface SpiderRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const spiderActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const spiderActionHandlers: ProviderActionHandlers<"spider", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_credits(_input, context) {
     return {
       data: await requestSpiderJson({ path: "/data/credits" }, context, "execute"),

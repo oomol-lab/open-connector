@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { LeexiActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -50,7 +50,7 @@ interface LeexiActionContext {
   signal?: AbortSignal;
 }
 
-export const leexiActionHandlers: Record<LeexiActionName, LeexiActionHandler> = {
+export const leexiActionHandlers: ProviderActionHandlers<"leexi", LeexiActionHandler> = {
   list_users(input, context) {
     return executeListUsers(input, context);
   },

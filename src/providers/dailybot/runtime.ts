@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DailybotActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -18,7 +18,7 @@ const dailybotApiBaseUrl = "https://api.dailybot.com";
 type DailybotPhase = "validate" | "execute";
 type DailybotHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const dailybotActionHandlers: Record<DailybotActionName, DailybotHandler> = {
+export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", DailybotHandler> = {
   async get_me(_input, context) {
     return { profile: asObject(await dailybotRequest({ path: "/v1/me/", method: "GET", context, phase: "execute" })) };
   },

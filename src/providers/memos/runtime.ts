@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -49,7 +50,7 @@ export interface MemosContext {
 const requestTimeoutMs = 60_000;
 const attachmentMaxBytes = 20 * 1024 * 1024;
 
-export const memosActionHandlers: Record<string, ProviderRuntimeHandler<MemosContext>> = {
+export const memosActionHandlers: ProviderActionHandlers<"memos", ProviderRuntimeHandler<MemosContext>> = {
   async create_memo(input, context) {
     const memo = requireResponseObject(
       await requestMemosJson(context, "/memos", {

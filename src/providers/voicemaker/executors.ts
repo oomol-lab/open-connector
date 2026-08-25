@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineApiKeyProviderExecutors,
@@ -28,24 +29,26 @@ async function post(
     throw new ProviderRequestError(response.status || 502, "Voicemaker request failed", payload);
   return payload;
 }
+const handlers: ProviderActionHandlers<"voicemaker", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+  async list_voices(input, context) {
+    const payload = await post("/api/v1/voice/list", input, context);
+    const data = payload.data as { voices_list?: unknown[] } | undefined;
+    return { voices: data?.voices_list ?? [] };
+  },
+  async generate_tts(input, context) {
+    const payload = await post("/api/v1/voice/convert", input, context);
+    return {
+      audioUrl: payload.path,
+      usedChars: payload.usedChars,
+      remainingChars: payload.remainChars,
+      remainingKeyChars: payload.remainKeyChars,
+    };
+  },
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
   "voicemaker",
-  {
-    async list_voices(input, context) {
-      const payload = await post("/api/v1/voice/list", input, context);
-      const data = payload.data as { voices_list?: unknown[] } | undefined;
-      return { voices: data?.voices_list ?? [] };
-    },
-    async generate_tts(input, context) {
-      const payload = await post("/api/v1/voice/convert", input, context);
-      return {
-        audioUrl: payload.path,
-        usedChars: payload.usedChars,
-        remainingChars: payload.remainChars,
-        remainingKeyChars: payload.remainKeyChars,
-      };
-    },
-  },
+  handlers,
   { skipDnsValidation: true },
 );
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

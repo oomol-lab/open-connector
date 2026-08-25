@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProxiedmailActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -40,7 +40,7 @@ interface ProxiedmailActionContext {
 
 type ProxiedmailActionHandler = (input: Record<string, unknown>, context: ProxiedmailActionContext) => Promise<unknown>;
 
-export const proxiedmailActionHandlers: Record<ProxiedmailActionName, ProxiedmailActionHandler> = {
+export const proxiedmailActionHandlers: ProviderActionHandlers<"proxiedmail", ProxiedmailActionHandler> = {
   async list_proxy_bindings(_input, context) {
     const payload = await requestProxiedmailJson({
       apiKey: context.apiKey,

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PerdooActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -143,7 +143,7 @@ const upsertCommitMutation = `
   }
 `;
 
-export const perdooActionHandlers: Record<PerdooActionName, PerdooActionHandler> = {
+export const perdooActionHandlers: ProviderActionHandlers<"perdoo", PerdooActionHandler> = {
   async list_goals(input, context) {
     const data = await requestPerdooData(
       {

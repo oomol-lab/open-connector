@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FloatActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -42,7 +42,7 @@ interface FloatAccount {
   raw: Record<string, unknown>;
 }
 
-export const floatActionHandlers: Record<FloatActionName, FloatActionHandler> = {
+export const floatActionHandlers: ProviderActionHandlers<"float", FloatActionHandler> = {
   async list_accounts(input, context) {
     const response = await requestFloatJson(context, {
       path: "/accounts",

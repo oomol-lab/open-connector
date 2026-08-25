@@ -1,16 +1,23 @@
-import { defineProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderActionSources, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-const paths: Record<string, string> = {
+import {
+  defineProviderExecutors,
+  mapProviderActionSources,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
+
+interface Context {
+  fetcher: typeof fetch;
+}
+
+const paths: ProviderActionSources<"indiegogo", string> = {
   get_creator: "/api/public/creators/getCreator",
   list_active_crowdfunding_projects: "/api/public/projects/getActiveCrowdfundingProjects",
   get_crowdfunding_project: "/api/public/projects/getCrowdfundingProject",
 };
-async function execute(
-  input: Record<string, unknown>,
-  context: { fetcher: typeof fetch },
-  name: string,
-): Promise<unknown> {
-  const url = new URL(paths[name]!, "https://www.indiegogo.com");
+async function execute(input: Record<string, unknown>, context: Context, name: string, path: string): Promise<unknown> {
+  const url = new URL(path, "https://www.indiegogo.com");
   if (input.urlName !== undefined) url.searchParams.set("urlName", String(input.urlName));
   const response = await context.fetcher(url, {
     headers: { accept: "application/json", "user-agent": providerUserAgent },
@@ -25,13 +32,16 @@ async function execute(
       ? { creator: payload }
       : { project: payload };
 }
-export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors({
+
+const handlers: ProviderActionHandlers<"indiegogo", ProviderRuntimeHandler<Context>> = mapProviderActionSources(
+  "indiegogo",
+  paths,
+  (name, path) => (input, context) => execute(input, context, name, path),
+);
+
+export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
   service: "indiegogo",
   createContext: (_context, fetcher) => ({ fetcher }),
   skipDnsValidation: true,
-  handlers: {
-    get_creator: (input, context) => execute(input, context, "get_creator"),
-    list_active_crowdfunding_projects: (input, context) => execute(input, context, "list_active_crowdfunding_projects"),
-    get_crowdfunding_project: (input, context) => execute(input, context, "get_crowdfunding_project"),
-  },
+  handlers,
 });

@@ -203,11 +203,3 @@ export const incidentIoActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type IncidentIoActionName =
-  | "list_incidents"
-  | "get_incident"
-  | "list_actions"
-  | "get_action"
-  | "list_severities"
-  | "list_incident_statuses";

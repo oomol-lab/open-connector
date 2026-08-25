@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TwitterActionName } from "./actions.ts";
 
 import { base64Bytes } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -64,7 +64,7 @@ export async function fetchTwitterCurrentAccount(
   };
 }
 
-export const twitterActionHandlers: Record<TwitterActionName, TwitterActionHandler> = {
+export const twitterActionHandlers: ProviderActionHandlers<"twitter", TwitterActionHandler> = {
   async user_lookup_me(input, context) {
     const url = new URL(`${twitterApiBaseUrl}/users/me`);
     appendTwitterUserFields(url, input);

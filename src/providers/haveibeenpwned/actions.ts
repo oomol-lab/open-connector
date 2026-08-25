@@ -57,15 +57,6 @@ const subscriptionSchema = s.object("Subscription status returned by Have I Been
 
 const emailAddressSchema = s.email("Email address to search in Have I Been Pwned.");
 
-export type HaveIBeenPwnedActionName =
-  | "list_breaches"
-  | "get_breach"
-  | "get_latest_breach"
-  | "list_data_classes"
-  | "search_breached_account"
-  | "list_pastes_for_account"
-  | "get_subscription_status";
-
 export const haveibeenpwnedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_breaches",

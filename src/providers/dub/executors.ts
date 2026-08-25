@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DubActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ const dubAnalyticsPath = "/analytics";
 type DubRequestPhase = "validate" | "execute";
 type DubActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const dubActionHandlers: Record<DubActionName, DubActionHandler> = {
+export const dubActionHandlers: ProviderActionHandlers<"dub", DubActionHandler> = {
   create_link(input, context) {
     return executeCreateLink(input, context);
   },

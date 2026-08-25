@@ -58,5 +58,3 @@ export const formspreeActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type FormspreeActionName = "list_submissions";

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { KlicktippActionName } from "./actions.ts";
 
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -19,7 +19,7 @@ const klicktippRequestTimeoutMs = 30_000;
 type KlicktippActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type KlicktippActionHandler = (input: Record<string, unknown>, context: KlicktippActionContext) => Promise<unknown>;
 
-export const klicktippActionHandlers: Record<KlicktippActionName, KlicktippActionHandler> = {
+export const klicktippActionHandlers: ProviderActionHandlers<"klicktipp", KlicktippActionHandler> = {
   async signin(input, context): Promise<unknown> {
     const payload = await requestKlicktippJson("/subscriber/signin", buildSigninBody(input), context);
     return {

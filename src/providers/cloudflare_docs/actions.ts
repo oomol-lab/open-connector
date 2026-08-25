@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "cloudflare_docs" as const;
 
-export type CloudflareDocsActionName = "search_cloudflare_documentation" | "get_pages_to_workers_migration_guide";
-
 export const cloudflareDocsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_cloudflare_documentation",

@@ -33,8 +33,6 @@ const smsReportSchema = s.actionOutput(
   "The normalized TelTel outbound SMS delivery report.",
 );
 
-export type TeltelActionName = "get_account_balance" | "send_sms" | "list_sms_reports" | "get_sms_report";
-
 export const teltelActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",

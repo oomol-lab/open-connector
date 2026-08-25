@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
@@ -107,7 +108,7 @@ type CreditRepairCloudActionHandler = (
   context: CreditRepairCloudActionContext,
 ) => Promise<unknown>;
 
-const actionHandlers: Record<string, CreditRepairCloudActionHandler> = {
+const actionHandlers: ProviderActionHandlers<"credit_repair_cloud", CreditRepairCloudActionHandler> = {
   insert_lead_client: bindAction("insert_lead_client"),
   update_lead_client: bindAction("update_lead_client"),
   delete_lead_client: bindAction("delete_lead_client"),

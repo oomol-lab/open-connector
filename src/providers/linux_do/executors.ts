@@ -1,5 +1,5 @@
 import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { LinuxDoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import { defineProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -15,7 +15,7 @@ interface LinuxDoActionContext {
 
 type LinuxDoActionHandler = (input: Record<string, unknown>, context: LinuxDoActionContext) => Promise<unknown>;
 
-export const linuxDoActionHandlers: Record<LinuxDoActionName, LinuxDoActionHandler> = {
+export const linuxDoActionHandlers: ProviderActionHandlers<"linux_do", LinuxDoActionHandler> = {
   list_latest_topics(input, context) {
     return topicFeed("/latest.rss", {}, input, context);
   },

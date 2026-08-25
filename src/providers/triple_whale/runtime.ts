@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TripleWhaleActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -18,7 +18,7 @@ const tripleWhaleValidateApiKeyPath = "/users/api-keys/me";
 type TripleWhaleRequestPhase = "validate" | "execute";
 type TripleWhaleActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const tripleWhaleActionHandlers: Record<TripleWhaleActionName, TripleWhaleActionHandler> = {
+export const tripleWhaleActionHandlers: ProviderActionHandlers<"triple_whale", TripleWhaleActionHandler> = {
   async validate_api_key(_input, context): Promise<unknown> {
     const payload = await requestTripleWhaleJson({
       path: tripleWhaleValidateApiKeyPath,

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -8,7 +9,10 @@ export const timelinesAiApiBaseUrl = "https://app.timelines.ai/integrations/api"
 const timelinesAiRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
-export const timelinesAiActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const timelinesAiActionHandlers: ProviderActionHandlers<
+  "timelinesai",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async get_workspace(_input, context) {
     return { workspace: normalizeWorkspace(await request({ path: "/workspace", ...context })) };
   },

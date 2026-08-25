@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -17,7 +18,7 @@ interface WorkiomRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const workiomActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const workiomActionHandlers: ProviderActionHandlers<"workiom", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_apps(_input, context): Promise<unknown> {
     const raw = await requestWorkiom({ path: "/Apps/GetAll", apiKey: context.apiKey }, context);
     return {

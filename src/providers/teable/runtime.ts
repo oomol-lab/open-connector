@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -24,7 +25,7 @@ interface TeableRequestInput extends Pick<ApiKeyProviderContext, "apiKey" | "fet
   body?: Record<string, unknown>;
 }
 
-export const teableActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const teableActionHandlers: ProviderActionHandlers<"teable", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   get_current_user(_input, context) {
     return executeGetCurrentUser(context);
   },

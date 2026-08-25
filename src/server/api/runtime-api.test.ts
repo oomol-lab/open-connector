@@ -7,6 +7,7 @@ import {
   serializeRuntimeAction,
   serializeRuntimeActionResult,
   serializeRuntimeFailure,
+  unknownActionFailure,
   writeRuntimeActionHttpResult,
 } from "./runtime-api.ts";
 
@@ -68,7 +69,9 @@ describe("runtime action HTTP results", () => {
 
   it.each([
     ["authorization_failed", 403],
+    ["connection_not_allowed", 403],
     ["connection_not_found", 404],
+    ["unknown_action", 404],
     ["rate_limited", 429],
     ["provider_error", 500],
     ["internal_error", 500],
@@ -140,6 +143,19 @@ describe("runtime action HTTP results", () => {
     });
 
     expect(parseRuntimeActionHttpResult(result)).toEqual(result);
+  });
+
+  it("serializes a catalog miss as unknown_action", () => {
+    expect(serializeRuntimeFailure(unknownActionFailure("example.missing"))).toEqual({
+      status: 404,
+      body: {
+        success: false,
+        message: "Unknown action: example.missing",
+        data: null,
+        errorCode: "unknown_action",
+        meta: { actionId: "example.missing" },
+      },
+    });
   });
 
   it("writes a previously serialized result", async () => {

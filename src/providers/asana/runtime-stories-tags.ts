@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler } from "./runtime.ts";
 
 import {
@@ -55,7 +56,7 @@ const defaultTagFields = [
   "permalink_url",
 ];
 
-export const storyTagActionHandlers: Record<string, AsanaActionHandler> = {
+export const storyTagActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActionHandler> = {
   get_story(input, context) {
     return getAsanaResource(
       `/stories/${asanaPathGid(input.storyId, "storyId")}`,

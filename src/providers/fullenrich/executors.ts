@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FullenrichActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface FullenrichRequestOptions {
   phase: FullenrichPhase;
 }
 
-export const fullenrichActionHandlers: Record<FullenrichActionName, FullenrichActionHandler> = {
+export const fullenrichActionHandlers: ProviderActionHandlers<"fullenrich", FullenrichActionHandler> = {
   async get_credit_balance(_input, context) {
     const payload = await requestFullenrichJson({
       context,

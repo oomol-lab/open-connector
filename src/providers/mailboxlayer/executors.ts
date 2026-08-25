@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailboxlayerActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const mailboxlayerValidationEmail = "hello@apilayer.com";
 
 type MailboxlayerActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const mailboxlayerActionHandlers: Record<MailboxlayerActionName, MailboxlayerActionHandler> = {
+export const mailboxlayerActionHandlers: ProviderActionHandlers<"mailboxlayer", MailboxlayerActionHandler> = {
   check_email(input, context) {
     return requestMailboxlayer({
       path: "/check",

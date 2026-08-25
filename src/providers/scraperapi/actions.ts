@@ -67,8 +67,6 @@ const scrapeResponseSchema = s.actionOutput(
 
 const accountUsageSchema = s.looseObject("Usage and account details returned by ScraperAPI.");
 
-export type ScraperapiActionName = "scrape_url" | "submit_url" | "get_account_usage";
-
 export const scraperapiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "scrape_url",

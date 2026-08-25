@@ -1,4 +1,4 @@
-import type { ClickupActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -81,22 +81,11 @@ export async function fetchClickupCurrentAccount(
     signal,
     mode,
   });
-  const workspacePayload = await requestClickupJson({
-    path: "/team",
-    authorizationHeader,
-    fetcher,
-    signal,
-    mode,
-  });
 
   const user = readObjectField(userPayload, "user");
-  const workspaces = readArrayField(workspacePayload, "teams");
   const userId = asStringId(user.id);
   const username = optionalString(user.username);
   const email = optionalString(user.email);
-  const workspaceNames = workspaces
-    .map((workspace) => optionalString(optionalRecord(workspace)?.name))
-    .filter((value): value is string => Boolean(value));
 
   return {
     accountId: userId ? `clickup:user:${userId}` : "clickup",
@@ -104,17 +93,14 @@ export async function fetchClickupCurrentAccount(
     metadata: compactObject({
       apiBaseUrl: clickupApiV2BaseUrl,
       validationUserEndpoint: "/user",
-      validationWorkspaceEndpoint: "/team",
       userId,
       username,
       email,
-      workspaceCount: workspaces.length,
-      workspaceNames,
     }),
   };
 }
 
-export const clickupActionHandlers: Record<ClickupActionName, ClickupActionHandler> = {
+export const clickupActionHandlers: ProviderActionHandlers<"clickup", ClickupActionHandler> = {
   async get_current_user(_input, context) {
     const payload = await requestClickupJson({
       path: "/user",

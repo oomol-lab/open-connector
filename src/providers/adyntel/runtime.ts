@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -44,7 +45,7 @@ interface AdyntelRequestOptions {
   body: Record<string, unknown>;
 }
 
-export const adyntelActionHandlers: Record<string, AdyntelActionHandler> = {
+export const adyntelActionHandlers: ProviderActionHandlers<"adyntel", AdyntelActionHandler> = {
   search_meta_ads(input, context) {
     return requestAdSearch(context, input, "/facebook", [
       "company_domain",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { SearchApiActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -29,7 +29,7 @@ const searchApiOrigin = "https://www.searchapi.io";
 const searchApiBasePath = "/api/v1/";
 export const searchApiBaseUrl: string = "https://www.searchapi.io/api/v1";
 
-export const searchApiActionHandlers: Record<SearchApiActionName, SearchApiActionHandler> = {
+export const searchApiActionHandlers: ProviderActionHandlers<"search_api", SearchApiActionHandler> = {
   get_account_info(_input, context) {
     return requestSearchApiAccountInfo(context.apiKey, context.fetcher, context.signal, "execute");
   },

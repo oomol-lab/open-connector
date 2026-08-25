@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { DrataActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -33,7 +33,7 @@ type DrataRequestOptions = {
   signal?: AbortSignal;
 };
 
-export const drataActionHandlers: Record<DrataActionName, DrataActionHandler> = {
+export const drataActionHandlers: ProviderActionHandlers<"drata", DrataActionHandler> = {
   get_company(_input, context) {
     return getCompany(context);
   },

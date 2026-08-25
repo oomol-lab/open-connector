@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FilloutActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -17,7 +17,7 @@ type FilloutRequestPhase = "validate" | "execute";
 type FilloutActionContext = ApiKeyProviderContext;
 type FilloutActionHandler = (input: Record<string, unknown>, context: FilloutActionContext) => Promise<unknown>;
 
-export const filloutActionHandlers: Record<FilloutActionName, FilloutActionHandler> = {
+export const filloutActionHandlers: ProviderActionHandlers<"fillout", FilloutActionHandler> = {
   list_forms(_input, context) {
     return listForms(context);
   },

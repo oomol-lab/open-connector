@@ -94,17 +94,15 @@ const handlers = {
     });
   },
   async list_templates(input: Record<string, unknown>, context: Context) {
-    return {
-      data: await request(context, `/wa/app/${encodeURIComponent(context.appId)}/template`, "GET", {
-        pageNo: optionalInteger(input.pageNo),
-        pageSize: optionalInteger(input.pageSize),
-        templateStatus: optionalString(input.templateStatus),
-        templateCategory: optionalString(input.templateCategory),
-        templateType: optionalString(input.templateType),
-        quality: optionalString(input.quality),
-        languageCode: optionalString(input.languageCode),
-      }),
-    };
+    return request(context, `/wa/app/${encodeURIComponent(context.appId)}/template`, "GET", {
+      pageNo: optionalInteger(input.pageNo),
+      pageSize: optionalInteger(input.pageSize),
+      templateStatus: optionalString(input.templateStatus),
+      templateCategory: optionalString(input.templateCategory),
+      templateType: optionalString(input.templateType),
+      quality: optionalString(input.quality),
+      languageCode: optionalString(input.languageCode),
+    });
   },
 };
 export const executors: ProviderExecutors = defineProviderExecutors<Context>({

@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { NocodbActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   objectArray,
@@ -40,7 +40,7 @@ interface NocodbContext {
 
 type NocodbActionHandler = (input: Record<string, unknown>, context: NocodbContext) => Promise<unknown>;
 
-export const nocodbActionHandlers: Record<NocodbActionName, NocodbActionHandler> = {
+export const nocodbActionHandlers: ProviderActionHandlers<"nocodb", NocodbActionHandler> = {
   async get_current_user(_input, context) {
     return {
       user: requiredOutputObject(

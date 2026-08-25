@@ -313,18 +313,3 @@ export const v2exActions: ActionDefinition[] = [
     outputSchema: emptyOutputSchema,
   }),
 ];
-
-export type V2exActionName =
-  | "list_notifications"
-  | "delete_notification"
-  | "list_hot_topics"
-  | "list_latest_topics"
-  | "get_current_member"
-  | "get_current_token"
-  | "create_token"
-  | "get_node"
-  | "list_node_topics"
-  | "get_topic"
-  | "list_topic_replies"
-  | "set_topic_sticky"
-  | "boost_topic";

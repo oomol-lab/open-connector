@@ -173,18 +173,6 @@ const paginatedQuestionnairesOutputSchema = s.object("Paginated Certn questionna
   pagination: paginationSchema,
 });
 
-export type CertnActionName =
-  | "list_cases"
-  | "get_case"
-  | "list_users"
-  | "get_user"
-  | "list_groups"
-  | "get_group"
-  | "list_packages"
-  | "list_events"
-  | "list_tags"
-  | "list_questionnaires";
-
 export const certnActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_cases",

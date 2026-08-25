@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { TwochatActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -30,7 +30,7 @@ interface TwochatResponse {
   rawText: string;
 }
 
-export const twochatActionHandlers: Record<TwochatActionName, TwochatActionHandler> = {
+export const twochatActionHandlers: ProviderActionHandlers<"twochat", TwochatActionHandler> = {
   test_api_key(_input, context) {
     return getTwochatInfo(context.apiKey, context.fetcher, "execute", context.signal);
   },

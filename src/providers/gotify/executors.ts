@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -51,7 +52,7 @@ interface GotifyJsonRequestOptions {
   phase: GotifyRequestPhase;
 }
 
-export const gotifyActionHandlers: Record<string, ProviderRuntimeHandler<GotifyContext>> = {
+export const gotifyActionHandlers: ProviderActionHandlers<"gotify", ProviderRuntimeHandler<GotifyContext>> = {
   async send_message(input, context) {
     const payload = await requestGotifyJson({
       context,

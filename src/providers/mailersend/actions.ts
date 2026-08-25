@@ -149,20 +149,6 @@ const idInputSchema = (description: string, field: string, schema: JsonSchema) =
     [field]: schema,
   });
 
-export type MailersendActionName =
-  | "send_email"
-  | "list_messages"
-  | "get_message"
-  | "list_domains"
-  | "get_domain"
-  | "list_domain_recipients"
-  | "get_domain_dns_records"
-  | "get_domain_verification_status"
-  | "list_templates"
-  | "get_template"
-  | "list_sender_identities"
-  | "get_sender_identity";
-
 export const mailersendActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_email",

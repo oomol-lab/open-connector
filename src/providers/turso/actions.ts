@@ -161,15 +161,3 @@ export const tursoActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type TursoActionName =
-  | "list_organizations"
-  | "get_organization"
-  | "list_locations"
-  | "list_groups"
-  | "get_group"
-  | "create_group"
-  | "list_databases"
-  | "get_database"
-  | "create_database"
-  | "delete_database";

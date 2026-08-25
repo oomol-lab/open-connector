@@ -172,16 +172,6 @@ const getLinkStatisticsInputSchema = s.object(
   { optional: ["period", "tz", "clicksChartInterval", "skipTops", "startDate", "endDate"] },
 );
 
-export type ShortIoActionName =
-  | "list_domains"
-  | "get_domain"
-  | "list_links"
-  | "get_link"
-  | "create_link"
-  | "update_link"
-  | "delete_link"
-  | "get_link_statistics";
-
 export const shortIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_domains",

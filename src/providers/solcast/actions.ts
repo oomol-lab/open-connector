@@ -58,11 +58,6 @@ function forecastLikeInput(maxHours: number, description: string): JsonSchema {
   );
 }
 
-export type SolcastActionName =
-  | "get_radiation_and_weather_forecast"
-  | "get_radiation_and_weather_live_estimated_actuals"
-  | "get_radiation_and_weather_historic";
-
 export const solcastActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_radiation_and_weather_forecast",

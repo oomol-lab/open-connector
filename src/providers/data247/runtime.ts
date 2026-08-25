@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { Data247ActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -39,7 +39,7 @@ interface Data247DncOutput {
   dnc: string;
 }
 
-export const data247ActionHandlers: Record<Data247ActionName, Data247Handler> = {
+export const data247ActionHandlers: ProviderActionHandlers<"data247", Data247Handler> = {
   check_balance(_input, context) {
     return requestData247ListOutput({
       apiKey: context.apiKey,

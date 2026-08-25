@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { StatistaActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -25,7 +25,7 @@ interface StatistaRequestOptions {
   query?: StatistaQuery;
 }
 
-export const statistaActionHandlers: Record<StatistaActionName, StatistaActionHandler> = {
+export const statistaActionHandlers: ProviderActionHandlers<"statista", StatistaActionHandler> = {
   async search_statistics(input, context) {
     const payload = await requestStatistaJson(
       {

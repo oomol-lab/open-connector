@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { UnioneActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -32,7 +32,7 @@ interface UnioneRequestOptions {
   body?: Record<string, unknown>;
 }
 
-export const unioneActionHandlers: Record<UnioneActionName, UnioneActionHandler> = {
+export const unioneActionHandlers: ProviderActionHandlers<"unione", UnioneActionHandler> = {
   get_account_info(_input, context) {
     return requestUnioneJson({
       context,

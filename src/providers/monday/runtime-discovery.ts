@@ -1,3 +1,4 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
@@ -14,7 +15,7 @@ import {
   normalizeMondayWorkspace,
 } from "./runtime-common.ts";
 
-export const mondayDiscoveryActionHandlers: Record<string, MondayActionHandler> = {
+export const mondayDiscoveryActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   get_current_user(input, fetcher) {
     return mondayGetCurrentUser(input, fetcher);
   },
@@ -389,8 +390,8 @@ async function mondayListTeams(input: MondayProviderActionInput, fetcher: typeof
     input.apiKey,
     {
       query: `
-        query ListTeams($ids: [ID!], $limit: Int, $page: Int) {
-          teams(ids: $ids, limit: $limit, page: $page) {
+        query ListTeams($ids: [ID!]) {
+          teams(ids: $ids) {
             id
             name
             picture_url
@@ -399,8 +400,6 @@ async function mondayListTeams(input: MondayProviderActionInput, fetcher: typeof
       `,
       variables: compactObject({
         ids: Array.isArray(source.ids) ? source.ids : undefined,
-        limit: typeof source.limit === "number" ? source.limit : undefined,
-        page: typeof source.page === "number" ? source.page : undefined,
       }),
     },
     fetcher,

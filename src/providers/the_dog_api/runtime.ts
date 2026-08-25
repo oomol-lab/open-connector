@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { TheDogApiActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ const defaultTimeoutMs = 30_000;
 type TheDogApiMethod = "GET" | "POST" | "DELETE";
 type TheDogApiHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const theDogApiActionHandlers: Record<TheDogApiActionName, TheDogApiHandler> = {
+export const theDogApiActionHandlers: ProviderActionHandlers<"the_dog_api", TheDogApiHandler> = {
   async search_images(input, context) {
     const format = optionalString(input.format);
     if (format && format !== "json") {

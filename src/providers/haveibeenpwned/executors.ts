@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HaveIBeenPwnedActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -30,7 +30,7 @@ interface HaveIBeenPwnedSubscription {
   IncludesKAnon: boolean;
 }
 
-export const haveibeenpwnedActionHandlers: Record<HaveIBeenPwnedActionName, HaveIBeenPwnedActionHandler> = {
+export const haveibeenpwnedActionHandlers: ProviderActionHandlers<"haveibeenpwned", HaveIBeenPwnedActionHandler> = {
   list_breaches(input, context) {
     return executeListBreaches(input, context);
   },

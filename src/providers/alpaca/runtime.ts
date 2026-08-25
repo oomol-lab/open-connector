@@ -1,5 +1,9 @@
+import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { readAlpacaGrantedScopes } from "./scopes.ts";
 
 const paperTradingBaseUrl = "https://paper-api.alpaca.markets";
 const liveTradingBaseUrl = "https://api.alpaca.markets";
@@ -10,11 +14,21 @@ type Environment = "paper" | "live";
 type ApiFamily = "trading" | "data";
 type Phase = "validate" | "execute";
 
-export interface Credential {
+export interface ApiKeyCredential {
+  authType: "api_key";
   apiKeyId: string;
   apiSecretKey: string;
   environment: Environment;
 }
+
+export interface OAuthCredential {
+  authType: "oauth2";
+  accessToken: string;
+  tokenType: string;
+  environment: Environment;
+}
+
+export type Credential = ApiKeyCredential | OAuthCredential;
 
 export interface ActionContext {
   credential: Credential;
@@ -24,7 +38,7 @@ export interface ActionContext {
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
 
-export const alpacaActionHandlers: Record<string, ActionHandler> = {
+export const alpacaActionHandlers: ProviderActionHandlers<"alpaca", ActionHandler> = {
   async get_account(_input, context) {
     return {
       account: await requestAlpacaJson({
@@ -391,12 +405,56 @@ export async function validateAlpacaCredential(
   input: { apiKey: string; apiKeyId: unknown; environment: unknown },
   fetcher: typeof fetch,
   signal?: AbortSignal,
-): Promise<{
-  profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
-  metadata: Record<string, unknown>;
-}> {
+): Promise<CredentialValidationResult> {
   const credential = readAlpacaCredential(input);
+  return validateResolvedAlpacaCredential(credential, [], credential.apiKeyId, "Alpaca API Key", fetcher, signal);
+}
+
+export async function validateAlpacaOAuthCredential(
+  input: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const grantedScopes = readAlpacaGrantedScopes(input.metadata.scope);
+  let authorizationError: ProviderRequestError | undefined;
+
+  for (const environment of ["live", "paper"] as const) {
+    const credential = readAlpacaOAuthCredential(input, environment);
+    try {
+      return await validateResolvedAlpacaCredential(
+        credential,
+        grantedScopes,
+        `alpaca:${environment}`,
+        `Alpaca ${environment}`,
+        fetcher,
+        signal,
+        "execute",
+      );
+    } catch (error) {
+      if (error instanceof ProviderRequestError && (error.status === 401 || error.status === 403)) {
+        authorizationError = error;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new ProviderRequestError(
+    400,
+    authorizationError?.message ?? "Alpaca OAuth token cannot access a live or paper account",
+    authorizationError?.details,
+  );
+}
+
+async function validateResolvedAlpacaCredential(
+  credential: Credential,
+  grantedScopes: string[],
+  fallbackAccountId: string,
+  fallbackDisplayName: string,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+  phase: Phase = "validate",
+): Promise<CredentialValidationResult> {
   const payload = await requestAlpacaJson({
     family: "trading",
     path: "/v2/account",
@@ -406,7 +464,7 @@ export async function validateAlpacaCredential(
       fetcher,
       signal,
     },
-    phase: "validate",
+    phase,
   });
   const account = normalizeRecord(payload);
   const accountId = optionalString(account.id);
@@ -414,10 +472,10 @@ export async function validateAlpacaCredential(
 
   return {
     profile: {
-      accountId: accountId ?? accountNumber ?? credential.apiKeyId,
-      displayName: accountNumber ?? accountId ?? "Alpaca API Key",
+      accountId: accountId ?? accountNumber ?? fallbackAccountId,
+      displayName: accountNumber ?? accountId ?? fallbackDisplayName,
     },
-    grantedScopes: [],
+    grantedScopes,
     metadata: compactObject({
       accountNumber,
       apiBaseUrl: tradingBaseUrl(credential.environment),
@@ -428,11 +486,28 @@ export async function validateAlpacaCredential(
   };
 }
 
-export function readAlpacaCredential(input: { apiKey: unknown; apiKeyId: unknown; environment: unknown }): Credential {
+export function readAlpacaCredential(input: {
+  apiKey: unknown;
+  apiKeyId: unknown;
+  environment: unknown;
+}): ApiKeyCredential {
   return {
+    authType: "api_key",
     apiSecretKey: requiredInputString(input.apiKey, "apiKey"),
     apiKeyId: requiredInputString(input.apiKeyId, "apiKeyId"),
-    environment: readEnvironment(input.environment),
+    environment: readEnvironment(input.environment, "paper"),
+  };
+}
+
+export function readAlpacaOAuthCredential(
+  input: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  environment: unknown,
+): OAuthCredential {
+  return {
+    authType: "oauth2",
+    accessToken: input.accessToken,
+    tokenType: input.tokenType,
+    environment: readEnvironment(environment),
   };
 }
 
@@ -451,7 +526,7 @@ async function requestAlpacaJson(input: {
       buildAlpacaUrl(input.family, input.path, input.query, input.context.credential.environment),
       {
         method: "GET",
-        headers: buildAlpacaHeaders(input.context.credential),
+        headers: alpacaCredentialHeaders(input.context.credential),
         signal,
       },
     );
@@ -495,7 +570,16 @@ function buildAlpacaUrl(
   return url;
 }
 
-function buildAlpacaHeaders(credential: Credential): HeadersInit {
+/** Build authentication headers for either an Alpaca OAuth token or API key pair. */
+export function alpacaCredentialHeaders(credential: Credential): Record<string, string> {
+  if (credential.authType === "oauth2") {
+    return {
+      accept: "application/json",
+      authorization: `${credential.tokenType} ${credential.accessToken}`,
+      "user-agent": providerUserAgent,
+    };
+  }
+
   return {
     accept: "application/json",
     "APCA-API-KEY-ID": credential.apiKeyId,
@@ -644,8 +728,8 @@ function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
-function readEnvironment(value: unknown): Environment {
-  const normalized = optionalString(value) ?? "paper";
+function readEnvironment(value: unknown, fallback?: Environment): Environment {
+  const normalized = optionalString(value) ?? fallback;
   if (normalized === "paper" || normalized === "live") {
     return normalized;
   }

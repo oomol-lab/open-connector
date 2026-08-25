@@ -1,4 +1,5 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -132,7 +133,7 @@ export function toYouzanExecutionError(error: unknown): ExecutionResult {
   return toProviderExecutionError(error, "Youzan request failed");
 }
 
-export const youzanActionHandlers: Record<string, ProviderRuntimeHandler<YouzanContext>> = {
+export const youzanActionHandlers: ProviderActionHandlers<"youzan", ProviderRuntimeHandler<YouzanContext>> = {
   async get_shop(_input, context) {
     const data = requireObject(await requestYouzanApi("youzan.shop.basic.get", "3.0.0", {}, context), "Youzan shop");
     return { shop: data };

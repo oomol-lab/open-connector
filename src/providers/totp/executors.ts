@@ -4,6 +4,7 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
 import { generateTotpCode, readTotpCredential, totpDigits, totpPeriodSeconds } from "./runtime.ts";
@@ -16,8 +17,8 @@ interface TotpActionContext {
   website: string;
 }
 
-const totpActionHandlers: Record<
-  string,
+const totpActionHandlers: ProviderActionHandlers<
+  "totp",
   (input: Record<string, unknown>, context: TotpActionContext) => Promise<unknown>
 > = {
   async generate_code(_input, context): Promise<unknown> {

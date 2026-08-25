@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { JamieActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -16,7 +16,7 @@ interface JamieContext {
   signal?: AbortSignal;
 }
 
-export const jamieActionHandlers: Record<JamieActionName, ProviderRuntimeHandler<JamieContext>> = {
+export const jamieActionHandlers: ProviderActionHandlers<"jamie", ProviderRuntimeHandler<JamieContext>> = {
   async list_meetings(input, context) {
     assertScopeFilterCompatibility("list_meetings", input, context.keyScope);
     const payload = await jamieGetJson(

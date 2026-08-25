@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { FuxinActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { basename } from "node:path";
@@ -83,7 +83,7 @@ interface FuxinDocumentSourceInput {
   fallbackBaseName: string;
 }
 
-export const fuxinActionHandlers: Record<FuxinActionName, FuxinActionHandler> = {
+export const fuxinActionHandlers: ProviderActionHandlers<"fuxin", FuxinActionHandler> = {
   upload_file(input, context) {
     return fuxinUploadFile(input, context);
   },

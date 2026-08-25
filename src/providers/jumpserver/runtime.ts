@@ -1,14 +1,15 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { SseError } from "@modelcontextprotocol/sdk/client/sse.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
+import { SseError } from "@modelcontextprotocol/client";
+import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionNames, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { jumpServerMcpToolNames } from "./actions.ts";
 
 type JumpServerActionHandler = (input: Record<string, unknown>, context: JumpServerMcpContext) => Promise<unknown>;
@@ -23,11 +24,14 @@ export interface JumpServerMcpContext {
 
 const requestTimeoutMs = 60_000;
 
-export const jumpServerActionHandlers: Record<string, JumpServerActionHandler> = {};
-for (const toolName of jumpServerMcpToolNames) {
-  jumpServerActionHandlers[toolName] = (input: Record<string, unknown>, context: JumpServerMcpContext) =>
-    callJumpServerMcpTool(context, toolName, input);
-}
+export const jumpServerActionHandlers: ProviderActionHandlers<"jumpserver", JumpServerActionHandler> =
+  mapProviderActionNames(
+    "jumpserver",
+    jumpServerMcpToolNames,
+    (toolName): JumpServerActionHandler =>
+      (input, context) =>
+        callJumpServerMcpTool(context, toolName, input),
+  );
 
 export function createJumpServerMcpContext(
   values: Record<string, string>,
@@ -111,7 +115,7 @@ async function callJumpServerMcpTool(
   args: Record<string, unknown>,
 ): Promise<unknown> {
   return withJumpServerMcpClient(context, async (client) => {
-    const result = await client.callTool({ name: toolName, arguments: args }, undefined, { timeout: requestTimeoutMs });
+    const result = await client.callTool({ name: toolName, arguments: args }, { timeout: requestTimeoutMs });
     return normalizeJumpServerMcpToolResult(toolName, result);
   });
 }
@@ -188,7 +192,7 @@ function mapJumpServerMcpError(error: unknown): ProviderRequestError {
       error,
     );
   }
-  if (error instanceof McpError) {
+  if (error instanceof ProtocolError) {
     return new ProviderRequestError(502, `JumpServer MCP request failed: ${error.message}`, error);
   }
   if (isAbortError(error)) {

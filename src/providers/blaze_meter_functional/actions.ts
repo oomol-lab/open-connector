@@ -27,8 +27,6 @@ const getMultiTestInputSchema = s.object(
   { optional: ["populateTests"] },
 );
 
-export type BlazeMeterFunctionalActionName = "list_multi_tests" | "get_multi_test" | "get_active_sessions";
-
 export const blazeMeterFunctionalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_multi_tests",

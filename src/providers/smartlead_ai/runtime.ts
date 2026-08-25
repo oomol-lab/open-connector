@@ -1,5 +1,5 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { SmartleadAiActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ type SmartleadAiActionHandler = (input: Record<string, unknown>, context: ApiKey
 
 export const smartleadAiApiBaseUrl = "https://server.smartlead.ai/api/v1";
 
-export const smartleadAiActionHandlers: Record<SmartleadAiActionName, SmartleadAiActionHandler> = {
+export const smartleadAiActionHandlers: ProviderActionHandlers<"smartlead_ai", SmartleadAiActionHandler> = {
   list_campaigns: executeListCampaigns,
   get_campaign: executeGetCampaign,
   list_email_accounts: executeListEmailAccounts,

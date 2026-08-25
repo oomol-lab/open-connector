@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -27,7 +28,7 @@ interface AutoboundRequestInput {
   phase: AutoboundRequestPhase;
 }
 
-export const autoboundActionHandlers: Record<string, AutoboundActionHandler> = {
+export const autoboundActionHandlers: ProviderActionHandlers<"autobound", AutoboundActionHandler> = {
   async get_account(_input, context) {
     const payload = await requestAutoboundJson({
       context,

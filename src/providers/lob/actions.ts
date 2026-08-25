@@ -56,13 +56,6 @@ const autocompleteInputSchema = s.object(
 const verificationSchema = s.looseObject("A Lob address verification object.");
 const suggestionSchema = s.looseObject("A Lob US address autocomplete suggestion.");
 
-export type LobActionName =
-  | "verify_us_address"
-  | "bulk_verify_us_addresses"
-  | "autocomplete_us_addresses"
-  | "verify_international_address"
-  | "bulk_verify_international_addresses";
-
 export const lobActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "verify_us_address",

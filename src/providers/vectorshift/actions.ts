@@ -136,5 +136,3 @@ export const vectorshiftActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type VectorshiftActionName = "list_pipelines" | "get_pipeline" | "run_pipeline" | "bulk_run_pipeline";

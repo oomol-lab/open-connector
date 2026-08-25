@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -32,7 +33,10 @@ export interface AerisWeatherContext {
   signal?: AbortSignal;
 }
 
-export const aerisweatherActionHandlers: Record<string, ProviderRuntimeHandler<AerisWeatherContext>> = {
+export const aerisweatherActionHandlers: ProviderActionHandlers<
+  "aerisweather",
+  ProviderRuntimeHandler<AerisWeatherContext>
+> = {
   async get_place(input, context) {
     const payload = await requestAerisWeatherJson({
       path: `/places/${encodeURIComponent(requiredString(input.location, "location", inputError))}`,

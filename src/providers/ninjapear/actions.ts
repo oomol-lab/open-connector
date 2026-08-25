@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "ninjapear";
 
-export type NinjapearActionName =
-  | "get_credit_balance"
-  | "check_disposable_email"
-  | "lookup_company_website"
-  | "get_company_details"
-  | "get_employee_count"
-  | "list_customers"
-  | "list_competitors"
-  | "list_products";
-
 const websiteSchema = s.nonEmptyString(
   "The website URL or company name of the target company. A website URL is recommended for precision.",
 );

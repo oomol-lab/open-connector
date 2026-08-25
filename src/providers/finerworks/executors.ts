@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineProviderProxy,
@@ -32,6 +33,13 @@ async function request(path: string, body: Record<string, unknown>, context: Con
     throw new ProviderRequestError(response.status || 502, "FinerWorks request failed", payload);
   return payload;
 }
+const handlers: ProviderActionHandlers<"finerworks", ProviderRuntimeHandler<Context>> = {
+  list_product_types: (input, context) => request("/v3/list_product_types", input, context),
+  list_media_types: (input, context) => request("/v3/list_media_types", input, context),
+  list_style_types: (input, context) => request("/v3/list_style_types", input, context),
+  get_prices: (input, context) => request("/v3/get_prices", input, context),
+};
+
 export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
   service: "finerworks",
   skipDnsValidation: true,
@@ -41,12 +49,7 @@ export const executors: import("../../core/types.ts").ProviderExecutors = define
     if (!appKey) throw new ProviderRequestError(401, "Configure the FinerWorks app key first.");
     return { webApiKey: credential.apiKey, appKey, fetcher, signal: context.signal };
   },
-  handlers: {
-    list_product_types: (input, context) => request("/v3/list_product_types", input, context),
-    list_media_types: (input, context) => request("/v3/list_media_types", input, context),
-    list_style_types: (input, context) => request("/v3/list_style_types", input, context),
-    get_prices: (input, context) => request("/v3/get_prices", input, context),
-  },
+  handlers,
 });
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "finerworks",

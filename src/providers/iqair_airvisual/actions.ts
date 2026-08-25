@@ -115,13 +115,6 @@ const cityDataOutputSchema = s.object("City data returned by IQAir AirVisual.", 
   data: cityDataSchema,
 });
 
-export type IqairAirvisualActionName =
-  | "list_supported_countries"
-  | "list_supported_states"
-  | "list_supported_cities"
-  | "get_nearest_city"
-  | "get_city_data";
-
 export const iqairAirvisualActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_supported_countries",

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { AirtableActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -41,7 +41,7 @@ const airtableValidationPath = "/v0/meta/whoami";
 const airtableListBasesPath = "/v0/meta/bases";
 const airtableGetUrlLengthSoftLimit = 15_000;
 
-export const airtableActionHandlers: Record<AirtableActionName, AirtableActionHandler> = {
+export const airtableActionHandlers: ProviderActionHandlers<"airtable", AirtableActionHandler> = {
   list_bases(input, context) {
     return listBases(input, context);
   },

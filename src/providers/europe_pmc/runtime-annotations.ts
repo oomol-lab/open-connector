@@ -1,10 +1,12 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { europePmcAnnotationsApiBaseUrl, requestEuropePmcJson, requestEuropePmcObject } from "./request.ts";
 
 type AnnotationActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch) => Promise<unknown>;
 
-export const europePmcAnnotationActionHandlers: Record<string, AnnotationActionHandler> = {
+export const europePmcAnnotationActionHandlers: ProviderActionHandlerSubset<"europe_pmc", AnnotationActionHandler> = {
   async get_annotations_by_articles(input: Record<string, unknown>, fetcher: typeof fetch) {
     const articleIds = readArticleIds(input.articles);
     const payload = await requestEuropePmcJson({

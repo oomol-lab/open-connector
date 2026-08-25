@@ -221,19 +221,6 @@ const renderJobSchema = s.object(
   },
 );
 
-export type ViggleActionName =
-  | "get_credit_balance"
-  | "create_character"
-  | "list_characters"
-  | "get_character"
-  | "delete_character"
-  | "import_template"
-  | "list_scenes"
-  | "get_scene"
-  | "delete_scene"
-  | "create_render_job"
-  | "get_render_job_status";
-
 export const viggleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credit_balance",

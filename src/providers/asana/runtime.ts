@@ -1,4 +1,4 @@
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -16,7 +16,7 @@ type AsanaRequestPhase = "validate" | "execute";
 type AsanaRequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 /** The authenticated transport shared by Asana API helpers. */
-export interface AsanaContext extends ApiKeyProviderContext {}
+export interface AsanaContext extends BearerProviderContext {}
 
 /** One Asana action handler backed by an authenticated Asana context. */
 export type AsanaActionHandler = (input: Record<string, unknown>, context: AsanaContext) => Promise<unknown>;
@@ -111,7 +111,7 @@ export async function requestAsana(input: AsanaRequestOptions): Promise<Record<s
   try {
     response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
-      headers: createAsanaHeaders(input.context.apiKey, requestBody.isJson),
+      headers: createAsanaHeaders(input.context.accessToken, requestBody.isJson),
       body: requestBody.body,
       signal: input.context.signal,
     });
@@ -229,10 +229,10 @@ function isJsonObject(body: AsanaRequestOptions["body"]): body is Record<string,
   );
 }
 
-function createAsanaHeaders(apiKey: string, isJson: boolean): Headers {
+function createAsanaHeaders(accessToken: string, isJson: boolean): Headers {
   const headers = new Headers({
     accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    authorization: `Bearer ${accessToken}`,
     "user-agent": providerUserAgent,
   });
   if (isJson) {

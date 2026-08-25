@@ -5,15 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "zipcodebase";
 
-export type ZipcodebaseActionName =
-  | "get_status"
-  | "search_postal_codes"
-  | "calculate_distance"
-  | "list_postal_codes_within_radius"
-  | "match_postal_codes_by_distance"
-  | "list_postal_codes_by_city"
-  | "list_postal_codes_by_state";
-
 const postalCodeSchema = s.nonEmptyString("The postal code to query.");
 const postalCodesSchema = s.array(
   "The postal codes to query.",

@@ -242,12 +242,3 @@ export const fernActions: ActionDefinition[] = [
     outputSchema: transactionSchema,
   }),
 ];
-
-export type FernActionName =
-  | "list_customers"
-  | "get_customer"
-  | "list_payment_accounts"
-  | "get_payment_account"
-  | "get_exchange_rate"
-  | "list_transactions"
-  | "get_transaction";

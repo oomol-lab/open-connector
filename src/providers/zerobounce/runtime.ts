@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ZerobounceActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -24,7 +24,7 @@ const zerobounceDefaultRequestTimeoutMs = 30_000;
 type ZerobounceRequestPhase = "validate" | "execute";
 type ZerobounceActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-export const zerobounceActionHandlers: Record<ZerobounceActionName, ZerobounceActionHandler> = {
+export const zerobounceActionHandlers: ProviderActionHandlers<"zerobounce", ZerobounceActionHandler> = {
   get_credit_balance(_input, context) {
     return requestZerobounceCreditBalance({
       apiKey: context.apiKey,

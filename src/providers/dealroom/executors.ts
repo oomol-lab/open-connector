@@ -1,12 +1,12 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "dealroom";
 const baseUrl = "https://api.dealroom.co/api/v1/";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, {
+const handlers: ProviderActionHandlers<"dealroom", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   search_companies(input, context) {
     return search("companies", input, context);
   },
@@ -20,7 +20,9 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
       throw new ProviderRequestError(400, "dealroom transactions limit plus offset cannot exceed 100");
     return search("transactions", input, context);
   },
-});
+};
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers);
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

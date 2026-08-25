@@ -97,17 +97,6 @@ const listOutputSchema = (description: string, itemName: string, itemSchema: Jso
     raw: s.looseObject("The raw Torii response object."),
   });
 
-export type ToriiActionName =
-  | "get_organization"
-  | "list_apps"
-  | "get_app"
-  | "list_users"
-  | "get_user"
-  | "list_contracts"
-  | "get_contract"
-  | "list_transactions"
-  | "list_workflows";
-
 export const toriiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",

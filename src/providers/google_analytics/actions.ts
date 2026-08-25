@@ -105,11 +105,62 @@ const filterExpressionSchema = s.looseObject(
   },
 );
 
-const orderBySchema = s.looseObject(
-  {},
-  {
-    description: "A Google Analytics Data API OrderBy object.",
-  },
+const orderByDescendingSchema = s.boolean("Whether to sort the values in descending order.");
+const orderBySchema = s.anyOf(
+  [
+    s.object(
+      {
+        metric: s.object(
+          { metricName: s.nonEmptyString("The requested metric name to sort by.") },
+          { description: "The metric ordering configuration." },
+        ),
+        desc: orderByDescendingSchema,
+      },
+      { description: "A Google Analytics metric ordering rule.", required: ["metric"] },
+    ),
+    s.object(
+      {
+        dimension: s.object(
+          {
+            dimensionName: s.nonEmptyString("The requested dimension name to sort by."),
+            orderType: s.stringEnum(
+              ["ORDER_TYPE_UNSPECIFIED", "ALPHANUMERIC", "CASE_INSENSITIVE_ALPHANUMERIC", "NUMERIC"],
+              { description: "The rule used to order dimension string values." },
+            ),
+          },
+          { description: "The dimension ordering configuration.", required: ["dimensionName"] },
+        ),
+        desc: orderByDescendingSchema,
+      },
+      { description: "A Google Analytics dimension ordering rule.", required: ["dimension"] },
+    ),
+    s.object(
+      {
+        pivot: s.object(
+          {
+            metricName: s.nonEmptyString("The requested metric name to sort by."),
+            pivotSelections: s.array(
+              s.object(
+                {
+                  dimensionName: s.nonEmptyString("The pivot dimension name."),
+                  dimensionValue: s.string("The pivot dimension value."),
+                },
+                {
+                  description: "A dimension name and value pair selecting a pivot column.",
+                  required: ["dimensionName", "dimensionValue"],
+                },
+              ),
+              { description: "The dimension name and value pairs selecting the pivot column group." },
+            ),
+          },
+          { description: "The pivot ordering configuration.", required: ["metricName"] },
+        ),
+        desc: orderByDescendingSchema,
+      },
+      { description: "A Google Analytics pivot ordering rule.", required: ["pivot"] },
+    ),
+  ],
+  { description: "A Google Analytics Data API OrderBy object." },
 );
 
 const comparisonSchema = s.looseObject(

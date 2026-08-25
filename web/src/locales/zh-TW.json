@@ -126,6 +126,22 @@
   },
   "providers": {
     "catalogTitle": "服務提供者",
+    "viewLabel": "服務提供者檢視",
+    "views": { "manage": "我的連線", "discover": "探索應用程式" },
+    "discovery": {
+      "browseByTask": "依任務瀏覽",
+      "explore": "探索應用程式",
+      "scenarios": {
+        "ai": { "title": "AI 與 Agent", "description": "模型、Agent、搜尋與媒體生成" },
+        "crossBorderEcommerce": { "title": "電商營運", "description": "店面、訂單、履約與市場資料" },
+        "communication": { "title": "團隊協作", "description": "訊息、電子郵件、會議與通知" },
+        "docs": { "title": "文件與知識", "description": "文件、知識庫、雲端硬碟與試算表" },
+        "productivity": { "title": "專案與效率", "description": "專案、工作、行程與自動化" },
+        "marketing": { "title": "行銷與成長", "description": "廣告、內容、潛在客戶與成長資料" },
+        "dataStorage": { "title": "資料與分析", "description": "資料倉儲、資料庫、BI 與儲存" },
+        "developer": { "title": "開發與雲端", "description": "程式碼、部署、雲端服務與可觀測性" }
+      }
+    },
     "brandNotice": "第三方名稱、標誌及商標歸其各自權利人所有，此處僅用於識別對應的服務提供者。本專案不主張擁有相關權利。再散布本專案或將其用於商業用途的使用者，應自行查閱適用的品牌規範，並依其具體用途取得所需許可。",
     "searchPlaceholder": "搜尋服務提供者",
     "statusFilterLabel": "服務提供者狀態",
@@ -241,6 +257,9 @@
       "resetOAuthClient": "重設預設 App"
     },
     "oauthClientSettings": {
+      "setupTitle": "建立 OAuth 應用程式",
+      "setupIntro": "在 {{name}} 註冊一個 OAuth 應用程式，然後將其憑證貼到下方。",
+      "setupDocsLink": "開啟 {{name}} 開發者入口網站",
       "callbackUrl": "Callback URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
@@ -420,6 +439,8 @@
       },
       "layerSummary": "操作：{{action}} · 代理：{{proxy}}",
       "tokenSummary": "操作允許規則 {{allowed}} 條 · 操作阻止規則 {{blocked}} 條 · Proxy 授權 {{proxies}} 條 · 仍受執行階段基準限制",
+      "connectionsUnrestricted": "全部連線",
+      "connectionsRestricted": "連線：{{names}}",
       "editor": {
         "title": "編輯執行階段策略",
         "description": "儲存前會結合部署約束預覽修改影響。",
@@ -463,7 +484,15 @@
         "noRules": "這個清單中暫無規則。",
         "actionAllowRequired": "請至少新增一條操作允許規則，或選擇不額外限制。",
         "proxyAllowRequired": "請至少新增一條提供商允許規則，或選擇不額外限制。",
-        "tokenHint": "操作規則與 Proxy 授權彼此獨立。Proxy 授權清單為空時，權杖不能傳送提供商代理請求。",
+        "connectionsTitle": "連線存取",
+        "connectionsUnrestrictedHint": "此權杖可以使用任何已儲存的連線；請求未指定名稱時使用 default。",
+        "connectionsRestrictedHint": "此權杖只能使用下方選取的提供商連線。",
+        "connectionsList": "允許的連線",
+        "connectionsRequired": "請至少選取一個連線，或選擇不額外限制。",
+        "tooManyConnections": "連線清單最多包含 128 個連線。",
+        "connectionCount": "{{count}} 個連線",
+        "noConnections": "這個清單中暫無連線。",
+        "connectionsDefaultHint": "選取某個提供商的 default 連線後，權杖才能執行該提供商未指定連線名稱的 HTTP、MCP 或代理請求。",
         "discard": "放棄修改",
         "preview": "預覽影響"
       },

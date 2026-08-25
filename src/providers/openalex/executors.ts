@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { OpenAlexActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -20,7 +20,7 @@ const openalexEntities = new Set(openalexEntityValues);
 type OpenAlexPhase = "validate" | "execute";
 type OpenAlexActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const openalexActionHandlers: Record<OpenAlexActionName, OpenAlexActionHandler> = {
+export const openalexActionHandlers: ProviderActionHandlers<"openalex", OpenAlexActionHandler> = {
   async list_entities(input, context) {
     const entity = readEntity(input.entity);
     const payload = await requestOpenAlexJson({

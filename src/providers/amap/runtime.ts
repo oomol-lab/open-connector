@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -38,7 +39,7 @@ type AmapResponsePayload = Record<string, unknown> & {
   infocode?: unknown;
 };
 
-export const amapActionHandlers: Record<string, AmapActionHandler> = {
+export const amapActionHandlers: ProviderActionHandlers<"amap", AmapActionHandler> = {
   geocode(input, runtime) {
     return executeGeocode(input, runtime);
   },

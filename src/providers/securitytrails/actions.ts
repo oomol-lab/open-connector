@@ -19,8 +19,6 @@ const pageField = s.integer("The 1-based results page to fetch from the associat
   minimum: 1,
 });
 
-export type SecuritytrailsActionName = "get_domain" | "get_subdomains" | "find_associated_domains" | "get_domain_ssl";
-
 export const securitytrailsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_domain",

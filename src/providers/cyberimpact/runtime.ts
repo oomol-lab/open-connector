@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CyberimpactActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -11,7 +11,7 @@ const cyberimpactApiBaseUrl = "https://api.cyberimpact.com";
 type CyberimpactPhase = "validate" | "execute";
 type CyberimpactHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const cyberimpactActionHandlers: Record<CyberimpactActionName, CyberimpactHandler> = {
+export const cyberimpactActionHandlers: ProviderActionHandlers<"cyberimpact", CyberimpactHandler> = {
   list_members(input, context) {
     return listRecords("members", input, context);
   },

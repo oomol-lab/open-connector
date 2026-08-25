@@ -91,17 +91,6 @@ function idInputSchema(description: string): JsonSchema {
   return s.object(description, { id: s.positiveInteger("Reply.io resource ID.") });
 }
 
-export type ReplyIoActionName =
-  | "get_current_user"
-  | "list_contacts"
-  | "create_contact"
-  | "get_contact"
-  | "update_contact"
-  | "list_sequences"
-  | "get_sequence"
-  | "start_sequence"
-  | "pause_sequence";
-
 export const replyIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

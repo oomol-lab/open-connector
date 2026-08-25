@@ -72,32 +72,6 @@ const optionalProjectFields = Object.keys(projectFields);
 const optionalTaskFields = Object.keys(taskFields);
 const optionalTimeEntryFields = Object.keys(timeEntryFields);
 
-export type TogglActionName =
-  | "get_current_user"
-  | "list_workspaces"
-  | "get_workspace"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "delete_project"
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "delete_task"
-  | "list_tags"
-  | "create_tag"
-  | "update_tag"
-  | "delete_tag"
-  | "list_time_entries"
-  | "get_current_time_entry"
-  | "get_time_entry"
-  | "create_time_entry"
-  | "update_time_entry"
-  | "stop_time_entry"
-  | "delete_time_entry";
-
 export const togglActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

@@ -1,4 +1,5 @@
 import type { ExecutionContext } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -19,8 +20,8 @@ export async function createLunoContext(context: ExecutionContext, fetcher: type
     signal: context.signal,
   };
 }
-export const lunoActionHandlers: Record<
-  string,
+export const lunoActionHandlers: ProviderActionHandlers<
+  "luno",
   (input: Record<string, unknown>, context: LunoContext) => Promise<unknown>
 > = {
   get_ticker: (input, context) =>

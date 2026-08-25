@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -42,7 +43,7 @@ export interface AmiliaContext {
   signal?: AbortSignal;
 }
 
-export const amiliaActionHandlers: Record<string, ProviderRuntimeHandler<AmiliaContext>> = {
+export const amiliaActionHandlers: ProviderActionHandlers<"amilia", ProviderRuntimeHandler<AmiliaContext>> = {
   async list_programs(input, context) {
     const payload = await requestAmiliaJson({
       context,

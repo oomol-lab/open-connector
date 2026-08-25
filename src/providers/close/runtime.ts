@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { CloseActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -17,7 +17,7 @@ export const closeDefaultRequestTimeoutMs = 30_000;
 type CloseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type CloseQueryValue = string | number | undefined;
 
-export const closeActionHandlers: Record<CloseActionName, CloseActionHandler> = {
+export const closeActionHandlers: ProviderActionHandlers<"close", CloseActionHandler> = {
   list_leads(input, context) {
     return listLeads(input, context);
   },

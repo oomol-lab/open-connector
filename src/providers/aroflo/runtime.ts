@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
@@ -14,7 +15,7 @@ import { providerUserAgent, ProviderRequestError, readProviderJsonBody } from ".
 
 export const arofloApiBaseUrl = "https://api.aroflo.com/v2";
 
-export const arofloActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const arofloActionHandlers: ProviderActionHandlers<"aroflo", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_health_status(_input, context) {
     const object = await request("/healthcheck", {}, context, "execute");
     return compactObject({

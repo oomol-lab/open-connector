@@ -7,7 +7,8 @@ import type {
 } from "../../core/types.ts";
 import type { CloudflareR2Context } from "./runtime.ts";
 
-import { optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
+import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -22,7 +23,7 @@ import {
 import {
   cloudflareR2ActionHandlers,
   cloudflareR2ApiBaseUrl,
-  requestCloudflareR2Accounts,
+  requestCloudflareR2CurrentUser,
   validateCloudflareR2Credential,
 } from "./runtime.ts";
 
@@ -50,6 +51,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareR2
         ),
         metadata: credential.metadata,
         fetcher,
+        transitFiles: context.transitFiles,
         signal: context.signal,
       };
     }
@@ -60,6 +62,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareR2
         accountId: optionalString(credential.metadata.accountId),
         metadata: credential.metadata,
         fetcher,
+        transitFiles: context.transitFiles,
         signal: context.signal,
       };
     }
@@ -116,33 +119,19 @@ export const credentialValidators: CredentialValidators = {
     return validateCloudflareR2Credential(input.values, fetcher, signal);
   },
   async oauth2(input, { fetcher, signal }): Promise<CredentialValidationResult> {
-    const result = await requestCloudflareR2Accounts(input.accessToken, fetcher, signal, { page: 1, perPage: 50 });
-    if (result.accounts.length === 1) {
-      const account = result.accounts[0]!;
-      return {
-        profile: {
-          accountId: account.id,
-          displayName: account.name ?? "Cloudflare R2",
-        },
-        grantedScopes: input.profile.grantedScopes,
-        metadata: {
-          accountId: account.id,
-          accountName: account.name,
-          accountType: account.type,
-          validationEndpoint: "/accounts?page=1&per_page=50",
-        },
-      };
-    }
+    const user = await requestCloudflareR2CurrentUser(input.accessToken, fetcher, signal);
+    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare R2");
     return {
       profile: {
-        accountId: input.profile.accountId,
-        displayName: "Cloudflare R2",
+        accountId: user.userId,
+        displayName,
       },
       grantedScopes: input.profile.grantedScopes,
-      metadata: {
-        availableAccounts: result.accounts,
-        validationEndpoint: "/accounts?page=1&per_page=50",
-      },
+      metadata: compactObject({
+        userId: user.userId,
+        email: user.email,
+        validationEndpoint: "/user",
+      }),
     };
   },
 };

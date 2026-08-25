@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { HackerrankWorkActionName } from "./actions.ts";
 
 import { optionalIntegerLike, optionalRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -16,7 +16,7 @@ type HackerrankWorkActionHandler = (
   context: HackerrankWorkActionContext,
 ) => Promise<unknown>;
 
-export const hackerrankWorkActionHandlers: Record<HackerrankWorkActionName, HackerrankWorkActionHandler> = {
+export const hackerrankWorkActionHandlers: ProviderActionHandlers<"hackerrank_work", HackerrankWorkActionHandler> = {
   async list_tests(input, context) {
     const payload = await requestHackerrankWorkJson(
       "/tests",

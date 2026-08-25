@@ -219,6 +219,61 @@ const imageToVideoModels = [
   "I2V-01",
 ];
 
+const textToAudioModels = [
+  "speech-2.8-hd",
+  "speech-2.8-turbo",
+  "speech-2.6-hd",
+  "speech-2.6-turbo",
+  "speech-02-hd",
+  "speech-02-turbo",
+  "speech-01-hd",
+  "speech-01-turbo",
+];
+
+const textToAudioLanguageBoosts = [
+  "Chinese",
+  "Chinese,Yue",
+  "English",
+  "Arabic",
+  "Russian",
+  "Spanish",
+  "French",
+  "Portuguese",
+  "German",
+  "Turkish",
+  "Dutch",
+  "Ukrainian",
+  "Vietnamese",
+  "Indonesian",
+  "Japanese",
+  "Italian",
+  "Korean",
+  "Thai",
+  "Polish",
+  "Romanian",
+  "Greek",
+  "Czech",
+  "Finnish",
+  "Hindi",
+  "Bulgarian",
+  "Danish",
+  "Hebrew",
+  "Malay",
+  "Persian",
+  "Slovak",
+  "Swedish",
+  "Croatian",
+  "Filipino",
+  "Hungarian",
+  "Norwegian",
+  "Slovenian",
+  "Catalan",
+  "Nynorsk",
+  "Tamil",
+  "Afrikaans",
+  "auto",
+];
+
 const textToVideoModelSchema = s.stringEnum(textToVideoModels, {
   description: "MiniMax text-to-video model to invoke, for example MiniMax-Hailuo-2.3.",
   default: "MiniMax-Hailuo-2.3",
@@ -356,6 +411,137 @@ const downloadVideoInputSchema = s.object("Input parameters for retrieving a gen
   file_id: trimmedNonEmptyString("Identifier of the generated video file to retrieve."),
 });
 
+const textToAudioVoiceSettingSchema = s.looseObject("MiniMax voice settings.", {
+  voice_id: s.string(
+    "Identifier of the system, cloned, or generated voice to speak with. Required unless timbre_weights mixes voices.",
+  ),
+  speed: s.number("Speech speed where higher values speak faster. MiniMax defaults to 1.", {
+    minimum: 0.5,
+    maximum: 2,
+  }),
+  vol: s.number("Speech volume where higher values are louder. MiniMax defaults to 1.", {
+    exclusiveMinimum: 0,
+    maximum: 10,
+  }),
+  pitch: s.integer("Speech pitch offset where 0 keeps the original pitch.", { minimum: -12, maximum: 12 }),
+  emotion: s.stringEnum("Emotion of the synthesized speech. MiniMax picks one from the text when omitted.", [
+    "happy",
+    "sad",
+    "angry",
+    "fearful",
+    "disgusted",
+    "surprised",
+    "calm",
+    "fluent",
+    "whisper",
+  ]),
+  text_normalization: s.boolean(
+    "Whether to normalize Chinese and English text, which reads digits better at the cost of latency.",
+  ),
+  latex_read: s.boolean(
+    "Whether to read LaTeX formulas wrapped in double dollar signs. Chinese only, and it forces language_boost to Chinese.",
+  ),
+});
+
+const textToAudioAudioSettingSchema = s.looseObject("MiniMax audio settings.", {
+  sample_rate: s.anyOf(
+    [s.literal(8000), s.literal(16000), s.literal(22050), s.literal(24000), s.literal(32000), s.literal(44100)],
+    {
+      description: "Sample rate of the generated audio in hertz. MiniMax defaults to 32000.",
+    },
+  ),
+  bitrate: s.anyOf([s.literal(32000), s.literal(64000), s.literal(128000), s.literal(256000)], {
+    description: "Bitrate of the generated audio, applied to mp3 output only. MiniMax defaults to 128000.",
+  }),
+  format: s.stringEnum(
+    "Format of the generated audio. MiniMax defaults to mp3, pcmu_raw and pcmu_wav are G.711 mu-law, and opus is Ogg/Opus.",
+    ["mp3", "pcm", "flac", "wav", "pcmu_raw", "pcmu_wav", "opus"],
+  ),
+  channel: s.anyOf([s.literal(1), s.literal(2)], {
+    description: "Number of audio channels where 1 is mono and 2 is stereo. MiniMax defaults to 1.",
+  }),
+});
+
+const textToAudioPronunciationDictSchema = s.looseObject("MiniMax pronunciation overrides.", {
+  tone: s.stringArray(
+    "Pronunciation rules written as original/replacement, for example omg/oh my god. Replacements accept plain text, parenthesized pinyin with tone digits, parenthesized IPA, or Japanese kana.",
+    { itemDescription: "One original/replacement pronunciation rule." },
+  ),
+});
+
+const textToAudioVoiceModifySchema = s.looseObject(
+  "MiniMax voice effect settings. Non-streaming synthesis supports mp3, wav, and flac output.",
+  {
+    pitch: s.integer("Voice depth where -100 is deepest and 100 is brightest.", { minimum: -100, maximum: 100 }),
+    intensity: s.integer("Voice intensity where -100 is strongest and 100 is softest.", {
+      minimum: -100,
+      maximum: 100,
+    }),
+    timbre: s.integer("Voice timbre where -100 is fullest and 100 is crispest.", { minimum: -100, maximum: 100 }),
+    sound_effects: s.stringEnum("Sound effect to apply. Only one effect can be active at a time.", [
+      "spacious_echo",
+      "auditorium_echo",
+      "lofi_telephone",
+      "robotic",
+    ]),
+  },
+);
+
+const textToAudioTimbreWeightSchema = s.object("One voice and its weight in the mixed timbre.", {
+  voice_id: trimmedNonEmptyString("Identifier of the voice to mix."),
+  weight: s.integer("Weight of this voice, where a higher value sounds more like it.", { minimum: 1, maximum: 100 }),
+});
+
+const textToAudioInputSchema = s.object(
+  "Request body for MiniMax text-to-audio synthesis.",
+  {
+    model: s.stringEnum("MiniMax speech model to invoke.", textToAudioModels),
+    text: s.string({
+      description: "Text to synthesize into audio. Must be shorter than 10,000 characters.",
+      minLength: 1,
+      maxLength: 9999,
+      pattern: "\\S",
+    }),
+    stream: s.literal(false, { description: "Set to false for the non-streaming connector action." }),
+    language_boost: s.stringEnum(
+      "Language or dialect hint that improves pronunciation. Set auto to let MiniMax detect it.",
+      textToAudioLanguageBoosts,
+    ),
+    output_format: s.stringEnum(
+      "How MiniMax delivers the audio. url returns a download link valid for 24 hours, while hex, the MiniMax default, inlines hex-encoded audio, so prefer url for long text.",
+      ["url", "hex"],
+    ),
+    voice_setting: textToAudioVoiceSettingSchema,
+    timbre_weights: s.array(
+      "Voices to blend into one mixed timbre. Leave voice_setting.voice_id empty when mixing voices.",
+      textToAudioTimbreWeightSchema,
+      { minItems: 1, maxItems: 4 },
+    ),
+    pronunciation_dict: textToAudioPronunciationDictSchema,
+    audio_setting: textToAudioAudioSettingSchema,
+    voice_modify: textToAudioVoiceModifySchema,
+    subtitle_enable: s.boolean("Whether MiniMax also generates a subtitle file and returns its download link."),
+    subtitle_type: s.stringEnum("Granularity of the generated subtitle timestamps. MiniMax defaults to sentence.", [
+      "sentence",
+      "word",
+    ]),
+  },
+  {
+    optional: [
+      "stream",
+      "language_boost",
+      "output_format",
+      "voice_setting",
+      "timbre_weights",
+      "pronunciation_dict",
+      "audio_setting",
+      "voice_modify",
+      "subtitle_enable",
+      "subtitle_type",
+    ],
+  },
+);
+
 const minimaxBaseRespSchema = s.looseRequiredObject(
   "MiniMax base response wrapper.",
   {
@@ -460,6 +646,55 @@ const videoFileOutputSchema = s.looseRequiredObject(
   { optional: ["file", "base_resp"] },
 );
 
+const textToAudioOutputSchema = s.looseRequiredObject(
+  "MiniMax text-to-audio response.",
+  {
+    data: s.nullable(
+      s.looseRequiredObject(
+        "Synthesized audio payload. MiniMax may return null.",
+        {
+          audio: s.string("Hex-encoded audio, or a download URL when output_format is url."),
+          status: s.integer("Synthesis status where 1 means synthesizing and 2 means finished."),
+          subtitle_file: s.string("Download link for the generated subtitle file."),
+        },
+        { optional: ["audio", "status", "subtitle_file"] },
+      ),
+    ),
+    extra_info: s.looseRequiredObject(
+      "Additional information about the synthesized audio.",
+      {
+        audio_length: s.integer("Audio duration in milliseconds."),
+        audio_sample_rate: s.integer("Sample rate of the generated audio."),
+        audio_size: s.integer("Size of the generated audio in bytes."),
+        bitrate: s.integer("Bitrate of the generated audio."),
+        audio_format: s.string("Format of the generated audio, for example mp3, pcm, or flac."),
+        audio_channel: s.integer("Number of audio channels where 1 is mono and 2 is stereo."),
+        invisible_character_ratio: s.number("Share of invalid characters in the submitted text."),
+        usage_characters: s.integer("Number of billable characters used by this synthesis."),
+        word_count: s.integer(
+          "Spoken word count covering Chinese characters, digits, and letters, but not punctuation.",
+        ),
+      },
+      {
+        optional: [
+          "audio_length",
+          "audio_sample_rate",
+          "audio_size",
+          "bitrate",
+          "audio_format",
+          "audio_channel",
+          "invisible_character_ratio",
+          "usage_characters",
+          "word_count",
+        ],
+      },
+    ),
+    trace_id: s.string("MiniMax session identifier used when reporting an issue."),
+    base_resp: minimaxBaseRespSchema,
+  },
+  { optional: ["data", "extra_info", "trace_id", "base_resp"] },
+);
+
 export const minimaxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
@@ -538,5 +773,11 @@ export const minimaxActions: ActionDefinition[] = [
     description: "Retrieve the download URL and metadata for a generated MiniMax video file.",
     inputSchema: downloadVideoInputSchema,
     outputSchema: videoFileOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "text_to_audio",
+    description: "Synthesize text into audio with the MiniMax T2A v2 API.",
+    inputSchema: textToAudioInputSchema,
+    outputSchema: textToAudioOutputSchema,
   }),
 ];

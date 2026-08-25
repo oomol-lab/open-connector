@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { FinageActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -22,7 +22,7 @@ type FinageQueryValue = string | number | boolean | undefined;
 type FinageActionContext = ApiKeyProviderContext;
 type FinageActionHandler = (input: Record<string, unknown>, context: FinageActionContext) => Promise<unknown>;
 
-export const finageActionHandlers: Record<FinageActionName, FinageActionHandler> = {
+export const finageActionHandlers: ProviderActionHandlers<"finage", FinageActionHandler> = {
   list_stock_symbols(input, context) {
     return listStockSymbols(input, context);
   },

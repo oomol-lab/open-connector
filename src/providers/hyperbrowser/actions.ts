@@ -238,10 +238,3 @@ export const hyperbrowserActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type HyperbrowserActionName =
-  | "fetch_page"
-  | "search_web"
-  | "start_web_crawl"
-  | "get_web_crawl_status"
-  | "get_web_crawl_results";

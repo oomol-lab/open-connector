@@ -246,31 +246,6 @@ const listVoucherPoolsOutputSchema = s.object("A page of Chatarmin voucher pools
   pagination: s.nullable(paginationOutputSchema),
 });
 
-export type ChatarminActionName =
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "send_message"
-  | "list_campaigns"
-  | "get_campaign"
-  | "list_flows"
-  | "get_flow"
-  | "get_flow_analytics"
-  | "get_flow_contact_analytics"
-  | "list_voucher_pools"
-  | "get_voucher_pool"
-  | "create_voucher_pool"
-  | "update_voucher_pool"
-  | "add_or_replace_voucher_codes"
-  | "remove_voucher_code"
-  | "delete_voucher_pool"
-  | "list_webhooks"
-  | "create_webhook"
-  | "update_webhook"
-  | "delete_webhook";
-
 export const chatarminActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",

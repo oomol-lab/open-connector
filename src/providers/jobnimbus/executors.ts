@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { JobnimbusActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -41,7 +41,7 @@ interface JobnimbusRequestInput {
   body?: Record<string, unknown>;
 }
 
-export const jobnimbusActionHandlers: Record<JobnimbusActionName, JobnimbusActionHandler> = {
+export const jobnimbusActionHandlers: ProviderActionHandlers<"jobnimbus", JobnimbusActionHandler> = {
   async list_contacts(input, context) {
     const payload = await requestJobnimbus({
       path: "/contacts",

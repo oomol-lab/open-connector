@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { AppcircleActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -33,7 +34,7 @@ type AppcircleActionHandler = (
   fetcher: typeof fetch,
 ) => Promise<unknown>;
 
-export const appcircleActionHandlers: Record<AppcircleActionName, AppcircleActionHandler> = {
+export const appcircleActionHandlers: ProviderActionHandlers<"appcircle", AppcircleActionHandler> = {
   async list_organizations(input, credential, fetcher) {
     const payload = await requestAppcircleJson({
       path: "/identity/v1/organizations",
@@ -57,7 +58,7 @@ export const appcircleActionHandlers: Record<AppcircleActionName, AppcircleActio
   async list_enterprise_store_profiles(input, credential, fetcher) {
     return listProfiles("/store/v2/profiles", input, credential, fetcher);
   },
-} satisfies Record<AppcircleActionName, AppcircleActionHandler>;
+};
 
 export async function validateAppcircleCredential(
   input: Record<string, string>,

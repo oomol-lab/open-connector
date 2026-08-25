@@ -64,8 +64,6 @@ const verifyPhoneNumberOutputSchema = s.object(
   },
 );
 
-export type VeriphoneActionName = "get_credits" | "verify_phone_number";
-
 export const veriphoneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",

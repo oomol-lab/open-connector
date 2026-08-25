@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DeskTimeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -30,7 +30,7 @@ interface NormalizedProject {
   raw: Record<string, unknown>;
 }
 
-export const desktimeActionHandlers: Record<DeskTimeActionName, DeskTimeHandler> = {
+export const desktimeActionHandlers: ProviderActionHandlers<"desktime", DeskTimeHandler> = {
   async get_company(_input, context) {
     const payload = await requestDeskTimeJson({
       path: "/company",

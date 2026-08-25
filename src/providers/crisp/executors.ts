@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { CrispActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -56,7 +56,7 @@ interface CrispEnvelope {
   data: unknown;
 }
 
-export const crispActionHandlers: Record<CrispActionName, CrispActionHandler> = {
+export const crispActionHandlers: ProviderActionHandlers<"crisp", CrispActionHandler> = {
   async get_website(_input, context) {
     return {
       website: normalizeCrispWebsite(await crispGetData(buildWebsitePath(context.websiteId), context), context),

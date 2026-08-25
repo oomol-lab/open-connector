@@ -155,11 +155,3 @@ export const jazzhrActions: ProviderActionDefinition[] = [
     outputSchema: singleOutputSchema("JazzHR user lookup result.", "user"),
   }),
 ];
-
-export type JazzhrActionName =
-  | "list_jobs"
-  | "get_job"
-  | "list_applicants"
-  | "get_applicant"
-  | "list_users"
-  | "get_user";

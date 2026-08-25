@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { MailblusterActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -17,7 +17,7 @@ const mailblusterDefaultRequestTimeoutMs = 30_000;
 
 type MailblusterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const mailblusterActionHandlers: Record<MailblusterActionName, MailblusterActionHandler> = {
+export const mailblusterActionHandlers: ProviderActionHandlers<"mailbluster", MailblusterActionHandler> = {
   list_fields(_input, context) {
     return requestMailblusterJson({
       context,

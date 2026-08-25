@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LoopsActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -22,7 +22,7 @@ const loopsApiVersion = "v1";
 
 type LoopsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const loopsActionHandlers: Record<LoopsActionName, LoopsActionHandler> = {
+export const loopsActionHandlers: ProviderActionHandlers<"loops", LoopsActionHandler> = {
   create_contact(input, context) {
     return loopsRequest(context, "/contacts/create", { method: "POST", body: buildContactBody(input) });
   },

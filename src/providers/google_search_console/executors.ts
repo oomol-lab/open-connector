@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -8,7 +9,7 @@ import {
   pickOptionalInteger,
   pickOptionalString as pickNonEmptyString,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "google_search_console";
@@ -38,7 +39,7 @@ type UrlInspectionPayload = {
   inspectionResult?: unknown;
 };
 
-export const googleSearchConsoleActionHandlers: Record<string, ActionHandler> = {
+export const googleSearchConsoleActionHandlers: ProviderActionHandlers<"google_search_console", ActionHandler> = {
   list_sites(input, deps) {
     return listSites(input, deps);
   },

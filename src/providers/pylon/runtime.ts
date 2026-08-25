@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PylonActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -12,7 +12,7 @@ type PylonPhase = "validate" | "execute";
 type PylonQueryValue = string | number | boolean | undefined;
 type PylonActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const pylonActionHandlers: Record<PylonActionName, PylonActionHandler> = {
+export const pylonActionHandlers: ProviderActionHandlers<"pylon", PylonActionHandler> = {
   async get_me(_input, context) {
     const payload = await requestPylonJson({
       path: "/me",

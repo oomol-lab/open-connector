@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { PdfApiIoActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -18,7 +18,7 @@ type PdfApiIoRequestPhase = "validate" | "execute";
 type PdfApiIoActionContext = ApiKeyProviderContext;
 type PdfApiIoActionHandler = (input: Record<string, unknown>, context: PdfApiIoActionContext) => Promise<unknown>;
 
-export const pdfApiIoActionHandlers: Record<PdfApiIoActionName, PdfApiIoActionHandler> = {
+export const pdfApiIoActionHandlers: ProviderActionHandlers<"pdf_api_io", PdfApiIoActionHandler> = {
   async list_templates(_input, context) {
     const payload = await requestPdfApiIo({
       path: pdfApiIoTemplatesPath,

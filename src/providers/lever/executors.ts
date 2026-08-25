@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LeverActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -25,7 +25,7 @@ const leverDefaultRequestTimeoutMs = 30_000;
 type LeverPhase = "validate" | "execute";
 type LeverActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const leverActionHandlers: Record<LeverActionName, LeverActionHandler> = {
+export const leverActionHandlers: ProviderActionHandlers<"lever", LeverActionHandler> = {
   async list_postings(input, context) {
     const payload = await requestLeverJson({
       context,

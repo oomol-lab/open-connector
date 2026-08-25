@@ -1,3 +1,4 @@
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -17,7 +18,10 @@ interface Credentials {
   apiSecret: string;
 }
 type RequestPhase = "validate" | "execute";
-export const formstackDocumentsActionHandlers: Record<string, ProviderRuntimeHandler<FormstackDocumentsContext>> = {
+export const formstackDocumentsActionHandlers: ProviderActionHandlers<
+  "formstack_documents",
+  ProviderRuntimeHandler<FormstackDocumentsContext>
+> = {
   async list_documents(input, context) {
     const payload = await request({
       credentials: readCredentials(context.values),

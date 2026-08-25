@@ -99,15 +99,6 @@ const layerOverrideSchema = s.looseObject("Layer override object forwarded to Te
   html: s.string("Custom HTML content override."),
 });
 
-export type TemplatedActionName =
-  | "get_account"
-  | "list_templates"
-  | "get_template"
-  | "create_render"
-  | "list_renders"
-  | "get_render"
-  | "delete_render";
-
 export const templatedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",

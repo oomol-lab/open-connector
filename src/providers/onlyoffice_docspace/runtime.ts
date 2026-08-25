@@ -1,8 +1,10 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { objectArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const requestTimeoutMs = 30_000;
@@ -16,14 +18,16 @@ export interface OnlyofficeContext {
 }
 type Phase = "validate" | "execute";
 
-export function normalizePortalUrl(value: unknown): string {
+export function normalizePortalUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   if (typeof value !== "string" || !value.trim()) throw new ProviderRequestError(400, "portalUrl is required");
-  let url: URL;
-  try {
-    url = new URL(value.trim());
-  } catch {
-    throw new ProviderRequestError(400, "portalUrl must be a valid HTTPS URL");
-  }
+  const url = assertPublicHttpUrl(value.trim(), {
+    fieldName: "portalUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
   if (url.protocol !== "https:") throw new ProviderRequestError(400, "portalUrl must use HTTPS");
   if (url.username || url.password || url.search || url.hash)
     throw new ProviderRequestError(400, "portalUrl must not include credentials, query parameters, or a fragment");
@@ -39,7 +43,10 @@ export function createOnlyofficeContext(
   return { apiKey, portalUrl, apiBaseUrl: `${portalUrl}/api/2.0/`, fetcher, signal };
 }
 
-export const onlyofficeActionHandlers: Record<string, ProviderRuntimeHandler<OnlyofficeContext>> = {
+export const onlyofficeActionHandlers: ProviderActionHandlers<
+  "onlyoffice_docspace",
+  ProviderRuntimeHandler<OnlyofficeContext>
+> = {
   async get_current_user(_input, context) {
     return { user: requireResponseObject(await request(context, "people/@self")) };
   },

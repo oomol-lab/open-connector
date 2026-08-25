@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderTransitFile } from "../provider-runtime.ts";
-import type { ConvertapiActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -30,7 +30,7 @@ interface NormalizedConvertapiFile {
   transitFile?: ProviderTransitFile | null;
 }
 
-export const convertapiActionHandlers: Record<ConvertapiActionName, ConvertapiActionHandler> = {
+export const convertapiActionHandlers: ProviderActionHandlers<"convertapi", ConvertapiActionHandler> = {
   convert_pdf_to_docx(input, context) {
     return convertPdfToDocx(input, context);
   },

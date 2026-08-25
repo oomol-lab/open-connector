@@ -75,15 +75,6 @@ const sqlUserSchema = s.looseObject("CockroachDB Cloud SQL user record.", {
   name: s.string("SQL username."),
 });
 
-export type CockroachLabsActionName =
-  | "get_organization"
-  | "list_clusters"
-  | "get_cluster"
-  | "list_available_regions"
-  | "list_cluster_nodes"
-  | "list_databases"
-  | "list_sql_users";
-
 export const cockroachLabsActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",

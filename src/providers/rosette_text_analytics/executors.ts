@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RosetteTextAnalyticsActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -28,8 +28,8 @@ type RosetteTextAnalyticsActionHandler = (
   context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
-export const rosetteTextAnalyticsActionHandlers: Record<
-  RosetteTextAnalyticsActionName,
+export const rosetteTextAnalyticsActionHandlers: ProviderActionHandlers<
+  "rosette_text_analytics",
   RosetteTextAnalyticsActionHandler
 > = {
   identify_language(input, context) {

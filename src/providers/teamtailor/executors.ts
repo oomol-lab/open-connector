@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
-import type { TeamtailorActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -33,7 +33,7 @@ interface TeamtailorContext extends ApiKeyProviderContext {
 
 type TeamtailorActionHandler = (input: Record<string, unknown>, context: TeamtailorContext) => Promise<unknown>;
 
-export const teamtailorActionHandlers: Record<TeamtailorActionName, TeamtailorActionHandler> = {
+export const teamtailorActionHandlers: ProviderActionHandlers<"teamtailor", TeamtailorActionHandler> = {
   async list_jobs(input, context): Promise<unknown> {
     return listResources(input, context, "/v1/jobs", {
       "filter[department]": optionalString(input.departmentId),

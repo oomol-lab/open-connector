@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { NocrmIoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
@@ -32,7 +32,7 @@ interface NocrmContext {
 
 type NocrmActionHandler = (input: Record<string, unknown>, context: NocrmContext) => Promise<unknown>;
 
-export const nocrmIoActionHandlers: Record<NocrmIoActionName, NocrmActionHandler> = {
+export const nocrmIoActionHandlers: ProviderActionHandlers<"nocrm_io", NocrmActionHandler> = {
   async list_teams(_input, context) {
     const payload = await requestNocrmJson(context, {
       path: "/api/v2/teams",

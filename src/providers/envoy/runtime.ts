@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { EnvoyActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -43,7 +43,7 @@ interface EnvoySinglePayload {
   meta: Record<string, unknown>;
 }
 
-export const envoyActionHandlers: Record<EnvoyActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const envoyActionHandlers: ProviderActionHandlers<"envoy", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_locations(input, context) {
     const payload = await requestEnvoyList({
       path: "/rest/v1/locations",

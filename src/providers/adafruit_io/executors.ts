@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { AdafruitIoActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -84,7 +84,7 @@ interface AdafruitIoDataPoint {
 
 type AdafruitIoActionHandler = (input: Record<string, unknown>, context: AdafruitIoActionContext) => Promise<unknown>;
 
-export const adafruitIoActionHandlers: Record<AdafruitIoActionName, AdafruitIoActionHandler> = {
+export const adafruitIoActionHandlers: ProviderActionHandlers<"adafruit_io", AdafruitIoActionHandler> = {
   async get_current_user(_input, context) {
     const user = await fetchAdafruitIoCurrentUser({
       apiKey: context.apiKey,

@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -20,7 +21,7 @@ const proposalListPaths: Record<string, string> = {
   list_paid_proposals: "/proposal/paid",
 };
 
-export const betterProposalsActionHandlers: Record<string, ActionHandler> = {
+export const betterProposalsActionHandlers: ProviderActionHandlers<"better_proposals", ActionHandler> = {
   get_settings(_input, context) {
     return getResource("/settings", context);
   },

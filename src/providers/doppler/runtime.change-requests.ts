@@ -1,3 +1,5 @@
+import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+
 import { optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, readArray, readObject } from "./runtime.shared.ts";
@@ -12,14 +14,8 @@ type DopplerChangeRequestActionHandler = (
   context: DopplerChangeRequestActionContext,
 ) => Promise<unknown>;
 
-export const dopplerChangeRequestActionHandlers: Record<
-  | "list_change_requests"
-  | "create_change_request"
-  | "get_change_request"
-  | "update_change_request"
-  | "update_change_request_assignees"
-  | "update_change_request_unit_status"
-  | "review_change_request_unit",
+export const dopplerChangeRequestActionHandlers: ProviderActionHandlerSubset<
+  "doppler",
   DopplerChangeRequestActionHandler
 > = {
   list_change_requests(input, context) {

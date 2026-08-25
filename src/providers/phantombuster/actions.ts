@@ -138,12 +138,3 @@ export const phantombusterActions: ProviderActionDefinition[] = [
     outputSchema: s.object("The requested Phantombuster container.", { container }),
   }),
 ];
-
-export type PhantombusterActionName =
-  | "get_current_organization"
-  | "list_agents"
-  | "get_agent"
-  | "launch_agent"
-  | "stop_agent"
-  | "list_containers"
-  | "get_container";

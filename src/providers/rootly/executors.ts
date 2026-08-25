@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { RootlyActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,7 +11,7 @@ const jsonApiContentType = "application/vnd.api+json";
 
 type RootlyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const rootlyActionHandlers: Record<RootlyActionName, RootlyActionHandler> = {
+export const rootlyActionHandlers: ProviderActionHandlers<"rootly", RootlyActionHandler> = {
   get_current_user(_input, context) {
     return rootlyGetSingleResource("/users/me", {}, context);
   },

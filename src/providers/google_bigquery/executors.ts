@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { GoogleBigQueryActionName } from "./actions.ts";
 
 import {
   compactObject,
@@ -8,7 +8,7 @@ import {
   optionalInteger as asOptionalInteger,
   requiredRecord,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../googledrive/runtime-shared.ts";
+import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 const bigQueryApiBaseUrl = "https://bigquery.googleapis.com/bigquery/v2";
@@ -20,7 +20,7 @@ type GoogleBigQueryActionHandler = (
   context: GoogleBigQueryRuntimeDeps,
 ) => Promise<unknown>;
 
-export const googleBigQueryActionHandlers: Record<GoogleBigQueryActionName, GoogleBigQueryActionHandler> = {
+export const googleBigQueryActionHandlers: ProviderActionHandlers<"google_bigquery", GoogleBigQueryActionHandler> = {
   list_projects: listProjects,
   list_datasets: listDatasets,
   get_dataset: getDataset,

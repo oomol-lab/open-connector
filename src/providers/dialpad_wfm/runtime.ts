@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { DialpadWfmActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -28,7 +28,7 @@ interface DialpadWfmRequestInput {
   query: URLSearchParams;
 }
 
-export const dialpadWfmActionHandlers: Record<DialpadWfmActionName, DialpadWfmHandler> = {
+export const dialpadWfmActionHandlers: ProviderActionHandlers<"dialpad_wfm", DialpadWfmHandler> = {
   async get_schedule(input, context) {
     const payload = await requestDialpadWfmJson({
       path: "/schedule",

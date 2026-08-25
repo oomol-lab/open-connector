@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "waboxapp";
 
-export type WaboxappActionName = "get_account_status" | "send_chat" | "send_image" | "send_link" | "send_media";
-
 const sendMessageOutputSchema = s.actionOutput({
   success: s.boolean("Whether Waboxapp accepted the message submission."),
   customUid: s.string("The custom unique ID echoed back by Waboxapp for this message."),

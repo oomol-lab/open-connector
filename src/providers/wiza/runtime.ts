@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { WizaActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
@@ -19,7 +19,7 @@ interface WizaRequestOptions {
 export const wizaApiBaseUrl = "https://wiza.co";
 const wizaValidationPath = "/api/meta/credits";
 
-export const wizaActionHandlers: Record<WizaActionName, WizaActionHandler> = {
+export const wizaActionHandlers: ProviderActionHandlers<"wiza", WizaActionHandler> = {
   get_credits(_input, context) {
     return requestWizaJson({ path: wizaValidationPath, phase: "execute" }, context);
   },

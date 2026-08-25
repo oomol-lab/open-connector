@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { LogsnagActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ const logsnagApiBaseUrl = "https://api.logsnag.com/v1";
 
 type LogsnagActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const logsnagActionHandlers: Record<LogsnagActionName, LogsnagActionHandler> = {
+export const logsnagActionHandlers: ProviderActionHandlers<"logsnag", LogsnagActionHandler> = {
   publish_event(input, context) {
     return requestLogsnag("log", "POST", input, context);
   },

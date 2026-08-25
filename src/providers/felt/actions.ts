@@ -257,17 +257,3 @@ export const feltActions: ActionDefinition[] = [
     outputSchema: deleteMapOutputSchema,
   }),
 ];
-
-export type FeltActionName =
-  | "get_current_user"
-  | "list_projects"
-  | "create_project"
-  | "get_project"
-  | "update_project"
-  | "delete_project"
-  | "create_map"
-  | "get_map"
-  | "update_map"
-  | "duplicate_map"
-  | "move_map"
-  | "delete_map";

@@ -102,22 +102,6 @@ const urlConversionJobInputSchema = s.object(
   },
 );
 
-export type CloudconvertActionName =
-  | "get_current_user"
-  | "list_conversion_types"
-  | "create_url_conversion_job"
-  | "create_url_conversion_job_and_wait"
-  | "get_job"
-  | "wait_for_job"
-  | "list_jobs"
-  | "delete_job"
-  | "get_task"
-  | "wait_for_task"
-  | "list_tasks"
-  | "cancel_task"
-  | "retry_task"
-  | "delete_task";
-
 export const cloudconvertActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",

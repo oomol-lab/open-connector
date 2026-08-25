@@ -268,5 +268,3 @@ export const abuseipdbActions: ActionDefinition[] = [
     ),
   }),
 ];
-
-export type AbuseipdbActionName = "check_ip" | "get_reports" | "check_block" | "blacklist";

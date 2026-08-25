@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { RocketChatActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -43,7 +43,7 @@ interface RocketChatContext {
 
 type RocketChatActionHandler = (input: Record<string, unknown>, context: RocketChatContext) => Promise<unknown>;
 
-export const rocketChatActionHandlers: Record<RocketChatActionName, RocketChatActionHandler> = {
+export const rocketChatActionHandlers: ProviderActionHandlers<"rocket_chat", RocketChatActionHandler> = {
   async get_me(_input, context) {
     const profile = await requestRocketChatObject({
       credential: context.credential,

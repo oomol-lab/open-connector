@@ -133,15 +133,6 @@ const usageSchema = s.looseObject("A DiscoLike API usage response.", {
   month_to_date_spend: s.number("Total spend for the current month."),
 });
 
-export type DiscolikeActionName =
-  | "discover_companies"
-  | "count_matching_domains"
-  | "get_business_profile"
-  | "get_digital_footprint_score"
-  | "get_growth_metrics"
-  | "get_certificate_metrics"
-  | "get_usage";
-
 export const discolikeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "discover_companies",

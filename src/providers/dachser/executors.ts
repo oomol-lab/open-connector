@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -34,7 +35,7 @@ interface DachserRequest {
 
 type DachserActionHandler = (input: Record<string, unknown>, context: DachserActionContext) => Promise<unknown>;
 
-export const dachserActionHandlers: Record<string, DachserActionHandler> = {
+export const dachserActionHandlers: ProviderActionHandlers<"dachser", DachserActionHandler> = {
   get_shipment_status(input, context) {
     return requestDachser(context, {
       path: "/rest/v2/shipmentstatus",

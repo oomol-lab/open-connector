@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { FeltActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +10,7 @@ export const feltApiBaseUrl = "https://felt.com/api/v2";
 type FeltRequestPhase = "validate" | "execute";
 type FeltRequestMethod = "GET" | "POST" | "DELETE";
 
-export const feltActionHandlers: Record<FeltActionName, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
+export const feltActionHandlers: ProviderActionHandlers<"felt", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },

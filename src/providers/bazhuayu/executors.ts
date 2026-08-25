@@ -5,6 +5,7 @@ import type {
   ProxyRequestInput,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { BazhuayuRuntimeContext } from "./runtime.ts";
 
@@ -12,6 +13,7 @@ import {
   createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
+  mapProviderActionHandlers,
   normalizeProviderProxyHeaders,
   providerFetch,
   providerUserAgent,
@@ -34,10 +36,14 @@ import {
 const service = "bazhuayu";
 const requestTimeoutMs = 30_000;
 
-const handlers: Record<string, ProviderRuntimeHandler<BazhuayuRuntimeContext>> = {};
-for (const action of bazhuayuActions) {
-  handlers[action.name] = (input, context) => executeBazhuayuAction(action.name, input, context);
-}
+const handlers: ProviderActionHandlers<
+  "bazhuayu",
+  ProviderRuntimeHandler<BazhuayuRuntimeContext>
+> = mapProviderActionHandlers(
+  service,
+  bazhuayuActions,
+  (_action, name) => (input, context) => executeBazhuayuAction(name, input, context),
+);
 
 export const executors: ProviderExecutors = defineProviderExecutors<BazhuayuRuntimeContext>({
   service,

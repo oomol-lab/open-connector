@@ -6,8 +6,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
-import type { MongoDbAtlasAdministrationActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -51,8 +51,8 @@ interface AtlasActionContext {
 
 type AtlasActionHandler = (input: Record<string, unknown>, context: AtlasActionContext) => Promise<unknown>;
 
-export const mongoDbAtlasAdministrationActionHandlers: Record<
-  MongoDbAtlasAdministrationActionName,
+export const mongoDbAtlasAdministrationActionHandlers: ProviderActionHandlers<
+  "mongo_db_atlas_administration",
   AtlasActionHandler
 > = {
   async list_projects(input, context): Promise<unknown> {

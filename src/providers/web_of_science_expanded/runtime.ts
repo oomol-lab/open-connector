@@ -1,4 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -28,7 +29,10 @@ type WebOfScienceExpandedActionHandler = (
   context: WebOfScienceExpandedContext,
 ) => Promise<unknown>;
 
-export const webOfScienceExpandedActionHandlers: Record<string, WebOfScienceExpandedActionHandler> = {
+export const webOfScienceExpandedActionHandlers: ProviderActionHandlers<
+  "web_of_science_expanded",
+  WebOfScienceExpandedActionHandler
+> = {
   async search_documents(input, context) {
     validateSearchOptions(input);
     const limit = optionalInteger(input.limit) ?? 10;

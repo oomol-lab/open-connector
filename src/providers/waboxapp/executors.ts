@@ -1,5 +1,5 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { WaboxappActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -42,7 +42,7 @@ interface WaboxappAccountStatus {
 
 type WaboxappActionHandler = (input: Record<string, unknown>, context: WaboxappActionContext) => Promise<unknown>;
 
-export const waboxappActionHandlers: Record<WaboxappActionName, WaboxappActionHandler> = {
+export const waboxappActionHandlers: ProviderActionHandlers<"waboxapp", WaboxappActionHandler> = {
   get_account_status(_input, context) {
     return getAccountStatus(context);
   },

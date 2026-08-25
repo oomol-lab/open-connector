@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { GiteaActionName } from "./actions.ts";
+import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -28,7 +28,7 @@ export interface GiteaActionContext {
 
 type GiteaActionHandler = (input: Record<string, unknown>, context: GiteaActionContext) => Promise<unknown>;
 
-export const giteaActionHandlers: Record<GiteaActionName, GiteaActionHandler> = {
+export const giteaActionHandlers: ProviderActionHandlers<"gitea", GiteaActionHandler> = {
   get_current_user(_input, context) {
     return getCurrentUser(context);
   },
