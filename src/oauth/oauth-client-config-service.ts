@@ -75,6 +75,8 @@ export class OAuthClientConfigService {
   private readonly origin: string;
   private readonly store: IOAuthClientConfigStore;
   private readonly isCustomClientConfigAvailable: (service: string) => boolean;
+  /** Per-service in-flight dynamic registrations, so concurrent first authorizations share one client. */
+  private readonly pendingRegistrations = new Map<string, Promise<OAuthClientConfig>>();
 
   constructor(input: OAuthClientConfigServiceOptions) {
     this.catalog = input.catalog;
@@ -100,9 +102,27 @@ export class OAuthClientConfigService {
       return undefined;
     }
 
-    const config = await this.registerConfig(service, auth);
-    await this.store.set(config);
-    return config;
+    const pending = this.pendingRegistrations.get(service);
+    if (pending) {
+      return pending;
+    }
+    const registration = (async () => {
+      // Re-read inside the single flight: a concurrent caller may have
+      // registered and stored a client between our first read and now.
+      const existing = normalizeStoredOAuthClientConfig(await this.store.get(service));
+      if (existing) {
+        return existing;
+      }
+      const config = await this.registerConfig(service, auth);
+      await this.store.set(config);
+      return config;
+    })();
+    this.pendingRegistrations.set(service, registration);
+    try {
+      return await registration;
+    } finally {
+      this.pendingRegistrations.delete(service);
+    }
   }
 
   private async registerConfig(service: string, auth: OAuth2AuthDefinition): Promise<OAuthClientConfig> {
