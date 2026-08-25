@@ -8,13 +8,15 @@ const service = "sunsama_mcp";
  * Sunsama provider backed by Sunsama's official remote MCP server.
  *
  * OAuth clients are public clients registered through Sunsama's dynamic client
- * registration endpoint with this Open Connector deployment's callback URL.
+ * registration endpoint with this Open Connector deployment's callback URL. Sunsama has no
+ * self-serve "create an OAuth app" dashboard, so the client id has to come from that endpoint
+ * (see the description below for the exact steps) rather than from a form on Sunsama's site.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Sunsama MCP",
   description:
-    "Work with Sunsama daily planning tasks and workflows through Sunsama's official remote MCP server. OAuth uses a public client registered through https://api.sunsama.com/oauth/register with this Open Connector deployment's callback URL.",
+    "Work with Sunsama daily planning tasks and workflows through Sunsama's official remote MCP server. Sunsama has no OAuth app dashboard, so the Client ID above has to be obtained via its dynamic client registration endpoint: (1) find this deployment's callback URL on this page or via GET /api/oauth/configs, (2) have someone with API access POST {\"redirect_uris\":[\"<that callback URL>\"],\"token_endpoint_auth_method\":\"none\"} to https://api.sunsama.com/oauth/register, (3) paste the returned client_id into the Client ID field above — no client secret is needed, and one client id can be reused by everyone connecting through this deployment.",
   categories: ["Productivity"],
   authTypes: ["oauth2"],
   auth: [
