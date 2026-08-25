@@ -2,6 +2,7 @@ import type { CredentialValidationResult, TransitFileWriter } from "../../core/t
 import type { CloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { CloudflareR2PresignedMethod } from "./s3-presign.ts";
 
 import {
   compactObject,
@@ -14,6 +15,7 @@ import {
 import { queryParams, readBoundedResponseBytes } from "../../core/request.ts";
 import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { createCloudflareR2PresignedUrl, deriveCloudflareR2S3SecretAccessKey } from "./s3-presign.ts";
 
 export interface CloudflareR2Context {
   authType: "custom_credential" | "oauth2";
@@ -82,6 +84,9 @@ export const cloudflareR2ActionHandlers: ProviderActionHandlers<
   },
   delete_bucket_cors_policy(input, context) {
     return deleteBucketCorsPolicy(input, context);
+  },
+  generate_presigned_url(input, context) {
+    return generatePresignedUrl(input, context);
   },
 };
 
@@ -207,13 +212,7 @@ async function downloadObject(input: Record<string, unknown>, context: Cloudflar
 
   const accountId = resolveAccountId(input, context);
   const bucketName = requiredString(input.bucketName, "bucketName", providerInputError);
-  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
-  if (objectKey.length === 0) {
-    throw providerInputError("objectKey must not be empty");
-  }
-  if (objectKey.split("/").some((segment) => segment === "." || segment === "..")) {
-    throw providerInputError("objectKey must not contain . or .. path segments");
-  }
+  const objectKey = readObjectKey(input);
   const url = buildCloudflareR2Url(
     `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeR2ObjectKey(objectKey)}`,
   );
@@ -371,6 +370,133 @@ async function deleteBucketCorsPolicy(input: Record<string, unknown>, context: C
     bucketName,
     deleted: true,
   };
+}
+
+const defaultPresignExpiresSeconds = 3600;
+const maxPresignExpiresSeconds = 604800;
+
+async function generatePresignedUrl(input: Record<string, unknown>, context: CloudflareR2Context): Promise<unknown> {
+  if (context.authType !== "custom_credential") {
+    throw new ProviderRequestError(
+      400,
+      "cloudflare_r2.generate_presigned_url requires a custom API token credential. OAuth connections cannot mint R2 S3 signatures.",
+      {
+        action: "cloudflare_r2.generate_presigned_url",
+        authType: context.authType,
+        requiredAuthType: "custom_credential",
+      },
+    );
+  }
+
+  const accountId = resolveAccountId(input, context);
+  const bucketName = requiredString(input.bucketName, "bucketName", providerInputError);
+  const objectKey = readObjectKey(input);
+  const method = normalizePresignedMethod(input.method);
+  const expiresSeconds = normalizeExpiresSeconds(input.expiresSeconds);
+  const contentType = method === "PUT" ? optionalString(input.contentType) : undefined;
+  const jurisdiction = optionalString(input.jurisdiction);
+  const accessKeyId = await resolveR2S3AccessKeyId(accountId, context);
+
+  return {
+    bucketName,
+    objectKey,
+    ...createCloudflareR2PresignedUrl({
+      accountId,
+      accessKeyId,
+      secretAccessKey: deriveCloudflareR2S3SecretAccessKey(context.accessToken),
+      bucketName,
+      objectKey,
+      method,
+      expiresSeconds,
+      contentType,
+      jurisdiction,
+    }),
+  };
+}
+
+async function resolveR2S3AccessKeyId(accountId: string, context: CloudflareR2Context): Promise<string> {
+  const existing = optionalString(context.metadata.tokenId);
+  if (existing) {
+    return existing;
+  }
+  const verification = await verifyCloudflareR2ApiToken(context.accessToken, accountId, context);
+  if (verification.tokenStatus && verification.tokenStatus !== "active") {
+    throw new ProviderRequestError(400, `cloudflare token is not active: ${verification.tokenStatus}`);
+  }
+  if (!verification.tokenId) {
+    throw new ProviderRequestError(
+      400,
+      "Unable to derive R2 S3 Access Key ID from this API token. cloudflare_r2.generate_presigned_url requires a custom API token that can be verified.",
+    );
+  }
+  return verification.tokenId;
+}
+
+interface CloudflareR2TokenVerification {
+  tokenId?: string;
+  tokenStatus?: string;
+  validationEndpoint: string;
+}
+
+async function verifyCloudflareR2ApiToken(
+  apiToken: string,
+  accountId: string,
+  context: { fetcher: typeof fetch; signal?: AbortSignal },
+): Promise<CloudflareR2TokenVerification> {
+  try {
+    return await verifyCloudflareR2ApiTokenAt(apiToken, "/user/tokens/verify", context);
+  } catch (error) {
+    if (!(error instanceof ProviderRequestError) || error.status !== 400) {
+      throw error;
+    }
+    return verifyCloudflareR2ApiTokenAt(apiToken, `/accounts/${encodeURIComponent(accountId)}/tokens/verify`, context);
+  }
+}
+
+async function verifyCloudflareR2ApiTokenAt(
+  apiToken: string,
+  path: string,
+  context: { fetcher: typeof fetch; signal?: AbortSignal },
+): Promise<CloudflareR2TokenVerification> {
+  const envelope = await cloudflareR2RequestEnvelope(apiToken, { path }, context, "validate");
+  const verification = readObject(envelope.result, "cloudflare token verification");
+  return {
+    tokenId: optionalString(verification.id),
+    tokenStatus: optionalString(verification.status),
+    validationEndpoint: path,
+  };
+}
+
+function normalizePresignedMethod(value: unknown): Exclude<CloudflareR2PresignedMethod, "DELETE"> {
+  if (value === undefined || value === "GET") {
+    return "GET";
+  }
+  if (value === "PUT" || value === "HEAD") {
+    return value;
+  }
+  throw providerInputError("method must be GET, PUT, or HEAD");
+}
+
+function normalizeExpiresSeconds(value: unknown): number {
+  if (value === undefined) {
+    return defaultPresignExpiresSeconds;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > maxPresignExpiresSeconds) {
+    throw providerInputError("expiresSeconds must be an integer between 1 and 604800");
+  }
+  return parsed;
+}
+
+function readObjectKey(input: Record<string, unknown>): string {
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
+  if (objectKey.length === 0) {
+    throw providerInputError("objectKey must not be empty");
+  }
+  if (objectKey.split("/").some((segment) => segment === "." || segment === "..")) {
+    throw providerInputError("objectKey must not contain . or .. path segments");
+  }
+  return objectKey;
 }
 
 function resolveAccountId(input: Record<string, unknown>, context: CloudflareR2Context): string {

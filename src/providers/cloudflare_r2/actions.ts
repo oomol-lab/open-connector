@@ -300,4 +300,46 @@ export const cloudflareR2Actions: ActionDefinition[] = [
       deleted: s.boolean("Whether the delete request succeeded."),
     }),
   }),
+  defineProviderAction(service, {
+    name: "generate_presigned_url",
+    description:
+      "Generate a pre-signed R2 URL for a single GET, PUT, or HEAD request. Requires a custom API token credential; OAuth connections cannot mint R2 S3 signatures.",
+    requiredScopes: [r2ReadScope, r2WriteScope],
+    providerPermissions: [r2ReadPermission, r2WritePermission],
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        accountId: accountIdSchema,
+        bucketName: bucketNameSchema,
+        objectKey: s.nonEmptyString("The complete R2 object key. Slashes are preserved as key delimiters."),
+        method: s.stringEnum(["GET", "PUT", "HEAD"], {
+          description: "The HTTP method that the signed URL should allow.",
+          default: "GET",
+        }),
+        expiresSeconds: s.integer("How long the signed URL remains valid, in seconds.", {
+          minimum: 1,
+          maximum: 604800,
+          default: 3600,
+        }),
+        contentType: s.string("The Content-Type that must be sent with a signed PUT request."),
+        jurisdiction: jurisdictionSchema,
+      },
+      {
+        required: ["bucketName", "objectKey"],
+        optional: ["accountId", "method", "expiresSeconds", "contentType", "jurisdiction"],
+      },
+    ),
+    outputSchema: s.object("The output payload for this action.", {
+      bucketName: s.string("The bucket used to build the signed URL."),
+      objectKey: s.string("The object key used to build the signed URL."),
+      method: s.string("The signed HTTP method."),
+      expiresSeconds: s.integer("The URL validity duration in seconds."),
+      expiresAt: s.dateTime("The timestamp when the signed URL expires."),
+      url: s.string("The generated pre-signed URL."),
+      requiredHeaders: s.record(
+        "HTTP headers that were included in the signature and must be sent with the request.",
+        s.string("A signed header value."),
+      ),
+    }),
+  }),
 ];
