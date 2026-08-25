@@ -310,7 +310,7 @@ const defaultProviderErrorMaxResponseBytes = 64 * 1024;
 export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, queryInput?: unknown): URL {
   const endpoint = normalizeProviderProxyEndpoint(endpointInput);
   const base = new URL(baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
-  const url = new URL(endpoint.slice(1), base);
+  const url = new URL(`./${endpoint.slice(1)}`, base);
   if (url.origin !== base.origin) {
     throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
   }

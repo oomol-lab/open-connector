@@ -156,6 +156,12 @@ describe("createProviderProxyUrl", () => {
       "https://api.example.com/v1/items",
     );
   });
+
+  it("keeps a colon-suffixed literal segment below the base instead of parsing it as a scheme", () => {
+    expect(createProviderProxyUrl("https://api.example.com/v1/", "/groups:batchDelete").toString()).toBe(
+      "https://api.example.com/v1/groups:batchDelete",
+    );
+  });
 });
 
 const apiKeyCredential: ResolvedCredential = {
