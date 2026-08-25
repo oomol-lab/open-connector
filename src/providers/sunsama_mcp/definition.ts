@@ -7,16 +7,18 @@ const service = "sunsama_mcp";
 /**
  * Sunsama provider backed by Sunsama's official remote MCP server.
  *
- * OAuth clients are public clients registered through Sunsama's dynamic client
- * registration endpoint with this Open Connector deployment's callback URL. Sunsama has no
- * self-serve "create an OAuth app" dashboard, so the client id has to come from that endpoint
- * (see the description below for the exact steps) rather than from a form on Sunsama's site.
+ * Sunsama has no self-serve "create an OAuth app" dashboard — its own MCP settings page just
+ * says "connect with the MCP server URL, sign in when prompted." To match that, OAuth clients
+ * are public clients this runtime registers for itself through Sunsama's RFC 7591 dynamic client
+ * registration endpoint the first time someone starts authorization with no client configured
+ * (see `registrationEndpoint` below and `OAuthClientConfigService.getConfig`), instead of
+ * requiring an admin to obtain and paste a clientId first.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Sunsama MCP",
   description:
-    "Work with Sunsama daily planning tasks and workflows through Sunsama's official remote MCP server. Sunsama has no OAuth app dashboard, so the Client ID above has to be obtained via its dynamic client registration endpoint: (1) find this deployment's callback URL on this page or via GET /api/oauth/configs, (2) have someone with API access POST {\"redirect_uris\":[\"<that callback URL>\"],\"token_endpoint_auth_method\":\"none\"} to https://api.sunsama.com/oauth/register, (3) paste the returned client_id into the Client ID field above — no client secret is needed, and one client id can be reused by everyone connecting through this deployment.",
+    "Work with Sunsama daily planning tasks and workflows through Sunsama's official remote MCP server. OAuth needs no setup: this deployment registers its own public client with Sunsama automatically the first time someone connects.",
   categories: ["Productivity"],
   authTypes: ["oauth2"],
   auth: [
@@ -27,6 +29,7 @@ export const provider: ProviderDefinition = {
       refreshTokenUrl: "https://api.sunsama.com/oauth/token",
       scopes: ["read", "execute", "offline_access"],
       tokenEndpointAuthMethod: "none",
+      registrationEndpoint: "https://api.sunsama.com/oauth/register",
       pkce: { method: "S256" },
     },
   ],

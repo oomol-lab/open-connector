@@ -4,6 +4,7 @@ import type { OAuth2AuthDefinition, OAuthClientConfigFieldDefinition } from "../
 import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
 import { assertPublicHttpUrl } from "../core/request.ts";
+import { registerDynamicOAuthClient } from "./oauth-dynamic-registration.ts";
 
 /**
  * OAuth client configuration supplied by an open-source runtime user.
@@ -33,6 +34,8 @@ export interface OAuthClientConfigInput {
 export interface OAuthClientConfigSummary {
   service: string;
   configured: boolean;
+  /** Whether the runtime will auto-register a public OAuth client on the first authorization attempt. */
+  autoRegisters: boolean;
   customClientAvailable: boolean;
   clientId: string | null;
   expectedRedirectUri: string;
@@ -88,8 +91,35 @@ export class OAuthClientConfigService {
   }
 
   async getConfig(service: string): Promise<OAuthClientConfig | undefined> {
-    this.getOAuthDefinition(service);
-    return normalizeStoredOAuthClientConfig(await this.store.get(service));
+    const auth = this.getOAuthDefinition(service);
+    const stored = normalizeStoredOAuthClientConfig(await this.store.get(service));
+    if (stored) {
+      return stored;
+    }
+    if (!autoRegisters(auth)) {
+      return undefined;
+    }
+
+    const config = await this.registerConfig(service, auth);
+    await this.store.set(config);
+    return config;
+  }
+
+  private async registerConfig(service: string, auth: OAuth2AuthDefinition): Promise<OAuthClientConfig> {
+    assertOAuthEndpointUrl(auth.registrationEndpoint!);
+    const registered = await registerDynamicOAuthClient({
+      registrationEndpoint: auth.registrationEndpoint!,
+      redirectUri: this.expectedRedirectUri(service),
+      clientName: `OpenConnector (${this.origin})`,
+      createError: (message) => new OAuthClientConfigError("oauth_dynamic_registration_failed", message),
+    });
+    return {
+      service,
+      clientId: registered.clientId,
+      clientSecret: registered.clientSecret ?? "",
+      extra: {},
+      secretExtra: {},
+    };
   }
 
   async upsertConfig(input: OAuthClientConfigInput & { service: string }): Promise<OAuthClientConfigSummary> {
@@ -192,6 +222,7 @@ export class OAuthClientConfigService {
     return {
       service,
       configured: config != null,
+      autoRegisters: autoRegisters(auth),
       customClientAvailable: this.isCustomClientConfigAvailable(service),
       clientId: config?.clientId ?? null,
       expectedRedirectUri: this.expectedRedirectUri(service),
@@ -343,6 +374,10 @@ function readStringRecord(value: unknown): Record<string, string> {
       return normalized ? [[key, normalized]] : [];
     }),
   );
+}
+
+function autoRegisters(auth: OAuth2AuthDefinition): boolean {
+  return Boolean(auth.registrationEndpoint) && auth.tokenEndpointAuthMethod === "none";
 }
 
 function assertOAuthEndpointUrl(value: string): void {
