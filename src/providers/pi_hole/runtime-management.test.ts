@@ -210,7 +210,7 @@ describe("list management", () => {
 
     const put = requests.find((request) => request.method === "PUT")!;
     expect(put.url.searchParams.get("type")).toBe("block");
-    expect(put.body).toEqual({ comment: "keep", enabled: false });
+    expect(put.body).toEqual({ comment: "keep", enabled: false, groups: [0] });
   });
 
   it("deletes a list with the type query and an encoded address", async () => {
@@ -287,6 +287,39 @@ describe("domain management", () => {
     // server URL-decodes encoded bytes before matching the item.
     expect(del.url.pathname).toBe("/api/domains/deny/regex/ads*.example");
   });
+
+  it("preserves group memberships when only updating the comment", async () => {
+    const { context, requests } = createTestContext((request) => {
+      if (request.method === "POST" && request.url.pathname === "/api/auth") {
+        return sessionResponse("sid");
+      }
+      if (request.method === "GET" && request.url.pathname === "/api/domains/allow/exact") {
+        return Response.json({
+          domains: [
+            {
+              domain: "example.com",
+              type: "allow",
+              kind: "exact",
+              comment: "keep",
+              enabled: true,
+              groups: [0, 2],
+            },
+          ],
+          took: 0.1,
+        });
+      }
+      if (request.method === "PUT") {
+        return processedResponse();
+      }
+      return undefined;
+    });
+
+    await handlers.update_domain!({ type: "allow", kind: "exact", domain: "example.com", comment: "new" }, context);
+
+    const put = requests.find((request) => request.method === "PUT")!;
+    expect(put.url.pathname).toBe("/api/domains/allow/exact/example.com");
+    expect(put.body).toEqual({ comment: "new", groups: [0, 2], enabled: true });
+  });
 });
 
 describe("client management", () => {
@@ -337,7 +370,7 @@ describe("client management", () => {
     // The write endpoint must target the canonical stored identifier, not the
     // hostname alias used to find the client.
     expect(put.url.pathname).toBe("/api/clients/10.0.0.9");
-    expect(put.body).toEqual({ comment: "nas" });
+    expect(put.body).toEqual({ comment: "nas", groups: [0] });
   });
 
   it("deletes a client by identifier", async () => {

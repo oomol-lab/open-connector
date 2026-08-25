@@ -1,5 +1,3 @@
-import type { PiHoleActionContext } from "./runtime.ts";
-
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
@@ -434,6 +432,7 @@ describe("teleporter backup and restore", () => {
         name: "teleporter.zip",
         mimeType: "application/zip",
         sizeBytes: zipBytes.length,
+        data: null,
       },
     });
     expect(create).toHaveBeenCalledTimes(1);
@@ -460,6 +459,8 @@ describe("teleporter backup and restore", () => {
         name: "teleporter.zip",
         mimeType: "application/zip",
         sizeBytes: zipBytes.length,
+        fileId: null,
+        downloadUrl: null,
         data: Buffer.from(zipBytes).toString("base64"),
       },
     });

@@ -215,18 +215,19 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
   },
 
   async list_lists(input, context) {
+    const type = optionalString(input.type);
     const payload = readRecordPayload(
       await requestPiHoleJson({
         context,
         method: "GET",
         path: "lists",
-        query: { type: optionalString(input.type) },
+        query: type === undefined ? undefined : { type: normalizeListType(type) },
       }),
     );
     return { lists: optionalObjectArray(payload.lists, "Pi-hole lists response") };
   },
   async add_list(input, context) {
-    const type = readRequiredString(input.type, "type");
+    const type = normalizeListType(readRequiredString(input.type, "type"));
     const payload = readRecordPayload(
       await requestPiHoleJson({
         context,
@@ -260,7 +261,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
         query: { type },
         body: {
           comment: effectiveOptionalString(input.comment, current.comment),
-          ...(input.groups !== undefined ? { groups: readGroupsPayload(input) } : {}),
+          ...(input.groups !== undefined ? { groups: readGroupsPayload(input) } : { groups: current.groups }),
           enabled: effectiveOptionalBoolean(input.enabled, current.enabled),
         },
       }),
@@ -268,7 +269,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async delete_list(input, context) {
-    const type = readRequiredString(input.type, "type");
+    const type = normalizeListType(readRequiredString(input.type, "type"));
     const address = readRequiredString(input.address, "address");
     return deleteListedItem({ context, path: `lists/${encodeURIComponent(address)}`, query: { type } });
   },
@@ -322,7 +323,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
         path: `domains/${type}/${kind}/${encodeURIComponent(domain)}`,
         body: {
           comment: effectiveOptionalString(input.comment, current.comment),
-          ...(input.groups !== undefined ? { groups: readGroupsPayload(input) } : {}),
+          ...(input.groups !== undefined ? { groups: readGroupsPayload(input) } : { groups: current.groups }),
           enabled: effectiveOptionalBoolean(input.enabled, current.enabled),
         },
       }),
@@ -377,7 +378,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
         path: `clients/${encodeURIComponent(targetIdentifier)}`,
         body: {
           comment: effectiveOptionalString(input.comment, current.comment),
-          ...(input.groups !== undefined ? { groups: readGroupsPayload(input) } : {}),
+          ...(input.groups !== undefined ? { groups: readGroupsPayload(input) } : { groups: current.groups }),
         },
       }),
     );

@@ -29,6 +29,7 @@ const defaultPiHoleApiPath = "api";
 const piHoleGravityOutputTailChars = 2_000;
 // Keep in sync with the server-side upload cap (FTL MAXFILESIZE).
 const piHoleTeleporterMaxBytes = 50 * 1024 * 1024;
+const piHoleNoAuthCacheTtlMs = 5 * 60_000;
 
 export const piHoleCredentialHelpUrl = "https://docs.pi-hole.net/api/";
 
@@ -170,8 +171,9 @@ async function authenticatePiHole(context: PiHoleActionContext): Promise<PiHoleS
   if (session?.valid === true) {
     const sid = optionalString(session.sid);
     if (sid === undefined) {
-      // No authentication is required on this server; cache the no-auth state.
-      return { sid: null, expiresAt: Number.POSITIVE_INFINITY };
+      // No authentication is required on this server; cache the no-auth state for a
+      // bounded time so the proxy picks it up if authentication is enabled later.
+      return { sid: null, expiresAt: Date.now() + piHoleNoAuthCacheTtlMs };
     }
     const validitySeconds = optionalNumber(session.validity) ?? 0;
     // Leave a small buffer so the cached session expires before the server does.
@@ -381,7 +383,15 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
     const blocking = requiredBoolean(input.blocking, "blocking", piHoleInputError);
     const body: Record<string, unknown> = { blocking };
     if (input.timer !== undefined) {
-      body.timer = typeof input.timer === "number" ? input.timer : null;
+      if (input.timer === null) {
+        body.timer = null;
+      } else {
+        const timer = optionalNumber(input.timer);
+        if (timer === undefined) {
+          throw piHoleInputError("timer must be a number or null");
+        }
+        body.timer = timer;
+      }
     }
     const payload = readRecordPayload(await requestPiHoleJson({ context, method: "POST", path: "dns/blocking", body }));
     return readBlockingStatus(payload);
@@ -495,6 +505,9 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
   async update_config(input, context) {
     const config = requiredRecord(input.config, "config", piHoleInputError);
     const restart = input.restart === undefined ? undefined : readRestartFlag(input.restart);
+    if (input.restart !== undefined && restart === undefined) {
+      throw piHoleInputError("restart must be a boolean");
+    }
     const payload = readRecordPayload(
       await requestPiHoleJson({
         context,
@@ -557,6 +570,7 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
           name: upload.name,
           mimeType: upload.mimeType,
           sizeBytes: upload.sizeBytes,
+          data: null,
         },
       };
     }
@@ -565,6 +579,8 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
         name,
         mimeType,
         sizeBytes: bytes.length,
+        fileId: null,
+        downloadUrl: null,
         data: encodePiHoleBase64(bytes),
       },
     };
@@ -593,7 +609,12 @@ export async function validatePiHoleCredential(
   const baseUrl = normalizePiHoleBaseUrl(input.values.baseUrl);
   const apiPath = normalizePiHoleApiPath(input.values.apiPath);
 
-  await authenticatePiHole({ appPassword, baseUrl, apiPath, fetcher, signal });
+  const context = { appPassword, baseUrl, apiPath, fetcher, signal };
+  const session = await authenticatePiHole(context);
+  if (session.sid) {
+    // Validation is a one-shot check, so release the session seat immediately.
+    await performPiHoleRequest({ context, method: "DELETE", path: "auth", sid: session.sid }).catch(() => {});
+  }
 
   return {
     profile: {

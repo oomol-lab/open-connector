@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { proxy } from "./executors.ts";
+import { clearPiHoleSessionCache } from "./runtime.ts";
 
 const lanInstanceUrl = "http://192.168.150.53:8084";
 
@@ -33,6 +34,7 @@ describe("pi_hole proxy", () => {
   afterEach(() => {
     setDefaultGuardedFetchDnsLookup(null);
     setPrivateNetworkAccessAllowed(false);
+    clearPiHoleSessionCache();
     vi.unstubAllGlobals();
   });
 
