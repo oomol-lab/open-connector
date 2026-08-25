@@ -1,10 +1,8 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/client";
 
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
 import { defineOAuthProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -41,10 +39,13 @@ async function callSunsamaMcpTool(
   argumentsInput: Record<string, unknown>,
 ): Promise<{ result: unknown }> {
   const result = await withSunsamaMcpClient(context, "execute", (client) =>
-    client.callTool({ name: toolName, arguments: argumentsInput }, undefined, {
-      timeout: sunsamaMcpRequestTimeoutMs,
-      signal: context.signal,
-    }),
+    client.callTool(
+      { name: toolName, arguments: argumentsInput },
+      {
+        timeout: sunsamaMcpRequestTimeoutMs,
+        signal: context.signal,
+      },
+    ),
   );
   if (!("toolResult" in result) && result.isError) {
     throw new ProviderRequestError(502, `Sunsama MCP tool ${toolName} returned an error`, result);
@@ -112,8 +113,8 @@ function mapSunsamaMcpError(error: unknown, phase: "validate" | "execute"): Prov
       error,
     );
   }
-  if (error instanceof StreamableHTTPError) {
-    const status = error.code;
+  if (error instanceof SdkHttpError) {
+    const status = error.status;
     if (status === 401 || status === 403) {
       return new ProviderRequestError(
         phase === "validate" ? 400 : 401,
@@ -127,7 +128,7 @@ function mapSunsamaMcpError(error: unknown, phase: "validate" | "execute"): Prov
       error,
     );
   }
-  if (error instanceof McpError) {
+  if (error instanceof ProtocolError) {
     return new ProviderRequestError(502, `Sunsama MCP request failed: ${error.message}`, error);
   }
   return new ProviderRequestError(
