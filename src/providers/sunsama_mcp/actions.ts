@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { sunsamaMcpOfficialActions } from "./official-actions.ts";
 
 const service = "sunsama_mcp";
 
@@ -27,6 +28,7 @@ const mcpToolSummarySchema = s.object(
 );
 
 export const sunsamaMcpActions: ActionDefinition[] = [
+  ...sunsamaMcpOfficialActions,
   defineProviderAction(service, {
     name: "list_tools",
     description: "Discover the current Sunsama task and daily planning MCP tools with their live input schemas.",

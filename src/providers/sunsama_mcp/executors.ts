@@ -8,6 +8,7 @@ import { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
 import { defineOAuthProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { sunsamaMcpOfficialActions } from "./official-actions.ts";
 
 const service = "sunsama_mcp";
 const sunsamaMcpEndpoint = "https://api.sunsama.com/mcp";
@@ -34,6 +35,31 @@ async function withSunsamaMcpClient<T>(
   );
 }
 
+async function callSunsamaMcpTool(
+  context: OAuthProviderContext,
+  toolName: string,
+  argumentsInput: Record<string, unknown>,
+): Promise<{ result: unknown }> {
+  const result = await withSunsamaMcpClient(context, "execute", (client) =>
+    client.callTool({ name: toolName, arguments: argumentsInput }, undefined, {
+      timeout: sunsamaMcpRequestTimeoutMs,
+      signal: context.signal,
+    }),
+  );
+  if (!("toolResult" in result) && result.isError) {
+    throw new ProviderRequestError(502, `Sunsama MCP tool ${toolName} returned an error`, result);
+  }
+  return { result };
+}
+
+const officialToolHandlers: Record<
+  string,
+  (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<{ result: unknown }>
+> = {};
+for (const action of sunsamaMcpOfficialActions) {
+  officialToolHandlers[action.name] = (input, context) => callSunsamaMcpTool(context, action.name, input);
+}
+
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(
   service,
   {
@@ -45,17 +71,9 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(
     },
     async call_tool(input, context: OAuthProviderContext) {
       const toolName = String(input.toolName);
-      const result = await withSunsamaMcpClient(context, "execute", (client) =>
-        client.callTool({ name: toolName, arguments: input.arguments as Record<string, unknown> }, undefined, {
-          timeout: sunsamaMcpRequestTimeoutMs,
-          signal: context.signal,
-        }),
-      );
-      if (!("toolResult" in result) && result.isError) {
-        throw new ProviderRequestError(502, `Sunsama MCP tool ${toolName} returned an error`, result);
-      }
-      return { result };
+      return callSunsamaMcpTool(context, toolName, (input.arguments as Record<string, unknown>) ?? {});
     },
+    ...officialToolHandlers,
   },
   { skipDnsValidation: true },
 );
