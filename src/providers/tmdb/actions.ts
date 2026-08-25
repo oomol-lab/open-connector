@@ -11,10 +11,13 @@ const pageSchema = s.integer("One-based TMDB results page. TMDB accepts values f
   maximum: 500,
 });
 const includeAdultSchema = s.boolean("Whether adult-rated titles should be included in search results.");
-const yearSchema = s.integer("Four-digit calendar year used as a TMDB search filter.", {
-  minimum: 1,
-  maximum: 9999,
-});
+const yearSchema = s.integer(
+  "Four-digit calendar year used as a TMDB search filter. TMDB accepts values from 1000 to 9999.",
+  {
+    minimum: 1000,
+    maximum: 9999,
+  },
+);
 const tmdbIdSchema = (description: string) => s.positiveInteger(description);
 
 const namedIdSchema = s.integer("TMDB numeric identifier for this result.");

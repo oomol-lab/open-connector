@@ -4,19 +4,18 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 
 import {
   CastError,
-  compactObject,
-  integer,
   optionalBoolean,
   optionalInteger,
   optionalRecord,
   optionalString,
+  positiveInteger,
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { objectPayload, requestJson } from "../http-json-runtime.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-export const tmdbApiBaseUrl = "https://api.themoviedb.org";
+const tmdbApiBaseUrl = "https://api.themoviedb.org";
 const tmdbValidationPath = "/3/authentication";
 
 type TmdbActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -27,59 +26,47 @@ const trendingTimeWindows = ["day", "week"];
 
 export const tmdbActionHandlers: ProviderActionHandlers<"tmdb", TmdbActionHandler> = {
   search_movie(input, context) {
-    return tmdbGet(
-      "/3/search/movie",
-      context,
-      compactObject({
-        query: requiredString(input.query, "query"),
-        language: optionalString(input.language),
-        page: optionalInteger(input.page),
-        include_adult: optionalBoolean(input.includeAdult),
-        year: optionalInteger(input.year),
-        primary_release_year: optionalInteger(input.primaryReleaseYear),
-        region: optionalString(input.region),
-      }),
-    );
+    return tmdbGet("/3/search/movie", context, {
+      query: requiredString(input.query, "query"),
+      language: optionalString(input.language),
+      page: optionalInteger(input.page),
+      include_adult: optionalBoolean(input.includeAdult),
+      year: optionalInteger(input.year),
+      primary_release_year: optionalInteger(input.primaryReleaseYear),
+      region: optionalString(input.region),
+    });
   },
   get_movie(input, context) {
-    return tmdbGet(`/3/movie/${encodePathSegment(readTmdbId(input.movieId, "movieId"))}`, context, {
+    return tmdbGet(`/3/movie/${encodePathSegment(positiveInteger(input.movieId, "movieId"))}`, context, {
       language: optionalString(input.language),
     });
   },
   search_tv(input, context) {
-    return tmdbGet(
-      "/3/search/tv",
-      context,
-      compactObject({
-        query: requiredString(input.query, "query"),
-        language: optionalString(input.language),
-        page: optionalInteger(input.page),
-        include_adult: optionalBoolean(input.includeAdult),
-        year: optionalInteger(input.year),
-        first_air_date_year: optionalInteger(input.firstAirDateYear),
-      }),
-    );
+    return tmdbGet("/3/search/tv", context, {
+      query: requiredString(input.query, "query"),
+      language: optionalString(input.language),
+      page: optionalInteger(input.page),
+      include_adult: optionalBoolean(input.includeAdult),
+      year: optionalInteger(input.year),
+      first_air_date_year: optionalInteger(input.firstAirDateYear),
+    });
   },
   get_tv(input, context) {
-    return tmdbGet(`/3/tv/${encodePathSegment(readTmdbId(input.tvId, "tvId"))}`, context, {
+    return tmdbGet(`/3/tv/${encodePathSegment(positiveInteger(input.tvId, "tvId"))}`, context, {
       language: optionalString(input.language),
     });
   },
   get_person(input, context) {
-    return tmdbGet(`/3/person/${encodePathSegment(readTmdbId(input.personId, "personId"))}`, context, {
+    return tmdbGet(`/3/person/${encodePathSegment(positiveInteger(input.personId, "personId"))}`, context, {
       language: optionalString(input.language),
     });
   },
   list_trending(input, context) {
     const mediaType = readAllowedValue(input.mediaType, "mediaType", trendingMediaTypes, "all");
     const timeWindow = readAllowedValue(input.timeWindow, "timeWindow", trendingTimeWindows, "day");
-    return tmdbGet(
-      `/3/trending/${encodePathSegment(mediaType)}/${encodePathSegment(timeWindow)}`,
-      context,
-      compactObject({
-        language: optionalString(input.language),
-      }),
-    );
+    return tmdbGet(`/3/trending/${encodePathSegment(mediaType)}/${encodePathSegment(timeWindow)}`, context, {
+      language: optionalString(input.language),
+    });
   },
   get_configuration(_input, context) {
     return tmdbGet("/3/configuration", context);
@@ -142,14 +129,6 @@ async function tmdbGet(
     }
     throw error;
   }
-}
-
-function readTmdbId(value: unknown, fieldName: string): number {
-  const id = integer(value, fieldName);
-  if (id < 1) {
-    throw new CastError(`${fieldName} must be a positive integer`);
-  }
-  return id;
 }
 
 function readAllowedValue(value: unknown, fieldName: string, allowed: readonly string[], fallback: string): string {
