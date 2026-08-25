@@ -1,1 +1,1 @@
-export const harvestOAuthScopes: string[] = ["harvest:all", "all"];
+export const harvestOAuthScopes: string[] = ["harvest:all"];

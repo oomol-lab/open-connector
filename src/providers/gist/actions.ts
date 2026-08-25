@@ -6,7 +6,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 const service = "gist";
 
 export const gistRequiredScopes: string[] = ["gist"];
-export const gistOAuthScopes: string[] = ["read:user", ...gistRequiredScopes];
+export const gistOAuthScopes: string[] = [...gistRequiredScopes];
 
 const rawObjectSchema = s.looseObject("A GitHub API object.");
 const nullableString = s.nullable(s.string());

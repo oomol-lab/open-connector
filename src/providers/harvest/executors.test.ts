@@ -8,7 +8,7 @@ const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
   accessToken: "harvest-access-token",
   tokenType: "Bearer",
   profile: { accountId: "oauth2", displayName: "OAuth Credential", grantedScopes: [] },
-  metadata: { scope: "all" },
+  metadata: { scope: "harvest:all" },
 };
 
 describe("Harvest OAuth credential validation", () => {

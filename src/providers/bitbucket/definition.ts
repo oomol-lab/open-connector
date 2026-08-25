@@ -13,9 +13,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://bitbucket.org/site/oauth2/authorize",
       tokenUrl: "https://bitbucket.org/site/oauth2/access_token",
       scopes: [
-        "email",
         "account",
-        "team",
         "project",
         "repository",
         "repository:write",
