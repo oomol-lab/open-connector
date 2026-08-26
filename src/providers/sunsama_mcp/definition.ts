@@ -32,7 +32,6 @@ export const provider: ProviderDefinition = {
           "Copy the Callback URL shown below; Sunsama requires it when registering the OAuth client.",
           'POST {"redirect_uris":["<Callback URL>"],"token_endpoint_auth_method":"none"} as JSON to https://api.sunsama.com/oauth/register.',
           "Copy the returned client_id into the Client ID field below and leave Client Secret empty.",
-          "Reuse this Client ID for every user connecting through this deployment.",
         ],
       },
     },
