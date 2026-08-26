@@ -26,6 +26,7 @@ export interface OAuthAuthorizationStartInput {
 export interface OAuthAuthorizationCompleteInput {
   state: string;
   code: string;
+  callbackParameters?: Record<string, string>;
   signal?: AbortSignal;
 }
 
@@ -160,11 +161,14 @@ export class OAuthFlowService {
       tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
       tokenRequestFormat: auth.tokenRequestFormat,
       tokenUrl: this.clientConfigs.resolveEndpointUrl(pending.service, auth.tokenUrl, config),
-      extraFields: createTokenExtraFields(pending),
+      extraFields: createTokenExtraFields(pending, auth, input.callbackParameters),
       createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
     });
+    const refreshParameters = readCallbackParameters(auth, input.callbackParameters, true);
     const oauthCredential = {
       ...tokenResponse,
+      providerSecret:
+        Object.keys(refreshParameters).length > 0 ? { oauthRefreshParameters: refreshParameters } : undefined,
       metadata: {
         ...tokenResponse.metadata,
         oauthClientId: config.clientId,
@@ -209,14 +213,28 @@ function setAuthorizationParam(
   }
 }
 
-function createTokenExtraFields(state: OAuthAuthorizationState): Record<string, string> | undefined {
-  if (!state.pkceCodeVerifier) {
-    return undefined;
-  }
+function createTokenExtraFields(
+  state: OAuthAuthorizationState,
+  auth: ReturnType<OAuthClientConfigService["getOAuthDefinition"]>,
+  callbackParameters: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  const fields = readCallbackParameters(auth, callbackParameters, false);
+  if (state.pkceCodeVerifier) fields.code_verifier = state.pkceCodeVerifier;
+  return Object.keys(fields).length > 0 ? fields : undefined;
+}
 
-  return {
-    code_verifier: state.pkceCodeVerifier,
-  };
+function readCallbackParameters(
+  auth: ReturnType<OAuthClientConfigService["getOAuthDefinition"]>,
+  values: Record<string, string> | undefined,
+  refreshOnly: boolean,
+): Record<string, string> {
+  const fields: Record<string, string> = {};
+  for (const parameter of auth.callbackParameters ?? []) {
+    if (refreshOnly && !parameter.includeInRefresh) continue;
+    const value = values?.[parameter.name];
+    if (value) fields[parameter.tokenRequestField ?? parameter.name] = value;
+  }
+  return fields;
 }
 
 function isExpiredOAuthState(state: OAuthAuthorizationState, maxAgeMs: number): boolean {

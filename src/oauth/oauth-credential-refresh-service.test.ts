@@ -150,4 +150,19 @@ describe("OAuthCredentialRefreshService", () => {
     expect(refreshed.refreshToken).toBe("refresh-token");
     expect(refreshed.providerSecret).toEqual(credential.providerSecret);
   });
+
+  it("forwards stored provider parameters during refresh", async () => {
+    const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      Response.json({ access_token: "new-access-token" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const credential = {
+      ...expiredCredential({ expires_in: 3600 }),
+      providerSecret: { oauthRefreshParameters: { employer: "employer-id" } },
+    };
+
+    await new OAuthCredentialRefreshService(clientConfigs).refresh("example", credential);
+
+    expect(String(fetcher.mock.calls[0]?.[1]?.body)).toContain("employer=employer-id");
+  });
 });

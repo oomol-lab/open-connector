@@ -38,6 +38,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
         clientSecret: config.clientSecret,
         responseEnvelope: auth.tokenResponseEnvelope,
         refreshToken: value,
+        extraFields: readOAuthRefreshParameters(credential.providerSecret),
         tokenRequestFields: auth.tokenRequestFields,
         tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
         tokenRequestFormat: auth.tokenRequestFormat,
@@ -68,4 +69,16 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       },
     };
   }
+}
+
+function readOAuthRefreshParameters(
+  providerSecret: Record<string, unknown> | undefined,
+): Record<string, string> | undefined {
+  const value = providerSecret?.oauthRefreshParameters;
+  if (typeof value !== "object" || value == null || Array.isArray(value)) return undefined;
+  const fields: Record<string, string> = {};
+  for (const [key, fieldValue] of Object.entries(value)) {
+    if (typeof fieldValue === "string") fields[key] = fieldValue;
+  }
+  return Object.keys(fields).length > 0 ? fields : undefined;
 }

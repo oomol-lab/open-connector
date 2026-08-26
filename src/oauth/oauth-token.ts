@@ -31,6 +31,7 @@ interface AuthorizationCodeTokenRequest extends OAuthTokenRequestOptions {
 
 interface RefreshTokenRequest extends OAuthTokenRequestOptions {
   refreshToken: string;
+  extraFields?: Record<string, string>;
   createError: OAuthTokenErrorFactory;
 }
 
@@ -275,7 +276,10 @@ function createRefreshTokenFields(input: RefreshTokenRequest): Record<string, st
     "refresh_token",
     input.refreshToken,
   );
-  return fields;
+  return {
+    ...fields,
+    ...(input.extraFields ?? {}),
+  };
 }
 
 function setMappedField(

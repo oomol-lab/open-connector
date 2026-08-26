@@ -1043,6 +1043,7 @@ export class ConnectServer {
         await this.options.oauthFlow.completeAuthorization({
           state,
           code,
+          callbackParameters: Object.fromEntries(new URL(context.req.url).searchParams),
           signal: context.req.raw.signal,
         })
       ).service;

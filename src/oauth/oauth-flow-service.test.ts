@@ -67,6 +67,21 @@ const pkceOAuthProvider: ProviderDefinition = {
   ],
 };
 
+const callbackParameterOAuthProvider: ProviderDefinition = {
+  ...oauthProvider,
+  service: "callback_parameter",
+  auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://example.com/oauth/authorize",
+      tokenUrl: "https://example.com/oauth/token",
+      scopes: ["read"],
+      tokenEndpointAuthMethod: "client_secret_post",
+      callbackParameters: [{ name: "employer", includeInRefresh: true }],
+    },
+  ],
+};
+
 const customOAuthProvider: ProviderDefinition = {
   ...oauthProvider,
   service: "custom_oauth",
@@ -572,6 +587,34 @@ describe("OAuthFlowService", () => {
     });
     expect(tokenBody).toBeInstanceOf(URLSearchParams);
     expect((tokenBody as URLSearchParams).get("code_verifier")).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("forwards allowlisted callback parameters and stores refresh parameters", async () => {
+    const services = createServices([callbackParameterOAuthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "callback_parameter",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      Response.json({ access_token: "access-token", refresh_token: "refresh-token", token_type: "Bearer" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const started = await services.flow.startAuthorization({ service: "callback_parameter" });
+    await services.flow.completeAuthorization({
+      state: started.state,
+      code: "code",
+      callbackParameters: { employer: "employer-id", untrusted: "ignored" },
+    });
+
+    const tokenBody = fetcher.mock.calls[0]?.[1]?.body;
+    expect(tokenBody).toBeInstanceOf(URLSearchParams);
+    expect(String(tokenBody)).toContain("employer=employer-id");
+    expect(String(tokenBody)).not.toContain("untrusted");
+    await expect(services.connections.getCredential("callback_parameter")).resolves.toMatchObject({
+      providerSecret: { oauthRefreshParameters: { employer: "employer-id" } },
+    });
   });
 
   it("accepts token responses that use token instead of access_token", async () => {
