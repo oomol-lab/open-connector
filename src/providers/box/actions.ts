@@ -281,8 +281,12 @@ export const boxActions: ActionDefinition[] = [
       { required: ["folderId"] },
     ),
     s.requiredObject("The deletion result.", {
-      deleted: s.boolean("Whether Box accepted the deletion."),
+      deleted: s.boolean("Whether Box confirmed that the deletion completed."),
       folderId: s.nonEmptyString("The deleted Box folder identifier."),
+      status: s.stringEnum(["deleted", "in_progress"], {
+        description: "Whether deletion completed or continues asynchronously after a Box timeout.",
+      }),
+      retryAfter: s.nullableString("The Box retry delay when provided, or null when no delay was returned."),
     }),
     boxProviderScopes.write,
   ),

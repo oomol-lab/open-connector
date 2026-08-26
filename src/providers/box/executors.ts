@@ -208,6 +208,7 @@ async function downloadFile(
       retryAfter
         ? `Box file is not ready for download; retry after ${retryAfter} seconds`
         : "Box file is not ready for download; retry later",
+      retryAfter ? { retryAfter } : undefined,
     );
   }
   if (!response.ok) {
@@ -305,13 +306,24 @@ async function deleteItem(
   const key = resource === "files" ? "fileId" : "folderId";
   const id = requireId(input[key], key);
   const url = new URL(`${boxApiBaseUrl}/${resource}/${encodeURIComponent(id)}`);
-  if (resource === "folders") setQuery(url, "recursive", optionalBoolean(input.recursive));
+  const recursive = resource === "folders" ? optionalBoolean(input.recursive) : undefined;
+  if (resource === "folders") setQuery(url, "recursive", recursive);
   const headers = new Headers();
   const etag = optionalString(input.etag);
   if (etag) headers.set("if-match", etag);
   const response = await boxRequest(url, context, { method: "DELETE", headers });
+  if (resource === "folders" && recursive === true && response.status === 503) {
+    return {
+      deleted: false,
+      folderId: id,
+      status: "in_progress",
+      retryAfter: response.headers.get("retry-after"),
+    };
+  }
   if (!response.ok) throw await boxResponseError(response, `Box ${resource.slice(0, -1)} deletion failed`);
-  return { deleted: true, [key]: id };
+  return resource === "folders"
+    ? { deleted: true, folderId: id, status: "deleted", retryAfter: null }
+    : { deleted: true, fileId: id };
 }
 
 async function boxJsonRequest(
