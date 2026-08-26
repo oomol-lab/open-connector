@@ -161,10 +161,10 @@ export class OAuthFlowService {
       tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
       tokenRequestFormat: auth.tokenRequestFormat,
       tokenUrl: this.clientConfigs.resolveEndpointUrl(pending.service, auth.tokenUrl, config),
-      extraFields: createTokenExtraFields(pending, auth, input.callbackParameters),
+      extraFields: createTokenExtraFields(pending, auth.tokenRequestCallbackParameters, input.callbackParameters),
       createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
     });
-    const refreshParameters = readCallbackParameters(auth, input.callbackParameters, true);
+    const refreshParameters = readCallbackParameters(auth.tokenRequestCallbackParameters, input.callbackParameters);
     const oauthCredential = {
       ...tokenResponse,
       providerSecret:
@@ -215,24 +215,22 @@ function setAuthorizationParam(
 
 function createTokenExtraFields(
   state: OAuthAuthorizationState,
-  auth: ReturnType<OAuthClientConfigService["getOAuthDefinition"]>,
+  parameterNames: readonly string[] | undefined,
   callbackParameters: Record<string, string> | undefined,
 ): Record<string, string> | undefined {
-  const fields = readCallbackParameters(auth, callbackParameters, false);
+  const fields = readCallbackParameters(parameterNames, callbackParameters);
   if (state.pkceCodeVerifier) fields.code_verifier = state.pkceCodeVerifier;
   return Object.keys(fields).length > 0 ? fields : undefined;
 }
 
 function readCallbackParameters(
-  auth: ReturnType<OAuthClientConfigService["getOAuthDefinition"]>,
+  parameterNames: readonly string[] | undefined,
   values: Record<string, string> | undefined,
-  refreshOnly: boolean,
 ): Record<string, string> {
   const fields: Record<string, string> = {};
-  for (const parameter of auth.callbackParameters ?? []) {
-    if (refreshOnly && !parameter.includeInRefresh) continue;
-    const value = values?.[parameter.name];
-    if (value) fields[parameter.tokenRequestField ?? parameter.name] = value;
+  for (const name of parameterNames ?? []) {
+    const value = values?.[name];
+    if (value) fields[name] = value;
   }
   return fields;
 }

@@ -77,7 +77,7 @@ const callbackParameterOAuthProvider: ProviderDefinition = {
       tokenUrl: "https://example.com/oauth/token",
       scopes: ["read"],
       tokenEndpointAuthMethod: "client_secret_post",
-      callbackParameters: [{ name: "employer", includeInRefresh: true }],
+      tokenRequestCallbackParameters: ["employer"],
     },
   ],
 };

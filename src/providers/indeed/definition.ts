@@ -18,7 +18,7 @@ export const provider: ProviderDefinition = {
       tokenEndpointAuthMethod: "client_secret_post",
       pkce: { method: "S256" },
       authorizationParams: { prompt: "select_employer" },
-      callbackParameters: [{ name: "employer", includeInRefresh: true }],
+      tokenRequestCallbackParameters: ["employer"],
       clientSetup: {
         docsUrl: "https://docs.indeed.com/authentication/auth-3-legged-oauth",
         steps: [

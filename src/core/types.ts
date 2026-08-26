@@ -169,12 +169,8 @@ export type OAuth2AuthDefinition = {
   };
   /** Extra static authorization URL parameters, such as Google `access_type=offline`. */
   authorizationParams?: Record<string, string>;
-  /** Provider callback query parameters forwarded to token exchange and, when requested, token refresh. */
-  callbackParameters?: Array<{
-    name: string;
-    tokenRequestField?: string;
-    includeInRefresh?: boolean;
-  }>;
+  /** Provider callback query parameters forwarded to token exchange and later token refresh. */
+  tokenRequestCallbackParameters?: string[];
   /** Provider-specific OAuth authorization request field names. */
   authorizationRequestFields?: {
     clientId?: string | false;
