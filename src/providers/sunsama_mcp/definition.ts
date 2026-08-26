@@ -14,8 +14,7 @@ const service = "sunsama_mcp";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Sunsama MCP",
-  description:
-    'Work with Sunsama daily planning tasks and workflows through Sunsama\'s official remote MCP server. Sunsama has no OAuth app dashboard. Register a public client by posting {"redirect_uris":["<this deployment\'s callback URL>"],"token_endpoint_auth_method":"none"} to https://api.sunsama.com/oauth/register, then configure the returned client_id. No client secret is required, and the client id can be reused by users on this deployment.',
+  description: "Work with Sunsama daily planning tasks and workflows through Sunsama's official remote MCP server.",
   categories: ["Productivity"],
   authTypes: ["oauth2"],
   auth: [
@@ -27,6 +26,15 @@ export const provider: ProviderDefinition = {
       scopes: ["read", "execute", "offline_access"],
       tokenEndpointAuthMethod: "none",
       pkce: { method: "S256" },
+      clientSetup: {
+        docsUrl: "https://help.sunsama.com/docs/integrations/mcp/",
+        steps: [
+          "Copy the Callback URL shown below; Sunsama requires it when registering the OAuth client.",
+          'POST {"redirect_uris":["<Callback URL>"],"token_endpoint_auth_method":"none"} as JSON to https://api.sunsama.com/oauth/register.',
+          "Copy the returned client_id into the Client ID field below and leave Client Secret empty.",
+          "Reuse this Client ID for every user connecting through this deployment.",
+        ],
+      },
     },
   ],
   homepageUrl: "https://help.sunsama.com/docs/integrations/mcp/",
