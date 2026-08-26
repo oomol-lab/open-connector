@@ -58,44 +58,106 @@ const channelSelection = `
   }
 `;
 
-const transcriptSelection = `
-  id
-  title
-  date
-  user {
-    user_id
-    email
+const transcriptUserSelection = `
+  user_id
+  email
+  name
+  is_admin
+`;
+
+const transcriptSummarySelection = `
+  overview
+  notes
+  gist
+  bullet_gist
+  short_summary
+  short_overview
+  shorthand_bullet
+  meeting_type
+  action_items
+  keywords
+  topics_discussed
+`;
+
+const transcriptSentenceSelection = `
+  speaker_name
+  text
+  start_time
+  end_time
+`;
+
+const meetingAttendeeSelection = `
+  display_name: displayName
+  email
+  phone_number: phoneNumber
+`;
+
+const transcriptAnalyticsSelection = `
+  sentiments {
+    negative_pct
+    neutral_pct
+    positive_pct
+  }
+  categories {
+    questions
+    date_times
+    metrics
+    tasks
+  }
+  speakers {
+    speaker_id
     name
-    is_admin
-  }
-  summary {
-    overview
-    notes
-    gist
-    bullet_gist
-    short_summary
-    short_overview
-    shorthand_bullet
-    meeting_type
-    action_items
-    keywords
-    topics_discussed
-  }
-  sentences {
-    speaker_name
-    text
-    start_time
-    end_time
-  }
-  meeting_attendees {
-    display_name
-    email
-    phone_number
-  }
-  channels {
-    ${channelSelection}
+    duration
+    word_count
+    longest_monologue
+    monologues_count
+    filler_words
+    questions
+    duration_pct
+    words_per_minute
   }
 `;
+
+const meetingAttendanceSelection = `
+  name
+  join_time
+  leave_time
+`;
+
+function buildTranscriptSelection(input: Record<string, unknown>): string {
+  const sections = ["id", "title", "date"];
+
+  if (input.include_user_details !== false) {
+    sections.push(`user { ${transcriptUserSelection} }`);
+  }
+  if (input.include_summary !== false) {
+    sections.push(`summary { ${transcriptSummarySelection} }`);
+  }
+  if (input.include_sentences !== false) {
+    sections.push(`sentences { ${transcriptSentenceSelection} }`);
+  }
+  if (input.include_meeting_attendees !== false) {
+    sections.push(`meeting_attendees { ${meetingAttendeeSelection} }`);
+  }
+  if (input.include_audio_url === true) {
+    sections.push("audio_url");
+  }
+  if (input.include_video_url === true) {
+    sections.push("video_url");
+  }
+  if (input.include_analytics === true) {
+    sections.push(`analytics { ${transcriptAnalyticsSelection} }`);
+  }
+  if (input.include_apps_preview === true) {
+    sections.push(`apps_preview { outputs { ${aiAppOutputSelection} } }`);
+  }
+  if (input.include_meeting_attendance === true) {
+    sections.push(`meeting_attendance { ${meetingAttendanceSelection} }`);
+  }
+
+  sections.push(`channels { ${channelSelection} }`);
+  return sections.join("\n");
+}
 
 const biteSelection = `
   id
@@ -381,38 +443,20 @@ async function listTranscripts(input: Record<string, unknown>, context: Fireflie
         $organizers: [String!]
         $participants: [String!]
         $channel_id: String
-        $include_summary: Boolean
-        $include_analytics: Boolean
-        $include_audio_url: Boolean
-        $include_video_url: Boolean
-        $include_sentences: Boolean
-        $include_apps_preview: Boolean
-        $include_user_details: Boolean
-        $include_meeting_attendees: Boolean
-        $include_meeting_attendance: Boolean
       ) {
         transcripts(
           skip: $skip
           limit: $limit
           title: $title
           user_id: $user_id
-          from_date: $from_date
-          to_date: $to_date
+          fromDate: $from_date
+          toDate: $to_date
           host_email: $host_email
           organizers: $organizers
           participants: $participants
           channel_id: $channel_id
-          include_summary: $include_summary
-          include_analytics: $include_analytics
-          include_audio_url: $include_audio_url
-          include_video_url: $include_video_url
-          include_sentences: $include_sentences
-          include_apps_preview: $include_apps_preview
-          include_user_details: $include_user_details
-          include_meeting_attendees: $include_meeting_attendees
-          include_meeting_attendance: $include_meeting_attendance
         ) {
-          ${transcriptSelection}
+          ${buildTranscriptSelection(input)}
         }
       }
     `,
@@ -427,15 +471,6 @@ async function listTranscripts(input: Record<string, unknown>, context: Fireflie
       organizers: input.organizers,
       participants: input.participants,
       channel_id: input.channel_id,
-      include_summary: input.include_summary,
-      include_analytics: input.include_analytics,
-      include_audio_url: input.include_audio_url,
-      include_video_url: input.include_video_url,
-      include_sentences: input.include_sentences,
-      include_apps_preview: input.include_apps_preview,
-      include_user_details: input.include_user_details,
-      include_meeting_attendees: input.include_meeting_attendees,
-      include_meeting_attendance: input.include_meeting_attendance,
     }),
   );
 
@@ -450,7 +485,7 @@ async function getTranscript(input: Record<string, unknown>, context: FirefliesA
     `
       query GetTranscript($transcriptId: String!) {
         transcript(id: $transcriptId) {
-          ${transcriptSelection}
+          ${buildTranscriptSelection({})}
         }
       }
     `,
