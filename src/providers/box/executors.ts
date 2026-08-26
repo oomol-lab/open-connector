@@ -20,6 +20,20 @@ import {
 const boxApiBaseUrl = "https://api.box.com/2.0";
 const boxUploadBaseUrl = "https://upload.box.com/api/2.0";
 const boxSimpleUploadMaxBytes = 50 * 1024 * 1024;
+const boxItemFields = [
+  "id",
+  "type",
+  "name",
+  "etag",
+  "sequence_id",
+  "description",
+  "size",
+  "parent",
+  "path_collection",
+  "shared_link",
+  "created_at",
+  "modified_at",
+].join(",");
 
 type ActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
 
@@ -137,6 +151,7 @@ async function listFolderItems(
   setQuery(url, "limit", optionalNumber(input.limit));
   setQuery(url, "sort", optionalString(input.sort));
   setQuery(url, "direction", optionalString(input.direction));
+  setQuery(url, "fields", boxItemFields);
 
   const payload = await boxJsonRequest(url, context);
   return normalizeItemPage(payload);
@@ -153,6 +168,7 @@ async function search(input: Record<string, unknown>, context: BoxRequestContext
   setQuery(url, "offset", optionalNumber(input.offset));
   setQuery(url, "sort", optionalString(input.sort));
   setQuery(url, "direction", optionalString(input.direction));
+  setQuery(url, "fields", boxItemFields);
 
   const payload = await boxJsonRequest(url, context);
   const page = normalizeItemPage(payload);
@@ -333,10 +349,12 @@ async function boxResponseError(response: Response, fallback: string): Promise<P
   const code = optionalString(record.code);
   const message = optionalString(record.message);
   const suffix = [code, message].filter(Boolean).join(": ");
+  const retryAfter = response.status === 429 || response.status === 503 ? response.headers.get("retry-after") : null;
+  const details = retryAfter ? { ...record, retryAfter } : record;
   return new ProviderRequestError(
     response.status >= 500 ? 502 : response.status,
     suffix ? `${fallback}: ${suffix}` : `${fallback} with HTTP ${response.status}`,
-    record,
+    details,
   );
 }
 
