@@ -1070,7 +1070,7 @@ export function shouldEnableConnectionSubmit(
     return true;
   }
   if (!manualValues) {
-    return (oauthConfig?.configured || oauthConfig?.autoRegisters) ?? false;
+    return oauthConfig?.configured ?? false;
   }
   if (!manualValues.clientId.trim()) {
     return false;
@@ -1370,10 +1370,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
     extraValues: manualExtraValues,
   };
   const needsOAuthClient =
-    props.auth.type === "oauth2" &&
-    props.oauthClientMode === "configured" &&
-    !props.oauthConfig?.configured &&
-    !props.oauthConfig?.autoRegisters;
+    props.auth.type === "oauth2" && props.oauthClientMode === "configured" && !props.oauthConfig?.configured;
   const canSubmit =
     props.connectionName.length > 0 &&
     props.connectionNameValid &&

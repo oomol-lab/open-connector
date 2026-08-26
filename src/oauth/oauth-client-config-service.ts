@@ -4,7 +4,6 @@ import type { OAuth2AuthDefinition, OAuthClientConfigFieldDefinition } from "../
 import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
 import { assertPublicHttpUrl } from "../core/request.ts";
-import { registerDynamicOAuthClient } from "./oauth-dynamic-registration.ts";
 
 /**
  * OAuth client configuration supplied by an open-source runtime user.
@@ -34,8 +33,6 @@ export interface OAuthClientConfigInput {
 export interface OAuthClientConfigSummary {
   service: string;
   configured: boolean;
-  /** Whether the runtime will auto-register a public OAuth client on the first authorization attempt. */
-  autoRegisters: boolean;
   customClientAvailable: boolean;
   clientId: string | null;
   expectedRedirectUri: string;
@@ -75,8 +72,6 @@ export class OAuthClientConfigService {
   private readonly origin: string;
   private readonly store: IOAuthClientConfigStore;
   private readonly isCustomClientConfigAvailable: (service: string) => boolean;
-  /** Per-service in-flight dynamic registrations, so concurrent first authorizations share one client. */
-  private readonly pendingRegistrations = new Map<string, Promise<OAuthClientConfig>>();
 
   constructor(input: OAuthClientConfigServiceOptions) {
     this.catalog = input.catalog;
@@ -93,53 +88,8 @@ export class OAuthClientConfigService {
   }
 
   async getConfig(service: string): Promise<OAuthClientConfig | undefined> {
-    const auth = this.getOAuthDefinition(service);
-    const stored = normalizeStoredOAuthClientConfig(await this.store.get(service));
-    if (stored) {
-      return stored;
-    }
-    if (!autoRegisters(auth)) {
-      return undefined;
-    }
-
-    const pending = this.pendingRegistrations.get(service);
-    if (pending) {
-      return pending;
-    }
-    const registration = (async () => {
-      // Re-read inside the single flight: a concurrent caller may have
-      // registered and stored a client between our first read and now.
-      const existing = normalizeStoredOAuthClientConfig(await this.store.get(service));
-      if (existing) {
-        return existing;
-      }
-      const config = await this.registerConfig(service, auth);
-      await this.store.set(config);
-      return config;
-    })();
-    this.pendingRegistrations.set(service, registration);
-    try {
-      return await registration;
-    } finally {
-      this.pendingRegistrations.delete(service);
-    }
-  }
-
-  private async registerConfig(service: string, auth: OAuth2AuthDefinition): Promise<OAuthClientConfig> {
-    assertOAuthEndpointUrl(auth.registrationEndpoint!);
-    const registered = await registerDynamicOAuthClient({
-      registrationEndpoint: auth.registrationEndpoint!,
-      redirectUri: this.expectedRedirectUri(service),
-      clientName: `OpenConnector (${this.origin})`,
-      createError: (message) => new OAuthClientConfigError("oauth_dynamic_registration_failed", message),
-    });
-    return {
-      service,
-      clientId: registered.clientId,
-      clientSecret: registered.clientSecret ?? "",
-      extra: {},
-      secretExtra: {},
-    };
+    this.getOAuthDefinition(service);
+    return normalizeStoredOAuthClientConfig(await this.store.get(service));
   }
 
   async upsertConfig(input: OAuthClientConfigInput & { service: string }): Promise<OAuthClientConfigSummary> {
@@ -242,7 +192,6 @@ export class OAuthClientConfigService {
     return {
       service,
       configured: config != null,
-      autoRegisters: autoRegisters(auth),
       customClientAvailable: this.isCustomClientConfigAvailable(service),
       clientId: config?.clientId ?? null,
       expectedRedirectUri: this.expectedRedirectUri(service),
@@ -394,10 +343,6 @@ function readStringRecord(value: unknown): Record<string, string> {
       return normalized ? [[key, normalized]] : [];
     }),
   );
-}
-
-function autoRegisters(auth: OAuth2AuthDefinition): boolean {
-  return Boolean(auth.registrationEndpoint) && auth.tokenEndpointAuthMethod === "none";
 }
 
 function assertOAuthEndpointUrl(value: string): void {

@@ -134,14 +134,6 @@ export type OAuth2AuthDefinition = {
   scopeSeparator?: " " | ",";
   /** How the runtime sends client credentials to the token endpoint. */
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
-  /**
-   * RFC 7591 dynamic client registration endpoint. Only used when
-   * `tokenEndpointAuthMethod` is `"none"`: the first time someone starts
-   * authorization with no OAuth client configured, the runtime registers its
-   * own public client here and stores the result, instead of requiring an
-   * admin to obtain and paste a clientId first.
-   */
-  registrationEndpoint?: string;
   /** Token request body encoding. Defaults to OAuth form encoding. */
   tokenRequestFormat?: "form" | "json";
   /** Provider-specific OAuth token request field names. */

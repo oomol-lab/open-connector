@@ -7,18 +7,15 @@ const service = "sunsama_mcp";
 /**
  * Sunsama provider backed by Sunsama's official remote MCP server.
  *
- * Sunsama has no self-serve "create an OAuth app" dashboard — its own MCP settings page just
- * says "connect with the MCP server URL, sign in when prompted." To match that, OAuth clients
- * are public clients this runtime registers for itself through Sunsama's RFC 7591 dynamic client
- * registration endpoint the first time someone starts authorization with no client configured
- * (see `registrationEndpoint` below and `OAuthClientConfigService.getConfig`), instead of
- * requiring an admin to obtain and paste a clientId first.
+ * OAuth clients are public clients registered through Sunsama's dynamic client registration
+ * endpoint with this deployment's callback URL. Sunsama has no self-serve OAuth app dashboard,
+ * so an administrator must obtain the client id from that endpoint before users connect.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Sunsama MCP",
   description:
-    "Work with Sunsama daily planning tasks and workflows through Sunsama's official remote MCP server. OAuth needs no setup: this deployment registers its own public client with Sunsama automatically the first time someone connects.",
+    'Work with Sunsama daily planning tasks and workflows through Sunsama\'s official remote MCP server. Sunsama has no OAuth app dashboard. Register a public client by posting {"redirect_uris":["<this deployment\'s callback URL>"],"token_endpoint_auth_method":"none"} to https://api.sunsama.com/oauth/register, then configure the returned client_id. No client secret is required, and the client id can be reused by users on this deployment.',
   categories: ["Productivity"],
   authTypes: ["oauth2"],
   auth: [
@@ -29,7 +26,6 @@ export const provider: ProviderDefinition = {
       refreshTokenUrl: "https://api.sunsama.com/oauth/token",
       scopes: ["read", "execute", "offline_access"],
       tokenEndpointAuthMethod: "none",
-      registrationEndpoint: "https://api.sunsama.com/oauth/register",
       pkce: { method: "S256" },
     },
   ],

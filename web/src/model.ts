@@ -103,8 +103,6 @@ export interface ConnectionRecord {
 export interface OAuthConfig {
   service: string;
   configured: boolean;
-  /** Whether the runtime will auto-register a public OAuth client on the first authorization attempt. */
-  autoRegisters?: boolean;
   customClientAvailable?: boolean;
   clientId: string | null;
   expectedRedirectUri?: string;
@@ -366,7 +364,7 @@ function providerRequiresOAuth(provider: ProviderDefinition): boolean {
 }
 
 function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): boolean {
-  return oauthConfigs.some((config) => config.service === service && (config.configured || config.autoRegisters));
+  return oauthConfigs.some((config) => config.service === service && config.configured);
 }
 
 export function credentialFieldsFor(auth: AuthDefinition): CredentialField[] {
