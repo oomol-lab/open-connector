@@ -433,7 +433,7 @@ async function listRecords(request: FeishuJsonRequest, input: Record<string, unk
     }),
     "Base record list",
   );
-  return normalizePage(data, ["records", "items"], offset, limit);
+  return normalizeRecordPage(data, offset, limit);
 }
 
 async function searchRecords(request: FeishuJsonRequest, input: Record<string, unknown>) {
@@ -457,7 +457,7 @@ async function searchRecords(request: FeishuJsonRequest, input: Record<string, u
     }),
     "Base record search",
   );
-  return normalizePage(data, ["records", "items"], offset, limit);
+  return normalizeRecordPage(data, offset, limit);
 }
 
 async function getRecord(request: FeishuJsonRequest, input: Record<string, unknown>) {
@@ -475,7 +475,7 @@ async function getRecord(request: FeishuJsonRequest, input: Record<string, unkno
     }),
     "Base record batch get",
   );
-  const record = extractItems(data, ["records", "items"])[0];
+  const record = extractRecords(data)[0];
   if (!record || !optionalObject(record)) {
     throw invalidResponse(`Base record ${recordId} was not returned`);
   }
@@ -506,7 +506,14 @@ async function deleteRecords(request: FeishuJsonRequest, input: Record<string, u
 }
 
 function normalizePage(data: Record<string, unknown>, itemKeys: readonly string[], offset: number, limit: number) {
-  const items = extractItems(data, itemKeys);
+  return pageFromItems(data, extractItems(data, itemKeys), offset, limit);
+}
+
+function normalizeRecordPage(data: Record<string, unknown>, offset: number, limit: number) {
+  return pageFromItems(data, extractRecords(data), offset, limit);
+}
+
+function pageFromItems(data: Record<string, unknown>, items: unknown[], offset: number, limit: number) {
   const reportedTotal = optionalNumber(data.total);
   const total = reportedTotal ?? offset + items.length;
   const hasMore =
@@ -514,6 +521,41 @@ function normalizePage(data: Record<string, unknown>, itemKeys: readonly string[
     optionalBoolean(data.hasMore) ??
     (reportedTotal !== undefined ? offset + items.length < reportedTotal : items.length === limit);
   return { items, offset, limit, total, hasMore };
+}
+
+function extractRecords(data: Record<string, unknown>): unknown[] {
+  const items = firstArray(data, ["records", "items"]);
+  if (items) {
+    return items;
+  }
+
+  const matrixKeys = ["record_id_list", "fields", "data"];
+  if (!matrixKeys.some((key) => Object.hasOwn(data, key))) {
+    return [];
+  }
+
+  const recordIds = requireResponseStringArray(data.record_id_list, "record_id_list");
+  const fields = requireResponseStringArray(data.fields, "fields");
+  const rows = data.data;
+  if (!Array.isArray(rows)) {
+    throw invalidResponse("data must be an array of record rows");
+  }
+  if (recordIds.length !== rows.length) {
+    throw invalidResponse(`record_id_list and data lengths differ (${recordIds.length} and ${rows.length})`);
+  }
+
+  return rows.map((value, rowIndex) => {
+    if (!Array.isArray(value)) {
+      throw invalidResponse(`data row ${rowIndex + 1} must be an array`);
+    }
+    if (value.length !== fields.length) {
+      throw invalidResponse(`data row ${rowIndex + 1} has ${value.length} cells but fields has ${fields.length}`);
+    }
+    return {
+      record_id: recordIds[rowIndex],
+      fields: Object.fromEntries(fields.map((field, fieldIndex) => [field, value[fieldIndex]])),
+    };
+  });
 }
 
 function extractItems(data: Record<string, unknown>, keys: readonly string[]) {
@@ -585,6 +627,13 @@ function requireStringArray(value: unknown, fieldName: string) {
     return items as string[];
   }
   throw new ProviderRequestError(400, `${fieldName} must contain non-empty strings`);
+}
+
+function requireResponseStringArray(value: unknown, fieldName: string): string[] {
+  if (Array.isArray(value) && value.every((item) => typeof item === "string" && item.length > 0)) {
+    return value;
+  }
+  throw invalidResponse(`${fieldName} must contain non-empty strings`);
 }
 
 function optionalStringArray(value: unknown) {
