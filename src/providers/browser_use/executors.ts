@@ -7,17 +7,25 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  normalizeProviderProxyEndpoint,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
 } from "../provider-runtime.ts";
 
 const service = "browser_use";
-const browserUseApiBaseUrl = "https://api.browser-use.com/api/v3";
+const browserUseV3ApiBaseUrl = "https://api.browser-use.com/api/v3";
+const browserUseV4ApiBaseUrl = "https://api.browser-use.com/api/v4";
 const browserUseDefaultRequestTimeoutMs = 60_000;
 const browserUseMaxResponseBytes = 10 * 1024 * 1024;
 
 type BrowserUseRequestPhase = "validate" | "execute";
+type BrowserUseApiVersion = "v3" | "v4";
+
+interface BrowserUseProxyTarget {
+  apiVersion: BrowserUseApiVersion;
+  endpoint: string;
+}
 
 interface BrowserUseRequestInput {
   method: "GET" | "POST";
@@ -125,12 +133,25 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
   skipDnsValidation: true,
 });
 
-export const proxy: ProviderProxyExecutor = defineProviderProxy({
+const browserUseV3Proxy = defineProviderProxy({
   service,
-  baseUrl: browserUseApiBaseUrl,
+  baseUrl: browserUseV3ApiBaseUrl,
   auth: { type: "api_key_header", name: "X-Browser-Use-API-Key" },
   skipDnsValidation: true,
 });
+
+const browserUseV4Proxy = defineProviderProxy({
+  service,
+  baseUrl: browserUseV4ApiBaseUrl,
+  auth: { type: "api_key_header", name: "X-Browser-Use-API-Key" },
+  skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = (input, context) => {
+  const target = resolveBrowserUseProxyTarget(input.method, input.endpoint);
+  const request = target.endpoint === input.endpoint ? input : { ...input, endpoint: target.endpoint };
+  return target.apiVersion === "v4" ? browserUseV4Proxy(request, context) : browserUseV3Proxy(request, context);
+};
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
@@ -152,7 +173,7 @@ export const credentialValidators: CredentialValidators = {
       },
       grantedScopes: [],
       metadata: {
-        apiBaseUrl: browserUseApiBaseUrl,
+        apiBaseUrl: browserUseV3ApiBaseUrl,
         projectId,
         planName: optionalString(optionalRecord(accountRecord.planInfo)?.planName),
       },
@@ -196,13 +217,76 @@ async function requestBrowserUseJson(input: BrowserUseRequestInput): Promise<unk
 }
 
 function buildBrowserUseUrl(path: string, query?: Record<string, string | number | undefined>): URL {
-  const url = new URL(`${browserUseApiBaseUrl}${path}`);
+  const url = new URL(`${browserUseV3ApiBaseUrl}${path}`);
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value !== undefined) {
       url.searchParams.set(key, String(value));
     }
   }
   return url;
+}
+
+/**
+ * Route Browser Use's shared browser, profile, and workspace resources through V4 while preserving
+ * the existing V3 agent-session and billing surface. Callers can include an explicit `/api/v3` or
+ * `/api/v4` prefix to select an upstream version without changing the stored connection.
+ */
+export function resolveBrowserUseProxyTarget(methodInput: string, endpointInput: string): BrowserUseProxyTarget {
+  const endpoint = normalizeProviderProxyEndpoint(endpointInput);
+  const explicitVersion = endpoint.match(/^\/api\/(v3|v4)(?=\/|[?#]|$)/u)?.[1] as BrowserUseApiVersion | undefined;
+  if (explicitVersion) {
+    const versionPrefix = `/api/${explicitVersion}`;
+    const versionlessEndpoint = endpoint.slice(versionPrefix.length);
+    return {
+      apiVersion: explicitVersion,
+      endpoint:
+        versionlessEndpoint === "" || versionlessEndpoint.startsWith("?") || versionlessEndpoint.startsWith("#")
+          ? `/${versionlessEndpoint}`
+          : versionlessEndpoint,
+    };
+  }
+
+  return {
+    apiVersion: isBrowserUseV4ResourceRoute(methodInput, endpoint) ? "v4" : "v3",
+    endpoint,
+  };
+}
+
+function isBrowserUseV4ResourceRoute(methodInput: string, endpoint: string): boolean {
+  const method = methodInput.toUpperCase();
+  const path = endpoint.split(/[?#]/u, 1)[0]!;
+
+  if (path === "/browsers") {
+    return method === "GET" || method === "POST";
+  }
+  if (/^\/browsers\/[^/]+$/u.test(path)) {
+    return method === "GET" || method === "PATCH";
+  }
+  if (/^\/browsers\/[^/]+\/downloads$/u.test(path)) {
+    return method === "GET";
+  }
+  if (path === "/profiles") {
+    return method === "GET" || method === "POST";
+  }
+  if (/^\/profiles\/[^/]+$/u.test(path)) {
+    return method === "GET" || method === "PATCH" || method === "DELETE";
+  }
+  if (path === "/workspaces") {
+    return method === "POST";
+  }
+  if (/^\/workspaces\/[^/]+$/u.test(path)) {
+    return method === "GET" || method === "PATCH" || method === "DELETE";
+  }
+  if (/^\/workspaces\/[^/]+\/size$/u.test(path)) {
+    return method === "GET";
+  }
+  if (/^\/workspaces\/[^/]+\/files$/u.test(path)) {
+    return method === "GET" || method === "DELETE";
+  }
+  if (/^\/workspaces\/[^/]+\/files\/upload$/u.test(path)) {
+    return method === "POST";
+  }
+  return false;
 }
 
 async function readBrowserUsePayload(response: Response): Promise<unknown> {
