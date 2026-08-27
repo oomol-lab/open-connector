@@ -475,11 +475,24 @@ async function getRecord(request: FeishuJsonRequest, input: Record<string, unkno
     }),
     "Base record batch get",
   );
-  const record = extractRecords(data)[0];
-  if (!record || !optionalObject(record)) {
+  if (optionalStringArray(data.record_not_found)?.includes(recordId)) {
+    throw new ProviderRequestError(404, `Base record ${recordId} was not found`);
+  }
+  const record = findRecord(extractRecords(data), recordId);
+  if (!record) {
     throw invalidResponse(`Base record ${recordId} was not returned`);
   }
   return { record };
+}
+
+function findRecord(records: readonly unknown[], recordId: string) {
+  for (const entry of records) {
+    const record = optionalObject(entry);
+    if (record && record.record_id === recordId) {
+      return record;
+    }
+  }
+  return undefined;
 }
 
 async function writeRecord(
