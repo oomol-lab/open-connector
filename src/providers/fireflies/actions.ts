@@ -140,10 +140,10 @@ const analyticsSentimentsSchema = s.looseRequiredObject(
 const analyticsCategoriesSchema = s.looseRequiredObject(
   "Conversation category counts for a Fireflies transcript.",
   {
-    questions: s.number("The number of questions detected in the meeting."),
-    date_times: s.number("The number of date and time mentions detected in the meeting."),
-    metrics: s.number("The number of metric mentions detected in the meeting."),
-    tasks: s.number("The number of tasks detected in the meeting."),
+    questions: s.integer("The number of questions detected in the meeting."),
+    date_times: s.integer("The number of date and time mentions detected in the meeting."),
+    metrics: s.integer("The number of metric mentions detected in the meeting."),
+    tasks: s.integer("The number of tasks detected in the meeting."),
   },
   { optional: ["questions", "date_times", "metrics", "tasks"] },
 );
@@ -151,14 +151,14 @@ const analyticsCategoriesSchema = s.looseRequiredObject(
 const analyticsSpeakerSchema = s.looseRequiredObject(
   "Speaker analytics for a Fireflies transcript.",
   {
-    speaker_id: s.string("The analytics speaker identifier."),
+    speaker_id: s.integer("The analytics speaker identifier."),
     name: s.string("The analytics speaker name."),
     duration: s.number("The speaker talk duration in seconds."),
-    word_count: s.number("The number of words spoken by the speaker."),
+    word_count: s.integer("The number of words spoken by the speaker."),
     longest_monologue: s.number("The longest monologue duration for the speaker."),
-    monologues_count: s.number("The number of monologues for the speaker."),
-    filler_words: s.number("The number of filler words used by the speaker."),
-    questions: s.number("The number of questions asked by the speaker."),
+    monologues_count: s.integer("The number of monologues for the speaker."),
+    filler_words: s.integer("The number of filler words used by the speaker."),
+    questions: s.integer("The number of questions asked by the speaker."),
     duration_pct: s.number("The share of meeting time used by the speaker."),
     words_per_minute: s.number("The words per minute spoken by the speaker."),
   },
@@ -251,7 +251,7 @@ const aiAppOutputSchema = s.looseRequiredObject(
     prompt: s.string("The prompt sent to the AI app."),
     user_id: s.string("The Fireflies user identifier for the AI app output."),
     response: s.string("The AI app response text."),
-    created_at: s.string("The AI app output creation timestamp."),
+    created_at: s.number("The AI app output creation timestamp in milliseconds since Unix epoch."),
     transcript_id: s.string("The Fireflies transcript identifier."),
   },
   { optional: ["title", "app_id", "prompt", "user_id", "response", "created_at", "transcript_id"] },
@@ -617,6 +617,20 @@ const listUserGroupsInputSchema = s.object(
   { optional: ["mine"] },
 );
 
+const transcriptIncludeInputs = {
+  include_summary: s.boolean("Whether to include transcript summary data. Defaults to true."),
+  include_analytics: s.boolean("Whether to include transcript analytics data. Defaults to false."),
+  include_audio_url: s.boolean("Whether to include the transcript audio URL. Defaults to false."),
+  include_video_url: s.boolean("Whether to include the transcript video URL. Defaults to false."),
+  include_sentences: s.boolean("Whether to include transcript sentences. Defaults to true."),
+  include_apps_preview: s.boolean("Whether to include transcript app preview data. Defaults to false."),
+  include_user_details: s.boolean("Whether to include detailed user information. Defaults to true."),
+  include_meeting_attendees: s.boolean("Whether to include meeting attendees. Defaults to true."),
+  include_meeting_attendance: s.boolean("Whether to include meeting attendance details. Defaults to false."),
+};
+
+const transcriptIncludeInputKeys = Object.keys(transcriptIncludeInputs);
+
 const listTranscriptsInputSchema = s.looseRequiredObject(
   "Input parameters for listing Fireflies transcripts.",
   {
@@ -630,15 +644,7 @@ const listTranscriptsInputSchema = s.looseRequiredObject(
     organizers: optionalEmailArray("Organizer email addresses used to filter transcripts."),
     participants: optionalEmailArray("Participant email addresses used to filter transcripts."),
     channel_id: nonEmptyString("The Fireflies channel identifier used to filter transcripts."),
-    include_summary: s.boolean("Whether to include transcript summary data. Defaults to true."),
-    include_analytics: s.boolean("Whether to include transcript analytics data. Defaults to false."),
-    include_audio_url: s.boolean("Whether to include the transcript audio URL. Defaults to false."),
-    include_video_url: s.boolean("Whether to include the transcript video URL. Defaults to false."),
-    include_sentences: s.boolean("Whether to include transcript sentences. Defaults to true."),
-    include_apps_preview: s.boolean("Whether to include transcript app preview data. Defaults to false."),
-    include_user_details: s.boolean("Whether to include detailed user information. Defaults to true."),
-    include_meeting_attendees: s.boolean("Whether to include meeting attendees. Defaults to true."),
-    include_meeting_attendance: s.boolean("Whether to include meeting attendance details. Defaults to false."),
+    ...transcriptIncludeInputs,
   },
   {
     optional: [
@@ -652,22 +658,19 @@ const listTranscriptsInputSchema = s.looseRequiredObject(
       "organizers",
       "participants",
       "channel_id",
-      "include_summary",
-      "include_analytics",
-      "include_audio_url",
-      "include_video_url",
-      "include_sentences",
-      "include_apps_preview",
-      "include_user_details",
-      "include_meeting_attendees",
-      "include_meeting_attendance",
+      ...transcriptIncludeInputKeys,
     ],
   },
 );
 
-const getTranscriptInputSchema = s.requiredObject("Input parameters for reading a Fireflies transcript by ID.", {
-  id: nonEmptyString("The Fireflies transcript identifier."),
-});
+const getTranscriptInputSchema = s.object(
+  "Input parameters for reading a Fireflies transcript by ID.",
+  {
+    id: nonEmptyString("The Fireflies transcript identifier."),
+    ...transcriptIncludeInputs,
+  },
+  { optional: transcriptIncludeInputKeys },
+);
 
 const getBiteInputSchema = s.requiredObject("Input parameters for reading a Fireflies bite by ID.", {
   id: nonEmptyString("The Fireflies bite identifier."),

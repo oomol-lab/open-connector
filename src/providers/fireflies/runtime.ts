@@ -485,7 +485,7 @@ async function getTranscript(input: Record<string, unknown>, context: FirefliesA
     `
       query GetTranscript($transcriptId: String!) {
         transcript(id: $transcriptId) {
-          ${buildTranscriptSelection({})}
+          ${buildTranscriptSelection(input)}
         }
       }
     `,
