@@ -19,3 +19,8 @@ data/
 # Local Xero OAuth app credentials (never commit)
 xero-credentials.json
 xero-encryption-key.txt
+
+# star-history-action renders a PNG alongside the SVGs on every refresh, but
+# README only embeds the SVGs. PNG doesn't delta-compress, so committing it
+# would grow the repo by ~60 KB per refresh for nothing.
+assets/star-history/star-history.png

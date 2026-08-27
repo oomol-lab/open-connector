@@ -6,6 +6,11 @@ name: Star History
 # a "[skip ci]" commit message so chart refreshes don't trigger the CI workflow.
 # Daily schedule keeps commit noise low; use workflow_dispatch for an on-demand
 # refresh (e.g. the first run after merging this workflow).
+#
+# The action also renders star-history.png, but README embeds only the SVGs and
+# PNG bytes don't delta-compress in git, so the PNG is gitignored. The action's
+# `git add <output-dir>` respects .gitignore and change detection reads only
+# .star-history.sig, so the PNG is simply rendered and discarded each run.
 on:
   schedule:
     - cron: "0 3 * * *"
