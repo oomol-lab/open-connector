@@ -244,6 +244,13 @@ Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomo
 
 See [docs/docker-ghcr.md](docs/docker-ghcr.md) for tags, pulling, and running.
 
+## RepoCloud Deployment
+
+Deploy OpenConnector to the cloud with one click on RepoCloud with competitive pricing and no
+infrastructure setup required.
+
+See [RepoCloud](https://repocloud.io/details/Open%20Connector/) for one-click cloud deployment.
+
 ## Build a Desktop Agent with Wanta
 
 OpenConnector and [Wanta](https://github.com/oomol-lab/wanta) are two open-source projects for AI
