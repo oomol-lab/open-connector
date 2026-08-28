@@ -135,6 +135,25 @@ describe("D1RuntimeDatabase", () => {
     await expect(database.oauthStateStore.take("state-1")).resolves.toBeUndefined();
   });
 
+  it("deletes OAuth states created before a cutoff", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    await database.oauthStateStore.set({
+      service: "gmail",
+      state: "expired",
+      createdAt: "2026-06-30T00:00:00.000Z",
+    });
+    await database.oauthStateStore.set({
+      service: "gmail",
+      state: "current",
+      createdAt: "2026-06-30T00:00:01.000Z",
+    });
+
+    await database.oauthStateStore.deleteCreatedBefore("2026-06-30T00:00:01.000Z");
+
+    await expect(database.oauthStateStore.take("expired")).resolves.toBeUndefined();
+    await expect(database.oauthStateStore.take("current")).resolves.toMatchObject({ state: "current" });
+  });
+
   it("stores OAuth state through the secret codec", async () => {
     const d1 = new SqliteD1Database();
     const database = new D1RuntimeDatabase(d1, {

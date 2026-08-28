@@ -348,6 +348,10 @@ export class SqliteOAuthStateStore implements IOAuthStateStore {
     this.secretCodec = secretCodec;
   }
 
+  async deleteCreatedBefore(cutoff: string): Promise<void> {
+    this.database.prepare("delete from oauth_states where created_at < ?").run(cutoff);
+  }
+
   async set(state: OAuthAuthorizationState): Promise<void> {
     this.database
       .prepare(

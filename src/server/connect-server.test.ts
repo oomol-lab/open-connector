@@ -3883,6 +3883,12 @@ class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {
 class MemoryOAuthStateStore implements IOAuthStateStore {
   private readonly states = new Map<string, OAuthAuthorizationState>();
 
+  async deleteCreatedBefore(cutoff: string): Promise<void> {
+    for (const [state, value] of this.states) {
+      if (value.createdAt < cutoff) this.states.delete(state);
+    }
+  }
+
   async set(state: OAuthAuthorizationState): Promise<void> {
     this.states.set(state.state, state);
   }

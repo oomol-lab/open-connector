@@ -490,6 +490,35 @@ describe("OAuthFlowService", () => {
     });
   });
 
+  it("removes expired OAuth authorization states before starting a new flow", async () => {
+    const services = createServices([oauthProvider], { stateMaxAgeMs: 1_000 });
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: {
+        tenant: "default",
+      },
+    });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:01.001Z"));
+    await services.states.set({
+      service: "example",
+      state: "expired",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    });
+    await services.states.set({
+      service: "example",
+      state: "current",
+      createdAt: "2026-01-01T00:00:00.001Z",
+    });
+
+    await services.flow.startAuthorization({ service: "example" });
+
+    await expect(services.states.take("expired")).resolves.toBeUndefined();
+    await expect(services.states.take("current")).resolves.toMatchObject({ state: "current" });
+  });
+
   it("rejects malformed OAuth authorization state timestamps", async () => {
     const services = createServices([oauthProvider]);
     await services.clientConfigs.upsertConfig({
@@ -875,6 +904,12 @@ class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {
 
 class MemoryOAuthStateStore implements IOAuthStateStore {
   private readonly states = new Map<string, OAuthAuthorizationState>();
+
+  async deleteCreatedBefore(cutoff: string): Promise<void> {
+    for (const [state, value] of this.states) {
+      if (value.createdAt < cutoff) this.states.delete(state);
+    }
+  }
 
   async set(state: OAuthAuthorizationState): Promise<void> {
     this.states.set(state.state, state);

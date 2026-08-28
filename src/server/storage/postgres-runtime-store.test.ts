@@ -127,6 +127,24 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     await expect(database.oauthStateStore.take("state-1")).resolves.toBeUndefined();
   });
 
+  it("deletes OAuth states created before a cutoff", async () => {
+    await database.oauthStateStore.set({
+      service: "gmail",
+      state: "expired",
+      createdAt: "2026-06-30T00:00:00.000Z",
+    });
+    await database.oauthStateStore.set({
+      service: "gmail",
+      state: "current",
+      createdAt: "2026-06-30T00:00:01.000Z",
+    });
+
+    await database.oauthStateStore.deleteCreatedBefore("2026-06-30T00:00:01.000Z");
+
+    await expect(database.oauthStateStore.take("expired")).resolves.toBeUndefined();
+    await expect(database.oauthStateStore.take("current")).resolves.toMatchObject({ state: "current" });
+  });
+
   it("preserves connection identity and rejects stale revisions", async () => {
     const created = await database.connectionStore.set("github", "default", githubCredential("github-token"));
     const updated = await database.connectionStore.set("github", "default", githubCredential("updated-token"));

@@ -375,6 +375,10 @@ class PostgresOAuthStateStore implements IOAuthStateStore {
     this.secretCodec = secretCodec;
   }
 
+  async deleteCreatedBefore(cutoff: string): Promise<void> {
+    await this.pool.query("delete from oauth_states where created_at < $1", [cutoff]);
+  }
+
   async set(state: OAuthAuthorizationState): Promise<void> {
     await this.pool.query(
       `

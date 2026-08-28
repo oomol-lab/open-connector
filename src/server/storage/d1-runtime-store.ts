@@ -256,6 +256,10 @@ export class D1OAuthStateStore implements IOAuthStateStore {
     this.secretCodec = secretCodec;
   }
 
+  async deleteCreatedBefore(cutoff: string): Promise<void> {
+    await this.database.prepare("delete from oauth_states where created_at < ?").bind(cutoff).run();
+  }
+
   async set(state: OAuthAuthorizationState): Promise<void> {
     await this.database
       .prepare(

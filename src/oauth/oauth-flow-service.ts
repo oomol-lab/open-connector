@@ -55,6 +55,7 @@ export interface OAuthFlowServiceOptions {
  * Storage contract for pending OAuth authorization states.
  */
 export interface IOAuthStateStore {
+  deleteCreatedBefore(cutoff: string): Promise<void>;
   set(state: OAuthAuthorizationState): Promise<void>;
   take(state: string): Promise<OAuthAuthorizationState | undefined>;
 }
@@ -90,13 +91,15 @@ export class OAuthFlowService {
       throw new OAuthFlowError("oauth_client_config_required", `Configure an OAuth client for ${service} first.`);
     }
 
+    const now = new Date();
     const state = crypto.randomUUID();
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
+    await this.states.deleteCreatedBefore(new Date(now.getTime() - this.stateMaxAgeMs).toISOString());
     await this.states.set({
       service,
       connectionName,
       state,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
       pkceCodeVerifier,
       clientConfig: input.clientConfig ? config : undefined,
     });
