@@ -216,7 +216,9 @@ function MarketplaceSummary(props: { marketplace?: MarketplaceState }): ReactNod
       </div>
       <div className="marketplace-summary-copy">
         <div className="marketplace-summary-title">
-          <h2 title={marketplace?.marketplace?.id}>{marketplace?.marketplace?.name ?? t("marketplace.summary.title")}</h2>
+          <h2 title={marketplace?.marketplace?.id}>
+            {marketplace?.marketplace?.name ?? t("marketplace.summary.title")}
+          </h2>
           <Badge tone={available ? "success" : marketplace?.status === "auth_error" ? "error" : undefined}>
             {available ? <CheckCircle2 size={12} /> : null}
             {t(`marketplace.status.${marketplace?.status ?? "disabled"}`)}
