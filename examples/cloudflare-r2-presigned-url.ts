@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   if (missing.length > 0) {
     console.log(
       `Skip Cloudflare R2 presigned URL example: missing ${missing.join(", ")}. ` +
-        "The current custom-credential path needs R2_API_TOKEN, R2_ACCOUNT_ID, and R2_BUCKET.",
+        "It needs R2_ACCOUNT_ID, R2_BUCKET, and either R2_API_TOKEN or R2_ACCESS_KEY_ID + R2_SECRET_ACCESS_KEY.",
     );
     return;
   }
@@ -112,7 +112,10 @@ async function main(): Promise<void> {
         await deleteObject({ ...shared, signedUrl });
         console.log(`Deleted live-test object ${objectKey}.`);
       } catch (error) {
+        // A leaked live-test object must fail the run, but rethrowing here would
+        // replace the error the try block is already propagating.
         console.error("Failed to delete the live-test object.", error);
+        process.exitCode = 1;
       }
     }
   }
@@ -177,7 +180,7 @@ async function createSignedRequest(input: SignedRequestInput) {
   };
 }
 
-async function deleteObject(input: {
+interface DeleteObjectInput {
   accountId: string;
   bucketName: string;
   objectKey: string;
@@ -186,7 +189,11 @@ async function deleteObject(input: {
   accessKeyId?: string;
   secretAccessKey?: string;
   signedUrl: string;
-}): Promise<void> {
+}
+
+async function deleteObject(input: DeleteObjectInput): Promise<void> {
+  // generate_presigned_url deliberately does not sign DELETE and never returns the
+  // token id, so cleanup recovers the Access Key ID from the signed URL credential.
   const accessKeyId = input.accessKeyId ?? new URL(input.signedUrl).searchParams.get("X-Amz-Credential")?.split("/")[0];
   const secretAccessKey =
     input.secretAccessKey ?? (input.apiToken ? deriveCloudflareR2S3SecretAccessKey(input.apiToken) : undefined);
