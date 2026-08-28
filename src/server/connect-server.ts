@@ -904,7 +904,7 @@ export class ConnectServer {
   }
 
   private async disconnect(context: Context, service: string): Promise<Response> {
-    const body = context.req.header("content-type")?.includes("application/json") ? await readJsonBody(context) : {};
+    const body = await readJsonBody(context);
     const connectionName = readConnectionName(context, body);
     const logContext: ConnectionLogContext = {
       operation: "disconnect",

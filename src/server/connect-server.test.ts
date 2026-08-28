@@ -507,6 +507,31 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("accepts case-insensitive JSON media types when disconnecting a named connection", async () => {
+    const app = createTestServer([apiKeyProvider]).createApp();
+    for (const [connectionName, apiKey] of [
+      ["default", "default-key"],
+      ["work", "work-key"],
+    ]) {
+      await app.request("/api/connections/example", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ authType: "api_key", connectionName, values: { apiKey } }),
+      });
+    }
+
+    const response = await app.request("/api/connections/example", {
+      method: "DELETE",
+      headers: { "content-type": "Application/JSON; Charset=UTF-8" },
+      body: JSON.stringify({ connectionName: "work" }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ connectionName: "work", configured: false });
+    const connections = (await (await app.request("/api/connections")).json()) as Array<{ connectionName: string }>;
+    expect(connections.map((connection) => connection.connectionName)).toEqual(["default"]);
+  });
+
   it("rejects JSON request bodies that are not objects", async () => {
     const app = createTestServer([
       {

@@ -22,7 +22,7 @@ export type JsonRequestBody = {
  */
 export async function readJsonBody(context: Context, maxBytes?: number): Promise<JsonRequestBody> {
   const contentType = context.req.header("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
+  if (contentType.split(";", 1)[0]?.trim().toLowerCase() !== "application/json") {
     return {};
   }
 
