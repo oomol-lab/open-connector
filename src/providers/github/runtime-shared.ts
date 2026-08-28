@@ -11,6 +11,7 @@ export const githubUserAgent = "oomol-connect";
 export type GitHubActionContext = {
   accessToken: string;
   fetcher: typeof fetch;
+  signal?: AbortSignal;
 };
 
 export type GitHubActionHandler = (input: Record<string, unknown>, context: GitHubActionContext) => Promise<unknown>;
@@ -30,6 +31,21 @@ interface GitHubNoContentRequest {
   body?: Record<string, unknown>;
   accessToken: string;
   fetcher: typeof fetch;
+}
+
+interface GitHubTextTailRequest {
+  path: string;
+  accessToken: string;
+  fetcher: typeof fetch;
+  maxBytes: number;
+  signal?: AbortSignal;
+}
+
+export interface GitHubTextTail {
+  text: string;
+  sizeBytes: number;
+  returnedBytes: number;
+  truncated: boolean;
 }
 
 export async function githubRequestJson<T>(input: GitHubJsonRequest): Promise<T> {
@@ -60,6 +76,49 @@ export async function githubRequestNoContent(input: GitHubNoContentRequest): Pro
     const payload = await readJsonResponse(response);
     throw normalizeGitHubError(response, payload, "github api request failed");
   }
+}
+
+/** Download a GitHub text response while retaining only its trailing bytes. */
+export async function githubRequestTextTail(input: GitHubTextTailRequest): Promise<GitHubTextTail> {
+  const response = await input.fetcher(buildGitHubUrl(input.path), {
+    headers: githubHeaders(input.accessToken, false),
+    signal: input.signal,
+  });
+  if (!response.ok) {
+    const payload = await readJsonResponse(response);
+    throw normalizeGitHubError(response, payload, "github api request failed");
+  }
+
+  const tail = new Uint8Array(input.maxBytes);
+  const reader = response.body?.getReader();
+  let sizeBytes = 0;
+  let writeOffset = 0;
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        sizeBytes += value.byteLength;
+        writeOffset = writeTailBytes(tail, writeOffset, value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  const truncated = sizeBytes > input.maxBytes;
+  const retainedSize = Math.min(sizeBytes, input.maxBytes);
+  const retained = readTailBytes(tail, writeOffset, retainedSize, truncated);
+  const utf8Start = truncated ? skipUtf8ContinuationBytes(retained) : 0;
+  const returnedBytes = retained.byteLength - utf8Start;
+  return {
+    text: new TextDecoder().decode(retained.subarray(utf8Start)),
+    sizeBytes,
+    returnedBytes,
+    truncated,
+  };
 }
 
 export function buildGitHubUrl(path: string, query?: Record<string, string | number | boolean | undefined>): string {
@@ -156,6 +215,38 @@ function isRateLimited(response: Response, payload: unknown): boolean {
 
   const message = readGitHubErrorMessage(payload)?.toLowerCase() ?? "";
   return message.includes("rate limit");
+}
+
+function writeTailBytes(tail: Uint8Array, writeOffset: number, value: Uint8Array): number {
+  if (value.byteLength >= tail.byteLength) {
+    tail.set(value.subarray(value.byteLength - tail.byteLength));
+    return 0;
+  }
+
+  const firstLength = Math.min(value.byteLength, tail.byteLength - writeOffset);
+  tail.set(value.subarray(0, firstLength), writeOffset);
+  tail.set(value.subarray(firstLength), 0);
+  return (writeOffset + value.byteLength) % tail.byteLength;
+}
+
+function readTailBytes(tail: Uint8Array, writeOffset: number, size: number, wrapped: boolean): Uint8Array {
+  if (!wrapped) {
+    return tail.slice(0, size);
+  }
+
+  const value = new Uint8Array(size);
+  const firstLength = tail.byteLength - writeOffset;
+  value.set(tail.subarray(writeOffset), 0);
+  value.set(tail.subarray(0, writeOffset), firstLength);
+  return value;
+}
+
+function skipUtf8ContinuationBytes(value: Uint8Array): number {
+  let offset = 0;
+  while (offset < value.byteLength && (value[offset]! & 0xc0) === 0x80) {
+    offset++;
+  }
+  return offset;
 }
 
 export function decodeGitHubContent(contentBase64: string, encoding?: string): string | null {

@@ -74,6 +74,7 @@ const githubRequiredInputFields: Record<string, string[]> = {
   list_workflow_runs: ["owner", "repo"],
   get_workflow_run: ["owner", "repo", "runId"],
   list_workflow_run_jobs: ["owner", "repo", "runId"],
+  get_workflow_job_logs: ["owner", "repo", "jobId"],
   rerun_workflow: ["owner", "repo", "runId"],
   list_releases: ["owner", "repo"],
   create_release: ["owner", "repo", "tagName"],
@@ -1449,6 +1450,22 @@ export const githubActions: ActionDefinition[] = [
     outputSchema: s.object({
       total_count: s.integer(),
       jobs: s.array(githubWorkflowJobSchema),
+    }),
+  }),
+  action({
+    name: "get_workflow_job_logs",
+    description: "Get the tail of the plain-text logs for a completed GitHub Actions workflow job.",
+    requiredScopes: githubRepoScopes,
+    inputSchema: s.object({
+      owner: nonEmptyString,
+      repo: nonEmptyString,
+      jobId: s.integer({ minimum: 1 }),
+    }),
+    outputSchema: s.object({
+      logs: s.string({ description: "The complete log text or its trailing 256 KiB when truncated." }),
+      sizeBytes: s.integer({ description: "The total size of the downloaded log in bytes." }),
+      returnedBytes: s.integer({ description: "The number of source log bytes represented by logs." }),
+      truncated: s.boolean({ description: "Whether logs omits bytes from the beginning of the job log." }),
     }),
   }),
   action({
