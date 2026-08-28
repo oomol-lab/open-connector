@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { executors } from "./executors.ts";
+import { credentialValidators, executors } from "./executors.ts";
 
 interface CapturedRequest {
   url: URL;
@@ -229,6 +229,98 @@ describe("Cloudflare R2 generate_presigned_url", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("signs the us jurisdiction host", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePresign({
+      bucketName: "documents",
+      objectKey: "notes.txt",
+      jurisdiction: "us",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(new URL(String(readPresignedOutput(result).url)).hostname).toBe("account-1.us.r2.cloudflarestorage.com");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown jurisdiction with the allowed values", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePresign({
+      bucketName: "documents",
+      objectKey: "notes.txt",
+      jurisdiction: "moon",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "jurisdiction must be one of default, eu, fedramp, us",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects DELETE because the action only signs GET, PUT, and HEAD", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePresign({
+      bucketName: "documents",
+      objectKey: "notes.txt",
+      method: "DELETE",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "method must be GET, PUT, or HEAD",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects dot segments in the signed object key", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePresign({ bucketName: "documents", objectKey: "a/../secret" });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "objectKey must not contain . or .. path segments",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a contentType that is not a valid HTTP header value", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePresign({
+      bucketName: "documents",
+      objectKey: "notes.txt",
+      method: "PUT",
+      contentType: "text/plain\r\nx-evil: 1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "contentType must be a valid HTTP header value",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("discovers the token ID when custom-credential metadata omitted it", async () => {
     const requests = stubJsonResponses([
       {
@@ -275,6 +367,32 @@ describe("Cloudflare R2 generate_presigned_url", () => {
     ]);
   });
 
+  it("rejects a token that is no longer active", async () => {
+    const requests = stubJsonResponses([
+      {
+        success: true,
+        result: { id: "verified-token-id", status: "disabled" },
+      },
+    ]);
+
+    const result = await executePresign(
+      { bucketName: "documents", objectKey: "notes.txt" },
+      {
+        ...customCredential,
+        metadata: { accountId: "account-1" },
+      },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "cloudflare token is not active: disabled",
+      },
+    });
+    expect(requests).toHaveLength(1);
+  });
+
   it("rejects OAuth credentials without calling Cloudflare", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
@@ -318,6 +436,43 @@ describe("Cloudflare R2 generate_presigned_url", () => {
       },
     });
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("Cloudflare R2 custom credential validation", () => {
+  it("stores the verified token ID so presign calls skip token verification", async () => {
+    const paths: string[] = [];
+    const responses = [
+      Response.json({ success: true, result: { buckets: [{ name: "documents" }] } }),
+      Response.json({ success: true, result: { id: "token-id-1", status: "active" } }),
+    ];
+
+    const result = await credentialValidators.customCredential!(
+      { values: { apiKey: "cf-api-token-secret", accountId: "account-1" } },
+      {
+        fetcher: async (url) => {
+          paths.push(new URL(url.toString()).pathname);
+          const response = responses.shift();
+          if (!response) {
+            throw new Error(`Unexpected Cloudflare R2 request to ${url.toString()}`);
+          }
+          return response;
+        },
+      },
+    );
+
+    expect(result).toMatchObject({
+      profile: { accountId: "account-1", displayName: "Cloudflare R2 - documents" },
+      grantedScopes: [],
+      metadata: {
+        validationEndpoint: "/accounts/account-1/r2/buckets?per_page=1",
+        accountId: "account-1",
+        firstBucketName: "documents",
+        tokenId: "token-id-1",
+        tokenStatus: "active",
+      },
+    });
+    expect(paths).toEqual(["/client/v4/accounts/account-1/r2/buckets", "/client/v4/user/tokens/verify"]);
   });
 });
 

@@ -1,6 +1,7 @@
 import { createAwsSigV4PresignedUrl, encodeRfc3986, encodeS3ObjectKey, sha256Hex } from "../../core/aws-sigv4.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { cloudflareR2Jurisdictions } from "./actions.ts";
 
 const r2S3Region = "auto";
 const r2S3Service = "s3";
@@ -90,7 +91,13 @@ export function createCloudflareR2S3ObjectUrl(input: {
   ) {
     throw invalidR2S3Endpoint();
   }
-  url.pathname = `/${encodeRfc3986(input.bucketName)}/${encodeS3ObjectKey(input.objectKey)}`;
+  const pathname = `/${encodeRfc3986(input.bucketName)}/${encodeS3ObjectKey(input.objectKey)}`;
+  url.pathname = pathname;
+  // The WHATWG parser resolves `.` and `..` segments, so a normalized pathname
+  // would sign a URL for a different bucket or key than the caller asked for.
+  if (url.pathname !== pathname) {
+    throw new ProviderRequestError(400, "bucketName and objectKey must not contain . or .. path segments");
+  }
   return url;
 }
 
@@ -98,10 +105,11 @@ function buildCloudflareR2S3Host(accountId: string, jurisdiction: string | undef
   if (!jurisdiction || jurisdiction === "default") {
     return `${accountId}.r2.cloudflarestorage.com`;
   }
-  if (jurisdiction === "eu" || jurisdiction === "fedramp") {
-    return `${accountId}.${jurisdiction}.r2.cloudflarestorage.com`;
+  const allowedJurisdictions = cloudflareR2Jurisdictions as readonly string[];
+  if (!allowedJurisdictions.includes(jurisdiction)) {
+    throw new ProviderRequestError(400, `jurisdiction must be one of ${allowedJurisdictions.join(", ")}`);
   }
-  throw new ProviderRequestError(400, "jurisdiction must be default, eu, or fedramp");
+  return `${accountId}.${jurisdiction}.r2.cloudflarestorage.com`;
 }
 
 function invalidR2S3Endpoint(): ProviderRequestError {

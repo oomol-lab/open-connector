@@ -6,6 +6,7 @@ import type { CloudflareR2PresignedMethod } from "./s3-presign.ts";
 
 import {
   compactObject,
+  integer,
   optionalInteger,
   optionalRecord,
   optionalString,
@@ -109,6 +110,10 @@ export async function validateCloudflareR2Credential(
   const result = optionalRecord(envelope.result);
   const buckets = normalizeR2BucketList(result?.buckets ?? []);
   const firstBucket = buckets[0];
+  // The verified token id is the R2 S3 Access Key ID, so storing it here keeps
+  // generate_presigned_url from re-verifying the token on every call.
+  const verification = await verifyCloudflareR2ApiToken(apiToken, accountId, { fetcher, signal });
+  assertActiveCloudflareR2Token(verification);
   return {
     profile: {
       accountId,
@@ -119,6 +124,8 @@ export async function validateCloudflareR2Credential(
       validationEndpoint: `/accounts/${accountId}/r2/buckets?per_page=1`,
       accountId,
       firstBucketName: optionalString(firstBucket?.name),
+      tokenId: verification.tokenId,
+      tokenStatus: verification.tokenStatus,
     }),
   };
 }
@@ -393,7 +400,7 @@ async function generatePresignedUrl(input: Record<string, unknown>, context: Clo
   const objectKey = readObjectKey(input);
   const method = normalizePresignedMethod(input.method);
   const expiresSeconds = normalizeExpiresSeconds(input.expiresSeconds);
-  const contentType = method === "PUT" ? optionalString(input.contentType) : undefined;
+  const contentType = method === "PUT" ? normalizeContentType(input.contentType) : undefined;
   const jurisdiction = optionalString(input.jurisdiction);
   const accessKeyId = await resolveR2S3AccessKeyId(accountId, context);
 
@@ -419,10 +426,10 @@ async function resolveR2S3AccessKeyId(accountId: string, context: CloudflareR2Co
   if (existing) {
     return existing;
   }
+  // Connections validated before validateCloudflareR2Credential stored tokenId
+  // still have to discover it here.
   const verification = await verifyCloudflareR2ApiToken(context.accessToken, accountId, context);
-  if (verification.tokenStatus && verification.tokenStatus !== "active") {
-    throw new ProviderRequestError(400, `cloudflare token is not active: ${verification.tokenStatus}`);
-  }
+  assertActiveCloudflareR2Token(verification);
   if (!verification.tokenId) {
     throw new ProviderRequestError(
       400,
@@ -458,6 +465,8 @@ async function verifyCloudflareR2ApiTokenAt(
   path: string,
   context: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CloudflareR2TokenVerification> {
+  // The "validate" phase is deliberate: normalizeCloudflareR2Error collapses 400/401/403/404
+  // to 400 only there, which is what lets the user-token to account-token fallback fire.
   const envelope = await cloudflareR2RequestEnvelope(apiToken, { path }, context, "validate");
   const verification = readObject(envelope.result, "cloudflare token verification");
   return {
@@ -465,6 +474,12 @@ async function verifyCloudflareR2ApiTokenAt(
     tokenStatus: optionalString(verification.status),
     validationEndpoint: path,
   };
+}
+
+function assertActiveCloudflareR2Token(verification: CloudflareR2TokenVerification): void {
+  if (verification.tokenStatus && verification.tokenStatus !== "active") {
+    throw new ProviderRequestError(400, `cloudflare token is not active: ${verification.tokenStatus}`);
+  }
 }
 
 function normalizePresignedMethod(value: unknown): Exclude<CloudflareR2PresignedMethod, "DELETE"> {
@@ -481,11 +496,25 @@ function normalizeExpiresSeconds(value: unknown): number {
   if (value === undefined) {
     return defaultPresignExpiresSeconds;
   }
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > maxPresignExpiresSeconds) {
+  const parsed = integer(value, "expiresSeconds", providerInputError);
+  if (parsed < 1 || parsed > maxPresignExpiresSeconds) {
     throw providerInputError("expiresSeconds must be an integer between 1 and 604800");
   }
   return parsed;
+}
+
+function normalizeContentType(value: unknown): string | undefined {
+  const contentType = optionalString(value);
+  if (!contentType) {
+    return undefined;
+  }
+  try {
+    // A CRLF or NUL would make the signer's Headers.set throw a raw TypeError.
+    new Headers({ "content-type": contentType });
+  } catch {
+    throw providerInputError("contentType must be a valid HTTP header value");
+  }
+  return contentType;
 }
 
 function readObjectKey(input: Record<string, unknown>): string {

@@ -57,6 +57,23 @@ describe("Cloudflare R2 S3 presign helper", () => {
     );
   });
 
+  it("rejects dot segments that the URL parser would resolve away", () => {
+    expect(() =>
+      createCloudflareR2S3ObjectUrl({
+        accountId: "023e105f4ecef8ad9ca31a8372d0c353",
+        bucketName: "..",
+        objectKey: "file.txt",
+      }),
+    ).toThrow(ProviderRequestError);
+    expect(() =>
+      createCloudflareR2S3ObjectUrl({
+        accountId: "023e105f4ecef8ad9ca31a8372d0c353",
+        bucketName: "documents",
+        objectKey: "../x",
+      }),
+    ).toThrow(ProviderRequestError);
+  });
+
   it("rejects account IDs that would change the R2 S3 origin", () => {
     expect(() =>
       createCloudflareR2S3ObjectUrl({
