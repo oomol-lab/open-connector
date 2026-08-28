@@ -1,7 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredString,
+  stringArray,
+} from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -246,18 +253,22 @@ async function falAiSubmitQueueRequest(input: Record<string, unknown>, context: 
     context,
   );
 
-  if (!payload.request_id || !payload.status_url || !payload.response_url || !payload.cancel_url) {
-    throw new ProviderRequestError(502, "fal_ai queue submission response is missing required fields.");
-  }
-
   return {
-    requestId: payload.request_id,
+    requestId: requiredString(payload.request_id, "fal_ai queue submission request_id", invalidQueueResponseError),
     status: payload.status ?? "IN_QUEUE",
     queuePosition: typeof payload.queue_position === "number" ? payload.queue_position : null,
-    statusUrl: payload.status_url,
-    responseUrl: payload.response_url,
-    cancelUrl: payload.cancel_url,
+    statusUrl: requiredString(payload.status_url, "fal_ai queue submission status_url", invalidQueueResponseError),
+    responseUrl: requiredString(
+      payload.response_url,
+      "fal_ai queue submission response_url",
+      invalidQueueResponseError,
+    ),
+    cancelUrl: requiredString(payload.cancel_url, "fal_ai queue submission cancel_url", invalidQueueResponseError),
   };
+}
+
+function invalidQueueResponseError(message: string): ProviderRequestError {
+  return new ProviderRequestError(502, message);
 }
 
 async function falAiQueueGetStatus(input: Record<string, unknown>, context: FalAiActionContext): Promise<unknown> {

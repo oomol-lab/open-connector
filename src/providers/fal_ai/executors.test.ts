@@ -17,7 +17,7 @@ const context: ExecutionContext = {
 };
 
 afterEach(() => {
-  setDefaultGuardedFetchDnsLookup(null);
+  setDefaultGuardedFetchDnsLookup(undefined);
   vi.unstubAllGlobals();
 });
 
@@ -66,6 +66,25 @@ describe("fal_ai.submit_queue_request", () => {
     expect(calls[0]!.method).toBe("POST");
     expect(calls[0]!.headers.get("authorization")).toBe("Key test-fal-key");
     expect(await calls[0]!.json()).toEqual({ prompt: "a small red cube" });
+  });
+
+  it("rejects a submission response with a non-string request_id instead of returning it as-is", async () => {
+    stubFetch(() =>
+      Response.json({
+        status: "IN_QUEUE",
+        request_id: 12345,
+        status_url: "https://queue.fal.run/fal-ai/flux/requests/req-1/status",
+        response_url: "https://queue.fal.run/fal-ai/flux/requests/req-1",
+        cancel_url: "https://queue.fal.run/fal-ai/flux/requests/req-1/cancel",
+      }),
+    );
+
+    const result = await executors["fal_ai.submit_queue_request"]!(
+      { modelId: "fal-ai/flux/schnell", input: { prompt: "a small red cube" } },
+      context,
+    );
+
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining("request_id") } });
   });
 });
 
