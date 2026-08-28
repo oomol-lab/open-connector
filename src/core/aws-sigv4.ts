@@ -28,20 +28,6 @@ export interface AwsSigV4PresignInput {
 }
 
 /**
- * Header-based SigV4 signing input used for direct S3 requests.
- */
-export interface AwsSigV4SignHeadersInput {
-  credential: AwsSigV4Credential;
-  method: string;
-  url: URL;
-  headers: Record<string, string>;
-  payloadHash: string;
-  region: string;
-  service?: string;
-  now?: Date;
-}
-
-/**
  * Build an AWS SigV4 query-string presigned URL. Signing is local; the function
  * does not send a network request.
  */
@@ -71,11 +57,11 @@ export function createAwsSigV4PresignedUrl(input: AwsSigV4PresignInput): string 
   if (input.credential.sessionToken) {
     query.set("X-Amz-Security-Token", input.credential.sessionToken);
   }
-  url.search = canonicalizeSearchParams(query);
+  const canonicalQuery = canonicalizeSearchParams(query);
   const canonicalRequest = [
     input.method,
     url.pathname,
-    url.search.slice(1),
+    canonicalQuery,
     formatCanonicalHeaders(canonicalHeaders),
     signedHeaders,
     "UNSIGNED-PAYLOAD",
@@ -85,42 +71,11 @@ export function createAwsSigV4PresignedUrl(input: AwsSigV4PresignInput): string 
     getAwsSigningKey(input.credential.secretAccessKey, dateStamp, input.region, service),
     stringToSign,
   );
-  url.searchParams.set("X-Amz-Signature", signature);
+  // Append the signature to the canonical query text instead of going through
+  // `url.searchParams`, whose setter re-serializes as form-urlencoded and would
+  // diverge from the signed bytes for `~`, space, and `*`.
+  url.search = `${canonicalQuery}&X-Amz-Signature=${signature}`;
   return url.toString();
-}
-
-/**
- * Sign an AWS request with SigV4 Authorization and x-amz-date headers.
- */
-export function signAwsSigV4Headers(input: AwsSigV4SignHeadersInput): { headers: Headers } {
-  const now = input.now ?? new Date();
-  const amzDate = formatAmzDate(now);
-  const dateStamp = amzDate.slice(0, 8);
-  const service = input.service ?? defaultAwsServiceName;
-  const credentialScope = `${dateStamp}/${input.region}/${service}/aws4_request`;
-  const headers = new Headers(input.headers);
-  headers.set("x-amz-date", amzDate);
-  if (input.credential.sessionToken) {
-    headers.set("x-amz-security-token", input.credential.sessionToken);
-  }
-  const canonicalHeaders = buildCanonicalHeaders(headers);
-  const signedHeaders = Object.keys(canonicalHeaders).join(";");
-  const canonicalRequest = [
-    input.method,
-    input.url.pathname,
-    input.url.search.slice(1),
-    formatCanonicalHeaders(canonicalHeaders),
-    signedHeaders,
-    input.payloadHash,
-  ].join("\n");
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
-  const authorization = [
-    `AWS4-HMAC-SHA256 Credential=${input.credential.accessKeyId}/${credentialScope}`,
-    `SignedHeaders=${signedHeaders}`,
-    `Signature=${hmacHex(getAwsSigningKey(input.credential.secretAccessKey, dateStamp, input.region, service), stringToSign)}`,
-  ].join(", ");
-  headers.set("authorization", authorization);
-  return { headers };
 }
 
 /**
@@ -147,7 +102,8 @@ export function encodeS3ObjectKey(value: string): string {
 }
 
 /**
- * Sort and encode query parameters the way AWS SigV4 canonical requests require.
+ * Encode query parameters and sort them by code point, the byte order AWS SigV4
+ * canonical requests require.
  */
 export function canonicalizeSearchParams(searchParams: URLSearchParams): string {
   const entries = Array.from(searchParams.entries()).map(([key, value]) => ({
@@ -156,22 +112,23 @@ export function canonicalizeSearchParams(searchParams: URLSearchParams): string 
   }));
   entries.sort((left, right) => {
     if (left.key === right.key) {
-      return left.value.localeCompare(right.value);
+      return compareCodePoints(left.value, right.value);
     }
-    return left.key.localeCompare(right.key);
+    return compareCodePoints(left.key, right.key);
   });
   return entries.map((entry) => `${entry.key}=${entry.value}`).join("&");
 }
 
 /**
- * Lowercase, trim, and sort headers for a SigV4 canonical request.
+ * Lowercase header names, collapse whitespace in header values, and sort the
+ * headers by code point for a SigV4 canonical request.
  */
 export function buildCanonicalHeaders(headers: Headers): Record<string, string> {
   const entries = Array.from(headers.entries()).map(([key, value]) => ({
     key: key.toLowerCase(),
     value: collapseHeaderWhitespace(value),
   }));
-  entries.sort((left, right) => left.key.localeCompare(right.key));
+  entries.sort((left, right) => compareCodePoints(left.key, right.key));
   return Object.fromEntries(entries.map((entry) => [entry.key, entry.value]));
 }
 
@@ -223,5 +180,16 @@ function hmacHex(key: Buffer, value: string): string {
 }
 
 function collapseHeaderWhitespace(value: string): string {
-  return value.trim().split(" ").filter(Boolean).join(" ");
+  return value.trim().replaceAll(/\s+/g, " ");
+}
+
+/**
+ * SigV4 sorts canonical headers and query parameters by byte order, so compare
+ * code points instead of using the locale/ICU dependent `localeCompare`.
+ */
+function compareCodePoints(left: string, right: string): number {
+  if (left < right) {
+    return -1;
+  }
+  return left > right ? 1 : 0;
 }
