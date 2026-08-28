@@ -34,7 +34,8 @@ async function main(): Promise<void> {
     return;
   }
 
-  const objectKey = process.env.R2_OBJECT_KEY?.trim() || `oomol-connect/presign-live/${Date.now()}.txt`;
+  const objectKeyPrefix = process.env.R2_OBJECT_KEY?.trim().replace(/\/+$/, "") || "oomol-connect/presign-live";
+  const objectKey = `${objectKeyPrefix}/${Date.now()}.txt`;
   const jurisdiction = process.env.R2_JURISDICTION?.trim();
   const body = `oomol-connect r2 presign live test ${new Date().toISOString()}\n`;
   const contentType = "text/plain";
