@@ -51,6 +51,22 @@ describe("Cloudflare R2 S3 presign helper", () => {
     expect(result.requiredHeaders).toEqual({});
   });
 
+  it("reports expiration from the second-precision signing time", () => {
+    const result = createCloudflareR2PresignedUrl({
+      accountId: "023e105f4ecef8ad9ca31a8372d0c353",
+      accessKeyId: "token-id-1",
+      secretAccessKey: "secret",
+      bucketName: "documents",
+      objectKey: "file.txt",
+      method: "GET",
+      expiresSeconds: 60,
+      now: new Date("2026-08-22T00:00:00.999Z"),
+    });
+
+    expect(new URL(result.url).searchParams.get("X-Amz-Date")).toBe("20260822T000000Z");
+    expect(result.expiresAt).toBe("2026-08-22T00:01:00.000Z");
+  });
+
   it("derives the S3 secret as the SHA-256 hex digest of the API token", () => {
     expect(deriveCloudflareR2S3SecretAccessKey("cf-api-token-secret")).toBe(
       "c954a48febbdcd595a54a6d658b123e08a05bbb9d97b7a733a7d928b31c47a81",
@@ -90,4 +106,18 @@ describe("Cloudflare R2 S3 presign helper", () => {
       }),
     ).toThrow(ProviderRequestError);
   });
+
+  for (const [field, input] of [
+    ["bucketName", { bucketName: "documents\ud800", objectKey: "file.txt" }],
+    ["objectKey", { bucketName: "documents", objectKey: "file\ud800" }],
+  ] as const) {
+    it(`rejects non-well-formed Unicode in ${field}`, () => {
+      expect(() =>
+        createCloudflareR2S3ObjectUrl({
+          accountId: "023e105f4ecef8ad9ca31a8372d0c353",
+          ...input,
+        }),
+      ).toThrow(`${field} must contain valid Unicode`);
+    });
+  }
 });

@@ -43,7 +43,7 @@ export function deriveCloudflareR2S3SecretAccessKey(apiToken: string): string {
  * network request.
  */
 export function createCloudflareR2PresignedUrl(input: CloudflareR2PresignedUrlInput): CloudflareR2PresignedUrl {
-  const now = input.now ?? new Date();
+  const now = new Date(Math.floor((input.now ?? new Date()).getTime() / 1000) * 1000);
   const requiredHeaders: Record<string, string> = {};
   if (input.contentType) {
     requiredHeaders["content-type"] = input.contentType;
@@ -76,6 +76,12 @@ export function createCloudflareR2S3ObjectUrl(input: {
   objectKey: string;
   jurisdiction?: string;
 }): URL {
+  if (!input.bucketName.isWellFormed()) {
+    throw new ProviderRequestError(400, "bucketName must contain valid Unicode");
+  }
+  if (!input.objectKey.isWellFormed()) {
+    throw new ProviderRequestError(400, "objectKey must contain valid Unicode");
+  }
   const expectedHost = buildCloudflareR2S3Host(input.accountId, input.jurisdiction);
   const url = assertPublicHttpUrl(`https://${expectedHost}`, {
     fieldName: "accountId",

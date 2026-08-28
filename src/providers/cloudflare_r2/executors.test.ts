@@ -300,6 +300,22 @@ describe("Cloudflare R2 generate_presigned_url", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("rejects a signed object key with an unpaired Unicode surrogate", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executePresign({ bucketName: "documents", objectKey: "file\ud800" });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "objectKey must contain valid Unicode",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("rejects a contentType that is not a valid HTTP header value", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
