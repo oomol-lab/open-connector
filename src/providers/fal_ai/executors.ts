@@ -280,7 +280,7 @@ async function falAiQueueGetStatus(input: Record<string, unknown>, context: FalA
     logs?: unknown[];
   }>(
     {
-      url: statusUrl ? assertFalAiQueueUrl(statusUrl, "statusUrl") : undefined,
+      url: statusUrl ? assertFalAiQueueUrl(statusUrl, "statusUrl").toString() : undefined,
       path: statusUrl ? undefined : buildQueueRequestPath(input, "status"),
       query: compactObject({
         logs: optionalInteger(input.logs),
@@ -307,7 +307,7 @@ async function falAiQueueGetStatusStream(
     {
       apiKey: context.apiKey,
       baseUrl: falAiQueueApiBaseUrl,
-      url: statusUrl ? `${assertFalAiQueueUrl(statusUrl, "statusUrl")}/stream` : undefined,
+      url: statusUrl ? appendFalAiQueuePathSegment(assertFalAiQueueUrl(statusUrl, "statusUrl"), "stream") : undefined,
       path: statusUrl ? undefined : buildQueueRequestPath(input, "status/stream"),
       query: compactObject({
         logs: optionalInteger(input.logs),
@@ -354,7 +354,7 @@ async function falAiGetQueueRequestResult(
   const responseUrl = optionalString(input.responseUrl);
   const payload = await falAiQueueRequest<Record<string, unknown>>(
     {
-      url: responseUrl ? assertFalAiQueueUrl(responseUrl, "responseUrl") : undefined,
+      url: responseUrl ? assertFalAiQueueUrl(responseUrl, "responseUrl").toString() : undefined,
       path: responseUrl ? undefined : buildQueueRequestPath(input),
       signal: context.signal,
     },
@@ -378,7 +378,7 @@ async function falAiCancelQueueRequest(input: Record<string, unknown>, context: 
   }>(
     {
       method: "PUT",
-      url: cancelUrl ? assertFalAiQueueUrl(cancelUrl, "cancelUrl") : undefined,
+      url: cancelUrl ? assertFalAiQueueUrl(cancelUrl, "cancelUrl").toString() : undefined,
       path: cancelUrl ? undefined : buildQueueRequestPath(input, "cancel"),
       signal: context.signal,
     },
@@ -478,7 +478,7 @@ function encodeFalAiModelIdPath(modelId: string): string {
  * cannot redirect the request (and the Authorization header) off fal's
  * queue host.
  */
-function assertFalAiQueueUrl(value: string, fieldName: string): string {
+function assertFalAiQueueUrl(value: string, fieldName: string): URL {
   let parsed: URL;
   try {
     parsed = new URL(value);
@@ -488,7 +488,18 @@ function assertFalAiQueueUrl(value: string, fieldName: string): string {
   if (parsed.protocol !== "https:" || parsed.hostname !== "queue.fal.run") {
     throw new ProviderRequestError(400, `${fieldName} must be an https://queue.fal.run URL returned by fal.`);
   }
-  return parsed.toString();
+  return parsed;
+}
+
+/**
+ * Append a path segment to a validated fal queue URL's pathname, preserving
+ * its search and hash. String-concatenating a `/stream` suffix onto the
+ * whole URL would land after the query string instead of the path.
+ */
+function appendFalAiQueuePathSegment(url: URL, segment: string): string {
+  const withSegment = new URL(url);
+  withSegment.pathname = `${withSegment.pathname.replace(/\/+$/, "")}/${segment}`;
+  return withSegment.toString();
 }
 
 function normalizeStringOrArray(value: unknown): string | string[] | undefined {

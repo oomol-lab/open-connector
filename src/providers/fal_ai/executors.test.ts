@@ -136,6 +136,31 @@ describe("fal_ai.queue_get_status", () => {
   });
 });
 
+describe("fal_ai.queue_get_status_stream", () => {
+  it("appends /stream to the pathname and keeps the statusUrl's query string intact", async () => {
+    const calls = stubFetch(
+      () =>
+        new Response('data: {"status":"COMPLETED"}\n\n', {
+          headers: { "content-type": "text/event-stream" },
+        }),
+    );
+
+    await executors["fal_ai.queue_get_status_stream"]!(
+      {
+        modelId: "fal-ai/flux/schnell",
+        requestId: "req-1",
+        statusUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1/status?logs=1",
+      },
+      context,
+    );
+
+    expect(calls).toHaveLength(1);
+    const url = new URL(calls[0]!.url);
+    expect(url.pathname).toBe("/fal-ai/flux/requests/req-1/status/stream");
+    expect(url.search).toBe("?logs=1");
+  });
+});
+
 describe("fal_ai.get_queue_request_result", () => {
   it("returns fal's raw, model-specific result payload directly instead of an empty envelope", async () => {
     const rawResult = {
