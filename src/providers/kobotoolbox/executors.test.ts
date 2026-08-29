@@ -34,8 +34,25 @@ describe("KoboToolbox credential validation", () => {
         { apiKey: "kobo-token", values: { baseUrl: "https://10.0.0.5" } },
         { fetcher: createProviderFetch({ fetch: fetchMock }) },
       ),
-    ).rejects.toThrow("request URL must not target private or reserved IP addresses");
+    ).rejects.toThrow("baseUrl must not target private or reserved IP addresses");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards the caller abort signal to the validation request", async () => {
+    setPrivateNetworkAccessAllowed(true);
+
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      init?.signal?.throwIfAborted();
+      return Response.json({ username: "alice" });
+    });
+
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "kobo-token", values: { baseUrl: "https://10.0.0.5" } },
+        { fetcher: createProviderFetch({ fetch: fetchMock }), signal: AbortSignal.abort() },
+      ),
+    ).rejects.toThrow("KoboToolbox request timed out");
+    expect(fetchMock.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
   });
 
   it("rejects reserved metadata targets even with the deployment opt-in", async () => {
@@ -48,7 +65,7 @@ describe("KoboToolbox credential validation", () => {
         { apiKey: "kobo-token", values: { baseUrl: "https://169.254.169.254" } },
         { fetcher: createProviderFetch({ fetch: fetchMock }) },
       ),
-    ).rejects.toThrow("request URL must not target private or reserved IP addresses");
+    ).rejects.toThrow("baseUrl must not target private or reserved IP addresses");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

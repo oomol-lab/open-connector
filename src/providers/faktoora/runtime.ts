@@ -111,7 +111,7 @@ export const faktooraActionHandlers: ProviderActionHandlers<"faktoora", Faktoora
 
 export async function validateFaktooraCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch,
 ): Promise<FaktooraCredentialCheck> {
   const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
   await requestFaktooraJson({

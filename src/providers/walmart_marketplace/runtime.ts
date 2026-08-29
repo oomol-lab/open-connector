@@ -36,7 +36,7 @@ interface ValidationResult {
 
 export async function validateWalmartMarketplaceCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch,
 ): Promise<ValidationResult> {
   const credential = readCredential(input);
   await exchangeAccessToken(credential, fetcher, "validate");

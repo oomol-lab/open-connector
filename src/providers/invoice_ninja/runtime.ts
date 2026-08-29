@@ -13,6 +13,7 @@ interface InvoiceNinjaInput {
   apiKey: string;
   providerMetadata: Record<string, unknown>;
   input: Record<string, unknown>;
+  signal?: AbortSignal;
 }
 type Handler = (input: InvoiceNinjaInput, fetcher: typeof fetch) => Promise<unknown>;
 
@@ -135,6 +136,7 @@ export const invoiceNinjaActionHandlers: Record<string, Handler> = {
 export async function validateInvoiceNinjaCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const apiKey = input.apiKey?.trim();
   if (!apiKey) throw new ProviderRequestError(400, "apiKey is required");
@@ -146,6 +148,7 @@ export async function validateInvoiceNinjaCredential(
     method: "POST",
     phase: "validate",
     fetcher,
+    signal,
   });
   const company = unwrapEntity(payload, "company");
   const companyId = optionalString(company.id)?.trim();
@@ -207,6 +210,7 @@ async function request(
     path,
     fetcher,
     phase: "execute",
+    signal: input.signal,
     ...options,
   });
 }
@@ -221,8 +225,9 @@ async function requestJson(input: {
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;
   notFound?: boolean;
+  signal?: AbortSignal;
 }) {
-  const timeout = createProviderTimeout(undefined, 30_000);
+  const timeout = createProviderTimeout(input.signal, 30_000);
   const url = new URL(`${input.apiBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));

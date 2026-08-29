@@ -39,7 +39,7 @@ interface ValidationResult {
 
 export async function validateCoupangCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch,
 ): Promise<ValidationResult> {
   const credential = readCoupangCredential(input);
   await requestCoupangJson({

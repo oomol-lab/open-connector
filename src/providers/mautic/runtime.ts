@@ -3,7 +3,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortSignalError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 type MauticCredential = {
   baseUrl: string;
@@ -19,22 +24,25 @@ type MauticRequest = {
   method?: "DELETE" | "GET" | "PATCH" | "POST";
   query?: Record<string, unknown>;
   jsonBody?: Record<string, unknown>;
+  signal?: AbortSignal;
 };
 
 type MauticActionHandler = (
   input: Record<string, unknown>,
   credential: MauticCredential,
   fetcher: typeof fetch,
+  signal?: AbortSignal,
 ) => Promise<unknown>;
 
 const mauticRequestTimeoutMs = 30_000;
 const mauticMaxResponseBytes = 10 * 1024 * 1024;
 
 export const mauticActionHandlers: Record<string, MauticActionHandler> = {
-  async list_contacts(input, credential, fetcher) {
+  async list_contacts(input, credential, fetcher, signal) {
     const payload = await requestMauticJson({
       credential,
       fetcher,
+      signal,
       path: "contacts",
       phase: "execute",
       query: buildListQuery(input),
@@ -46,21 +54,23 @@ export const mauticActionHandlers: Record<string, MauticActionHandler> = {
     };
   },
 
-  async get_contact(input, credential, fetcher) {
+  async get_contact(input, credential, fetcher, signal) {
     const contactId = readEntityId(input.contactId, "contactId");
     const payload = await requestMauticJson({
       credential,
       fetcher,
+      signal,
       path: `contacts/${contactId}`,
       phase: "execute",
     });
     return { contact: requireResponseObject(readObjectValue(payload, "contact"), "contact") };
   },
 
-  async create_contact(input, credential, fetcher) {
+  async create_contact(input, credential, fetcher, signal) {
     const payload = await requestMauticJson({
       credential,
       fetcher,
+      signal,
       path: "contacts/new",
       phase: "execute",
       method: "POST",
@@ -69,11 +79,12 @@ export const mauticActionHandlers: Record<string, MauticActionHandler> = {
     return { contact: requireResponseObject(readObjectValue(payload, "contact"), "contact") };
   },
 
-  async update_contact(input, credential, fetcher) {
+  async update_contact(input, credential, fetcher, signal) {
     const contactId = readEntityId(input.contactId, "contactId");
     const payload = await requestMauticJson({
       credential,
       fetcher,
+      signal,
       path: `contacts/${contactId}/edit`,
       phase: "execute",
       method: "PATCH",
@@ -82,11 +93,12 @@ export const mauticActionHandlers: Record<string, MauticActionHandler> = {
     return { contact: requireResponseObject(readObjectValue(payload, "contact"), "contact") };
   },
 
-  async delete_contact(input, credential, fetcher) {
+  async delete_contact(input, credential, fetcher, signal) {
     const contactId = readEntityId(input.contactId, "contactId");
     const payload = await requestMauticJson({
       credential,
       fetcher,
+      signal,
       path: `contacts/${contactId}/delete`,
       phase: "execute",
       method: "DELETE",
@@ -94,10 +106,11 @@ export const mauticActionHandlers: Record<string, MauticActionHandler> = {
     return { contact: requireResponseObject(readObjectValue(payload, "contact"), "contact") };
   },
 
-  async list_segments(input, credential, fetcher) {
+  async list_segments(input, credential, fetcher, signal) {
     const payload = await requestMauticJson({
       credential,
       fetcher,
+      signal,
       path: "segments",
       phase: "execute",
       query: buildListQuery(input),
@@ -109,23 +122,25 @@ export const mauticActionHandlers: Record<string, MauticActionHandler> = {
     };
   },
 
-  async add_contact_to_segment(input, credential, fetcher) {
-    return changeSegmentMembership(input, credential, fetcher, "add");
+  async add_contact_to_segment(input, credential, fetcher, signal) {
+    return changeSegmentMembership(input, credential, fetcher, "add", signal);
   },
 
-  async remove_contact_from_segment(input, credential, fetcher) {
-    return changeSegmentMembership(input, credential, fetcher, "remove");
+  async remove_contact_from_segment(input, credential, fetcher, signal) {
+    return changeSegmentMembership(input, credential, fetcher, "remove", signal);
   },
 };
 
 export async function validateMauticCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const credential = buildMauticCredential(input);
   const payload = await requestMauticJson({
     credential,
     fetcher,
+    signal,
     path: "users/self",
     phase: "validate",
   });
@@ -234,12 +249,14 @@ async function changeSegmentMembership(
   credential: MauticCredential,
   fetcher: typeof fetch,
   operation: "add" | "remove",
+  signal?: AbortSignal,
 ) {
   const segmentId = readEntityId(input.segmentId, "segmentId");
   const contactId = readEntityId(input.contactId, "contactId");
   const payload = await requestMauticJson({
     credential,
     fetcher,
+    signal,
     path: `segments/${segmentId}/contact/${contactId}/${operation}`,
     phase: "execute",
     method: "POST",
@@ -258,7 +275,7 @@ async function requestMauticJson(input: MauticRequest): Promise<Record<string, u
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(undefined, mauticRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal, mauticRequestTimeoutMs);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
@@ -291,7 +308,7 @@ async function requestMauticJson(input: MauticRequest): Promise<Record<string, u
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeout.didTimeout()) {
+    if (timeout.didTimeout() || isAbortSignalError(timeout.signal, error)) {
       throw new ProviderRequestError(504, "Mautic request timed out");
     }
     throw new ProviderRequestError(

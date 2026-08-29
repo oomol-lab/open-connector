@@ -59,7 +59,7 @@ export const helpdeskActionHandlers: ProviderActionHandlers<"helpdesk", Helpdesk
 
 export async function validateHelpdeskCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch,
 ): Promise<HelpdeskCredentialCheck> {
   const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
   const accountId = requireHelpdeskAccountId(input);

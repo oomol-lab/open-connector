@@ -7,12 +7,14 @@ import {
   pickOptionalInteger,
   pickOptionalString,
 } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;
   input: Record<string, unknown>;
   providerMetadata: Record<string, unknown>;
+  signal?: AbortSignal;
 }
 interface ProviderProxyFetchInput {
   fetcher: typeof fetch;
@@ -210,6 +212,7 @@ export const koboToolboxActionHandlers: Record<string, Handler> = {
 export async function validateKoboToolboxCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<ValidateCredentialResult> {
   const apiKey = requireApiKey(input);
   const baseUrl = normalizeKoboToolboxBaseUrl(input.baseUrl);
@@ -220,6 +223,7 @@ export async function validateKoboToolboxCredential(
       path: "/me/",
       phase: "validate",
       fetcher,
+      signal,
     }),
     "current user profile",
   );
@@ -237,16 +241,18 @@ export async function validateKoboToolboxCredential(
   };
 }
 
-export function normalizeKoboToolboxBaseUrl(value: unknown): string {
+export function normalizeKoboToolboxBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   if (typeof value !== "string" || !value.trim()) {
     throw new ProviderRequestError(400, "baseUrl is required");
   }
-  let url: URL;
-  try {
-    url = new URL(value.trim());
-  } catch {
-    throw new ProviderRequestError(400, "baseUrl must be a valid http(s) URL");
-  }
+  const url = assertPublicHttpUrl(value.trim(), {
+    fieldName: "baseUrl",
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
+  });
   if (url.protocol !== "https:") {
     throw new ProviderRequestError(400, "baseUrl must use https");
   }
@@ -276,8 +282,9 @@ export async function requestKoboToolboxJson(input: {
   query?: Record<string, unknown>;
   body?: unknown;
   notFound?: boolean;
+  signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(undefined, 30_000);
+  const timeout = createProviderTimeout(input.signal, 30_000);
   const url = new URL(input.path, `${normalizeKoboToolboxBaseUrl(input.baseUrl)}/`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));
@@ -331,6 +338,7 @@ function requestForAction(
     path,
     fetcher,
     phase: "execute",
+    signal: input.signal,
     ...options,
   });
 }
