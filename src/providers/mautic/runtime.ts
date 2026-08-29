@@ -120,7 +120,7 @@ export const mauticActionHandlers: Record<string, MauticActionHandler> = {
 
 export async function validateMauticCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch,
 ): Promise<CredentialValidationResult> {
   const credential = buildMauticCredential(input);
   const payload = await requestMauticJson({

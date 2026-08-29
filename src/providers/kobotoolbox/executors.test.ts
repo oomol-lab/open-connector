@@ -1,24 +1,54 @@
-import { afterEach, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { credentialValidators } from "./executors.ts";
 
-afterEach(() => setPrivateNetworkAccessAllowed(false));
+describe("KoboToolbox credential validation", () => {
+  afterEach(() => setPrivateNetworkAccessAllowed(false));
 
-it("validates credentials against an opted-in private instance", async () => {
-  setPrivateNetworkAccessAllowed(true);
+  it("validates credentials against an opted-in private instance", async () => {
+    setPrivateNetworkAccessAllowed(true);
 
-  const result = await credentialValidators.apiKey!(
-    { apiKey: "kobo-token", values: { baseUrl: "https://10.0.0.5" } },
-    {
-      fetcher: createProviderFetch({
-        fetch: async (url) => {
-          expect(url.toString()).toBe("https://10.0.0.5/me/");
-          return Response.json({ username: "alice" });
-        },
-      }),
-    },
-  );
+    const requests: string[] = [];
+    const fetchMock = vi.fn(async (url: RequestInfo | URL) => {
+      requests.push(String(url));
+      return Response.json({ username: "alice" });
+    });
 
-  expect(result).toMatchObject({ profile: { accountId: "kobotoolbox:10.0.0.5:alice" } });
+    const result = await credentialValidators.apiKey!(
+      { apiKey: "kobo-token", values: { baseUrl: "https://10.0.0.5" } },
+      // Guard the mock the way the runtime guards the injected fetcher, so the
+      // test fails unless the validator opts private instances into egress.
+      { fetcher: createProviderFetch({ fetch: fetchMock }) },
+    );
+
+    expect(requests).toEqual(["https://10.0.0.5/me/"]);
+    expect(result).toMatchObject({ profile: { accountId: "kobotoolbox:10.0.0.5:alice" } });
+  });
+
+  it("rejects a private instance without the deployment opt-in", async () => {
+    const fetchMock = vi.fn();
+
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "kobo-token", values: { baseUrl: "https://10.0.0.5" } },
+        { fetcher: createProviderFetch({ fetch: fetchMock }) },
+      ),
+    ).rejects.toThrow("request URL must not target private or reserved IP addresses");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects reserved metadata targets even with the deployment opt-in", async () => {
+    setPrivateNetworkAccessAllowed(true);
+
+    const fetchMock = vi.fn();
+
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "kobo-token", values: { baseUrl: "https://169.254.169.254" } },
+        { fetcher: createProviderFetch({ fetch: fetchMock }) },
+      ),
+    ).rejects.toThrow("request URL must not target private or reserved IP addresses");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
