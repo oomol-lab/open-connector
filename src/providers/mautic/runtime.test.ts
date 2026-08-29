@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
+import { credentialValidators } from "./executors.ts";
 import { normalizeMauticBaseUrl } from "./runtime.ts";
 
 afterEach(() => setPrivateNetworkAccessAllowed(false));
@@ -24,4 +26,22 @@ describe("normalizeMauticBaseUrl", () => {
     expect(() => normalizeMauticBaseUrl("http://[::ffff:169.254.169.254]/")).toThrow("IPv6");
     expect(() => normalizeMauticBaseUrl("https://metadata.google.internal")).toThrow("cloud metadata hosts");
   });
+});
+
+it("validates credentials against an opted-in private instance", async () => {
+  setPrivateNetworkAccessAllowed(true);
+
+  const result = await credentialValidators.customCredential!(
+    { values: { baseUrl: "https://10.0.0.5", username: "admin", password: "secret" } },
+    {
+      fetcher: createProviderFetch({
+        fetch: async (url) => {
+          expect(url.toString()).toBe("https://10.0.0.5/api/users/self");
+          return Response.json({ user: { id: 1, username: "admin" } });
+        },
+      }),
+    },
+  );
+
+  expect(result).toMatchObject({ profile: { accountId: "mautic:https://10.0.0.5/api/:1" } });
 });

@@ -7,6 +7,7 @@ import type {
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   defineProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
@@ -43,10 +44,11 @@ export const executors: ProviderExecutors = defineProviderExecutors<Context>({
 });
 
 export const credentialValidators: CredentialValidators = {
-  async apiKey(input, context) {
+  async apiKey(input, { fetcher }) {
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     const result = await validateKoboToolboxCredential(
       { apiKey: input.apiKey, baseUrl: String(input.values.baseUrl ?? "") },
-      context.fetcher,
+      guardedFetcher,
     );
     return {
       profile: { accountId: result.providerAccountId ?? "kobotoolbox", displayName: result.accountLabel },

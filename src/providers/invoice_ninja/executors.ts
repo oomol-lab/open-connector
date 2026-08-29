@@ -1,7 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { createProviderFetch, defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
 import { invoiceNinjaActionHandlers, normalizeInvoiceNinjaUrls, validateInvoiceNinjaCredential } from "./runtime.ts";
 
 interface InvoiceNinjaContext {
@@ -35,6 +35,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher }) {
-    return validateInvoiceNinjaCredential({ apiKey: input.apiKey, ...input.values }, fetcher);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateInvoiceNinjaCredential({ apiKey: input.apiKey, ...input.values }, guardedFetcher);
   },
 };

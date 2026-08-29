@@ -1,7 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { createProviderFetch, defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
 import { mauticActionHandlers, normalizeMauticBaseUrl, validateMauticCredential } from "./runtime.ts";
 
 interface MauticContext {
@@ -38,6 +38,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
 
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher }) {
-    return validateMauticCredential(input.values, fetcher);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    return validateMauticCredential(input.values, guardedFetcher);
   },
 };
