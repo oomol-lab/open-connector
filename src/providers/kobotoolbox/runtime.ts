@@ -8,7 +8,12 @@ import {
   pickOptionalString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortSignalError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;
@@ -309,7 +314,7 @@ export async function requestKoboToolboxJson(input: {
     return payload;
   } catch (error) {
     if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || (error instanceof Error && error.name === "AbortError")) {
+    if (timeout.didTimeout() || isAbortSignalError(timeout.signal, error)) {
       throw new ProviderRequestError(504, "KoboToolbox request timed out");
     }
     throw new ProviderRequestError(

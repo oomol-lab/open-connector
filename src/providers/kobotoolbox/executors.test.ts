@@ -55,6 +55,26 @@ describe("KoboToolbox credential validation", () => {
     expect(fetchMock.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
   });
 
+  it("maps a caller abort reason to the timeout error", async () => {
+    setPrivateNetworkAccessAllowed(true);
+
+    // A caller that aborts with its own reason makes fetch reject with that
+    // reason object, whose name is not "AbortError".
+    const signal = AbortSignal.abort(new Error("cancelled by caller"));
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.signal?.aborted) throw init.signal.reason;
+      return Response.json({ username: "alice" });
+    });
+
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "kobo-token", values: { baseUrl: "https://10.0.0.5" } },
+        { fetcher: createProviderFetch({ fetch: fetchMock }), signal },
+      ),
+    ).rejects.toThrow("KoboToolbox request timed out");
+    expect(fetchMock.mock.calls[0]?.[1]?.signal?.reason).toBe(signal.reason);
+  });
+
   it("rejects reserved metadata targets even with the deployment opt-in", async () => {
     setPrivateNetworkAccessAllowed(true);
 

@@ -660,10 +660,11 @@ export function isAbortLikeError(error: unknown): boolean {
 }
 
 /**
- * Return whether an error came from a specific aborted signal.
+ * Return whether an error came from a specific aborted signal, counting the
+ * signal's own abort reason regardless of the name it carries.
  */
 export function isAbortSignalError(signal: AbortSignal | undefined, error: unknown): boolean {
-  return signal?.aborted === true && isAbortLikeError(error);
+  return signal?.aborted === true && (isAbortLikeError(error) || error === signal.reason);
 }
 
 /**

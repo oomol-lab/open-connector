@@ -9,6 +9,7 @@ import {
   defineOAuthProviderExecutors,
   defineProviderExecutors,
   defineProviderProxy,
+  isAbortSignalError,
   mapProviderActionSources,
   providerFetch,
   ProviderRequestError,
@@ -159,6 +160,21 @@ describe("createProviderTimeout", () => {
     } finally {
       timeout.cleanup();
     }
+  });
+});
+
+describe("isAbortSignalError", () => {
+  it("accepts both AbortError rejections and the signal's own abort reason", () => {
+    expect(isAbortSignalError(AbortSignal.abort(), new DOMException("aborted", "AbortError"))).toBe(true);
+
+    const cancelled = AbortSignal.abort(new Error("cancelled"));
+    expect(isAbortSignalError(cancelled, cancelled.reason)).toBe(true);
+  });
+
+  it("rejects errors that did not come from the aborted signal", () => {
+    const pending = new AbortController().signal;
+    expect(isAbortSignalError(pending, new DOMException("aborted", "AbortError"))).toBe(false);
+    expect(isAbortSignalError(AbortSignal.abort(new Error("cancelled")), new Error("connection reset"))).toBe(false);
   });
 });
 
