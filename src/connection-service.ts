@@ -154,40 +154,27 @@ export class ConnectionService {
       configuredByService.set(connection.service, serviceConnections);
     }
 
-    const preferences = new Map(
-      ((await this.marketplace?.listProviderPreferences()) ?? []).map((item) => [item.service, item.enabled]),
+    const preferences = await this.loadProviderPreferences();
+    return this.catalog.providers.flatMap((provider) =>
+      this.summarizeProviderConnections(provider, configuredByService.get(provider.service) ?? [], preferences),
     );
-    return this.catalog.providers.flatMap((provider) => {
-      const connections = configuredByService.get(provider.service) ?? [];
-      if (connections.length > 0) {
-        const stored = connections.map((connection) =>
-          this.createConfiguredConnectionSummary(
-            provider,
-            connection.id,
-            connection.connectionName,
-            connection.credential,
-          ),
-        );
-        const marketplace = this.createMarketplaceConnectionSummary(provider, preferences);
-        return marketplace ? [...stored, marketplace] : stored;
-      }
-
-      const marketplace = this.createMarketplaceConnectionSummary(provider, preferences, true);
-      if (this.supportsAuth(provider, "no_auth")) {
-        const noAuth = this.createNoAuthConnectionSummary(provider, defaultConnectionName);
-        const secondaryMarketplace = this.createMarketplaceConnectionSummary(provider, preferences);
-        return secondaryMarketplace ? [noAuth, secondaryMarketplace] : [noAuth];
-      }
-      return marketplace ? [marketplace] : [];
-    });
   }
 
   async listConnectionsByService(service: string): Promise<ConnectionSummary[]> {
     const provider = this.getProvider(service);
     const connections = (await this.store.list()).filter((connection) => connection.service === service);
-    const preferences = new Map(
-      ((await this.marketplace?.listProviderPreferences()) ?? []).map((item) => [item.service, item.enabled]),
-    );
+    return this.summarizeProviderConnections(provider, connections, await this.loadProviderPreferences());
+  }
+
+  /**
+   * List one provider's connections: stored ones first, otherwise the virtual no-auth and
+   * Marketplace entries that stand in for them.
+   */
+  private summarizeProviderConnections(
+    provider: RuntimeProviderDefinition,
+    connections: readonly ServiceConnection[],
+    preferences: ReadonlyMap<string, boolean>,
+  ): ConnectionSummary[] {
     if (connections.length > 0) {
       const stored = connections.map((connection) =>
         this.createConfiguredConnectionSummary(
@@ -210,6 +197,13 @@ export class ConnectionService {
     return marketplace ? [marketplace] : [];
   }
 
+  /** Read which providers the operator enabled in the Marketplace, keyed by service id. */
+  private async loadProviderPreferences(): Promise<ReadonlyMap<string, boolean>> {
+    return new Map(
+      ((await this.marketplace?.listProviderPreferences()) ?? []).map((item) => [item.service, item.enabled]),
+    );
+  }
+
   async listAuthenticatedServices(services: string[]): Promise<string[]> {
     const configured = await this.store.list();
     const authenticated = new Set(
@@ -217,9 +211,7 @@ export class ConnectionService {
         .filter((connection) => connection.credential.authType !== "no_auth")
         .map((connection) => connection.service),
     );
-    const preferences = new Map(
-      ((await this.marketplace?.listProviderPreferences()) ?? []).map((item) => [item.service, item.enabled]),
-    );
+    const preferences = await this.loadProviderPreferences();
     for (const service of this.marketplace?.getSnapshot()?.actionsByService.keys() ?? []) {
       if (preferences.get(service) === true) authenticated.add(service);
     }
@@ -466,10 +458,7 @@ export class ConnectionService {
       return undefined;
     }
     if (!connectionName && (hasStoredSelection || this.supportsAuth(provider, "no_auth"))) return undefined;
-    const preferences = new Map(
-      ((await this.marketplace?.listProviderPreferences()) ?? []).map((item) => [item.service, item.enabled]),
-    );
-    return this.createMarketplaceConnectionSummary(provider, preferences, !connectionName);
+    return this.createMarketplaceConnectionSummary(provider, await this.loadProviderPreferences(), !connectionName);
   }
 
   private createMarketplaceConnectionSummary(

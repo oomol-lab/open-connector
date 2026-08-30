@@ -18,15 +18,28 @@ import type {
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
-import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
+import type {
+  IRunLogStore,
+  RunLog,
+  RunLogListInput,
+  RunLogPage,
+  RunLogWriteResult,
+  RuntimeRow,
+  SecretJsonTable,
+} from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
-import { DEFAULT_RUN_LIMIT, decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
-
-type RuntimeRow = Record<string, unknown>;
-type SecretJsonTable = "oauth_client_configs";
+import {
+  buildRunLogQuery,
+  DEFAULT_RUN_LIMIT,
+  parseJson,
+  readRunLogRow,
+  readRuntimeTokenRow,
+  readString,
+  toRunLogPage,
+} from "./runtime-store.ts";
 
 export interface D1RuntimeDatabaseOptions {
   runLimit?: number;
@@ -321,7 +334,6 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
         from runtime_tokens
-        where revoked_at is null
         order by created_at desc, id desc
       `,
       )
@@ -335,7 +347,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
         from runtime_tokens
-        where token_hash = ? and revoked_at is null
+        where token_hash = ?
       `,
       )
       .bind(tokenHash)
@@ -349,7 +361,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?
-        where id = ? and revoked_at is null
+        where id = ?
         returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
       `,
       )
@@ -370,25 +382,8 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
   }
 
   async markUsed(id: string, usedAt: string): Promise<void> {
-    await this.database
-      .prepare("update runtime_tokens set last_used_at = ? where id = ? and revoked_at is null")
-      .bind(usedAt, id)
-      .run();
+    await this.database.prepare("update runtime_tokens set last_used_at = ? where id = ?").bind(usedAt, id).run();
   }
-}
-
-function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
-  return {
-    id: readString(row, "id"),
-    name: readString(row, "name"),
-    tokenHash: readString(row, "token_hash"),
-    allowedActions: parseJson(readString(row, "allowed_actions")),
-    blockedActions: parseJson(readString(row, "blocked_actions")),
-    allowedProxies: parseJson(readString(row, "allowed_proxies")),
-    allowedConnections: parseJson(readOptionalString(row, "allowed_connections") ?? "[]"),
-    createdAt: readString(row, "created_at"),
-    lastUsedAt: readOptionalString(row, "last_used_at"),
-  };
 }
 
 export class D1RuntimePolicyStore implements IRuntimePolicyStore {
@@ -562,42 +557,12 @@ export class D1RunLogStore implements IRunLogStore {
   }
 
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
-    const limit = Math.max(1, Math.min(input.limit ?? this.limit, this.limit));
-    const cursor = decodeRunLogCursor(input.cursor);
-    const conditions: string[] = [];
-    const values: Array<string | number> = [];
-    if (cursor) {
-      conditions.push("(started_at < ? or (started_at = ? and id < ?))");
-      values.push(cursor.startedAt, cursor.startedAt, cursor.id);
-    }
-    if (input.service) {
-      conditions.push("service = ?");
-      values.push(input.service);
-    }
-    if (input.actionId) {
-      conditions.push("action_id = ?");
-      values.push(input.actionId);
-    }
-    if (input.caller) {
-      conditions.push("caller = ?");
-      values.push(input.caller);
-    }
-    if (input.ok !== undefined) {
-      conditions.push("ok = ?");
-      values.push(input.ok ? 1 : 0);
-    }
-    const where = conditions.length > 0 ? `where ${conditions.join(" and ")}` : "";
+    const query = buildRunLogQuery(input, this.limit, () => "?");
     const { results } = await this.database
-      .prepare(`select service, value from runs ${where} order by started_at desc, id desc limit ?`)
-      .bind(...values, limit + 1)
+      .prepare(query.sql)
+      .bind(...query.values)
       .all<RuntimeRow>();
-    const runs = results.map(readRunLogRow);
-    const items = runs.slice(0, limit);
-
-    return {
-      items,
-      nextCursor: runs.length > limit && items.length > 0 ? encodeRunLogCursor(items[items.length - 1]) : undefined,
-    };
+    return toRunLogPage(results, query.limit);
   }
 }
 
@@ -609,34 +574,4 @@ async function getSecretJson<T>(
 ): Promise<T | undefined> {
   const row = await database.prepare(`select value from ${table} where service = ?`).bind(service).first<RuntimeRow>();
   return row ? parseJson<T>(await secretCodec.decode(readString(row, "value"))) : undefined;
-}
-
-function readString(row: RuntimeRow, key: string): string {
-  const value = row[key];
-  if (typeof value !== "string") {
-    throw new Error(`Expected D1 column ${key} to be a string.`);
-  }
-
-  return value;
-}
-
-function readRunLogRow(row: RuntimeRow): RunLog {
-  const run = parseJson<RunLog>(readString(row, "value"));
-  return { ...run, service: readString(row, "service") };
-}
-
-function readOptionalString(row: RuntimeRow, key: string): string | undefined {
-  const value = row[key];
-  if (value == null) {
-    return undefined;
-  }
-  if (typeof value !== "string") {
-    throw new Error(`Expected D1 column ${key} to be a string.`);
-  }
-
-  return value;
-}
-
-function parseJson<T>(value: string): T {
-  return JSON.parse(value) as T;
 }

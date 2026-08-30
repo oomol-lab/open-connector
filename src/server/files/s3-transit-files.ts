@@ -16,8 +16,14 @@ import {
 } from "@aws-sdk/client-s3";
 import { randomBytes } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { extname } from "node:path";
-import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+import {
+  assertSafeFileId,
+  contentDispositionForFileName,
+  contentTypeFromFileId,
+  objectKey,
+  safeExtension,
+  TransitFileError,
+} from "./transit-file-store.ts";
 
 export interface S3TransitFileOptions {
   client: S3Client;
@@ -200,21 +206,6 @@ function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitFileMeta
       typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
     sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
   };
-}
-
-function objectKey(fileId: string): string {
-  return `transit/${fileId}`;
-}
-
-function assertSafeFileId(fileId: string): void {
-  if (!/^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?$/.test(fileId)) {
-    throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
-  }
-}
-
-function safeExtension(name: string): string {
-  const extension = extname(name).toLowerCase();
-  return /^\.[a-z0-9]{1,16}$/.test(extension) ? extension : "";
 }
 
 function encodeFileName(name: string): string {

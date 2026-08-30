@@ -172,6 +172,49 @@ describe("ConnectionService", () => {
     ]);
   });
 
+  // The listing puts the Marketplace entry after whatever already answers for the provider, and
+  // only that first entry is the default one.
+  it("orders Marketplace entries after stored and no_auth connections", async () => {
+    const services = ["uptimerobot", "hackernews", "database"];
+    const marketplace = {
+      getSnapshot: () => ({
+        definition: { id: "community", name: "Community", pricing: { model: "included" } },
+        actionsByService: new Map(services.map((service) => [service, new Set([`${service}.example`])])),
+      }),
+      listProviderPreferences: async () =>
+        services.map((service) => ({
+          service,
+          enabled: true,
+          createdAt: "2026-08-27T00:00:00.000Z",
+          updatedAt: "2026-08-27T00:00:00.000Z",
+        })),
+    } as unknown as MarketplaceService;
+    const service = new ConnectionService({
+      catalog: createCatalogStore([apiKeyProvider, hackernewsProvider, customCredentialProvider]),
+      marketplace,
+      providerLoader: new FakeProviderLoader(),
+      store: new MemoryConnectionStore(),
+    });
+    await service.connectWithApiKey("uptimerobot", {
+      values: {
+        apiKey: "test-key",
+        accountId: "account-1",
+      },
+    });
+
+    const summaries = await service.listConnections();
+    expect(summaries.map((summary) => [summary.service, summary.authType, summary.default])).toEqual([
+      ["database", "marketplace", true],
+      ["hackernews", "no_auth", true],
+      ["hackernews", "marketplace", false],
+      ["uptimerobot", "api_key", true],
+      ["uptimerobot", "marketplace", false],
+    ]);
+    await expect(service.listConnectionsByService("uptimerobot")).resolves.toEqual(
+      summaries.filter((summary) => summary.service === "uptimerobot"),
+    );
+  });
+
   it("derives an explicit Marketplace connection name from discovery metadata", async () => {
     const marketplace = {
       getSnapshot: () => ({

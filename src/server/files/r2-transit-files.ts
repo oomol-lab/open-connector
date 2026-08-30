@@ -1,21 +1,28 @@
 import type { R2BucketBinding, R2ObjectBinding } from "../cloudflare/cloudflare-bindings.ts";
-import type { ITransitFileService, TransitFileRead, TransitFileUpload } from "./transit-file-store.ts";
+import type {
+  ITransitFileService,
+  TransitFileMetadata,
+  TransitFileRead,
+  TransitFileUpload,
+} from "./transit-file-store.ts";
 
-import { extname } from "node:path";
-import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+import {
+  assertSafeFileId,
+  contentDispositionForFileName,
+  contentTypeFromFileId,
+  metadataKey,
+  normalizeMetadata,
+  objectKey,
+  randomHex,
+  safeExtension,
+  TransitFileError,
+} from "./transit-file-store.ts";
 
 export interface R2TransitFileOptions {
   bucket: R2BucketBinding;
   publicOrigin: string;
   ttlSeconds: number;
   maxBytes: number;
-}
-
-interface TransitFileMetadata {
-  name: string;
-  mimeType: string;
-  createdAt: string;
-  sizeBytes: number;
 }
 
 export class R2TransitFileService implements ITransitFileService {
@@ -125,38 +132,4 @@ export class R2TransitFileService implements ITransitFileService {
 
 async function metadataText(metadata: { arrayBuffer(): Promise<ArrayBuffer> }): Promise<string> {
   return new TextDecoder().decode(await metadata.arrayBuffer());
-}
-
-function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitFileMetadata {
-  return {
-    name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "file",
-    mimeType:
-      typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
-    createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
-    sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
-  };
-}
-
-function objectKey(fileId: string): string {
-  return `transit/${fileId}`;
-}
-
-function metadataKey(fileId: string): string {
-  return `transit/${fileId}.meta.json`;
-}
-
-function assertSafeFileId(fileId: string): void {
-  if (!/^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?$/.test(fileId)) {
-    throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
-  }
-}
-
-function safeExtension(name: string): string {
-  const extension = extname(name).toLowerCase();
-  return /^\.[a-z0-9]{1,16}$/.test(extension) ? extension : "";
-}
-
-function randomHex(byteLength: number): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }

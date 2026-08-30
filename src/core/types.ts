@@ -317,13 +317,7 @@ export interface TransitFileRead {
 
 export interface TransitFileStore {
   readonly maxBytes: number;
-  create(file: File): Promise<{
-    fileId: string;
-    downloadUrl: string;
-    sizeBytes: number;
-    name: string;
-    mimeType: string;
-  }>;
+  create(file: File): Promise<TransitFileUpload>;
   read(fileId: string): Promise<TransitFileRead>;
   delete(fileId: string): Promise<boolean>;
 }

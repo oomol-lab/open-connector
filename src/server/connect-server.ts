@@ -55,7 +55,7 @@ import {
   writeRuntimeFailure,
   writeRuntimeSuccess,
 } from "./api/runtime-api.ts";
-import { createTransitFileResponse, TransitFileError } from "./files/transit-file-store.ts";
+import { TransitFileError } from "./files/transit-file-store.ts";
 import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { decodeRunLogCursor } from "./storage/runtime-store.ts";
 import { summarizeRuntimeToken } from "./storage/runtime-token-service.ts";
@@ -327,12 +327,7 @@ export class ConnectServer {
 
   private async getTransitFile(context: Context, fileId: string): Promise<Response> {
     try {
-      if (this.options.transitFiles.response) {
-        return await this.options.transitFiles.response(fileId);
-      }
-
-      const file = await this.options.transitFiles.read(fileId);
-      return createTransitFileResponse(file);
+      return await this.options.transitFiles.response(fileId);
     } catch (error) {
       return this.handleTransitFileError(context, error);
     }

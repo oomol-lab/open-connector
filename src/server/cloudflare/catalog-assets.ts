@@ -5,7 +5,6 @@ import type { AssetsBinding } from "./cloudflare-bindings.ts";
 import { createCatalogStore, resolveExecutableActionIds } from "../../catalog-store.ts";
 
 const catalogIndexPath = "/catalog/index.json";
-const legacyCatalogPath = "/catalog/apps.json";
 const chunkNamePattern = /^apps-\d{4}\.json$/;
 const jsonContentTypePattern = /^application\/(?:[\w.+-]+\+)?json$/i;
 
@@ -15,25 +14,11 @@ interface CatalogAssetIndex {
   chunks: string[];
 }
 
-/** A catalog asset read attempt: either the parsed JSON, or why the asset is treated as absent. */
-type CatalogAsset = { found: true; value: unknown } | { found: false; reason: string };
-
 export async function loadCatalogFromAssets(
   assets: AssetsBinding,
   options: LoadCatalogOptions = {},
 ): Promise<CatalogStore> {
-  const indexAsset = await readJsonAsset(assets, catalogIndexPath);
-  if (!indexAsset.found) {
-    const legacyAsset = await readJsonAsset(assets, legacyCatalogPath);
-    if (!legacyAsset.found) {
-      // Naming both paths matters: current builds emit only the index, so an operator seeing just
-      // the legacy failure would chase an asset the build stopped producing.
-      throw assetRequestError(catalogIndexPath, `${indexAsset.reason}, and ${legacyCatalogPath} ${legacyAsset.reason}`);
-    }
-    return createCatalog(requireProviderArray(legacyAsset.value, legacyCatalogPath), options);
-  }
-
-  const index = parseCatalogIndex(indexAsset.value, catalogIndexPath);
+  const index = parseCatalogIndex(await readJsonAsset(assets, catalogIndexPath), catalogIndexPath);
   const chunks = await Promise.all(index.chunks.map((chunk) => requireProviderArrayAsset(assets, `/catalog/${chunk}`)));
   const providers = chunks.flat();
   if (providers.length !== index.providerCount) {
@@ -87,12 +72,7 @@ function parseCatalogIndex(value: unknown, path: string): CatalogAssetIndex {
 }
 
 async function requireProviderArrayAsset(assets: AssetsBinding, path: string): Promise<ProviderDefinition[]> {
-  const asset = await readJsonAsset(assets, path);
-  if (!asset.found) {
-    throw assetRequestError(path, asset.reason);
-  }
-
-  return requireProviderArray(asset.value, path);
+  return requireProviderArray(await readJsonAsset(assets, path), path);
 }
 
 function requireProviderArray(value: unknown, path: string): ProviderDefinition[] {
@@ -104,18 +84,18 @@ function requireProviderArray(value: unknown, path: string): ProviderDefinition[
 }
 
 /**
- * Read one catalog asset as JSON, reporting absence instead of throwing.
+ * Read one catalog asset as JSON.
  *
  * `not_found_handling: "single-page-application"` (see `wrangler.example.jsonc`) makes the assets
  * binding answer an unknown path with `index.html` and status 200 rather than 404, and it does so
- * for binding fetches regardless of the request's `Accept` header. Absence is therefore decided by
- * the response content type as well as by the status, so a deployment whose assets predate catalog
- * chunking still resolves to the legacy catalog instead of failing on the SPA shell.
+ * for binding fetches regardless of the request's `Accept` header. A missing index or chunk is
+ * therefore detected by the response content type as well as by the status, otherwise the SPA shell
+ * would be parsed as catalog JSON.
  */
-async function readJsonAsset(assets: AssetsBinding, path: string): Promise<CatalogAsset> {
+async function readJsonAsset(assets: AssetsBinding, path: string): Promise<unknown> {
   const response = await fetchAsset(assets, path);
   if (response.status === 404) {
-    return { found: false, reason: "returned 404" };
+    throw assetRequestError(path, "returned 404");
   }
   if (!response.ok) {
     throw assetRequestError(path, `returned ${response.status}`);
@@ -123,10 +103,10 @@ async function readJsonAsset(assets: AssetsBinding, path: string): Promise<Catal
 
   const contentType = response.headers.get("content-type");
   if (!isJsonContentType(contentType)) {
-    return { found: false, reason: `returned content type ${contentType ?? "(none)"} instead of JSON` };
+    throw assetRequestError(path, `returned content type ${contentType ?? "(none)"} instead of JSON`);
   }
 
-  return { found: true, value: await readResponseJson(response, path) };
+  return await readResponseJson(response, path);
 }
 
 function fetchAsset(assets: AssetsBinding, path: string): Promise<Response> {

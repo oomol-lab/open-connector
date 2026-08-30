@@ -55,29 +55,6 @@ describe("loadCatalogFromAssets", () => {
     expect(catalog.providers.map((entry) => entry.service)).toEqual(["aardvark", "example", "zulu"]);
   });
 
-  it("falls back to the legacy catalog asset when the index is missing", async () => {
-    const catalog = await loadCatalogFromAssets(
-      memoryAssets({
-        "/catalog/apps.json": [provider],
-      }),
-    );
-
-    expect(catalog.providers[0]?.service).toBe("example");
-  });
-
-  it("falls back to the legacy catalog asset when a missing index resolves to the SPA shell", async () => {
-    const catalog = await loadCatalogFromAssets(
-      memoryAssets(
-        {
-          "/catalog/apps.json": [provider],
-        },
-        "spa-shell",
-      ),
-    );
-
-    expect(catalog.providers[0]?.service).toBe("example");
-  });
-
   it("fails when an index chunk is missing", async () => {
     await expect(
       loadCatalogFromAssets(
@@ -161,15 +138,15 @@ describe("loadCatalogFromAssets", () => {
     ).rejects.toThrow("Cloudflare asset catalog contains invalid JSON: /catalog/index.json");
   });
 
-  it("names both the index and the legacy catalog when neither is present", async () => {
+  it("fails when the index is missing", async () => {
     await expect(loadCatalogFromAssets(memoryAssets({}))).rejects.toThrow(
-      "Cloudflare asset catalog request failed: /catalog/index.json returned 404, and /catalog/apps.json returned 404",
+      "Cloudflare asset catalog request failed: /catalog/index.json returned 404",
     );
   });
 
-  it("names both the index and the legacy catalog when both resolve to the SPA shell", async () => {
+  it("fails when a missing index resolves to the SPA shell", async () => {
     await expect(loadCatalogFromAssets(memoryAssets({}, "spa-shell"))).rejects.toThrow(
-      "Cloudflare asset catalog request failed: /catalog/index.json returned content type text/html; charset=utf-8 instead of JSON, and /catalog/apps.json returned content type text/html; charset=utf-8 instead of JSON",
+      "Cloudflare asset catalog request failed: /catalog/index.json returned content type text/html; charset=utf-8 instead of JSON",
     );
   });
 });

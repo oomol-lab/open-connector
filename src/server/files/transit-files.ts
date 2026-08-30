@@ -9,10 +9,17 @@ import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { createReadStream, createWriteStream } from "node:fs";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
-import { contentDispositionForFileName, contentTypeFromFileId, TransitFileError } from "./transit-file-store.ts";
+import {
+  assertSafeFileId,
+  contentDispositionForFileName,
+  contentTypeFromFileId,
+  isSafeFileId,
+  safeExtension,
+  TransitFileError,
+} from "./transit-file-store.ts";
 
 export interface TransitFileOptions {
   rootDir: string;
@@ -210,27 +217,12 @@ export class TransitFileService implements IStagedTransitFileService {
   }
 }
 
-function assertSafeFileId(fileId: string): void {
-  if (!isSafeFileId(fileId)) {
-    throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
-  }
-}
-
-function isSafeFileId(fileId: string): boolean {
-  return /^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?$/.test(fileId);
-}
-
 function isManagedFileName(fileName: string): boolean {
   return (
     isSafeFileId(fileName) ||
     /^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?\.tmp$/.test(fileName) ||
     /^[a-f0-9]{32}(?:\.[a-z0-9]{1,16})?\.meta\.json$/.test(fileName)
   );
-}
-
-function safeExtension(name: string): string {
-  const extension = extname(name).toLowerCase();
-  return /^\.[a-z0-9]{1,16}$/.test(extension) ? extension : "";
 }
 
 function metadataPath(path: string): string {
