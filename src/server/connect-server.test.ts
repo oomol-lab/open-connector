@@ -3622,7 +3622,6 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     connections,
     runs,
     transitFiles,
-    actionPolicy: options.actionPolicy,
     logger: options.logger,
   });
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;

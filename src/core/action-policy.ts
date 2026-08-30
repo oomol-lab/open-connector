@@ -213,14 +213,6 @@ export class ActionPolicyService {
   ): ActionPolicySnapshot {
     return new ActionPolicySnapshot(this.rules, runtime, token, updatedAt);
   }
-
-  evaluate(action: ActionDefinition): ActionPolicyDecision {
-    return this.createSnapshot().evaluate(action);
-  }
-
-  evaluateProxy(service: string): ActionPolicyDecision {
-    return this.createSnapshot().evaluateProxy(service);
-  }
 }
 
 export function emptyPolicyRules(): PolicyRules {

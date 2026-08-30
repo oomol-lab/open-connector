@@ -13,15 +13,12 @@ export interface ActionSearchDocument {
   description: string;
 }
 
-export type ActionSearchResult = ActionSearchDocument;
-
-export type ActionSearchField = "service" | "name" | "description";
+type ActionSearchField = "service" | "name" | "description";
 
 export interface ActionSearchOptions {
   limit?: number;
   fuzzy?: number;
   prefix?: boolean;
-  boost?: Partial<Record<ActionSearchField, number>>;
   service?: string;
 }
 
@@ -32,7 +29,7 @@ export interface ActionSearchIndexProvider {
 const indexFields: readonly ActionSearchField[] = ["service", "name", "description"];
 const storeFields = ["id", "service", "name", "description"] as const;
 
-export const DEFAULT_ACTION_SEARCH_BOOST: Record<ActionSearchField, number> = {
+const DEFAULT_ACTION_SEARCH_BOOST: Record<ActionSearchField, number> = {
   service: 3,
   name: 2,
   description: 1,
@@ -235,19 +232,13 @@ export function searchActions(
   index: MiniSearch<ActionSearchDocument>,
   query: string,
   options: ActionSearchOptions = {},
-): ActionSearchResult[] {
-  const {
-    limit = DEFAULT_ACTION_SEARCH_LIMIT,
-    fuzzy = DEFAULT_ACTION_SEARCH_FUZZY,
-    prefix = true,
-    boost,
-    service,
-  } = options;
+): ActionSearchDocument[] {
+  const { limit = DEFAULT_ACTION_SEARCH_LIMIT, fuzzy = DEFAULT_ACTION_SEARCH_FUZZY, prefix = true, service } = options;
   const results = index.search(query, {
     fuzzy,
     prefix,
     combineWith: "OR",
-    boost: { ...DEFAULT_ACTION_SEARCH_BOOST, ...boost },
+    boost: DEFAULT_ACTION_SEARCH_BOOST,
     weights: { fuzzy: 0.5, prefix: 0.1 },
     processTerm: searchProcessTerm,
     filter: service ? (result) => result.service === service : undefined,
@@ -273,7 +264,7 @@ function searchProcessTerm(term: string): string | string[] | null {
   return synonyms ? [...synonyms] : normalized;
 }
 
-function toActionSearchResult(result: SearchResult): ActionSearchResult {
+function toActionSearchResult(result: SearchResult): ActionSearchDocument {
   return {
     id: result.id as string,
     service: result.service as string,

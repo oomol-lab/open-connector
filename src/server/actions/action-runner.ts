@@ -1,6 +1,6 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService, ConnectionSummary, ExecutionConnection } from "../../connection-service.ts";
-import type { ActionPolicyDecision, ActionPolicyService, ActionPolicySnapshot } from "../../core/action-policy.ts";
+import type { ActionPolicyDecision, ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
 import type { MarketplaceService } from "../../marketplace/marketplace-service.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
@@ -17,7 +17,6 @@ export interface ActionRunnerOptions {
   connections: ConnectionService;
   runs: IRunLogStore;
   transitFiles?: TransitFileWriter;
-  actionPolicy?: ActionPolicyService;
   logger?: Logger;
   marketplace?: MarketplaceService;
 }
@@ -73,7 +72,7 @@ export class ActionRunner {
     this.options.logger?.info(logContext, "action run started");
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();
-    const snapshot = input.policy ?? this.options.actionPolicy?.createSnapshot();
+    const snapshot = input.policy;
     let policy: ActionPolicyDecision = snapshot?.evaluate(action) ?? { allowed: true, checks: [] };
     let connection: ExecutionConnection | undefined;
     let result: ExecutionResult;

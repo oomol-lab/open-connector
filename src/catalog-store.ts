@@ -35,9 +35,9 @@ export type RuntimeProviderDefinition = Omit<ProviderDefinition, "actions"> & {
  * needed by the single action detail view, which fetches the full action from
  * `/api/actions/:actionId`. List views read metadata only.
  */
-export type ActionSummaryDefinition = Omit<RuntimeActionDefinition, "inputSchema" | "outputSchema">;
+type ActionSummaryDefinition = Omit<RuntimeActionDefinition, "inputSchema" | "outputSchema">;
 
-export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions"> & {
+type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions"> & {
   actions: ActionSummaryDefinition[];
 };
 
@@ -50,15 +50,11 @@ export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions
 export type CatalogStore = {
   providers: RuntimeProviderDefinition[];
   /**
-   * Schema-free view of `providers`, precomputed once because the catalog is
-   * immutable at runtime. Served by `/api/providers` so the dashboard does not
-   * download every action schema on load.
-   */
-  providerSummaries: ProviderSummaryDefinition[];
-  /**
-   * `providerSummaries` pre-serialized to JSON. Served verbatim by
-   * `/api/providers` so the response is neither re-serialized per request nor
-   * able to drift from {@link providerSummariesEtag}.
+   * Schema-free view of `providers`, pre-serialized once because the catalog is
+   * immutable at runtime. Served verbatim by `/api/providers` so the dashboard
+   * does not download every action schema on load, and so the response is
+   * neither re-serialized per request nor able to drift from
+   * {@link providerSummariesEtag}.
    */
   providerSummariesJson: string;
   /**
@@ -112,7 +108,6 @@ export function createCatalogStore(
 
   return {
     providers: runtimeProviders,
-    providerSummaries,
     providerSummariesJson,
     providerSummariesEtag: weakEtag(providerSummariesJson),
     actions,

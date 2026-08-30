@@ -1,6 +1,6 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService } from "../../connection-service.ts";
-import type { ActionPolicyService, ActionPolicySnapshot } from "../../core/action-policy.ts";
+import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ProviderProxyExecutor, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
@@ -15,7 +15,6 @@ export interface ProxyRunnerOptions {
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
-  actionPolicy?: ActionPolicyService;
   logger?: Logger;
 }
 
@@ -67,7 +66,7 @@ export class ProxyRunner {
       };
     }
 
-    const snapshot = input.policy ?? this.options.actionPolicy?.createSnapshot();
+    const snapshot = input.policy;
     const decision = snapshot?.evaluateProxy(provider.service);
     if (decision && !decision.allowed) {
       return {

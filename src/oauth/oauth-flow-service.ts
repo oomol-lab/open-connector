@@ -245,15 +245,11 @@ function isExpiredOAuthState(state: OAuthAuthorizationState, maxAgeMs: number): 
 }
 
 function createPkceCodeVerifier(): string {
-  return encodeBase64Url(randomBytes(48));
+  return randomBytes(48).toString("base64url");
 }
 
 function createPkceCodeChallenge(codeVerifier: string): string {
-  return encodeBase64Url(createHash("sha256").update(codeVerifier).digest());
-}
-
-function encodeBase64Url(value: Uint8Array): string {
-  return Buffer.from(value).toString("base64").replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  return createHash("sha256").update(codeVerifier).digest("base64url");
 }
 
 /**

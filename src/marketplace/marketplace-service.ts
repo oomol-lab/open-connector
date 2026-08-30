@@ -194,11 +194,6 @@ export class MarketplaceService {
     return preference;
   }
 
-  async isProviderEnabled(service: string): Promise<boolean> {
-    const preference = (await this.options.store.listProviderPreferences()).find((item) => item.service === service);
-    return preference?.enabled ?? false;
-  }
-
   async execute(actionId: string, input: unknown, signal?: AbortSignal): Promise<ExecutionResult> {
     const snapshot = this.snapshot;
     if (!snapshot || !snapshot.compatibleActions.has(actionId)) {

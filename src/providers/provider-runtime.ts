@@ -255,12 +255,6 @@ export interface ProviderTimeout {
   cleanup(): void;
 }
 
-export interface BearerProviderProxyDefinition {
-  service: string;
-  baseUrl: string;
-  allowedEndpoint?: (endpoint: string) => boolean;
-}
-
 export type ProviderProxyAuth =
   | { type: "none" }
   | { type: "bearer" }
@@ -542,13 +536,6 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
 export function providerProxyEndpointPrefixes(...prefixes: string[]): (endpoint: string) => boolean {
   return (endpoint) =>
     prefixes.some((prefix) => endpoint === prefix || endpoint.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`));
-}
-
-export function defineBearerProviderProxy(input: BearerProviderProxyDefinition): ProviderProxyExecutor {
-  return defineProviderProxy({
-    ...input,
-    auth: { type: "bearer" },
-  });
 }
 
 export function credentialProviderProxyBaseUrl(...fields: string[]): ProviderProxyBaseUrlResolver {

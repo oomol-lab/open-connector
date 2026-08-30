@@ -1,3 +1,4 @@
+import type { RuntimeProviderDefinition } from "./catalog-store.ts";
 import type { ProviderDefinition } from "./core/types.ts";
 
 import { describe, expect, it } from "vitest";
@@ -57,7 +58,7 @@ describe("catalog store", () => {
     ];
 
     const catalog = createCatalogStore(providers, { executableActionIds: ["example.ping"] });
-    const summary = catalog.providerSummaries[0];
+    const summary = (JSON.parse(catalog.providerSummariesJson) as RuntimeProviderDefinition[])[0];
     const summarizedAction = summary?.actions[0];
 
     expect(summarizedAction).not.toHaveProperty("inputSchema");

@@ -1,7 +1,7 @@
 import type { CatalogStore, RuntimeActionDefinition } from "../catalog-store.ts";
 import type { ConnectionService, ConnectionSummary } from "../connection-service.ts";
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
-import type { ActionSearchIndexProvider, ActionSearchResult } from "../core/action-search.ts";
+import type { ActionSearchDocument, ActionSearchIndexProvider } from "../core/action-search.ts";
 import type { MarketplaceConfigInput, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
@@ -74,7 +74,6 @@ export interface IConnectServerOptions {
   idempotency: IIdempotencyStore;
   transitFiles: ITransitFileService;
   uploadTransitFile?: (request: Request) => Promise<TransitFileUpload>;
-  staticRoot?: string;
   auth?: LocalAuthOptions;
   actionPolicy?: ActionPolicyService;
   runtimePolicyStore: IRuntimePolicyStore;
@@ -104,7 +103,6 @@ export class ConnectServer {
       catalog: options.catalog,
       providerLoader: options.providerLoader,
       connections: options.connections,
-      actionPolicy: this.actionPolicy,
       logger: options.logger,
     });
   }
@@ -484,7 +482,7 @@ export class ConnectServer {
     return writeRuntimeSuccess(context, await this.serializeSearchResults(results));
   }
 
-  private async serializeSearchResults(results: ActionSearchResult[]): Promise<RuntimeActionSearchResult[]> {
+  private async serializeSearchResults(results: ActionSearchDocument[]): Promise<RuntimeActionSearchResult[]> {
     const authenticated = new Set(
       await this.options.connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
     );
@@ -1303,7 +1301,7 @@ interface RuntimeActionSearchResult {
 }
 
 function serializeActionSearchResult(
-  result: ActionSearchResult,
+  result: ActionSearchDocument,
   action: RuntimeActionDefinition,
   authenticated: boolean,
 ): RuntimeActionSearchResult {

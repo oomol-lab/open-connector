@@ -73,7 +73,6 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     connections,
     runs: options.runtimeDatabase.runLogStore,
     transitFiles: options.transitFiles,
-    actionPolicy: options.actionPolicy,
     logger: options.logger,
     marketplace,
   });

@@ -128,9 +128,6 @@ describe("action execution OpenAPI", () => {
     expect(healthSchema?.required).toEqual(expect.arrayContaining(["success", "message", "data", "meta"]));
     expect(healthDataSchema?.type).toBe("object");
     expect(healthDataSchema?.required).toEqual(expect.arrayContaining(["ok", "runtime"]));
-    expect(document.components.schemas.ActionSearchRuntimeResult).toEqual({
-      $ref: "#/components/schemas/ActionSearchResult",
-    });
     expect(search.get.responses["400"]?.content?.["application/json"]?.schema?.required).toEqual(
       expect.arrayContaining(["success", "errorCode"]),
     );

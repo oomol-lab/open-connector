@@ -254,7 +254,7 @@ describe("ActionRunner", () => {
     const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
     const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
     const actionPolicy = new ActionPolicyService({ blockedActions: ["example.echo"] });
-    const runner = createRunner({ runs, logger, providerLoader, actionPolicy });
+    const runner = createRunner({ runs, logger, providerLoader });
 
     const run = await runner.run({
       actionId: "example.echo",
@@ -291,7 +291,7 @@ describe("ActionRunner", () => {
       allowedProxies: [],
       allowedConnections: ["ungranted-connection-id"],
     });
-    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader, actionPolicy });
+    const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader });
 
     const omitted = await runner.run({
       actionId: "example.echo",
@@ -328,7 +328,6 @@ describe("ActionRunner", () => {
     const runner = createRunner({
       runs,
       logger: createTestLogger().logger,
-      actionPolicy,
       provider: authenticatedProvider,
       store,
     });
@@ -381,7 +380,6 @@ function createRunner(options: {
   runs: IRunLogStore;
   logger: Logger;
   providerLoader?: IProviderLoader;
-  actionPolicy?: ActionPolicyService;
   provider?: ProviderDefinition;
   store?: IConnectionStore;
 }): ActionRunner {
@@ -397,7 +395,6 @@ function createRunner(options: {
       store: options.store ?? new MemoryConnectionStore(),
     }),
     runs: options.runs,
-    actionPolicy: options.actionPolicy,
     logger: options.logger,
   });
 }

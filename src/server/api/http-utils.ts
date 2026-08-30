@@ -106,13 +106,6 @@ export function internalError(context: Context, _error: unknown): Response {
   return jsonError(context, 500, "internal_error", "Internal server error.");
 }
 
-/**
- * Escape plain text for the tiny OAuth callback completion page.
- */
-export function escapeHtml(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-}
-
 export class HttpRequestError extends Error {
   readonly code: string;
   readonly status: 400 | 413;

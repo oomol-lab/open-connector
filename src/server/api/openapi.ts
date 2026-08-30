@@ -386,7 +386,6 @@ export function createOpenApiDocument(
             description: "A single action returned by fuzzy keyword search.",
           },
         ),
-        ActionSearchRuntimeResult: { $ref: "#/components/schemas/ActionSearchResult" },
         RuntimeProviderMetadata: jsonSchema.object(
           {
             service: jsonSchema.string({ description: "Provider service identifier." }),
@@ -716,7 +715,6 @@ export function createOpenApiDocument(
             completedAt: jsonSchema.string({ description: "Completion timestamp." }),
             durationMs: jsonSchema.number({ description: "Run duration in milliseconds." }),
             ok: jsonSchema.boolean({ description: "Whether the run succeeded." }),
-            connectionName: jsonSchema.string({ description: "Named provider connection used by the action." }),
             connectionProfile: jsonSchema.unknownObject(
               "Provider account identity that the action used, when a connection was available.",
             ),

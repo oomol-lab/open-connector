@@ -1,10 +1,9 @@
-import type { RuntimeActionDefinition } from "../../catalog-store.ts";
+import type { RuntimeActionDefinition, RuntimeProviderDefinition } from "../../catalog-store.ts";
 import type { ConnectionError, ConnectionSummary } from "../../connection-service.ts";
-import type { ExecutionResult, ProviderDefinition, ProviderScenario } from "../../core/types.ts";
+import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
 import type { Context } from "hono";
 
 import { requiredRecord } from "../../core/cast.ts";
-import { resolveProviderScenario } from "../../core/provider-scenarios.ts";
 
 type RuntimeStatus = 400 | 401 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
@@ -94,7 +93,7 @@ export type RuntimeActionHttpResult =
   | { status: 200; body: RuntimeSuccessEnvelope<unknown> }
   | { status: RuntimeStatus; body: RuntimeFailureEnvelope };
 
-export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeProviderMetadata {
+export function serializeRuntimeProvider(provider: RuntimeProviderDefinition): RuntimeProviderMetadata {
   return {
     service: provider.service,
     displayName: provider.displayName,
@@ -104,7 +103,7 @@ export function serializeRuntimeProvider(provider: ProviderDefinition): RuntimeP
       id: category,
       displayName: category,
     })),
-    scenario: resolveProviderScenario(provider),
+    scenario: provider.scenario,
     authTypes: provider.authTypes,
   };
 }

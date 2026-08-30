@@ -60,7 +60,6 @@ describe("ProxyRunner", () => {
     const loadProxyExecutor = vi.fn();
     const connections = createConnections();
     const runner = createRunner({
-      actionPolicy: new ActionPolicyService({ allowedProxies: ["other"] }),
       connections,
       providerLoader: {
         loadActionExecutor: async () => undefined,
@@ -73,6 +72,7 @@ describe("ProxyRunner", () => {
       runner.run({
         service: "example",
         input: { endpoint: "/items", method: "GET" },
+        policy: new ActionPolicyService({ allowedProxies: ["other"] }).createSnapshot(),
       }),
     ).resolves.toMatchObject({
       ok: false,
@@ -87,7 +87,6 @@ describe("ProxyRunner", () => {
     const loadProxyExecutor = vi.fn();
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
-      actionPolicy,
       providerLoader: {
         loadActionExecutor: async () => undefined,
         loadCredentialValidators: async () => undefined,
@@ -117,7 +116,6 @@ describe("ProxyRunner", () => {
     const loadProxyExecutor = vi.fn();
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
-      actionPolicy,
       providerLoader: {
         loadActionExecutor: async () => undefined,
         loadCredentialValidators: async () => undefined,
@@ -154,7 +152,6 @@ describe("ProxyRunner", () => {
     const connections = createConnections();
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
-      actionPolicy,
       connections,
       providerLoader: {
         loadActionExecutor: async () => undefined,
@@ -202,7 +199,6 @@ describe("ProxyRunner", () => {
     );
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
-      actionPolicy,
       providerLoader: new TestProviderLoader(proxy),
     });
 
@@ -244,7 +240,6 @@ describe("ProxyRunner", () => {
     );
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
-      actionPolicy,
       provider: { ...provider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }] },
       connections: createConnections({
         getConnectionSummary: async () => ({
@@ -284,7 +279,6 @@ describe("ProxyRunner", () => {
     );
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
-      actionPolicy,
       provider: {
         ...provider,
         authTypes: ["no_auth", "api_key"],
@@ -316,10 +310,6 @@ describe("ProxyRunner", () => {
       }),
     );
     const runner = createRunner({
-      actionPolicy: new ActionPolicyService({
-        allowedActions: ["example.echo"],
-        allowedProxies: ["example"],
-      }),
       providerLoader: new TestProviderLoader(proxy),
     });
 
@@ -327,6 +317,10 @@ describe("ProxyRunner", () => {
       runner.run({
         service: "example",
         input: { endpoint: "/items", method: "GET" },
+        policy: new ActionPolicyService({
+          allowedActions: ["example.echo"],
+          allowedProxies: ["example"],
+        }).createSnapshot(),
       }),
     ).resolves.toMatchObject({
       ok: true,
@@ -659,7 +653,6 @@ describe("ProxyRunner", () => {
 });
 
 function createRunner(input: {
-  actionPolicy?: ActionPolicyService;
   connections?: ConnectionService;
   logger?: Logger;
   provider?: ProviderDefinition;
@@ -667,7 +660,6 @@ function createRunner(input: {
 }): ProxyRunner {
   return new ProxyRunner({
     catalog: { providers: [input.provider ?? provider] } as CatalogStore,
-    actionPolicy: input.actionPolicy,
     connections: input.connections ?? createConnections(),
     logger: input.logger,
     providerLoader: input.providerLoader,
