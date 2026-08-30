@@ -33,7 +33,7 @@ export interface S3TransitFileOptions {
   maxBytes: number;
 }
 
-interface TransitFileMetadata {
+interface S3ObjectMetadata {
   name: string;
   mimeType: string;
   sizeBytes: number;
@@ -146,7 +146,7 @@ export class S3TransitFileService implements IStagedTransitFileService {
 
   private async readObject(fileId: string): Promise<{
     object: GetObjectCommandOutput;
-    metadata: TransitFileMetadata;
+    metadata: S3ObjectMetadata;
   }> {
     assertSafeFileId(fileId);
     const object = await this.getObject(objectKey(fileId));
@@ -199,7 +199,7 @@ export class S3TransitFileService implements IStagedTransitFileService {
   }
 }
 
-function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitFileMetadata {
+function normalizeMetadata(input: Partial<S3ObjectMetadata>): S3ObjectMetadata {
   return {
     name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "file",
     mimeType:

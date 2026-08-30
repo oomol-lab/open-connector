@@ -24,7 +24,6 @@ import type {
   RunLogPage,
   RunLogWriteResult,
   RuntimeRow,
-  SecretJsonTable,
 } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
@@ -42,6 +41,7 @@ import {
   toRunLogPage,
 } from "./runtime-store.ts";
 
+type SecretJsonTable = "oauth_client_configs";
 const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 export interface SqliteRuntimeDatabaseOptions {

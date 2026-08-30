@@ -28,7 +28,7 @@ export interface TransitFileOptions {
   maxBytes: number;
 }
 
-interface TransitFileMetadata {
+interface LocalFileMetadata {
   name: string;
   mimeType: string;
 }
@@ -168,14 +168,14 @@ export class TransitFileService implements IStagedTransitFileService {
     );
   }
 
-  private async readMetadata(path: string, fileId: string): Promise<TransitFileMetadata> {
+  private async readMetadata(path: string, fileId: string): Promise<LocalFileMetadata> {
     const fallback = { name: fileId, mimeType: contentTypeFromFileId(fileId) };
     const text = await readFile(metadataPath(path), "utf8").catch(() => undefined);
     if (!text) {
       return fallback;
     }
     try {
-      return normalizeMetadata(JSON.parse(text) as Partial<TransitFileMetadata>, fallback);
+      return normalizeMetadata(JSON.parse(text) as Partial<LocalFileMetadata>, fallback);
     } catch {
       return fallback;
     }
@@ -230,9 +230,9 @@ function metadataPath(path: string): string {
 }
 
 function normalizeMetadata(
-  input: Partial<TransitFileMetadata>,
-  fallback: TransitFileMetadata = { name: "file", mimeType: "application/octet-stream" },
-): TransitFileMetadata {
+  input: Partial<LocalFileMetadata>,
+  fallback: LocalFileMetadata = { name: "file", mimeType: "application/octet-stream" },
+): LocalFileMetadata {
   const name = typeof input.name === "string" && input.name.trim() ? input.name.trim() : fallback.name;
   const mimeType =
     typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : fallback.mimeType;

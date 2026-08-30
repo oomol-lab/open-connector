@@ -25,7 +25,6 @@ import type {
   RunLogPage,
   RunLogWriteResult,
   RuntimeRow,
-  SecretJsonTable,
 } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
@@ -40,6 +39,8 @@ import {
   readString,
   toRunLogPage,
 } from "./runtime-store.ts";
+
+type SecretJsonTable = "oauth_client_configs";
 
 export interface D1RuntimeDatabaseOptions {
   runLimit?: number;

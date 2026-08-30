@@ -7,9 +7,6 @@ export const DEFAULT_RUN_LIMIT = 5_000;
 /** One row a runtime store backend read back from its database driver. */
 export type RuntimeRow = Record<string, unknown>;
 
-/** Tables whose `value` column holds a secret JSON document keyed by service. */
-export type SecretJsonTable = "oauth_client_configs";
-
 export type RunLogCaller = "http" | "mcp" | "web";
 
 /**
@@ -101,7 +98,7 @@ export function readString(row: unknown, key: string): string {
 }
 
 /** Read a nullable string column, treating both SQL null and a missing column as absent. */
-export function readOptionalString(row: unknown, key: string): string | undefined {
+function readOptionalString(row: unknown, key: string): string | undefined {
   if (typeof row !== "object" || row == null) {
     throw new Error(`Expected a runtime store row for ${key}.`);
   }
@@ -127,6 +124,7 @@ export function readRunLogRow(row: unknown): RunLog {
   return { ...run, service: readString(row, "service") };
 }
 
+/** Decode a `runtime_tokens` row into the record the token service stores. */
 export function readRuntimeTokenRow(row: unknown): RuntimeTokenRecord {
   return {
     id: readString(row, "id"),

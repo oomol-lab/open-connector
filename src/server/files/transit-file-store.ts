@@ -138,15 +138,18 @@ export function safeExtension(name: string): string {
   return /^\.[a-z0-9]{1,16}$/.test(extension) ? extension : "";
 }
 
+/** Hex-encode `byteLength` cryptographically random bytes from Web Crypto. */
 export function randomHex(byteLength: number): string {
   const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+/** Key holding a transit file's bytes, shared by the KV, R2 and S3 backends. */
 export function objectKey(fileId: string): string {
   return `transit/${fileId}`;
 }
 
+/** Key holding a transit file's side-car metadata, shared by the KV, R2 and S3 backends. */
 export function metadataKey(fileId: string): string {
   return `transit/${fileId}.meta.json`;
 }

@@ -167,8 +167,9 @@ export class ConnectionService {
   }
 
   /**
-   * List one provider's connections: stored ones first, otherwise the virtual no-auth and
-   * Marketplace entries that stand in for them.
+   * List one provider's connections: the stored ones, or the virtual no-auth entry when there are
+   * none, with the Marketplace entry appended after whatever already answers for the provider.
+   * Only the first entry is the default.
    */
   private summarizeProviderConnections(
     provider: RuntimeProviderDefinition,
