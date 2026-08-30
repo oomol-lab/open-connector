@@ -279,10 +279,7 @@ const recommendedProviderServices = [
   "stripe",
   "googleanalytics",
   "googlesearchconsole",
-  "facebookleadads",
-  "metaads",
   "linkedin",
-  "salesforce",
   "pipedrive",
   "zendesk",
   "intercom",
@@ -471,13 +468,6 @@ function compactProviderService(service: string): string {
     .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, "");
-}
-
-export function firstProviderByConnectionStatus(
-  providers: ProviderDefinition[],
-  connections: ConnectionRecord[],
-): ProviderDefinition | undefined {
-  return sortProviders(providers, new Map(connections.map((connection) => [connection.service, connection])))[0];
 }
 
 export function filterActions(actions: ActionDefinition[], query: string, service: string | null): ActionDefinition[] {

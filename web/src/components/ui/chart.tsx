@@ -13,7 +13,7 @@ interface ChartContextValue {
   config: ChartConfig;
 }
 
-export interface ChartContainerProps extends React.ComponentProps<"div"> {
+interface ChartContainerProps extends React.ComponentProps<"div"> {
   config: ChartConfig;
   children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>["children"];
 }
@@ -38,15 +38,6 @@ interface ChartTooltipContentProps {
   config?: ChartConfig;
   hideZero?: boolean;
   valueFormatter?: (value: unknown) => React.ReactNode;
-}
-
-export function useChart(): ChartContextValue {
-  const context = React.useContext(ChartContext);
-  if (!context) {
-    throw new Error("useChart must be used within a ChartContainer");
-  }
-
-  return context;
 }
 
 export function ChartContainer({ id, className, children, config, ...props }: ChartContainerProps): React.ReactElement {

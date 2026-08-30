@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { createAppI18n, readInitialLang } from "./i18n";
 import { App } from "./ui";
-import "virtual:uno.css";
 import "./style.css";
 
 const i18n = createAppI18n(readInitialLang());

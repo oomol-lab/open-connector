@@ -6,26 +6,6 @@ import { useState } from "react";
 import providerIconUrls from "virtual:oomol-provider-icons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge as UiBadge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-
-export function Metric(props: { label: string; value: number }): ReactNode {
-  return (
-    <Card className="metric">
-      <span>{props.label}</span>
-      <strong>{props.value}</strong>
-    </Card>
-  );
-}
-
-export function InfoBlock(props: { icon: ReactNode; label: string; value: string }): ReactNode {
-  return (
-    <div className="info-block">
-      {props.icon}
-      <span>{props.label}</span>
-      <strong>{props.value}</strong>
-    </div>
-  );
-}
 
 export function Badge(props: { children: ReactNode; tone?: "success" | "warning" | "error" }): ReactNode {
   return (
@@ -85,11 +65,6 @@ export function providerInitials(displayName: string): string {
       .slice(0, 2)
       .toUpperCase() || "?"
   );
-}
-
-export function providerIconUrl(provider: ProviderDefinition): string | undefined {
-  const source = providerIconSource(provider);
-  return source?.kind == "url" ? source.value : undefined;
 }
 
 interface ProviderIconSource {

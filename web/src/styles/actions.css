@@ -131,22 +131,11 @@
   border-bottom: 1px solid var(--border);
 }
 
-.detail-spacer {
-  flex: 1;
-}
-
 .detail-description {
   margin: 0 0 18px;
   max-width: 760px;
   color: var(--muted-foreground);
   line-height: 1.55;
-}
-
-.section-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 22px;
 }
 
 .panel-section {
@@ -308,17 +297,9 @@
     display: grid;
     grid-template-columns: 1fr;
   }
-
-  .section-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 640px) {
-  .section-grid {
-    grid-template-columns: 1fr;
-  }
-
   .action-detail-header {
     display: grid;
   }

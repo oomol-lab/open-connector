@@ -1,20 +1,11 @@
 import tailwindcss from "@tailwindcss/vite";
-import { presetIcons } from "@unocss/preset-icons";
-import UnoCSS from "@unocss/vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import { providerIconsPlugin } from "./provider-icons-plugin";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    UnoCSS({
-      presets: [presetIcons()],
-    }),
-    providerIconsPlugin(),
-  ],
+  plugins: [react(), tailwindcss(), providerIconsPlugin()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

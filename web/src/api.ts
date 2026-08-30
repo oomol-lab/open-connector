@@ -20,54 +20,50 @@ export async function apiGet<T>(path: string, options: RequestOptions = {}): Pro
   );
 }
 
-export async function apiPost<T = unknown>(path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+export async function apiPost<T = unknown>(path: string, body: unknown): Promise<T> {
   return readJson<T>(
     await fetch(path, {
       method: "POST",
-      headers: headersFor(options, true),
+      headers: { "content-type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify(body),
     }),
   );
 }
 
-export async function apiPut<T = unknown>(path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+export async function apiPut<T = unknown>(path: string, body: unknown): Promise<T> {
   return readJson<T>(
     await fetch(path, {
       method: "PUT",
-      headers: headersFor(options, true),
+      headers: { "content-type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify(body),
     }),
   );
 }
 
-export async function apiPatch<T = unknown>(path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
   return readJson<T>(
     await fetch(path, {
       method: "PATCH",
-      headers: headersFor(options, true),
+      headers: { "content-type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify(body),
     }),
   );
 }
 
-export async function apiDelete<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
+export async function apiDelete<T = unknown>(path: string): Promise<T> {
   return readJson<T>(
     await fetch(path, {
       method: "DELETE",
-      headers: headersFor(options),
       credentials: "same-origin",
     }),
   );
 }
 
-function headersFor(options: RequestOptions, json = false): Headers {
+function headersFor(options: RequestOptions): Headers {
   const headers = new Headers();
-  if (json) {
-    headers.set("content-type", "application/json");
-  }
   const token = options.bearerToken?.trim();
   if (token) {
     headers.set("authorization", `Bearer ${token}`);

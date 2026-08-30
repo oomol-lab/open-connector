@@ -5,20 +5,13 @@
     "catalogOnly": "カタログのみ",
     "clear": "クリア",
     "close": "閉じる",
-    "connected": "接続済み",
-    "copied": "{{label}} をコピーしました",
-    "copy": "{{label}} をコピー",
     "credential": "認証情報",
     "currentSelection": "現在の選択",
-    "docs": "ドキュメント",
     "failed": "失敗",
     "loadingRuntimeData": "ランタイムデータを読み込み中...",
     "local": "ローカル",
     "noAuth": "認証不要",
-    "notConnected": "未接続",
-    "open": "開く",
     "refresh": "更新",
-    "required": "必須",
     "runtimeReady": "ランタイム準備完了",
     "showMore": "さらに表示",
     "showing": "{{shown}} / {{total}} を表示中",
@@ -62,33 +55,26 @@
     },
     "headings": {
       "overview": {
-        "title": "概要",
-        "subtitle": "ランタイムの状態とヘルスを確認します。"
+        "title": "概要"
       },
       "providers": {
-        "title": "プロバイダー",
-        "subtitle": "プロバイダーを接続し、機能を確認します。"
+        "title": "プロバイダー"
       },
-      "marketplace": { "title": "Marketplace", "subtitle": "Configure managed provider actions." },
+      "marketplace": { "title": "Marketplace" },
       "oauthApps": {
-        "title": "OAuth Apps",
-        "subtitle": "各プロバイダーのデフォルト OAuth App を管理します。"
+        "title": "OAuth Apps"
       },
       "actions": {
-        "title": "アクション",
-        "subtitle": "ローカルランタイムのアクションを検索、確認、デバッグします。"
+        "title": "アクション"
       },
       "runs": {
-        "title": "実行履歴",
-        "subtitle": "最近のローカルアクション実行です。"
+        "title": "実行履歴"
       },
       "access": {
-        "title": "API Key",
-        "subtitle": "Agent とクライアント向けの runtime API token を管理します。"
+        "title": "API Key"
       },
       "resources": {
-        "title": "リソース",
-        "subtitle": "生成された API reference と tool metadata です。"
+        "title": "リソース"
       }
     }
   },
@@ -102,7 +88,6 @@
     "capabilityStatus": "能力ステータス",
     "metrics": {
       "providers": "プロバイダー",
-      "actions": "アクション",
       "executable": "実行可能",
       "runHealth": "実行ヘルス"
     },
@@ -113,8 +98,6 @@
     "unavailable": "利用不可",
     "needsAttention": "要対応",
     "recentFailures": "最近の失敗",
-    "noFailedRunsTitle": "失敗した実行はありません",
-    "noFailedRunsDescription": "最近のアクション実行は正常です。",
     "callTrend": "ツール呼び出しトレンド",
     "callTrendLegend": "サービス",
     "noCallTrendTitle": "呼び出しトレンドはまだありません",
@@ -129,7 +112,6 @@
   "marketplace": {
     "summary": {
       "title": "Connector Marketplace",
-      "id": "ID: {{id}}",
       "description": "この Connector ランタイム向けのマネージドプロバイダーアクセスです。",
       "providers": "プロバイダー",
       "actions": "アクション"
@@ -204,9 +186,6 @@
       "notConnected": "未接続",
       "oauthNeedsConfig": "OAuth 設定が必要"
     },
-    "providerMeta": "{{service}} ・ {{authTypes}} ・ {{count}} 件のアクション",
-    "noAuth": "認証不要",
-    "oauthConfigBadge": "OAuth 設定",
     "noProvidersTitle": "プロバイダーが見つかりません",
     "noProvidersDescription": "別の検索語句またはステータスフィルターを試してください。",
     "resultCount": "{{shown}} / {{total}} を表示",
@@ -216,9 +195,6 @@
     "providerNotFoundDescription": "{{service}} は現在の catalog にありません。",
     "backToProviders": "プロバイダーに戻る",
     "providerHomepage": "ホームページ",
-    "selectProviderTitle": "プロバイダーを選択",
-    "selectProviderDescription": "接続設定を確認するプロバイダーを選択してください。",
-    "connectedBy": "{{authType}} で接続済み",
     "marketplaceBadge": "マネージド",
     "marketplaceConnection": {
       "title": "Marketplace マネージド接続",
@@ -232,14 +208,6 @@
     "runtimeUnavailableBadge": "利用不可",
     "runtimeUnavailableTitle": "現在のランタイムでは利用できません",
     "runtimeUnavailableDescription": "{{name}} はカタログの参照用に表示されますが、現在のランタイムでは接続の設定やアクションの実行はできません。",
-    "summary": {
-      "actions": "アクション",
-      "auth": "認証",
-      "oauthConfig": "OAuth 設定",
-      "configured": "設定済み",
-      "required": "必須",
-      "notUsed": "未使用"
-    },
     "connection": "接続",
     "connectionCount": "{{count}} 件の接続",
     "savedConnections": "保存済みの接続",
@@ -426,7 +394,6 @@
     "policy": {
       "title": "Access Policy",
       "description": "Action と provider proxy request を制限します。",
-      "rulesHint": "Block rule が優先されます。空でない allowlist は deployment、runtime、token の各 layer で共通する範囲に制限されます。1 行に 1 rule を入力してください。",
       "deployment": "Deployment policy（読み取り専用）",
       "runtime": "Runtime policy",
       "allowedActions": "許可する actions",
@@ -437,7 +404,6 @@
       "saving": "Policy を保存中...",
       "saved": "Policy を保存しました。",
       "saveFailed": "Policy を保存できませんでした。",
-      "unrestricted": "Token 固有の制限なし",
       "edit": "Policy を編集",
       "editToken": "Token policy を編集",
       "baseline": {
@@ -552,8 +518,7 @@
         "connectionCount": "{{count}} connections",
         "noConnections": "このリストに connections はありません。",
         "connectionsDefaultHint": "Provider の default connection を選択すると、その Provider の名前なし HTTP / MCP / proxy リクエストを許可できます。",
-        "discard": "変更を破棄",
-        "preview": "影響をプレビュー"
+        "discard": "変更を破棄"
       },
       "impact": {
         "title": "Draft の影響",

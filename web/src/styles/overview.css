@@ -25,12 +25,6 @@
   font-size: 13px;
 }
 
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 1fr));
-  gap: 12px;
-}
-
 .content-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -494,16 +488,6 @@
 @media (max-width: 960px) {
   .content-grid {
     display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .metrics {
     grid-template-columns: 1fr;
   }
 }

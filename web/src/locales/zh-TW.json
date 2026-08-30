@@ -5,20 +5,13 @@
     "catalogOnly": "僅供目錄查閱",
     "clear": "清除",
     "close": "關閉",
-    "connected": "已連線",
-    "copied": "已複製 {{label}}",
-    "copy": "複製 {{label}}",
     "credential": "憑證",
     "currentSelection": "目前選取項目",
-    "docs": "文件",
     "failed": "失敗",
     "loadingRuntimeData": "正在載入執行階段資料...",
     "local": "本機",
     "noAuth": "無須驗證",
-    "notConnected": "尚未連線",
-    "open": "開啟",
     "refresh": "重新整理",
-    "required": "必填",
     "runtimeReady": "執行階段已就緒",
     "showMore": "顯示更多",
     "showing": "顯示 {{shown}} / {{total}}",
@@ -62,33 +55,26 @@
     },
     "headings": {
       "overview": {
-        "title": "總覽",
-        "subtitle": "執行階段狀態與健康情形。"
+        "title": "總覽"
       },
       "providers": {
-        "title": "服務提供者",
-        "subtitle": "連線至服務提供者並檢視其功能。"
+        "title": "服務提供者"
       },
-      "marketplace": { "title": "Marketplace", "subtitle": "設定託管 Provider Action。" },
+      "marketplace": { "title": "Marketplace" },
       "oauthApps": {
-        "title": "OAuth Apps",
-        "subtitle": "管理各服務提供者預設使用的 OAuth App。"
+        "title": "OAuth Apps"
       },
       "actions": {
-        "title": "動作",
-        "subtitle": "搜尋、檢視及偵錯本機執行階段動作。"
+        "title": "動作"
       },
       "runs": {
-        "title": "執行記錄",
-        "subtitle": "近期的本機動作執行記錄。"
+        "title": "執行記錄"
       },
       "access": {
-        "title": "API 金鑰",
-        "subtitle": "管理供 Agent 與用戶端使用的執行階段 API 權杖。"
+        "title": "API 金鑰"
       },
       "resources": {
-        "title": "資源",
-        "subtitle": "產生的 API 參考文件與工具中繼資料。"
+        "title": "資源"
       }
     }
   },
@@ -102,7 +88,6 @@
     "capabilityStatus": "功能狀態",
     "metrics": {
       "providers": "服務提供者",
-      "actions": "動作",
       "executable": "可執行",
       "runHealth": "執行健康情形"
     },
@@ -113,8 +98,6 @@
     "unavailable": "無法使用",
     "needsAttention": "需要注意",
     "recentFailures": "近期失敗",
-    "noFailedRunsTitle": "沒有失敗的執行記錄",
-    "noFailedRunsDescription": "近期的動作執行皆正常。",
     "callTrend": "工具呼叫趨勢",
     "callTrendLegend": "服務",
     "noCallTrendTitle": "尚無呼叫趨勢",
@@ -129,7 +112,6 @@
   "marketplace": {
     "summary": {
       "title": "Connector Marketplace",
-      "id": "ID：{{id}}",
       "description": "為目前 Connector 執行環境提供託管的服務存取能力。",
       "providers": "服務提供者",
       "actions": "操作"
@@ -201,9 +183,6 @@
       "notConnected": "尚未連線",
       "oauthNeedsConfig": "OAuth 需要設定"
     },
-    "providerMeta": "{{service}} · {{authTypes}} · {{count}} 個動作",
-    "noAuth": "無須驗證",
-    "oauthConfigBadge": "OAuth 設定",
     "noProvidersTitle": "找不到服務提供者",
     "noProvidersDescription": "請嘗試其他搜尋條件或狀態篩選器。",
     "resultCount": "顯示 {{shown}} / {{total}}",
@@ -213,9 +192,6 @@
     "providerNotFoundDescription": "{{service}} 與目前的目錄不符。",
     "backToProviders": "返回服務提供者",
     "providerHomepage": "首頁",
-    "selectProviderTitle": "選取服務提供者",
-    "selectProviderDescription": "選取服務提供者以檢視連線設定。",
-    "connectedBy": "透過 {{authType}} 連線",
     "marketplaceBadge": "託管",
     "marketplaceConnection": {
       "title": "Marketplace 託管連線",
@@ -229,14 +205,6 @@
     "runtimeUnavailableBadge": "無法使用",
     "runtimeUnavailableTitle": "無法在此執行階段使用",
     "runtimeUnavailableDescription": "{{name}} 仍會顯示供目錄查閱，但目前的執行階段無法使用其連線與動作。",
-    "summary": {
-      "actions": "動作",
-      "auth": "驗證",
-      "oauthConfig": "OAuth 設定",
-      "configured": "已設定",
-      "required": "必要",
-      "notUsed": "未使用"
-    },
     "connection": "連線",
     "connectionCount": "{{count}} 個連線",
     "savedConnections": "已儲存的連線",
@@ -423,7 +391,6 @@
     "policy": {
       "title": "存取策略",
       "description": "限制操作與提供者代理請求。",
-      "rulesHint": "Block 規則優先；非空 allowlist 會在部署、執行階段與權杖層之間取交集。每行填寫一條規則。",
       "deployment": "部署策略（唯讀）",
       "runtime": "執行階段策略",
       "allowedActions": "允許的操作",
@@ -434,7 +401,6 @@
       "saving": "正在儲存策略...",
       "saved": "策略已儲存。",
       "saveFailed": "儲存策略失敗。",
-      "unrestricted": "沒有權杖專屬限制",
       "edit": "編輯策略",
       "editToken": "編輯權杖策略",
       "baseline": {
@@ -549,8 +515,7 @@
         "connectionCount": "{{count}} 個連線",
         "noConnections": "這個清單中暫無連線。",
         "connectionsDefaultHint": "選取某個提供商的 default 連線後，權杖才能執行該提供商未指定連線名稱的 HTTP、MCP 或代理請求。",
-        "discard": "放棄修改",
-        "preview": "預覽影響"
+        "discard": "放棄修改"
       },
       "impact": {
         "title": "草稿影響",

@@ -5,20 +5,13 @@
     "catalogOnly": "仅目录",
     "clear": "清除",
     "close": "关闭",
-    "connected": "已连接",
-    "copied": "已复制 {{label}}",
-    "copy": "复制 {{label}}",
     "credential": "凭证",
     "currentSelection": "当前选择",
-    "docs": "文档",
     "failed": "失败",
     "loadingRuntimeData": "正在加载运行时数据...",
     "local": "本地",
     "noAuth": "无需鉴权",
-    "notConnected": "未连接",
-    "open": "打开",
     "refresh": "刷新",
-    "required": "必填",
     "runtimeReady": "运行时就绪",
     "showMore": "显示更多",
     "showing": "显示 {{shown}} / {{total}}",
@@ -62,33 +55,26 @@
     },
     "headings": {
       "overview": {
-        "title": "概览",
-        "subtitle": "查看运行时状态和健康情况。"
+        "title": "概览"
       },
       "providers": {
-        "title": "提供商",
-        "subtitle": "连接提供商并查看能力配置。"
+        "title": "提供商"
       },
-      "marketplace": { "title": "Marketplace", "subtitle": "配置托管 Provider Action。" },
+      "marketplace": { "title": "Marketplace" },
       "oauthApps": {
-        "title": "OAuth Apps",
-        "subtitle": "管理各提供商默认使用的 OAuth App。"
+        "title": "OAuth Apps"
       },
       "actions": {
-        "title": "操作",
-        "subtitle": "搜索、检查并调试本地运行时操作。"
+        "title": "操作"
       },
       "runs": {
-        "title": "运行记录",
-        "subtitle": "最近的本地操作执行记录。"
+        "title": "运行记录"
       },
       "access": {
-        "title": "API Key",
-        "subtitle": "管理 agent 和客户端使用的运行时 API token。"
+        "title": "API Key"
       },
       "resources": {
-        "title": "资源",
-        "subtitle": "生成的 API 参考和工具元数据。"
+        "title": "资源"
       }
     }
   },
@@ -102,7 +88,6 @@
     "capabilityStatus": "能力状态",
     "metrics": {
       "providers": "提供商",
-      "actions": "操作",
       "executable": "可执行",
       "runHealth": "运行健康"
     },
@@ -113,8 +98,6 @@
     "unavailable": "暂不可用",
     "needsAttention": "需处理",
     "recentFailures": "最近失败",
-    "noFailedRunsTitle": "暂无失败运行",
-    "noFailedRunsDescription": "最近的操作运行都正常。",
     "callTrend": "工具调用趋势",
     "callTrendLegend": "服务",
     "noCallTrendTitle": "暂无调用趋势",
@@ -129,7 +112,6 @@
   "marketplace": {
     "summary": {
       "title": "Connector Marketplace",
-      "id": "ID：{{id}}",
       "description": "为当前 Connector 运行时提供托管的服务访问能力。",
       "providers": "提供商",
       "actions": "操作"
@@ -201,9 +183,6 @@
       "notConnected": "未连接",
       "oauthNeedsConfig": "OAuth 待配置"
     },
-    "providerMeta": "{{service}} · {{authTypes}} · {{count}} 个操作",
-    "noAuth": "无需鉴权",
-    "oauthConfigBadge": "OAuth 配置",
     "noProvidersTitle": "没有找到提供商",
     "noProvidersDescription": "试试其他搜索词或状态筛选。",
     "resultCount": "显示 {{shown}} / {{total}}",
@@ -213,9 +192,6 @@
     "providerNotFoundDescription": "{{service}} 不在当前目录中。",
     "backToProviders": "返回提供商",
     "providerHomepage": "主页",
-    "selectProviderTitle": "选择提供商",
-    "selectProviderDescription": "选择一个提供商来查看连接设置。",
-    "connectedBy": "通过 {{authType}} 连接",
     "marketplaceBadge": "托管",
     "marketplaceConnection": {
       "title": "Marketplace 托管连接",
@@ -229,14 +205,6 @@
     "runtimeUnavailableBadge": "不可用",
     "runtimeUnavailableTitle": "当前运行时不可用",
     "runtimeUnavailableDescription": "{{name}} 仍保留在目录中供查阅，但当前运行时无法配置连接或执行操作。",
-    "summary": {
-      "actions": "操作",
-      "auth": "鉴权",
-      "oauthConfig": "OAuth 配置",
-      "configured": "已配置",
-      "required": "必填",
-      "notUsed": "未使用"
-    },
     "connection": "连接",
     "connectionCount": "{{count}} 个连接",
     "savedConnections": "已保存的连接",
@@ -423,7 +391,6 @@
     "policy": {
       "title": "访问策略",
       "description": "限制操作和提供商代理请求。",
-      "rulesHint": "Block 规则优先；非空 allowlist 会在部署、运行时和 token 层之间取交集。每行填写一条规则。",
       "deployment": "部署策略（只读）",
       "runtime": "运行时策略",
       "allowedActions": "允许的操作",
@@ -434,7 +401,6 @@
       "saving": "正在保存策略...",
       "saved": "策略已保存。",
       "saveFailed": "保存策略失败。",
-      "unrestricted": "没有 token 专属限制",
       "edit": "编辑策略",
       "editToken": "编辑 Token 策略",
       "baseline": {
@@ -549,8 +515,7 @@
         "connectionCount": "{{count}} 个连接",
         "noConnections": "这个列表中暂无连接。",
         "connectionsDefaultHint": "选择某个 Provider 的 default 连接后，Token 才能执行该 Provider 未指定连接名称的 HTTP、MCP 或代理请求。",
-        "discard": "放弃修改",
-        "preview": "预览影响"
+        "discard": "放弃修改"
       },
       "impact": {
         "title": "草稿影响",

@@ -5,20 +5,13 @@
     "catalogOnly": "Catalogue uniquement",
     "clear": "Effacer",
     "close": "Fermer",
-    "connected": "Connecté",
-    "copied": "{{label}} copié",
-    "copy": "Copier {{label}}",
     "credential": "Identifiant",
     "currentSelection": "Sélection actuelle",
-    "docs": "Docs",
     "failed": "Échec",
     "loadingRuntimeData": "Chargement des données du runtime...",
     "local": "Local",
     "noAuth": "Sans auth",
-    "notConnected": "Non connecté",
-    "open": "Ouvrir",
     "refresh": "Actualiser",
-    "required": "Requis",
     "runtimeReady": "Runtime prêt",
     "showMore": "Afficher plus",
     "showing": "{{shown}} sur {{total}} affichés",
@@ -62,33 +55,26 @@
     },
     "headings": {
       "overview": {
-        "title": "Vue d’ensemble",
-        "subtitle": "État et santé du runtime."
+        "title": "Vue d’ensemble"
       },
       "providers": {
-        "title": "Fournisseurs",
-        "subtitle": "Connectez des fournisseurs et examinez leurs capacités."
+        "title": "Fournisseurs"
       },
-      "marketplace": { "title": "Marketplace", "subtitle": "Configure managed provider actions." },
+      "marketplace": { "title": "Marketplace" },
       "oauthApps": {
-        "title": "Apps OAuth",
-        "subtitle": "Gérez l’application OAuth par défaut de chaque fournisseur."
+        "title": "Apps OAuth"
       },
       "actions": {
-        "title": "Actions",
-        "subtitle": "Recherchez, inspectez et déboguez les actions du runtime local."
+        "title": "Actions"
       },
       "runs": {
-        "title": "Exécutions",
-        "subtitle": "Exécutions récentes des actions locales."
+        "title": "Exécutions"
       },
       "access": {
-        "title": "API Key",
-        "subtitle": "Gérez les tokens d’API runtime pour les agents et les clients."
+        "title": "API Key"
       },
       "resources": {
-        "title": "Ressources",
-        "subtitle": "Références d’API générées et métadonnées d’outils."
+        "title": "Ressources"
       }
     }
   },
@@ -102,7 +88,6 @@
     "capabilityStatus": "État des capacités",
     "metrics": {
       "providers": "Fournisseurs",
-      "actions": "Actions",
       "executable": "Exécutables",
       "runHealth": "Santé des exécutions"
     },
@@ -113,8 +98,6 @@
     "unavailable": "Indisponible",
     "needsAttention": "À traiter",
     "recentFailures": "Échecs récents",
-    "noFailedRunsTitle": "Aucun échec",
-    "noFailedRunsDescription": "Les exécutions récentes sont propres.",
     "callTrend": "Tendance des appels d’outils",
     "callTrendLegend": "Services",
     "noCallTrendTitle": "Aucune tendance d’appel",
@@ -129,7 +112,6 @@
   "marketplace": {
     "summary": {
       "title": "Connector Marketplace",
-      "id": "ID : {{id}}",
       "description": "Accès géré aux fournisseurs pour cette instance Connector.",
       "providers": "Fournisseurs",
       "actions": "Actions"
@@ -224,9 +206,6 @@
       "notConnected": "Non connectés",
       "oauthNeedsConfig": "OAuth à configurer"
     },
-    "providerMeta": "{{service}} · {{authTypes}} · {{count}} actions",
-    "noAuth": "sans auth",
-    "oauthConfigBadge": "Config OAuth",
     "noProvidersTitle": "Aucun fournisseur trouvé",
     "noProvidersDescription": "Essayez une autre recherche ou un autre filtre de statut.",
     "resultCount": "{{shown}} / {{total}} affichés",
@@ -236,9 +215,6 @@
     "providerNotFoundDescription": "{{service}} ne correspond pas au catalogue actuel.",
     "backToProviders": "Retour aux fournisseurs",
     "providerHomepage": "Site web",
-    "selectProviderTitle": "Sélectionner un fournisseur",
-    "selectProviderDescription": "Choisissez un fournisseur pour inspecter les paramètres de connexion.",
-    "connectedBy": "Connecté via {{authType}}",
     "marketplaceBadge": "Géré",
     "marketplaceConnection": {
       "title": "Connexion Marketplace gérée",
@@ -252,14 +228,6 @@
     "runtimeUnavailableBadge": "Indisponible",
     "runtimeUnavailableTitle": "Indisponible dans cet environnement d’exécution",
     "runtimeUnavailableDescription": "{{name}} reste visible dans le catalogue, mais ses connexions et actions ne sont pas disponibles dans l’environnement d’exécution actuel.",
-    "summary": {
-      "actions": "Actions",
-      "auth": "Auth",
-      "oauthConfig": "Config OAuth",
-      "configured": "Configuré",
-      "required": "Requis",
-      "notUsed": "Non utilisé"
-    },
     "connection": "Connexion",
     "connectionCount": "{{count}} connexions",
     "savedConnections": "Connexions enregistrées",
@@ -446,7 +414,6 @@
     "policy": {
       "title": "Politique d’accès",
       "description": "Limitez les actions et les requêtes proxy des fournisseurs.",
-      "rulesHint": "Les règles de blocage sont prioritaires. Les listes d’autorisation non vides s’intersectent entre les couches de déploiement, runtime et token. Une règle par ligne.",
       "deployment": "Politique de déploiement (lecture seule)",
       "runtime": "Politique runtime",
       "allowedActions": "Actions autorisées",
@@ -457,7 +424,6 @@
       "saving": "Enregistrement de la politique...",
       "saved": "Politique enregistrée.",
       "saveFailed": "Échec de l’enregistrement de la politique.",
-      "unrestricted": "Aucune restriction propre au token",
       "edit": "Modifier la politique",
       "editToken": "Modifier la politique du token",
       "baseline": {
@@ -572,8 +538,7 @@
         "connectionCount": "{{count}} connexions",
         "noConnections": "Aucune connexion dans cette liste.",
         "connectionsDefaultHint": "Sélectionnez la connexion default d’un fournisseur pour autoriser ses requêtes HTTP, MCP ou proxy sans nom.",
-        "discard": "Abandonner les modifications",
-        "preview": "Prévisualiser l’impact"
+        "discard": "Abandonner les modifications"
       },
       "impact": {
         "title": "Impact du brouillon",

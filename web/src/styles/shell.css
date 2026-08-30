@@ -259,21 +259,6 @@
   padding-bottom: 28px;
 }
 
-.page-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-}
-
-.page-header p {
-  margin-top: 6px;
-  color: var(--muted-foreground);
-}
-
 .page-loading {
   margin-top: 0;
 }
@@ -393,15 +378,6 @@
   .shell-header {
     position: static;
     padding: 0 16px;
-  }
-
-  .page-header {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .page-header {
-    align-items: start;
   }
 }
 

@@ -5,20 +5,13 @@
     "catalogOnly": "Catalog only",
     "clear": "Clear",
     "close": "Close",
-    "connected": "Connected",
-    "copied": "Copied {{label}}",
-    "copy": "Copy {{label}}",
     "credential": "Credential",
     "currentSelection": "Current selection",
-    "docs": "Docs",
     "failed": "Failed",
     "loadingRuntimeData": "Loading runtime data...",
     "local": "Local",
     "noAuth": "No auth",
-    "notConnected": "Not connected",
-    "open": "Open",
     "refresh": "Refresh",
-    "required": "Required",
     "runtimeReady": "Runtime ready",
     "showMore": "Show more",
     "showing": "Showing {{shown}} of {{total}}",
@@ -62,33 +55,26 @@
     },
     "headings": {
       "overview": {
-        "title": "Overview",
-        "subtitle": "Runtime status and health."
+        "title": "Overview"
       },
       "providers": {
-        "title": "Providers",
-        "subtitle": "Connect providers and review provider capabilities."
+        "title": "Providers"
       },
-      "marketplace": { "title": "Marketplace", "subtitle": "Configure managed provider actions." },
+      "marketplace": { "title": "Marketplace" },
       "oauthApps": {
-        "title": "OAuth Apps",
-        "subtitle": "Manage the default OAuth app for each provider."
+        "title": "OAuth Apps"
       },
       "actions": {
-        "title": "Actions",
-        "subtitle": "Search, inspect, and debug local runtime actions."
+        "title": "Actions"
       },
       "runs": {
-        "title": "Runs",
-        "subtitle": "Recent local action executions."
+        "title": "Runs"
       },
       "access": {
-        "title": "API Key",
-        "subtitle": "Manage runtime API tokens for agents and clients."
+        "title": "API Key"
       },
       "resources": {
-        "title": "Resources",
-        "subtitle": "Generated API references and tool metadata."
+        "title": "Resources"
       }
     }
   },
@@ -102,7 +88,6 @@
     "capabilityStatus": "Capability Status",
     "metrics": {
       "providers": "Providers",
-      "actions": "Actions",
       "executable": "Executable",
       "runHealth": "Run Health"
     },
@@ -113,8 +98,6 @@
     "unavailable": "Unavailable",
     "needsAttention": "Needs attention",
     "recentFailures": "Recent Failures",
-    "noFailedRunsTitle": "No failed runs",
-    "noFailedRunsDescription": "Recent action runs are clean.",
     "callTrend": "Tool Call Trend",
     "callTrendLegend": "Services",
     "noCallTrendTitle": "No call trend yet",
@@ -129,7 +112,6 @@
   "marketplace": {
     "summary": {
       "title": "Connector Marketplace",
-      "id": "ID: {{id}}",
       "description": "Managed provider access for this Connector runtime.",
       "providers": "Providers",
       "actions": "Actions"
@@ -218,9 +200,6 @@
       "notConnected": "Not connected",
       "oauthNeedsConfig": "OAuth needs config"
     },
-    "providerMeta": "{{service}} · {{authTypes}} · {{count}} actions",
-    "noAuth": "no auth",
-    "oauthConfigBadge": "OAuth config",
     "noProvidersTitle": "No providers found",
     "noProvidersDescription": "Try a different search or status filter.",
     "resultCount": "Showing {{shown}} / {{total}}",
@@ -230,9 +209,6 @@
     "providerNotFoundDescription": "{{service}} does not match the current catalog.",
     "backToProviders": "Back to providers",
     "providerHomepage": "Homepage",
-    "selectProviderTitle": "Select a provider",
-    "selectProviderDescription": "Choose a provider to inspect connection settings.",
-    "connectedBy": "Connected by {{authType}}",
     "marketplaceBadge": "Managed",
     "marketplaceConnection": {
       "title": "Managed Marketplace connection",
@@ -246,14 +222,6 @@
     "runtimeUnavailableBadge": "Unavailable",
     "runtimeUnavailableTitle": "Unavailable in this runtime",
     "runtimeUnavailableDescription": "{{name}} remains visible for catalog reference, but connections and actions are unavailable in the current runtime.",
-    "summary": {
-      "actions": "Actions",
-      "auth": "Auth",
-      "oauthConfig": "OAuth config",
-      "configured": "Configured",
-      "required": "Required",
-      "notUsed": "Not used"
-    },
     "connection": "Connection",
     "connectionCount": "{{count}} connections",
     "savedConnections": "Saved connections",
@@ -440,7 +408,6 @@
     "policy": {
       "title": "Access Policy",
       "description": "Limit actions and provider proxy requests.",
-      "rulesHint": "Block rules take priority. Non-empty allowlists intersect across deployment, runtime, and token layers. Enter one rule per line.",
       "deployment": "Deployment policy (read-only)",
       "runtime": "Runtime policy",
       "allowedActions": "Allowed actions",
@@ -451,7 +418,6 @@
       "saving": "Saving policy...",
       "saved": "Policy saved.",
       "saveFailed": "Failed to save policy.",
-      "unrestricted": "No token-specific restrictions",
       "edit": "Edit Policy",
       "editToken": "Edit Token Policy",
       "baseline": {
@@ -566,8 +532,7 @@
         "connectionCount": "{{count}} connections",
         "noConnections": "No connections in this list.",
         "connectionsDefaultHint": "Select a provider's default connection to allow its unnamed HTTP, MCP, or proxy requests.",
-        "discard": "Discard changes",
-        "preview": "Preview impact"
+        "discard": "Discard changes"
       },
       "impact": {
         "title": "Draft impact",
