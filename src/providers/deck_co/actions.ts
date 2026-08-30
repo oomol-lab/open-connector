@@ -149,7 +149,3 @@ export const deckCoActions: readonly ProviderActionDefinition[] = [
     outputSchema: getSourceOutputSchema,
   }),
 ];
-
-export const deckCoActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
-  deckCoActions.map((action) => [action.name, action] as const),
-);

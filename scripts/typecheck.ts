@@ -7,11 +7,10 @@ const tscBin = join(rootDir, "node_modules/typescript/bin/tsc");
 const buildInfoDir = join(rootDir, ".tmp/tsbuildinfo");
 const projectConfigs: TypecheckProject[] = [
   { name: "src", path: "src/tsconfig.json" },
-  { name: "scripts", path: "scripts/tsconfig.build.json" },
   { name: "scripts-all", path: "scripts/tsconfig.json" },
   { name: "examples", path: "examples/tsconfig.json" },
 ];
-const defaultProjectNames = ["src", "scripts"];
+const defaultProjectNames = ["src", "scripts-all", "examples"];
 
 interface TypecheckProject {
   name: string;

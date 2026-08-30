@@ -264,7 +264,3 @@ export const bolnaActions: ProviderActionDefinition[] = [
     outputSchema: getExecutionRawLogsOutputSchema,
   }),
 ];
-
-export const bolnaActionByName: ReadonlyMap<string, (typeof bolnaActions)[number]> = new Map(
-  bolnaActions.map((action) => [action.name, action]),
-);

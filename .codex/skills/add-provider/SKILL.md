@@ -127,7 +127,6 @@ Previous provider batches needed cleanup for these issues. Check them explicitly
 
 - Do not add catalog-only placeholders or empty `executors`. Add a provider when it has a runnable local executor.
 - Do not commit generated action schema modules. Hand-maintained provider source should own action schemas.
-- Do commit the repository-wide generated `src/providers/action-contracts.generated.ts` when definition changes update it; it is not a provider-local generated schema module.
 - If a credential field contains a user-configured base URL, host, workspace URL, or region-derived URL, normalize and validate it with the current public URL helper from `src/core/request.ts` before any fetch or proxy call. Reject credentials in URLs and unsafe network targets according to that helper.
 - If runtime downloads or uploads files, use existing transit-file and bounded-response helpers. Avoid unbounded `arrayBuffer()` or `text()` reads for file-sized responses.
 - If the upstream API supports streaming, multipart uploads, or very large local files but this runtime only supports JSON-friendly calls, expose the JSON-friendly shape and reject unsupported flags deliberately.
@@ -168,7 +167,7 @@ Before finishing, inspect the result against these checks:
 - No duplicate action-name union or cast exists solely to make a handler map appear exhaustive.
 - Generic helper code has a single owner.
 - Provider-local helper code has provider-specific meaning.
-- Generated registries, action contracts, and catalog files were updated by their commands, not hand-edited, and all changed generated files are included in the final diff.
+- Generated registries, action contracts, and catalog files were updated by their commands, not hand-edited.
 - No third-party rights issue was introduced.
 - No non-public product behavior is mentioned.
 

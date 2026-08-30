@@ -358,7 +358,3 @@ export const wpsMcpActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export const wpsMcpActionByName: Map<string, ActionDefinition> = new Map(
-  wpsMcpActions.map((action) => [action.name, action]),
-);

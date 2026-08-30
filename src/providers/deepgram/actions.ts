@@ -215,7 +215,3 @@ export const deepgramActions: readonly ProviderActionDefinition[] = [
   listProjectModelsAction,
   getProjectModelAction,
 ];
-
-export const deepgramActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
-  deepgramActions.map((action) => [action.name, action] as const),
-);

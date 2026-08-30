@@ -352,7 +352,3 @@ export const capsuleCrmActions: ActionDefinition[] = [
     outputSchema: listOutputSchema("The Capsule CRM stages list response.", "stages"),
   }),
 ];
-
-export const capsuleCrmActionByName: Map<string, ActionDefinition> = new Map(
-  capsuleCrmActions.map((action) => [action.name, action]),
-);

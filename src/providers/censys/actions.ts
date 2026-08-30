@@ -89,7 +89,3 @@ export const censysActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export const censysActionByName: Map<string, ProviderActionDefinition> = new Map(
-  censysActions.map((action) => [action.name, action] as const),
-);

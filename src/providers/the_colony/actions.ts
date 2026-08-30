@@ -288,7 +288,3 @@ export const theColonyActions: ActionDefinition[] = [
   voteCommentAction,
   searchAction,
 ];
-
-export const theColonyActionByName: ReadonlyMap<string, ActionDefinition> = new Map(
-  theColonyActions.map((action) => [action.name, action]),
-);

@@ -306,10 +306,3 @@ export const captainBiActions: ActionDefinition[] = [
     outputSchema: pageOutputSchema("A page of CaptainBI refund records.", "refunds", refundSchema),
   }),
 ];
-
-export type CaptainBiActionName = (typeof captainBiActions)[number]["name"];
-type CaptainBiAction = (typeof captainBiActions)[number];
-
-export const captainBiActionByName: ReadonlyMap<CaptainBiActionName, CaptainBiAction> = new Map(
-  captainBiActions.map((action) => [action.name, action] as const),
-);

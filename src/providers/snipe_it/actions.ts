@@ -237,7 +237,3 @@ export const snipeItActions: ActionDefinition[] = [
     outputSchema: listResultSchema("A page of Snipe-IT status labels.", "statusLabels"),
   }),
 ];
-
-export const snipeItActionByName: ReadonlyMap<string, ActionDefinition> = new Map(
-  snipeItActions.map((action) => [action.name, action]),
-);

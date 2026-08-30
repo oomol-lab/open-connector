@@ -200,7 +200,3 @@ export const cardlyActions: ProviderActionDefinition[] = [
   listFontsAction,
   listWritingStylesAction,
 ];
-
-export const cardlyActionByName: Map<string, ProviderActionDefinition> = new Map(
-  cardlyActions.map((action) => [action.name, action] as const),
-);

@@ -263,7 +263,3 @@ export const sevenShiftsActions: ProviderActionDefinition[] = [
   listRolesAction,
   listUsersAction,
 ];
-
-export const sevenShiftsActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
-  sevenShiftsActions.map((action) => [action.name, action] as const),
-);

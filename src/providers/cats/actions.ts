@@ -157,7 +157,3 @@ export const catsActions: ProviderActionDefinition[] = [
     outputSchema: listOutputSchema("CATS job search response.", "jobs", "CATS job record."),
   }),
 ];
-
-export const catsActionByName: Map<string, ProviderActionDefinition> = new Map(
-  catsActions.map((action) => [action.name, action] as const),
-);

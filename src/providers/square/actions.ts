@@ -224,7 +224,3 @@ export const squareActions: ActionDefinition[] = [
     outputSchema: customerPageOutputSchema,
   }),
 ];
-
-export const squareActionByName: ReadonlyMap<string, ActionDefinition> = new Map(
-  squareActions.map((action) => [action.name, action]),
-);

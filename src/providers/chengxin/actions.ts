@@ -435,7 +435,3 @@ export type ChengxinActionName =
   | "search_travel"
   | "search_transport"
   | "search_buses";
-
-export const chengxinActionByName: Map<string, ActionDefinition> = new Map(
-  chengxinActions.map((action) => [action.name, action]),
-);

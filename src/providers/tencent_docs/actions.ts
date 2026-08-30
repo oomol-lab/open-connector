@@ -466,7 +466,3 @@ export const tencentDocsActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export const tencentDocsActionByName: Map<string, ActionDefinition> = new Map(
-  tencentDocsActions.map((action) => [action.name, action]),
-);

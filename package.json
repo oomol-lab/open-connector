@@ -9,7 +9,6 @@
   "scripts": {
     "postinstall": "node scripts/ensure-generated.ts",
     "dev": "node scripts/dev-local.ts",
-    "dev:api": "node scripts/ensure-generated.ts && node src/server/index.ts",
     "build": "npm run typecheck",
     "build:web": "npm run build --workspace web",
     "dev:cloudflare": "npm run generate:catalog && npm run build:web && node scripts/copy-catalog-assets.ts && wrangler dev --config wrangler.local.jsonc",
@@ -19,8 +18,6 @@
     "typecheck": "npm run generate:registry && node scripts/typecheck.ts src scripts-all examples",
     "generate:registry": "node scripts/generate-provider-registry.ts",
     "generate:catalog": "node scripts/generate-catalog.ts",
-    "export:feishu-permissions": "node scripts/export-feishu-permissions.ts",
-    "generate:provider": "node scripts/generate-provider.ts",
     "runtime:migrate": "node scripts/runtime-data.ts migrate",
     "runtime:data": "node scripts/runtime-data.ts",
     "lint": "oxlint .",

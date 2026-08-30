@@ -131,7 +131,3 @@ export const deeplActions: readonly ProviderActionDefinition[] = [
     outputSchema: translateTextOutputSchema,
   }),
 ];
-
-export const deeplActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
-  deeplActions.map((action) => [action.name, action] as const),
-);

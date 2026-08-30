@@ -168,7 +168,3 @@ export const blandAiActions: readonly ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export const blandAiActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
-  blandAiActions.map((action) => [action.name, action] as const),
-);

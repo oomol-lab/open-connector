@@ -171,7 +171,3 @@ export const theCatApiActions: ActionDefinition[] = [
     outputSchema: getBreedOutputSchema,
   }),
 ];
-
-export const theCatApiActionByName: Map<string, ActionDefinition> = new Map(
-  theCatApiActions.map((action) => [action.name, action] as const),
-);

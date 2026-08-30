@@ -158,10 +158,6 @@ export const blueskyActions: ProviderActionDefinition[] = [
   }),
 ];
 
-export const blueskyActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
-  blueskyActions.map((action) => [action.name, action] as const),
-);
-
 export function getBlueskyPostTextValidationIssues(text: string): string[] {
   const issues: string[] = [];
   if (textEncoder.encode(text).byteLength > blueskyPostTextMaxBytes) {

@@ -820,7 +820,3 @@ export type SpyfuActionName =
   | "get_domain_ad_history"
   | "get_keyword_ad_history"
   | "get_keyword_ad_history_with_stats";
-
-export const spyfuActionByName: Map<string, ActionDefinition> = new Map(
-  spyfuActions.map((action) => [action.name, action]),
-);

@@ -480,7 +480,3 @@ export function createCanvaActions(service: string): ActionDefinition[] {
 }
 
 export const canvaActions: ActionDefinition[] = createCanvaActions("canva");
-
-export const canvaActionByName: Map<string, ActionDefinition> = new Map(
-  canvaActions.map((action) => [action.name, action] as const),
-);

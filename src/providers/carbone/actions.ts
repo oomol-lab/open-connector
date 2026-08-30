@@ -155,7 +155,3 @@ export const carboneActions: ActionDefinition[] = [
   updateTemplateMetadataAction,
   deleteTemplateAction,
 ];
-
-export const carboneActionByName: Map<string, ActionDefinition> = new Map(
-  carboneActions.map((action) => [action.name, action] as const),
-);

@@ -106,7 +106,3 @@ export const onlyofficeDocspaceActions: ActionDefinition[] = [
 ];
 
 export type OnlyofficeDocspaceActionName = (typeof onlyofficeDocspaceActions)[number]["name"];
-
-export const onlyofficeDocspaceActionByName: Map<string, ActionDefinition> = new Map(
-  onlyofficeDocspaceActions.map((action) => [action.name, action]),
-);

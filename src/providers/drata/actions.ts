@@ -5,16 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "drata" as const;
 
-export type DrataActionName =
-  | "get_company"
-  | "list_workspaces"
-  | "list_personnel"
-  | "get_personnel"
-  | "list_controls"
-  | "get_control"
-  | "list_vendors"
-  | "get_vendor";
-
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 
 const cursorSchema = nonEmptyString("The Drata cursor returned in pagination.cursor by a previous list response.");
@@ -273,7 +263,3 @@ export const drataActions: ActionDefinition[] = [
   listVendorsAction,
   getVendorAction,
 ];
-
-export const drataActionByName: Map<DrataActionName, ActionDefinition> = new Map(
-  drataActions.map((action) => [action.name as DrataActionName, action]),
-);
