@@ -158,8 +158,8 @@ export class ActionRunner {
       connectionProfile: connection?.summary?.profile,
       runtimeTokenId: input.runtimeTokenId,
       policy,
-      inputSummary: this.summarizeAuditValue(input.input, logContext),
-      outputSummary: result.ok ? this.summarizeAuditValue(result.output, logContext) : undefined,
+      inputSummary: summarizeForRunLog(input.input),
+      outputSummary: result.ok ? summarizeForRunLog(result.output) : undefined,
       ...auditError,
     };
 
@@ -213,15 +213,6 @@ export class ActionRunner {
       context.transitFiles = this.options.transitFiles;
     }
     return context;
-  }
-
-  private summarizeAuditValue(value: unknown, logContext: Record<string, unknown>): unknown {
-    try {
-      return summarizeForRunLog(value);
-    } catch {
-      this.options.logger?.warn(logContext, "run audit summary unavailable");
-      return "[unavailable]";
-    }
   }
 }
 

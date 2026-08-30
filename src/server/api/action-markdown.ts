@@ -7,10 +7,10 @@ import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmFromMarkdown, gfmToMarkdown } from "mdast-util-gfm";
 import { toMarkdown } from "mdast-util-to-markdown";
 import { gfm } from "micromark-extension-gfm";
+import { describeSchemaType, readSchemaProperties, readSchemaRequired } from "../../core/json-schema.ts";
 
 export type ActionMarkdownContext = {
   connection?: ConnectionSummary;
-  providerPermissions?: string[];
   policy?: ActionPolicyDecision;
 };
 
@@ -21,7 +21,6 @@ export type ActionMarkdownContext = {
 export function renderActionMarkdown(action: ActionDefinition, context: ActionMarkdownContext = {}): string {
   const exampleInput = buildExampleInput(action.inputSchema);
   const exampleBody = JSON.stringify({ input: exampleInput }, null, 2);
-  const providerPermissions = context.providerPermissions ?? action.providerPermissions;
   const root: Root = {
     type: "root",
     children: [
@@ -52,7 +51,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       heading(2, "Required Scopes"),
       ...describeStringList(action.requiredScopes, "No provider scopes are required."),
       heading(2, "Provider Permissions"),
-      ...describeStringList(providerPermissions, "No provider permissions are declared."),
+      ...describeStringList(action.providerPermissions, "No provider permissions are declared."),
       heading(2, "Execution Policy"),
       ...describePolicy(context.policy),
       heading(2, "Current Connection"),
@@ -125,13 +124,13 @@ function describeConnection(connection: ConnectionSummary | undefined): BlockCon
 }
 
 function describeParameters(schema: JsonSchema): BlockContent[] {
-  const properties = readProperties(schema);
+  const properties = readSchemaProperties(schema);
   const entries = Object.entries(properties);
   if (entries.length === 0) {
     return [textParagraph("This action does not require input parameters.")];
   }
 
-  const required = new Set(readRequired(schema));
+  const required = new Set(readSchemaRequired(schema));
   return [
     parameterTable(entries, required),
     listItems(
@@ -152,7 +151,7 @@ function parameterTable(entries: Array<[string, JsonSchema]>, required: Set<stri
         tableRow([
           inlineCodeTableCell(name),
           textTableCell(required.has(name) ? "Yes" : "No"),
-          inlineCodeTableCell(describeType(property)),
+          inlineCodeTableCell(describeSchemaType(property)),
         ]),
       ),
     ],
@@ -264,40 +263,12 @@ function isBlockContent(node: DocumentContent): node is BlockContent {
 type DocumentContent = BlockContent | DefinitionContent;
 
 function buildExampleInput(schema: JsonSchema): Record<string, unknown> {
-  const properties = readProperties(schema);
+  const properties = readSchemaProperties(schema);
   const input: Record<string, unknown> = {};
-  for (const name of readRequired(schema)) {
+  for (const name of readSchemaRequired(schema)) {
     input[name] = exampleValue(properties[name]);
   }
   return input;
-}
-
-function readProperties(schema: JsonSchema): Record<string, JsonSchema> {
-  return schema.properties && typeof schema.properties === "object"
-    ? (schema.properties as Record<string, JsonSchema>)
-    : {};
-}
-
-function readRequired(schema: JsonSchema): string[] {
-  return Array.isArray(schema.required)
-    ? schema.required.filter((value): value is string => typeof value === "string")
-    : [];
-}
-
-function describeType(schema: JsonSchema | undefined): string {
-  if (!schema) {
-    return "unknown";
-  }
-  if (typeof schema.const === "string" || typeof schema.const === "number" || typeof schema.const === "boolean") {
-    return JSON.stringify(schema.const);
-  }
-  if (Array.isArray(schema.enum)) {
-    return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
-  }
-  if (Array.isArray(schema.anyOf)) {
-    return schema.anyOf.map((item) => describeType(item as JsonSchema)).join(" | ");
-  }
-  return typeof schema.type === "string" ? schema.type : "unknown";
 }
 
 function readDescription(schema: JsonSchema | undefined): string {

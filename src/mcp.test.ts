@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "./catalog-store.ts";
 import { ConnectionService } from "./connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "./core/action-policy.ts";
-import { createMcpServer } from "./mcp.ts";
+import { createMcpServer, listMcpToolSummaries } from "./mcp.ts";
 import { ActionRunner } from "./server/actions/action-runner.ts";
 
 const echoAction: ActionDefinition = {
@@ -100,6 +100,16 @@ describe("MCP server", () => {
         "get_action_guide",
         "execute_action",
       ]);
+    });
+  });
+
+  it("projects the tool summaries from the registered tools", async () => {
+    await withMcpClient(async (client) => {
+      const result = await client.listTools();
+
+      expect(listMcpToolSummaries()).toEqual(
+        result.tools.map(({ name, title, description }) => ({ name, title, description })),
+      );
     });
   });
 
@@ -646,7 +656,6 @@ async function withMcpClient(
   });
   const server = createMcpServer({
     catalog,
-    providerLoader,
     connections,
     actions,
     ...policy,
@@ -702,7 +711,7 @@ async function withAuthenticatedMcpClient(
     ]),
   });
   const actions = new ActionRunner({ catalog, providerLoader, connections, runs });
-  const server = createMcpServer({ catalog, providerLoader, connections, actions, ...policy });
+  const server = createMcpServer({ catalog, connections, actions, ...policy });
   const client = new Client({ name: "mcp-test", version: "0.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 

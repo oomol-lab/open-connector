@@ -3,7 +3,6 @@ import type { ConnectionService, ConnectionSummary } from "./connection-service.
 import type { ActionPolicyDecision, ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
-import type { IProviderLoader } from "./providers/provider-loader.ts";
 import type { ActionRunner, ActionRunResult } from "./server/actions/action-runner.ts";
 import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
 import type { CallToolResult } from "@modelcontextprotocol/server";
@@ -13,6 +12,7 @@ import * as z from "zod/v4";
 import { ConnectionError } from "./connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "./core/action-policy.ts";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
+import { describeSchemaType, readSchemaProperties, readSchemaRequired } from "./core/json-schema.ts";
 import { renderActionMarkdown } from "./server/api/action-markdown.ts";
 
 /**
@@ -20,10 +20,8 @@ import { renderActionMarkdown } from "./server/api/action-markdown.ts";
  */
 export interface IMcpServerOptions {
   catalog: CatalogStore;
-  providerLoader: IProviderLoader;
   connections: ConnectionService;
   actions: ActionRunner;
-  actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
   getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
   runtimeGrant?: RuntimeGrant;
@@ -38,34 +36,6 @@ export interface IMcpToolSummary {
   title: string;
   description: string;
 }
-
-const mcpToolSummaries: IMcpToolSummary[] = [
-  {
-    name: "list_apps",
-    title: "List Apps",
-    description: "List available provider apps with connection and action counts.",
-  },
-  {
-    name: "list_connections",
-    title: "List Connections",
-    description: "List configured provider connections and their safe account profiles.",
-  },
-  {
-    name: "search_actions",
-    title: "Search Actions",
-    description: "Search catalog actions by query and optional provider service id.",
-  },
-  {
-    name: "get_action_guide",
-    title: "Get Action Guide",
-    description: "Return the compact markdown guide for one action, including examples and parameters.",
-  },
-  {
-    name: "execute_action",
-    title: "Execute Action",
-    description: "Execute one local provider action by id with a JSON input object.",
-  },
-];
 
 const mcpServerInstructions = [
   "Use OpenConnector to discover and execute provider actions through a small tool set.",
@@ -85,6 +55,65 @@ const optionalConnectionNameSchema = z
   .describe("Optional named connection. Omit it to use the default connection.");
 
 /**
+ * Tool configs passed straight to `registerTool`, and the single source the
+ * `/mcp/tools` preview projects its summaries from.
+ */
+const mcpToolConfigs = {
+  list_apps: {
+    title: "List Apps",
+    description: "List available provider apps with connection and action counts.",
+    inputSchema: {
+      query: z.string().optional().describe("Optional case-insensitive app name, service, category, or auth filter."),
+    },
+  },
+  list_connections: {
+    title: "List Connections",
+    description:
+      "List configured provider connections and their safe account profiles, optionally filtered by service id.",
+    inputSchema: {
+      service: z.string().optional().describe("Optional provider service id such as github, gmail, or notion."),
+    },
+  },
+  search_actions: {
+    title: "Search Actions",
+    description:
+      "Search catalog actions by query and optional provider service id. Use this before requesting an action guide.",
+    inputSchema: {
+      query: z
+        .string()
+        .optional()
+        .describe("Optional case-insensitive search text matched against action id, name, description, and scopes."),
+      service: z
+        .string()
+        .optional()
+        .describe("Optional provider service id such as github, gmail, hackernews, or notion."),
+      limit: z.number().int().min(1).max(50).default(20).describe("Maximum number of actions to return."),
+    },
+  },
+  get_action_guide: {
+    title: "Get Action Guide",
+    description: "Return one action's compact markdown guide, including local execute examples and input parameters.",
+    inputSchema: {
+      actionId: z.string().describe("Full action id, for example github.get_current_user."),
+      connectionName: optionalConnectionNameSchema,
+    },
+  },
+  execute_action: {
+    title: "Execute Action",
+    description:
+      "Execute one local provider action by id with a JSON input object. Call get_action_guide first if the input shape is unclear.",
+    inputSchema: {
+      actionId: z.string().describe("Full action id, for example hackernews.get_item."),
+      input: z
+        .record(z.string(), z.unknown())
+        .default({})
+        .describe("Action input object matching the selected action guide."),
+      connectionName: optionalConnectionNameSchema,
+    },
+  },
+};
+
+/**
  * Return the fixed discovery-oriented MCP tool list.
  *
  * The local runtime can contain hundreds of provider actions, so MCP exposes a
@@ -92,7 +121,11 @@ const optionalConnectionNameSchema = z
  * action.
  */
 export function listMcpToolSummaries(): IMcpToolSummary[] {
-  return mcpToolSummaries;
+  return Object.entries(mcpToolConfigs).map(([name, config]) => ({
+    name,
+    title: config.title,
+    description: config.description,
+  }));
 }
 
 /**
@@ -109,82 +142,24 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
     },
   );
 
-  server.registerTool(
-    "list_apps",
-    {
-      title: "List Apps",
-      description: "List available provider apps with connection and action counts.",
-      inputSchema: {
-        query: z.string().optional().describe("Optional case-insensitive app name, service, category, or auth filter."),
-      },
-    },
-    async ({ query }) => toolResult(await listApps(options, query)),
+  server.registerTool("list_apps", mcpToolConfigs.list_apps, async ({ query }) =>
+    toolResult(await listApps(options, query)),
   );
 
-  server.registerTool(
-    "list_connections",
-    {
-      title: "List Connections",
-      description:
-        "List configured provider connections and their safe account profiles, optionally filtered by service id.",
-      inputSchema: {
-        service: z.string().optional().describe("Optional provider service id such as github, gmail, or notion."),
-      },
-    },
-    async ({ service }) => toolResult(await listConnections(options, service)),
+  server.registerTool("list_connections", mcpToolConfigs.list_connections, async ({ service }) =>
+    toolResult(await listConnections(options, service)),
   );
 
-  server.registerTool(
-    "search_actions",
-    {
-      title: "Search Actions",
-      description:
-        "Search catalog actions by query and optional provider service id. Use this before requesting an action guide.",
-      inputSchema: {
-        query: z
-          .string()
-          .optional()
-          .describe("Optional case-insensitive search text matched against action id, name, description, and scopes."),
-        service: z
-          .string()
-          .optional()
-          .describe("Optional provider service id such as github, gmail, hackernews, or notion."),
-        limit: z.number().int().min(1).max(50).default(20).describe("Maximum number of actions to return."),
-      },
-    },
-    async ({ query, service, limit }) => toolResult(await searchActions(options, { query, service, limit })),
+  server.registerTool("search_actions", mcpToolConfigs.search_actions, async ({ query, service, limit }) =>
+    toolResult(await searchActions(options, { query, service, limit })),
   );
 
-  server.registerTool(
-    "get_action_guide",
-    {
-      title: "Get Action Guide",
-      description: "Return one action's compact markdown guide, including local execute examples and input parameters.",
-      inputSchema: {
-        actionId: z.string().describe("Full action id, for example github.get_current_user."),
-        connectionName: optionalConnectionNameSchema,
-      },
-    },
-    async ({ actionId, connectionName }) => toolResult(await getActionGuide(options, actionId, connectionName)),
+  server.registerTool("get_action_guide", mcpToolConfigs.get_action_guide, async ({ actionId, connectionName }) =>
+    toolResult(await getActionGuide(options, actionId, connectionName)),
   );
 
-  server.registerTool(
-    "execute_action",
-    {
-      title: "Execute Action",
-      description:
-        "Execute one local provider action by id with a JSON input object. Call get_action_guide first if the input shape is unclear.",
-      inputSchema: {
-        actionId: z.string().describe("Full action id, for example hackernews.get_item."),
-        input: z
-          .record(z.string(), z.unknown())
-          .default({})
-          .describe("Action input object matching the selected action guide."),
-        connectionName: optionalConnectionNameSchema,
-      },
-    },
-    async ({ actionId, input, connectionName }) =>
-      toolResult(await executeAction(options, actionId, input, connectionName)),
+  server.registerTool("execute_action", mcpToolConfigs.execute_action, async ({ actionId, input, connectionName }) =>
+    toolResult(await executeAction(options, actionId, input, connectionName)),
   );
 
   return server;
@@ -302,12 +277,10 @@ async function getActionGuide(
     if (!connectionDecision.allowed) {
       return errorPayload(connectionDecision.code, connectionDecision.message);
     }
+    const capability = await describeActionCapability(options, action, connectionName, policy);
     return successPayload({
-      capability: await describeActionCapability(options, action, connectionName, policy),
-      markdown: renderActionMarkdown(
-        action,
-        await describeActionMarkdownContext(options, action, connectionName, policy),
-      ),
+      capability,
+      markdown: renderActionMarkdown(action, { connection: capability.connection, policy: capability.policy }),
     });
   } catch (error) {
     return connectionErrorPayload(error, policy);
@@ -373,11 +346,8 @@ async function executeAction(
 }
 
 function summarizeInputSchema(schema: JsonSchema): unknown {
-  const properties =
-    schema.properties && typeof schema.properties === "object" ? (schema.properties as Record<string, JsonSchema>) : {};
-  const required = new Set(
-    Array.isArray(schema.required) ? schema.required.filter((value): value is string => typeof value === "string") : [],
-  );
+  const properties = readSchemaProperties(schema);
+  const required = new Set(readSchemaRequired(schema));
 
   return Object.entries(properties).map(([name, property]) => ({
     name,
@@ -415,26 +385,11 @@ async function describeActionCapability(
   };
 }
 
-async function describeActionMarkdownContext(
-  options: IMcpServerOptions,
-  action: RuntimeActionDefinition,
-  connectionName?: string,
-  policy?: ActionPolicySnapshot,
-): Promise<{ connection?: ConnectionSummary; providerPermissions: string[]; policy: ActionPolicyDecision }> {
-  const snapshot = policy ?? (await getPolicySnapshot(options));
-  const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
-  return {
-    connection: evaluateConnectionGrant(snapshot, connection).allowed ? connection : undefined,
-    providerPermissions: action.providerPermissions,
-    policy: snapshot.evaluate(action),
-  };
-}
-
 async function getPolicySnapshot(options: IMcpServerOptions): Promise<ActionPolicySnapshot> {
   if (options.getPolicySnapshot) {
     return options.getPolicySnapshot();
   }
-  return (options.actionPolicy ?? new ActionPolicyService()).createSnapshot(emptyPolicyRules(), options.runtimeGrant);
+  return new ActionPolicyService().createSnapshot(emptyPolicyRules(), options.runtimeGrant);
 }
 
 async function getSelectedConnectionSummary(
@@ -454,22 +409,6 @@ function evaluateConnectionGrant(
   connection: ConnectionSummary | undefined,
 ): ActionPolicyDecision {
   return connection?.authType === "no_auth" ? { allowed: true, checks: [] } : policy.evaluateConnection(connection?.id);
-}
-
-function describeSchemaType(schema: JsonSchema | undefined): string {
-  if (!schema) {
-    return "unknown";
-  }
-  if (schema.const !== undefined) {
-    return JSON.stringify(schema.const);
-  }
-  if (Array.isArray(schema.enum)) {
-    return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
-  }
-  if (Array.isArray(schema.anyOf)) {
-    return schema.anyOf.map((value) => describeSchemaType(value as JsonSchema)).join(" | ");
-  }
-  return typeof schema.type === "string" ? schema.type : "unknown";
 }
 
 interface ToolExecutionMeta {

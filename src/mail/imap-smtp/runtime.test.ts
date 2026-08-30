@@ -102,11 +102,7 @@ describe("IMAP/SMTP mail runtime", () => {
         qqMailRuntimeConfig.readCredential({ email: "user@qq.com", authorizationCode }),
         "INBOX",
         1,
-        {
-          peek: true,
-          maxBytes: 1024,
-          skipAttachmentBodies: true,
-        },
+        { maxBytes: 1024 },
       ),
     ).resolves.toMatchObject({
       replyTo: [{ name: null, email: "reply@example.com" }],
@@ -239,11 +235,7 @@ describe("IMAP/SMTP mail runtime", () => {
         qqMailRuntimeConfig.readCredential({ email: "user@qq.com", authorizationCode }),
         "INBOX",
         1,
-        {
-          peek: true,
-          maxBytes: 1024,
-          skipAttachmentBodies: true,
-        },
+        { maxBytes: 1024 },
       ),
     ).resolves.toMatchObject({ references: expected });
 

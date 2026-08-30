@@ -9,7 +9,6 @@ import { createCatalogStore } from "../../catalog-store.ts";
 import { ConnectionService } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { ActionRunner } from "./action-runner.ts";
-import * as runLogSummary from "./run-log-summary.ts";
 
 const echoAction: ActionDefinition = {
   id: "example.echo",
@@ -94,14 +93,15 @@ describe("ActionRunner", () => {
   });
 
   it("falls back to an unavailable summary without changing the action result", async () => {
-    vi.spyOn(runLogSummary, "summarizeForRunLog").mockImplementationOnce(() => {
-      throw new Error("secret-in-summary");
-    });
+    // A non-plain prototype is the shape summarizeForRunLog refuses to enumerate.
+    const unsummarizableInput = new (class {
+      readonly message = "secret-in-summary";
+    })() as unknown as Record<string, unknown>;
     const runs = new MemoryRunLogStore();
     const { entries, logger } = createTestLogger();
     const runner = createRunner({ runs, logger });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "web" });
+    const run = await runner.run({ actionId: "example.echo", input: unsummarizableInput, caller: "web" });
 
     expect(run?.result).toEqual({ ok: true, output: { message: "ok" } });
     expect(runs.items[0]).toMatchObject({ inputSummary: "[unavailable]" });

@@ -296,7 +296,6 @@ export async function executeMailAction(
         const { summaries, nextBeforeUid } = await protocol.searchSummaries(credential, folder, criteria, {
           limit: searchInput.limit ?? defaultLimit,
           ...(searchInput.beforeUid !== undefined ? { beforeUid: searchInput.beforeUid } : {}),
-          peek: true,
         });
         return {
           folder,
@@ -308,9 +307,7 @@ export async function executeMailAction(
         const getInput = input as { folder?: string; uid: number };
         const folder = getInput.folder ?? defaultFolder;
         const message = await protocol.fetchMessage(credential, folder, getInput.uid, {
-          peek: true,
           maxBytes: mailMessageFetchByteLimit,
-          skipAttachmentBodies: true,
         });
         return {
           folder,
@@ -421,9 +418,7 @@ export async function executeMailAction(
         replyInput.folder = replyInput.folder ?? defaultFolder;
         replyInput.replyAll = replyInput.replyAll ?? false;
         const original = await protocol.fetchMessage(credential, replyInput.folder, replyInput.uid, {
-          peek: true,
           maxBytes: mailMessageFetchByteLimit,
-          skipAttachmentBodies: true,
         });
         const prepared = await buildReplySendInput(credential, original, replyInput, context);
         try {
@@ -436,9 +431,7 @@ export async function executeMailAction(
         const forwardInput = input as unknown as ParsedForwardInput;
         forwardInput.folder = forwardInput.folder ?? defaultFolder;
         const original = await protocol.fetchMessage(credential, forwardInput.folder, forwardInput.uid, {
-          peek: true,
           maxBytes: mailMessageFetchByteLimit,
-          skipAttachmentBodies: true,
         });
         const prepared = await buildForwardSendInput(original, forwardInput, context);
         try {

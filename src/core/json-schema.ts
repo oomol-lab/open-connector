@@ -393,6 +393,40 @@ function cloneSchema(schema: JsonSchema, properties: Partial<JsonSchema>): JsonS
  */
 export const s: typeof jsonSchema = jsonSchema;
 
+/**
+ * Render a schema's value domain as the short type label shown to agents, for
+ * example `string`, `"a" | "b"` for an enum, or the literal for a `const`.
+ */
+export function describeSchemaType(schema: JsonSchema | undefined): string {
+  if (!schema) {
+    return "unknown";
+  }
+  if (schema.const !== undefined) {
+    return JSON.stringify(schema.const);
+  }
+  if (Array.isArray(schema.enum)) {
+    return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
+  }
+  if (Array.isArray(schema.anyOf)) {
+    return schema.anyOf.map((value) => describeSchemaType(value as JsonSchema)).join(" | ");
+  }
+  return typeof schema.type === "string" ? schema.type : "unknown";
+}
+
+/** Read an object schema's `properties` map, tolerating a missing or malformed value. */
+export function readSchemaProperties(schema: JsonSchema): Record<string, JsonSchema> {
+  return schema.properties && typeof schema.properties === "object"
+    ? (schema.properties as Record<string, JsonSchema>)
+    : {};
+}
+
+/** Read an object schema's `required` property names, tolerating a missing or malformed value. */
+export function readSchemaRequired(schema: JsonSchema): string[] {
+  return Array.isArray(schema.required)
+    ? schema.required.filter((value): value is string => typeof value === "string")
+    : [];
+}
+
 function withOptions(schema: JsonSchema, options: JsonSchemaOptions): JsonSchema {
   if (options.description) schema.description = options.description;
   if (options.default !== undefined) schema.default = options.default;

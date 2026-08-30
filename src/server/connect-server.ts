@@ -405,7 +405,6 @@ export class ConnectServer {
       return context.text(
         renderActionMarkdown(action, {
           connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
-          providerPermissions: action.providerPermissions,
           policy,
         }),
         200,
@@ -798,10 +797,8 @@ export class ConnectServer {
       () =>
         createMcpServer({
           catalog: this.options.catalog,
-          providerLoader: this.options.providerLoader,
           connections: this.options.connections,
           actions: this.options.actions,
-          actionPolicy: this.actionPolicy,
           actionSearch: this.actionSearch,
           getPolicySnapshot: () => this.getPolicySnapshot(context),
           runtimeGrant: readRuntimeGrant(context),

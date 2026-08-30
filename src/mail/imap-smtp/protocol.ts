@@ -93,7 +93,6 @@ export interface MailSearchCriteria {
 export interface MailSearchPage {
   limit: number;
   beforeUid?: number;
-  peek: true;
 }
 
 export interface MailSearchSummariesResult {
@@ -162,13 +161,6 @@ export interface MailProtocol {
   validateSmtpCredential(credential: MailCredential): Promise<void>;
   sendMail(credential: MailCredential, input: MailSendInput): Promise<MailSendResult>;
   listFolders(credential: MailCredential): Promise<MailFolder[]>;
-  searchUids(credential: MailCredential, folder: string, criteria: MailSearchCriteria): Promise<number[]>;
-  fetchSummaries(
-    credential: MailCredential,
-    folder: string,
-    uids: number[],
-    options: { peek: true },
-  ): Promise<MailSummary[]>;
   searchSummaries(
     credential: MailCredential,
     folder: string,
@@ -179,7 +171,7 @@ export interface MailProtocol {
     credential: MailCredential,
     folder: string,
     uid: number,
-    options: { peek: true; maxBytes: number; skipAttachmentBodies: true },
+    options: { maxBytes: number },
   ): Promise<MailFetchedMessage>;
   downloadAttachment(
     credential: MailCredential,
@@ -317,16 +309,6 @@ export function createMailProtocol(config: MailProtocolConfig, deps: MailProtoco
       return await withImapClient(config, deps, credential, async (client) =>
         (await client.list()).map(normalizeMailbox),
       );
-    },
-    async searchUids(credential, folder, criteria) {
-      return await withMailbox(config, deps, credential, folder, true, async (client) => {
-        return await searchUidsInMailbox(client, criteria);
-      });
-    },
-    async fetchSummaries(credential, folder, uids) {
-      return await withMailbox(config, deps, credential, folder, true, async (client) => {
-        return await fetchSummariesInMailbox(client, uids);
-      });
     },
     async searchSummaries(credential, folder, criteria, page) {
       return await withMailbox(config, deps, credential, folder, true, async (client) => {
@@ -656,6 +638,7 @@ async function withMailbox<T>(
   deps: MailProtocolDependencies,
   credential: MailCredential,
   folder: string,
+  /** `true` opens the mailbox with EXAMINE; reads never set \Seen anyway because imapflow always uses BODY.PEEK. */
   readOnly: boolean,
   callback: (client: RuntimeImapClient) => Promise<T>,
 ) {
