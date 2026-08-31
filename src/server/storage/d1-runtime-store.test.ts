@@ -1,12 +1,14 @@
 import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../cloudflare/cloudflare-bindings.ts";
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { D1RuntimeDatabase } from "./d1-runtime-store.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
+
+const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 const githubProfile = {
   accountId: "github:octocat",
@@ -504,6 +506,76 @@ describe("D1RuntimeDatabase", () => {
     });
     await expect(database.runLogStore.get("run-2")).resolves.toMatchObject({ id: "run-2" });
   });
+
+  it("upserts the marketplace config and provider preferences", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database());
+
+    await expect(database.marketplaceStore.getConfig()).resolves.toBeUndefined();
+
+    await database.marketplaceStore.setConfig({
+      discoveryUrl: "https://marketplace.example.com/discovery",
+      apiKeyEncrypted: "encrypted-one",
+      enabled: false,
+      createdAt: "2026-06-30T00:00:00.000Z",
+      updatedAt: "2026-06-30T00:00:00.000Z",
+    });
+    await database.marketplaceStore.setConfig({
+      discoveryUrl: "https://marketplace.example.com/discovery",
+      apiKeyEncrypted: "encrypted-two",
+      enabled: true,
+      createdAt: "2026-06-30T00:00:00.000Z",
+      updatedAt: "2026-06-30T00:00:05.000Z",
+    });
+
+    await expect(database.marketplaceStore.getConfig()).resolves.toEqual({
+      discoveryUrl: "https://marketplace.example.com/discovery",
+      apiKeyEncrypted: "encrypted-two",
+      enabled: true,
+      createdAt: "2026-06-30T00:00:00.000Z",
+      updatedAt: "2026-06-30T00:00:05.000Z",
+    });
+
+    await expect(database.marketplaceStore.listProviderPreferences()).resolves.toEqual([]);
+
+    await database.marketplaceStore.setProviderPreference({
+      service: "gmail",
+      enabled: true,
+      createdAt: "2026-06-30T00:00:00.000Z",
+      updatedAt: "2026-06-30T00:00:00.000Z",
+    });
+    await database.marketplaceStore.setProviderPreference({
+      service: "gmail",
+      enabled: false,
+      createdAt: "2026-06-30T00:00:09.000Z",
+      updatedAt: "2026-06-30T00:00:09.000Z",
+    });
+    await database.marketplaceStore.setProviderPreference({
+      service: "abuseipdb",
+      enabled: true,
+      createdAt: "2026-06-30T00:00:02.000Z",
+      updatedAt: "2026-06-30T00:00:02.000Z",
+    });
+
+    // Ordered by service, and the second gmail write keeps createdAt while replacing enabled/updatedAt.
+    await expect(database.marketplaceStore.listProviderPreferences()).resolves.toEqual([
+      {
+        service: "abuseipdb",
+        enabled: true,
+        createdAt: "2026-06-30T00:00:02.000Z",
+        updatedAt: "2026-06-30T00:00:02.000Z",
+      },
+      {
+        service: "gmail",
+        enabled: false,
+        createdAt: "2026-06-30T00:00:00.000Z",
+        updatedAt: "2026-06-30T00:00:09.000Z",
+      },
+    ]);
+
+    await database.marketplaceStore.deleteConfig();
+    await expect(database.marketplaceStore.getConfig()).resolves.toBeUndefined();
+    await expect(database.marketplaceStore.listProviderPreferences()).resolves.toHaveLength(2);
+  });
 });
 
 function createRun(id: string, startedAt: string, actionId = "hackernews.get_top_stories", service = "hackernews") {
@@ -535,29 +607,15 @@ class SqliteD1Database implements D1DatabaseBinding {
   private readonly database = new DatabaseSync(":memory:");
 
   constructor() {
-    this.database.exec(readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8"));
-    this.database.exec(readFileSync(new URL("../../../migrations/0002_run_service.sql", import.meta.url), "utf8"));
-    this.database.exec(
-      readFileSync(new URL("../../../migrations/0003_action_idempotency.sql", import.meta.url), "utf8"),
-    );
-    this.database.exec(readFileSync(new URL("../../../migrations/0004_action_run_audit.sql", import.meta.url), "utf8"));
-    this.database.exec(readFileSync(new URL("../../../migrations/0005_run_retention.sql", import.meta.url), "utf8"));
-    this.database.exec(
-      readFileSync(new URL("../../../migrations/0006_connection_identity.sql", import.meta.url), "utf8"),
-    );
-    this.database.exec(readFileSync(new URL("../../../migrations/0007_runtime_policy.sql", import.meta.url), "utf8"));
-    this.database.exec(
-      readFileSync(new URL("../../../migrations/0008_runtime_token_policy.sql", import.meta.url), "utf8"),
-    );
-    this.database.exec(
-      readFileSync(new URL("../../../migrations/0009_runtime_token_proxy.sql", import.meta.url), "utf8"),
-    );
-    this.database.exec(
-      readFileSync(new URL("../../../migrations/0010_connection_revision.sql", import.meta.url), "utf8"),
-    );
-    this.database.exec(
-      readFileSync(new URL("../../../migrations/0011_runtime_token_connection_scope.sql", import.meta.url), "utf8"),
-    );
+    // Derive the migration list the same way runSqliteMigrations does, so a new migration reaches the
+    // D1 harness on its own. The three lines stay duplicated here because sharing an owner would mean
+    // exporting from production code, which this test-only fix deliberately leaves alone.
+    const migrationFiles = readdirSync(migrationDirectory)
+      .filter((name) => /^\d+_.*\.sql$/.test(name))
+      .sort();
+    for (const file of migrationFiles) {
+      this.database.exec(readFileSync(new URL(file, migrationDirectory), "utf8"));
+    }
   }
 
   prepare(query: string): D1PreparedStatementBinding {
