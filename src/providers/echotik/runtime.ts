@@ -2,12 +2,11 @@ import type { EchoTikContext } from "./executors.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const echotikApiBaseUrl = "https://open.echotik.live/api/v3";
 const echotikMaxResponseBytes = 4 * 1024 * 1024;
-const echotikRequestTimeoutMs = 30_000;
 
 type EchoTikPhase = "validate" | "execute";
 type EchoTikCredential = Pick<EchoTikContext, "username" | "password" | "signal">;
@@ -71,7 +70,7 @@ export const echotikActionHandlers: Record<string, EchoTikActionHandler> = {
       path: `/echotik/category/l${level}`,
       query: compactObject({
         language: readRequiredString(input.language, "language"),
-        parent_id: readOptionalString(input.parentCategoryId),
+        parent_id: optionalRawString(input.parentCategoryId),
       }),
       credential: context,
       fetcher: context.fetcher,
@@ -121,9 +120,9 @@ export const echotikActionHandlers: Record<string, EchoTikActionHandler> = {
         path: "/echotik/product/list",
         query: compactObject({
           region: readRegion(input.region),
-          category_id: readOptionalString(input.categoryId),
-          category_l2_id: readOptionalString(input.categoryLevel2Id),
-          category_l3_id: readOptionalString(input.categoryLevel3Id),
+          category_id: optionalRawString(input.categoryId),
+          category_l2_id: optionalRawString(input.categoryLevel2Id),
+          category_l3_id: optionalRawString(input.categoryLevel3Id),
           sales_trend_flag: mapOptionalEnum(input.salesTrend, {
             stable: 0,
             rising: 1,
@@ -258,9 +257,9 @@ export const echotikActionHandlers: Record<string, EchoTikActionHandler> = {
         path: "/echotik/category/trend",
         query: compactObject({
           region: readRegion(input.region),
-          category_id: readOptionalString(input.categoryId),
-          category_l2_id: readOptionalString(input.categoryLevel2Id),
-          category_l3_id: readOptionalString(input.categoryLevel3Id),
+          category_id: optionalRawString(input.categoryId),
+          category_l2_id: optionalRawString(input.categoryLevel2Id),
+          category_l3_id: optionalRawString(input.categoryLevel3Id),
           start_date: readRequiredString(input.startDate, "startDate"),
           end_date: readRequiredString(input.endDate, "endDate"),
           page_num: readPage(input),
@@ -302,7 +301,7 @@ export const echotikActionHandlers: Record<string, EchoTikActionHandler> = {
         path: "/echotik/product/video/list",
         query: compactObject({
           product_id: readRequiredString(input.productId, "productId"),
-          user_id: readOptionalString(input.userId),
+          user_id: optionalRawString(input.userId),
           min_create_time: readOptionalNumber(input.createdFrom),
           max_create_time: readOptionalNumber(input.createdTo),
           product_video_sort_field: mapOptionalEnum(input.sortBy, videoSortValues),
@@ -366,9 +365,9 @@ export const echotikActionHandlers: Record<string, EchoTikActionHandler> = {
             local: 1,
             cross_border: 2,
           }),
-          category_id: readOptionalString(input.categoryId),
-          category_l2_id: readOptionalString(input.categoryLevel2Id),
-          category_l3_id: readOptionalString(input.categoryLevel3Id),
+          category_id: optionalRawString(input.categoryId),
+          category_l2_id: optionalRawString(input.categoryLevel2Id),
+          category_l3_id: optionalRawString(input.categoryLevel3Id),
           page_num: readPage(input),
           page_size: readPageSize(input),
         }),
@@ -501,7 +500,7 @@ async function requestProductPage<T>(
 }
 
 async function requestEchoTikJson(input: EchoTikRequestInput): Promise<EchoTikEnvelope> {
-  const timeout = createProviderTimeout(input.credential.signal, echotikRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.credential.signal);
   const retryDelays = input.riskControlRetryDelaysMs ?? [];
   try {
     for (let attempt = 0; ; attempt += 1) {
@@ -716,31 +715,31 @@ function readRecordArray(value: unknown, fieldName: string) {
 function normalizeCategory(raw: Record<string, unknown>) {
   return compactObject({
     categoryId: readRequiredString(raw.category_id, "data.category_id"),
-    level: readOptionalString(raw.category_level),
-    name: readOptionalString(raw.category_name),
-    language: readOptionalString(raw.language),
-    parentId: readOptionalString(raw.parent_id),
+    level: optionalRawString(raw.category_level),
+    name: optionalRawString(raw.category_name),
+    language: optionalRawString(raw.language),
+    parentId: optionalRawString(raw.parent_id),
   });
 }
 
 function normalizeProductComment(raw: Record<string, unknown>) {
   return compactObject({
     reviewId: readRequiredString(raw.review_id, "data.review_id"),
-    productId: readOptionalString(raw.product_id),
+    productId: optionalRawString(raw.product_id),
     rating: readOptionalInteger(raw.rating),
-    text: readOptionalString(raw.display_text),
+    text: optionalRawString(raw.display_text),
     reviewedAt: readOptionalInteger(raw.review_timestamp),
-    skuId: readOptionalString(raw.sku_id),
-    skuSpecification: readOptionalString(raw.sku_specification),
+    skuId: optionalRawString(raw.sku_id),
+    skuSpecification: optionalRawString(raw.sku_specification),
   });
 }
 
 function normalizeCategoryOverview(raw: Record<string, unknown>) {
   return compactObject({
     categoryId: readRequiredString(raw.category_id, "data.category_id"),
-    region: readOptionalString(raw.priority_region),
-    trend: readOptionalString(raw.category_trend),
-    priceTrend: readOptionalString(raw.category_price_trend),
+    region: optionalRawString(raw.priority_region),
+    trend: optionalRawString(raw.category_trend),
+    priceTrend: optionalRawString(raw.category_price_trend),
     totalGmv: readOptionalNumber(raw.total_gmv_amt),
     gmv1Day: readOptionalNumber(raw.total_gmv_1d_amt),
     gmv7Days: readOptionalNumber(raw.total_gmv_7d_amt),
@@ -765,10 +764,10 @@ function normalizeCategoryOverview(raw: Record<string, unknown>) {
 function normalizeCategoryTrend(raw: Record<string, unknown>) {
   return compactObject({
     date: readRequiredString(raw.dt, "data.dt"),
-    region: readOptionalString(raw.priority_region),
-    categoryId: readOptionalString(raw.category_id),
-    categoryLevel2Id: readOptionalString(raw.category_l2_id),
-    categoryLevel3Id: readOptionalString(raw.category_l3_id),
+    region: optionalRawString(raw.priority_region),
+    categoryId: optionalRawString(raw.category_id),
+    categoryLevel2Id: optionalRawString(raw.category_l2_id),
+    categoryLevel3Id: optionalRawString(raw.category_l3_id),
     dailySales: readOptionalInteger(raw.total_sale_1d_cnt),
     dailyGmv: readOptionalNumber(raw.total_sale_gmv_1d_amt),
   });
@@ -778,12 +777,12 @@ function normalizeProduct(raw: Record<string, unknown>) {
   const coverUrls = decodeProductCovers(raw.cover_url);
   return compactObject({
     productId: readRequiredString(raw.product_id, "data.product_id"),
-    productName: readOptionalString(raw.product_name),
-    region: readOptionalString(raw.region),
-    categoryId: readOptionalString(raw.category_id),
-    categoryLevel2Id: readOptionalString(raw.category_l2_id),
-    categoryLevel3Id: readOptionalString(raw.category_l3_id),
-    sellerId: readOptionalString(raw.seller_id),
+    productName: optionalRawString(raw.product_name),
+    region: optionalRawString(raw.region),
+    categoryId: optionalRawString(raw.category_id),
+    categoryLevel2Id: optionalRawString(raw.category_l2_id),
+    categoryLevel3Id: optionalRawString(raw.category_l3_id),
+    sellerId: optionalRawString(raw.seller_id),
     coverUrl: coverUrls[0]?.url,
     coverUrls: coverUrls.length > 0 ? coverUrls : undefined,
     minimumPrice: readOptionalNumber(raw.min_price),
@@ -807,7 +806,7 @@ function decodeProductCovers(value: unknown) {
   return decoded
     .map((item) => {
       const record = optionalRecord(item);
-      const url = record ? readOptionalString(record.url) : undefined;
+      const url = record ? optionalRawString(record.url) : undefined;
       if (!url) {
         return undefined;
       }
@@ -843,11 +842,11 @@ function decodeCoverCollection(value: unknown): unknown[] {
 function normalizeProductRanking(raw: Record<string, unknown>) {
   return compactObject({
     productId: readRequiredString(raw.product_id, "data.product_id"),
-    productName: readOptionalString(raw.product_name),
-    region: readOptionalString(raw.region),
-    categoryId: readOptionalString(raw.category_id),
-    categoryLevel2Id: readOptionalString(raw.category_l2_id),
-    categoryLevel3Id: readOptionalString(raw.category_l3_id),
+    productName: optionalRawString(raw.product_name),
+    region: optionalRawString(raw.region),
+    categoryId: optionalRawString(raw.category_id),
+    categoryLevel2Id: optionalRawString(raw.category_l2_id),
+    categoryLevel3Id: optionalRawString(raw.category_l3_id),
     minimumPrice: readOptionalNumber(raw.min_price),
     maximumPrice: readOptionalNumber(raw.max_price),
     averagePrice: readOptionalNumber(raw.spu_avg_price),
@@ -863,7 +862,7 @@ function normalizeProductRanking(raw: Record<string, unknown>) {
 function normalizeProductTrend(raw: Record<string, unknown>) {
   return compactObject({
     date: readRequiredString(raw.dt, "data.dt"),
-    productId: readOptionalString(raw.product_id),
+    productId: optionalRawString(raw.product_id),
     averagePrice: readOptionalNumber(raw.spu_avg_price),
     dailySales: readOptionalInteger(raw.total_sale_1d_cnt),
     totalSales: readOptionalInteger(raw.total_sale_cnt),
@@ -878,11 +877,11 @@ function normalizeProductTrend(raw: Record<string, unknown>) {
 function normalizeProductInfluencer(raw: Record<string, unknown>) {
   return compactObject({
     userId: readRequiredString(raw.user_id, "data.user_id"),
-    productId: readOptionalString(raw.product_id),
-    nickname: readOptionalString(raw.nick_name),
-    region: readOptionalString(raw.region),
-    category: readOptionalString(raw.category),
-    avatarUrl: readOptionalString(raw.avatar),
+    productId: optionalRawString(raw.product_id),
+    nickname: optionalRawString(raw.nick_name),
+    region: optionalRawString(raw.region),
+    category: optionalRawString(raw.category),
+    avatarUrl: optionalRawString(raw.avatar),
     followerCount: readOptionalInteger(raw.total_followers_cnt),
     likeCount: readOptionalInteger(raw.total_digg_cnt),
     productSales: readOptionalInteger(raw.per_product_ifl_sale_cnt),
@@ -897,14 +896,14 @@ function normalizeProductInfluencer(raw: Record<string, unknown>) {
 function normalizeProductVideo(raw: Record<string, unknown>) {
   return compactObject({
     videoId: readRequiredString(raw.video_id, "data.video_id"),
-    productId: readOptionalString(raw.product_id),
-    userId: readOptionalString(raw.user_id),
-    region: readOptionalString(raw.region),
-    description: readOptionalString(raw.video_desc),
+    productId: optionalRawString(raw.product_id),
+    userId: optionalRawString(raw.user_id),
+    region: optionalRawString(raw.region),
+    description: optionalRawString(raw.video_desc),
     createdAt: readOptionalScalarString(raw.create_time),
     durationSeconds: readOptionalInteger(raw.duration),
-    playUrl: readOptionalString(raw.play_addr),
-    coverUrl: readOptionalString(raw.reflow_cover),
+    playUrl: optionalRawString(raw.play_addr),
+    coverUrl: optionalRawString(raw.reflow_cover),
     viewCount: readOptionalInteger(raw.total_views_cnt),
     likeCount: readOptionalInteger(raw.total_digg_cnt),
     commentCount: readOptionalInteger(raw.total_comments_cnt),
@@ -918,15 +917,15 @@ function normalizeProductVideo(raw: Record<string, unknown>) {
 function normalizeProductLive(raw: Record<string, unknown>) {
   return compactObject({
     roomId: readRequiredString(raw.room_id, "data.room_id"),
-    productId: readOptionalString(raw.product_id),
-    productName: readOptionalString(raw.product_name),
-    userId: readOptionalString(raw.user_id),
-    region: readOptionalString(raw.region),
+    productId: optionalRawString(raw.product_id),
+    productName: optionalRawString(raw.product_name),
+    userId: optionalRawString(raw.user_id),
+    region: optionalRawString(raw.region),
     createdAt: readOptionalInteger(raw.create_time),
     liveType: normalizeLiveType(raw.live_type),
-    coverUrl: readOptionalString(raw.cover_url),
-    sellerId: readOptionalString(raw.seller_id),
-    sellerName: readOptionalString(raw.seller_name),
+    coverUrl: optionalRawString(raw.cover_url),
+    sellerId: optionalRawString(raw.seller_id),
+    sellerName: optionalRawString(raw.seller_name),
     peakViewCount: readOptionalInteger(raw.max_views_cnt),
     totalViewCount: readOptionalInteger(raw.total_views_cnt),
     productCount: readOptionalInteger(raw.total_product_cnt),
@@ -938,11 +937,11 @@ function normalizeProductLive(raw: Record<string, unknown>) {
 function normalizeShop(raw: Record<string, unknown>) {
   return compactObject({
     shopId: readRequiredString(raw.seller_id, "data.seller_id"),
-    shopName: readOptionalString(raw.seller_name),
-    shopUrl: readOptionalString(raw.seller_link),
-    region: readOptionalString(raw.region),
+    shopName: optionalRawString(raw.seller_name),
+    shopUrl: optionalRawString(raw.seller_link),
+    region: optionalRawString(raw.region),
     storeType: normalizeStoreType(raw.from_flag),
-    coverUrl: readOptionalString(raw.cover_url),
+    coverUrl: optionalRawString(raw.cover_url),
     rating: readOptionalNumber(raw.rating),
     reviewCount: readOptionalInteger(raw.review_count),
     positiveFeedbackRate: readOptionalNumber(raw.positive_feedback_rate),
@@ -963,15 +962,15 @@ function normalizeShop(raw: Record<string, unknown>) {
 function normalizeInfluencerDetail(raw: Record<string, unknown>) {
   return compactObject({
     userId: readRequiredString(raw.user_id, "data.user_id"),
-    uniqueId: readOptionalString(raw.unique_id),
-    nickname: readOptionalString(raw.nick_name),
-    signature: readOptionalString(raw.signature),
-    region: readOptionalString(raw.region),
-    language: readOptionalString(raw.language),
-    gender: readOptionalString(raw.gender),
-    category: readOptionalString(raw.category),
-    avatarUrl: readOptionalString(raw.avatar),
-    contactEmail: readOptionalString(raw.contact_email),
+    uniqueId: optionalRawString(raw.unique_id),
+    nickname: optionalRawString(raw.nick_name),
+    signature: optionalRawString(raw.signature),
+    region: optionalRawString(raw.region),
+    language: optionalRawString(raw.language),
+    gender: optionalRawString(raw.gender),
+    category: optionalRawString(raw.category),
+    avatarUrl: optionalRawString(raw.avatar),
+    contactEmail: optionalRawString(raw.contact_email),
     commerceScore: readOptionalNumber(raw.ec_score),
     interactionRate: readOptionalNumber(raw.interaction_rate),
     followerCount: readOptionalInteger(raw.total_followers_cnt),
@@ -993,13 +992,13 @@ function normalizeInfluencerDetail(raw: Record<string, unknown>) {
 function normalizeVideoDetail(raw: Record<string, unknown>) {
   return compactObject({
     videoId: readRequiredString(raw.video_id, "data.video_id"),
-    userId: readOptionalString(raw.user_id),
-    uniqueId: readOptionalString(raw.unique_id),
-    description: readOptionalString(raw.video_desc),
-    region: readOptionalString(raw.region),
+    userId: optionalRawString(raw.user_id),
+    uniqueId: optionalRawString(raw.unique_id),
+    description: optionalRawString(raw.video_desc),
+    region: optionalRawString(raw.region),
     createdAt: readOptionalScalarString(raw.create_time),
     durationSeconds: readOptionalInteger(raw.duration),
-    coverUrl: readOptionalString(raw.reflow_cover),
+    coverUrl: optionalRawString(raw.reflow_cover),
     createdByAi: readOptionalBooleanFlag(raw.created_by_ai),
     isAd: readOptionalBooleanFlag(raw.is_ad),
     viewCount: readOptionalInteger(raw.total_views_cnt),
@@ -1019,18 +1018,18 @@ function normalizeVideoDetail(raw: Record<string, unknown>) {
 function normalizeLiveDetail(raw: Record<string, unknown>) {
   return compactObject({
     roomId: readRequiredString(raw.room_id, "data.room_id"),
-    userId: readOptionalString(raw.user_id),
-    uniqueId: readOptionalString(raw.unique_id),
-    nickname: readOptionalString(raw.nick_name),
-    title: readOptionalString(raw.title),
-    region: readOptionalString(raw.region),
+    userId: optionalRawString(raw.user_id),
+    uniqueId: optionalRawString(raw.unique_id),
+    nickname: optionalRawString(raw.nick_name),
+    title: optionalRawString(raw.title),
+    region: optionalRawString(raw.region),
     status: normalizeLiveStatus(raw.live_status),
     liveType: normalizeLiveType(raw.live_type),
     startedAt: readOptionalInteger(raw.create_time),
     finishedAt: readOptionalInteger(raw.finish_time),
     durationSeconds: readOptionalInteger(raw.duration),
-    coverUrl: readOptionalString(raw.cover_url),
-    avatarUrl: readOptionalString(raw.avatar),
+    coverUrl: optionalRawString(raw.cover_url),
+    avatarUrl: optionalRawString(raw.avatar),
     peakViewCount: readOptionalInteger(raw.max_views_cnt),
     totalViewCount: readOptionalInteger(raw.total_views_cnt),
     followerGrowthRate: readOptionalNumber(raw.followers_growth_rate),
@@ -1040,7 +1039,7 @@ function normalizeLiveDetail(raw: Record<string, unknown>) {
     productSales: readOptionalInteger(raw.total_sale_cnt),
     productGmv: readOptionalNumber(raw.total_sale_gmv_amt),
     averageProductPrice: readOptionalNumber(raw.spu_avg_price),
-    topProducts: readOptionalString(raw.live_sale_top3_product),
+    topProducts: optionalRawString(raw.live_sale_top3_product),
   });
 }
 
@@ -1083,7 +1082,7 @@ function readPageSize(input: Record<string, unknown>) {
 }
 
 function readRequestId(envelope: EchoTikEnvelope) {
-  return readOptionalString(envelope.requestId) ?? null;
+  return optionalRawString(envelope.requestId) ?? null;
 }
 
 function readRequiredString(value: unknown, fieldName: string) {
@@ -1091,13 +1090,6 @@ function readRequiredString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `${fieldName} is missing`, undefined, "provider_error");
   }
   return value.trim();
-}
-
-function readOptionalString(value: unknown) {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-  return value;
 }
 
 function assertRanges(input: Record<string, unknown>, ranges: readonly (readonly [string, string])[]): void {

@@ -2,7 +2,7 @@
   "$comment": "Ratchet baseline for provider-source-guards.clone-baseline.test.ts. Each count is how many provider-local copies of a shared owner src/providers still holds. The numbers may only go down; see AGENTS.md \"Shared owners providers must not re-clone\".",
   "counts": {
     "local-abort-predicate": 1,
-    "local-request-timeout-constant": 126,
+    "local-request-timeout-constant": 125,
     "local-provider-error-factory": 485,
     "local-api-key-action-input": 11,
     "hand-written-proxy": 114,
