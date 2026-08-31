@@ -81,15 +81,19 @@ describe("action execution OpenAPI", () => {
     },
   );
 
-  it("documents the statuses each /v1 route newly answers", () => {
+  it("documents the same runtime statuses on both /v1 execution routes", () => {
     const document = createOpenApiDocument([provider]);
     const documentedStatuses = (path: string): string[] =>
       Object.keys((document.paths[path] as { post: { responses: Record<string, unknown> } }).post.responses);
 
     // The action route now honors an upstream 413 the way the proxy route did,
-    // and the proxy route now answers 402 the way the action route did.
+    // and the proxy route now answers 402 the way the action route did. The two
+    // routes derive their status from the same error object, so a status one
+    // route documents and the other hides is a contract the client cannot read.
     expect(documentedStatuses("/v1/actions/{actionId}")).toContain("413");
+    expect(documentedStatuses("/v1/actions/{actionId}")).toContain("402");
     expect(documentedStatuses("/v1/proxy/{service}")).toContain("402");
+    expect(documentedStatuses("/v1/proxy/{service}")).toContain("413");
   });
 
   it("documents public /v1 catalog routes with the runtime envelope", () => {
