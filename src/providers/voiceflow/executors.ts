@@ -3,7 +3,6 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
@@ -16,18 +15,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderFetch,
-  createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
-  normalizeProviderProxyEndpoint,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "voiceflow";
@@ -36,7 +29,6 @@ const realtimeBaseUrl = "https://realtime-api.voiceflow.com";
 const defaultEnvironmentAlias = "main";
 
 // Fixed-host proxy egress (generalRuntimeBaseUrl / realtimeBaseUrl); DNS-rebinding check is redundant here.
-const voiceflowFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface VoiceflowActionContext {
   apiKey: string;
@@ -109,42 +101,23 @@ export const executors: ProviderExecutors = defineProviderExecutors<VoiceflowAct
   },
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
-    const credential = await requireApiKeyCredential(context, service);
-    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
-    const url = createProviderProxyUrl(resolveProxyBaseUrl(endpoint), endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    await requireApiKeyCredential(context, service);
+    return generalRuntimeBaseUrl;
+  },
+  auth: { type: "api_key_authorization", prefix: "" },
+  allowedOrigins: [realtimeBaseUrl],
+  customizeRequest({ endpoint, url, headers }) {
+    if (resolveProxyBaseUrl(endpoint) === realtimeBaseUrl) {
+      url.host = new URL(realtimeBaseUrl).host;
+    }
     headers.set("accept", "application/json");
-    headers.set("authorization", credential.apiKey);
-    headers.set("user-agent", providerUserAgent);
-
-    const init: RequestInit = {
-      method: input.method,
-      headers,
-      signal: context.signal,
-    };
-    if (input.body !== undefined) {
-      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
-      if (!headers.has("content-type") && typeof input.body !== "string") {
-        headers.set("content-type", "application/json");
-      }
-    }
-
-    const response = await voiceflowFetch(url, init);
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-
-    return {
-      ok: true,
-      response: await readProviderProxyResponse(response),
-    };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+  },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
