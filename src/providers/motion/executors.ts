@@ -10,12 +10,11 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
 import { jsonObject, queryParams } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "motion";
@@ -261,13 +260,11 @@ async function requestMotionJson(input: {
   query?: Record<string, string>;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Motion" }, async (signal) => {
     const response = await input.context.fetcher(buildMotionUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: buildMotionHeaders(input.context.apiKey, input.body),
-      signal: timeout.signal,
+      signal,
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),
     });
     const payload = await readMotionPayload(response);
@@ -277,22 +274,7 @@ async function requestMotionJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Motion request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Motion request failed: ${error.message}` : "Motion request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildMotionUrl(path: string, query?: Record<string, string>): URL {

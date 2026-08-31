@@ -11,9 +11,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderProxyUrl,
-  createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
@@ -21,6 +19,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  runProviderRequest,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -189,30 +188,19 @@ async function requestSalesmateJson(
   input: SalesmateRequestInput,
   context: SalesmateRequestContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Salesmate" }, async (signal) => {
     const response = await context.fetcher(buildSalesmateUrl(input, context.linkName), {
       method: input.method,
       headers: buildSalesmateHeaders(context, Boolean(input.body)),
       body: input.body ? JSON.stringify(compactObject(input.body)) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readSalesmatePayload(response);
     if (!response.ok) throw createSalesmateError(response.status, payload, input.phase);
     const payloadObject = optionalRecord(payload);
     if (!payloadObject) throw new ProviderRequestError(502, "Salesmate returned an invalid payload");
     return payloadObject;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error))
-      throw new ProviderRequestError(504, "Salesmate request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Salesmate request failed: ${error.message}` : "Salesmate request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSalesmateUrl(input: SalesmateRequestInput, linkName: string): URL {

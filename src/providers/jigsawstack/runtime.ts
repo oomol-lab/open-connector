@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const jigsawstackApiBaseUrl = "https://api.jigsawstack.com";
 const jigsawstackValidationPath = "/v1/web/search/suggest";
@@ -159,14 +154,12 @@ async function requestJigsawstackJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   request: JigsawstackRequest,
 ): Promise<Record<string, unknown>> {
-  const timeoutHandle = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "JigsawStack" }, async (signal) => {
     const response = await context.fetcher(buildJigsawstackUrl(request.path, request.query), {
       method: request.method ?? "GET",
       headers: jigsawstackHeaders(context.apiKey),
       body: request.body ? JSON.stringify(request.body) : undefined,
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readJigsawstackPayload(response);
     if (!response.ok) {
@@ -178,22 +171,7 @@ async function requestJigsawstackJson(
       throw new ProviderRequestError(502, "JigsawStack returned invalid JSON object");
     }
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "JigsawStack request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `JigsawStack request failed: ${error.message}` : "JigsawStack request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function jigsawstackHeaders(apiKey: string): Record<string, string> {

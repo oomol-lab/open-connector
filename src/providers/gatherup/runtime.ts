@@ -3,11 +3,10 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export interface GatherupContext {
@@ -111,9 +110,7 @@ export async function validateGatherupCredential(
 }
 
 async function requestGatherupJson(input: GatherupRequestInput) {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "GatherUp" }, async (signal) => {
     const response = await input.fetcher(buildGatherupUrl(input), {
       method: "GET",
       headers: {
@@ -121,27 +118,14 @@ async function requestGatherupJson(input: GatherupRequestInput) {
         authorization: `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readGatherupPayload(response);
     if (!response.ok) {
       throw createGatherupError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "GatherUp request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `GatherUp request failed: ${error.message}` : "GatherUp request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildGatherupUrl(input: GatherupRequestInput) {

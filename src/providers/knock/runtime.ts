@@ -5,11 +5,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const knockApiBaseUrl = "https://api.knock.app/v1";
@@ -153,9 +152,7 @@ async function requestKnockJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   mode: KnockRequestMode,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Knock" }, async (signal) => {
     const headers = knockHeaders(context.apiKey);
     if (request.idempotencyKey) {
       headers["Idempotency-Key"] = request.idempotencyKey;
@@ -165,7 +162,7 @@ async function requestKnockJson(
       method: request.method,
       headers,
       body: request.body === undefined ? undefined : JSON.stringify(request.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKnockPayload(response);
 
@@ -178,22 +175,7 @@ async function requestKnockJson(
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Knock request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Knock request failed: ${error.message}` : "Knock request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildKnockUrl(path: string, query: Record<string, string | string[] | undefined> = {}): URL {

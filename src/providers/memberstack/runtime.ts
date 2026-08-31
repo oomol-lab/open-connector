@@ -10,12 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 const memberstackApiBaseUrl = "https://admin.memberstack.com";
 
@@ -172,9 +167,7 @@ async function requestMemberstackJson(input: {
   emptySuccess?: boolean;
   phase: MemberstackPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Memberstack" }, async (signal) => {
     const body = input.body && Object.keys(input.body).length > 0 ? input.body : undefined;
     const headers: Record<string, string> = {
       accept: "application/json",
@@ -189,7 +182,7 @@ async function requestMemberstackJson(input: {
       method: input.method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readMemberstackPayload(response);
 
@@ -206,22 +199,7 @@ async function requestMemberstackJson(input: {
       throw new ProviderRequestError(502, "Memberstack returned an invalid payload");
     }
     return payloadRecord;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Memberstack request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Memberstack request failed: ${error.message}` : "Memberstack request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildMemberstackUrl(path: string, params: Record<string, string | undefined>): URL {

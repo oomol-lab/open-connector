@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const cockroachLabsApiBaseUrl = "https://cockroachlabs.cloud";
@@ -203,8 +202,7 @@ async function requestCockroachLabsJson(input: {
   phase: CockroachLabsRequestPhase;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "CockroachDB Cloud" }, async (signal) => {
     const response = await input.context.fetcher(buildCockroachLabsUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -213,7 +211,7 @@ async function requestCockroachLabsJson(input: {
         "cc-version": cockroachLabsApiVersion,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCockroachLabsPayload(response);
     if (!response.ok) {
@@ -221,22 +219,7 @@ async function requestCockroachLabsJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "CockroachDB Cloud request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `CockroachDB Cloud request failed: ${error.message}`
-        : "CockroachDB Cloud request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildCockroachLabsUrl(path: string, query?: URLSearchParams): URL {

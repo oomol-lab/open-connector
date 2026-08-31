@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const smartsheetApiBaseUrl = "https://api.smartsheet.com/2.0";
 const smartsheetIntegrationSource = "AI,OOMOL,oomol-connect";
@@ -162,28 +157,17 @@ async function requestSmartsheetJson(input: {
   phase: SmartsheetPhase;
   body?: unknown;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Smartsheet" }, async (signal) => {
     const response = await input.context.fetcher(buildSmartsheetUrl(input.path, input.params), {
       method: input.method,
       headers: buildSmartsheetHeaders(input.context.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readSmartsheetPayload(response);
     if (!response.ok) throw createSmartsheetError(response.status, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error))
-      throw new ProviderRequestError(504, "Smartsheet request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Smartsheet request failed: ${error.message}` : "Smartsheet request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSmartsheetUrl(path: string, params: Record<string, string | undefined>): URL {

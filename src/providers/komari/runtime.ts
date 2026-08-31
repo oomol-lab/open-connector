@@ -5,12 +5,11 @@ import type { KomariOperation } from "./operations.ts";
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   mapProviderActionHandlers,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 import { komariOperations } from "./operations.ts";
 
@@ -320,8 +319,7 @@ async function requestKomariRpc(
   phase: KomariRequestPhase,
 ): Promise<unknown> {
   const url = new URL(rpcPath, `${context.baseUrl}/`);
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Komari" }, async (signal) => {
     const response = await context.fetcher(url, {
       method: "POST",
       headers: {
@@ -331,7 +329,7 @@ async function requestKomariRpc(
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readJsonResponse(response);
     if (!response.ok) {
@@ -351,20 +349,7 @@ async function requestKomariRpc(
       throw new ProviderRequestError(502, "Komari returned a JSON-RPC response without a result");
     }
     return envelope.result;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Komari request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Komari request failed: ${error.message}` : "Komari request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readJsonResponse(response: Response): Promise<unknown> {

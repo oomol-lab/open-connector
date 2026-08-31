@@ -4,12 +4,7 @@ import type { OAuthProviderContext, ProviderFetch, ProviderRuntimeHandler } from
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const zoomApiBaseUrl = "https://api.zoom.us/v2";
 
@@ -120,8 +115,7 @@ export async function fetchZoomCurrentAccount(
 }
 
 async function requestZoomJson(input: ZoomRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Zoom" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       authorization: `Bearer ${input.context.accessToken}`,
@@ -135,7 +129,7 @@ async function requestZoomJson(input: ZoomRequestInput): Promise<Record<string, 
       method: input.method ?? "GET",
       headers,
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readZoomPayload(response);
 
@@ -152,22 +146,7 @@ async function requestZoomJson(input: ZoomRequestInput): Promise<Record<string, 
     }
 
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Zoom request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Zoom request failed: ${error.message}` : "Zoom request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildZoomUrl(path: string, query?: Record<string, string | undefined>): URL {

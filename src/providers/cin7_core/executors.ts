@@ -11,15 +11,14 @@ import { compactObject, objectArray, optionalRecord, optionalString, requiredStr
 import {
   createProviderFetch,
   createProviderProxyUrl,
-  createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  runProviderRequest,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -256,9 +255,7 @@ async function requestCin7CoreJson(input: {
   phase: Cin7CorePhase;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Cin7 Core" }, async (signal) => {
     const response = await input.context.fetcher(buildCin7CoreUrl(input), {
       method: input.method,
       headers: {
@@ -268,7 +265,7 @@ async function requestCin7CoreJson(input: {
         "api-auth-accountid": input.context.accountId,
         "api-auth-applicationkey": input.context.applicationKey,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCin7CorePayload(response);
 
@@ -277,20 +274,7 @@ async function requestCin7CoreJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Cin7 Core request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Cin7 Core request failed: ${error.message}` : "Cin7 Core request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildCin7CoreUrl(input: { path: string; query?: URLSearchParams }): URL {

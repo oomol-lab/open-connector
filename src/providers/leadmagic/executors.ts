@@ -18,12 +18,11 @@ import {
   optionalStringOrNull,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "leadmagic";
@@ -183,14 +182,12 @@ async function requestLeadmagicJson(
   input: LeadmagicRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "LeadMagic" }, async (signal) => {
     const response = await context.fetcher(buildLeadmagicUrl(input.path), {
       method: input.method,
       headers: buildLeadmagicHeaders(context.apiKey, Boolean(input.body)),
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readLeadmagicPayload(response);
 
@@ -204,22 +201,7 @@ async function requestLeadmagicJson(
     }
 
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "LeadMagic request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `LeadMagic request failed: ${error.message}` : "LeadMagic request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildLeadmagicUrl(path: string): string {

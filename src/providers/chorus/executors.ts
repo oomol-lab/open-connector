@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "chorus";
@@ -159,9 +158,7 @@ async function requestChorusJson(input: {
   context: ChorusContext;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Chorus" }, async (signal) => {
     const response = await input.context.fetcher(buildChorusUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -169,7 +166,7 @@ async function requestChorusJson(input: {
         authorization: input.apiKey,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readChorusPayload(response);
 
@@ -178,20 +175,7 @@ async function requestChorusJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Chorus request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Chorus request failed: ${error.message}` : "Chorus request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildChorusUrl(path: string, query?: URLSearchParams): URL {

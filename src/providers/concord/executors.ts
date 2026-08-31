@@ -12,14 +12,13 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "concord";
@@ -131,31 +130,19 @@ async function requestConcordJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   phase: ConcordPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Concord" }, async (signal) => {
     const response = await context.fetcher(`${concordApiBaseUrl}${path}`, {
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
         "X-API-KEY": context.apiKey,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readJson(response);
     if (!response.ok) throw createConcordError(response.status, payload, phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Concord request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Concord request failed: ${error.message}` : "Concord request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readJson(response: Response): Promise<unknown> {

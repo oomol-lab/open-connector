@@ -3,11 +3,10 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const contentstackContentDeliveryApiBaseUrl = "https://cdn.contentstack.io/v3";
@@ -269,34 +268,18 @@ async function requestContentstackJson(input: {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Contentstack Content Delivery" }, async (signal) => {
     const response = await input.fetcher(buildContentstackUrl(input.path, input.query, input.arrayQuery), {
       method: "GET",
       headers: buildContentstackHeaders(input.stackApiKey, input.deliveryToken, input.branch),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readContentstackPayload(response);
     if (!response.ok) {
       throw createContentstackError(response.status, payload, input.phase);
     }
     return requireRecord(payload, "Contentstack response");
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Contentstack Content Delivery request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `Contentstack Content Delivery request failed: ${error.message}`
-        : "Contentstack Content Delivery request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildContentstackUrl(

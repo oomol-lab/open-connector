@@ -4,12 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 import { deviceSortColumns, sensorSortColumns } from "./constants.ts";
 
 export const prtgClassicTablePath = "/table.json";
@@ -186,15 +181,14 @@ async function requestPrtgClassicTableJson(options: PrtgClassicRequestOptions): 
   });
   assertPrtgClassicRequestUrl(url);
 
-  const timeout = createProviderTimeout(options.context.signal);
-  try {
+  return runProviderRequest({ signal: options.context.signal, label: "PRTG Classic" }, async (signal) => {
     const response = await options.context.fetcher(url, {
       method: "GET",
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPrtgClassicPayload(response);
 
@@ -204,20 +198,7 @@ async function requestPrtgClassicTableJson(options: PrtgClassicRequestOptions): 
     throwIfPrtgClassicPayloadError(payload, options.mode);
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "PRTG Classic request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `PRTG Classic request failed: ${error.message}` : "PRTG Classic request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function assertPrtgClassicRequestUrl(url: URL): void {

@@ -1,11 +1,6 @@
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const trendshiftApiBaseUrl = "https://api.trendshift.io";
 export const trendshiftValidationPath = "/v1/trending/daily";
@@ -140,8 +135,7 @@ async function requestTrendshiftJson(input: {
   for (const [name, value] of Object.entries(input.request.query ?? {})) {
     if (value !== undefined) url.searchParams.set(name, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Trendshift" }, async (signal) => {
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
@@ -149,24 +143,13 @@ async function requestTrendshiftJson(input: {
         authorization: `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const result = await readTrendshiftPayload(response);
     if (!response.ok) throw createTrendshiftError(response.status, result.payload, input.mode);
     if (!result.isJson) throw new ProviderRequestError(502, "Trendshift returned invalid JSON");
     return result.payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Trendshift request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Trendshift request failed: ${error.message}` : "Trendshift request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readTrendshiftPayload(response: Response): Promise<{ payload: unknown; isJson: boolean }> {

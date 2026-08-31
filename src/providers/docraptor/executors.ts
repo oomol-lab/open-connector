@@ -6,12 +6,11 @@ import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "docraptor";
@@ -127,39 +126,27 @@ async function postDocraptorJson(input: {
   phase: DocraptorRequestPhase;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, docraptorRequestTimeoutMs);
-
-  try {
-    const response = await input.fetcher(new URL(input.path, docraptorApiBaseUrl), {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        authorization: buildDocraptorAuthorizationHeader(input.apiKey),
-        "content-type": "application/json",
-        "user-agent": providerUserAgent,
-      },
-      body: JSON.stringify(input.body),
-      signal: timeout.signal,
-    });
-    const payload = await readDocraptorPayload(response);
-    if (!response.ok) {
-      throw createDocraptorError(response, payload, input.phase);
-    }
-    return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "DocRaptor request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `DocRaptor request failed: ${error.message}` : "DocRaptor request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  return runProviderRequest(
+    { signal: input.signal, timeoutMs: docraptorRequestTimeoutMs, label: "DocRaptor" },
+    async (signal) => {
+      const response = await input.fetcher(new URL(input.path, docraptorApiBaseUrl), {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          authorization: buildDocraptorAuthorizationHeader(input.apiKey),
+          "content-type": "application/json",
+          "user-agent": providerUserAgent,
+        },
+        body: JSON.stringify(input.body),
+        signal,
+      });
+      const payload = await readDocraptorPayload(response);
+      if (!response.ok) {
+        throw createDocraptorError(response, payload, input.phase);
+      }
+      return payload;
+    },
+  );
 }
 
 function buildDocraptorAuthorizationHeader(apiKey: string): string {

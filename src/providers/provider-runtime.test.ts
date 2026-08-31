@@ -17,6 +17,7 @@ import {
   ProviderRequestError,
   providerResponseError,
   readProviderJson,
+  runProviderRequest,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
 
@@ -221,6 +222,65 @@ describe("isAbortLikeError", () => {
     expect(isAbortLikeError(new TypeError("fetch failed"))).toBe(false);
     expect(isAbortLikeError({ name: "AbortError" })).toBe(false);
     expect(isAbortLikeError(undefined)).toBe(false);
+  });
+});
+
+describe("runProviderRequest", () => {
+  it("returns the request result and passes ProviderRequestError through untouched", async () => {
+    await expect(runProviderRequest({ label: "Skio" }, async () => "ok")).resolves.toBe("ok");
+
+    const inner = new ProviderRequestError(404, "not found", { id: 1 });
+    await expect(runProviderRequest({ label: "Skio" }, async () => Promise.reject(inner))).rejects.toBe(inner);
+  });
+
+  it("maps AbortError, TimeoutError and a fired timeout to 504 with the provider label", async () => {
+    for (const reason of [new DOMException("aborted", "AbortError"), new DOMException("timed out", "TimeoutError")]) {
+      const error = await runProviderRequest({ label: "Skio" }, async () => Promise.reject(reason)).catch((e) => e);
+      expect(error).toBeInstanceOf(ProviderRequestError);
+      expect(error.status).toBe(504);
+      expect(error.message).toBe("Skio request timed out");
+    }
+
+    const timedOut = await runProviderRequest(
+      { label: "Skio", timeoutMs: 5 },
+      (signal) =>
+        new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(new Error("aborted by test")))),
+    ).catch((e) => e);
+    expect(timedOut.status).toBe(504);
+    expect(timedOut.message).toBe("Skio request timed out");
+  });
+
+  it("maps every other failure to 502 and keeps the Error message", async () => {
+    const withMessage = await runProviderRequest({ label: "Skio" }, async () =>
+      Promise.reject(new Error("boom")),
+    ).catch((e) => e);
+    expect(withMessage.status).toBe(502);
+    expect(withMessage.message).toBe("Skio request failed: boom");
+    expect(withMessage.details).toBeUndefined();
+
+    const nonError = await runProviderRequest({ label: "Skio" }, async () => Promise.reject("boom")).catch((e) => e);
+    expect(nonError.status).toBe(502);
+    expect(nonError.message).toBe("Skio request failed");
+  });
+
+  it("forwards the caller signal and clears the timer", async () => {
+    vi.useFakeTimers();
+    try {
+      const controller = new AbortController();
+      const seen: AbortSignal[] = [];
+      const pending = runProviderRequest({ label: "Skio", signal: controller.signal }, (signal) => {
+        seen.push(signal);
+        return new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(signal.reason)));
+      });
+      expect(vi.getTimerCount()).toBe(1);
+      controller.abort();
+      const error = await pending.catch((e) => e);
+      expect(error.status).toBe(504);
+      expect(seen[0]?.aborted).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

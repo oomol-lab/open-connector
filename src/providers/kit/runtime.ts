@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const kitApiBaseUrl = "https://api.kit.com/v4";
 
@@ -219,9 +214,7 @@ async function requestKitJson(input: {
   phase: KitPhase;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Kit" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       "user-agent": providerUserAgent,
@@ -235,7 +228,7 @@ async function requestKitJson(input: {
       method: input.method,
       headers,
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKitPayload(response);
 
@@ -248,22 +241,7 @@ async function requestKitJson(input: {
       throw new ProviderRequestError(502, "Kit returned an invalid payload");
     }
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Kit request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Kit request failed: ${error.message}` : "Kit request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildKitUrl(path: string, params: Record<string, string | undefined>) {

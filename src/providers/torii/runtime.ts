@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const toriiApiBaseUrl = "https://api.toriihq.com/v1.0";
 
@@ -218,9 +213,7 @@ async function requestToriiJson(
   options: ToriiRequestOptions,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Torii" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       authorization: `Bearer ${context.apiKey}`,
@@ -233,7 +226,7 @@ async function requestToriiJson(
     const response = await context.fetcher(buildToriiUrl(options), {
       method: "GET",
       headers,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readToriiPayload(response);
 
@@ -242,20 +235,7 @@ async function requestToriiJson(
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Torii request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Torii request failed: ${error.message}` : "Torii request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildToriiUrl(options: { path: string; query?: URLSearchParams; extraQuery?: Record<string, unknown> }): URL {

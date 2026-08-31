@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "sling";
@@ -141,8 +140,7 @@ async function requestSlingJson(input: {
   phase: SlingPhase;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Sling" }, async (signal) => {
     const response = await input.fetcher(buildSlingUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -150,21 +148,12 @@ async function requestSlingJson(input: {
         Accept: "application/json",
         "User-Agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readSlingPayload(response, { allowPlainText: !response.ok });
     if (!response.ok) throw createSlingError(response.status, payload, input.phase);
     return payload ?? {};
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) throw new ProviderRequestError(504, "Sling request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Sling request failed: ${error.message}` : "Sling request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSlingUrl(path: string, query: Record<string, SlingQueryValue | undefined>): URL {

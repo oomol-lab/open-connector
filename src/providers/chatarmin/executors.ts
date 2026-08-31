@@ -5,11 +5,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "chatarmin";
@@ -276,14 +275,12 @@ async function chatarminRequestJson(
   context: ChatarminContext,
   phase: ChatarminRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Chatarmin" }, async (signal) => {
     const response = await context.fetcher(buildChatarminUrl(input.path, input.query), {
       method: input.method,
       headers: chatarminHeaders(context.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readChatarminPayload(response);
 
@@ -292,20 +289,7 @@ async function chatarminRequestJson(
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Chatarmin request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Chatarmin request failed: ${error.message}` : "Chatarmin request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildChatarminUrl(path: string, query: Record<string, string | undefined> = {}): URL {

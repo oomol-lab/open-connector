@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const mezmoApiBaseUrl = "https://api.mezmo.com";
 
@@ -129,9 +124,7 @@ async function requestMezmoJson(input: {
   context: MezmoActionContext;
   phase: MezmoPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Mezmo" }, async (signal) => {
     const response = await input.context.fetcher(buildMezmoUrl(input.path, input.params), {
       method: "GET",
       headers: {
@@ -139,7 +132,7 @@ async function requestMezmoJson(input: {
         authorization: `Token ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readMezmoPayload(response);
 
@@ -148,21 +141,7 @@ async function requestMezmoJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Mezmo request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Mezmo request failed: ${error.message}` : "Mezmo request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildMezmoUrl(path: string, params: Record<string, string | undefined>): URL {

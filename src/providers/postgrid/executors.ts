@@ -11,12 +11,11 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "postgrid";
@@ -172,14 +171,12 @@ async function requestPostgridJson(input: {
   context: ApiKeyProviderContext;
   phase: PostgridPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "PostGrid" }, async (signal) => {
     const response = await input.context.fetcher(buildPostgridUrl(input.path, input.params ?? {}), {
       method: input.method,
       headers: postgridHeaders(input.context.apiKey, input.body !== undefined),
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPostgridPayload(response);
 
@@ -192,22 +189,7 @@ async function requestPostgridJson(input: {
       throw new ProviderRequestError(502, "PostGrid returned an invalid payload", payload);
     }
     return payloadRecord;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "PostGrid request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `PostGrid request failed: ${error.message}` : "PostGrid request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildPostgridUrl(path: string, params: Record<string, string | undefined>): string {

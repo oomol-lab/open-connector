@@ -16,12 +16,11 @@ import {
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const onePasswordEventsValidationPath = "/api/v2/auth/introspect";
@@ -189,8 +188,7 @@ async function requestOnePasswordEventsJson(input: {
   phase: OnePasswordEventsPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "1Password Events" }, async (signal) => {
     const response = await input.context.fetcher(new URL(input.path, `${input.context.baseUrl}/`), {
       method: input.method,
       headers: {
@@ -200,7 +198,7 @@ async function requestOnePasswordEventsJson(input: {
         "user-agent": providerUserAgent,
       },
       ...(input.method === "POST" ? { body: JSON.stringify(input.body ?? {}) } : {}),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readOnePasswordEventsPayload(response);
 
@@ -209,22 +207,7 @@ async function requestOnePasswordEventsJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "1Password Events request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `1Password Events request failed: ${error.message}` : "1Password Events request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readOnePasswordEventsPayload(response: Response): Promise<unknown> {

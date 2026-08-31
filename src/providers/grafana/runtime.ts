@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const defaultNamespace = "default";
 const folderParentAnnotation = "grafana.app/folder";
@@ -413,34 +408,19 @@ async function grafanaRequestJson(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Grafana" }, async (signal) => {
     const response = await context.fetcher(url, {
       method: request.method,
       headers: grafanaHeaders(context.apiKey, request.body !== undefined),
       body: request.body === undefined ? undefined : JSON.stringify(request.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readGrafanaPayload(response);
     if (!response.ok) {
       throw createGrafanaError(response, payload, context.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Grafana request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Grafana request failed: ${error.message}` : "Grafana request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function grafanaHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {

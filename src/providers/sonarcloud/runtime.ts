@@ -13,12 +13,11 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 import { sonarCloudAllowedApiBaseUrls, sonarCloudDefaultApiBaseUrl } from "./constants.ts";
 
@@ -169,8 +168,7 @@ export async function validateSonarCloudCredential(
 }
 
 async function requestSonarCloudJson(input: SonarCloudRequest): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "SonarQube Cloud" }, async (signal) => {
     const response = await input.context.fetcher(buildSonarCloudUrl(input), {
       method: "GET",
       headers: {
@@ -178,23 +176,12 @@ async function requestSonarCloudJson(input: SonarCloudRequest): Promise<unknown>
         authorization: `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readSonarCloudPayload(response);
     if (!response.ok) throw createSonarCloudError(response.status, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "SonarQube Cloud request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `SonarQube Cloud request failed: ${error.message}` : "SonarQube Cloud request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSonarCloudUrl(input: SonarCloudRequest): string {

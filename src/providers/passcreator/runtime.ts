@@ -13,11 +13,10 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const passcreatorApiBaseUrl = "https://app.passcreator.com";
@@ -124,43 +123,29 @@ async function requestPasscreatorJson(input: {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeoutHandle = createProviderTimeout(input.signal, passcreatorDefaultRequestTimeoutMs);
+  return runProviderRequest(
+    { signal: input.signal, timeoutMs: passcreatorDefaultRequestTimeoutMs, label: "Passcreator" },
+    async (signal) => {
+      const response = await input.fetcher(input.url, {
+        method: input.method,
+        headers: {
+          accept: "application/json",
+          authorization: input.apiKey,
+          ...(input.body ? { "content-type": "application/json" } : {}),
+          "user-agent": providerUserAgent,
+        },
+        body: input.body ? JSON.stringify(input.body) : undefined,
+        signal,
+      });
+      const payload = await readPasscreatorPayload(response);
 
-  try {
-    const response = await input.fetcher(input.url, {
-      method: input.method,
-      headers: {
-        accept: "application/json",
-        authorization: input.apiKey,
-        ...(input.body ? { "content-type": "application/json" } : {}),
-        "user-agent": providerUserAgent,
-      },
-      body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeoutHandle.signal,
-    });
-    const payload = await readPasscreatorPayload(response);
-
-    if (!response.ok) {
-      throw createPasscreatorError(response.status, payload);
-    }
-    assertSuccessfulPasscreatorPayload(payload);
-    return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Passcreator request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Passcreator request failed: ${error.message}` : "Passcreator request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+      if (!response.ok) {
+        throw createPasscreatorError(response.status, payload);
+      }
+      assertSuccessfulPasscreatorPayload(payload);
+      return payload;
+    },
+  );
 }
 
 function buildListPassesUrl(input: Record<string, unknown>) {

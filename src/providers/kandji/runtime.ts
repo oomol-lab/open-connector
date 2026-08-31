@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 type KandjiPhase = "validate" | "execute";
 type KandjiActionHandler = (input: Record<string, unknown>, context: KandjiActionContext) => Promise<unknown>;
@@ -179,13 +174,11 @@ async function requestKandjiJson(input: {
   phase: KandjiPhase;
   notFoundAsInvalidInput?: boolean;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Kandji" }, async (signal) => {
     const response = await input.fetcher(buildKandjiUrl(input.apiUrl, input.path, input.query), {
       method: "GET",
       headers: buildKandjiHeaders(input.apiKey),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKandjiPayload(response);
 
@@ -194,21 +187,7 @@ async function requestKandjiJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Kandji request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Kandji request failed: ${error.message}` : "Kandji request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function isAllowedKandjiApiHost(hostname: string): boolean {

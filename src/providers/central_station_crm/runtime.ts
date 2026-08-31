@@ -2,12 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const centralStationCrmCredentialHelpUrl = "https://centralstationcrm.com/api-basics";
 
@@ -394,38 +389,19 @@ async function deleteRecord(input: { input: CentralStationCrmActionInput; fetche
 }
 
 async function requestCentralStationCrmJson(input: CentralStationCrmRequestInput) {
-  const timeoutHandle = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "CentralStationCRM" }, async (signal) => {
     const response = await input.fetcher(buildCentralStationCrmUrl(input.apiBaseUrl, input.path, input.query), {
       method: input.method ?? "GET",
       headers: buildCentralStationCrmHeaders(input.apiKey, input.body !== undefined),
       ...(input.body === undefined ? {} : { body: JSON.stringify(input.body) }),
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readCentralStationCrmPayload(response);
     if (!response.ok) {
       throw createCentralStationCrmError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "CentralStationCRM request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `CentralStationCRM request failed: ${error.message}`
-        : "CentralStationCRM request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildCentralStationCrmUrl(apiBaseUrl: string, path: string, query: Record<string, string | undefined> = {}) {

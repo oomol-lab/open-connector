@@ -695,6 +695,50 @@ export function isAbortSignalError(signal: AbortSignal | undefined, error: unkno
 }
 
 /**
+ * Options for {@link runProviderRequest}.
+ */
+export interface ProviderRequestOptions {
+  /** Caller signal, usually the execution context's; aborting it aborts the request. */
+  signal?: AbortSignal;
+  /** Provider-local budget for the whole request; defaults to 30 seconds. */
+  timeoutMs?: number;
+  /** Provider name used in the timeout and failure messages, e.g. `"Skio"`. */
+  label: string;
+}
+
+/**
+ * Run a provider request under the shared timeout and error mapping.
+ *
+ * `request` receives the combined abort signal and should perform the fetch and
+ * read the body. A `ProviderRequestError` thrown inside passes through
+ * untouched; a timeout or abort becomes `504 "<label> request timed out"`; any
+ * other failure becomes `502 "<label> request failed[: <message>]"`. The
+ * timeout is always cleaned up.
+ */
+export async function runProviderRequest<T>(
+  options: ProviderRequestOptions,
+  request: (signal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const timeout = createProviderTimeout(options.signal, options.timeoutMs);
+  try {
+    return await request(timeout.signal);
+  } catch (error) {
+    if (error instanceof ProviderRequestError) {
+      throw error;
+    }
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
+      throw new ProviderRequestError(504, `${options.label} request timed out`);
+    }
+    throw new ProviderRequestError(
+      502,
+      error instanceof Error ? `${options.label} request failed: ${error.message}` : `${options.label} request failed`,
+    );
+  } finally {
+    timeout.cleanup();
+  }
+}
+
+/**
  * Set defined query parameters on a URL.
  */
 export function setSearchParams(url: URL, query: Record<string, string | undefined>): void {

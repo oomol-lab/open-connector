@@ -2,12 +2,7 @@ import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-ru
 import type { VidaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export interface VidaCredentialCheck {
   providerAccountId?: string;
@@ -135,16 +130,14 @@ async function requestVidaJson(input: {
   fetcher: typeof fetch;
   phase: VidaPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Vida" }, async (signal) => {
     const response = await input.fetcher(buildVidaUrl(input.path, input.apiKey, input.params), {
       method: "GET",
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
       },
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readVidaPayload(response, { strictJson: response.ok });
 
@@ -153,22 +146,7 @@ async function requestVidaJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Vida request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Vida request failed: ${error.message}` : "Vida request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildVidaUrl(path: string, apiKey: string, params: Record<string, string | undefined>) {

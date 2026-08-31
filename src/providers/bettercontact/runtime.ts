@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 const bettercontactApiBaseUrl = "https://app.bettercontact.rocks/api/v2";
 
@@ -158,14 +153,12 @@ async function requestBettercontactJson(
   input: BettercontactRequestInput,
   context: BettercontactContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "BetterContact" }, async (signal) => {
     const response = await context.fetcher(buildBettercontactUrl(input, context.apiKey), {
       method: input.method,
       headers: buildBettercontactHeaders(context.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(compactObject(input.body)),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readBettercontactPayload(response);
 
@@ -179,22 +172,7 @@ async function requestBettercontactJson(
     }
 
     return payloadObject;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "BetterContact request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `BetterContact request failed: ${error.message}` : "BetterContact request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildBettercontactUrl(input: BettercontactRequestInput, apiKey: string): URL {

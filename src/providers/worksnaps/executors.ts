@@ -5,11 +5,10 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { Buffer } from "node:buffer";
 import { compactObject, optionalString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const worksnapsApiBaseUrl = "https://api.worksnaps.com/api";
@@ -204,12 +203,11 @@ async function requestWorksnapsXml(input: {
   phase: "validate" | "execute";
   query?: Record<string, string | undefined>;
 }): Promise<XmlNode> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Worksnaps" }, async (signal) => {
     const response = await input.context.fetcher(buildWorksnapsUrl(input.path, input.query), {
       method: "GET",
       headers: buildWorksnapsHeaders(input.context.apiKey),
-      signal: timeout.signal,
+      signal,
     });
     const text = await response.text();
     if (!response.ok) {
@@ -219,20 +217,7 @@ async function requestWorksnapsXml(input: {
       throw new ProviderRequestError(502, "Worksnaps returned an empty response");
     }
     return parseXmlDocument(text);
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Worksnaps request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Worksnaps request failed: ${error.message}` : "Worksnaps request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildWorksnapsUrl(path: string, query?: Record<string, string | undefined>): URL {

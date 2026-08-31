@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "atlas_so";
@@ -226,14 +225,12 @@ async function requestAtlasSoJson(input: {
   query?: Record<string, AtlasSoQueryValue>;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Atlas.so" }, async (signal) => {
     const response = await input.context.fetcher(buildAtlasSoUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: buildAtlasSoHeaders(input.context.apiKey, input.body !== undefined),
       body: input.body !== undefined ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
 
     if (!response.ok) {
@@ -242,22 +239,7 @@ async function requestAtlasSoJson(input: {
     }
 
     return await readAtlasSoPayload(response);
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Atlas.so request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Atlas.so request failed: ${error.message}` : "Atlas.so request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildAtlasSoUrl(path: string, query?: Record<string, AtlasSoQueryValue>): URL {

@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const metatextaiApiBaseUrl = "https://guard-api.metatext.ai";
 
@@ -133,9 +128,7 @@ async function metatextaiRequestJson(input: {
   phase: MetatextaiPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "MetatextAI" }, async (signal) => {
     const response = await input.context.fetcher(buildUrl(input.path), {
       method: input.method,
       headers: {
@@ -145,7 +138,7 @@ async function metatextaiRequestJson(input: {
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readJsonResponse(response);
 
@@ -154,20 +147,7 @@ async function metatextaiRequestJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "MetatextAI request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `MetatextAI request failed: ${error.message}` : "MetatextAI request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildUrl(path: string): string {

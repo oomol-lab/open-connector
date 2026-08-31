@@ -11,12 +11,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export interface SevenShiftsContext extends ApiKeyProviderContext {
   companyGuid?: string;
@@ -179,13 +174,11 @@ export async function validateSevenShiftsCredential(
 }
 
 async function requestSevenShiftsJson(options: SevenShiftsRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(options.signal);
-
-  try {
+  return runProviderRequest({ signal: options.signal, label: "7shifts" }, async (signal) => {
     const response = await options.fetcher(buildSevenShiftsUrl(options.path, options.query), {
       method: "GET",
       headers: buildSevenShiftsHeaders(options),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readSevenShiftsPayload(response);
 
@@ -197,20 +190,7 @@ async function requestSevenShiftsJson(options: SevenShiftsRequestOptions): Promi
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "7shifts request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `7shifts request failed: ${error.message}` : "7shifts request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSevenShiftsUrl(path: string, query?: Record<string, string | undefined>): URL {

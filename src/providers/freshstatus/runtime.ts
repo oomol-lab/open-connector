@@ -1,11 +1,10 @@
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const freshstatusApiBaseUrl = "https://public-api.freshstatus.io/api/v1/";
@@ -207,8 +206,7 @@ function mapDisplayOptions(value: unknown, mapping: Record<string, string>): Rec
 }
 
 async function requestFreshstatus(input: FreshstatusRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Freshstatus" }, async (signal) => {
     const response = await input.context.fetcher(new URL(input.path, freshstatusApiBaseUrl), {
       method: input.method ?? "GET",
       headers: {
@@ -218,23 +216,12 @@ async function requestFreshstatus(input: FreshstatusRequestInput): Promise<unkno
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPayload(response);
     if (!response.ok) throw createFreshstatusError(response.status, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Freshstatus request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Freshstatus request failed: ${error.message}` : "Freshstatus request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readPayload(response: Response): Promise<unknown> {

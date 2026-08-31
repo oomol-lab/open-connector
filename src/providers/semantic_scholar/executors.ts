@@ -9,15 +9,14 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   mapProviderActionSources,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "semantic_scholar";
@@ -347,14 +346,12 @@ async function requestSemanticScholarJson(input: {
   fetcher: typeof fetch;
   phase: SemanticScholarPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Semantic Scholar" }, async (signal) => {
     const response = await input.fetcher(buildSemanticScholarUrl(input), {
       method: input.method,
       headers: buildSemanticScholarHeaders(input),
       body: input.method === "POST" ? JSON.stringify(input.body ?? {}) : undefined,
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readSemanticScholarPayload(response);
 
@@ -363,22 +360,7 @@ async function requestSemanticScholarJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Semantic Scholar request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Semantic Scholar request failed: ${error.message}` : "Semantic Scholar request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildSemanticScholarHeaders(input: { method: "GET" | "POST"; apiKey: string }) {

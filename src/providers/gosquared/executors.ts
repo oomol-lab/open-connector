@@ -11,13 +11,12 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  runProviderRequest,
   setSearchParams,
 } from "../provider-runtime.ts";
 
@@ -179,16 +178,14 @@ async function requestGosquaredReport(
 }
 
 async function requestGosquaredJson(options: GosquaredRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(options.signal);
-
-  try {
+  return runProviderRequest({ signal: options.signal, label: "GoSquared" }, async (signal) => {
     const response = await options.fetcher(buildGosquaredUrl(options), {
       method: "GET",
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readGosquaredPayload(response);
 
@@ -202,20 +199,7 @@ async function requestGosquaredJson(options: GosquaredRequestOptions): Promise<R
     }
 
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "GoSquared request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `GoSquared request failed: ${error.message}` : "GoSquared request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildGosquaredUrl(options: Pick<GosquaredRequestOptions, "path" | "apiKey" | "siteToken" | "query">): URL {

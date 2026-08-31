@@ -20,12 +20,11 @@ import {
 } from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const promptLayerApiBaseUrl = "https://api.promptlayer.com";
@@ -195,8 +194,7 @@ export async function validatePromptLayerCredential(
 }
 
 async function requestPromptLayerJson(input: PromptLayerRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "PromptLayer" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       "user-agent": providerUserAgent,
@@ -210,7 +208,7 @@ async function requestPromptLayerJson(input: PromptLayerRequestInput): Promise<R
       method: input.method,
       headers,
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPromptLayerPayload(response);
     if (!response.ok) {
@@ -221,20 +219,7 @@ async function requestPromptLayerJson(input: PromptLayerRequestInput): Promise<R
       throw new ProviderRequestError(502, "PromptLayer returned an invalid payload");
     }
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "PromptLayer request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `PromptLayer request failed: ${error.message}` : "PromptLayer request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildPromptLayerUrl(path: string, query: Record<string, PromptLayerQueryValue> = {}): URL {

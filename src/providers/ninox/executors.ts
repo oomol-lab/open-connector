@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const ninoxApiBaseUrl = "https://api.ninox.com/v1";
@@ -318,9 +317,7 @@ async function deleteRecords(input: Record<string, unknown>, context: ApiKeyProv
 }
 
 async function requestNinoxJson(input: NinoxRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Ninox" }, async (signal) => {
     const response = await input.context.fetcher(buildNinoxUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: {
@@ -330,7 +327,7 @@ async function requestNinoxJson(input: NinoxRequestInput): Promise<unknown> {
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
 
     if (input.allowNoContent && response.status === 204) {
@@ -343,21 +340,7 @@ async function requestNinoxJson(input: NinoxRequestInput): Promise<unknown> {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Ninox request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Ninox request failed: ${error.message}` : "Ninox request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildNinoxUrl(path: string, query?: Record<string, NinoxQueryValue>): URL {

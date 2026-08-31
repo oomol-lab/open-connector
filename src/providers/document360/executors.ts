@@ -12,13 +12,12 @@ import {
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "document360";
@@ -154,8 +153,7 @@ async function requestJson(input: {
   phase: Phase;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Document360" }, async (signal) => {
     const response = await input.fetcher(buildUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -164,7 +162,7 @@ async function requestJson(input: {
         api_token: input.apiKey,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPayload(response);
     if (!response.ok) throw createError(response.status, payload, input.phase);
@@ -173,17 +171,7 @@ async function requestJson(input: {
     if (record.success === false)
       throw createError(response.status >= 400 ? response.status : 400, record, input.phase);
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error))
-      throw new ProviderRequestError(504, "Document360 request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Document360 request failed: ${error.message}` : "Document360 request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildUrl(path: string, query: Record<string, string | number | boolean | undefined>): URL {

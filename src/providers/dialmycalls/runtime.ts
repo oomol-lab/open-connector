@@ -2,12 +2,7 @@ import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-ru
 import type { DialMyCallsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export interface DialmycallsCredentialCheck {
   providerAccountId?: string;
@@ -194,16 +189,14 @@ async function requestDialMyCallsJson(input: {
   body?: Record<string, unknown>;
   range?: string;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "DialMyCalls" }, async (signal) => {
     const response = await input.fetcher(buildDialMyCallsUrl(input.path), {
       method: input.method ?? "GET",
       headers: buildDialMyCallsHeaders(input.apiKey, {
         hasBody: input.body !== undefined,
         range: input.range,
       }),
-      signal: timeoutHandle.signal,
+      signal,
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),
     });
     const payload = await readDialMyCallsPayload(response);
@@ -213,22 +206,7 @@ async function requestDialMyCallsJson(input: {
     }
 
     return requireEnvelope(payload);
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "DialMyCalls request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `DialMyCalls request failed: ${error.message}` : "DialMyCalls request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildDialMyCallsUrl(path: string) {

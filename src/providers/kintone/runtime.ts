@@ -12,11 +12,10 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 type KintonePhase = "validate" | "execute";
@@ -170,8 +169,7 @@ async function requestKintoneJson(input: {
   query?: Record<string, KintoneQueryValue | undefined>;
   phase: KintonePhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Kintone" }, async (signal) => {
     const response = await input.context.fetcher(buildKintoneUrl(input.context.apiBaseUrl, input.path, input.query), {
       method: "GET",
       headers: {
@@ -179,7 +177,7 @@ async function requestKintoneJson(input: {
         authorization: `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKintonePayload(response);
     if (!response.ok) {
@@ -190,20 +188,7 @@ async function requestKintoneJson(input: {
       throw new ProviderRequestError(502, "Kintone returned an invalid payload");
     }
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Kintone request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Kintone request failed: ${error.message}` : "Kintone request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildKintoneUrl(

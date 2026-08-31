@@ -5,12 +5,11 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const anrokApiBaseUrl = "https://api.anrok.com";
@@ -132,9 +131,7 @@ async function requestAnrokJson(input: {
   phase: AnrokPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Anrok" }, async (signal) => {
     const response = await input.context.fetcher(buildAnrokUrl(input.path), {
       method: "POST",
       headers: {
@@ -144,7 +141,7 @@ async function requestAnrokJson(input: {
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify(input.body ?? {}),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readAnrokPayload(response);
 
@@ -153,20 +150,7 @@ async function requestAnrokJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Anrok request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Anrok request failed: ${error.message}` : "Anrok request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildAnrokUrl(path: string): URL {

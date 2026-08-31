@@ -4,13 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "store_leads";
@@ -137,8 +136,7 @@ async function requestStoreLeadsJson(input: {
   phase: StoreLeadsPhase;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Store Leads" }, async (signal) => {
     const response = await input.context.fetcher(buildStoreLeadsUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -146,27 +144,14 @@ async function requestStoreLeadsJson(input: {
         authorization: `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readStoreLeadsPayload(response);
     if (!response.ok) {
       throw createStoreLeadsError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Store Leads request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Store Leads request failed: ${error.message}` : "Store Leads request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildStoreLeadsUrl(path: string, query?: URLSearchParams): string {

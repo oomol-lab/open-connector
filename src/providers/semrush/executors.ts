@@ -3,13 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalIntegerLike, optionalRawString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   mapProviderActionSources,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const semrushApiBaseUrl = "https://api.semrush.com";
@@ -128,16 +127,14 @@ async function requestSemrushReport(input: {
   fetcher: typeof fetch;
   phase: SemrushPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Semrush" }, async (signal) => {
     const response = await input.fetcher(buildSemrushUrl(input.apiKey, input.params), {
       method: "GET",
       headers: {
         accept: "text/csv, text/plain, */*",
         "user-agent": providerUserAgent,
       },
-      signal: timeoutHandle.signal,
+      signal,
     });
     const text = await response.text();
 
@@ -146,22 +143,7 @@ async function requestSemrushReport(input: {
     }
 
     return parseSemrushCsvReport(text);
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Semrush request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Semrush request failed: ${error.message}` : "Semrush request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildSemrushUrl(apiKey: string, params: Record<string, string | undefined>) {

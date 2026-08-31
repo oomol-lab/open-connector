@@ -11,11 +11,10 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "klazify";
@@ -242,9 +241,7 @@ async function requestKlazifyJson(input: {
   signal?: AbortSignal;
   phase: KlazifyPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Klazify" }, async (signal) => {
     const response = await input.fetcher(buildKlazifyUrl(input.path), {
       method: "POST",
       headers: {
@@ -254,7 +251,7 @@ async function requestKlazifyJson(input: {
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKlazifyPayload(response);
 
@@ -267,22 +264,7 @@ async function requestKlazifyJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Klazify request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Klazify request failed: ${error.message}` : "Klazify request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildKlazifyUrl(path: string): URL {

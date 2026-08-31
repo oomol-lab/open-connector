@@ -9,13 +9,12 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "markettime";
@@ -123,8 +122,7 @@ async function requestMarkettime(input: MarkettimeRequestInput): Promise<unknown
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value != null) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "MarketTime" }, async (signal) => {
     const response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
@@ -134,25 +132,14 @@ async function requestMarkettime(input: MarkettimeRequestInput): Promise<unknown
         "x-api-key": input.context.apiKey,
       },
       body: input.body == null ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readJson(response, response.ok);
     if (!response.ok) throw createMarkettimeError(response, payload, input.phase);
     const envelope = optionalRecord(payload);
     if (envelope?.success === false) throw createMarkettimeError(response, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "MarketTime request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `MarketTime request failed: ${error.message}` : "MarketTime request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function parseListResponse(payload: unknown): Record<string, unknown> {

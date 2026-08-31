@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalRawString, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const timecampApiBaseUrl = "https://app.timecamp.com/third_party/api";
 
@@ -240,9 +235,7 @@ async function requestTimecampJson(input: {
   body?: Record<string, unknown>;
   phase: TimecampPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "TimeCamp" }, async (signal) => {
     const response = await input.context.fetcher(buildTimecampUrl(input.path, input.params ?? {}), {
       method: input.method,
       headers: {
@@ -252,7 +245,7 @@ async function requestTimecampJson(input: {
         ...(input.body ? { "content-type": "application/json" } : {}),
       },
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readTimecampPayload(response);
 
@@ -261,22 +254,7 @@ async function requestTimecampJson(input: {
     }
 
     return payload ?? {};
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "TimeCamp request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `TimeCamp request failed: ${error.message}` : "TimeCamp request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildTimecampUrl(path: string, params: Record<string, TimecampQueryValue>): URL {

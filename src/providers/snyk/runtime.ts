@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 type QueryValue = string | number | boolean | readonly (string | number | boolean)[] | undefined;
@@ -173,8 +172,7 @@ export async function validateSnykCredential(
 }
 
 async function requestJson(input: RequestInput): Promise<SnykResponse> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Snyk" }, async (signal) => {
     const url = buildUrl(input.path, input.query, input.commaArrays);
     const response = await input.context.fetcher(url, {
       headers: {
@@ -183,7 +181,7 @@ async function requestJson(input: RequestInput): Promise<SnykResponse> {
         "content-type": "application/vnd.api+json",
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readProviderJsonBody(response, {
       emptyBody: null,
@@ -204,16 +202,7 @@ async function requestJson(input: RequestInput): Promise<SnykResponse> {
     const object = optionalRecord(payload);
     if (!object) throw new ProviderRequestError(502, "Snyk returned a non-object response");
     return object;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) throw new ProviderRequestError(504, "Snyk request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Snyk request failed: ${error.message}` : "Snyk request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildUrl(path: string, query: Record<string, QueryValue> = {}, commaArrays: readonly string[] = []): URL {

@@ -5,12 +5,11 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const vonageApiBaseUrl = "https://rest.nexmo.com";
@@ -138,8 +137,7 @@ async function requestVonage(input: VonageRequestInput): Promise<unknown> {
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Vonage" }, async (signal) => {
     const response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",
       headers: {
@@ -149,7 +147,7 @@ async function requestVonage(input: VonageRequestInput): Promise<unknown> {
         "user-agent": providerUserAgent,
       },
       body: input.body,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readProviderJsonBody(response, {
       emptyBody: {},
@@ -157,18 +155,7 @@ async function requestVonage(input: VonageRequestInput): Promise<unknown> {
     });
     if (!response.ok) throw mapHttpError(response, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Vonage request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Vonage request failed: ${error.message}` : "Vonage request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function mapHttpError(response: Response, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {

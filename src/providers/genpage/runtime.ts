@@ -2,12 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const genpageApiBaseUrl = "https://backend.genpage.ai";
 type Method = "GET" | "POST";
@@ -83,8 +78,7 @@ async function request(input: RequestInput): Promise<unknown> {
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, Array.isArray(value) ? value.join(",") : String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "GenPage" }, async (signal) => {
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
@@ -94,22 +88,12 @@ async function request(input: RequestInput): Promise<unknown> {
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPayload(response);
     if (!response.ok) throw createError(response.status, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error))
-      throw new ProviderRequestError(504, "GenPage request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `GenPage request failed: ${error.message}` : "GenPage request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 async function readPayload(response: Response): Promise<unknown> {
   const text = await response.text();

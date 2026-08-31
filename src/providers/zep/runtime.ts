@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const zepApiBaseUrl = "https://api.getzep.com/api/v2";
@@ -180,31 +179,19 @@ async function requestZepJson(
     headers.set("content-type", "application/json");
     body = JSON.stringify(input.body);
   }
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Zep" }, async (signal) => {
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers,
       body,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readZepPayload(response);
     if (!response.ok) {
       throw createZepError(response.status, payload, input.phase ?? "execute");
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Zep request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Zep request failed: ${error.message}` : "Zep request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readZepPayload(response: Response): Promise<unknown> {

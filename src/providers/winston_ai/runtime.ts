@@ -4,12 +4,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 type WinstonAiRequestPhase = "validate" | "execute";
 type WinstonAiActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -102,34 +97,25 @@ async function requestWinstonAiJson(
   input: WinstonAiRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, winstonAiDefaultRequestTimeoutMs);
-  try {
-    const response = await context.fetcher(new URL(input.path, winstonAiApiBaseUrl), {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
-        "content-type": "application/json",
-        "user-agent": providerUserAgent,
-      },
-      body: JSON.stringify(input.body),
-      signal: timeout.signal,
-    });
-    const payload = await readWinstonAiPayload(response);
-    if (!response.ok) throw createWinstonAiError(response, payload, input.phase);
-    return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Winston AI request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Winston AI request failed: ${error.message}` : "Winston AI request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  return runProviderRequest(
+    { signal: context.signal, timeoutMs: winstonAiDefaultRequestTimeoutMs, label: "Winston AI" },
+    async (signal) => {
+      const response = await context.fetcher(new URL(input.path, winstonAiApiBaseUrl), {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${context.apiKey}`,
+          "content-type": "application/json",
+          "user-agent": providerUserAgent,
+        },
+        body: JSON.stringify(input.body),
+        signal,
+      });
+      const payload = await readWinstonAiPayload(response);
+      if (!response.ok) throw createWinstonAiError(response, payload, input.phase);
+      return payload;
+    },
+  );
 }
 
 async function readWinstonAiPayload(response: Response): Promise<Record<string, unknown>> {

@@ -14,12 +14,11 @@ import {
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   mapProviderActionHandlers,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 import { longbridgeOAuthScopes } from "./actions.ts";
 import { indexSymbolToCounterId, symbolToCounterId } from "./counter-id.ts";
@@ -379,28 +378,14 @@ export async function validateLongbridgeCredential(
 
 export async function requestLongbridgeJson(input: LongbridgeRequestOptions): Promise<unknown> {
   const url = buildLongbridgeUrl(input.path, input.query);
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
-    const response = await input.context.fetcher(url, buildLongbridgeRequestInit(input, timeout.signal));
+  return runProviderRequest({ signal: input.context.signal, label: "Longbridge" }, async (signal) => {
+    const response = await input.context.fetcher(url, buildLongbridgeRequestInit(input, signal));
     const payload = await readLongbridgeJson(response);
     if (!response.ok) {
       throw mapLongbridgeHttpError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Longbridge request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Longbridge request failed: ${error.message}` : "Longbridge request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildLongbridgeRequestInit(input: LongbridgeRequestOptions, signal: AbortSignal): RequestInit {

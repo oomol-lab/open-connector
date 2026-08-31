@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const beamerApiBaseUrl = "https://api.getbeamer.com/v0";
 
@@ -214,12 +209,10 @@ async function requestBeamerJson(
   context: BeamerContext,
   phase: BeamerPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Beamer" }, async (signal) => {
     const response = await context.fetcher(url, {
       ...init,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readBeamerPayload(response);
 
@@ -228,20 +221,7 @@ async function requestBeamerJson(
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Beamer request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Beamer request failed: ${error.message}` : "Beamer request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function beamerUrl(path: string): URL {

@@ -16,14 +16,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerInputError,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "zenrows";
@@ -149,41 +148,29 @@ async function requestZenrowsUrl(
   authLocation: ZenrowsAuthLocation,
   phase: ZenrowsPhase,
 ): Promise<Response> {
-  const timeout = createProviderTimeout(context.signal, zenrowsDefaultRequestTimeoutMs);
-
-  try {
-    const response = await context.fetcher(
-      buildZenrowsUrl(url, query, authLocation === "query" ? context.apiKey : undefined),
-      {
-        method: "GET",
-        headers: {
-          accept: "*/*",
-          ...(authLocation === "header" ? { "x-api-key": context.apiKey } : {}),
-          "user-agent": providerUserAgent,
+  return runProviderRequest(
+    { signal: context.signal, timeoutMs: zenrowsDefaultRequestTimeoutMs, label: "ZenRows" },
+    async (signal) => {
+      const response = await context.fetcher(
+        buildZenrowsUrl(url, query, authLocation === "query" ? context.apiKey : undefined),
+        {
+          method: "GET",
+          headers: {
+            accept: "*/*",
+            ...(authLocation === "header" ? { "x-api-key": context.apiKey } : {}),
+            "user-agent": providerUserAgent,
+          },
+          signal,
         },
-        signal: timeout.signal,
-      },
-    );
+      );
 
-    if (!response.ok) {
-      throw createZenrowsError(response.status, await response.text(), phase);
-    }
+      if (!response.ok) {
+        throw createZenrowsError(response.status, await response.text(), phase);
+      }
 
-    return response;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "ZenRows request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `ZenRows request failed: ${error.message}` : "ZenRows request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+      return response;
+    },
+  );
 }
 
 function buildZenrowsUrl(url: string, query: Record<string, ZenrowsQueryValue>, apiKey: string | undefined): string {

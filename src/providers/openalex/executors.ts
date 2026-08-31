@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
   setSearchParams,
 } from "../provider-runtime.ts";
 import { openalexApiBaseUrl, openalexEntityValues } from "./constants.ts";
@@ -148,16 +147,14 @@ async function requestOpenAlexJson(input: {
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
   phase: OpenAlexPhase;
 }): Promise<Record<string, unknown>> {
-  const timeoutHandle = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "OpenAlex" }, async (signal) => {
     const response = await input.context.fetcher(buildOpenAlexUrl(input.path, input.apiKey, input.params), {
       method: "GET",
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
       },
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readOpenAlexPayload(response);
 
@@ -166,22 +163,7 @@ async function requestOpenAlexJson(input: {
     }
 
     return requireRecord(payload, "OpenAlex returned an invalid payload");
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "OpenAlex request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `OpenAlex request failed: ${error.message}` : "OpenAlex request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildOpenAlexUrl(path: string, apiKey: string, params: Record<string, string | undefined>): URL {

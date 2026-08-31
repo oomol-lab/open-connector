@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const lexofficeApiBaseUrl = "https://api.lexware.io";
@@ -207,13 +206,12 @@ export async function validateLexofficeCredential(
 }
 
 async function requestLexofficeJson(input: LexofficeRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Lexoffice" }, async (signal) => {
     const response = await input.fetcher(buildLexofficeUrl(input.path, input.query), {
       method: input.method,
       headers: buildLexofficeHeaders(input.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readLexofficePayload(response);
     if (!response.ok) {
@@ -223,20 +221,7 @@ async function requestLexofficeJson(input: LexofficeRequestOptions): Promise<unk
       throw new ProviderRequestError(502, "Lexoffice returned an empty response");
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Lexoffice request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Lexoffice request failed: ${error.message}` : "Lexoffice request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildLexofficeUrl(path: string, query?: Record<string, string | undefined>): string {

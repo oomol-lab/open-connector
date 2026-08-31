@@ -16,13 +16,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "proxiedmail";
@@ -206,8 +205,7 @@ async function requestProxiedmailJson(input: {
   signal?: AbortSignal;
   phase: ProxiedmailRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "ProxiedMail" }, async (signal) => {
     const response = await input.fetcher(buildProxiedmailUrl(input.path), {
       method: input.method,
       headers: {
@@ -217,7 +215,7 @@ async function requestProxiedmailJson(input: {
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readProxiedmailPayload(response);
 
@@ -226,20 +224,7 @@ async function requestProxiedmailJson(input: {
     }
 
     return payload ?? {};
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "ProxiedMail request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `ProxiedMail request failed: ${error.message}` : "ProxiedMail request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildProxiedmailUrl(path: string): URL {

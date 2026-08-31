@@ -2,12 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const bigmailerApiBaseUrl: string = "https://api.bigmailer.io";
 
@@ -292,14 +287,12 @@ async function requestBigmailerJson(input: {
   query?: Record<string, string | number | boolean | undefined>;
   body?: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "BigMailer" }, async (signal) => {
     const response = await input.fetcher(buildBigmailerUrl(input.path, input.query), {
       method: input.method,
       headers: bigmailerHeaders(input.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readBigmailerPayload(response);
     if (!response.ok) {
@@ -311,22 +304,7 @@ async function requestBigmailerJson(input: {
       throw new ProviderRequestError(502, "BigMailer returned an invalid payload");
     }
     return objectPayload ?? {};
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "BigMailer request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `BigMailer request failed: ${error.message}` : "BigMailer request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildBigmailerUrl(path: string, query: Record<string, string | number | boolean | undefined> = {}) {

@@ -4,12 +4,11 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "clari_copilot";
@@ -137,9 +136,7 @@ async function requestClariCopilotJson(input: {
   context: ClariCopilotContext;
   phase: ClariCopilotPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Clari Copilot" }, async (signal) => {
     const response = await input.context.fetcher(buildClariCopilotUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -148,7 +145,7 @@ async function requestClariCopilotJson(input: {
         "x-api-password": input.context.apiPassword,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readClariCopilotPayload(response);
 
@@ -157,20 +154,7 @@ async function requestClariCopilotJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Clari Copilot request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Clari Copilot request failed: ${error.message}` : "Clari Copilot request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildClariCopilotUrl(path: string, query?: URLSearchParams): URL {

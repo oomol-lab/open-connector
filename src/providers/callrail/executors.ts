@@ -4,12 +4,11 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "callrail";
@@ -153,13 +152,11 @@ async function requestCallrailJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "CallRail" }, async (signal) => {
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: callrailHeaders(input.context.apiKey),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCallrailPayload(response);
 
@@ -168,20 +165,7 @@ async function requestCallrailJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "CallRail request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `CallRail request failed: ${error.message}` : "CallRail request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function callrailHeaders(apiKey: string): Record<string, string> {

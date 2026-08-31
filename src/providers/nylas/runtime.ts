@@ -11,12 +11,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 type NylasActionContext = ApiKeyProviderContext;
 type NylasPhase = "validate" | "execute";
@@ -169,8 +164,7 @@ export async function validateNylasCredential(
 }
 
 async function requestNylasJson(options: NylasRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(options.context.signal);
-  try {
+  return runProviderRequest({ signal: options.context.signal, label: "Nylas" }, async (signal) => {
     const response = await options.context.fetcher(buildNylasUrl(options.path, options.params ?? {}), {
       method: "GET",
       headers: {
@@ -178,7 +172,7 @@ async function requestNylasJson(options: NylasRequestOptions): Promise<Record<st
         authorization: `Bearer ${options.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readNylasPayload(response);
     if (!response.ok) {
@@ -190,20 +184,7 @@ async function requestNylasJson(options: NylasRequestOptions): Promise<Record<st
       throw new ProviderRequestError(502, "Nylas returned an invalid payload");
     }
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Nylas request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Nylas request failed: ${error.message}` : "Nylas request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildNylasUrl(path: string, params: Record<string, string | undefined>): URL {

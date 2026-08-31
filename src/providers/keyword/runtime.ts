@@ -2,12 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const keywordApiBaseUrl = "https://app.keyword.com";
 
@@ -106,9 +101,7 @@ async function requestKeywordJson(
     query?: Record<string, string | undefined>;
   },
 ) {
-  const timeout = createProviderTimeout(context.signal);
-
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Keyword.com" }, async (signal) => {
     const response = await context.fetcher(buildKeywordUrl(request.path, request.query), {
       method: "GET",
       headers: {
@@ -116,29 +109,14 @@ async function requestKeywordJson(
         authorization: `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKeywordPayload(response);
     if (!response.ok) {
       throw createKeywordError(response, payload, context.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Keyword.com request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Keyword.com request failed: ${error.message}` : "Keyword.com request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildKeywordUrl(path: string, query: Record<string, string | undefined> = {}) {

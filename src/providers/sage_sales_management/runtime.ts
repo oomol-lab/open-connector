@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 type SageSalesManagementPhase = "validate" | "execute";
 interface SageSalesManagementCredentials {
@@ -353,9 +348,7 @@ async function requestSageSalesManagementJsonWithStatus(input: {
   extraHeaders?: Record<string, string>;
   body?: Record<string, unknown>;
 }) {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Sage Sales Management" }, async (signal) => {
     const response = await input.fetcher(buildSageSalesManagementUrl(input.path, input.query), {
       method: input.method,
       headers: compactObject({
@@ -366,7 +359,7 @@ async function requestSageSalesManagementJsonWithStatus(input: {
         "user-agent": providerUserAgent,
       }),
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readPayload(response);
 
@@ -378,24 +371,7 @@ async function requestSageSalesManagementJsonWithStatus(input: {
       status: response.status,
       payload,
     };
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Sage Sales Management request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `Sage Sales Management request failed: ${error.message}`
-        : "Sage Sales Management request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSageSalesManagementUrl(path: string, query: Record<string, string | number> = {}) {

@@ -4,13 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "hub_planner";
@@ -206,8 +205,7 @@ async function requestHubPlannerJson<T>(input: {
   signal?: AbortSignal;
 }): Promise<T> {
   const url = buildHubPlannerUrl(input.path, input.query);
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Hub Planner" }, async (signal) => {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
@@ -216,7 +214,7 @@ async function requestHubPlannerJson<T>(input: {
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),
     });
     const payload = await readHubPlannerPayload(response, !response.ok);
@@ -232,21 +230,7 @@ async function requestHubPlannerJson<T>(input: {
     }
 
     return payload as T;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Hub Planner request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Hub Planner request failed: ${error.message}` : "Hub Planner request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildHubPlannerUrl(path: string, query: Record<string, HubPlannerQueryValue> = {}) {

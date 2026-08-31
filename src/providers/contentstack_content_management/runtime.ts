@@ -3,11 +3,10 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const contentstackContentManagementApiBaseUrl = "https://api.contentstack.io/v3";
@@ -272,35 +271,19 @@ async function requestContentstackJson(input: {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Contentstack Content Management" }, async (signal) => {
     const response = await input.fetcher(buildContentstackUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: buildContentstackHeaders(input.managementToken, input.stackApiKey, input.branch),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readContentstackPayload(response);
     if (!response.ok) {
       throw createContentstackError(response.status, payload, input.phase);
     }
     return requireRecord(payload, "Contentstack response");
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Contentstack Content Management request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `Contentstack Content Management request failed: ${error.message}`
-        : "Contentstack Content Management request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildContentstackUrl(path: string, query?: Record<string, string | undefined>): URL {

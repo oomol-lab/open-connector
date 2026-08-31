@@ -4,12 +4,11 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "codegen";
@@ -221,9 +220,7 @@ async function requestCodegenJson(input: {
   phase: CodegenPhase;
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Codegen" }, async (signal) => {
     const response = await input.context.fetcher(new URL(input.path, codegenApiBaseUrl), {
       method: input.method,
       headers: {
@@ -231,7 +228,7 @@ async function requestCodegenJson(input: {
         authorization: `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCodegenPayload(response);
 
@@ -240,20 +237,7 @@ async function requestCodegenJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Codegen request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Codegen request failed: ${error.message}` : "Codegen request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildPathWithQuery(path: string, input: Record<string, unknown>, allowedParams: readonly string[]): string {

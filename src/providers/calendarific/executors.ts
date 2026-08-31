@@ -4,11 +4,10 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "calendarific";
@@ -114,16 +113,14 @@ async function requestCalendarificJson(input: {
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: CalendarificPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Calendarific" }, async (signal) => {
     const response = await input.context.fetcher(buildCalendarificUrl(input.path, input.context.apiKey, input.params), {
       method: "GET",
       headers: {
         accept: "application/json",
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCalendarificPayload(response);
 
@@ -136,20 +133,7 @@ async function requestCalendarificJson(input: {
       throw new ProviderRequestError(502, "Calendarific returned an invalid payload");
     }
     return payloadRecord;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Calendarific request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Calendarific request failed: ${error.message}` : "Calendarific request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildCalendarificUrl(path: string, apiKey: string, params: Record<string, string | undefined>): URL {

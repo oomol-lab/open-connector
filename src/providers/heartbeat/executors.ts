@@ -4,14 +4,13 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "heartbeat";
@@ -157,9 +156,7 @@ async function requestHeartbeatJson(input: {
       url.searchParams.set(name, value);
     }
   }
-  const timeout = createProviderTimeout(input.context.signal);
-
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Heartbeat" }, async (signal) => {
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
@@ -167,27 +164,14 @@ async function requestHeartbeatJson(input: {
         authorization: `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readHeartbeatPayload(response);
     if (!response.ok) {
       throw createHeartbeatError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Heartbeat request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Heartbeat request failed: ${error.message}` : "Heartbeat request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readHeartbeatPayload(response: Response): Promise<unknown> {

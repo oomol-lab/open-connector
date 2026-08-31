@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const cronlyApiBaseUrl = "https://cronly.app/api";
 type CronlyPhase = "validate" | "execute";
@@ -118,8 +113,7 @@ interface CronlyRequestInput {
   body?: Record<string, unknown>;
 }
 async function requestCronlyJson(input: CronlyRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Cronly" }, async (signal) => {
     const path = input.path.startsWith("/") ? input.path.slice(1) : input.path;
     const response = await input.context.fetcher(new URL(path, `${cronlyApiBaseUrl}/`), {
       method: input.method ?? "GET",
@@ -130,23 +124,13 @@ async function requestCronlyJson(input: CronlyRequestInput): Promise<unknown> {
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCronlyPayload(response);
     if (!response.ok || optionalString(optionalRecord(payload)?.status) === "error")
       throw createCronlyError(response.status, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error))
-      throw new ProviderRequestError(504, "Cronly request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Cronly request failed: ${error.message}` : "Cronly request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 async function readCronlyPayload(response: Response): Promise<unknown> {
   const text = await response.text();

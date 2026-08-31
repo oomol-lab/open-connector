@@ -280,9 +280,7 @@ async function requestCrossref(input: {
   apiKey?: string;
   phase?: "execute" | "validate";
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Crossref" }, async (signal) => {
     const headers = new Headers({
       accept: input.accept,
       "user-agent": providerUserAgent,
@@ -294,7 +292,7 @@ async function requestCrossref(input: {
     const response = await input.fetcher(buildCrossrefUrl(input.path, input.params), {
       method: "GET",
       headers,
-      signal: timeoutHandle.signal,
+      signal,
     });
     const body = await readCrossrefResponseText(response);
 
@@ -302,22 +300,7 @@ async function requestCrossref(input: {
       throw createCrossrefError(response.status, parseCrossrefPayload(body), input.phase ?? "execute", !!input.apiKey);
     }
     return { body, response };
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Crossref request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Crossref request failed: ${error.message}` : "Crossref request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildCrossrefUrl(path: string, params: Record<string, string | undefined>) {
@@ -890,9 +873,8 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";

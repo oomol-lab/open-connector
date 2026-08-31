@@ -4,12 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 const databoxApiBaseUrl = "https://api.databox.com";
 const validateKeyPath = "/v1/auth/validate-key";
@@ -121,8 +116,7 @@ async function databoxRequestJson(input: {
   phase: DataboxPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Databox" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       "user-agent": providerUserAgent,
@@ -133,22 +127,12 @@ async function databoxRequestJson(input: {
       method: input.method,
       headers,
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readDataboxPayload(response);
     if (!response.ok) throw createDataboxError(response.status, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error))
-      throw new ProviderRequestError(504, "Databox request timed out");
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Databox request failed: ${error.message}` : "Databox request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readDataboxPayload(response: Response): Promise<unknown> {

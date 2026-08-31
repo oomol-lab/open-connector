@@ -10,14 +10,13 @@ import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "liveagent";
@@ -350,14 +349,12 @@ async function requestLiveagentJson(input: {
   readonly body?: unknown;
   readonly signal?: AbortSignal;
 }) {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "LiveAgent" }, async (signal) => {
     const response = await input.fetcher(buildLiveagentUrl(input.apiBaseUrl, input.path, input.query), {
       method: input.method ?? "GET",
       headers: buildLiveagentHeaders(input.apiKey, input.body !== undefined),
       ...(input.body === undefined ? {} : { body: JSON.stringify(input.body) }),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readLiveagentPayload(response);
 
@@ -366,22 +363,7 @@ async function requestLiveagentJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "LiveAgent request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `LiveAgent request failed: ${error.message}` : "LiveAgent request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildLiveagentUrl(apiBaseUrl: string, path: string, query?: Record<string, QueryValue>) {

@@ -6,11 +6,10 @@ import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "lob";
@@ -168,33 +167,19 @@ async function requestLobJson(input: {
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "lob" }, async (signal) => {
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: lobHeaders(input.context.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readLobPayload(response);
     if (!response.ok) {
       throw createLobError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "lob request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `lob request failed: ${error.message}` : "lob request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function lobHeaders(apiKey: string, hasBody: boolean): Record<string, string> {

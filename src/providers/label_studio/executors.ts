@@ -18,15 +18,14 @@ import {
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
-  createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
-  isAbortLikeError,
   providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "label_studio";
@@ -271,14 +270,12 @@ async function requestLabelStudioJson(input: {
   body?: unknown;
   notFoundAsInvalidInput?: boolean;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Label Studio" }, async (signal) => {
     const response = await input.fetcher(buildLabelStudioUrl(input.baseUrl, input.path, input.query), {
       method: input.method ?? "GET",
       headers: buildLabelStudioHeaders(input.apiKey, input.body !== undefined),
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readLabelStudioPayload(response);
 
@@ -287,22 +284,7 @@ async function requestLabelStudioJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Label Studio request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Label Studio request failed: ${error.message}` : "Label Studio request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildLabelStudioUrl(

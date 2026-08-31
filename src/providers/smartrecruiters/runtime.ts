@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const smartrecruitersApiBaseUrl = "https://api.smartrecruiters.com";
 
@@ -115,8 +110,7 @@ async function requestSmartRecruitersJson(
   input: SmartRecruitersRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "SmartRecruiters" }, async (signal) => {
     const response = await context.fetcher(buildSmartRecruitersUrl(input.path, input.query), {
       method: input.method,
       headers: {
@@ -124,7 +118,7 @@ async function requestSmartRecruitersJson(
         "user-agent": providerUserAgent,
         "X-SmartToken": context.apiKey,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readSmartRecruitersPayload(response);
 
@@ -136,20 +130,7 @@ async function requestSmartRecruitersJson(
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "SmartRecruiters request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `SmartRecruiters request failed: ${error.message}` : "SmartRecruiters request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildSmartRecruitersUrl(path: string, query: Partial<SmartRecruitersQuery> = {}): URL {

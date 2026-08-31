@@ -8,12 +8,7 @@ import {
   optionalString as asOptionalString,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const timelinkApiBaseUrl: string = "https://api.timelink.io/api/v1";
 
@@ -308,9 +303,7 @@ async function requestTimelinkJson(input: {
   fetcher: typeof fetch;
   phase: TimelinkPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Timelink" }, async (signal) => {
     const response = await input.fetcher(buildTimelinkUrl(input.path, input.query), {
       method: "GET",
       headers: {
@@ -318,7 +311,7 @@ async function requestTimelinkJson(input: {
         authorization: `Bearer ${input.token}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readTimelinkPayload(response);
 
@@ -332,22 +325,7 @@ async function requestTimelinkJson(input: {
     }
 
     return payloadRecord;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Timelink request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Timelink request failed: ${error.message}` : "Timelink request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildTimelinkUrl(path: string, query: Record<string, string[] | string | undefined>) {

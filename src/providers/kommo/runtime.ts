@@ -10,12 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 const kommoCredentialHelpUrl = "https://developers.kommo.com/docs/long-lived-token";
 const kommoPrivateIntegrationHelpUrl = "https://developers.kommo.com/docs/private-integration";
@@ -290,34 +285,18 @@ async function getRecord<TRecord extends Record<string, unknown>>(input: {
 }
 
 async function requestKommoJson(input: KommoRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal);
-
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Kommo" }, async (signal) => {
     const response = await input.fetcher(buildKommoUrl(input.apiBaseUrl, input.path, input.query), {
       method: "GET",
       headers: buildKommoHeaders(input.apiKey),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readKommoPayload(response);
     if (!response.ok) {
       throw createKommoError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Kommo request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Kommo request failed: ${error.message}` : "Kommo request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildKommoUrl(apiBaseUrl: string, path: string, query: Record<string, QueryValue | undefined> = {}): URL {

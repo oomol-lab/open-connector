@@ -12,9 +12,7 @@ import { compactObject, optionalRecord, optionalString, requiredRecord, required
 import {
   createProviderFetch,
   createProviderProxyUrl,
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   normalizeProviderProxyHeaders,
   providerInputError,
   ProviderRequestError,
@@ -22,6 +20,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  runProviderRequest,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -150,12 +149,11 @@ async function requestCronitorJson(input: {
   method?: CronitorMethod;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Cronitor" }, async (signal) => {
     const response = await input.context.fetcher(buildCronitorUrl(input.path), {
       method: input.method ?? "GET",
       headers: buildCronitorHeaders(input.context.apiKey, input.body !== undefined),
-      signal: timeout.signal,
+      signal,
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
     });
     const payload = await readCronitorPayload(response);
@@ -163,20 +161,7 @@ async function requestCronitorJson(input: {
       throw createCronitorError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Cronitor request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Cronitor request failed: ${error.message}` : "Cronitor request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildCronitorUrl(path: string): URL {

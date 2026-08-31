@@ -4,12 +4,11 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "crunchbase";
@@ -155,8 +154,7 @@ async function requestCrunchbaseJson(input: {
     appendQueryValue(url, key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "crunchbase" }, async (signal) => {
     const response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",
       headers: {
@@ -165,7 +163,7 @@ async function requestCrunchbaseJson(input: {
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },
-      signal: timeout.signal,
+      signal,
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
     });
     const payload = await readCrunchbasePayload(response, response.ok);
@@ -173,18 +171,7 @@ async function requestCrunchbaseJson(input: {
       throw createCrunchbaseError(response.status, payload, input.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "crunchbase request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `crunchbase request failed: ${error.message}` : "crunchbase request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 async function readCrunchbasePayload(response: Response, requireJson: boolean): Promise<unknown> {

@@ -4,12 +4,11 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 export const stackOverflowForTeamsApiBaseUrl = "https://api.stackoverflowteams.com/v3/";
@@ -113,15 +112,14 @@ async function requestPaginated(
 async function requestJson(input: RequestInput): Promise<unknown> {
   const url = new URL(`teams/${encodeURIComponent(input.team)}/${input.path}`, stackOverflowForTeamsApiBaseUrl);
   if (input.query) url.search = input.query.toString();
-  const timeout = createProviderTimeout(input.signal);
-  try {
+  return runProviderRequest({ signal: input.signal, label: "Stack Internal" }, async (signal) => {
     const response = await input.fetcher(url, {
       headers: {
         accept: "application/json",
         authorization: `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readProviderJsonBody(response, {
       emptyBody: {},
@@ -129,18 +127,7 @@ async function requestJson(input: RequestInput): Promise<unknown> {
     });
     if (!response.ok) throw mapError(response, payload, input.phase);
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Stack Internal request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Stack Internal request failed: ${error.message}` : "Stack Internal request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function mapError(response: Response, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {

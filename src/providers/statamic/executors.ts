@@ -4,12 +4,11 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
   defineApiKeyProviderExecutors,
-  isAbortLikeError,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const service = "statamic";
@@ -112,8 +111,7 @@ async function requestStatamicJson(input: {
   phase: StatamicPhase;
   body?: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Statamic" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       authorization: `Bearer ${input.context.apiKey}`,
@@ -127,7 +125,7 @@ async function requestStatamicJson(input: {
       method: input.method,
       headers,
       body: input.body === undefined ? undefined : JSON.stringify(input.body),
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readStatamicPayload(response);
 
@@ -140,20 +138,7 @@ async function requestStatamicJson(input: {
       throw new ProviderRequestError(502, "Statamic returned an invalid payload");
     }
     return payloadRecord;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Statamic request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Statamic request failed: ${error.message}` : "Statamic request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildStatamicUrl(path: string): string {

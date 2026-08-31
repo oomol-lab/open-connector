@@ -10,12 +10,7 @@ import {
   optionalBoolean,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const deepgramApiBaseUrl = "https://api.deepgram.com/v1";
 
@@ -165,13 +160,11 @@ async function requestDeepgramJson(input: {
   fetcher: typeof fetch;
   phase: DeepgramPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Deepgram" }, async (signal) => {
     const response = await input.fetcher(buildDeepgramUrl(input), {
       method: input.method,
       headers: buildDeepgramHeaders(input.apiKey),
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readDeepgramPayload(response);
 
@@ -180,22 +173,7 @@ async function requestDeepgramJson(input: {
     }
 
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Deepgram request timed out");
-    }
-
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Deepgram request failed: ${error.message}` : "Deepgram request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildDeepgramHeaders(apiKey: string) {

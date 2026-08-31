@@ -2,11 +2,10 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderTimeout,
-  isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const embaseApiBaseUrl = "https://api.elsevier.com/content/embase";
@@ -112,13 +111,11 @@ async function requestEmbaseJson(input: {
   fetcher: typeof fetch;
   phase: EmbasePhase;
 }): Promise<EmbaseResponse> {
-  const timeoutHandle = createProviderTimeout(undefined);
-
-  try {
+  return runProviderRequest({ label: "Embase" }, async (signal) => {
     const response = await input.fetcher(buildEmbaseUrl(input.path, input.params), {
       method: "GET",
       headers: buildEmbaseHeaders(input.credentials),
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readEmbasePayload(response);
 
@@ -132,20 +129,7 @@ async function requestEmbaseJson(input: {
     }
 
     return { payload: payloadRecord, quota: readEmbaseQuota(response.headers) };
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Embase request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Embase request failed: ${error.message}` : "Embase request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 function buildEmbaseUrl(path: string, params: Record<string, string | undefined>) {

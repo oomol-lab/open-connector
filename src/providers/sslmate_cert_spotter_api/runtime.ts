@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const certSpotterMonitoringApiBaseUrl: string = "https://sslmate.com/api/v3/monitoring";
 export const certSpotterCtSearchApiBaseUrl: string = "https://api.certspotter.com/v1";
@@ -188,33 +183,19 @@ async function requestCertSpotterJson(input: {
   body?: string;
   phase: CertSpotterRequestPhase;
 }): Promise<{ response: Response; payload: unknown }> {
-  const timeout = createProviderTimeout(input.context.signal);
-  try {
+  return runProviderRequest({ signal: input.context.signal, label: "Cert Spotter" }, async (signal) => {
     const response = await input.context.fetcher(input.url, {
       method: input.method,
       headers: buildCertSpotterHeaders(input.context.apiKey, input.body ? "application/json" : undefined),
       body: input.body,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readCertSpotterPayload(response);
     if (!response.ok) {
       throw createCertSpotterError(response, payload, input.phase);
     }
     return { response, payload };
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Cert Spotter request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Cert Spotter request failed: ${error.message}` : "Cert Spotter request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 function buildCertSpotterHeaders(apiKey: string, contentType?: string): Headers {

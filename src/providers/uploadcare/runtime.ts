@@ -12,13 +12,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  providerUserAgent,
-  ProviderRequestError,
-  setSearchParams,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest, setSearchParams } from "../provider-runtime.ts";
 
 export const uploadcareApiBaseUrl = "https://api.uploadcare.com";
 
@@ -188,32 +182,18 @@ async function requestUploadcareJson(
     secretKey: context.secretKey,
   });
 
-  const timeout = createProviderTimeout(context.signal);
-  try {
+  return runProviderRequest({ signal: context.signal, label: "Uploadcare" }, async (signal) => {
     const response = await context.fetcher(url.toString(), {
       method: request.method,
       headers,
-      signal: timeout.signal,
+      signal,
     });
     const payload = await readUploadcarePayload(response);
     if (!response.ok) {
       throw createUploadcareError(response, payload, request.phase);
     }
     return payload;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Uploadcare request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Uploadcare request failed: ${error.message}` : "Uploadcare request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  });
 }
 
 export function signUploadcareRequest(input: {

@@ -2,12 +2,7 @@ import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-ru
 import type { InstabotActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export interface InstabotCredentialCheck {
   providerAccountId?: string;
@@ -188,8 +183,7 @@ async function listUsers(
 }
 
 async function requestInstabotJson(input: InstabotRequestInput) {
-  const timeoutHandle = createProviderTimeout(undefined);
-  try {
+  return runProviderRequest({ label: "Instabot" }, async (signal) => {
     const url = new URL(input.path.replace(/^\//, ""), `${instabotApiBaseUrl}/`);
     for (const [key, value] of Object.entries(input.query ?? {})) {
       if (value !== undefined) {
@@ -206,7 +200,7 @@ async function requestInstabotJson(input: InstabotRequestInput) {
         "x-instabot-api-key": input.credential.apiKey,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: timeoutHandle.signal,
+      signal,
     });
     const payload = await readPayload(response);
     if (!response.ok) {
@@ -221,20 +215,7 @@ async function requestInstabotJson(input: InstabotRequestInput) {
       throw createInstabotError(response.status, record, input.phase);
     }
     return record;
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "Instabot request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Instabot request failed: ${error.message}` : "Instabot request failed",
-    );
-  } finally {
-    timeoutHandle.cleanup();
-  }
+  });
 }
 
 async function readPayload(response: Response) {
