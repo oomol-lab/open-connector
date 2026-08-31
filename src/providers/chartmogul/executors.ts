@@ -10,6 +10,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
+  looseArray,
   optionalBoolean,
   optionalNumber,
   optionalRecord,
@@ -127,7 +128,7 @@ async function listSources(input: Record<string, unknown>, context: ApiKeyProvid
   const response = readObject(payload, "chartmogul data sources response");
 
   return {
-    dataSources: readArray(response.data_sources).map((item) =>
+    dataSources: looseArray(response.data_sources).map((item) =>
       normalizeDataSource(readObject(item, "chartmogul data source")),
     ),
   };
@@ -152,7 +153,7 @@ async function listCustomers(input: Record<string, unknown>, context: ApiKeyProv
   const response = readObject(payload, "chartmogul customers response");
 
   return {
-    customers: readArray(response.entries).map((item) => normalizeCustomer(readObject(item, "chartmogul customer"))),
+    customers: looseArray(response.entries).map((item) => normalizeCustomer(readObject(item, "chartmogul customer"))),
     cursor: optionalString(response.cursor) ?? null,
     hasMore: optionalBoolean(response.has_more) ?? false,
   };
@@ -187,7 +188,7 @@ async function listContacts(input: Record<string, unknown>, context: ApiKeyProvi
   const response = readObject(payload, "chartmogul contacts response");
 
   return {
-    contacts: readArray(response.entries).map((item) => normalizeContact(readObject(item, "chartmogul contact"))),
+    contacts: looseArray(response.entries).map((item) => normalizeContact(readObject(item, "chartmogul contact"))),
     cursor: optionalString(response.cursor) ?? null,
     hasMore: optionalBoolean(response.has_more) ?? false,
   };
@@ -384,10 +385,6 @@ function normalizeInclude(value: unknown): string | undefined {
 
 function readObject(value: unknown, label: string): Record<string, unknown> {
   return requiredRecord(value, label, (message) => new ProviderRequestError(502, message, value));
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readNullableString(value: unknown): string | null {

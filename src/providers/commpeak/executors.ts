@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalNumber,
   optionalRecord,
   optionalString,
@@ -94,7 +95,7 @@ async function executeListStreams(input: Record<string, unknown>, context: ApiKe
     signal: context.signal,
   });
   return {
-    streams: readArray(payload).map(normalizeStream),
+    streams: looseArray(payload).map(normalizeStream),
   };
 }
 
@@ -119,7 +120,7 @@ async function executeListSenders(input: Record<string, unknown>, context: ApiKe
     signal: context.signal,
   });
   return {
-    senders: readArray(payload).map(normalizeSender),
+    senders: looseArray(payload).map(normalizeSender),
   };
 }
 
@@ -128,7 +129,7 @@ async function executeListDomains(input: Record<string, unknown>, context: ApiKe
     signal: context.signal,
   });
   return {
-    domains: readArray(payload).map(normalizeDomain),
+    domains: looseArray(payload).map(normalizeDomain),
   };
 }
 
@@ -188,7 +189,7 @@ async function executeListIncomingMessages(input: Record<string, unknown>, conte
 async function executeSendSms(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const streamId = positiveInteger(input.streamId, "streamId", providerInputError);
   const sender = optionalString(input.sender);
-  const messages = readArray(input.messages).map((message) => {
+  const messages = looseArray(input.messages).map((message) => {
     const item = requireResponseObject(message);
     return compactObject({
       internal_id: optionalString(item.internalId),
@@ -217,7 +218,7 @@ async function executeSendSms(input: Record<string, unknown>, context: ApiKeyPro
   return {
     status: object.status === true,
     taskId: nullableString(object.task_id),
-    messages: readArray(object.messages).map(normalizeSmsSendMessageResult),
+    messages: looseArray(object.messages).map(normalizeSmsSendMessageResult),
     raw: object,
   };
 }
@@ -381,13 +382,9 @@ function listParams(input: Record<string, unknown>) {
   });
 }
 
-function readArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
-}
-
 function readPage(payload: unknown) {
   const object = optionalRecord(payload);
-  const items = readArray(object?.items);
+  const items = looseArray(object?.items);
   const totalItems = nullableNumber(object?.totalItems ?? object?.total_items ?? object?.total);
   return { items, totalItems };
 }
@@ -403,7 +400,7 @@ function normalizeStream(value: unknown) {
     callerId: nullableString(object.callerId),
     ipAcl: nullableString(object.ipAcl),
     state: nullableString(object.state),
-    streamTags: readArray(object.streamTags).map(normalizeStreamTag),
+    streamTags: looseArray(object.streamTags).map(normalizeStreamTag),
     raw: object,
   };
 }

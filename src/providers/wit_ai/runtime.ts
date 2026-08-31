@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import {
   compactObject,
+  looseArray,
   objectArray,
   optionalBoolean,
   optionalInteger,
@@ -185,7 +186,7 @@ async function detectLanguage(input: Record<string, unknown>, context: ApiKeyPro
   });
   const record = asLooseObject(payload);
   return {
-    detectedLocales: asUnknownArray(record.detected_locales).map((item) => {
+    detectedLocales: looseArray(record.detected_locales).map((item) => {
       const locale = asLooseObject(item);
       return {
         locale: requiredResponseString(locale.locale, "locale"),
@@ -203,7 +204,7 @@ async function listApps(input: Record<string, unknown>, context: ApiKeyProviderC
       offset: requireOptionalNonNegativeInteger(input.offset, "offset"),
     }),
   });
-  return { apps: asUnknownArray(payload).map((item) => normalizeAppSummary(item)) };
+  return { apps: looseArray(payload).map((item) => normalizeAppSummary(item)) };
 }
 
 async function getApp(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -221,7 +222,7 @@ async function listIntents(input: Record<string, unknown>, context: ApiKeyProvid
       offset: requireOptionalNonNegativeInteger(input.offset, "offset"),
     }),
   });
-  return { intents: asUnknownArray(payload).map((item) => normalizeIntentSummary(item)) };
+  return { intents: looseArray(payload).map((item) => normalizeIntentSummary(item)) };
 }
 
 async function createIntent(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -241,7 +242,7 @@ async function getIntent(input: Record<string, unknown>, context: ApiKeyProvider
   return {
     id: requiredResponseString(record.id, "id"),
     name: requiredResponseString(record.name, "name"),
-    entities: asUnknownArray(record.entities).map((item) => {
+    entities: looseArray(record.entities).map((item) => {
       const entity = asLooseObject(item);
       return {
         id: requiredResponseString(entity.id, "id"),
@@ -253,7 +254,7 @@ async function getIntent(input: Record<string, unknown>, context: ApiKeyProvider
 
 async function listEntities(context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await witAiRequest<unknown[]>(context, { path: "/entities" });
-  return { entities: asUnknownArray(payload).map((item) => normalizeEntitySummary(item)) };
+  return { entities: looseArray(payload).map((item) => normalizeEntitySummary(item)) };
 }
 
 async function createEntity(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -306,7 +307,7 @@ async function addKeywordSynonym(input: Record<string, unknown>, context: ApiKey
 
 async function listTraits(context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await witAiRequest<unknown[]>(context, { path: "/traits" });
-  return { traits: asUnknownArray(payload).map((item) => normalizeTraitSummary(item)) };
+  return { traits: looseArray(payload).map((item) => normalizeTraitSummary(item)) };
 }
 
 async function createTrait(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -345,7 +346,7 @@ async function listUtterances(input: Record<string, unknown>, context: ApiKeyPro
       entities: readOptionalStringArray(input.entities),
     }),
   });
-  return { utterances: asUnknownArray(payload).map((item) => normalizeUtterance(item)) };
+  return { utterances: looseArray(payload).map((item) => normalizeUtterance(item)) };
 }
 
 async function createUtterances(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -459,7 +460,7 @@ function normalizeMessageResult(payload: unknown): Record<string, unknown> {
   return {
     text: requiredResponseString(record.text, "text"),
     messageId: optionalString(record.msg_id) ?? null,
-    intents: asUnknownArray(record.intents).map((item) => {
+    intents: looseArray(record.intents).map((item) => {
       const intent = asLooseObject(item);
       return compactObject({
         id: requiredResponseString(intent.id, "id"),
@@ -564,7 +565,7 @@ function normalizeTraitDetail(value: unknown): Record<string, unknown> {
   return compactObject({
     id: requiredResponseString(record.id, "id"),
     name: requiredResponseString(record.name, "name"),
-    values: asUnknownArray(record.values).map((item) => normalizeTraitValue(item)),
+    values: looseArray(record.values).map((item) => normalizeTraitValue(item)),
     lang: optionalString(record.lang),
     lookups: readResponseStringArray(record.lookups),
     createdAt: optionalString(record.created_at),
@@ -589,8 +590,8 @@ function normalizeUtterance(value: unknown): Record<string, unknown> {
   return {
     text: requiredResponseString(record.text, "text"),
     intent: normalizeOptionalUtteranceIntent(record.intent),
-    entities: asUnknownArray(record.entities).map((item) => normalizeUtteranceEntity(item)),
-    traits: asUnknownArray(record.traits).map((item) => normalizeUtteranceTrait(item)),
+    entities: looseArray(record.entities).map((item) => normalizeUtteranceEntity(item)),
+    traits: looseArray(record.traits).map((item) => normalizeUtteranceTrait(item)),
   };
 }
 
@@ -610,7 +611,7 @@ function normalizeUtteranceEntity(value: unknown): NormalizedUtteranceEntity {
     start: requiredResponseNumber(record.start, "start"),
     end: requiredResponseNumber(record.end, "end"),
     body: requiredResponseString(record.body, "body"),
-    entities: asUnknownArray(record.entities).map((item) => normalizeUtteranceEntity(item)),
+    entities: looseArray(record.entities).map((item) => normalizeUtteranceEntity(item)),
   };
 }
 
@@ -632,11 +633,11 @@ function normalizeQueueMutation(value: unknown): Record<string, unknown> {
 
 function normalizeNamedArrayMap<T>(value: unknown, mapItem: (item: unknown) => T): Record<string, T[]> {
   const record = asLooseObject(value);
-  return Object.fromEntries(Object.entries(record).map(([key, child]) => [key, asUnknownArray(child).map(mapItem)]));
+  return Object.fromEntries(Object.entries(record).map(([key, child]) => [key, looseArray(child).map(mapItem)]));
 }
 
 function normalizeEntityRoles(value: unknown): string[] {
-  return asUnknownArray(value)
+  return looseArray(value)
     .map((item) => {
       if (typeof item === "string") return item;
       const record = asLooseObject(item);
@@ -646,7 +647,7 @@ function normalizeEntityRoles(value: unknown): string[] {
 }
 
 function normalizeEntityKeywords(value: unknown): Array<Record<string, unknown>> {
-  return asUnknownArray(value).map((item) => {
+  return looseArray(value).map((item) => {
     const record = asLooseObject(item);
     return {
       keyword: requiredResponseString(record.keyword, "keyword"),
@@ -752,10 +753,6 @@ function requiredResponseBoolean(value: unknown, fieldName: string): boolean {
   const parsed = optionalBoolean(value);
   if (parsed === undefined) throw new ProviderRequestError(502, `Wit.ai response missing boolean field: ${fieldName}`);
   return parsed;
-}
-
-function asUnknownArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function asLooseObject(value: unknown): Record<string, unknown> {

@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ProviderExecutors } from "../../core/t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { nullableString, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
+import { looseArray, nullableString, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const personaApiBaseUrl = "https://api.withpersona.com/api/v1";
@@ -68,7 +68,7 @@ export async function validatePersonaCredential(
     metadata: {
       apiBaseUrl: personaApiBaseUrl,
       validationEndpoint: "/inquiries",
-      inquiryCount: readArray(object.data).length,
+      inquiryCount: looseArray(object.data).length,
     },
   };
 }
@@ -84,12 +84,12 @@ async function listInquiries(input: Record<string, unknown>, context: ApiKeyProv
   const links = optionalRecord(object.links) ?? {};
 
   return {
-    inquiries: readArray(object.data).map(normalizePersonaInquiry),
+    inquiries: looseArray(object.data).map(normalizePersonaInquiry),
     links: {
       prev: nullableString(links.prev) ?? null,
       next: nullableString(links.next) ?? null,
     },
-    included: readArray(object.included),
+    included: looseArray(object.included),
     raw: object,
   };
 }
@@ -236,7 +236,7 @@ function normalizeSingleInquiryResponse(payload: unknown): Record<string, unknow
   const object = optionalRecord(payload) ?? {};
   return {
     inquiry: normalizePersonaInquiry(object.data),
-    included: readArray(object.included),
+    included: looseArray(object.included),
     raw: object,
   };
 }
@@ -253,7 +253,7 @@ function normalizePersonaInquiry(value: unknown): Record<string, unknown> {
       status: optionalString(attributes.status) ?? "",
       referenceId: nullableString(attributes["reference-id"]) ?? null,
       note: nullableString(attributes.note) ?? null,
-      tags: stringArray(readArray(attributes.tags), "tags", (message) => new ProviderRequestError(502, message)),
+      tags: stringArray(looseArray(attributes.tags), "tags", (message) => new ProviderRequestError(502, message)),
       createdAt: nullableString(attributes["created-at"]) ?? null,
       updatedAt: nullableString(attributes["updated-at"]) ?? null,
       completedAt: nullableString(attributes["completed-at"]) ?? null,
@@ -330,8 +330,4 @@ function readStringInput(input: Record<string, unknown>, key: string): string {
     throw new ProviderRequestError(400, `${key} is required`);
   }
   return text;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }

@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalBooleanOrNull,
   optionalInteger,
   optionalRecord,
@@ -483,7 +484,7 @@ function normalizeContact(record: Record<string, unknown> | undefined) {
     id: nullableString(record?.id),
     brandId: nullableString(record?.brand_id),
     email: nullableString(record?.email),
-    fieldValues: normalizeLooseArray(record?.field_values),
+    fieldValues: looseArray(record?.field_values),
     listIds: normalizeStringArray(record?.list_ids) ?? [],
     unsubscribeAll: optionalBooleanOrNull(record?.unsubscribe_all),
     unsubscribeIds: normalizeStringArray(record?.unsubscribe_ids) ?? [],
@@ -511,10 +512,6 @@ function normalizeObjectArray(value: unknown) {
   return value
     .map((item) => optionalRecord(item))
     .filter((item): item is Record<string, unknown> => item !== undefined);
-}
-
-function normalizeLooseArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
 }
 
 function nullableObject(value: unknown) {

@@ -2,6 +2,7 @@ import type { ChengxinActionName } from "./actions.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
 } from "../../core/cast.ts";
@@ -366,7 +367,7 @@ function normalizeChengxinOutput(actionName: ChengxinActionName, data: Record<st
 
 function readFlightRecords(data: Record<string, unknown>) {
   const flights: ReturnType<typeof normalizeFlight>[] = [];
-  for (const [groupIndex, groupValue] of asArray(data.flightDataList).entries()) {
+  for (const [groupIndex, groupValue] of looseArray(data.flightDataList).entries()) {
     const group = asOptionalObject(groupValue);
     if (!group) {
       continue;
@@ -383,7 +384,7 @@ function pushNormalizedFlights(
   groupIndex: number,
   groupDescription: string | null,
 ) {
-  for (const item of asArray(value)) {
+  for (const item of looseArray(value)) {
     const record = asOptionalObject(item);
     if (record) {
       target.push(normalizeFlight(record, groupIndex, groupDescription));
@@ -393,7 +394,7 @@ function pushNormalizedFlights(
 
 function readSupplementalTransport(data: Record<string, unknown>) {
   const segments: ReturnType<typeof normalizeSupplementalTransport>[] = [];
-  for (const [groupIndex, groupValue] of asArray(data.flightDataList).entries()) {
+  for (const [groupIndex, groupValue] of looseArray(data.flightDataList).entries()) {
     const group = asOptionalObject(groupValue);
     if (!group) {
       continue;
@@ -455,7 +456,7 @@ function pushNormalizedSupplementalTransport(
   groupIndex: number,
   groupDescription: string | null,
 ) {
-  for (const item of asArray(value)) {
+  for (const item of looseArray(value)) {
     const record = asOptionalObject(item);
     if (record) {
       target.push(normalizeSupplementalTransport(record, direction, groupIndex, groupDescription));
@@ -475,13 +476,13 @@ function legacySupplementDirection(value: string | null) {
 
 function readResourceRecords(data: Record<string, unknown>, dataListKey: string, listKey: string) {
   const records: Record<string, unknown>[] = [];
-  for (const groupValue of asArray(data[dataListKey])) {
+  for (const groupValue of looseArray(data[dataListKey])) {
     const group = asOptionalObject(groupValue);
     if (!group) {
       continue;
     }
 
-    for (const item of asArray(group[listKey])) {
+    for (const item of looseArray(group[listKey])) {
       const record = asOptionalObject(item);
       if (record) {
         records.push({
@@ -495,13 +496,13 @@ function readResourceRecords(data: Record<string, unknown>, dataListKey: string,
 }
 
 function readPlanRecords(data: Record<string, unknown>) {
-  return asArray(data.tripPlanDataList)
+  return looseArray(data.tripPlanDataList)
     .map((value) => asOptionalObject(value))
     .filter((value): value is Record<string, unknown> => Boolean(value));
 }
 
 function pushObjects(target: Record<string, unknown>[], value: unknown) {
-  for (const item of asArray(value)) {
+  for (const item of looseArray(value)) {
     const record = asOptionalObject(item);
     if (record) {
       target.push(record);
@@ -587,7 +588,7 @@ function normalizeSupplementalTransport(
 }
 
 function normalizeTickets(value: unknown) {
-  return asArray(value)
+  return looseArray(value)
     .map((item) => asOptionalObject(item))
     .filter((item): item is Record<string, unknown> => Boolean(item))
     .map((ticket) => ({
@@ -598,7 +599,7 @@ function normalizeTickets(value: unknown) {
 }
 
 function normalizeTransferSegments(value: unknown) {
-  return asArray(value)
+  return looseArray(value)
     .map((item) => asOptionalObject(item))
     .filter((item): item is Record<string, unknown> => Boolean(item))
     .map((segment) => ({
@@ -619,7 +620,7 @@ function normalizeTransferSegments(value: unknown) {
 }
 
 function normalizeTransferInfo(value: unknown) {
-  return asArray(value)
+  return looseArray(value)
     .map((item) => asOptionalObject(item))
     .filter((item): item is Record<string, unknown> => Boolean(item))
     .map((transfer) => ({
@@ -634,7 +635,7 @@ function normalizeTransitRoutes(value: unknown) {
     return [];
   }
 
-  return asArray(transitRoute.routes)
+  return looseArray(transitRoute.routes)
     .map((item) => asOptionalObject(item))
     .filter((item): item is Record<string, unknown> => Boolean(item))
     .map((route) => ({
@@ -650,7 +651,7 @@ function normalizeTransitRoutes(value: unknown) {
 
 function normalizeTransitSteps(value: unknown) {
   const steps: Record<string, unknown>[] = [];
-  for (const group of asArray(value)) {
+  for (const group of looseArray(value)) {
     if (Array.isArray(group)) {
       pushObjects(steps, group);
       continue;
@@ -774,12 +775,8 @@ function bookingUrl(record: Record<string, unknown>) {
   return text(record.clawRedirectUrl ?? record.redirectUrl ?? record.pcRedirectUrl ?? record.wakeLyRedirectUrl);
 }
 
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
 function stringArray(value: unknown) {
-  return asArray(value)
+  return looseArray(value)
     .map((item) => text(item))
     .filter((item): item is string => item !== null);
 }

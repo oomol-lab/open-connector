@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalNumber,
   optionalRecord,
@@ -110,7 +111,7 @@ async function listFiles(input: Record<string, unknown>, context: PinataActionCo
   });
   const data = requireObject(extractData(payload), "Pinata file list data");
   return {
-    files: readArray(data.files).map(normalizeFile),
+    files: looseArray(data.files).map(normalizeFile),
     nextPageToken: optionalString(data.next_page_token) ?? null,
     raw: data,
   };
@@ -199,7 +200,7 @@ async function queryPinRequests(input: Record<string, unknown>, context: PinataA
   });
   const data = requireObject(extractData(payload), "Pinata pin request list data");
   return {
-    pinRequests: readArray(data.jobs).map(normalizePinRequest),
+    pinRequests: looseArray(data.jobs).map(normalizePinRequest),
     nextPageToken: optionalString(data.next_page_token) ?? null,
     raw: data,
   };
@@ -224,7 +225,7 @@ async function listGroups(input: Record<string, unknown>, context: PinataActionC
   });
   const data = requireObject(extractData(payload), "Pinata group list data");
   return {
-    groups: readArray(data.groups).map(normalizeGroup),
+    groups: looseArray(data.groups).map(normalizeGroup),
     nextPageToken: optionalString(data.next_page_token) ?? null,
     raw: data,
   };
@@ -510,10 +511,6 @@ function requireObject(value: unknown, label: string): Record<string, unknown> {
     throw new ProviderRequestError(502, `${label} must be an object`, value);
   }
   return object;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function requireOutputString(value: unknown, label: string): string {

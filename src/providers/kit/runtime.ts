@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalBoolean,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const kitApiBaseUrl = "https://api.kit.com/v4";
@@ -401,7 +408,7 @@ function normalizeSubscriber(value: unknown) {
     fields: normalizeCustomFields(record.fields),
     canceled_at: readNullableString(record.canceled_at),
     attribution: record.attribution === undefined ? null : normalizeAttribution(record.attribution),
-    tags: readArrayOrEmpty(record.tags).map(normalizeTag),
+    tags: looseArray(record.tags).map(normalizeTag),
     location: record.location === undefined ? null : normalizeLocation(record.location),
     added_at: readNullableString(record.added_at),
     tagged_at: readNullableString(record.tagged_at),
@@ -522,10 +529,6 @@ function readArray(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `Kit response missing array field: ${fieldName}`);
   }
   return value;
-}
-
-function readArrayOrEmpty(value: unknown) {
-  return Array.isArray(value) ? value : [];
 }
 
 function readRequiredString(value: unknown, fieldName: string) {

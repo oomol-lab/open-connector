@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, looseArray } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { sentryProviderScopes } from "./scopes.ts";
 
@@ -724,7 +724,7 @@ function normalizeOrganizationIntegration(value: unknown) {
     scopes: nullableStringArray(body.scopes),
     status: nullableString(body.status),
     provider: normalizeIntegrationProvider(body.provider),
-    configOrganization: arrayValue(body.configOrganization),
+    configOrganization: looseArray(body.configOrganization),
     configData: asRecord(body.configData ?? body.config_data) ?? {},
     externalId: nullableString(body.externalId),
     organizationId: nullableInteger(body.organizationId),
@@ -771,7 +771,7 @@ function normalizeIntegrationProviderMetadata(value: unknown) {
     issueUrl: nullableString(body.issueUrl ?? body.issue_url),
     sourceUrl: nullableString(body.sourceUrl ?? body.source_url),
     aspects: asRecord(body.aspects) ?? null,
-    features: arrayValue(body.features),
+    features: looseArray(body.features),
   };
 }
 
@@ -807,7 +807,7 @@ function normalizeSentryApp(value: unknown) {
     overview: nullableString(body.overview),
     popularity: nullableInteger(body.popularity),
     webhookUrl: nullableString(body.webhookUrl),
-    featureData: arrayValue(body.featureData),
+    featureData: looseArray(body.featureData),
     isAlertable: booleanValue(body.isAlertable),
     redirectUrl: nullableString(body.redirectUrl),
     hasClientSecret: isNonEmptyString(body.clientSecret),
@@ -1403,10 +1403,6 @@ function nullableStringArray(value: unknown) {
     return null;
   }
   return stringArray(value);
-}
-
-function arrayValue(value: unknown) {
-  return Array.isArray(value) ? value : [];
 }
 
 function nullableInteger(value: unknown) {

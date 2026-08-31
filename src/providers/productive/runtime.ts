@@ -1,7 +1,7 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   isAbortLikeError,
@@ -101,7 +101,7 @@ async function listTasks(
   });
   return {
     tasks: readDataArray(payload, "tasks").map((item) => normalizeTaskResource(item)),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
     links: optionalRecord(payload.links) ?? {},
     meta: optionalRecord(payload.meta) ?? {},
   };
@@ -118,7 +118,7 @@ async function getTask(
   const payload = await productiveGetJson(path, context, context.fetcher, { phase: "execute" });
   return {
     task: normalizeTaskResource(readDataResource(payload, "task")),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
   };
 }
 
@@ -144,7 +144,7 @@ async function createTask(
   );
   return {
     task: normalizeTaskResource(readDataResource(payload, "task")),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
   };
 }
 
@@ -172,7 +172,7 @@ async function updateTask(
   );
   return {
     task: normalizeTaskResource(readDataResource(payload, "task")),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
   };
 }
 
@@ -185,7 +185,7 @@ async function listTimeEntries(
   });
   return {
     timeEntries: readDataArray(payload, "time_entries").map((item) => normalizeTimeEntryResource(item)),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
     links: optionalRecord(payload.links) ?? {},
     meta: optionalRecord(payload.meta) ?? {},
   };
@@ -219,7 +219,7 @@ async function createTimeEntry(
   );
   return {
     timeEntry: normalizeTimeEntryResource(readDataResource(payload, "time_entry")),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
   };
 }
 
@@ -248,7 +248,7 @@ async function updateTimeEntry(
   );
   return {
     timeEntry: normalizeTimeEntryResource(readDataResource(payload, "time_entry")),
-    included: readOptionalArray(payload.included),
+    included: looseArray(payload.included),
   };
 }
 
@@ -512,10 +512,6 @@ function readDataArray(payload: Record<string, unknown>, label: string) {
     throw new ProviderRequestError(502, `Productive ${label} response data must be an array`);
   }
   return payload.data;
-}
-
-function readOptionalArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
 }
 
 function nullableInputString(value: unknown) {

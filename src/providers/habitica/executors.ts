@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalBooleanOrNull,
   optionalInteger,
@@ -555,7 +556,7 @@ function normalizeTask(value: unknown): Record<string, unknown> {
 }
 
 function normalizeChecklistList(value: unknown): Array<Record<string, unknown>> {
-  return optionalArray(value).map((item) => {
+  return looseArray(value).map((item) => {
     const record = requiredRecord(item, "Habitica checklist item", providerResponseError);
     return {
       id: nullableString(record.id) ?? nullableString(record._id),
@@ -613,10 +614,6 @@ function requiredArray(value: unknown, label: string): unknown[] {
     throw new ProviderRequestError(502, `${label} is missing or invalid`);
   }
   return value;
-}
-
-function optionalArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function optionalStringArray(value: unknown): string[] | undefined {

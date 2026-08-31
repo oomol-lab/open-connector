@@ -1,7 +1,14 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalBoolean,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { jsonObject, queryFlag, queryParams } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
@@ -343,7 +350,7 @@ async function vercelListTeams(input: VercelActionInput, context: VercelActionCo
   });
 
   return compactObject({
-    teams: normalizeArray(payload.teams).map((team) => normalizeVercelTeam(team as VercelTeamResponse)),
+    teams: looseArray(payload.teams).map((team) => normalizeVercelTeam(team as VercelTeamResponse)),
     pagination: optionalRecord(payload.pagination),
   });
 }
@@ -384,7 +391,7 @@ async function vercelListProjects(input: VercelActionInput, context: VercelActio
   });
 
   return compactObject({
-    projects: normalizeArray(payload.projects).map((project) => mapProject(project)),
+    projects: looseArray(payload.projects).map((project) => mapProject(project)),
     pagination: optionalRecord(payload.pagination),
   });
 }
@@ -483,7 +490,7 @@ async function vercelListDeployments(input: VercelActionInput, context: VercelAc
   });
 
   return compactObject({
-    deployments: normalizeArray(payload.deployments).map((deployment) => mapDeployment(deployment)),
+    deployments: looseArray(payload.deployments).map((deployment) => mapDeployment(deployment)),
     pagination: optionalRecord(payload.pagination),
   });
 }
@@ -1124,11 +1131,7 @@ function normalizeArrayPayload(payload: unknown, key: string): unknown[] {
 
   const record = optionalRecord(payload);
   const value = record?.[key];
-  return normalizeArray(value);
-}
-
-function normalizeArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
+  return looseArray(value);
 }
 
 function normalizeStringArray(value: unknown): string[] | undefined {

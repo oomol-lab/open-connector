@@ -4,6 +4,7 @@ import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.
 
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalBooleanOrNull,
   optionalInteger,
@@ -122,7 +123,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
     const payload = await supportbeeGetJson(context, "/labels");
     const raw = payloadObject(payload);
     return {
-      labels: readLooseArray(raw.labels).map(normalizeSupportbeeLabel),
+      labels: looseArray(raw.labels).map(normalizeSupportbeeLabel),
       raw,
     };
   },
@@ -604,17 +605,13 @@ function readObjectProperty(value: unknown, key: string): Record<string, unknown
 }
 
 function readObjectArray(value: Record<string, unknown>, key: string): Array<Record<string, unknown>> {
-  return readLooseArray(value[key]).filter(
+  return looseArray(value[key]).filter(
     (item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item),
   );
 }
 
-function readLooseArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
 function readStringArray(value: unknown): string[] {
-  return readLooseArray(value).filter((item): item is string => typeof item === "string");
+  return looseArray(value).filter((item): item is string => typeof item === "string");
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {
@@ -623,7 +620,7 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
 }
 
 function readOptionalIntegerArray(value: unknown): number[] | undefined {
-  const values = readLooseArray(value)
+  const values = looseArray(value)
     .map((item) => optionalInteger(item))
     .filter((item): item is number => item !== undefined);
   return values.length > 0 ? values : undefined;
@@ -637,7 +634,7 @@ function readMaxTickets(value: unknown): number | false | undefined {
 }
 
 function readLabelNames(value: unknown): string[] {
-  return readLooseArray(value)
+  return looseArray(value)
     .map((item) => {
       if (typeof item === "string") {
         return item;

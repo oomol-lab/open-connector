@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalRawString, optionalString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalBoolean, optionalRawString, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
@@ -749,7 +749,7 @@ async function posthogGetCohortPersons(input: PosthogProviderActionInput, fetche
   return {
     next: asNullableString(payload.next),
     previous: asNullableString(payload.previous),
-    results: normalizeUnknownArray(payload.results).map((item) => asLooseObject(item)),
+    results: looseArray(payload.results).map((item) => asLooseObject(item)),
     raw: payload,
   };
 }
@@ -794,7 +794,7 @@ async function posthogListInsights(input: PosthogProviderActionInput, fetcher: t
     count: asNumber(payload.count) ?? 0,
     next: asNullableString(payload.next),
     previous: asNullableString(payload.previous),
-    results: normalizeUnknownArray(payload.results).map((item) => mapInsight(item)),
+    results: looseArray(payload.results).map((item) => mapInsight(item)),
     raw: payload,
   };
 }
@@ -842,7 +842,7 @@ async function posthogRunQuery(input: PosthogProviderActionInput, fetcher: typeo
   });
 
   return {
-    results: normalizeUnknownArray(payload.results),
+    results: looseArray(payload.results),
     columns: Array.isArray(payload.columns)
       ? payload.columns.filter((item): item is string => typeof item === "string")
       : undefined,
@@ -853,7 +853,7 @@ async function posthogRunQuery(input: PosthogProviderActionInput, fetcher: typeo
     query: asNullableObject(payload.query),
     error: payload.error,
     is_cached: asNullableBoolean(payload.is_cached),
-    timings: normalizeUnknownArray(payload.timings).map((item) => asLooseObject(item)),
+    timings: looseArray(payload.timings).map((item) => asLooseObject(item)),
     query_status: asNullableObject(payload.query_status),
     hogql: asNullableString(payload.hogql),
     cache_target_age: asNullableString(payload.cache_target_age),
@@ -976,7 +976,7 @@ async function posthogListDashboards(input: PosthogProviderActionInput, fetcher:
     count: asNumber(payload.count) ?? 0,
     next: asNullableString(payload.next),
     previous: asNullableString(payload.previous),
-    results: normalizeUnknownArray(payload.results).map((item) => mapDashboardBasic(item)),
+    results: looseArray(payload.results).map((item) => mapDashboardBasic(item)),
     raw: payload,
   };
 }
@@ -1082,7 +1082,7 @@ async function posthogRunDashboardInsights(input: PosthogProviderActionInput, fe
   });
 
   return {
-    results: normalizeUnknownArray(payload.results),
+    results: looseArray(payload.results),
     raw: payload,
   };
 }
@@ -1165,7 +1165,7 @@ async function posthogListDashboardCollaborators(input: PosthogProviderActionInp
   });
 
   return {
-    results: normalizeUnknownArray(payload).map((item) => mapDashboardCollaborator(item)),
+    results: looseArray(payload).map((item) => mapDashboardCollaborator(item)),
     raw: payload,
   };
 }
@@ -1597,7 +1597,7 @@ function extractCurrentOrganizationId(user: Record<string, unknown>) {
     return currentOrganizationId;
   }
 
-  const organizations = normalizeUnknownArray(user.organizations);
+  const organizations = looseArray(user.organizations);
   if (organizations.length === 1) {
     return optionalString(asNullableObject(organizations[0])?.id);
   }
@@ -1766,10 +1766,6 @@ function asLooseObject(value: unknown) {
   return asNullableObject(value) ?? {};
 }
 
-function normalizeUnknownArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
-}
-
 function normalizeUnknownString(value: unknown) {
   if (typeof value === "string" && value.trim()) {
     return value;
@@ -1818,8 +1814,8 @@ function mapInsight(value: unknown) {
     query: asNullableObject(payload.query),
     order: asNumber(payload.order),
     deleted: optionalBoolean(payload.deleted),
-    dashboards: normalizeUnknownArray(payload.dashboards),
-    dashboard_tiles: normalizeUnknownArray(payload.dashboard_tiles).map((item) => asLooseObject(item)),
+    dashboards: looseArray(payload.dashboards),
+    dashboard_tiles: looseArray(payload.dashboard_tiles).map((item) => asLooseObject(item)),
     last_refresh: asNullableString(payload.last_refresh),
     cache_target_age: asNullableString(payload.cache_target_age),
     next_allowed_client_refresh: asNullableString(payload.next_allowed_client_refresh),
@@ -1832,7 +1828,7 @@ function mapInsight(value: unknown) {
     created_by: asNullableObject(payload.created_by),
     description: asNullableString(payload.description),
     updated_at: optionalRawString(payload.updated_at),
-    tags: normalizeUnknownArray(payload.tags),
+    tags: looseArray(payload.tags),
     favorited: optionalBoolean(payload.favorited),
     last_modified_at: optionalRawString(payload.last_modified_at),
     last_modified_by: asNullableObject(payload.last_modified_by),
@@ -1846,7 +1842,7 @@ function mapInsight(value: unknown) {
     hogql: asNullableString(payload.hogql),
     types: Array.isArray(payload.types) ? payload.types : undefined,
     resolved_date_range: asNullableObject(payload.resolved_date_range),
-    alerts: normalizeUnknownArray(payload.alerts),
+    alerts: looseArray(payload.alerts),
     last_viewed_at: asNullableString(payload.last_viewed_at),
     raw: payload,
   };
@@ -1866,7 +1862,7 @@ function mapDashboardBasic(value: unknown) {
     is_shared: optionalBoolean(payload.is_shared),
     deleted: optionalBoolean(payload.deleted),
     creation_mode: optionalRawString(payload.creation_mode),
-    tags: normalizeUnknownArray(payload.tags),
+    tags: looseArray(payload.tags),
     restriction_level: asNumber(payload.restriction_level),
     effective_restriction_level: asNumber(payload.effective_restriction_level),
     effective_privilege_level: asNumber(payload.effective_privilege_level),
@@ -1896,7 +1892,7 @@ function mapDashboard(value: unknown) {
 }
 
 function mapAnnotationList(payload: Record<string, unknown>) {
-  const results = normalizeUnknownArray(payload.results).map((item) => mapAnnotation(item));
+  const results = looseArray(payload.results).map((item) => mapAnnotation(item));
   return {
     count: asNumber(payload.count) ?? results.length,
     next: asNullableString(payload.next),
@@ -1930,8 +1926,8 @@ function mapAnnotation(value: unknown) {
 
 function mapBulkUpdateTags(payload: Record<string, unknown>) {
   return {
-    updated: normalizeUnknownArray(payload.updated),
-    skipped: normalizeUnknownArray(payload.skipped),
+    updated: looseArray(payload.updated),
+    skipped: looseArray(payload.skipped),
     raw: payload,
   };
 }
@@ -1950,7 +1946,7 @@ function mapDashboardCollaborator(value: unknown) {
 }
 
 function mapFeatureFlagList(payload: Record<string, unknown>) {
-  const results = normalizeUnknownArray(payload.results).map((item) => mapFeatureFlag(item));
+  const results = looseArray(payload.results).map((item) => mapFeatureFlag(item));
   return {
     count: asNumber(payload.count) ?? results.length,
     next: asNullableString(payload.next),
@@ -1976,7 +1972,7 @@ function mapFeatureFlag(value: unknown) {
     version: asNumber(payload.version),
     ensure_experience_continuity: asNullableBoolean(payload.ensure_experience_continuity),
     experiment_set: normalizeNumberArray(payload.experiment_set),
-    experiment_set_metadata: normalizeUnknownArray(payload.experiment_set_metadata).map((item) => asLooseObject(item)),
+    experiment_set_metadata: looseArray(payload.experiment_set_metadata).map((item) => asLooseObject(item)),
     surveys: asNullableObject(payload.surveys),
     features: asNullableObject(payload.features),
     rollback_conditions: payload.rollback_conditions === null ? null : payload.rollback_conditions,
@@ -1988,7 +1984,7 @@ function mapFeatureFlag(value: unknown) {
     last_called_at: asNullableString(payload.last_called_at),
     user_access_level: asNullableString(payload.user_access_level),
     rollout_percentage: asNullableNumber(payload.rollout_percentage),
-    tags: normalizeUnknownArray(payload.tags),
+    tags: looseArray(payload.tags),
     evaluation_contexts: normalizeStringArray(payload.evaluation_contexts),
     usage_dashboard: asNumber(payload.usage_dashboard),
     analytics_dashboards: normalizeNumberArray(payload.analytics_dashboards),
@@ -2014,7 +2010,7 @@ function mapFeatureFlagStatus(payload: Record<string, unknown>) {
 
 function mapDependentFlags(payload: unknown) {
   return {
-    results: normalizeUnknownArray(payload).map((item) => mapDependentFlag(item)),
+    results: looseArray(payload).map((item) => mapDependentFlag(item)),
     raw: Array.isArray(payload) ? payload : {},
   };
 }
@@ -2030,7 +2026,7 @@ function mapDependentFlag(value: unknown) {
 
 function mapFeatureFlagLocalEvaluation(payload: Record<string, unknown>) {
   return {
-    flags: normalizeUnknownArray(payload.flags).map((item) => mapMinimalFeatureFlag(item)),
+    flags: looseArray(payload.flags).map((item) => mapMinimalFeatureFlag(item)),
     group_type_mapping: asNullableObject(payload.group_type_mapping) ?? {},
     cohorts: asNullableObject(payload.cohorts) ?? {},
     raw: payload,
@@ -2100,7 +2096,7 @@ function mapQueryStatus(payload: Record<string, unknown>) {
 }
 
 function normalizeStringArray(value: unknown) {
-  return normalizeUnknownArray(value).filter((item): item is string => typeof item === "string");
+  return looseArray(value).filter((item): item is string => typeof item === "string");
 }
 
 function normalizeStringArrayOrUndefined(value: unknown) {
@@ -2108,7 +2104,7 @@ function normalizeStringArrayOrUndefined(value: unknown) {
 }
 
 function normalizeNumberArray(value: unknown) {
-  return normalizeUnknownArray(value).filter((item): item is number => typeof item === "number");
+  return looseArray(value).filter((item): item is number => typeof item === "number");
 }
 
 function joinStringArray(value: unknown) {

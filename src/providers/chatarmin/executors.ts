@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
@@ -145,7 +145,7 @@ export const chatarminActionHandlers: ProviderActionHandlers<"chatarmin", Chatar
     );
     const record = requireChatarminObject(payload);
     return {
-      added: readOptionalArray(record.added),
+      added: looseArray(record.added),
       raw: record,
     };
   },
@@ -163,7 +163,7 @@ export const chatarminActionHandlers: ProviderActionHandlers<"chatarmin", Chatar
   },
   async list_webhooks(_input, context) {
     const payload = await chatarminRequestJson({ method: "GET", path: "/webhooks" }, context, "execute");
-    return { webhooks: readOptionalArray(payload) };
+    return { webhooks: looseArray(payload) };
   },
   create_webhook(input, context) {
     return writeChatarminResource("PUT", "/webhooks", pickBody(input, ["url", "topic"]), "webhook", context);
@@ -236,7 +236,7 @@ async function listChatarminRecords(
   );
   const record = requireChatarminObject(payload);
   return {
-    data: readOptionalArray(record.data),
+    data: looseArray(record.data),
     pagination: optionalRecord(record.pagination) ?? null,
   };
 }
@@ -378,10 +378,6 @@ function requireChatarminObject(payload: unknown): Record<string, unknown> {
     throw new ProviderRequestError(502, "Chatarmin returned an invalid payload");
   }
   return record;
-}
-
-function readOptionalArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function pickContactBody(input: Record<string, unknown>): Record<string, unknown> {

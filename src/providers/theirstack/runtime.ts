@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const theirstackApiBaseUrl = "https://api.theirstack.com";
@@ -15,7 +15,7 @@ export const theirstackActionHandlers: ProviderActionHandlers<"theirstack", Thei
     const payload = await theirstackRequestJson("POST", "/v1/jobs/search", input, context);
     const record = readObject(payload, "TheirStack job search response");
     return {
-      jobs: readArray(record.data),
+      jobs: looseArray(record.data),
       metadata: readObject(record.metadata, "TheirStack job search metadata"),
     };
   },
@@ -23,7 +23,7 @@ export const theirstackActionHandlers: ProviderActionHandlers<"theirstack", Thei
     const payload = await theirstackRequestJson("POST", "/v1/companies/search", input, context);
     const record = readObject(payload, "TheirStack company search response");
     return {
-      companies: readArray(record.data),
+      companies: looseArray(record.data),
       metadata: readObject(record.metadata, "TheirStack company search metadata"),
     };
   },
@@ -32,7 +32,7 @@ export const theirstackActionHandlers: ProviderActionHandlers<"theirstack", Thei
     const payload = await theirstackRequestJson("POST", "/v1/companies/technologies", input, context);
     const record = readObject(payload, "TheirStack technographics response");
     return {
-      technologies: readArray(record.data),
+      technologies: looseArray(record.data),
       metadata: readObject(record.metadata, "TheirStack technographics metadata"),
     };
   },
@@ -137,10 +137,6 @@ function readObject(value: unknown, label: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
   return record;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function assertJobSearchWindow(input: Record<string, unknown>): void {

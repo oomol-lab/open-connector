@@ -2,7 +2,7 @@ import type { CredentialValidationResult, TransitFileWriter } from "../../core/t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, readTransitFileInput } from "../provider-runtime.ts";
 
@@ -137,7 +137,7 @@ async function whatsappGetPhoneNumbers(
     phase: "execute",
   });
   return {
-    phone_numbers: extractArray(payload.data ?? payload).map((item) => normalizePhoneNumber(item)),
+    phone_numbers: looseArray(payload.data ?? payload).map((item) => normalizePhoneNumber(item)),
     paging: normalizePaging(payload.paging),
   };
 }
@@ -196,7 +196,7 @@ async function whatsappGetMessageTemplates(
     phase: "execute",
   });
   return {
-    templates: extractArray(payload.data ?? payload).map((item) => normalizeTemplate(item)),
+    templates: looseArray(payload.data ?? payload).map((item) => normalizeTemplate(item)),
     paging: normalizePaging(payload.paging),
   };
 }
@@ -402,7 +402,7 @@ function whatsappSendInteractiveButtons(
   input: Record<string, unknown>,
   context: WhatsAppActionContext,
 ): Promise<unknown> {
-  const buttons = extractArray(input.buttons).map((item) => {
+  const buttons = looseArray(input.buttons).map((item) => {
     const record = asRecord(item, "buttons[]");
     return {
       type: "reply",
@@ -555,14 +555,14 @@ function normalizeWhatsAppError(input: {
 
 function normalizeMessageSendResponse(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    contacts: extractArray(payload.contacts).map((item) => {
+    contacts: looseArray(payload.contacts).map((item) => {
       const record = asRecord(item, "contacts[]");
       return {
         input: readString(record.input) ?? "",
         wa_id: readString(record.wa_id) ?? "",
       };
     }),
-    messages: extractArray(payload.messages).map((item) => {
+    messages: looseArray(payload.messages).map((item) => {
       const record = asRecord(item, "messages[]");
       return { id: readString(record.id) ?? "" };
     }),
@@ -606,7 +606,7 @@ function normalizeTemplate(value: unknown): Record<string, unknown> {
     status: readString(record.status) ?? "",
     category: readString(record.category) ?? "",
     language: readString(record.language) ?? "",
-    components: extractArray(record.components).map((item) => normalizeTemplateComponent(item)),
+    components: looseArray(record.components).map((item) => normalizeTemplateComponent(item)),
     created_time: readString(record.created_time),
     updated_time: readString(record.updated_time),
     quality_rating: readString(record.quality_rating),
@@ -623,7 +623,7 @@ function normalizeTemplateComponent(value: unknown): Record<string, unknown> {
     type: readString(record.type) ?? "",
     format: readString(record.format),
     text: readString(record.text),
-    buttons: extractArray(record.buttons).map((item) => normalizeTemplateButton(item)),
+    buttons: looseArray(record.buttons).map((item) => normalizeTemplateButton(item)),
     example: optionalRecord(record.example),
   });
 }
@@ -705,12 +705,8 @@ function extractGraphError(value: unknown): Record<string, unknown> | null {
   return optionalRecord(error) ?? null;
 }
 
-function extractArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
 function extractFirstRecord(value: unknown): Record<string, unknown> | undefined {
-  return extractArray(value).find((item): item is Record<string, unknown> => optionalRecord(item) !== undefined);
+  return looseArray(value).find((item): item is Record<string, unknown> => optionalRecord(item) !== undefined);
 }
 
 function asRecord(value: unknown, fieldName: string): Record<string, unknown> {

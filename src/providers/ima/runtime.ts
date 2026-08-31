@@ -6,6 +6,7 @@ import { createHash, createHmac } from "node:crypto";
 import { basename, extname } from "node:path";
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalIntegerLike,
   optionalRecord,
@@ -224,7 +225,7 @@ export async function validateImaCredential(
     phase: "validate",
   });
 
-  const firstNotebook = asArray(payload.note_folder_infos)
+  const firstNotebook = looseArray(payload.note_folder_infos)
     .map((item) => normalizeNotebook(item))
     .find(isPresent);
 
@@ -266,7 +267,7 @@ async function searchImaNotes(input: Record<string, unknown>, context: ImaRuntim
     phase: "execute",
   });
 
-  const notes = asArray(payload.search_note_infos)
+  const notes = looseArray(payload.search_note_infos)
     .map((item) => normalizeSearchNote(item))
     .filter(isPresent);
   const isEnd = optionalBoolean(payload.is_end) ?? true;
@@ -295,7 +296,7 @@ async function listImaNotebooks(input: Record<string, unknown>, context: ImaRunt
 
   const isEnd = optionalBoolean(payload.is_end) ?? true;
   return {
-    notebooks: asArray(payload.note_folder_infos)
+    notebooks: looseArray(payload.note_folder_infos)
       .map((item) => normalizeNotebook(item))
       .filter(isPresent),
     nextCursor: isEnd ? null : (optionalString(payload.next_cursor) ?? null),
@@ -322,7 +323,7 @@ async function listImaNotes(input: Record<string, unknown>, context: ImaRuntimeC
 
   const isEnd = optionalBoolean(payload.is_end) ?? true;
   return {
-    notes: asArray(payload.note_book_list)
+    notes: looseArray(payload.note_book_list)
       .map((item) => normalizeListedNote(item))
       .filter(isPresent),
     nextCursor: isEnd ? null : (optionalString(payload.next_cursor) ?? null),
@@ -407,7 +408,7 @@ async function searchImaKnowledgeBases(input: Record<string, unknown>, context: 
 
   const isEnd = optionalBoolean(payload.is_end) ?? true;
   return {
-    knowledgeBases: asArray(payload.info_list)
+    knowledgeBases: looseArray(payload.info_list)
       .map((item) => normalizeKnowledgeBase(item))
       .filter(isPresent),
     nextCursor: isEnd ? null : (optionalString(payload.next_cursor) ?? null),
@@ -455,7 +456,7 @@ async function listAddableImaKnowledgeBases(
 
   const isEnd = optionalBoolean(payload.is_end) ?? true;
   return {
-    knowledgeBases: asArray(payload.addable_knowledge_base_list)
+    knowledgeBases: looseArray(payload.addable_knowledge_base_list)
       .map((item) => normalizeKnowledgeBase(item))
       .filter(isPresent),
     nextCursor: isEnd ? null : (optionalString(payload.next_cursor) ?? null),
@@ -483,10 +484,10 @@ async function listImaKnowledgeItems(input: Record<string, unknown>, context: Im
 
   const isEnd = optionalBoolean(payload.is_end) ?? true;
   return {
-    items: asArray(payload.knowledge_list)
+    items: looseArray(payload.knowledge_list)
       .map((item) => normalizeKnowledgeItem(item))
       .filter(isPresent),
-    currentPath: asArray(payload.current_path)
+    currentPath: looseArray(payload.current_path)
       .map((item) => normalizeKnowledgeFolder(item))
       .filter(isPresent),
     nextCursor: isEnd ? null : (optionalString(payload.next_cursor) ?? null),
@@ -512,7 +513,7 @@ async function searchImaKnowledgeItems(input: Record<string, unknown>, context: 
 
   const isEnd = optionalBoolean(payload.is_end) ?? true;
   return {
-    items: asArray(payload.info_list)
+    items: looseArray(payload.info_list)
       .map((item) => normalizeKnowledgeItem(item))
       .filter(isPresent),
     nextCursor: isEnd ? null : (optionalString(payload.next_cursor) ?? null),
@@ -572,7 +573,7 @@ async function checkImaRepeatedNames(input: Record<string, unknown>, context: Im
       {
         knowledgeBaseId: requireImaField(input.knowledgeBaseId, "knowledgeBaseId"),
         folderId: optionalString(input.folderId),
-        files: asArray(input.files).map((item) => {
+        files: looseArray(input.files).map((item) => {
           const raw = optionalRecord(item) ?? {};
           return {
             name: requireImaField(raw.name, "files.name"),
@@ -663,7 +664,7 @@ async function requestImaRepeatedNames(
     phase: "execute",
   });
 
-  return asArray(payload.results).map((item) => {
+  return looseArray(payload.results).map((item) => {
     const raw = optionalRecord(item) ?? {};
     return {
       name: optionalString(raw.name) ?? "",
@@ -1332,10 +1333,6 @@ function inferExtensionFromMimeType(mimeType: string): string | null {
     return null;
   }
   return subtype.replace(/[^a-z0-9]+/g, "") || null;
-}
-
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function isPresent<T>(value: T | null | undefined): value is T {

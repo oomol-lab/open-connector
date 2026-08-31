@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRawString, optionalRecord } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
@@ -127,7 +127,7 @@ export const semanticScholarActionHandlers: ProviderActionHandlers<"semantic_sch
 
     const payloadRecord = optionalRecord(payload);
     return {
-      completions: normalizeArray(payloadRecord?.matches ?? payloadRecord?.data),
+      completions: looseArray(payloadRecord?.matches ?? payloadRecord?.data),
       raw: normalizeRawObject(payload),
     };
   },
@@ -245,7 +245,7 @@ export const semanticScholarActionHandlers: ProviderActionHandlers<"semantic_sch
       total: readNullableInteger(payloadRecord?.total),
       offset: readNullableInteger(payloadRecord?.offset),
       next: readNullableInteger(payloadRecord?.next),
-      snippets: normalizeArray(payloadRecord?.data),
+      snippets: looseArray(payloadRecord?.data),
       raw: normalizeRawObject(payload),
     };
   },
@@ -500,7 +500,7 @@ function normalizePaperList(payload: unknown) {
     offset: readNullableInteger(payloadRecord?.offset),
     next: readNullableInteger(payloadRecord?.next),
     token: readNullableString(payloadRecord?.token),
-    papers: normalizeArray(payloadRecord?.data ?? payloadRecord?.recommendedPapers),
+    papers: looseArray(payloadRecord?.data ?? payloadRecord?.recommendedPapers),
     raw: normalizeRawObject(payload),
   };
 }
@@ -511,7 +511,7 @@ function normalizeAuthorList(payload: unknown) {
     total: readNullableInteger(payloadRecord?.total),
     offset: readNullableInteger(payloadRecord?.offset),
     next: readNullableInteger(payloadRecord?.next),
-    authors: normalizeArray(payloadRecord?.data),
+    authors: looseArray(payloadRecord?.data),
     raw: normalizeRawObject(payload),
   };
 }
@@ -522,13 +522,9 @@ function normalizeEdgeList(payload: unknown) {
     total: readNullableInteger(payloadRecord?.total),
     offset: readNullableInteger(payloadRecord?.offset),
     next: readNullableInteger(payloadRecord?.next),
-    data: normalizeArray(payloadRecord?.data),
+    data: looseArray(payloadRecord?.data),
     raw: normalizeRawObject(payload),
   };
-}
-
-function normalizeArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
 }
 
 function normalizeRawObject(value: unknown) {

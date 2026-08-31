@@ -9,6 +9,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalIntegerLike,
   optionalRecord,
@@ -137,9 +138,9 @@ async function listMonitors(input: Record<string, unknown>, context: ApiKeyProvi
   const body = requireObjectPayload(payload, "OpenStatus list monitors response");
 
   return {
-    httpMonitors: readArray(body.httpMonitors),
-    tcpMonitors: readArray(body.tcpMonitors),
-    dnsMonitors: readArray(body.dnsMonitors),
+    httpMonitors: looseArray(body.httpMonitors),
+    tcpMonitors: looseArray(body.tcpMonitors),
+    dnsMonitors: looseArray(body.dnsMonitors),
     totalSize: optionalIntegerLike(body.totalSize, "totalSize") ?? 0,
   };
 }
@@ -173,7 +174,7 @@ async function getMonitorStatus(input: Record<string, unknown>, context: ApiKeyP
 
   return {
     id: optionalString(body.id) ?? requiredInputString(input.id, "id"),
-    regions: readArray(body.regions),
+    regions: looseArray(body.regions),
   };
 }
 
@@ -211,7 +212,7 @@ async function listHttpResponseLogs(input: Record<string, unknown>, context: Api
   const body = requireObjectPayload(payload, "OpenStatus HTTP response logs response");
 
   return {
-    logs: readArray(body.logs),
+    logs: looseArray(body.logs),
     pagination: optionalRecord(body.pagination) ?? null,
   };
 }
@@ -443,10 +444,6 @@ function requireObjectPayload(value: unknown, label: string): Record<string, unk
     throw new ProviderRequestError(502, `${label} is not an object`);
   }
   return parsed;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readOptionalArray(value: unknown): unknown[] | undefined {

@@ -5,6 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { createHash } from "node:crypto";
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalInteger,
   optionalRecord,
@@ -146,7 +147,7 @@ async function listActions(
   });
   const raw = requireObjectPayload(payload, "SafetyCulture actions response");
   return {
-    actions: readArray(raw.actions),
+    actions: looseArray(raw.actions),
     nextPageToken: optionalString(raw.next_page_token) ?? "",
     total: readOptionalNumber(raw.total) ?? 0,
     raw,
@@ -311,7 +312,7 @@ function normalizeInspectionSearchPayload(payload: unknown): Record<string, unkn
   return {
     count: readOptionalNumber(raw.count) ?? 0,
     total: readOptionalNumber(raw.total) ?? 0,
-    inspections: readArray(raw.audits),
+    inspections: looseArray(raw.audits),
     raw,
   };
 }
@@ -320,10 +321,6 @@ function requireObjectPayload(value: unknown, context: string): Record<string, u
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `${context} must be a JSON object`);
   return record;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {

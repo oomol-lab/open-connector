@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const valyuApiBaseUrl = "https://api.valyu.ai";
@@ -40,7 +40,7 @@ export const valyuActionHandlers: ProviderActionHandlers<"valyu", ValyuActionHan
     const response = asObject(payload);
     return {
       ...response,
-      results: readArray(response.results).map(normalizeSearchResult),
+      results: looseArray(response.results).map(normalizeSearchResult),
       results_by_source: optionalRecord(response.results_by_source) ?? {},
       raw: response,
     };
@@ -169,10 +169,6 @@ function normalizeSearchResult(value: unknown): Record<string, unknown> {
     metadata: optionalRecord(input.metadata),
     raw: input,
   });
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function asObject(value: unknown): Record<string, unknown> {

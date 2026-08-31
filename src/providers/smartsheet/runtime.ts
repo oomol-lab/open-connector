@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalBooleanOrNull,
   optionalNumber,
   optionalRecord,
@@ -35,7 +36,7 @@ export const smartsheetActionHandlers: ProviderActionHandlers<"smartsheet", Smar
 
     return {
       page: normalizePage(record),
-      sheets: normalizeArray(record.data).map(normalizeSheetSummary),
+      sheets: looseArray(record.data).map(normalizeSheetSummary),
       raw: record,
     };
   },
@@ -135,7 +136,7 @@ export async function validateSmartsheetCredential(
     phase: "validate",
   });
   const record = requiredRecord(payload, "Smartsheet returned an invalid validation payload");
-  const firstSheet = normalizeSheetSummary(normalizeArray(record.data)[0]);
+  const firstSheet = normalizeSheetSummary(looseArray(record.data)[0]);
   const firstSheetName = firstSheet.name ?? undefined;
 
   return {
@@ -259,8 +260,8 @@ function normalizeSheet(value: unknown): Record<string, unknown> {
     modifiedAt: nullableString(record.modifiedAt),
     version: nullableInteger(record.version),
     totalRowCount: nullableInteger(record.totalRowCount),
-    columns: normalizeArray(record.columns).map(normalizeColumn),
-    rows: normalizeArray(record.rows).map(normalizeRow),
+    columns: looseArray(record.columns).map(normalizeColumn),
+    rows: looseArray(record.rows).map(normalizeRow),
     raw: record,
   };
 }
@@ -274,7 +275,7 @@ function normalizeColumn(value: unknown): Record<string, unknown> {
     primary: optionalBooleanOrNull(record.primary),
     index: nullableInteger(record.index),
     symbol: nullableString(record.symbol),
-    options: normalizeArray(record.options).flatMap((option) => (typeof option === "string" ? [option] : [])),
+    options: looseArray(record.options).flatMap((option) => (typeof option === "string" ? [option] : [])),
     raw: record,
   };
 }
@@ -289,7 +290,7 @@ function normalizeRow(value: unknown): Record<string, unknown> {
     expanded: optionalBooleanOrNull(record.expanded),
     createdAt: nullableString(record.createdAt),
     modifiedAt: nullableString(record.modifiedAt),
-    cells: normalizeArray(record.cells).map(normalizeCell),
+    cells: looseArray(record.cells).map(normalizeCell),
     raw: record,
   };
 }
@@ -311,7 +312,7 @@ function normalizeWriteResult(value: unknown): Record<string, unknown> {
     message: nullableString(record.message),
     resultCode: nullableInteger(record.resultCode),
     version: nullableInteger(record.version),
-    rows: normalizeArray(record.result).map(normalizeRow),
+    rows: looseArray(record.result).map(normalizeRow),
     raw: record,
   };
 }
@@ -337,10 +338,6 @@ function readPositiveInteger(value: unknown, fieldName: string): number {
   if (!Number.isInteger(parsed) || parsed <= 0)
     throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   return parsed;
-}
-
-function normalizeArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function stringifyOptionalNumber(value: unknown): string | undefined {

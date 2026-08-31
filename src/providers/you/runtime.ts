@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+} from "../../core/cast.ts";
 import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const youApiBaseUrl = "https://api.you.com/v1";
@@ -65,8 +72,8 @@ async function search(input: Record<string, unknown>, context: ApiKeyProviderCon
   const response = requiredRecord(payload, "you search response", providerResponseError);
   const results = optionalRecord(response.results) ?? {};
   return {
-    web: readArray(results.web).map(normalizeWebResult),
-    news: readArray(results.news).map(normalizeNewsResult),
+    web: looseArray(results.web).map(normalizeWebResult),
+    news: looseArray(results.news).map(normalizeNewsResult),
     metadata: normalizeSearchMetadata(response.metadata),
     raw: response,
   };
@@ -87,7 +94,7 @@ async function fetchContents(input: Record<string, unknown>, context: ApiKeyProv
     signal: context.signal,
     phase: "execute",
   });
-  const items = readArray(payload);
+  const items = looseArray(payload);
   return { pages: items.map(normalizeContentPage), raw: items };
 }
 
@@ -331,7 +338,7 @@ function normalizeResearchOutput(value: unknown): Record<string, unknown> {
   return {
     content: input.content,
     contentType: requiredProviderString(input.content_type, "content_type"),
-    sources: readArray(input.sources).map(normalizeResearchSource),
+    sources: looseArray(input.sources).map(normalizeResearchSource),
     raw: input,
   };
 }
@@ -364,10 +371,6 @@ function normalizeAccountBalance(value: unknown): {
     balanceUsd: balanceCents / 100,
     raw: response,
   };
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readStringArray(value: unknown): string[] | undefined {

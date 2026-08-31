@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { looseArray, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -302,7 +302,7 @@ export const perigonActionHandlers: ProviderActionHandlers<"perigon", PerigonAct
       status: readNullableInteger(record.status),
       numResults: readNullableInteger(record.numResults),
       summary: optionalString(record.summary) ?? null,
-      results: readArray(record.results),
+      results: looseArray(record.results),
       raw: record,
     };
   },
@@ -530,7 +530,7 @@ function normalizeListResponse(payload: unknown, key: "articles" | "stories"): R
   return {
     status: readNullableInteger(record.status),
     numResults: readNullableInteger(record.numResults),
-    [key]: readArray(record[key]),
+    [key]: looseArray(record[key]),
     raw: record,
   };
 }
@@ -540,7 +540,7 @@ function normalizeResultsResponse(payload: unknown): Record<string, unknown> {
   return {
     status: readNullableInteger(record.status),
     numResults: readNullableInteger(record.numResults),
-    results: readArray(record.results),
+    results: looseArray(record.results),
     raw: record,
   };
 }
@@ -549,7 +549,7 @@ function normalizeTopicsResponse(payload: unknown): Record<string, unknown> {
   const record = readObject(payload, "Perigon topics response");
   return {
     total: readNullableInteger(record.total),
-    data: readArray(record.data),
+    data: looseArray(record.data),
     raw: record,
   };
 }
@@ -558,7 +558,7 @@ function normalizeVectorResponse(payload: unknown): Record<string, unknown> {
   const record = readObject(payload, "Perigon vector response");
   return {
     status: readNullableInteger(record.status),
-    results: readArray(record.results),
+    results: looseArray(record.results),
     raw: record,
   };
 }
@@ -569,10 +569,6 @@ function readObject(value: unknown, fieldName: string): Record<string, unknown> 
     throw new ProviderRequestError(502, `${fieldName} must be an object`, value);
   }
   return record;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readNullableInteger(value: unknown): number | null {

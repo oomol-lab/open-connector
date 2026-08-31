@@ -10,6 +10,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { Buffer } from "node:buffer";
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalBooleanOrNull,
   optionalInteger,
@@ -413,7 +414,7 @@ function normalizeCall(value: unknown): Record<string, unknown> {
     simpleTranscript:
       optionalStringOrNull(record.simple_transcript) ?? optionalStringOrNull(record["simple_transcript:"]),
     owner: record.owner == null ? null : normalizeOwner(record.owner),
-    participatingUsers: readArray(record.participating_users).map((item) => normalizeOwner(item)),
+    participatingUsers: looseArray(record.participating_users).map((item) => normalizeOwner(item)),
     customerPhoneNumbers: readResponseStringArray(record.customer_phone_numbers),
     customerEmailAddresses: readResponseStringArray(record.customer_email_addresses),
     conversationType: record.conversation_type == null ? null : normalizeConversationType(record.conversation_type),
@@ -451,7 +452,7 @@ function normalizeCallNote(value: unknown): Record<string, unknown> {
     updatedAt: readRequiredString(record.updated_at, "call_note.updated_at"),
     call: normalizeCall(record.call),
     prompt: record.prompt == null ? null : normalizeCallNotePrompt(record.prompt),
-    translations: readArray(record.translations).map((item) => normalizeCallNoteTranslation(item)),
+    translations: looseArray(record.translations).map((item) => normalizeCallNoteTranslation(item)),
     raw: record,
   };
 }
@@ -533,10 +534,6 @@ function readResponseStringArray(value: unknown): string[] {
   }
 
   return value.map((item) => optionalString(item)).filter((item): item is string => Boolean(item));
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function requireArray(value: unknown, label: string): unknown[] {

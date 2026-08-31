@@ -5,6 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { createHash } from "node:crypto";
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalInteger,
   optionalRecord,
@@ -37,7 +38,7 @@ export const rollbarActionHandlers: ProviderActionHandlers<"rollbar", RollbarAct
     return {
       page: requirePositiveInteger(result.page, "page"),
       totalCount: optionalInteger(result.total_count) ?? null,
-      items: readArray(result.items).map((item) => normalizeItem(requireRecord(item, "rollbar item"))),
+      items: looseArray(result.items).map((item) => normalizeItem(requireRecord(item, "rollbar item"))),
     };
   },
   async get_item(input, context) {
@@ -56,7 +57,7 @@ export const rollbarActionHandlers: ProviderActionHandlers<"rollbar", RollbarAct
     const result = requireResultRecord(payload, "rollbar occurrence list response");
     return {
       page: requirePositiveInteger(result.page, "page"),
-      occurrences: readArray(result.instances).map((item) =>
+      occurrences: looseArray(result.instances).map((item) =>
         normalizeOccurrence(requireRecord(item, "rollbar occurrence")),
       ),
     };
@@ -76,7 +77,7 @@ export const rollbarActionHandlers: ProviderActionHandlers<"rollbar", RollbarAct
     const result = requireResultRecord(payload, "rollbar environments response");
     return {
       page: requirePositiveInteger(result.page, "page"),
-      environments: readArray(result.environments).map((item) =>
+      environments: looseArray(result.environments).map((item) =>
         normalizeEnvironment(requireRecord(item, "rollbar environment")),
       ),
     };
@@ -91,7 +92,7 @@ export const rollbarActionHandlers: ProviderActionHandlers<"rollbar", RollbarAct
     const result = requireResultRecord(payload, "rollbar deploy list response");
     return {
       page: requirePositiveInteger(result.page, "page"),
-      deploys: readArray(result.deploys).map((item) => normalizeDeploy(requireRecord(item, "rollbar deploy"))),
+      deploys: looseArray(result.deploys).map((item) => normalizeDeploy(requireRecord(item, "rollbar deploy"))),
     };
   },
   async get_deploy(input, context) {
@@ -113,7 +114,7 @@ export const credentialValidators: CredentialValidators = {
       phase: "validate",
     });
     const result = requireResultRecord(payload, "rollbar validation response");
-    const environments = readArray(result.environments).map((item) =>
+    const environments = looseArray(result.environments).map((item) =>
       normalizeEnvironment(requireRecord(item, "rollbar environment")),
     );
     const firstEnvironment = environments[0];
@@ -379,10 +380,6 @@ function requireBooleanLike(value: unknown, fieldName: string): boolean {
   if (value === 1 || value === "1") return true;
   if (value === 0 || value === "0") return false;
   throw new ProviderRequestError(502, `${fieldName} is missing`);
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readOptionalPositiveIntegerString(value: unknown): string | undefined {

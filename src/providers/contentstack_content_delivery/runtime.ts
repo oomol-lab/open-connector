@@ -1,7 +1,14 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   providerInputError,
   ProviderRequestError,
@@ -71,7 +78,7 @@ export async function validateContentstackContentDeliveryCredential(
     signal,
   });
   const record = requireRecord(payload, "Contentstack content types response");
-  const firstContentType = optionalRecord(readArray(record.content_types)[0]);
+  const firstContentType = optionalRecord(looseArray(record.content_types)[0]);
 
   return {
     profile: {
@@ -113,7 +120,7 @@ async function executeListContentTypes(
   });
   const record = requireRecord(payload, "Contentstack content types response");
   return {
-    contentTypes: readArray(record.content_types).map((value) => requireRecord(value, "Contentstack content type")),
+    contentTypes: looseArray(record.content_types).map((value) => requireRecord(value, "Contentstack content type")),
     count: optionalInteger(record.count) ?? null,
     raw: record,
   };
@@ -170,7 +177,7 @@ async function executeListEntries(
   });
   const record = requireRecord(payload, "Contentstack entries response");
   return {
-    entries: readArray(record.entries).map((value) => requireRecord(value, "Contentstack entry")),
+    entries: looseArray(record.entries).map((value) => requireRecord(value, "Contentstack entry")),
     count: optionalInteger(record.count) ?? null,
     raw: record,
   };
@@ -232,7 +239,7 @@ async function executeListAssets(
   });
   const record = requireRecord(payload, "Contentstack assets response");
   return {
-    assets: readArray(record.assets).map((value) => requireRecord(value, "Contentstack asset")),
+    assets: looseArray(record.assets).map((value) => requireRecord(value, "Contentstack asset")),
     count: optionalInteger(record.count) ?? null,
     raw: record,
   };
@@ -405,10 +412,6 @@ function requireRecord(value: unknown, label: string): Record<string, unknown> {
     throw new ProviderRequestError(502, `${label} is not a JSON object`);
   }
   return record;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readStringArray(value: unknown): string[] | undefined {

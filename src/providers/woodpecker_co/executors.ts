@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalBoolean,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -128,7 +135,7 @@ export const woodpeckerCoActionHandlers: ProviderActionHandlers<"woodpecker_co",
       context,
       phase: "execute",
     });
-    const mailboxes = readArray(payload);
+    const mailboxes = looseArray(payload);
 
     return {
       mailboxes: normalizeMailboxList(mailboxes),
@@ -311,7 +318,7 @@ function normalizeUsersPayload(payload: unknown): {
   const object = requireRecordPayload(payload);
 
   return {
-    users: normalizeUserList(readArray(object.content)),
+    users: normalizeUserList(looseArray(object.content)),
     pagination: normalizePagination(object.pagination_data),
     raw: object,
   };
@@ -392,10 +399,6 @@ function requireRecordPayload(payload: unknown): Record<string, unknown> {
     throw new ProviderRequestError(502, "Woodpecker.co returned an invalid JSON object", payload);
   }
   return object;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readV1ListPayload(payload: unknown): {

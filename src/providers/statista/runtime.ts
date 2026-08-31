@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -175,7 +175,7 @@ function requiredSearchQuery(input: Record<string, unknown>): StatistaQuery {
 
 function normalizeStatisticsSearchResponse(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    items: readArray(payload.items).map((item, index) => normalizeStatisticSearchItem(item, `items[${index}]`)),
+    items: looseArray(payload.items).map((item, index) => normalizeStatisticSearchItem(item, `items[${index}]`)),
     totalCount: readRequiredInteger(payload.total_count, "total_count"),
     took: optionalRecord(payload.took) ?? null,
     raw: payload,
@@ -193,7 +193,7 @@ function normalizeStatisticSearchItem(value: unknown, fieldName: string): Record
     link: readRequiredString(record.link, `${fieldName}.link`),
     date: readNullableString(record.date),
     platform: readRequiredString(record.platform, `${fieldName}.platform`),
-    teaserImageUrls: readArray(record.teaser_image_urls).map((image, index) =>
+    teaserImageUrls: looseArray(record.teaser_image_urls).map((image, index) =>
       normalizeTeaserImage(image, `${fieldName}.teaser_image_urls[${index}]`),
     ),
     rankingScore: readNullableNumber(record.ranking_score),
@@ -211,7 +211,7 @@ function normalizeStatisticData(payload: Record<string, unknown>): Record<string
     link: readRequiredString(payload.link, "link"),
     date: readNullableString(payload.date),
     platform: readRequiredString(payload.platform, "platform"),
-    teaserImageUrls: readArray(payload.teaser_image_urls).map((image, index) =>
+    teaserImageUrls: looseArray(payload.teaser_image_urls).map((image, index) =>
       normalizeTeaserImage(image, `teaser_image_urls[${index}]`),
     ),
     chart: optionalRecord(payload.chart) ?? {},
@@ -221,7 +221,7 @@ function normalizeStatisticData(payload: Record<string, unknown>): Record<string
 
 function normalizeMarketInsightsSearchResponse(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    items: readArray(payload.items).map((item, index) => normalizeMarketInsightItem(item, `items[${index}]`)),
+    items: looseArray(payload.items).map((item, index) => normalizeMarketInsightItem(item, `items[${index}]`)),
     totalCount: readRequiredInteger(payload.total_count, "total_count"),
     raw: payload,
   };
@@ -247,7 +247,9 @@ function normalizeMarketInsightItem(value: unknown, fieldName: string): Record<s
 
 function normalizeConsumerInsightsSearchResponse(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    results: readArray(payload.results).map((item, index) => normalizeConsumerInsightResult(item, `results[${index}]`)),
+    results: looseArray(payload.results).map((item, index) =>
+      normalizeConsumerInsightResult(item, `results[${index}]`),
+    ),
     raw: payload,
   };
 }
@@ -260,7 +262,7 @@ function normalizeConsumerInsightResult(value: unknown, fieldName: string): Reco
     label: readRequiredString(record.label, `${fieldName}.label`),
     questionType: readRequiredString(record.question_type, `${fieldName}.question_type`),
     metadata: optionalRecord(record.metadata) ?? {},
-    answersSubset: readArray(record.answers_subset).map((answer, index) =>
+    answersSubset: looseArray(record.answers_subset).map((answer, index) =>
       normalizeConsumerInsightAnswer(answer, `${fieldName}.answers_subset[${index}]`),
     ),
     totalAnswers: readRequiredInteger(record.total_answers, `${fieldName}.total_answers`),
@@ -354,12 +356,8 @@ function readObject(value: unknown, fieldName: string): Record<string, unknown> 
   return record;
 }
 
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
 function readObjectArray(value: unknown): Array<Record<string, unknown>> {
-  return readArray(value).flatMap((item) => {
+  return looseArray(value).flatMap((item) => {
     const record = optionalRecord(item);
     return record ? [record] : [];
   });

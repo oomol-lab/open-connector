@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ProviderExecutors } from "../../core/t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { looseArray, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
@@ -26,7 +26,7 @@ export const readwiseActionHandlers: ProviderActionHandlers<"readwise", Readwise
       context,
       mode: "execute",
     });
-    const books = readArray(payload);
+    const books = looseArray(payload);
     return {
       books: books.map(normalizeBook),
       raw: books,
@@ -46,7 +46,7 @@ export const readwiseActionHandlers: ProviderActionHandlers<"readwise", Readwise
     return {
       count: optionalInteger(record.count) ?? null,
       nextPageCursor: optionalString(record.nextPageCursor) ?? null,
-      books: readArray(record.results).map(normalizeBook),
+      books: looseArray(record.results).map(normalizeBook),
       raw: record,
     };
   },
@@ -68,7 +68,7 @@ export const readwiseActionHandlers: ProviderActionHandlers<"readwise", Readwise
       count: optionalInteger(record.count) ?? null,
       next: optionalString(record.next) ?? null,
       previous: optionalString(record.previous) ?? null,
-      books: readArray(record.results).map(normalizeBook),
+      books: looseArray(record.results).map(normalizeBook),
       raw: record,
     };
   },
@@ -89,7 +89,7 @@ export const readwiseActionHandlers: ProviderActionHandlers<"readwise", Readwise
     return {
       count: optionalInteger(record.count) ?? null,
       nextPageCursor: optionalString(record.nextPageCursor) ?? null,
-      documents: readArray(record.results).map(normalizeDocument),
+      documents: looseArray(record.results).map(normalizeDocument),
       raw: record,
     };
   },
@@ -281,7 +281,7 @@ function normalizeBook(value: unknown): Record<string, unknown> {
     source: optionalString(record.source) ?? null,
     numHighlights: optionalInteger(record.num_highlights) ?? optionalInteger(record.numHighlights) ?? null,
     updatedAt: optionalString(record.updated) ?? optionalString(record.updated_at) ?? null,
-    highlights: readArray(record.highlights).map(normalizeHighlight),
+    highlights: looseArray(record.highlights).map(normalizeHighlight),
     raw: record,
   };
 }
@@ -316,10 +316,6 @@ function requireRecord(value: unknown, message: string): Record<string, unknown>
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, message);
   return record;
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function readStringArray(value: unknown): string[] {

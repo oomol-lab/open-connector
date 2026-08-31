@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalRawString } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalBoolean, optionalRawString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 const ragieApiBaseUrl = "https://api.ragie.ai";
@@ -85,7 +85,7 @@ function ragieRetrieve(input: Record<string, unknown>, context: RagieActionConte
     },
     context.fetcher,
   ).then((payload) => ({
-    scoredChunks: asArray(payload.scored_chunks).map((item) => mapScoredChunk(asObject(item))),
+    scoredChunks: looseArray(payload.scored_chunks).map((item) => mapScoredChunk(asObject(item))),
   }));
 }
 
@@ -103,7 +103,7 @@ function ragieListDocuments(input: Record<string, unknown>, context: RagieAction
     },
     context.fetcher,
   ).then((payload) => ({
-    documents: asArray(payload.documents).map((item) => mapDocument(asObject(item))),
+    documents: looseArray(payload.documents).map((item) => mapDocument(asObject(item))),
     pagination: mapPagination(asObject(payload.pagination)),
   }));
 }
@@ -214,7 +214,7 @@ function ragieGetDocumentChunks(input: Record<string, unknown>, context: RagieAc
     },
     context.fetcher,
   ).then((payload) => ({
-    chunks: asArray(payload.chunks).map((item) => mapDocumentChunk(asObject(item))),
+    chunks: looseArray(payload.chunks).map((item) => mapDocumentChunk(asObject(item))),
     pagination: mapPagination(asObject(payload.pagination)),
   }));
 }
@@ -246,7 +246,7 @@ function ragieListPartitions(context: RagieActionContext, input: Record<string, 
     },
     context.fetcher,
   ).then((payload) => ({
-    partitions: asArray(payload.partitions).map((item) => mapPartition(asObject(item))),
+    partitions: looseArray(payload.partitions).map((item) => mapPartition(asObject(item))),
     pagination: mapPagination(asObject(payload.pagination)),
   }));
 }
@@ -325,7 +325,7 @@ function ragieListConnectionSourceTypes(context: RagieActionContext) {
     },
     context.fetcher,
   ).then((payload) => ({
-    connectors: asArray(payload.connectors).map((item) => mapConnectorSourceType(asObject(item))),
+    connectors: looseArray(payload.connectors).map((item) => mapConnectorSourceType(asObject(item))),
   }));
 }
 
@@ -343,7 +343,7 @@ function ragieListConnections(input: Record<string, unknown>, context: RagieActi
     },
     context.fetcher,
   ).then((payload) => ({
-    connections: asArray(payload.connections).map((item) => mapConnection(asObject(item))),
+    connections: looseArray(payload.connections).map((item) => mapConnection(asObject(item))),
     pagination: mapPagination(asObject(payload.pagination)),
   }));
 }
@@ -631,10 +631,6 @@ function snakeToCamel(value: string) {
       return segment.slice(0, 1).toUpperCase() + segment.slice(1);
     })
     .join("");
-}
-
-function asArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
 }
 
 function asObject(value: unknown) {

@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+} from "../../core/cast.ts";
 import { googleJsonRequest } from "../google-runtime.ts";
 import {
   defineOAuthProviderExecutors,
@@ -306,7 +313,7 @@ async function listResources(
     },
   );
   return compactObject({
-    [spec.responseField]: arrayOrEmpty(payload[spec.responseField]),
+    [spec.responseField]: looseArray(payload[spec.responseField]),
     nextPageToken: optionalString(payload.nextPageToken) ?? null,
     totalSize: spec.supportsTotalSize ? optionalInteger(payload.totalSize) : undefined,
   });
@@ -379,8 +386,4 @@ function listQuery(input: Record<string, unknown>, supportsFilter = false): Reco
 function integerQuery(value: unknown): string | undefined {
   const resolved = optionalInteger(value);
   return resolved === undefined ? undefined : String(resolved);
-}
-
-function arrayOrEmpty(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }

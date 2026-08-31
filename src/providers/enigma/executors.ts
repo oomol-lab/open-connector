@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  looseArray,
   optionalBoolean,
   optionalBooleanOrNull,
   optionalInteger,
@@ -401,8 +402,8 @@ async function enigmaSearchGraphql(
 
   return {
     accepted: response.status === 202,
-    results: normalizeUnknownArray(response.data.search),
-    backgroundTasks: normalizeUnknownArray(response.extensions.backgroundTasks),
+    results: looseArray(response.data.search),
+    backgroundTasks: looseArray(response.extensions.backgroundTasks),
   };
 }
 
@@ -426,7 +427,7 @@ async function enigmaGetBusiness(
     "execute",
   );
 
-  const results = normalizeUnknownArray(response.data.search);
+  const results = looseArray(response.data.search);
   return {
     business: results[0] ?? null,
   };
@@ -496,7 +497,7 @@ async function enigmaCreateList(
   const payload = optionalRecord(response.data.createList);
   return {
     list: payload?.list ?? null,
-    searchPreview: normalizeUnknownArray(payload?.search)[0] ?? null,
+    searchPreview: looseArray(payload?.search)[0] ?? null,
   };
 }
 
@@ -581,9 +582,9 @@ async function enigmaGetGraphqlSchemaExtended(context: ApiKeyProviderContext): P
 
   const schema = optionalRecord(response.data._schemaExtended);
   return {
-    types: normalizeUnknownArray(schema?.types),
-    projections: normalizeUnknownArray(schema?.projections),
-    dataAssetMetadata: normalizeUnknownArray(schema?.dataAssetMetadata),
+    types: looseArray(schema?.types),
+    projections: looseArray(schema?.projections),
+    dataAssetMetadata: looseArray(schema?.dataAssetMetadata),
   };
 }
 
@@ -953,13 +954,11 @@ function normalizeKybResponse(value: unknown): Record<string, unknown> {
     riskSummary: riskSummary
       ? {
           overallRisk: optionalString(riskSummary.overall_risk ?? riskSummary.overallRisk) ?? null,
-          tasks: normalizeUnknownArray(riskSummary.tasks),
+          tasks: looseArray(riskSummary.tasks),
         }
       : undefined,
-    registeredEntityMatchCount: normalizeUnknownArray(
-      record.registered_entity_matches ?? record.registeredEntityMatches,
-    ).length,
-    brandMatchCount: normalizeUnknownArray(record.brand_matches ?? record.brandMatches).length,
+    registeredEntityMatchCount: looseArray(record.registered_entity_matches ?? record.registeredEntityMatches).length,
+    brandMatchCount: looseArray(record.brand_matches ?? record.brandMatches).length,
     raw: record,
   };
 }
@@ -1178,10 +1177,6 @@ function normalizeKybAttrs(value: unknown): string | undefined {
   }
   const normalized = value.map((item) => (typeof item === "string" ? item.trim() : "")).filter((item) => item !== "");
   return normalized.length > 0 ? normalized.join(",") : undefined;
-}
-
-function normalizeUnknownArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
 }
 
 function normalizeStringArrayValue(value: unknown): string[] | undefined {
