@@ -15,21 +15,14 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import { arrayPayload, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
 import {
-  createProviderFetch,
-  createProviderProxyUrl,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   ProviderRequestError,
-  providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "quickbase";
 const apiBaseUrl = "https://api.quickbase.com/v1";
-const quickbaseFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface QuickbaseContext {
   apiKey: string;
@@ -150,44 +143,23 @@ export const executors: ProviderExecutors = defineProviderExecutors<QuickbaseCon
   },
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context) => {
-  try {
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    await requireApiKeyCredential(context, service);
+    return apiBaseUrl;
+  },
+  auth: { type: "api_key_authorization", prefix: "QB-USER-TOKEN " },
+  async customizeRequest({ context, headers }) {
     const credential = await requireApiKeyCredential(context, service);
-    const url = createProviderProxyUrl(apiBaseUrl, input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("authorization", `QB-USER-TOKEN ${credential.apiKey}`);
     headers.set("qb-realm-hostname", normalizeRealmHostname(credential.values.realmHostname));
-    headers.set("user-agent", providerUserAgent);
     if (!headers.has("accept")) {
       headers.set("accept", "application/json");
     }
-
-    const init: RequestInit = {
-      method: input.method,
-      headers,
-      signal: context.signal,
-    };
-    if (input.body !== undefined) {
-      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
-      if (!headers.has("content-type") && typeof input.body !== "string") {
-        headers.set("content-type", "application/json");
-      }
-    }
-
-    const response = await quickbaseFetch(url, init);
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-
-    return {
-      ok: true,
-      response: await readProviderProxyResponse(response),
-    };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+  },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
