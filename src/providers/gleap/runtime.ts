@@ -1,8 +1,8 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const gleapApiBaseUrl = "https://api.gleap.io/v3";
 
@@ -68,8 +68,8 @@ export async function validateGleapCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredProviderString(input.apiKey, "apiKey");
-  const projectId = requiredProviderString(input.values.projectId, "projectId");
+  const apiKey = requiredInputString(input.apiKey, "apiKey");
+  const projectId = requiredInputString(input.values.projectId, "projectId");
   const context = { apiKey, projectId, fetcher, signal };
   const userPayload = await requestGleapJson({
     method: "GET",
@@ -489,14 +489,6 @@ function readArray(value: unknown, message: string): unknown[] {
     throw new ProviderRequestError(502, message);
   }
   return value;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireBodyFields(body: Record<string, unknown>, message: string): void {

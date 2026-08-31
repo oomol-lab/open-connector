@@ -365,7 +365,7 @@ function normalizeWorkspace(input: Record<string, unknown>) {
     title: nullableString(input.title),
     name: nullableString(input.name),
     status: nullableString(input.status),
-    kycVerified: nullableBoolean(input.kyc_verified),
+    kycVerified: optionalBooleanOrNull(input.kyc_verified),
     raw: input,
   };
 }
@@ -381,8 +381,8 @@ function normalizeContact(input: Record<string, unknown>) {
     country: nullableString(input.country),
     status: nullableString(input.status),
     visibility: nullableString(input.visibility),
-    blocked: nullableBoolean(input.blocked),
-    favourite: nullableBoolean(input.favourite),
+    blocked: optionalBooleanOrNull(input.blocked),
+    favourite: optionalBooleanOrNull(input.favourite),
     secondaryPhone: stringList(input.secondary_phone),
     secondaryEmail: stringList(input.secondary_email),
     tags: stringList(input.tags),
@@ -454,10 +454,6 @@ function nullableString(value: unknown) {
 function nullableInteger(value: unknown) {
   const parsed = optionalInteger(value);
   return parsed ?? null;
-}
-
-function nullableBoolean(value: unknown) {
-  return optionalBooleanOrNull(value);
 }
 
 function stringList(value: unknown) {

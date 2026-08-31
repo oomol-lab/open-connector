@@ -154,7 +154,7 @@ async function getProject(input: Record<string, unknown>, context: { apiKey: str
 async function listEpics(input: Record<string, unknown>, context: { apiKey: string; fetcher: typeof fetch }) {
   const payload = await shortcutGetJson(
     buildPathWithQuery("epics", {
-      includes_description: readOptionalBoolean(input.includesDescription),
+      includes_description: optionalBoolean(input.includesDescription),
     }),
     context.apiKey,
     context.fetcher,
@@ -204,7 +204,7 @@ async function listStories(input: Record<string, unknown>, context: { apiKey: st
   const projectId = readRequiredPositiveInteger(input.projectId, "projectId");
   const payload = await shortcutGetJson(
     buildPathWithQuery(`projects/${projectId}/stories`, {
-      includes_description: readOptionalBoolean(input.includesDescription),
+      includes_description: optionalBoolean(input.includesDescription),
     }),
     context.apiKey,
     context.fetcher,
@@ -285,7 +285,7 @@ function buildShortcutEpicBody(input: Record<string, unknown>) {
     planned_start_date: readOptionalString(input.plannedStartDate),
     deadline: readOptionalString(input.deadline),
     external_id: readOptionalNullableString(input.externalId),
-    archived: readOptionalBoolean(input.archived),
+    archived: optionalBoolean(input.archived),
   });
 }
 
@@ -304,7 +304,7 @@ function buildShortcutStoryBody(input: Record<string, unknown>) {
     due_date: readOptionalString(input.dueDate),
     external_id: readOptionalNullableString(input.externalId),
     iteration_id: readOptionalIntegerValue(input.iterationId),
-    archived: readOptionalBoolean(input.archived),
+    archived: optionalBoolean(input.archived),
   });
 }
 
@@ -494,10 +494,10 @@ function normalizeShortcutMemberProfile(value: unknown) {
     name: readOptionalString(record.name),
     mention_name: readOptionalNullableString(record.mention_name),
     email_address: readOptionalNullableString(record.email_address),
-    deactivated: readOptionalBoolean(record.deactivated),
-    two_factor_auth_activated: readOptionalBoolean(record.two_factor_auth_activated),
-    is_owner: readOptionalBoolean(record.is_owner),
-    disabled: readOptionalBoolean(record.disabled),
+    deactivated: optionalBoolean(record.deactivated),
+    two_factor_auth_activated: optionalBoolean(record.two_factor_auth_activated),
+    is_owner: optionalBoolean(record.is_owner),
+    disabled: optionalBoolean(record.disabled),
     entity_type: readOptionalString(record.entity_type),
     gravatar_hash: readOptionalNullableString(record.gravatar_hash),
     icon: normalizeOptionalShortcutIcon(record.icon),
@@ -789,12 +789,8 @@ function readOptionalNullableInteger(value: unknown) {
   return value === null ? null : readOptionalIntegerValue(value);
 }
 
-function readOptionalBoolean(value: unknown) {
-  return optionalBoolean(value);
-}
-
 function readRequiredBoolean(value: unknown, fieldName: string) {
-  const booleanValue = readOptionalBoolean(value);
+  const booleanValue = optionalBoolean(value);
   if (booleanValue === undefined) {
     throw new ProviderRequestError(502, `${fieldName} must be a boolean`);
   }

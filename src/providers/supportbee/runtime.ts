@@ -11,6 +11,7 @@ import {
   optionalRecord,
   optionalString,
   rawStringOrNull,
+  recordOrEmpty,
   requiredString,
 } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
@@ -45,7 +46,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
   },
   async get_ticket(input, context) {
     const payload = await supportbeeGetJson(context, `/tickets/${encodePathSegment(input.id)}`);
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       ticket: normalizeSupportbeeTicket(readObjectProperty(raw, "ticket") ?? raw),
       raw,
@@ -59,7 +60,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
         ticket: buildTicketCreateBody(input),
       },
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       ticket: normalizeSupportbeeTicket(readObjectProperty(raw, "ticket") ?? raw),
       raw,
@@ -67,7 +68,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
   },
   async list_ticket_replies(input, context) {
     const payload = await supportbeeGetJson(context, `/tickets/${encodePathSegment(input.ticket_id)}/replies`);
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       replies: readObjectArray(raw, "replies").map(normalizeSupportbeeReply),
       raw,
@@ -78,7 +79,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
       context,
       `/tickets/${encodePathSegment(input.ticket_id)}/replies/${encodePathSegment(input.reply_id)}`,
     );
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       reply: normalizeSupportbeeReply(readObjectProperty(raw, "reply") ?? raw),
       raw,
@@ -92,7 +93,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
         reply: buildReplyCreateBody(input),
       },
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       reply: normalizeSupportbeeReply(readObjectProperty(raw, "reply") ?? raw),
       raw,
@@ -100,7 +101,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
   },
   async list_ticket_comments(input, context) {
     const payload = await supportbeeGetJson(context, `/tickets/${encodePathSegment(input.ticket_id)}/comments`);
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       comments: readObjectArray(raw, "comments").map(normalizeSupportbeeComment),
       raw,
@@ -114,7 +115,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
         comment: buildCommentCreateBody(input),
       },
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       comment: normalizeSupportbeeComment(readObjectProperty(raw, "comment") ?? raw),
       raw,
@@ -122,7 +123,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
   },
   async list_labels(_input, context) {
     const payload = await supportbeeGetJson(context, "/labels");
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       labels: looseArray(raw.labels).map(normalizeSupportbeeLabel),
       raw,
@@ -133,7 +134,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
       method: "POST",
       path: `/tickets/${encodePathSegment(input.ticket_id)}/labels/${encodePathSegment(input.label_name)}`,
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       label: normalizeSupportbeeLabel(readObjectProperty(raw, "label") ?? raw),
       raw,
@@ -152,7 +153,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
       with_roles: readOptionalStringArray(input.with_roles)?.join(","),
       type: optionalString(input.type),
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       users: readObjectArray(raw, "users").map(normalizeSupportbeeUser),
       raw,
@@ -162,7 +163,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
     const payload = await supportbeeGetJson(context, `/users/${encodePathSegment(input.id)}`, {
       max_tickets: readMaxTickets(input.max_tickets),
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       user: normalizeSupportbeeUser(readObjectProperty(raw, "user") ?? raw),
       raw,
@@ -174,7 +175,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
       path: "/users",
       body: buildUserWriteBody(input),
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       user: normalizeSupportbeeUser(readObjectProperty(raw, "user") ?? raw),
       raw,
@@ -186,7 +187,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
       path: `/users/${encodePathSegment(input.id)}`,
       body: buildUserWriteBody(input),
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       user: normalizeSupportbeeUser(readObjectProperty(raw, "user") ?? raw),
       raw,
@@ -197,7 +198,7 @@ export const supportbeeActionHandlers: ProviderActionHandlers<"supportbee", Supp
       with_users: optionalBoolean(input.with_users),
       user: optionalString(input.user),
     });
-    const raw = payloadObject(payload);
+    const raw = recordOrEmpty(payload);
     return {
       teams: readObjectArray(raw, "teams").map(normalizeSupportbeeTeam),
       raw,
@@ -276,7 +277,7 @@ async function listSupportbeeTickets(
     requester_emails: readOptionalStringArray(input.requester_emails)?.join(","),
     total_only: optionalBoolean(input.total_only),
   });
-  const raw = payloadObject(payload);
+  const raw = recordOrEmpty(payload);
 
   return {
     tickets: readObjectArray(raw, "tickets").map(normalizeSupportbeeTicket),
@@ -591,10 +592,6 @@ export function readSupportbeeCompany(value: unknown): string {
 
 export function buildSupportbeeBaseUrl(company: string): string {
   return `https://${company}.supportbee.com`;
-}
-
-function payloadObject(payload: unknown): Record<string, unknown> {
-  return optionalRecord(payload) ?? {};
 }
 
 function readObjectProperty(value: unknown, key: string): Record<string, unknown> | null {

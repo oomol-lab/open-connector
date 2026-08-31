@@ -455,7 +455,8 @@ function normalizeZendeskPagination(payload: ZendeskListPayload): Record<string,
   return {
     count: nullableInteger(payload.count),
     hasMore:
-      nullableBoolean(meta?.has_more) ?? Boolean(optionalString(payload.next_page) ?? optionalString(links?.next)),
+      optionalBooleanOrNull(meta?.has_more) ??
+      Boolean(optionalString(payload.next_page) ?? optionalString(links?.next)),
     nextPage: nullableString(payload.next_page) ?? nullableString(links?.next),
     previousPage: nullableString(payload.previous_page) ?? nullableString(links?.prev),
     afterCursor: nullableString(meta?.after_cursor),
@@ -513,7 +514,7 @@ function normalizeZendeskComment(value: unknown, fieldName = "comment"): Record<
     body: nullableString(record.body),
     htmlBody: nullableString(record.html_body),
     plainBody: nullableString(record.plain_body),
-    public: nullableBoolean(record.public),
+    public: optionalBooleanOrNull(record.public),
     createdAt: nullableString(record.created_at),
     attachments: Array.isArray(record.attachments)
       ? record.attachments.map((item, index) => normalizeZendeskAttachment(item, `${fieldName}.attachments[${index}]`))
@@ -551,7 +552,7 @@ function normalizeZendeskUser(
     name: nullableString(record.name),
     email: nullableString(record.email),
     role: nullableString(record.role),
-    active: nullableBoolean(record.active),
+    active: optionalBooleanOrNull(record.active),
     organizationId: nullableInteger(record.organization_id),
     externalId: nullableString(record.external_id),
     phone: nullableString(record.phone),
@@ -575,8 +576,8 @@ function normalizeZendeskOrganization(value: unknown, fieldName = "organization"
     createdAt: nullableString(record.created_at),
     updatedAt: nullableString(record.updated_at),
     groupId: nullableInteger(record.group_id),
-    sharedTickets: nullableBoolean(record.shared_tickets),
-    sharedComments: nullableBoolean(record.shared_comments),
+    sharedTickets: optionalBooleanOrNull(record.shared_tickets),
+    sharedComments: optionalBooleanOrNull(record.shared_comments),
     domainNames: readRawStringArray(record.domain_names),
     tags: readRawStringArray(record.tags),
     raw: record,
@@ -632,10 +633,6 @@ function nullableString(value: unknown): string | null {
 
 function nullableInteger(value: unknown): number | null {
   return optionalIntegerOrNull(value);
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return optionalBooleanOrNull(value);
 }
 
 function stringifyArrayQuery(value: unknown): string[] | undefined {

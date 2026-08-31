@@ -7,7 +7,14 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
-import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  recordOrEmpty,
+} from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderFetch,
@@ -150,7 +157,7 @@ async function sendAltiriaSms(input: Record<string, unknown>, context: AltiriaCr
     }),
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     accepted: true,
     messages: readDataArray(wrapped).map(normalizeSms),
@@ -164,7 +171,7 @@ async function getAltiriaSms(input: Record<string, unknown>, context: AltiriaCre
     path: `/sms/${encodeURIComponent(requireString(input.id, "id"))}`,
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     messages: readDataArray(wrapped).map(normalizeSms),
     raw: payload,
@@ -182,7 +189,7 @@ async function listAltiriaContacts(input: Record<string, unknown>, context: Alti
     ],
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     contacts: readDataArray(wrapped).map(normalizeContact),
     meta: optionalRecord(wrapped.meta) ?? null,
@@ -197,7 +204,7 @@ async function getAltiriaContact(input: Record<string, unknown>, context: Altiri
     query: [["include", normalizeInclude(input.include)]],
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     contact: normalizeContact(readDataObject(wrapped)),
     raw: payload,
@@ -212,7 +219,7 @@ async function createAltiriaContact(input: Record<string, unknown>, context: Alt
     body: buildContactWriteBody(input),
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     contact: normalizeContact(readDataObject(wrapped)),
     raw: payload,
@@ -227,7 +234,7 @@ async function updateAltiriaContact(input: Record<string, unknown>, context: Alt
     body: buildContactWriteBody(input),
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     contact: normalizeContact(readDataObject(wrapped)),
     raw: payload,
@@ -254,7 +261,7 @@ async function listAltiriaGroups(input: Record<string, unknown>, context: Altiri
     ],
     phase: "execute",
   });
-  const wrapped = asAltiriaWrappedPayload(payload);
+  const wrapped = recordOrEmpty(payload);
   return {
     groups: readDataArray(wrapped).map(normalizeGroup),
     meta: optionalRecord(wrapped.meta) ?? null,
@@ -410,10 +417,6 @@ function buildContactWriteBody(input: Record<string, unknown>) {
 
 function normalizeInclude(value: unknown) {
   return Array.isArray(value) ? value.join(",") : undefined;
-}
-
-function asAltiriaWrappedPayload(payload: unknown): AltiriaWrappedPayload {
-  return optionalRecord(payload) ?? {};
 }
 
 function readDataArray(payload: AltiriaWrappedPayload) {

@@ -10,6 +10,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "starton";
@@ -42,7 +43,7 @@ export const startonActionHandlers: ProviderActionHandlers<"starton", StartonAct
     };
   },
   async get_pin(input, context) {
-    const pinId = requireTrimmedString(input.id, "id");
+    const pinId = requiredInputString(input.id, "id");
     const payload = await requestStartonJson({
       apiKey: context.apiKey,
       path: `/v3/ipfs/pin/${encodeURIComponent(pinId)}`,
@@ -61,7 +62,7 @@ export const startonActionHandlers: ProviderActionHandlers<"starton", StartonAct
       path: "/v3/ipfs/json",
       method: "POST",
       body: compactUndefined({
-        name: requireTrimmedString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
         content: requireLooseObject(input.content, "content"),
         metadata: optionalRecord(input.metadata),
       }),
@@ -76,7 +77,7 @@ export const startonActionHandlers: ProviderActionHandlers<"starton", StartonAct
       path: "/v3/ipfs/pin",
       method: "POST",
       body: compactUndefined({
-        cid: requireTrimmedString(input.cid, "cid"),
+        cid: requiredInputString(input.cid, "cid"),
         name: optionalString(input.name),
         metadata: optionalRecord(input.metadata),
       }),
@@ -86,7 +87,7 @@ export const startonActionHandlers: ProviderActionHandlers<"starton", StartonAct
     return { pin: normalizePin(payload) };
   },
   async delete_pin(input, context) {
-    const pinId = requireTrimmedString(input.id, "id");
+    const pinId = requiredInputString(input.id, "id");
     const payload = await requestStartonJson({
       apiKey: context.apiKey,
       path: `/v3/ipfs/pin/${encodeURIComponent(pinId)}`,
@@ -293,14 +294,6 @@ function requireLooseObject(value: unknown, fieldName: string): Record<string, u
     throw new ProviderRequestError(400, `${fieldName} must be an object.`);
   }
   return record;
-}
-
-function requireTrimmedString(value: unknown, fieldName: string): string {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required.`);
-  }
-  return parsed;
 }
 
 function requireOptionalString(value: unknown, label: string): string {

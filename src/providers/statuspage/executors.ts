@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "statuspage";
@@ -376,7 +377,7 @@ function buildIncidentComponentIds(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
   }
-  return value.map((item) => readIdValue(readObject(item, "component").componentId, "componentId"));
+  return value.map((item) => requiredInputString(readObject(item, "component").componentId, "componentId"));
 }
 
 function buildIncidentComponents(value: unknown): Record<string, unknown> | undefined {
@@ -386,21 +387,13 @@ function buildIncidentComponents(value: unknown): Record<string, unknown> | unde
   return Object.fromEntries(
     value.map((item) => {
       const component = readObject(item, "component");
-      return [readIdValue(component.componentId, "componentId"), component.status];
+      return [requiredInputString(component.componentId, "componentId"), component.status];
     }),
   );
 }
 
-function readIdValue(value: unknown, fieldName: string): string {
-  const stringValue = optionalString(value);
-  if (!stringValue) {
-    throw new ProviderRequestError(400, `${fieldName} is required.`);
-  }
-  return stringValue;
-}
-
 function readPathSegment(value: unknown, fieldName: string): string {
-  return encodeURIComponent(readIdValue(value, fieldName));
+  return encodeURIComponent(requiredInputString(value, fieldName));
 }
 
 function readObject(value: unknown, fieldName: string): Record<string, unknown> {

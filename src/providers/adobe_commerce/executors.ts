@@ -133,7 +133,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<AdobeCommerc
     return {
       apiKey: credential.apiKey,
       baseUrl: normalizeAdobeCommerceBaseUrl(credential.metadata.baseUrl ?? credential.values.baseUrl),
-      storeCode: normalizeOptionalStoreCode(credential.metadata.storeCode ?? credential.values.storeCode),
+      storeCode: optionalString(credential.metadata.storeCode ?? credential.values.storeCode),
       fetcher,
       signal: context.signal,
     };
@@ -145,7 +145,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: async (context) => {
     const credential = await requireApiKeyCredential(context, service);
     const baseUrl = normalizeAdobeCommerceBaseUrl(credential.metadata.baseUrl ?? credential.values.baseUrl);
-    const storeCode = normalizeOptionalStoreCode(credential.metadata.storeCode ?? credential.values.storeCode);
+    const storeCode = optionalString(credential.metadata.storeCode ?? credential.values.storeCode);
     const url = new URL(baseUrl);
     const segments = [...splitPathSegments(url.pathname), "rest", ...(storeCode ? [storeCode] : []), "V1"];
     url.pathname = `/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`;
@@ -157,7 +157,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const baseUrl = normalizeAdobeCommerceBaseUrl(input.values.baseUrl);
-    const storeCode = normalizeOptionalStoreCode(input.values.storeCode);
+    const storeCode = optionalString(input.values.storeCode);
 
     const payload = await requestAdobeCommerceJson({
       context: {
@@ -444,12 +444,8 @@ function readRequiredInteger(value: unknown, fieldName: string): number {
   return parsed;
 }
 
-function normalizeOptionalStoreCode(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function resolveStoreCode(inputStoreCode: unknown, metadataStoreCode: string | undefined): string | undefined {
-  return normalizeOptionalStoreCode(inputStoreCode) ?? metadataStoreCode;
+  return optionalString(inputStoreCode) ?? metadataStoreCode;
 }
 
 function normalizeAdobeCommerceBaseUrl(rawValue: unknown): string {

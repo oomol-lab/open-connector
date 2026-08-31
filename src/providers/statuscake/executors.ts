@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "statuscake";
@@ -98,7 +99,7 @@ async function listUptimeTests(input: Record<string, unknown>, context: ApiKeyPr
 }
 
 async function getUptimeTest(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const testId = requireInputString(input.test_id, "test_id");
+  const testId = requiredInputString(input.test_id, "test_id");
   const payload = await requestStatuscakeJson<Record<string, unknown>>({
     apiKey: context.apiKey,
     path: `/uptime/${encodeURIComponent(testId)}`,
@@ -123,7 +124,7 @@ async function createUptimeTest(input: Record<string, unknown>, context: ApiKeyP
 }
 
 async function updateUptimeTest(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const testId = requireInputString(input.test_id, "test_id");
+  const testId = requiredInputString(input.test_id, "test_id");
   const payload = await requestStatuscakeJson<Record<string, unknown>>({
     apiKey: context.apiKey,
     path: `/uptime/${encodeURIComponent(testId)}`,
@@ -137,7 +138,7 @@ async function updateUptimeTest(input: Record<string, unknown>, context: ApiKeyP
 }
 
 async function deleteUptimeTest(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const testId = requireInputString(input.test_id, "test_id");
+  const testId = requiredInputString(input.test_id, "test_id");
   await requestStatuscakeJson({
     apiKey: context.apiKey,
     path: `/uptime/${encodeURIComponent(testId)}`,
@@ -151,7 +152,7 @@ async function deleteUptimeTest(input: Record<string, unknown>, context: ApiKeyP
 async function listUptimeTestHistory(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return listWindowedUptimeResource({
     apiKey: context.apiKey,
-    testId: requireInputString(input.test_id, "test_id"),
+    testId: requiredInputString(input.test_id, "test_id"),
     resourcePath: "history",
     resultKey: "history",
     input,
@@ -162,7 +163,7 @@ async function listUptimeTestHistory(input: Record<string, unknown>, context: Ap
 async function listUptimeTestPeriods(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return listWindowedUptimeResource({
     apiKey: context.apiKey,
-    testId: requireInputString(input.test_id, "test_id"),
+    testId: requiredInputString(input.test_id, "test_id"),
     resourcePath: "periods",
     resultKey: "periods",
     input,
@@ -173,7 +174,7 @@ async function listUptimeTestPeriods(input: Record<string, unknown>, context: Ap
 async function listUptimeTestAlerts(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return listWindowedUptimeResource({
     apiKey: context.apiKey,
-    testId: requireInputString(input.test_id, "test_id"),
+    testId: requiredInputString(input.test_id, "test_id"),
     resourcePath: "alerts",
     resultKey: "alerts",
     input,
@@ -347,14 +348,6 @@ function requireArrayPayload(value: unknown, label: string): unknown[] {
     throw new ProviderRequestError(502, `${label} is not an array.`, value);
   }
   return value;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(400, `${fieldName} is required.`);
-  }
-  return parsed;
 }
 
 function buildQueryParams(input: Record<string, unknown>): URLSearchParams {

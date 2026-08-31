@@ -515,7 +515,7 @@ function balanceOperationBody(
   options: { includeRedeemedOn: boolean },
 ): Record<string, unknown> {
   return jsonObject({
-    amount: readOptionalNumber(input.amount),
+    amount: optionalNumber(input.amount),
     units: readOptionalInteger(input.units),
     ...eventBody(input),
     redeemedOn: options.includeRedeemedOn ? optionalString(input.redeemedOn) : undefined,
@@ -731,10 +731,6 @@ function normalizeStringArray(value: unknown): string[] {
   }
 
   return value.flatMap((item) => (typeof item === "string" ? [item] : []));
-}
-
-function readOptionalNumber(value: unknown): number | undefined {
-  return optionalNumber(value);
 }
 
 function readOptionalInteger(value: unknown): number | undefined {

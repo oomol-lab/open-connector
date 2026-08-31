@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, looseArray, rawStringOrNull } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalRawString, rawStringOrNull } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { sentryProviderScopes } from "./scopes.ts";
 
@@ -106,9 +106,9 @@ export async function validateSentryCredential(
     metadata: compactObject({
       validationEndpoint: "/users/me/",
       userId,
-      username: optionalString(user.username),
-      email: optionalString(user.email),
-      name: optionalString(user.name),
+      username: optionalRawString(user.username),
+      email: optionalRawString(user.email),
+      name: optionalRawString(user.name),
     }),
   };
 }
@@ -716,8 +716,8 @@ function normalizeOrganizationIntegration(value: unknown) {
   const body = expectRecord(value, "sentry integration payload is invalid");
 
   return {
-    id: optionalString(body.id) ?? "",
-    name: optionalString(body.name) ?? "",
+    id: optionalRawString(body.id) ?? "",
+    name: optionalRawString(body.name) ?? "",
     icon: rawStringOrNull(body.icon),
     domainName: rawStringOrNull(body.domainName),
     accountType: rawStringOrNull(body.accountType),
@@ -737,9 +737,9 @@ function normalizeIntegrationProvider(value: unknown) {
   const body = expectRecord(value, "sentry integration provider payload is invalid");
 
   return {
-    key: optionalString(body.key) ?? "",
-    slug: optionalString(body.slug) ?? "",
-    name: optionalString(body.name) ?? "",
+    key: optionalRawString(body.key) ?? "",
+    slug: optionalRawString(body.slug) ?? "",
+    name: optionalRawString(body.name) ?? "",
     canAdd: booleanValue(body.canAdd),
     canDisable: booleanValue(body.canDisable),
     features: stringArray(body.features),
@@ -792,15 +792,15 @@ function normalizeSentryApp(value: unknown) {
   const body = expectRecord(value, "sentry app payload is invalid");
 
   return {
-    name: optionalString(body.name) ?? "",
-    slug: optionalString(body.slug) ?? "",
-    uuid: optionalString(body.uuid) ?? "",
+    name: optionalRawString(body.name) ?? "",
+    slug: optionalRawString(body.slug) ?? "",
+    uuid: optionalRawString(body.uuid) ?? "",
     owner: normalizeSentryAppOwner(body.owner),
     author: rawStringOrNull(body.author),
     events: stringArray(body.events),
     schema: body.schema ?? null,
     scopes: stringArray(body.scopes),
-    status: optionalString(body.status) ?? "",
+    status: optionalRawString(body.status) ?? "",
     avatars: normalizeSentryAppAvatars(body.avatars),
     clientId: rawStringOrNull(body.clientId),
     metadata: body.metadata ?? null,
@@ -841,11 +841,11 @@ function normalizeSentryAppAvatars(value: unknown) {
 
     return [
       {
-        avatarType: optionalString(body.avatarType) ?? "",
-        avatarUuid: optionalString(body.avatarUuid) ?? "",
-        avatarUrl: optionalString(body.avatarUrl) ?? "",
+        avatarType: optionalRawString(body.avatarType) ?? "",
+        avatarUuid: optionalRawString(body.avatarUuid) ?? "",
+        avatarUrl: optionalRawString(body.avatarUrl) ?? "",
         color: booleanValue(body.color),
-        photoType: optionalString(body.photoType) ?? "",
+        photoType: optionalRawString(body.photoType) ?? "",
       },
     ];
   });
@@ -855,9 +855,9 @@ function normalizeSentryProject(value: unknown) {
   const body = expectRecord(value, "sentry project payload is invalid");
 
   return {
-    id: optionalString(body.id) ?? "",
-    slug: optionalString(body.slug) ?? "",
-    name: optionalString(body.name) ?? "",
+    id: optionalRawString(body.id) ?? "",
+    slug: optionalRawString(body.slug) ?? "",
+    name: optionalRawString(body.name) ?? "",
     platform: rawStringOrNull(body.platform),
     status: rawStringOrNull(body.status),
     dateCreated: rawStringOrNull(body.dateCreated),
@@ -902,9 +902,9 @@ function normalizeSentryProjectSummary(value: unknown) {
   }
 
   return {
-    id: optionalString(body.id) ?? "",
-    slug: optionalString(body.slug) ?? "",
-    name: optionalString(body.name) ?? "",
+    id: optionalRawString(body.id) ?? "",
+    slug: optionalRawString(body.slug) ?? "",
+    name: optionalRawString(body.name) ?? "",
     platform: rawStringOrNull(body.platform),
   };
 }
@@ -913,7 +913,7 @@ function normalizeSentryIssue(value: unknown) {
   const body = expectRecord(value, "sentry issue payload is invalid");
 
   return {
-    id: optionalString(body.id) ?? "",
+    id: optionalRawString(body.id) ?? "",
     shortId: rawStringOrNull(body.shortId),
     title: rawStringOrNull(body.title),
     culprit: rawStringOrNull(body.culprit),
@@ -994,7 +994,7 @@ function normalizeSentryIssueEvent(value: unknown) {
   const body = expectRecord(value, "sentry issue event payload is invalid");
 
   return {
-    id: optionalString(body.id) ?? optionalString(body.eventID) ?? "",
+    id: optionalRawString(body.id) ?? optionalRawString(body.eventID) ?? "",
     eventId: rawStringOrNull(body.eventID ?? body.eventId),
     issueId: rawStringOrNull(body.groupID ?? body.groupId),
     title: rawStringOrNull(body.title),
@@ -1058,7 +1058,7 @@ function normalizeSentryRelease(value: unknown) {
   const body = expectRecord(value, "sentry release payload is invalid");
 
   return {
-    version: optionalString(body.version) ?? "",
+    version: optionalRawString(body.version) ?? "",
     shortVersion: rawStringOrNull(body.shortVersion),
     status: rawStringOrNull(body.status),
     dateCreated: rawStringOrNull(body.dateCreated),
@@ -1120,7 +1120,7 @@ function normalizeSentryReplay(value: unknown) {
   const body = expectRecord(value, "sentry replay payload is invalid");
 
   return {
-    id: optionalString(body.id) ?? "",
+    id: optionalRawString(body.id) ?? "",
     projectId: nullableInteger(body.projectId ?? body.project_id),
     environment: rawStringOrNull(body.environment),
     platform: rawStringOrNull(body.platform),
@@ -1176,7 +1176,7 @@ function normalizeSentryReplayReleases(value: unknown) {
     }
 
     const body = asRecord(item);
-    const version = body ? optionalString(body.version) : undefined;
+    const version = body ? optionalRawString(body.version) : undefined;
     return version ? [version] : [];
   });
 }
@@ -1185,8 +1185,8 @@ function normalizeSentryAlert(value: unknown) {
   const body = expectRecord(value, "sentry alert payload is invalid");
 
   return {
-    id: optionalString(body.id) ?? "",
-    name: optionalString(body.name) ?? "",
+    id: optionalRawString(body.id) ?? "",
+    name: optionalRawString(body.name) ?? "",
     organizationId: rawStringOrNull(body.organizationId ?? body.organization_id),
     enabled: booleanValue(body.enabled),
     createdBy: normalizeCreatedBy(body.createdBy),
@@ -1321,7 +1321,7 @@ function extractSentryErrorMessage(payload: unknown): string | null {
 
 function readNestedString(body: Record<string, unknown>, key: string, nestedKey: string) {
   const nested = asOptionalRecord(body[key]);
-  return optionalString(nested?.[nestedKey]);
+  return optionalRawString(nested?.[nestedKey]);
 }
 
 function expectRecord(value: unknown, message: string) {
@@ -1343,12 +1343,8 @@ function asOptionalRecord(value: unknown) {
   return asRecord(value);
 }
 
-function optionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
-}
-
 function asOptionalString(value: unknown) {
-  return optionalString(value);
+  return optionalRawString(value);
 }
 
 function asOptionalStringArray(value: unknown) {

@@ -1,4 +1,11 @@
-import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalNumber,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const v0ApiBaseUrl = "https://api.v0.dev";
@@ -201,17 +208,17 @@ export function normalizeProject(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "project.id"),
-    object: asOptionalString(record.object),
-    name: asOptionalString(record.name),
-    description: asOptionalString(record.description),
-    instructions: asOptionalString(record.instructions),
-    icon: asOptionalString(record.icon),
-    privacy: asOptionalString(record.privacy),
-    vercelProjectId: asOptionalString(record.vercelProjectId),
-    createdAt: asOptionalString(record.createdAt),
-    updatedAt: asOptionalString(record.updatedAt),
-    apiUrl: asOptionalString(record.apiUrl),
-    webUrl: asOptionalString(record.webUrl),
+    object: optionalRawString(record.object),
+    name: optionalRawString(record.name),
+    description: optionalRawString(record.description),
+    instructions: optionalRawString(record.instructions),
+    icon: optionalRawString(record.icon),
+    privacy: optionalRawString(record.privacy),
+    vercelProjectId: optionalRawString(record.vercelProjectId),
+    createdAt: optionalRawString(record.createdAt),
+    updatedAt: optionalRawString(record.updatedAt),
+    apiUrl: optionalRawString(record.apiUrl),
+    webUrl: optionalRawString(record.webUrl),
     chats: normalizeOptionalArray(record.chats, normalizeChat),
   });
 }
@@ -221,13 +228,13 @@ export function normalizeEnvVar(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "environment_variable.id"),
-    object: asOptionalString(record.object),
-    key: asOptionalString(record.key),
-    value: asOptionalString(record.value),
-    decrypted: asOptionalBoolean(record.decrypted),
+    object: optionalRawString(record.object),
+    key: optionalRawString(record.key),
+    value: optionalRawString(record.value),
+    decrypted: optionalBoolean(record.decrypted),
     createdAt: asOptionalNumber(record.createdAt),
     updatedAt: asOptionalNumber(record.updatedAt),
-    deleted: asOptionalBoolean(record.deleted),
+    deleted: optionalBoolean(record.deleted),
   });
 }
 
@@ -236,17 +243,17 @@ export function normalizeChat(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "chat.id"),
-    object: asOptionalString(record.object),
-    name: asOptionalString(record.name),
-    privacy: asOptionalString(record.privacy),
-    favorite: asOptionalBoolean(record.favorite),
-    authorId: asOptionalString(record.authorId),
-    projectId: asOptionalString(record.projectId),
-    vercelProjectId: asOptionalString(record.vercelProjectId),
-    createdAt: asOptionalString(record.createdAt),
-    updatedAt: asOptionalString(record.updatedAt),
-    apiUrl: asOptionalString(record.apiUrl),
-    webUrl: asOptionalString(record.webUrl),
+    object: optionalRawString(record.object),
+    name: optionalRawString(record.name),
+    privacy: optionalRawString(record.privacy),
+    favorite: optionalBoolean(record.favorite),
+    authorId: optionalRawString(record.authorId),
+    projectId: optionalRawString(record.projectId),
+    vercelProjectId: optionalRawString(record.vercelProjectId),
+    createdAt: optionalRawString(record.createdAt),
+    updatedAt: optionalRawString(record.updatedAt),
+    apiUrl: optionalRawString(record.apiUrl),
+    webUrl: optionalRawString(record.webUrl),
     metadata: asOptionalRecord(record.metadata),
     latestVersion: normalizeOptionalObject(record.latestVersion, normalizeVersion),
     messages: normalizeOptionalArray(record.messages, normalizeMessage),
@@ -258,15 +265,15 @@ export function normalizeMessage(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "message.id"),
-    object: asOptionalString(record.object),
-    chatId: asOptionalString(record.chatId),
-    role: asOptionalString(record.role),
-    type: asOptionalString(record.type),
-    content: asOptionalString(record.content),
-    finishReason: asOptionalString(record.finishReason),
-    createdAt: asOptionalString(record.createdAt),
-    updatedAt: asOptionalString(record.updatedAt),
-    apiUrl: asOptionalString(record.apiUrl),
+    object: optionalRawString(record.object),
+    chatId: optionalRawString(record.chatId),
+    role: optionalRawString(record.role),
+    type: optionalRawString(record.type),
+    content: optionalRawString(record.content),
+    finishReason: optionalRawString(record.finishReason),
+    createdAt: optionalRawString(record.createdAt),
+    updatedAt: optionalRawString(record.updatedAt),
+    apiUrl: optionalRawString(record.apiUrl),
     modelConfiguration: asOptionalRecord(record.modelConfiguration),
     attachments: normalizeOptionalArray(record.attachments, normalizeAttachment),
     experimentalContent: record.experimentalContent ?? record.experimental_content ?? undefined,
@@ -278,12 +285,12 @@ export function normalizeVersion(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "version.id"),
-    object: asOptionalString(record.object),
-    status: asOptionalString(record.status),
-    demoUrl: asOptionalString(record.demoUrl),
-    screenshotUrl: asOptionalString(record.screenshotUrl),
-    createdAt: asOptionalString(record.createdAt),
-    updatedAt: asOptionalString(record.updatedAt),
+    object: optionalRawString(record.object),
+    status: optionalRawString(record.status),
+    demoUrl: optionalRawString(record.demoUrl),
+    screenshotUrl: optionalRawString(record.screenshotUrl),
+    createdAt: optionalRawString(record.createdAt),
+    updatedAt: optionalRawString(record.updatedAt),
     files: normalizeOptionalArray(record.files, normalizeFile),
   });
 }
@@ -293,13 +300,13 @@ export function normalizeDeployment(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "deployment.id"),
-    object: asOptionalString(record.object),
-    inspectorUrl: asOptionalString(record.inspectorUrl),
-    chatId: asOptionalString(record.chatId),
-    projectId: asOptionalString(record.projectId),
-    versionId: asOptionalString(record.versionId),
-    apiUrl: asOptionalString(record.apiUrl),
-    webUrl: asOptionalString(record.webUrl),
+    object: optionalRawString(record.object),
+    inspectorUrl: optionalRawString(record.inspectorUrl),
+    chatId: optionalRawString(record.chatId),
+    projectId: optionalRawString(record.projectId),
+    versionId: optionalRawString(record.versionId),
+    apiUrl: optionalRawString(record.apiUrl),
+    webUrl: optionalRawString(record.webUrl),
   });
 }
 
@@ -308,12 +315,12 @@ export function normalizeDeploymentLog(payload: unknown): Record<string, unknown
 
   return compactObject({
     id: requireResponseString(record.id, "deployment_log.id"),
-    object: asOptionalString(record.object),
-    deploymentId: asOptionalString(record.deploymentId),
-    createdAt: asOptionalString(record.createdAt),
-    text: asOptionalString(record.text),
-    type: asOptionalString(record.type),
-    level: asOptionalString(record.level),
+    object: optionalRawString(record.object),
+    deploymentId: optionalRawString(record.deploymentId),
+    createdAt: optionalRawString(record.createdAt),
+    text: optionalRawString(record.text),
+    type: optionalRawString(record.type),
+    level: optionalRawString(record.level),
   });
 }
 
@@ -321,10 +328,10 @@ export function normalizeDeploymentErrors(payload: unknown): Record<string, unkn
   const record = normalizeObjectData(payload);
 
   return compactObject({
-    error: asOptionalString(record.error),
-    fullErrorText: asOptionalString(record.fullErrorText),
-    errorType: asOptionalString(record.errorType),
-    formattedError: asOptionalString(record.formattedError),
+    error: optionalRawString(record.error),
+    fullErrorText: optionalRawString(record.fullErrorText),
+    errorType: optionalRawString(record.errorType),
+    formattedError: optionalRawString(record.formattedError),
   });
 }
 
@@ -333,8 +340,8 @@ export function normalizeAssignment(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "assignment.id"),
-    object: asOptionalString(record.object),
-    assigned: asOptionalBoolean(record.assigned),
+    object: optionalRawString(record.object),
+    assigned: optionalBoolean(record.assigned),
   });
 }
 
@@ -343,8 +350,8 @@ export function normalizeDeletedResource(payload: unknown, resourceName: string)
 
   return compactObject({
     id: requireResponseString(record.id, `${resourceName}.id`),
-    object: asOptionalString(record.object),
-    deleted: asOptionalBoolean(record.deleted),
+    object: optionalRawString(record.object),
+    deleted: optionalBoolean(record.deleted),
   });
 }
 
@@ -353,8 +360,8 @@ export function normalizeFavoriteStatus(payload: unknown): Record<string, unknow
 
   return compactObject({
     id: requireResponseString(record.id, "favorite.id"),
-    object: asOptionalString(record.object),
-    favorited: asOptionalBoolean(record.favorited),
+    object: optionalRawString(record.object),
+    favorited: optionalBoolean(record.favorited),
   });
 }
 
@@ -368,16 +375,16 @@ export function normalizeHook(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "hook.id"),
-    object: asOptionalString(record.object),
-    name: asOptionalString(record.name),
+    object: optionalRawString(record.object),
+    name: optionalRawString(record.name),
     events,
-    chatId: asOptionalString(record.chatId ?? record.chat_id),
-    projectId: asOptionalString(record.projectId ?? record.project_id),
-    url: asOptionalString(record.url),
-    createdAt: asOptionalString(record.createdAt ?? record.created_at),
-    updatedAt: asOptionalString(record.updatedAt ?? record.updated_at),
-    description: asOptionalString(record.description),
-    active: asOptionalBoolean(record.active),
+    chatId: optionalRawString(record.chatId ?? record.chat_id),
+    projectId: optionalRawString(record.projectId ?? record.project_id),
+    url: optionalRawString(record.url),
+    createdAt: optionalRawString(record.createdAt ?? record.created_at),
+    updatedAt: optionalRawString(record.updatedAt ?? record.updated_at),
+    description: optionalRawString(record.description),
+    active: optionalBoolean(record.active),
   });
 }
 
@@ -394,7 +401,7 @@ export function normalizeRateLimit(payload: unknown): Record<string, unknown> {
           limit: requireResponseNumber(dailyLimit.limit, "rate_limit.dailyLimit.limit"),
           remaining: asOptionalNumber(dailyLimit.remaining),
           reset: asOptionalNumber(dailyLimit.reset),
-          isWithinGracePeriod: asOptionalBoolean(dailyLimit.isWithinGracePeriod),
+          isWithinGracePeriod: optionalBoolean(dailyLimit.isWithinGracePeriod),
         })
       : undefined,
   });
@@ -410,7 +417,7 @@ export function normalizeBilling(payload: unknown): Record<string, unknown> {
   const limit = asOptionalNumber(wrapper.limit) ?? asOptionalNumber(record.limit) ?? asOptionalNumber(data?.limit);
 
   return compactObject({
-    billingType: asOptionalString(wrapper.billingType) ?? asOptionalString(record.billingType),
+    billingType: optionalRawString(wrapper.billingType) ?? optionalRawString(record.billingType),
     data,
     remaining,
     reset,
@@ -424,7 +431,7 @@ export function normalizePlan(payload: unknown): Record<string, unknown> {
   const balance = asOptionalRecord(record.balance);
 
   return compactObject({
-    object: asOptionalString(record.object),
+    object: optionalRawString(record.object),
     plan: requireResponseString(record.plan, "plan.plan"),
     billingCycle: billingCycle
       ? compactObject({
@@ -451,8 +458,8 @@ export function normalizeScope(payload: unknown): Record<string, unknown> {
   const record = normalizeObjectData(payload);
   return compactObject({
     id: requireResponseString(record.id, "scope.id"),
-    object: asOptionalString(record.object),
-    name: asOptionalString(record.name),
+    object: optionalRawString(record.object),
+    name: optionalRawString(record.name),
   });
 }
 
@@ -462,23 +469,23 @@ export function normalizeUsageEvent(payload: unknown): Record<string, unknown> {
 
   return compactObject({
     id: requireResponseString(record.id, "usage_event.id"),
-    object: asOptionalString(record.object),
-    type: asOptionalString(record.type),
-    promptCost: asOptionalString(record.promptCost),
-    completionCost: asOptionalString(record.completionCost),
-    totalCost: asOptionalString(record.totalCost),
-    chatId: asOptionalString(record.chatId),
-    messageId: asOptionalString(record.messageId),
-    userId: asOptionalString(record.userId),
+    object: optionalRawString(record.object),
+    type: optionalRawString(record.type),
+    promptCost: optionalRawString(record.promptCost),
+    completionCost: optionalRawString(record.completionCost),
+    totalCost: optionalRawString(record.totalCost),
+    chatId: optionalRawString(record.chatId),
+    messageId: optionalRawString(record.messageId),
+    userId: optionalRawString(record.userId),
     user: user
       ? compactObject({
-          id: asOptionalString(user.id),
-          object: asOptionalString(user.object),
-          name: asOptionalString(user.name),
-          email: asOptionalString(user.email),
+          id: optionalRawString(user.id),
+          object: optionalRawString(user.object),
+          name: optionalRawString(user.name),
+          email: optionalRawString(user.email),
         })
       : undefined,
-    createdAt: asOptionalString(record.createdAt),
+    createdAt: optionalRawString(record.createdAt),
   });
 }
 
@@ -499,8 +506,8 @@ export function normalizeVercelProject(payload: unknown): Record<string, unknown
 
   return compactObject({
     id: requireResponseString(record.id, "vercel_project.id"),
-    object: asOptionalString(record.object),
-    name: asOptionalString(record.name),
+    object: optionalRawString(record.object),
+    name: optionalRawString(record.name),
   });
 }
 
@@ -515,12 +522,12 @@ function normalizeAttachment(payload: unknown) {
   const record = normalizeObjectData(payload);
 
   return compactObject({
-    url: asOptionalString(record.url),
-    name: asOptionalString(record.name),
-    contentType: asOptionalString(record.contentType),
+    url: optionalRawString(record.url),
+    name: optionalRawString(record.name),
+    contentType: optionalRawString(record.contentType),
     size: asOptionalNumber(record.size),
-    content: asOptionalString(record.content),
-    type: asOptionalString(record.type),
+    content: optionalRawString(record.content),
+    type: optionalRawString(record.type),
   });
 }
 
@@ -528,12 +535,12 @@ function normalizeFile(payload: unknown) {
   const record = normalizeObjectData(payload);
 
   return compactObject({
-    object: asOptionalString(record.object),
-    name: asOptionalString(record.name),
-    content: asOptionalString(record.content),
-    locked: asOptionalBoolean(record.locked),
-    origin: asOptionalString(record.origin),
-    language: asOptionalString(record.language),
+    object: optionalRawString(record.object),
+    name: optionalRawString(record.name),
+    content: optionalRawString(record.content),
+    locked: optionalBoolean(record.locked),
+    origin: optionalRawString(record.origin),
+    language: optionalRawString(record.language),
     metadata: asOptionalRecord(record.metadata),
   });
 }
@@ -566,16 +573,8 @@ function asOptionalRecord(value: unknown) {
   return value as Record<string, unknown>;
 }
 
-function asOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
-}
-
 function asOptionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function asOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function requireResponseString(value: unknown, fieldName: string) {
@@ -646,7 +645,7 @@ function extractErrorMessage(payload: unknown, status: number) {
 
   const error = asOptionalRecord(record.error);
   const message =
-    asOptionalString(error?.message) ?? asOptionalString(record.message) ?? asOptionalString(record.errorMessage);
+    optionalRawString(error?.message) ?? optionalRawString(record.message) ?? optionalRawString(record.errorMessage);
 
   if (message) {
     return message;

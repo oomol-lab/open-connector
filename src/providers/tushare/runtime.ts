@@ -2,13 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { optionalNumber, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 interface TushareTableData {
@@ -361,7 +362,7 @@ async function tushareRequest(
       }),
     });
     const payload = await readJsonPayload(response);
-    const envelope = readProviderObject(payload, "payload");
+    const envelope = requiredResponseRecord(payload, "payload");
     if (!response.ok) {
       throw createTushareHttpError(response.status, envelope);
     }
@@ -412,7 +413,7 @@ function createTushareApiError(code: number, payload: Record<string, unknown>): 
 }
 
 function normalizeTableData(value: unknown): TushareTableData {
-  const data = readProviderObject(value, "data");
+  const data = requiredResponseRecord(value, "data");
   return {
     fields: normalizeFields(data.fields),
     items: normalizeItems(data.items),
@@ -491,12 +492,6 @@ function normalizeFieldsInput(value: unknown): string | undefined {
 function readOptionalObject(value: unknown, fieldName: string): Record<string, unknown> | undefined {
   if (value === undefined) return undefined;
   return requiredRecord(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function readProviderObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  return record;
 }
 
 function readProviderString(value: unknown, fieldName: string): string {

@@ -9,6 +9,7 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const superchatApiBaseUrl = "https://api.superchat.com";
@@ -33,7 +34,7 @@ type SuperchatActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 export const superchatActionHandlers: ProviderActionHandlers<"superchat", SuperchatActionHandler> = {
   async get_me(_input, context) {
     return {
-      profile: requiredRecord(
+      profile: requiredResponseRecord(
         await requestSuperchatJson({
           path: "/me",
           apiKey: context.apiKey,
@@ -46,7 +47,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
     };
   },
   async list_channels(input, context) {
-    const payload = requiredRecord(
+    const payload = requiredResponseRecord(
       await requestSuperchatJson({
         path: "/channels",
         apiKey: context.apiKey,
@@ -62,7 +63,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   async get_channel(input, context) {
     const channelId = requiredString(input.channel_id, "channel_id", providerInputError);
     return {
-      channel: requiredRecord(
+      channel: requiredResponseRecord(
         await requestSuperchatJson({
           path: `/channels/${encodeURIComponent(channelId)}`,
           apiKey: context.apiKey,
@@ -76,7 +77,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   },
   async create_contact(input, context) {
     return {
-      contact: requiredRecord(
+      contact: requiredResponseRecord(
         await requestSuperchatJson({
           path: "/contacts",
           method: "POST",
@@ -93,7 +94,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   async get_contact(input, context) {
     const contactId = requiredString(input.contact_id, "contact_id", providerInputError);
     return {
-      contact: requiredRecord(
+      contact: requiredResponseRecord(
         await requestSuperchatJson({
           path: `/contacts/${encodeURIComponent(contactId)}`,
           apiKey: context.apiKey,
@@ -106,7 +107,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
     };
   },
   async list_contacts(input, context) {
-    const payload = requiredRecord(
+    const payload = requiredResponseRecord(
       await requestSuperchatJson({
         path: "/contacts",
         apiKey: context.apiKey,
@@ -121,7 +122,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   },
   async search_contacts(input, context) {
     const field = requiredString(input.field, "field", providerInputError);
-    const payload = requiredRecord(
+    const payload = requiredResponseRecord(
       await requestSuperchatJson({
         path: "/contacts/search",
         method: "POST",
@@ -152,7 +153,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   async update_contact(input, context) {
     const contactId = requiredString(input.contact_id, "contact_id", providerInputError);
     return {
-      contact: requiredRecord(
+      contact: requiredResponseRecord(
         await requestSuperchatJson({
           path: `/contacts/${encodeURIComponent(contactId)}`,
           method: "PATCH",
@@ -168,7 +169,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   },
   async send_text_message(input, context) {
     return {
-      message: requiredRecord(
+      message: requiredResponseRecord(
         await requestSuperchatJson({
           path: "/messages",
           method: "POST",
@@ -188,7 +189,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   },
   async send_email_message(input, context) {
     return {
-      message: requiredRecord(
+      message: requiredResponseRecord(
         await requestSuperchatJson({
           path: "/messages",
           method: "POST",
@@ -214,7 +215,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
   },
   async send_whatsapp_template_message(input, context) {
     return {
-      message: requiredRecord(
+      message: requiredResponseRecord(
         await requestSuperchatJson({
           path: "/messages",
           method: "POST",
@@ -243,7 +244,7 @@ export async function validateSuperchatCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSuperchatJson({
       path: "/me",
       apiKey: input.apiKey,
@@ -380,10 +381,4 @@ function readSuperchatErrorMessage(payload: unknown): string | undefined {
   const title = optionalString(first?.title);
   const detail = optionalString(first?.detail);
   return title && detail ? `${title}: ${detail}` : (title ?? detail);
-}
-
-function requiredRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
-  return record;
 }

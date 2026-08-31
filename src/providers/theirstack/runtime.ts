@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
 export const theirstackApiBaseUrl = "https://api.theirstack.com";
 
@@ -13,27 +13,27 @@ export const theirstackActionHandlers: ProviderActionHandlers<"theirstack", Thei
   async search_jobs(input, context) {
     assertJobSearchWindow(input);
     const payload = await theirstackRequestJson("POST", "/v1/jobs/search", input, context);
-    const record = readObject(payload, "TheirStack job search response");
+    const record = requiredResponseRecord(payload, "TheirStack job search response");
     return {
       jobs: looseArray(record.data),
-      metadata: readObject(record.metadata, "TheirStack job search metadata"),
+      metadata: requiredResponseRecord(record.metadata, "TheirStack job search metadata"),
     };
   },
   async search_companies(input, context) {
     const payload = await theirstackRequestJson("POST", "/v1/companies/search", input, context);
-    const record = readObject(payload, "TheirStack company search response");
+    const record = requiredResponseRecord(payload, "TheirStack company search response");
     return {
       companies: looseArray(record.data),
-      metadata: readObject(record.metadata, "TheirStack company search metadata"),
+      metadata: requiredResponseRecord(record.metadata, "TheirStack company search metadata"),
     };
   },
   async list_technographics(input, context) {
     assertTechnographicsCompany(input);
     const payload = await theirstackRequestJson("POST", "/v1/companies/technologies", input, context);
-    const record = readObject(payload, "TheirStack technographics response");
+    const record = requiredResponseRecord(payload, "TheirStack technographics response");
     return {
       technologies: looseArray(record.data),
-      metadata: readObject(record.metadata, "TheirStack technographics metadata"),
+      metadata: requiredResponseRecord(record.metadata, "TheirStack technographics metadata"),
     };
   },
   get_credit_balance(_input, context) {
@@ -52,7 +52,7 @@ export async function validateTheirStackCredential(
     { apiKey: input.apiKey, fetcher: options.fetcher, signal: options.signal },
     "validate",
   );
-  const record = readObject(payload, "TheirStack credit balance response");
+  const record = requiredResponseRecord(payload, "TheirStack credit balance response");
   return {
     profile: { accountId: "theirstack:api-key", displayName: "TheirStack API Key" },
     grantedScopes: [],
@@ -131,12 +131,6 @@ function readTheirStackErrorMessage(payload: unknown): string | undefined {
     if (messages.length > 0) return messages.join("; ");
   }
   return optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.title);
-}
-
-function readObject(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
-  return record;
 }
 
 function assertJobSearchWindow(input: Record<string, unknown>): void {

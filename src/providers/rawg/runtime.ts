@@ -63,7 +63,7 @@ export const rawgActionHandlers: ProviderActionHandlers<"rawg", RawgActionHandle
     return getResource(`/games/${encodeURIComponent(String(readRequiredGameId(input.gameId)))}`, "game", context);
   },
   list_platforms(input, context) {
-    return listResource("/platforms", buildPagedQuery(input, readOptionalString(input.ordering)), "platforms", context);
+    return listResource("/platforms", buildPagedQuery(input, optionalRawString(input.ordering)), "platforms", context);
   },
   get_platform(input, context) {
     return getResource(
@@ -73,13 +73,13 @@ export const rawgActionHandlers: ProviderActionHandlers<"rawg", RawgActionHandle
     );
   },
   list_genres(input, context) {
-    return listResource("/genres", buildPagedQuery(input, readOptionalString(input.ordering)), "genres", context);
+    return listResource("/genres", buildPagedQuery(input, optionalRawString(input.ordering)), "genres", context);
   },
   get_genre(input, context) {
     return getResource(`/genres/${readRequiredPositiveInteger(input.genreId, "genreId")}`, "genre", context);
   },
   list_stores(input, context) {
-    return listResource("/stores", buildPagedQuery(input, readOptionalString(input.ordering)), "stores", context);
+    return listResource("/stores", buildPagedQuery(input, optionalRawString(input.ordering)), "stores", context);
   },
   get_store(input, context) {
     return getResource(`/stores/${readRequiredPositiveInteger(input.storeId, "storeId")}`, "store", context);
@@ -135,19 +135,19 @@ export const rawgActionHandlers: ProviderActionHandlers<"rawg", RawgActionHandle
 
 function buildListGamesQuery(input: Record<string, unknown>) {
   return compactObject({
-    search: readOptionalString(input.search),
+    search: optionalRawString(input.search),
     page: stringifyOptionalNumber(input.page),
     page_size: stringifyOptionalNumber(input.pageSize),
-    platforms: readOptionalString(input.platforms),
-    genres: readOptionalString(input.genres),
-    stores: readOptionalString(input.stores),
-    developers: readOptionalString(input.developers),
-    publishers: readOptionalString(input.publishers),
-    tags: readOptionalString(input.tags),
-    dates: readOptionalString(input.dates),
-    ordering: readOptionalString(input.ordering),
-    metacritic: readOptionalString(input.metacritic),
-    parent_platforms: readOptionalString(input.parentPlatforms),
+    platforms: optionalRawString(input.platforms),
+    genres: optionalRawString(input.genres),
+    stores: optionalRawString(input.stores),
+    developers: optionalRawString(input.developers),
+    publishers: optionalRawString(input.publishers),
+    tags: optionalRawString(input.tags),
+    dates: optionalRawString(input.dates),
+    ordering: optionalRawString(input.ordering),
+    metacritic: optionalRawString(input.metacritic),
+    parent_platforms: optionalRawString(input.parentPlatforms),
     search_exact: stringifyOptionalBoolean(input.searchExact),
     search_precise: stringifyOptionalBoolean(input.searchPrecise),
     exclude_additions: stringifyOptionalBoolean(input.excludeAdditions),
@@ -373,10 +373,6 @@ function stringifyOptionalBoolean(value: unknown) {
     return undefined;
   }
   return String(value);
-}
-
-function readOptionalString(value: unknown) {
-  return optionalRawString(value);
 }
 
 function asOptionalObject(value: unknown) {

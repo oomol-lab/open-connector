@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "slite";
@@ -40,7 +41,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const profile = requiredRecord(
+    const profile = requiredResponseRecord(
       await requestSliteJson({ path: "/v1/me", context: { apiKey: input.apiKey, fetcher, signal }, phase: "validate" }),
       "Slite profile",
     );
@@ -69,7 +70,7 @@ async function listNotes(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSliteJson({
       path: "/v1/notes",
       context,
@@ -97,7 +98,7 @@ async function getNote(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const noteId = requiredInputString(input.noteId, "noteId");
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSliteJson({
       path: `/v1/notes/${encodeURIComponent(noteId)}`,
       context,
@@ -114,7 +115,7 @@ async function createNote(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSliteJson({
       path: "/v1/notes",
       context,
@@ -150,7 +151,7 @@ async function updateNote(
     throw new ProviderRequestError(400, "Provide at least one of title, markdown, html, or attributes.");
   }
 
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSliteJson({
       path: `/v1/notes/${encodeURIComponent(noteId)}`,
       context,
@@ -182,7 +183,7 @@ async function searchNotes(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSliteJson({
       path: "/v1/search-notes",
       context,
@@ -215,7 +216,7 @@ async function searchGroups(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const payload = requiredRecord(
+  const payload = requiredResponseRecord(
     await requestSliteJson({
       path: "/v1/groups",
       context,
@@ -317,7 +318,7 @@ function extractSliteErrorMessage(payload: unknown): string | undefined {
 }
 
 function normalizeNote(input: unknown): Record<string, unknown> {
-  const note = requiredRecord(input, "Slite note");
+  const note = requiredResponseRecord(input, "Slite note");
   return {
     id: requiredResponseString(note.id, "id"),
     title: requiredResponseString(note.title, "title"),
@@ -338,7 +339,7 @@ function normalizeNote(input: unknown): Record<string, unknown> {
 
 function normalizeOwner(input: unknown): Record<string, unknown> | null {
   if (input == null) return null;
-  const owner = requiredRecord(input, "Slite owner");
+  const owner = requiredResponseRecord(input, "Slite owner");
   const userId = nullableString(owner.userId);
   const groupId = nullableString(owner.groupId);
   if (!userId && !groupId) throw new ProviderRequestError(502, "slite response missing owner id");
@@ -346,7 +347,7 @@ function normalizeOwner(input: unknown): Record<string, unknown> | null {
 }
 
 function normalizeSearchHit(input: unknown): Record<string, unknown> {
-  const hit = requiredRecord(input, "Slite search hit");
+  const hit = requiredResponseRecord(input, "Slite search hit");
   return {
     id: requiredResponseString(hit.id, "id"),
     title: requiredResponseString(hit.title, "title"),
@@ -358,7 +359,7 @@ function normalizeSearchHit(input: unknown): Record<string, unknown> {
     iconColor: nullableString(hit.iconColor),
     iconShape: nullableString(hit.iconShape),
     parentNotes: requiredArray(hit.parentNotes, "parentNotes").map((entry) => {
-      const parent = requiredRecord(entry, "parentNotes[]");
+      const parent = requiredResponseRecord(entry, "parentNotes[]");
       return {
         id: requiredResponseString(parent.id, "parentNotes[].id"),
         title: requiredResponseString(parent.title, "parentNotes[].title"),
@@ -369,7 +370,7 @@ function normalizeSearchHit(input: unknown): Record<string, unknown> {
 }
 
 function normalizeGroup(input: unknown): Record<string, unknown> {
-  const group = requiredRecord(input, "Slite group");
+  const group = requiredResponseRecord(input, "Slite group");
   return {
     id: requiredResponseString(group.id, "id"),
     name: requiredResponseString(group.name, "name"),
@@ -410,12 +411,6 @@ function optionalStringArray(value: unknown): string[] | null {
 
 function nullableString(value: unknown): string | null {
   return value == null ? null : (optionalString(value) ?? null);
-}
-
-function requiredRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
-  return record;
 }
 
 function requiredArray(value: unknown, fieldName: string): unknown[] {

@@ -477,7 +477,7 @@ function normalizeTimeEntryResource(value: unknown) {
   return {
     ...resource,
     date: optionalString(resource.attributes.date) ?? "",
-    time: readOptionalNumber(resource.attributes.time) ?? 0,
+    time: optionalNumber(resource.attributes.time) ?? 0,
     note: nullableOutputString(resource.attributes.note),
     billable: resource.attributes.billable === true,
     created_at: optionalString(resource.attributes.created_at) ?? "",
@@ -526,10 +526,6 @@ function nullableOutputString(value: unknown) {
     return null;
   }
   return optionalString(value) ?? null;
-}
-
-function readOptionalNumber(value: unknown) {
-  return optionalNumber(value);
 }
 
 function readRequiredApiKey(apiKey: unknown) {

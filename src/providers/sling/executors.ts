@@ -7,6 +7,7 @@ import {
   defineApiKeyProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -89,7 +90,7 @@ export const credentialValidators: CredentialValidators = {
       phase: "validate",
       signal,
     });
-    const sessionRecord = requiredProviderRecord(session, "Sling session");
+    const sessionRecord = requiredResponseRecord(session, "Sling session");
     const user = optionalRecord(sessionRecord.user);
     const org = optionalRecord(sessionRecord.org);
     const accountId = typeof user?.id === "number" || typeof user?.id === "string" ? String(user.id) : "api_key";
@@ -245,10 +246,4 @@ function readStringArray(value: unknown): string[] | undefined {
 
 function readOptionalNumber(value: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
-}
-
-function requiredProviderRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
-  return record;
 }

@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, recordOrEmpty, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "feathery";
@@ -33,7 +33,7 @@ type FeatheryActionHandler = (input: Record<string, unknown>, context: FeatheryA
 export const featheryActionHandlers: ProviderActionHandlers<"feathery", FeatheryActionHandler> = {
   async get_account_info(_input, context) {
     return {
-      account: normalizeObjectPayload(
+      account: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: "/api/account/",
@@ -66,7 +66,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
   },
   async get_form_schema(input, context) {
     return {
-      schema: normalizeObjectPayload(
+      schema: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: `/api/form/${encodeURIComponent(readRequiredTrimmedString(input.form_id, "form_id"))}/schema/`,
@@ -82,7 +82,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
   },
   async create_or_update_form_submissions(input, context) {
     return {
-      result: normalizeObjectPayload(
+      result: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: `/api/form/${encodeURIComponent(readRequiredTrimmedString(input.form_id, "form_id"))}/submission/`,
@@ -117,7 +117,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
   },
   async create_hidden_field(input, context) {
     return {
-      hiddenField: normalizeObjectPayload(
+      hiddenField: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: "/api/field/hidden/",
@@ -136,7 +136,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
   },
   async edit_hidden_field(input, context) {
     return {
-      hiddenField: normalizeObjectPayload(
+      hiddenField: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: `/api/field/hidden/${encodeURIComponent(readRequiredTrimmedString(input.field_id, "field_id"))}/`,
@@ -215,7 +215,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
   },
   async get_user_session(input, context) {
     return {
-      session: normalizeObjectPayload(
+      session: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: `/api/user/${encodeURIComponent(readRequiredTrimmedString(input.user_id, "user_id"))}/session/`,
@@ -231,7 +231,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
   },
   async create_or_fetch_user(input, context) {
     return {
-      user: normalizeObjectPayload(
+      user: recordOrEmpty(
         await requestFeatheryJson(
           {
             path: "/api/user/",
@@ -272,7 +272,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const account = normalizeObjectPayload(
+    const account = recordOrEmpty(
       await requestFeatheryJson(
         {
           path: featheryValidationPath,
@@ -426,10 +426,6 @@ function normalizeArrayPayload(payload: unknown): Array<Record<string, unknown>>
   }
 
   return [];
-}
-
-function normalizeObjectPayload(payload: unknown): Record<string, unknown> {
-  return optionalRecord(payload) ?? {};
 }
 
 function buildTagsQuery(value: unknown): Record<string, string[]> | undefined {

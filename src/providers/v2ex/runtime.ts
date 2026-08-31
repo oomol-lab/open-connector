@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export const v2exApiBaseUrl = "https://www.v2ex.com/api/v2";
@@ -326,7 +327,7 @@ function unwrapV2exEnvelope(
   label: string,
   phase: V2exRequestPhase,
 ): { message: string | undefined; result: unknown } {
-  const envelope = requireObject(payload, `V2EX ${label} response`);
+  const envelope = requiredResponseRecord(payload, `V2EX ${label} response`);
   if (envelope.success === false) {
     throw mapV2exSuccessError(extractV2exErrorMessage(envelope), phase);
   }
@@ -338,7 +339,7 @@ function unwrapV2exEnvelope(
 
 function ensureV2exAccepted(payload: unknown, label: string): void {
   if (payload == null) return;
-  const envelope = requireObject(payload, `V2EX ${label} response`);
+  const envelope = requiredResponseRecord(payload, `V2EX ${label} response`);
   if (envelope.success === false) {
     throw mapV2exSuccessError(extractV2exErrorMessage(envelope), "execute");
   }
@@ -347,7 +348,7 @@ function ensureV2exAccepted(payload: unknown, label: string): void {
 }
 
 function requireV2exObjectResult(envelope: { result: unknown }, label: string): Record<string, unknown> {
-  return requireObject(envelope.result, `V2EX ${label} result`);
+  return requiredResponseRecord(envelope.result, `V2EX ${label} result`);
 }
 
 function requireV2exArrayResult(envelope: { result: unknown }, label: string): unknown[] {
@@ -403,10 +404,4 @@ function mapV2exSuccessError(message: string | undefined, phase: V2exRequestPhas
   const resolvedMessage = message || "V2EX request failed";
   if (phase === "validate") return new ProviderRequestError(400, resolvedMessage);
   return new ProviderRequestError(502, resolvedMessage);
-}
-
-function requireObject(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
-  return record;
 }

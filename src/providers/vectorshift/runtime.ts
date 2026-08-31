@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
 const vectorshiftApiBaseUrl = "https://api.vectorshift.ai/v1";
 const listPipelinesPath = "/pipelines";
@@ -39,7 +39,7 @@ export async function validateVectorshiftCredential(
     "validate",
     fetcher,
   );
-  const record = requireRecord(payload, "VectorShift pipeline list response");
+  const record = requiredResponseRecord(payload, "VectorShift pipeline list response");
   const pipelineIds = Array.isArray(record.object_ids)
     ? record.object_ids.filter((value): value is string => typeof value === "string")
     : [];
@@ -72,7 +72,7 @@ async function executeListPipelines(input: Record<string, unknown>, context: Api
     "execute",
     context.fetcher,
   );
-  const record = requireRecord(payload, "VectorShift pipeline list response");
+  const record = requiredResponseRecord(payload, "VectorShift pipeline list response");
   return {
     status: typeof record.status === "string" ? record.status : "success",
     pipeline_ids: Array.isArray(record.object_ids)
@@ -103,16 +103,16 @@ async function executeGetPipeline(input: Record<string, unknown>, context: ApiKe
     "execute",
     context.fetcher,
   );
-  const record = requireRecord(payload, "VectorShift pipeline fetch response");
+  const record = requiredResponseRecord(payload, "VectorShift pipeline fetch response");
   return {
     status: typeof record.status === "string" ? record.status : "success",
-    pipeline: requireRecord(record.object, "VectorShift pipeline"),
+    pipeline: requiredResponseRecord(record.object, "VectorShift pipeline"),
   };
 }
 
 async function executeRunPipeline(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const pipelineId = requireTrimmedString(input.pipeline_id, "pipeline_id");
-  const inputs = requireRecord(input.inputs, "inputs");
+  const inputs = requiredResponseRecord(input.inputs, "inputs");
   assertJsonSafeRecord(inputs);
   return requestVectorshiftJson(
     buildVectorshiftUrl(`/pipeline/${encodeURIComponent(pipelineId)}/run`),
@@ -136,8 +136,8 @@ async function executeBulkRunPipeline(
     throw new ProviderRequestError(400, "runs must be an array");
   }
   const runs = input.runs.map((run, index) => {
-    const runRecord = requireRecord(run, `runs[${index}]`);
-    const inputs = requireRecord(runRecord.inputs, `runs[${index}].inputs`);
+    const runRecord = requiredResponseRecord(run, `runs[${index}]`);
+    const inputs = requiredResponseRecord(runRecord.inputs, `runs[${index}].inputs`);
     assertJsonSafeRecord(inputs);
     return { inputs };
   });
@@ -221,12 +221,6 @@ function readErrorMessage(payload: unknown): string | undefined {
   if (typeof record.message === "string" && record.message.trim()) return record.message;
   const nestedError = optionalRecord(record.error);
   return optionalString(nestedError?.message);
-}
-
-function requireRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  return record;
 }
 
 function requireTrimmedString(value: unknown, fieldName: string): string {

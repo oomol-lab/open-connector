@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -10,6 +10,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -32,7 +33,7 @@ export const heartbeatActionHandlers: ProviderActionHandlers<"heartbeat", Heartb
   async get_user(input, context) {
     const userId = requiredString(input.userId, "userId", providerInputError);
     return {
-      user: requireResourceObject(
+      user: requiredResponseRecord(
         await requestHeartbeatJson({
           context,
           path: `/users/${encodeURIComponent(userId)}`,
@@ -68,7 +69,7 @@ export const heartbeatActionHandlers: ProviderActionHandlers<"heartbeat", Heartb
   async get_group(input, context) {
     const groupId = requiredString(input.groupId, "groupId", providerInputError);
     return {
-      group: requireResourceObject(
+      group: requiredResponseRecord(
         await requestHeartbeatJson({
           context,
           path: `/groups/${encodeURIComponent(groupId)}`,
@@ -211,9 +212,5 @@ function requireResourceArray(payload: unknown, label: string): Array<Record<str
   if (!Array.isArray(payload)) {
     throw new ProviderRequestError(502, `${label} is invalid`);
   }
-  return payload.map((item) => requireResourceObject(item, `${label} item`));
-}
-
-function requireResourceObject(payload: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(payload, label, (message) => new ProviderRequestError(502, message));
+  return payload.map((item) => requiredResponseRecord(item, `${label} item`));
 }

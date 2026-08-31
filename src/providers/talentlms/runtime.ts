@@ -2,7 +2,7 @@ import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalRecord, optionalString, recordOrEmpty, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, jsonObject, queryParams } from "../../core/request.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -128,7 +128,7 @@ async function runHealthCheck(context: TalentlmsActionContext): Promise<unknown>
 
   return {
     healthy: true,
-    raw: asRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -152,7 +152,7 @@ async function listTalentlmsResource(
   return {
     [resourceName]: normalized.items,
     links: normalized.links,
-    raw: asRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -174,7 +174,7 @@ async function getTalentlmsResource(
 
   return {
     [outputKey]: normalizeTalentlmsEntity(payload, outputKey),
-    raw: asRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -198,7 +198,7 @@ async function writeTalentlmsResource(
 
   return {
     [outputKey]: normalizeTalentlmsEntity(payload, outputKey),
-    raw: asRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -219,7 +219,7 @@ async function deleteTalentlmsResource(
 
   return {
     deleted: true,
-    raw: asRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -423,10 +423,6 @@ function readLinks(object: Record<string, unknown>): Record<string, unknown> {
     prev: object.prev,
     next: object.next,
   });
-}
-
-function asRawObject(payload: unknown): Record<string, unknown> {
-  return optionalRecord(payload) ?? {};
 }
 
 export function readTalentlmsDomain(input: { domain?: unknown }): string {

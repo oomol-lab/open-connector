@@ -18,6 +18,7 @@ import {
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
+  requiredResponseRecord,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 import { harvestOAuthScopes } from "./scopes.ts";
@@ -229,7 +230,7 @@ async function getCurrentUser(context: HarvestActionContext): Promise<unknown> {
   });
 
   return {
-    user: requireObjectPayload(payload, "harvest current user response"),
+    user: requiredResponseRecord(payload, "harvest current user response"),
   };
 }
 
@@ -261,7 +262,7 @@ async function getClient(input: Record<string, unknown>, context: HarvestActionC
   });
 
   return {
-    client: requireObjectPayload(payload, "harvest client response"),
+    client: requiredResponseRecord(payload, "harvest client response"),
   };
 }
 
@@ -294,7 +295,7 @@ async function getProject(input: Record<string, unknown>, context: HarvestAction
   });
 
   return {
-    project: requireObjectPayload(payload, "harvest project response"),
+    project: requiredResponseRecord(payload, "harvest project response"),
   };
 }
 
@@ -326,7 +327,7 @@ async function getTask(input: Record<string, unknown>, context: HarvestActionCon
   });
 
   return {
-    task: requireObjectPayload(payload, "harvest task response"),
+    task: requiredResponseRecord(payload, "harvest task response"),
   };
 }
 
@@ -388,7 +389,7 @@ async function getTimeEntry(input: Record<string, unknown>, context: HarvestActi
   });
 
   return {
-    time_entry: requireObjectPayload(payload, "harvest time entry response"),
+    time_entry: requiredResponseRecord(payload, "harvest time entry response"),
   };
 }
 
@@ -403,7 +404,7 @@ async function createTimeEntry(input: Record<string, unknown>, context: HarvestA
   });
 
   return {
-    time_entry: requireObjectPayload(payload, "harvest time entry creation response"),
+    time_entry: requiredResponseRecord(payload, "harvest time entry creation response"),
   };
 }
 
@@ -420,7 +421,7 @@ async function updateTimeEntry(input: Record<string, unknown>, context: HarvestA
   });
 
   return {
-    time_entry: requireObjectPayload(payload, "harvest time entry update response"),
+    time_entry: requiredResponseRecord(payload, "harvest time entry update response"),
   };
 }
 
@@ -434,7 +435,7 @@ async function restartTimeEntry(input: Record<string, unknown>, context: Harvest
   });
 
   return {
-    time_entry: requireObjectPayload(payload, "harvest restarted time entry response"),
+    time_entry: requiredResponseRecord(payload, "harvest restarted time entry response"),
   };
 }
 
@@ -448,7 +449,7 @@ async function stopTimeEntry(input: Record<string, unknown>, context: HarvestAct
   });
 
   return {
-    time_entry: requireObjectPayload(payload, "harvest stopped time entry response"),
+    time_entry: requiredResponseRecord(payload, "harvest stopped time entry response"),
   };
 }
 
@@ -562,7 +563,7 @@ async function fetchHarvestCurrentAccount(
   metadata: Record<string, unknown>;
 }> {
   const accountsPayload = await requestHarvestAccounts(credential.accessToken, fetcher, signal);
-  const accountsResponse = requireObjectPayload(accountsPayload, "harvest accounts response");
+  const accountsResponse = requiredResponseRecord(accountsPayload, "harvest accounts response");
   const accountUser = optionalRecord(accountsResponse.user);
   const accounts = readHarvestAccounts(accountsResponse);
   const defaultAccount = accounts.length > 0 ? selectDefaultHarvestAccount(accounts) : undefined;
@@ -641,7 +642,7 @@ function harvestCredentialValidation(
   accountId: string,
   payload: Record<string, unknown>,
 ): Awaited<ReturnType<NonNullable<CredentialValidators["apiKey"]>>> {
-  const user = requireObjectPayload(payload, "harvest current user response");
+  const user = requiredResponseRecord(payload, "harvest current user response");
   const userId = requireHarvestResponseId(user.id, "user.id");
   const firstName = optionalString(user.first_name);
   const lastName = optionalString(user.last_name);
@@ -786,14 +787,6 @@ function requireNamedArray(payload: Record<string, unknown>, key: string, label:
     throw new ProviderRequestError(502, `${label} is missing ${key}`);
   }
   return value;
-}
-
-function requireObjectPayload(payload: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(payload);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function requireHarvestAccountId(value: unknown): string {

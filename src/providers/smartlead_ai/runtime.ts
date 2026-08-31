@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
 type QueryValue = string | number | boolean | undefined;
 type SmartleadAiRequestPhase = "validate" | "execute";
@@ -119,7 +119,7 @@ async function executeListCampaignLeads(
     },
     context,
   );
-  const result = requiredObject(payload, "payload");
+  const result = requiredResponseRecord(payload, "payload");
 
   return {
     total_leads: nullableIntegerOrIntegerString(result.total_leads, "total_leads"),
@@ -192,7 +192,7 @@ function normalizeEmailAccounts(payload: unknown): Array<Record<string, unknown>
 }
 
 function normalizeCampaign(value: unknown, fieldName: string): Record<string, unknown> {
-  const campaign = requiredObject(value, fieldName);
+  const campaign = requiredResponseRecord(value, fieldName);
   return {
     ...campaign,
     id: nullableInteger(campaign.id, `${fieldName}.id`),
@@ -209,7 +209,7 @@ function normalizeCampaign(value: unknown, fieldName: string): Record<string, un
 }
 
 function normalizeTag(value: unknown, fieldName: string): Record<string, unknown> {
-  const tag = requiredObject(value, fieldName);
+  const tag = requiredResponseRecord(value, fieldName);
   return {
     ...tag,
     tag_id: nullableInteger(tag.tag_id, `${fieldName}.tag_id`),
@@ -219,7 +219,7 @@ function normalizeTag(value: unknown, fieldName: string): Record<string, unknown
 }
 
 function normalizeEmailAccount(value: unknown, fieldName: string): Record<string, unknown> {
-  const account = requiredObject(value, fieldName);
+  const account = requiredResponseRecord(value, fieldName);
   return {
     ...account,
     id: nullableInteger(account.id, `${fieldName}.id`),
@@ -236,7 +236,7 @@ function normalizeEmailAccount(value: unknown, fieldName: string): Record<string
 }
 
 function normalizeCampaignLead(value: unknown, fieldName: string): Record<string, unknown> {
-  const campaignLead = requiredObject(value, fieldName);
+  const campaignLead = requiredResponseRecord(value, fieldName);
   return {
     ...campaignLead,
     campaign_lead_map_id: nullableInteger(campaignLead.campaign_lead_map_id, `${fieldName}.campaign_lead_map_id`),
@@ -249,7 +249,7 @@ function normalizeCampaignLead(value: unknown, fieldName: string): Record<string
 }
 
 function normalizeLeadContact(value: unknown, fieldName: string): Record<string, unknown> {
-  const lead = requiredObject(value, fieldName);
+  const lead = requiredResponseRecord(value, fieldName);
   return {
     ...lead,
     id: nullableInteger(lead.id, `${fieldName}.id`),
@@ -278,7 +278,7 @@ function unwrapDataArray(payload: unknown): unknown {
 function unwrapDataObject(payload: unknown, fieldName: string): unknown {
   const record = optionalRecord(payload);
   if (record?.data && typeof record.data === "object" && !Array.isArray(record.data)) return record.data;
-  return requiredObject(payload, fieldName);
+  return requiredResponseRecord(payload, fieldName);
 }
 
 async function readJsonPayload(response: Response): Promise<unknown> {
@@ -299,14 +299,8 @@ function extractErrorMessage(payload: unknown): string | undefined {
   return optionalString(optionalRecord(record?.error)?.message);
 }
 
-function requiredObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  return record;
-}
-
 function nullableObject(value: unknown, fieldName: string): Record<string, unknown> | null {
-  return value == null ? null : requiredObject(value, fieldName);
+  return value == null ? null : requiredResponseRecord(value, fieldName);
 }
 
 function requiredArray(value: unknown, fieldName: string): unknown[] {

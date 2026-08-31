@@ -7,14 +7,11 @@ import {
   optionalObjectArray,
   optionalRecord,
   optionalString,
+  recordOrEmpty,
   requiredString,
 } from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { requestPiHoleJson } from "./runtime.ts";
-
-function readRecordPayload(payload: unknown): Record<string, unknown> {
-  return optionalRecord(payload) ?? {};
-}
 
 function readStringArrayPayload(value: unknown, fieldName: string): unknown {
   if (typeof value === "string" || Array.isArray(value)) {
@@ -77,7 +74,7 @@ async function readResourceItems(
   path: string,
   key: string,
 ): Promise<Array<Record<string, unknown>>> {
-  const payload = readRecordPayload(await requestPiHoleJson({ context, method: "GET", path }));
+  const payload = recordOrEmpty(await requestPiHoleJson({ context, method: "GET", path }));
   return optionalObjectArray(payload[key], `Pi-hole ${key} response`);
 }
 
@@ -162,11 +159,11 @@ function effectiveOptionalBoolean(provided: unknown, current: unknown): boolean 
 
 export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHoleActionHandler> = {
   async list_groups(_input, context) {
-    const payload = readRecordPayload(await requestPiHoleJson({ context, method: "GET", path: "groups" }));
+    const payload = recordOrEmpty(await requestPiHoleJson({ context, method: "GET", path: "groups" }));
     return { groups: optionalObjectArray(payload.groups, "Pi-hole groups response") };
   },
   async create_group(input, context) {
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "POST",
@@ -184,7 +181,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     const name = requiredInputString(input.name, "name");
     const items = await readResourceItems(context, "groups", "groups");
     const current = requireExistingItem(items, (entry) => optionalString(entry.name) === name, `group ${name}`);
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "PUT",
@@ -208,7 +205,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
 
   async list_lists(input, context) {
     const type = optionalString(input.type);
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "GET",
@@ -220,7 +217,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
   },
   async add_list(input, context) {
     const type = normalizeListType(requiredInputString(input.type, "type"));
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "POST",
@@ -245,7 +242,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
       (entry) => optionalString(entry.address) === address && optionalString(entry.type) === type,
       `list ${address}`,
     );
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "PUT",
@@ -277,13 +274,13 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
         : normalizedType !== undefined
           ? `domains/${normalizedType}`
           : "domains";
-    const payload = readRecordPayload(await requestPiHoleJson({ context, method: "GET", path }));
+    const payload = recordOrEmpty(await requestPiHoleJson({ context, method: "GET", path }));
     return { domains: optionalObjectArray(payload.domains, "Pi-hole domains response") };
   },
   async add_domain(input, context) {
     const type = normalizeListType(requiredInputString(input.type, "type"));
     const kind = normalizeListType(requiredInputString(input.kind, "kind"));
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "POST",
@@ -308,7 +305,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
       (entry) => (optionalString(entry.domain) ?? "").toLowerCase() === domain.toLowerCase(),
       `domain ${domain}`,
     );
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "PUT",
@@ -330,11 +327,11 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
   },
 
   async list_clients(_input, context) {
-    const payload = readRecordPayload(await requestPiHoleJson({ context, method: "GET", path: "clients" }));
+    const payload = recordOrEmpty(await requestPiHoleJson({ context, method: "GET", path: "clients" }));
     return { clients: optionalObjectArray(payload.clients, "Pi-hole clients response") };
   },
   async create_client(input, context) {
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "POST",
@@ -363,7 +360,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     // when the caller used a hostname alias the PUT must target the stored
     // identifier, not the alias.
     const targetIdentifier = optionalString(current.client) ?? client;
-    const payload = readRecordPayload(
+    const payload = recordOrEmpty(
       await requestPiHoleJson({
         context,
         method: "PUT",
@@ -430,11 +427,11 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
   },
 
   async get_dhcp_leases(_input, context) {
-    const payload = readRecordPayload(await requestPiHoleJson({ context, method: "GET", path: "dhcp/leases" }));
+    const payload = recordOrEmpty(await requestPiHoleJson({ context, method: "GET", path: "dhcp/leases" }));
     return { leases: optionalObjectArray(payload.leases, "Pi-hole DHCP leases response") };
   },
   async get_network_devices(_input, context) {
-    const payload = readRecordPayload(await requestPiHoleJson({ context, method: "GET", path: "network/devices" }));
+    const payload = recordOrEmpty(await requestPiHoleJson({ context, method: "GET", path: "network/devices" }));
     return { devices: optionalObjectArray(payload.devices, "Pi-hole network devices response") };
   },
 };
