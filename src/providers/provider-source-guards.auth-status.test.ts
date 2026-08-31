@@ -142,8 +142,26 @@ function readStringConstants(source: string): Map<string, string> {
   return literalsByName;
 }
 
-/** Whether an argument expression can evaluate to the given numeric status. */
-function canEvaluateToStatus(argumentSource: string, status: number): boolean {
+/**
+ * Read the `const name = 409` bindings a status argument can name, so naming
+ * the status does not hide the construction the way naming the code would.
+ */
+function readNumericConstants(source: string): Map<string, string> {
+  const numbersByName = new Map<string, string>();
+  for (const match of source.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*(\d+)\s*[;,)\n]/gu)) {
+    numbersByName.set(match[1]!, match[2]!);
+  }
+  return numbersByName;
+}
+
+const identifierReferencePattern = /(?<![\w.$])[A-Za-z_$][\w$]*/gu;
+
+/**
+ * Whether an argument expression can evaluate to the given numeric status.
+ * Identifiers are substituted with the file's own numeric constants first, so a
+ * named status counts wherever it appears, including as one arm of a ternary.
+ */
+function canEvaluateToStatus(argumentSource: string, status: number, numbersByName: Map<string, string>): boolean {
   let stripped = "";
   let index = 0;
   while (index < argumentSource.length) {
@@ -155,7 +173,8 @@ function canEvaluateToStatus(argumentSource: string, status: number): boolean {
     stripped += character;
     index += 1;
   }
-  return new RegExp(String.raw`(?<![\w.])${status}(?![\w.])`, "u").test(stripped);
+  const resolved = stripped.replace(identifierReferencePattern, (name) => numbersByName.get(name) ?? name);
+  return new RegExp(String.raw`(?<![\w.])${status}(?![\w.])`, "u").test(resolved);
 }
 
 interface CallSite {
@@ -466,10 +485,11 @@ function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
   const scopes = findForwardedArgumentIndexes(sources, 0);
   const hits: AuthConflictHit[] = [];
   for (const entry of sources) {
+    const numbersByName = readNumericConstants(entry.source);
     for (const [callee, indexes] of calleesVisibleIn(scopes, entry.file)) {
       for (const site of findCallSitesIn(entry, callee)) {
         const raisesConflict = [...indexes].some((index) =>
-          canEvaluateToStatus(site.argumentSources[index] ?? "", 409),
+          canEvaluateToStatus(site.argumentSources[index] ?? "", 409, numbersByName),
         );
         if (!raisesConflict) {
           continue;
