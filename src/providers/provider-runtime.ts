@@ -726,7 +726,7 @@ export async function runProviderRequest<T>(
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeout.didTimeout() || isAbortLikeError(error)) {
+    if (timeout.didTimeout() || isAbortLikeError(error) || isAbortSignalError(timeout.signal, error)) {
       throw new ProviderRequestError(504, `${options.label} request timed out`);
     }
     throw new ProviderRequestError(

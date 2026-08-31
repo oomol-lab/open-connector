@@ -282,6 +282,18 @@ describe("runProviderRequest", () => {
       vi.useRealTimers();
     }
   });
+
+  it("maps a caller abort with a custom reason to 504", async () => {
+    const controller = new AbortController();
+    const pending = runProviderRequest({ label: "Skio", signal: controller.signal }, (signal) => {
+      return new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(signal.reason)));
+    });
+    controller.abort(new Error("cancelled by caller"));
+    const error = await pending.catch((e) => e);
+    expect(error).toBeInstanceOf(ProviderRequestError);
+    expect(error.status).toBe(504);
+    expect(error.message).toBe("Skio request timed out");
+  });
 });
 
 describe("isAbortSignalError", () => {
