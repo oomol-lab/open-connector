@@ -418,7 +418,6 @@ async function fetchTikHubDocument(url: string, maxBytes: number, fetcher: typeo
         "provider_error",
         `TikHub documentation request failed with status ${response.status}`,
         502,
-        undefined,
         { upstreamStatus: response.status, url },
       ] as const;
       throw response.status === 429 || response.status >= 500
