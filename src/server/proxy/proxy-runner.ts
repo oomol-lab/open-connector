@@ -6,8 +6,8 @@ import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { Logger } from "../logger.ts";
 
 import { ConnectionError } from "../../connection-service.ts";
-import { optionalInteger, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
-import { mapConnectionErrorStatus } from "../api/runtime-api.ts";
+import { optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
+import { mapConnectionErrorStatus, mapRuntimeErrorStatus } from "../api/runtime-api.ts";
 
 export type ProxyFailureStatus = 400 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
@@ -146,7 +146,7 @@ export class ProxyRunner {
 
       const failure = {
         ok: false as const,
-        status: mapProxyErrorStatus(result.error.code, result.error.details),
+        status: mapRuntimeErrorStatus(result.error.code, result.error.details),
         errorCode: result.error.code,
         message: result.error.message,
         data: result.error.details ?? null,
@@ -267,37 +267,6 @@ export class ProxyRunner {
     }
     return false;
   }
-}
-
-/**
- * Map a provider proxy failure onto the HTTP status the `/v1` proxy route
- * returns. It must stay in step with `mapExecutionErrorStatus` on the action
- * route: both front doors serve the same provider error object.
- */
-export function mapProxyErrorStatus(code: string, details: unknown): ProxyFailureStatus {
-  const upstreamStatus = optionalInteger(optionalRecord(details)?.status);
-  if (upstreamStatus === 413) {
-    return 413;
-  }
-  if (code === "insufficient_credit") {
-    return 402;
-  }
-  if (code === "invalid_input" && upstreamStatus === 404) {
-    return 404;
-  }
-  if (code === "authorization_failed") {
-    return 403;
-  }
-  if (code === "connection_not_found") {
-    return 404;
-  }
-  if (code === "rate_limited") {
-    return 429;
-  }
-  if (code === "provider_error") {
-    return 500;
-  }
-  return 400;
 }
 
 function loggableProxyEndpoint(endpoint: string): string {

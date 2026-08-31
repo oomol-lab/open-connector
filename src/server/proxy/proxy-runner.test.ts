@@ -14,6 +14,7 @@ import type { Logger } from "../logger.ts";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectionError } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
+import { runtimeErrorCodes, serializeRuntimeActionResult } from "../api/runtime-api.ts";
 import { ProxyRunner } from "./proxy-runner.ts";
 
 const provider: ProviderDefinition = {
@@ -35,6 +36,28 @@ const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
 const connectionId = "11111111-1111-4111-8111-111111111111";
 const otherConnectionId = "22222222-2222-4222-8222-222222222222";
 const openPolicy = new ActionPolicyService().createSnapshot();
+
+interface CrossRouteErrorCase {
+  title: string;
+  error: Extract<ProxyExecutionResult, { ok: false }>["error"];
+}
+
+/**
+ * Both `/v1` front doors serve the same provider error object, so both must
+ * derive the same HTTP status from it. Cover every documented runtime code and
+ * the two upstream statuses a provider preserves in `details.status`.
+ */
+const crossRouteErrorCases: CrossRouteErrorCase[] = [
+  ...runtimeErrorCodes.map((code) => ({ title: code, error: { code, message: "Provider request failed." } })),
+  {
+    title: "an upstream not-found status",
+    error: { code: "invalid_input", message: "Task not found.", details: { status: 404 } },
+  },
+  {
+    title: "an upstream payload-too-large status",
+    error: { code: "invalid_input", message: "response exceeds 4 bytes", details: { status: 413 } },
+  },
+];
 
 describe("ProxyRunner", () => {
   it("returns proxy_not_supported before resolving credentials when the provider has no proxy executor", async () => {
@@ -737,6 +760,29 @@ describe("ProxyRunner", () => {
       status: 429,
       errorCode: "rate_limited",
       message: "Rate limit exceeded.",
+    });
+  });
+
+  it.each(crossRouteErrorCases)("answers $title with the status the action route answers", async ({ error }) => {
+    const runner = createRunner({
+      providerLoader: new TestProviderLoader(async () => ({ ok: false, error })),
+    });
+
+    const proxyResult = await runner.run({
+      service: "example",
+      input: { endpoint: "/items", method: "GET" },
+      policy: openPolicy,
+    });
+
+    expect(proxyResult).toMatchObject({
+      ok: false,
+      status: serializeRuntimeActionResult({
+        actionId: "example.echo",
+        executionId: "execution-1",
+        auditPersisted: false,
+        result: { ok: false, error },
+      }).status,
+      errorCode: error.code,
     });
   });
 
