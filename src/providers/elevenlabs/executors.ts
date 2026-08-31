@@ -9,6 +9,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
+  booleanString,
   compactObject,
   optionalBoolean,
   optionalInteger,
@@ -229,7 +230,7 @@ async function searchElevenlabsVoices(input: Record<string, unknown>, context: E
         voice_ids: arrayQueryValue(input.voiceIds),
         page_size: numberQueryValue(input.pageSize),
         next_page_token: stringQueryValue(input.nextPageToken),
-        include_total_count: booleanQueryValue(input.includeTotalCount),
+        include_total_count: booleanString(input.includeTotalCount),
       }),
     },
     context.apiKey,
@@ -1116,10 +1117,6 @@ function stringQueryValue(value: unknown) {
 function numberQueryValue(value: unknown) {
   const parsed = optionalInteger(value);
   return parsed === undefined ? undefined : String(parsed);
-}
-
-function booleanQueryValue(value: unknown) {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function arrayQueryValue(value: unknown) {

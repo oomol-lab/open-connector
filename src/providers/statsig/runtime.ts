@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  booleanString,
+  compactObject,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const statsigApiBaseUrl = "https://statsigapi.net";
@@ -48,7 +55,7 @@ export const statsigActionHandlers: ProviderActionHandlers<"statsig", StatsigAct
     return readSingleStatsigData({
       path: `/console/v1/gates/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       query: {
-        includeArchiveMetadata: optionalBooleanString(input.includeArchiveMetadata),
+        includeArchiveMetadata: booleanString(input.includeArchiveMetadata),
       },
       apiKey: context.apiKey,
       fetcher: context.fetcher,
@@ -250,9 +257,9 @@ function buildListGatesQuery(input: Record<string, unknown>): Record<string, Sta
     releasePipelineID: optionalString(input.releasePipelineID),
     teamID: optionalString(input.teamID),
     targetAppID: optionalString(input.targetAppID),
-    includeArchived: optionalBooleanString(input.includeArchived),
-    includeArchiveMetadata: optionalBooleanString(input.includeArchiveMetadata),
-    store0100Exposures: optionalBooleanString(input.store0100Exposures),
+    includeArchived: booleanString(input.includeArchived),
+    includeArchiveMetadata: booleanString(input.includeArchiveMetadata),
+    store0100Exposures: booleanString(input.store0100Exposures),
     creatorName: optionalString(input.creatorName),
     creatorID: optionalString(input.creatorID),
     tags: readOptionalArray(input.tags),
@@ -281,10 +288,6 @@ function buildPagingQuery(input: Record<string, unknown>): Record<string, Statsi
     limit: optionalInteger(input.limit),
     page: optionalInteger(input.page),
   };
-}
-
-function optionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function readArray(value: unknown, fieldName: string): unknown[] {

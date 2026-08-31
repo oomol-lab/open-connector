@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ProviderExecutors } from "../../core/t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   providerUserAgent,
@@ -22,9 +22,9 @@ export const postgridVerifyActionHandlers: ProviderActionHandlers<"postgrid_veri
     return requestPostgridVerifyJson({
       path: "/verifications",
       query: {
-        includeDetails: optionalBooleanString(input.includeDetails),
-        geocode: optionalBooleanString(input.geocode),
-        properCase: optionalBooleanString(input.properCase),
+        includeDetails: booleanString(input.includeDetails),
+        geocode: booleanString(input.geocode),
+        properCase: booleanString(input.properCase),
       },
       body: compactObject({
         address: optionalString(input.address),
@@ -196,8 +196,4 @@ function extractPostgridVerifyErrorMessage(payload: unknown): string | undefined
   }
 
   return optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.status);
-}
-
-function optionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }

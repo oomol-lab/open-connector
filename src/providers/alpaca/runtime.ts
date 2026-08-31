@@ -1,7 +1,7 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { readAlpacaGrantedScopes } from "./scopes.ts";
 
@@ -108,7 +108,7 @@ export const alpacaActionHandlers: ProviderActionHandlers<"alpaca", ActionHandle
         after: optionalString(input.after),
         until: optionalString(input.until),
         direction: optionalString(input.direction),
-        nested: optionalBooleanString(input.nested),
+        nested: booleanString(input.nested),
         symbols: optionalStringList(input.symbols),
       }),
       context,
@@ -319,7 +319,7 @@ export const alpacaActionHandlers: ProviderActionHandlers<"alpaca", ActionHandle
       path: "/v2/options/contracts",
       query: compactObject({
         underlying_symbols: optionalStringList(input.underlyingSymbols),
-        show_deliverables: optionalBooleanString(input.showDeliverables),
+        show_deliverables: booleanString(input.showDeliverables),
         status: optionalString(input.status),
         expiration_date: optionalString(input.expirationDate),
         expiration_date_gte: optionalString(input.expirationDateGte),
@@ -331,7 +331,7 @@ export const alpacaActionHandlers: ProviderActionHandlers<"alpaca", ActionHandle
         strike_price_lte: optionalNumberString(input.strikePriceLte),
         page_token: optionalString(input.pageToken),
         limit: optionalNumberString(input.limit),
-        ppind: optionalBooleanString(input.ppind),
+        ppind: booleanString(input.ppind),
       }),
       context,
       phase: "execute",
@@ -386,8 +386,8 @@ export const alpacaActionHandlers: ProviderActionHandlers<"alpaca", ActionHandle
       query: compactObject({
         symbols: optionalStringList(input.symbols),
         limit: optionalNumberString(input.limit),
-        include_content: optionalBooleanString(input.includeContent),
-        exclude_contentless: optionalBooleanString(input.excludeContentless),
+        include_content: booleanString(input.includeContent),
+        exclude_contentless: booleanString(input.excludeContentless),
         start: optionalString(input.start),
         end: optionalString(input.end),
         sort: optionalString(input.sort),
@@ -718,10 +718,6 @@ function stringList(value: unknown, fieldName: string): string {
 
 function optionalNumberString(value: unknown): string | undefined {
   return typeof value === "number" && Number.isFinite(value) ? String(value) : undefined;
-}
-
-function optionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function readEnvironment(value: unknown, fallback?: Environment): Environment {

@@ -2,6 +2,7 @@ import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
 import {
+  booleanString,
   compactObject,
   nullableString,
   optionalBoolean,
@@ -534,10 +535,6 @@ function assertOptionalPlacement(input: Record<string, unknown>): void {
   if (input.insertBefore !== undefined && input.insertAfter !== undefined) {
     throw providerInputError("insertBefore and insertAfter cannot both be provided.");
   }
-}
-
-function booleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function nullableSearchDate(value: unknown): string | undefined {

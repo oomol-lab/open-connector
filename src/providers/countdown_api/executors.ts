@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "countdown_api";
@@ -116,15 +116,15 @@ async function searchProducts(input: Record<string, unknown>, context: Countdown
       "sort by": optionalString(input.sort_by),
       num: optionalIntegerString(input.num),
       facets: optionalString(input.facets),
-      "sold items": optionalBooleanString(input.sold_items),
-      "completed items": optionalBooleanString(input.completed_items),
-      "authorized sellers": optionalBooleanString(input.authorized_sellers),
-      "returns accepted": optionalBooleanString(input.returns_accepted),
-      "free returns": optionalBooleanString(input.free_returns),
-      "authenticity verified": optionalBooleanString(input.authenticity_verified),
-      "deals and savings": optionalBooleanString(input.deals_and_savings),
-      "sale items": optionalBooleanString(input.sale_items),
-      "allow rewritten results": optionalBooleanString(input.allow_rewritten_results),
+      "sold items": booleanString(input.sold_items),
+      "completed items": booleanString(input.completed_items),
+      "authorized sellers": booleanString(input.authorized_sellers),
+      "returns accepted": booleanString(input.returns_accepted),
+      "free returns": booleanString(input.free_returns),
+      "authenticity verified": booleanString(input.authenticity_verified),
+      "deals and savings": booleanString(input.deals_and_savings),
+      "sale items": booleanString(input.sale_items),
+      "allow rewritten results": booleanString(input.allow_rewritten_results),
       "customer location": optionalString(input.customer_location),
       "customer zipcode": optionalString(input.customer_zipcode),
       "include fields": optionalString(input.include_fields),
@@ -149,8 +149,8 @@ async function getProduct(input: Record<string, unknown>, context: CountdownApiC
       epid: optionalString(input.epid),
       gtin: optionalString(input.gtin),
       url: optionalString(input.ebay_url),
-      "skip gtin cache": optionalBooleanString(input.skip_gtin_cache),
-      "include parts compatibility": optionalBooleanString(input.include_parts_compatibility),
+      "skip gtin cache": booleanString(input.skip_gtin_cache),
+      "include parts compatibility": booleanString(input.include_parts_compatibility),
       "customer location": optionalString(input.customer_location),
       "customer zipcode": optionalString(input.customer_zipcode),
       "include fields": optionalString(input.include_fields),
@@ -293,8 +293,4 @@ function readRequiredString(value: unknown, fieldName: string): string {
 function optionalIntegerString(value: unknown): string | undefined {
   const parsed = optionalInteger(value);
   return parsed === undefined ? undefined : String(parsed);
-}
-
-function optionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }

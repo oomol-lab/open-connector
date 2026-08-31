@@ -2,7 +2,7 @@ import type { CredentialValidationResult, CredentialValidators, ProviderExecutor
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "scrapingbee";
@@ -126,16 +126,16 @@ async function requestScrapingbeeUsage(
 function buildFetchParams(input: Record<string, unknown>): Record<string, string | undefined> {
   return compactObject({
     url: readRequiredUrl(input.url),
-    render_js: readOptionalBoolean(input.renderJs),
+    render_js: booleanString(input.renderJs),
     wait: readOptionalInteger(input.waitMs),
     wait_for: readOptionalString(input.waitFor),
     device: readOptionalString(input.device),
-    block_ads: readOptionalBoolean(input.blockAds),
-    block_resources: readOptionalBoolean(input.blockResources),
+    block_ads: booleanString(input.blockAds),
+    block_resources: booleanString(input.blockResources),
     country_code: readOptionalString(input.countryCode),
-    premium_proxy: readOptionalBoolean(input.premiumProxy),
-    stealth_proxy: readOptionalBoolean(input.stealthProxy),
-    transparent_status_code: readOptionalBoolean(input.transparentStatusCode),
+    premium_proxy: booleanString(input.premiumProxy),
+    stealth_proxy: booleanString(input.stealthProxy),
+    transparent_status_code: booleanString(input.transparentStatusCode),
     retry: readOptionalInteger(input.retry),
   });
 }
@@ -220,10 +220,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function readOptionalBoolean(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function readOptionalInteger(value: unknown): string | undefined {

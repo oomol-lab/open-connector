@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalRawString, optionalString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalRawString, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 const timecampApiBaseUrl = "https://app.timecamp.com/third_party/api";
@@ -31,7 +31,7 @@ export const timecampActionHandlers: ProviderActionHandlers<"timecamp", Timecamp
       method: "GET",
       context,
       params: compactObject({
-        active_only: readOptionalBooleanString(input.activeOnly),
+        active_only: booleanString(input.activeOnly),
       }),
       phase: "execute",
     });
@@ -52,7 +52,7 @@ export const timecampActionHandlers: ProviderActionHandlers<"timecamp", Timecamp
         perms: readOptionalStringList(input.permissions),
         status: optionalString(input.status),
         minimal: readOptionalFlag(input.minimal),
-        ignoreAdminRights: readOptionalBooleanString(input.ignoreAdminRights),
+        ignoreAdminRights: booleanString(input.ignoreAdminRights),
       }),
       phase: "execute",
     });
@@ -72,18 +72,18 @@ export const timecampActionHandlers: ProviderActionHandlers<"timecamp", Timecamp
       params: compactObject({
         from: optionalString(input.from),
         to: optionalString(input.to),
-        billable: readOptionalBooleanString(input.billable),
+        billable: booleanString(input.billable),
         modify_from: optionalString(input.modifyFrom),
         modify_to: optionalString(input.modifyTo),
         "tags_filter[items][][tag]": readOptionalIdArray(input.tagIds),
-        approvalMode: readOptionalBooleanString(input.approvalMode),
+        approvalMode: booleanString(input.approvalMode),
         opt_fields: optionalString(input.optionalFields),
-        include_project: readOptionalBooleanString(input.includeProject),
-        include_rates: readOptionalBooleanString(input.includeRates),
-        with_subtasks: readOptionalBooleanString(input.withSubtasks),
-        ignoreInvoiced: readOptionalBooleanString(input.ignoreInvoiced),
-        round_duration: readOptionalBooleanString(input.roundDuration),
-        active_only: readOptionalBooleanString(input.activeOnly),
+        include_project: booleanString(input.includeProject),
+        include_rates: booleanString(input.includeRates),
+        with_subtasks: booleanString(input.withSubtasks),
+        ignoreInvoiced: booleanString(input.ignoreInvoiced),
+        round_duration: booleanString(input.roundDuration),
+        active_only: booleanString(input.activeOnly),
         user_ids: readOptionalStringList(input.userIds),
       }),
       phase: "execute",
@@ -522,10 +522,6 @@ function readOptionalIdArray(value: unknown): string[] | undefined {
     return id ? [id] : [];
   });
   return items.length > 0 ? items : undefined;
-}
-
-function readOptionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function readOptionalFlag(value: unknown): number | undefined {

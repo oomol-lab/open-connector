@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
+  booleanString,
   compactObject,
   optionalBoolean,
   optionalNumber,
@@ -142,7 +143,7 @@ async function listAgents(
       limit: numberQuery(input.limit),
       orderField: optionalString(input.orderField),
       orderDirection: optionalString(input.orderDirection),
-      includeExperiments: booleanQuery(input.includeExperiments),
+      includeExperiments: booleanString(input.includeExperiments),
     }),
   });
   const body = requireObject(payload, "Octave returned an invalid agent list payload");
@@ -327,8 +328,4 @@ function requireObject(value: unknown, message: string): Record<string, unknown>
 
 function numberQuery(value: unknown): string | undefined {
   return typeof value === "number" ? String(value) : undefined;
-}
-
-function booleanQuery(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }

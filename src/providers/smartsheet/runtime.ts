@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
+  booleanString,
   compactObject,
   looseArray,
   optionalBooleanOrNull,
@@ -25,7 +26,7 @@ export const smartsheetActionHandlers: ProviderActionHandlers<"smartsheet", Smar
       path: "/sheets",
       context,
       params: compactObject({
-        includeAll: stringifyOptionalBoolean(input.includeAll),
+        includeAll: booleanString(input.includeAll),
         modifiedSince: optionalString(input.modifiedSince),
         page: stringifyOptionalNumber(input.page),
         pageSize: stringifyOptionalNumber(input.pageSize),
@@ -72,8 +73,8 @@ export const smartsheetActionHandlers: ProviderActionHandlers<"smartsheet", Smar
       path: `/sheets/${sheetId}/rows`,
       context,
       params: compactObject({
-        allowPartialSuccess: stringifyOptionalBoolean(input.allowPartialSuccess),
-        overrideValidation: stringifyOptionalBoolean(input.overrideValidation),
+        allowPartialSuccess: booleanString(input.allowPartialSuccess),
+        overrideValidation: booleanString(input.overrideValidation),
       }),
       body: readRows(input.rows),
       phase: "execute",
@@ -91,8 +92,8 @@ export const smartsheetActionHandlers: ProviderActionHandlers<"smartsheet", Smar
       path: `/sheets/${sheetId}/rows`,
       context,
       params: compactObject({
-        allowPartialSuccess: stringifyOptionalBoolean(input.allowPartialSuccess),
-        overrideValidation: stringifyOptionalBoolean(input.overrideValidation),
+        allowPartialSuccess: booleanString(input.allowPartialSuccess),
+        overrideValidation: booleanString(input.overrideValidation),
       }),
       body: rows,
       phase: "execute",
@@ -109,7 +110,7 @@ export const smartsheetActionHandlers: ProviderActionHandlers<"smartsheet", Smar
       context,
       params: compactObject({
         ids: rowIds.join(","),
-        ignoreRowsNotFound: stringifyOptionalBoolean(input.ignoreRowsNotFound),
+        ignoreRowsNotFound: booleanString(input.ignoreRowsNotFound),
       }),
       phase: "execute",
     });
@@ -342,10 +343,6 @@ function readPositiveInteger(value: unknown, fieldName: string): number {
 
 function stringifyOptionalNumber(value: unknown): string | undefined {
   return typeof value === "number" ? String(value) : undefined;
-}
-
-function stringifyOptionalBoolean(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function nullableString(value: unknown): string | null {

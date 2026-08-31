@@ -1,7 +1,14 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  booleanString,
+  compactObject,
+  optionalBoolean,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type CalendlyActionContext = BearerProviderContext;
@@ -362,8 +369,8 @@ async function listEventTypes(input: Record<string, unknown>, context: CalendlyA
     query: compactQuery({
       organization: optionalString(input.organizationUri),
       user: optionalString(input.userUri),
-      active: stringifyBoolean(input.active),
-      admin_managed: stringifyBoolean(input.adminManaged),
+      active: booleanString(input.active),
+      admin_managed: booleanString(input.adminManaged),
       user_availability_schedule: optionalString(input.userAvailabilityScheduleUri),
       count: stringifyNumber(input.count),
       page_token: optionalString(input.pageToken),
@@ -1232,10 +1239,6 @@ function mapAvailabilityRuleObject(value: unknown) {
 
 function compactQuery(value: Record<string, string | undefined>) {
   return Object.fromEntries(Object.entries(value).filter(([, child]) => child !== undefined));
-}
-
-function stringifyBoolean(value: unknown) {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function stringifyNumber(value: unknown) {

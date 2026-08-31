@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
+  booleanString,
   compactObject,
   optionalBoolean,
   optionalInteger,
@@ -126,7 +127,7 @@ async function searchElevenreaderVoices(
       sort_direction: optionalString(input.sortDirection),
       page_size: integerQueryValue(input.pageSize),
       next_page_token: optionalString(input.nextPageToken),
-      include_total_count: booleanQueryValue(input.includeTotalCount),
+      include_total_count: booleanString(input.includeTotalCount),
     }) as Record<string, string | undefined>,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
@@ -151,7 +152,7 @@ async function getElevenreaderVoice(
   const payload = await requestElevenreaderJson<Record<string, unknown>>({
     path: `/voices/${encodeURIComponent(voiceId)}`,
     query: compactObject({
-      with_settings: booleanQueryValue(input.withSettings),
+      with_settings: booleanString(input.withSettings),
     }) as Record<string, string | undefined>,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
@@ -438,10 +439,6 @@ function normalizeStringArray(value: unknown): string[] | undefined {
 
 function normalizeObjectArray(value: unknown): Record<string, unknown>[] | undefined {
   return Array.isArray(value) ? value.map((item) => requireObject(item, "elevenreader object array item")) : undefined;
-}
-
-function booleanQueryValue(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function integerQueryValue(value: unknown): string | undefined {

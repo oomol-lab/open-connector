@@ -43,8 +43,8 @@ export async function executeDataciteAction(
     return requestDataciteJson({
       path: `/dois/${encodeURIComponent(normalizeDoi(doi))}`,
       params: compactObject({
-        affiliation: readOptionalBooleanString(input.affiliation),
-        publisher: readOptionalBooleanString(input.publisher),
+        affiliation: booleanString(input.affiliation),
+        publisher: booleanString(input.publisher),
       }),
       fetcher,
       apiKey,
@@ -84,9 +84,9 @@ function buildListParams(input: Record<string, unknown>): Record<string, string 
     "has-citations": readOptionalIntegerString(input.hasCitations),
     "has-references": readOptionalIntegerString(input.hasReferences),
     sort: readOptionalString(input.sort),
-    detail: readOptionalBooleanString(input.detail),
-    affiliation: readOptionalBooleanString(input.affiliation),
-    publisher: readOptionalBooleanString(input.publisher),
+    detail: booleanString(input.detail),
+    affiliation: booleanString(input.affiliation),
+    publisher: booleanString(input.publisher),
     "page[number]": readOptionalIntegerString(input.pageNumber),
     "page[size]": readOptionalIntegerString(input.pageSize),
     "page[cursor]": readOptionalString(input.pageCursor),
@@ -219,12 +219,8 @@ function readOptionalIntegerString(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) ? String(value) : undefined;
 }
 
-function readOptionalBooleanString(value: unknown) {
-  return typeof value === "boolean" ? String(value) : undefined;
-}
-
 import { Buffer } from "node:buffer";
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,

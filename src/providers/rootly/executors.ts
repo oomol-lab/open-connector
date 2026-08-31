@@ -2,7 +2,7 @@ import type { CredentialValidationResult, CredentialValidators, ProviderExecutor
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "rootly";
@@ -152,7 +152,7 @@ function buildIncidentQuery(input: Record<string, unknown>): Record<string, stri
     "filter[search]": optionalString(input.search),
     "filter[kind]": optionalString(input.kind),
     "filter[status]": optionalString(input.status),
-    "filter[private]": readOptionalBooleanString(input.private),
+    "filter[private]": booleanString(input.private),
     "filter[user_id]": readOptionalNumberString(input.userId),
     "filter[severity]": optionalString(input.severity),
     "filter[severity_id]": optionalString(input.severityId),
@@ -181,8 +181,8 @@ function buildConfigurationQuery(
     "filter[slug]": optionalString(input.slug),
     "filter[external_id]": optionalString(input.externalId),
     ...(options.includeColor ? { "filter[color]": optionalString(input.color) } : {}),
-    "filter[alert_broadcast_enabled]": readOptionalBooleanString(input.alertBroadcastEnabled),
-    "filter[incident_broadcast_enabled]": readOptionalBooleanString(input.incidentBroadcastEnabled),
+    "filter[alert_broadcast_enabled]": booleanString(input.alertBroadcastEnabled),
+    "filter[incident_broadcast_enabled]": booleanString(input.incidentBroadcastEnabled),
     "filter[created_at][gt]": optionalString(input.createdAtGt),
     "filter[created_at][gte]": optionalString(input.createdAtGte),
     "filter[created_at][lt]": optionalString(input.createdAtLt),
@@ -255,10 +255,6 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
 
 function readOptionalNumberString(value: unknown): string | undefined {
   return typeof value === "number" ? String(value) : undefined;
-}
-
-function readOptionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function readRootlyError(payload: unknown): string | undefined {

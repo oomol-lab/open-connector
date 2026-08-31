@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, isAbortLikeError, ProviderRequestError } from "../provider-runtime.ts";
 
 export const theOddsApiBaseUrl = "https://api.the-odds-api.com/v4/";
@@ -12,7 +12,7 @@ type TheOddsApiHandler = (input: Record<string, unknown>, context: ApiKeyProvide
 
 export const theOddsApiActionHandlers: ProviderActionHandlers<"the_odds_api", TheOddsApiHandler> = {
   async list_sports(input, context) {
-    const response = await theOddsApiRequestJson("sports", context, compactObject({ all: booleanParam(input.all) }));
+    const response = await theOddsApiRequestJson("sports", context, compactObject({ all: booleanString(input.all) }));
     return { sports: arrayPayload(response.payload, "The Odds API sports response"), quota: response.quota };
   },
   async get_odds(input, context) {
@@ -28,10 +28,10 @@ export const theOddsApiActionHandlers: ProviderActionHandlers<"the_odds_api", Th
         bookmakers: commaParam(input.bookmakers),
         commenceTimeFrom: optionalString(input.commenceTimeFrom),
         commenceTimeTo: optionalString(input.commenceTimeTo),
-        includeLinks: booleanParam(input.includeLinks),
-        includeSids: booleanParam(input.includeSids),
-        includeBetLimits: booleanParam(input.includeBetLimits),
-        includeRotationNumbers: booleanParam(input.includeRotationNumbers),
+        includeLinks: booleanString(input.includeLinks),
+        includeSids: booleanString(input.includeSids),
+        includeBetLimits: booleanString(input.includeBetLimits),
+        includeRotationNumbers: booleanString(input.includeRotationNumbers),
       }),
     );
     return { odds: arrayPayload(response.payload, "The Odds API odds response"), quota: response.quota };
@@ -57,7 +57,7 @@ export const theOddsApiActionHandlers: ProviderActionHandlers<"the_odds_api", Th
         eventIds: commaParam(input.eventIds),
         commenceTimeFrom: optionalString(input.commenceTimeFrom),
         commenceTimeTo: optionalString(input.commenceTimeTo),
-        includeRotationNumbers: booleanParam(input.includeRotationNumbers),
+        includeRotationNumbers: booleanString(input.includeRotationNumbers),
       }),
     );
     return { events: arrayPayload(response.payload, "The Odds API events response"), quota: response.quota };
@@ -72,10 +72,10 @@ export const theOddsApiActionHandlers: ProviderActionHandlers<"the_odds_api", Th
         dateFormat: optionalString(input.dateFormat),
         oddsFormat: optionalString(input.oddsFormat),
         bookmakers: commaParam(input.bookmakers),
-        includeLinks: booleanParam(input.includeLinks),
-        includeSids: booleanParam(input.includeSids),
-        includeBetLimits: booleanParam(input.includeBetLimits),
-        includeMultipliers: booleanParam(input.includeMultipliers),
+        includeLinks: booleanString(input.includeLinks),
+        includeSids: booleanString(input.includeSids),
+        includeBetLimits: booleanString(input.includeBetLimits),
+        includeMultipliers: booleanString(input.includeMultipliers),
       }),
     );
     return { eventOdds: objectPayload(response.payload, "The Odds API event odds response"), quota: response.quota };
@@ -220,10 +220,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
   const parsed = optionalString(value);
   if (!parsed) throw new ProviderRequestError(400, `${fieldName} is required`);
   return parsed;
-}
-
-function booleanParam(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function numberParam(value: unknown): string | undefined {

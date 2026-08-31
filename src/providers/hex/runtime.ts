@@ -2,6 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
+  booleanString,
   compactObject,
   optionalBoolean,
   optionalRecord,
@@ -99,10 +100,10 @@ async function listProjects(input: Record<string, unknown>, context: HexActionCo
       ownerEmail: optionalString(input.ownerEmail),
       creatorEmail: optionalString(input.creatorEmail),
       collectionId: optionalString(input.collectionId),
-      includeSharing: optionalBooleanString(input.includeSharing),
-      includeArchived: optionalBooleanString(input.includeArchived),
-      includeTrashed: optionalBooleanString(input.includeTrashed),
-      includeComponents: optionalBooleanString(input.includeComponents),
+      includeSharing: booleanString(input.includeSharing),
+      includeArchived: booleanString(input.includeArchived),
+      includeTrashed: booleanString(input.includeTrashed),
+      includeComponents: booleanString(input.includeComponents),
     }),
   });
 
@@ -123,7 +124,7 @@ async function getProject(input: Record<string, unknown>, context: HexActionCont
     signal: context.signal,
     mode: "execute",
     query: compactObject({
-      includeSharing: optionalBooleanString(input.includeSharing),
+      includeSharing: booleanString(input.includeSharing),
     }),
   });
 
@@ -203,7 +204,7 @@ async function getRunStatus(input: Record<string, unknown>, context: HexActionCo
     signal: context.signal,
     mode: "execute",
     headers: compactObject({
-      "enable-expanded-stats": optionalBooleanString(input.enableExpandedStats),
+      "enable-expanded-stats": booleanString(input.enableExpandedStats),
     }),
   });
 
@@ -356,10 +357,6 @@ function nullableString(value: unknown): string | null {
 
 function nullableInteger(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) ? value : null;
-}
-
-function optionalBooleanString(value: unknown): string | undefined {
-  return typeof value === "boolean" ? String(value) : undefined;
 }
 
 function joinStringArray(value: unknown): string | undefined {
