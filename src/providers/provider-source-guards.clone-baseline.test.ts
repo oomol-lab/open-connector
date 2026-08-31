@@ -390,7 +390,10 @@ function readBaseline(): CloneCounts {
 
 /**
  * Write the ratchet baseline back, keeping classes in scan order and files in
- * path order so the committed file has one stable form.
+ * code-point order so the committed file has one stable form. Code point rather
+ * than `localeCompare`, which collates by ICU rules: a re-seed on a runtime
+ * built without full ICU would reorder every entry and bury the real change in
+ * the diff.
  */
 function writeBaseline(counts: CloneCounts): void {
   const ordered: CloneCounts = {};
@@ -399,7 +402,7 @@ function writeBaseline(counts: CloneCounts): void {
     ordered[cloneClass.id] = Object.fromEntries(
       Object.entries(files)
         .filter(([, count]) => count > 0)
-        .sort(([left], [right]) => left.localeCompare(right)),
+        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0)),
     );
   }
 
