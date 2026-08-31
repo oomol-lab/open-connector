@@ -21,6 +21,10 @@ function placeholders(value: string): string[] {
   return (value.match(/{{\w+}}/g) ?? []).sort();
 }
 
+function englishWords(value: string): string {
+  return value.trim().toLowerCase().split(/\s+/).sort().join(" ");
+}
+
 describe("resolveInitialLang", () => {
   it("uses a stored supported language first", () => {
     expect(resolveInitialLang({ storedLang: "fr", detectedLang: "zh-CN" })).toBe("fr");
@@ -92,7 +96,8 @@ describe("locales", () => {
 
   // Product and protocol names every locale renders in English on purpose. A
   // multi-word value that matches en without being one of these is an
-  // untranslated string, not a deliberate one.
+  // untranslated string, not a deliberate one. Matching ignores case, so a
+  // locale respelling a term ("OAuth app" -> "OAuth App") still needs it here.
   const englishTerms = new Set([
     "API Key",
     "API key",
@@ -103,6 +108,7 @@ describe("locales", () => {
     "Connector Marketplace",
     "Discovery URL",
     "MCP URL",
+    "OAuth app",
     "OAuth Apps",
     "OpenAPI JSON",
   ]);
@@ -113,6 +119,13 @@ describe("locales", () => {
     fr: ["actions.actionsCount"],
   };
 
+  // Locales that write their own words in a non-Latin script. Reordering the
+  // English words there leaves the value in English, while in French the same
+  // reordering is the translation ("Local MCP client" -> "Client MCP local").
+  // The heuristic cannot separate that from a locale fronting a Latin acronym
+  // ("MCP URL" -> ru "URL MCP"), so such a value goes on englishTerms above.
+  const nonLatinScriptLangs = new Set(["zh-CN", "zh-TW", "ja", "ru"]);
+
   it.each([
     ["zh-CN", zhCN],
     ["zh-TW", zhTW],
@@ -120,7 +133,7 @@ describe("locales", () => {
     ["ru", ru],
     ["fr", fr],
   ] satisfies [string, LocaleTree][])(
-    "%s matches the en keys and placeholders and translates every value",
+    "%s matches the en keys and placeholders and leaves no multi-word English value untranslated",
     (lang, locale) => {
       const entries = flattenLocale(locale);
       expect(entries.map(([key]) => key)).toEqual(enEntries.map(([key]) => key));
@@ -132,9 +145,16 @@ describe("locales", () => {
 
       const allowedKeys = englishKeys[lang] ?? [];
       const untranslated = enEntries
-        .filter(([key, value]) => translations.get(key) === value)
         .filter(([, value]) => value.trim().split(/\s+/).length > 1)
         .filter(([key, value]) => !englishTerms.has(value) && !allowedKeys.includes(key))
+        .filter(([key, value]) => {
+          // A value copied from en reads as English, and so does one that only
+          // shuffles the same English words.
+          const translated = translations.get(key) ?? "";
+          return (
+            translated === value || (nonLatinScriptLangs.has(lang) && englishWords(translated) === englishWords(value))
+          );
+        })
         .map(([key]) => key);
       expect(untranslated).toEqual([]);
     },
