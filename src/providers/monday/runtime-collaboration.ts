@@ -3,6 +3,7 @@ import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import { compactObject } from "../../core/cast.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   asArray,
   mondayGraphqlRequest,
@@ -12,7 +13,6 @@ import {
   normalizeMondayDocNameResult,
   normalizeMondayReply,
   normalizeMondayUpdate,
-  mondayProviderError,
 } from "./runtime-common.ts";
 
 export const mondayCollaborationActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
@@ -57,7 +57,7 @@ async function mondayListUpdates(input: MondayProviderActionInput, fetcher: type
   // monday rejects a half-open range on the root `updates` query, so a partial
   // range is caught here instead of spending a request to be told.
   if ((since === undefined) !== (until === undefined)) {
-    throw mondayProviderError("since and until must be supplied together.", 400);
+    throw new ProviderRequestError(400, "since and until must be supplied together.");
   }
 
   const payload = await mondayGraphqlRequest<{

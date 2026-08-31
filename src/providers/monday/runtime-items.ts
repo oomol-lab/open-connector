@@ -3,13 +3,13 @@ import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import { compactObject, optionalRecord as asOptionalObject } from "../../core/cast.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   asArray,
   normalizeDocBlocksFromMarkdownResult,
   mondayGraphqlRequest,
   mondayItemFields,
   normalizeItemsPage,
-  mondayProviderError,
   normalizeMondayItem,
   serializeJsonInput,
 } from "./runtime-common.ts";
@@ -676,5 +676,5 @@ function requireMutationItemId(value: unknown, message: string) {
     return String(id);
   }
 
-  throw mondayProviderError(message, 502);
+  throw new ProviderRequestError(502, message);
 }

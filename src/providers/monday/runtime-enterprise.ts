@@ -3,7 +3,8 @@ import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import { compactObject, optionalRecord as asOptionalObject } from "../../core/cast.ts";
-import { asArray, mondayGraphqlRequest, mondayProviderError, normalizeMondayUser } from "./runtime-common.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
+import { asArray, mondayGraphqlRequest, normalizeMondayUser } from "./runtime-common.ts";
 
 export const mondayEnterpriseActionHandlers: ProviderActionHandlerSubset<"monday", MondayActionHandler> = {
   list_departments(input, fetcher) {
@@ -250,7 +251,7 @@ async function mondayClearUsersDepartment(input: MondayProviderActionInput, fetc
 function normalizeMondayDepartment(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("monday department payload is missing", 502);
+    throw new ProviderRequestError(502, "monday department payload is missing");
   }
 
   return {
@@ -280,7 +281,7 @@ function toOptionalId(value: unknown) {
 function normalizeString(value: unknown, fieldName: string) {
   const normalized = toOptionalString(value);
   if (!normalized) {
-    throw mondayProviderError(`${fieldName} is missing`, 502);
+    throw new ProviderRequestError(502, `${fieldName} is missing`);
   }
   return normalized;
 }
@@ -288,14 +289,14 @@ function normalizeString(value: unknown, fieldName: string) {
 function normalizeId(value: unknown, fieldName: string) {
   const normalized = toOptionalId(value);
   if (!normalized) {
-    throw mondayProviderError(`${fieldName} is missing`, 502);
+    throw new ProviderRequestError(502, `${fieldName} is missing`);
   }
   return normalized;
 }
 
 function normalizeInteger(value: unknown, fieldName: string) {
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    throw mondayProviderError(`${fieldName} is missing`, 502);
+    throw new ProviderRequestError(502, `${fieldName} is missing`);
   }
   return value;
 }
