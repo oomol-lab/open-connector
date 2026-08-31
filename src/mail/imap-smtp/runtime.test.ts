@@ -1,6 +1,8 @@
 import type { MailActionName } from "./actions.ts";
 import type { MailProtocol } from "./protocol.ts";
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { neteaseMailRuntimeConfig } from "../../providers/netease_mail/config.ts";
 import { ProviderRequestError } from "../../providers/provider-runtime.ts";
@@ -76,6 +78,19 @@ describe("IMAP/SMTP mail runtime", () => {
     expect(error).toBeInstanceOf(ProviderRequestError);
     expect((error as ProviderRequestError).status).toBe(500);
     expect((error as ProviderRequestError).message).toBe("Unsupported mail action: archive_email");
+  });
+
+  // The case above only proves the default clause throws. What keeps a new mail
+  // action from ever reaching it is the `never` assignment, which the compiler
+  // rejects when a name skips the switch, and no test can observe a compile
+  // error the repo has no type-test harness for. Read the clause instead.
+  it("keeps the compile-time exhaustiveness guard on the mail dispatch switch", () => {
+    const source = readFileSync(fileURLToPath(new URL("runtime.ts", import.meta.url)), "utf8");
+
+    expect(
+      source,
+      "executeMailAction's default clause must assign actionName to a never binding; without it a mail action added without a case compiles and returns an empty success",
+    ).toMatch(/default:[\s\S]{0,600}?:\s*never\s*=\s*actionName;/);
   });
 
   it.each(["@qq.com", "user@", "user@@qq.com", "user name@qq.com"])(
