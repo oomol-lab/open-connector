@@ -48,7 +48,9 @@ interface CrossRouteErrorCase {
  * mapper, so both must derive the same HTTP status from it. Cover every code a
  * provider executor can raise, the `connection_not_found` the runtime raises on
  * its behalf, and the two upstream statuses a provider preserves in
- * `details.status`.
+ * `details.status`. The last case matches two branches at once, so it also pins
+ * the order the two mappers resolve them in: a row that carries only a code or
+ * only a status agrees no matter where either mapper puts its 413 branch.
  */
 const crossRouteErrorCases: CrossRouteErrorCase[] = [
   ...providerErrorCodes.map((code) => ({ title: code, error: { code, message: "Provider request failed." } })),
@@ -60,6 +62,10 @@ const crossRouteErrorCases: CrossRouteErrorCase[] = [
   {
     title: "an upstream payload-too-large status",
     error: { code: "invalid_input", message: "response exceeds 4 bytes", details: { status: 413 } },
+  },
+  {
+    title: "an exhausted credit balance whose response was too large",
+    error: { code: "insufficient_credit", message: "response exceeds 4 bytes", details: { status: 413 } },
   },
 ];
 
