@@ -241,7 +241,7 @@ function mapWorkastError(status: number, payload: unknown, phase: WorkastRequest
   if (status == 401 || status == 403) {
     return phase == "validate"
       ? providerError("invalid_input", message, 400)
-      : providerError("credential_expired", message, 409);
+      : providerError("credential_expired", message, 401);
   }
   if (status == 429) return providerError("rate_limited", message, 429);
   if (status == 400 || status == 404 || status == 409 || status == 422) {

@@ -248,7 +248,7 @@ function mapDrataError(response: Response, payload: unknown, mode: "validate" | 
     readNonEmptyString(payload, "error") ??
     `Drata API request failed with status ${response.status}`;
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(mode === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(mode === "validate" ? 400 : 401, message);
   }
 
   if (response.status === 400 || response.status === 404 || response.status === 412) {

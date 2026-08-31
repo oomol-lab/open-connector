@@ -5,7 +5,9 @@ import { serializeRuntimeActionResult } from "../server/api/runtime-api.ts";
 import { executors as clinicalkeyExecutors } from "./clinicalkey/executors.ts";
 import { executors as deepgramExecutors } from "./deepgram/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
+import { executors as mondayExecutors } from "./monday/executors.ts";
 import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
+import { executors as teableExecutors } from "./teable/executors.ts";
 import { executors as zoomExecutors } from "./zoom/executors.ts";
 
 afterEach(() => {
@@ -35,13 +37,16 @@ const oauthCredential: ResolvedCredential = {
   metadata: {},
 };
 
+/** Named apart from the table so the 403 case cannot drift onto another provider. */
+const clinicalkeyCase: AuthFailureCase = {
+  service: "clinicalkey",
+  executors: clinicalkeyExecutors,
+  actionId: "clinicalkey.get_service_status",
+  credential: apiKeyCredential,
+};
+
 const authFailureCases: AuthFailureCase[] = [
-  {
-    service: "clinicalkey",
-    executors: clinicalkeyExecutors,
-    actionId: "clinicalkey.get_service_status",
-    credential: apiKeyCredential,
-  },
+  clinicalkeyCase,
   {
     service: "deepgram",
     executors: deepgramExecutors,
@@ -58,6 +63,18 @@ const authFailureCases: AuthFailureCase[] = [
     service: "sellersprite",
     executors: sellerspriteExecutors,
     actionId: "sellersprite.get_api_usage",
+    credential: apiKeyCredential,
+  },
+  {
+    service: "monday",
+    executors: mondayExecutors,
+    actionId: "monday.list_boards",
+    credential: apiKeyCredential,
+  },
+  {
+    service: "teable",
+    executors: teableExecutors,
+    actionId: "teable.list_spaces",
     credential: apiKeyCredential,
   },
   { service: "zoom", executors: zoomExecutors, actionId: "zoom.list_meetings", credential: oauthCredential },
@@ -105,7 +122,7 @@ describe.each(authFailureCases)("$service execute-phase credential failures", (t
 
 describe("clinicalkey execute-phase credential failures", () => {
   it("reports an upstream 403 as authorization_failed with HTTP 403", async () => {
-    const result = await runExpiredCredential(authFailureCases[0]!, 403);
+    const result = await runExpiredCredential(clinicalkeyCase, 403);
 
     expect(result).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
     expect(httpStatusOf(result)).toBe(403);

@@ -258,7 +258,7 @@ function createTeableError(response: Response, payload: unknown, phase: TeableRe
     return providerError("invalid_input", message, 400);
   }
   if (phase === "execute" && response.status === 401) {
-    return providerError("credential_expired", message, 409);
+    return providerError("credential_expired", message, 401);
   }
   if (phase === "execute" && response.status === 403) {
     return providerError("scope_missing", message, 403);

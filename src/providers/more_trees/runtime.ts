@@ -261,7 +261,7 @@ function createMoreTreesError(response: Response, payload: unknown, phase: MoreT
     return new ProviderRequestError(429, message);
   }
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if ([400, 404, 406, 422].includes(response.status)) {
     return new ProviderRequestError(400, message);

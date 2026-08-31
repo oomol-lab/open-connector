@@ -308,7 +308,7 @@ function createChengxinError(input: { phase: ChengxinRequestPhase; status: numbe
     input.code === "401" ||
     input.code === "403"
   ) {
-    return input.phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return input.phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
 
   if (input.status >= 400 && input.status < 500) {

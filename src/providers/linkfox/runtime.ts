@@ -339,7 +339,7 @@ function createLinkfoxError(
   const code = businessCode ?? httpStatus;
   const message = readErrorMessage(payload) ?? `LinkFox request failed with code ${code}`;
   if (code === 401 || httpStatus === 401) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (code === 403 || httpStatus === 403) {
     return new ProviderRequestError(phase === "validate" ? 400 : 403, message);
@@ -788,7 +788,7 @@ function readDeveloperProxyBody(payload: Record<string, unknown>) {
   }
   const message = readErrorMessage(body) ?? `Amazon upstream request failed with status ${httpStatus}`;
   if (httpStatus === 401) {
-    throw new ProviderRequestError(409, message);
+    throw new ProviderRequestError(401, message);
   }
   if (httpStatus === 403) {
     throw new ProviderRequestError(403, message);

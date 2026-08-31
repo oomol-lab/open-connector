@@ -203,7 +203,7 @@ async function readInsitesPayload(response: Response) {
 function createInsitesError(response: Response, payload: unknown, phase: InsitesRequestPhase) {
   const message = extractInsitesErrorMessage(payload) ?? response.statusText ?? "Insites request failed";
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);

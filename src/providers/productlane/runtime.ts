@@ -259,8 +259,12 @@ function mapProductlaneError(status: number, payload: unknown, phase: "validate"
   const message = readErrorMessage(payload) ?? `Productlane API request failed with status ${status}`;
   const providerCode = readErrorCode(payload);
 
-  if (status === 401 || status === 410) {
+  if (status === 401) {
     return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+  }
+
+  if (status === 410) {
+    return new ProviderRequestError(400, message);
   }
 
   if (status === 403) {

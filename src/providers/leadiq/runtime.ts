@@ -260,7 +260,7 @@ function readGraphqlErrorMessage(payload: Record<string, unknown>) {
 
 function mapLeadiqError(status: number, message: string, phase: LeadiqRequestPhase) {
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (status === 402) {
     return new ProviderRequestError(402, message || "LeadIQ credits are insufficient");

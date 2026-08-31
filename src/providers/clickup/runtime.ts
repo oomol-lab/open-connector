@@ -1128,7 +1128,7 @@ function mapClickupError(input: {
     if (input.mode === "validate") {
       return clickupRuntimeError("invalid_input", message, 400);
     }
-    return clickupRuntimeError("credential_expired", message, 409);
+    return clickupRuntimeError("credential_expired", message, 401);
   }
   if (input.status === 429) {
     return clickupRuntimeError("rate_limited", message, 429);

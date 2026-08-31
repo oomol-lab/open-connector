@@ -149,7 +149,7 @@ function mapLushaError(status: number, message: string, phase: "validate" | "exe
     return new ProviderRequestError(429, message);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(400, message);

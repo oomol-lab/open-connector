@@ -280,7 +280,7 @@ function buildDovetailError(status: number, payload: unknown, phase: DovetailReq
   }
 
   if (status === 401) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
 
   if (status === 403) {

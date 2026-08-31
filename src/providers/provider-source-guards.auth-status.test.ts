@@ -2,18 +2,23 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { runtimeErrorCodes } from "../server/api/runtime-api.ts";
+import { providerErrorCodes } from "../server/api/runtime-api.ts";
 
 const providersDirectory = fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * Matches the upstream-status test that governs a credential failure branch,
- * either as an explicit comparison or as a status list membership check.
+ * either as an explicit comparison or as a status list membership check. The
+ * comparison is matched case-insensitively so that a locally named status such
+ * as `httpStatus === 401` counts too.
  */
-const authStatusTestPattern = /status\s*===?\s*40[13]|\b40[13]\b[^\n]*\.includes/u;
+const authStatusTestPattern = /status\s*===?\s*40[13]|\b40[13]\b[^\n]*\.includes/iu;
 
 /** Matches a branch that tests for a genuine upstream 409 conflict. */
-const conflictStatusTestPattern = /===\s*409/u;
+const conflictStatusTestPattern = /===?\s*409/u;
+
+/** Lines read above a construction that no enclosing condition governs. */
+const branchContextLines = 2;
 
 interface AuthConflictHit {
   file: string;
@@ -34,40 +39,6 @@ function listProviderSourceFiles(directory: string): string[] {
     }
   }
   return files;
-}
-
-/**
- * Report every `ProviderRequestError(409, ...)` raised from a branch that tests
- * an upstream 401/403. `toProviderExecutionError` has no 409 case, so those
- * become `invalid_input` / HTTP 400 instead of `authorization_failed` / 403.
- * A window that also tests for 409 is a genuine upstream conflict and is kept.
- */
-function findAuthConflictErrors(): AuthConflictHit[] {
-  const hits: AuthConflictHit[] = [];
-  for (const file of listProviderSourceFiles(providersDirectory)) {
-    const lines = readFileSync(file, "utf8").split("\n");
-    lines.forEach((line, index) => {
-      if (!line.includes("ProviderRequestError(409")) {
-        return;
-      }
-      const window = lines.slice(Math.max(0, index - 4), index + 1).join("\n");
-      if (!authStatusTestPattern.test(window) || conflictStatusTestPattern.test(window)) {
-        return;
-      }
-      hits.push({
-        file: relative(providersDirectory, file),
-        line: index + 1,
-        source: line.trim(),
-      });
-    });
-  }
-  return hits;
-}
-
-interface ErrorCodeArgumentHit {
-  file: string;
-  line: number;
-  code: string;
 }
 
 function skipStringLiteral(source: string, startIndex: number): number {
@@ -136,12 +107,13 @@ function splitTopLevelArguments(source: string): string[] {
 const comparisonOperatorPattern = /[=!]==?$/u;
 
 /**
- * Read the codes a fourth-argument expression can evaluate to. A ternary such
- * as `phase === "validate" ? "invalid_input" : "authorization_failed"` carries
- * the phase literal too, so literals that sit on either side of a comparison
- * operator are conditions rather than codes.
+ * Read the codes a code-argument expression can evaluate to. A ternary such as
+ * `phase === "validate" ? "invalid_input" : "authorization_failed"` carries the
+ * phase literal too, so literals that sit on either side of a comparison
+ * operator are conditions rather than codes. A bare identifier is resolved
+ * against the file's own string constants.
  */
-function readCodeLiterals(argumentSource: string): string[] {
+function readCodeLiterals(argumentSource: string, literalsByName: Map<string, string>): string[] {
   const codes: string[] = [];
   for (const literal of argumentSource.matchAll(/"([^"\\]*)"/gu)) {
     const before = argumentSource.slice(0, literal.index).trimEnd();
@@ -151,7 +123,36 @@ function readCodeLiterals(argumentSource: string): string[] {
     }
     codes.push(literal[1]!);
   }
+  const named = literalsByName.get(argumentSource.trim());
+  if (named !== undefined) {
+    codes.push(named);
+  }
   return codes;
+}
+
+/** Read the `const name = "literal"` bindings a code argument can name. */
+function readStringConstants(source: string): Map<string, string> {
+  const literalsByName = new Map<string, string>();
+  for (const match of source.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*"([^"\\]*)"/gu)) {
+    literalsByName.set(match[1]!, match[2]!);
+  }
+  return literalsByName;
+}
+
+/** Whether an argument expression can evaluate to the given numeric status. */
+function canEvaluateToStatus(argumentSource: string, status: number): boolean {
+  let stripped = "";
+  let index = 0;
+  while (index < argumentSource.length) {
+    const character = argumentSource[index]!;
+    if (character === '"' || character === "'" || character === "`") {
+      index = skipStringLiteral(argumentSource, index);
+      continue;
+    }
+    stripped += character;
+    index += 1;
+  }
+  return new RegExp(String.raw`(?<![\w.])${status}(?![\w.])`, "u").test(stripped);
 }
 
 interface CallSite {
@@ -194,13 +195,12 @@ function readParameterNames(source: string, openIndex: number): string[] {
 }
 
 function findEnclosingCallable(source: string, index: number): EnclosingCallable | undefined {
-  const head = source.slice(0, index);
-  const functionStart = head.lastIndexOf("function ");
-  const constructorStart = head.lastIndexOf("constructor(");
+  const functionStart = source.lastIndexOf("function ", index);
+  const constructorStart = source.lastIndexOf("constructor(", index);
   if (constructorStart > functionStart) {
     const className = /class\s+([A-Za-z_$][\w$]*)\s+extends\s+ProviderRequestError/gu;
     let owner: string | undefined;
-    for (const match of head.matchAll(className)) {
+    for (const match of source.slice(0, index).matchAll(className)) {
       owner = match[1];
     }
     return owner === undefined
@@ -210,7 +210,7 @@ function findEnclosingCallable(source: string, index: number): EnclosingCallable
   if (functionStart === -1) {
     return undefined;
   }
-  const declaration = /^function\s+([A-Za-z_$][\w$]*)\s*\(/u.exec(source.slice(functionStart));
+  const declaration = /^function\s+([A-Za-z_$][\w$]*)\s*\(/u.exec(source.slice(functionStart, functionStart + 200));
   if (!declaration) {
     return undefined;
   }
@@ -222,19 +222,21 @@ function findEnclosingCallable(source: string, index: number): EnclosingCallable
 
 /**
  * Find the provider-local helpers and `ProviderRequestError` subclasses that
- * forward one of their own parameters into the code argument, so their callers
- * are held to the same rule as a direct construction.
+ * forward one of their own parameters into the given constructor argument, so
+ * their callers are held to the same rule as a direct construction. Without
+ * this a helper that reorders or discards its arguments hides every site that
+ * goes through it.
  */
-function findCodeArgumentIndexes(sources: string[]): Map<string, Set<number>> {
-  const indexesByCallee = new Map<string, Set<number>>([["ProviderRequestError", new Set([3])]]);
-  for (const source of sources) {
+function findForwardedArgumentIndexes(sources: string[], constructorArgumentIndex: number): Map<string, Set<number>> {
+  const indexesByCallee = new Map<string, Set<number>>([["ProviderRequestError", new Set([constructorArgumentIndex])]]);
+  for (const source of sources.filter((entry) => entry.includes("ProviderRequestError"))) {
     for (const site of findCallSites(source, /(?:new ProviderRequestError|super)\(/gu)) {
-      const codeArgument = site.argumentSources[3]?.trim();
-      if (codeArgument === undefined || !identifierPattern.test(codeArgument)) {
+      const forwarded = site.argumentSources[constructorArgumentIndex]?.trim();
+      if (forwarded === undefined || !identifierPattern.test(forwarded)) {
         continue;
       }
       const owner = findEnclosingCallable(source, site.index);
-      const argumentIndex = owner?.parameterNames.indexOf(codeArgument) ?? -1;
+      const argumentIndex = owner?.parameterNames.indexOf(forwarded) ?? -1;
       if (!owner || argumentIndex === -1) {
         continue;
       }
@@ -246,31 +248,188 @@ function findCodeArgumentIndexes(sources: string[]): Map<string, Set<number>> {
   return indexesByCallee;
 }
 
+interface BlockRange {
+  openIndex: number;
+  closeIndex: number;
+}
+
+interface SourceIndex {
+  blocks: BlockRange[];
+  /** Index of the `(` matching each `)`, so a block head is read without scanning backwards. */
+  parenthesisOpenerByCloser: Map<number, number>;
+}
+
+interface ProviderSource {
+  file: string;
+  source: string;
+  lines: string[];
+}
+
+const providerSources: ProviderSource[] = listProviderSourceFiles(providersDirectory).map((file) => {
+  const source = readFileSync(file, "utf8");
+  return { file: relative(providersDirectory, file), source, lines: source.split("\n") };
+});
+
+const sourceIndexes = new Map<string, SourceIndex>();
+
 /**
- * Report every string literal a provider puts in the `ProviderRequestError`
- * code argument that the runtime routes do not know, directly or through one
- * of those wrappers. That argument sets `error.code` verbatim and the routes
- * derive the HTTP status from the code alone, so an undocumented code turns
- * what the status would have answered into HTTP 400.
+ * Index the brace and parenthesis structure of a source file in one forward
+ * pass, so a construction can be traced back to the conditions that govern it.
+ * Generated action schemas dwarf the runtime modules, so this runs only for the
+ * few files that raise a 409 at all.
  */
-function findUndocumentedErrorCodes(): ErrorCodeArgumentHit[] {
-  const documented = new Set(runtimeErrorCodes);
-  const files = listProviderSourceFiles(providersDirectory);
-  const sources = new Map(files.map((file) => [file, readFileSync(file, "utf8")]));
-  const indexesByCallee = findCodeArgumentIndexes([...sources.values()]);
-  const hits: ErrorCodeArgumentHit[] = [];
-  for (const [file, source] of sources) {
+function readSourceIndex(entry: ProviderSource): SourceIndex {
+  const cached = sourceIndexes.get(entry.file);
+  if (cached) {
+    return cached;
+  }
+  const { source } = entry;
+  const blocks: BlockRange[] = [];
+  const parenthesisOpeners: number[] = [];
+  const parenthesisOpenerByCloser = new Map<number, number>();
+  const braceStack: number[] = [];
+  let index = 0;
+  while (index < source.length) {
+    const character = source[index]!;
+    if (character === '"' || character === "'" || character === "`") {
+      index = skipStringLiteral(source, index);
+      continue;
+    }
+    if (character === "/" && source[index + 1] === "/") {
+      const lineEnd = source.indexOf("\n", index);
+      index = lineEnd === -1 ? source.length : lineEnd;
+      continue;
+    }
+    if (character === "/" && source[index + 1] === "*") {
+      const commentEnd = source.indexOf("*/", index);
+      index = commentEnd === -1 ? source.length : commentEnd + 2;
+      continue;
+    }
+    if (character === "(") {
+      parenthesisOpeners.push(index);
+    } else if (character === ")") {
+      const opener = parenthesisOpeners.pop();
+      if (opener !== undefined) {
+        parenthesisOpenerByCloser.set(index, opener);
+      }
+    } else if (character === "{") {
+      braceStack.push(index);
+    } else if (character === "}") {
+      const opener = braceStack.pop();
+      if (opener !== undefined) {
+        blocks.push({ openIndex: opener, closeIndex: index });
+      }
+    }
+    index += 1;
+  }
+  const built: SourceIndex = { blocks, parenthesisOpenerByCloser };
+  sourceIndexes.set(entry.file, built);
+  return built;
+}
+
+/**
+ * Read the `if (...)` heads of the blocks that enclose a construction. Sibling
+ * branches and the rest of the enclosing function stay out, so a genuine 409
+ * raised a few lines below an unrelated 401 test is not mistaken for one.
+ */
+function readGoverningConditions(entry: ProviderSource, index: number): string[] {
+  const { blocks, parenthesisOpenerByCloser } = readSourceIndex(entry);
+  const conditions: string[] = [];
+  for (const block of blocks) {
+    if (block.openIndex >= index || block.closeIndex <= index) {
+      continue;
+    }
+    const head = entry.source.slice(0, block.openIndex).trimEnd();
+    if (!head.endsWith(")")) {
+      continue;
+    }
+    const conditionStart = parenthesisOpenerByCloser.get(head.length - 1);
+    if (conditionStart !== undefined) {
+      conditions.push(entry.source.slice(conditionStart, block.openIndex));
+    }
+  }
+  return conditions;
+}
+
+function findCallSitesIn(entry: ProviderSource, callee: string): CallSite[] {
+  if (!entry.source.includes(callee)) {
+    return [];
+  }
+  return findCallSites(entry.source, new RegExp(String.raw`\b${callee}\(`, "gu"));
+}
+
+function lineNumberAt(source: string, index: number): number {
+  return source.slice(0, index).split("\n").length;
+}
+
+/**
+ * Report every provider error raised with status 409 from a branch that tests
+ * an upstream 401/403, whether the 409 is a literal, one arm of a ternary, or
+ * an argument handed to a provider-local error helper.
+ * `toProviderExecutionError` has no 409 case, so those reach the caller as
+ * `invalid_input` / HTTP 400 instead of `authorization_failed` / HTTP 403. A
+ * branch that also tests for 409 is a genuine upstream conflict and is kept.
+ */
+function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
+  const indexesByCallee = findForwardedArgumentIndexes(
+    sources.map((entry) => entry.source),
+    0,
+  );
+  const hits: AuthConflictHit[] = [];
+  for (const entry of sources) {
     for (const [callee, indexes] of indexesByCallee) {
-      for (const site of findCallSites(source, new RegExp(`\\b${callee}\\(`, "gu"))) {
+      for (const site of findCallSitesIn(entry, callee)) {
+        const raisesConflict = [...indexes].some((index) =>
+          canEvaluateToStatus(site.argumentSources[index] ?? "", 409),
+        );
+        if (!raisesConflict) {
+          continue;
+        }
+        const lineIndex = lineNumberAt(entry.source, site.index) - 1;
+        const context = [
+          ...readGoverningConditions(entry, site.index),
+          ...entry.lines.slice(Math.max(0, lineIndex - branchContextLines), lineIndex + 1),
+        ].join("\n");
+        if (!authStatusTestPattern.test(context) || conflictStatusTestPattern.test(context)) {
+          continue;
+        }
+        hits.push({ file: entry.file, line: lineIndex + 1, source: entry.lines[lineIndex]!.trim() });
+      }
+    }
+  }
+  return hits;
+}
+
+interface ErrorCodeArgumentHit {
+  file: string;
+  line: number;
+  code: string;
+}
+
+/**
+ * Report every string a provider puts in the `ProviderRequestError` code
+ * argument that is not a provider's to set, directly or through one of those
+ * helpers. That argument sets `error.code` verbatim and the routes derive the
+ * HTTP status from the code alone, so an undocumented code turns what the
+ * status would have answered into HTTP 400, and a connection-layer code answers
+ * with a status that has nothing to do with what the upstream said.
+ */
+function findUndocumentedErrorCodes(sources: ProviderSource[]): ErrorCodeArgumentHit[] {
+  const allowed = new Set(providerErrorCodes);
+  const indexesByCallee = findForwardedArgumentIndexes(
+    sources.map((entry) => entry.source),
+    3,
+  );
+  const hits: ErrorCodeArgumentHit[] = [];
+  for (const entry of sources) {
+    const literalsByName = readStringConstants(entry.source);
+    for (const [callee, indexes] of indexesByCallee) {
+      for (const site of findCallSitesIn(entry, callee)) {
         for (const argumentIndex of indexes) {
           const codeArgument = site.argumentSources[argumentIndex];
-          for (const code of codeArgument === undefined ? [] : readCodeLiterals(codeArgument)) {
-            if (!documented.has(code)) {
-              hits.push({
-                file: relative(providersDirectory, file),
-                line: source.slice(0, site.index).split("\n").length,
-                code,
-              });
+          for (const code of codeArgument === undefined ? [] : readCodeLiterals(codeArgument, literalsByName)) {
+            if (!allowed.has(code)) {
+              hits.push({ file: entry.file, line: lineNumberAt(entry.source, site.index), code });
             }
           }
         }
@@ -282,10 +441,10 @@ function findUndocumentedErrorCodes(): ErrorCodeArgumentHit[] {
 
 describe("provider auth-failure status guard", () => {
   it("never maps an upstream 401 or 403 to a provider 409", () => {
-    expect(findAuthConflictErrors()).toEqual([]);
+    expect(findAuthConflictErrors(providerSources)).toEqual([]);
   });
 
-  it("only puts documented runtime error codes on the wire", () => {
-    expect(findUndocumentedErrorCodes()).toEqual([]);
+  it("only puts error codes a provider owns on the wire", () => {
+    expect(findUndocumentedErrorCodes(providerSources)).toEqual([]);
   });
 });

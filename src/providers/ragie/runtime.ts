@@ -437,7 +437,7 @@ async function assertRagieResponse(response: Response, mode: "validate" | "execu
 
   const message = await readRagieError(response);
   if (response.status === 401) {
-    throw new ProviderRequestError(mode === "validate" ? 400 : 409, message);
+    throw new ProviderRequestError(mode === "validate" ? 400 : 401, message);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
     throw new ProviderRequestError(400, message);

@@ -256,7 +256,7 @@ function createAircallError(status: number, payload: unknown, phase: AircallRequ
     return new ProviderRequestError(400, message, payload);
   }
 
-  if (phase === "execute" && [401, 402, 403].includes(status)) {
+  if (phase === "execute" && [401, 403].includes(status)) {
     return new ProviderRequestError(401, message, payload);
   }
 

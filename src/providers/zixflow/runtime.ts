@@ -291,7 +291,7 @@ function createZixflowError(response: Response, payload: unknown, phase: Zixflow
   const record = optionalRecord(payload);
   const message = record ? readMessage(record) : `Zixflow request failed with ${response.status}`;
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 409, message, payload);
+    return new ProviderRequestError(phase === "validate" ? 400 : 401, message, payload);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message, payload);

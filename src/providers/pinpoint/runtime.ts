@@ -176,7 +176,7 @@ function requireJsonApiDocument(payload: unknown) {
 
 function createPinpointError(status: number, payload: unknown, phase: "validate" | "execute") {
   const message = extractPinpointError(payload) ?? `Pinpoint request failed with status ${status}`;
-  if (status === 401 || status === 403) return new ProviderRequestError(phase === "validate" ? 400 : 409, message);
+  if (status === 401 || status === 403) return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   if (status === 429) return new ProviderRequestError(429, message);
   if (400 <= status && status < 500) return new ProviderRequestError(400, message);
   return new ProviderRequestError(status || 502, message);
