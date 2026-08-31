@@ -4,27 +4,19 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { ClicksendActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
-  createProviderFetch,
-  createProviderProxyUrl,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   ProviderRequestError,
-  providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 import { clicksendActionHandlers, clicksendApiBaseUrl, validateClicksendCredential } from "./runtime.ts";
 
 const service = "clicksend";
-const clicksendFetch = createProviderFetch({ skipDnsValidation: true });
 
 export const executors: ProviderExecutors = defineProviderExecutors<ClicksendActionContext>({
   service,
@@ -42,36 +34,23 @@ export const executors: ProviderExecutors = defineProviderExecutors<ClicksendAct
   fallbackMessage: "unknown clicksend action",
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    await requireApiKeyCredential(context, service);
+    return clicksendApiBaseUrl;
+  },
+  auth: { type: "none" },
+  async customizeRequest({ context, headers }) {
     const credential = await requireApiKeyCredential(context, service);
-    const url = createProviderProxyUrl(clicksendApiBaseUrl, input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set(
       "authorization",
       `Basic ${Buffer.from(`${requireClicksendUsername(credential.values)}:${credential.apiKey}`).toString("base64")}`,
     );
-    headers.set("user-agent", providerUserAgent);
-    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
-      headers.set("content-type", "application/json");
-    }
-
-    const response = await clicksendFetch(url, {
-      method: input.method,
-      headers,
-      body:
-        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
-      signal: context.signal,
-    });
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+  },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
