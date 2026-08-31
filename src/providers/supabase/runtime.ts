@@ -564,7 +564,7 @@ async function supabaseDownloadStorageObject(
   }
 
   const projectRef = readStorageProjectRef(input);
-  const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
+  const bucketId = readStorageBucketId(input);
   const objectPath = requiredRawString(input.objectPath, "objectPath", providerInputError);
   if (objectPath.length === 0) {
     throw providerInputError("objectPath must not be empty");
@@ -625,7 +625,7 @@ async function supabaseUploadStorageObject(
     throw providerInputError("supabase upload_storage_object requires local transit file storage");
   }
   const projectRef = readStorageProjectRef(input);
-  const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
+  const bucketId = readStorageBucketId(input);
   const objectPath = requiredRawString(input.objectPath, "objectPath", providerInputError);
   if (objectPath.length === 0) {
     throw providerInputError("objectPath must not be empty");
@@ -642,7 +642,7 @@ async function supabaseUploadStorageObject(
   }
   const mime = optionalString(input.contentType) ?? optionalString(source.mimeType) ?? "application/octet-stream";
   const storageKey = await resolveSupabaseStorageKey(input, projectRef, context, "upload");
-  const upsert = input.upsert === false ? false : true;
+  const upsert = optionalBoolean(input.upsert) ?? false;
   const method = "POST";
   const url = new URL(
     `https://${projectRef}${supabaseProjectHostSuffix}/storage/v1/object/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
@@ -681,7 +681,7 @@ async function supabaseUploadStorageObject(
     bucketId,
     objectPath,
     fileId: `${bucketId}/${objectPath}`,
-    name: source.name,
+    name: defaultStorageObjectName(objectPath),
     mimeType: mime,
     sizeBytes: source.sizeBytes,
     etag: response.headers.get("etag") ?? null,
@@ -725,6 +725,14 @@ async function resolveSupabaseStorageKey(
       ? "The selected Supabase API key is not an elevated secret or legacy service_role key."
       : `Supabase Storage ${operation} requires a revealed secret or legacy service_role project API key.`,
   );
+}
+
+function readStorageBucketId(input: SupabaseActionInput): string {
+  const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
+  if (/^\.+$/.test(bucketId)) {
+    throw providerInputError("bucketId must not be a . or .. path segment");
+  }
+  return bucketId;
 }
 
 function readStorageProjectRef(input: SupabaseActionInput): string {

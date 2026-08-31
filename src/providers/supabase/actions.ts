@@ -528,7 +528,7 @@ export const supabaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upload_storage_object",
     description: "Upload a local transit file to Supabase Storage.",
-    requiredScopes: [supabaseScopes.storageWrite, supabaseScopes.secretsRead],
+    requiredScopes: [supabaseScopes.storageRead, supabaseScopes.secretsRead],
     inputSchema: s.actionInput(
       {
         projectRef: s.string({
@@ -543,17 +543,19 @@ export const supabaseActions: ActionDefinition[] = [
           "A local transit file reference to upload.",
           {
             fileId: s.nonEmptyString("The transit file identifier."),
-            name: s.nonEmptyString("Optional filename override for the uploaded object."),
             mimeType: s.nonEmptyString("Optional MIME type override."),
           },
-          { optional: ["name", "mimeType"] },
+          { optional: ["mimeType"] },
         ),
         apiKeyId: s.nonEmptyString(
           "An optional secret or legacy service_role API key ID. When omitted, the first revealed elevated key is used.",
         ),
         contentType: s.nonEmptyString("Optional Content-Type override; defaults to the transit file MIME type."),
-        upsert: s.boolean("When true, replace the object if it exists. Defaults to true."),
-        cacheControl: s.nonEmptyString("Optional Cache-Control header value."),
+        upsert: s.boolean({
+          description: "When true, replace an existing object if it already exists. Defaults to false.",
+          default: false,
+        }),
+        cacheControl: s.nonEmptyString("Optional complete Cache-Control header value, for example max-age=3600."),
       },
       ["projectRef", "bucketId", "objectPath", "file"],
       "Input parameters for uploading one Supabase Storage object.",
@@ -562,7 +564,7 @@ export const supabaseActions: ActionDefinition[] = [
       bucketId: s.nonEmptyString("The bucket that received the object."),
       objectPath: s.nonEmptyString("The uploaded object path."),
       fileId: s.nonEmptyString("The bucket-qualified Supabase Storage object path."),
-      name: s.nonEmptyString("The uploaded filename."),
+      name: s.nonEmptyString("The stored object name derived from objectPath."),
       mimeType: s.nonEmptyString("The MIME type of the uploaded object."),
       sizeBytes: s.nonNegativeInteger("The uploaded object size in bytes."),
       etag: s.nullable(s.string("The uploaded object ETag, or null when Storage did not return it.")),

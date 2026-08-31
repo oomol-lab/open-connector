@@ -220,6 +220,23 @@ describe("Supabase download_storage_object", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("rejects a bucketId path segment before any egress", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { store } = createTransitFileStore(1024);
+
+    const result = await executeDownload({ projectRef, bucketId: "..", objectPath: "report.pdf" }, store);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "bucketId must not be a . or .. path segment",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("honors the transit size limit without storing a partial object", async () => {
     const requests = stubResponses([
       Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
@@ -273,7 +290,7 @@ describe("Supabase download_storage_object", () => {
 });
 
 describe("Supabase upload_storage_object", () => {
-  it("uploads a transit file via secret key with PUT and etag", async () => {
+  it("uploads a transit file via secret key with POST and etag", async () => {
     const uploadBody = new Uint8Array([1, 2, 3]);
     const file = new File([uploadBody], "hello.txt", { type: "text/plain" });
     const requests = stubResponses([
@@ -304,6 +321,8 @@ describe("Supabase upload_storage_object", () => {
     expect(requests[1]?.url.pathname).toBe("/storage/v1/object/documents/hello.txt");
     expect(requests[1]?.apiKey).toBe("sb_secret_test");
     expect(requests[1]?.authorization).toBeNull();
+    expect(requests[1]?.method).toBe("POST");
+    expect(requests[1]?.headers["x-upsert"]).toBeUndefined();
   });
 
   it("uses Authorization header for legacy service_role when explicitly selected", async () => {
@@ -342,6 +361,22 @@ describe("Supabase upload_storage_object", () => {
     expect(result).toMatchObject({
       ok: false,
       error: { code: "invalid_input", message: "objectPath must not contain . or .. path segments" },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a bucketId path segment before any egress", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      { projectRef, bucketId: "..", objectPath: "a.txt", file: { fileId: "transit-file-1" } },
+      store,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", message: "bucketId must not be a . or .. path segment" },
     });
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -409,14 +444,15 @@ describe("Supabase upload_storage_object", () => {
         objectPath: "a.txt",
         file: { fileId: "transit-file-1" },
         contentType: "text/csv",
-        cacheControl: "3600",
+        cacheControl: "max-age=3600",
+        upsert: true,
       },
       store,
     );
     expect(result.ok).toBe(true);
     expect(requests[1]?.url.pathname).toBe("/storage/v1/object/documents/a.txt");
     expect(requests[1]?.headers["content-type"]).toBe("text/csv");
-    expect(requests[1]?.headers["cache-control"]).toBe("3600");
+    expect(requests[1]?.headers["cache-control"]).toBe("max-age=3600");
     expect(requests[1]?.headers["x-upsert"]).toBe("true");
     expect(requests[1]?.method).toBe("POST");
     expect(requests[1]?.bodyBytes).toEqual(new Uint8Array([1]));
@@ -481,24 +517,34 @@ describe("Supabase upload_storage_object", () => {
     expect(requests[1]?.headers["content-type"]).toBe("application/octet-stream");
   });
 
-  it("respects file.name override via readTransitFileInput", async () => {
+  it("derives the stored object name from objectPath", async () => {
     const file = new File([new Uint8Array([1, 2, 3])], "original.txt", { type: "text/plain" });
     stubResponses([
       Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
-      new Response("", { headers: { etag: '"etag-override"' } }),
+      new Response("", { headers: { etag: '"etag-name"' } }),
     ]);
     const { store } = createTransitFileStoreWithRead(1024, file);
     const result = await executeUpload(
-      {
-        projectRef,
-        bucketId: "documents",
-        objectPath: "a.txt",
-        file: { fileId: "transit-file-1", name: "override.txt" },
-      },
+      { projectRef, bucketId: "documents", objectPath: "nested/dir/report.pdf", file: { fileId: "transit-file-1" } },
       store,
     );
     expect(result.ok).toBe(true);
-    expect((result as { ok: true; output: { name: string } }).output.name).toBe("override.txt");
+    expect((result as { ok: true; output: { name: string } }).output.name).toBe("report.pdf");
+  });
+
+  it("returns etag null when Storage omits the header", async () => {
+    const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
+    stubResponses([
+      Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
+      new Response("", { headers: {} }),
+    ]);
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      { projectRef, bucketId: "documents", objectPath: "a.txt", file: { fileId: "transit-file-1" } },
+      store,
+    );
+    expect(result.ok).toBe(true);
+    expect((result as { ok: true; output: { etag: string | null } }).output.etag).toBeNull();
   });
 
   it("rejects when no elevated key is available (only publishable)", async () => {
@@ -553,7 +599,7 @@ describe("Supabase upload_storage_object", () => {
     expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
   });
 
-  it("rejects invalid file.fileId via readTransitFileInput", async () => {
+  it("rejects an empty file.fileId", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
     const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
