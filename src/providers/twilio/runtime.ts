@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalString, optionalStringArray, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalString, optionalStringArray } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 export const twilioApiBaseUrl: string = "https://api.twilio.com/2010-04-01";

@@ -10,7 +10,6 @@ import {
   optionalString,
   optionalStringOrNull,
   positiveInteger,
-  requiredString,
 } from "../../core/cast.ts";
 import {
   providerInputError,

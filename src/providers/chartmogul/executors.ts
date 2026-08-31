@@ -16,7 +16,6 @@ import {
   optionalRecord,
   optionalString,
   requiredRecord,
-  requiredString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import {

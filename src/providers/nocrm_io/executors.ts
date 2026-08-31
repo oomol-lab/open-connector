@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,

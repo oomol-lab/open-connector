@@ -2,7 +2,7 @@ import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
-import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,

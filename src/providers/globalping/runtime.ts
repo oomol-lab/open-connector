@@ -10,7 +10,6 @@ import {
   optionalRecord,
   optionalString,
   requiredRecord,
-  requiredString,
 } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 

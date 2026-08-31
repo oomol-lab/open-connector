@@ -1,14 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
-import {
-  compactObject,
-  optionalNumber,
-  optionalRecord,
-  optionalString,
-  requiredRecord,
-  requiredString,
-} from "../../core/cast.ts";
+import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
   defineOAuthProviderExecutors,
   providerInputError,

@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, objectArray, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import { compactObject, objectArray, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const microsoftClarityApiBaseUrl = "https://www.clarity.ms";

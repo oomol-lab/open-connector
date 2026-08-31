@@ -1,7 +1,7 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { booleanString, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { booleanString, compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { readAlpacaGrantedScopes } from "./scopes.ts";
 

@@ -12,7 +12,6 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
-  requiredString,
 } from "../../core/cast.ts";
 import { queryParams, readBoundedResponseBytes } from "../../core/request.ts";
 import {

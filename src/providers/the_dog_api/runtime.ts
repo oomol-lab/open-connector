@@ -9,7 +9,6 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
-  requiredString,
 } from "../../core/cast.ts";
 import {
   createProviderTimeout,

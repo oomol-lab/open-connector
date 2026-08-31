@@ -3,14 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
-import {
-  base64Bytes,
-  compactObject,
-  optionalRecord,
-  optionalScalarString,
-  optionalString,
-  requiredString,
-} from "../../core/cast.ts";
+import { base64Bytes, compactObject, optionalRecord, optionalScalarString, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,

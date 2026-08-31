@@ -1,8 +1,8 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalBoolean, requiredString } from "../../core/cast.ts";
-import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import { optionalBoolean } from "../../core/cast.ts";
+import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const amapApiBaseUrl = "https://restapi.amap.com";
 const amapAuthErrorInfos = new Set([

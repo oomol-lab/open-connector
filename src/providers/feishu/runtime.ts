@@ -1,7 +1,7 @@
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalObjectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalObjectArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, readProviderJsonBody, requiredInputString } from "../provider-runtime.ts";
 
 const feishuOpenBaseUrl = "https://open.feishu.cn/open-apis";

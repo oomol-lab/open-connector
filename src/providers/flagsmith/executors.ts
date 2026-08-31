@@ -8,7 +8,7 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,

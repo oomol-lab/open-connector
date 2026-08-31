@@ -7,7 +7,7 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
+import { optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { jsonObject, queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,

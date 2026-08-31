@@ -13,7 +13,6 @@ import {
   optionalRecord,
   optionalString,
   optionalStringOrNull,
-  requiredString,
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,

@@ -2,7 +2,6 @@ import {
   compactObject,
   optionalBoolean,
   optionalInteger as asOptionalInteger,
-  optionalRecord,
   optionalString as asOptionalString,
   recordOrEmpty,
 } from "../../core/cast.ts";

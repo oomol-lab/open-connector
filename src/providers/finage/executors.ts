@@ -9,7 +9,6 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
-  requiredString,
   stringArray,
 } from "../../core/cast.ts";
 import {

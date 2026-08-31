@@ -2,14 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import {
-  compactObject,
-  optionalBoolean,
-  optionalNumber,
-  optionalRecord,
-  optionalString,
-  recordOrEmpty,
-} from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalNumber, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 

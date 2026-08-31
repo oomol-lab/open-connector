@@ -1,11 +1,4 @@
-import {
-  compactObject,
-  optionalRecord,
-  optionalString,
-  requiredRecord,
-  requiredString,
-  requiredStringArray,
-} from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredRecord, requiredStringArray } from "../../core/cast.ts";
 import {
   providerInputError,
   providerUserAgent,

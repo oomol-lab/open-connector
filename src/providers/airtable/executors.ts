@@ -10,7 +10,6 @@ import {
   optionalRecord,
   optionalString,
   optionalStringArray,
-  requiredRecord,
 } from "../../core/cast.ts";
 import {
   defineBearerProviderExecutors,

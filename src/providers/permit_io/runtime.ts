@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
+import { optionalInteger, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const permitIoApiBaseUrl = "https://api.permit.io";

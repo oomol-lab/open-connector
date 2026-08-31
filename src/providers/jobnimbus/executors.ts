@@ -11,7 +11,6 @@ import {
   optionalString,
   pickOptionalString,
   requiredRecord,
-  requiredString,
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,

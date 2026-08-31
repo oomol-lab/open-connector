@@ -2,7 +2,7 @@ import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   providerUserAgent,

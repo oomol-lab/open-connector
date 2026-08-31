@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalInteger, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const altTextAiApiBaseUrl = "https://alttext.ai/api/v1";

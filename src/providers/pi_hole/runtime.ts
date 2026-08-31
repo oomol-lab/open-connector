@@ -11,7 +11,6 @@ import {
   optionalStringArray,
   requiredBoolean,
   requiredRecord,
-  requiredString,
   stringArray,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";

@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ExecutionResult } from "../../core/typ
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString, requiredStringArray } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredStringArray } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,

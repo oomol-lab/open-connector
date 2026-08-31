@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { keepaDealPriceTypes, keepaHistoryTypes, keepaMarketplaces } from "./actions.ts";
 
-import { compactObject, optionalRawString, optionalRecord, rawStringOrNull, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, optionalRecord, rawStringOrNull } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,

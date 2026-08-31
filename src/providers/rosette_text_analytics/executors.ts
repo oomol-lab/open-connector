@@ -9,7 +9,6 @@ import {
   optionalRecord,
   optionalRawString,
   optionalString,
-  requiredRecord,
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,

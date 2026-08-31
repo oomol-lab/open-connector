@@ -8,7 +8,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,

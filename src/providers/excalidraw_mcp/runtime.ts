@@ -7,7 +7,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/client";
 import { SdkHttpError } from "@modelcontextprotocol/client";
 import { ProtocolError, SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
-import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";

@@ -18,7 +18,6 @@ import {
   optionalRecord,
   optionalScalarString,
   optionalString,
-  requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {

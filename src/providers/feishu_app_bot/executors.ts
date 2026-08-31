@@ -9,7 +9,7 @@ import type { FeishuActionRuntimeContext } from "../feishu/shared/client.ts";
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import { createFeishuApplicationActionHandlers } from "../feishu/shared/application-runtime.ts";
 import { createFeishuBaseAdvancedActionHandlers } from "../feishu/shared/base-advanced-runtime.ts";

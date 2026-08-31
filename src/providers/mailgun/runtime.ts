@@ -2,14 +2,7 @@ import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } 
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import {
-  compactObject,
-  optionalBoolean,
-  optionalInteger,
-  optionalRecord,
-  optionalString,
-  requiredString,
-} from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,

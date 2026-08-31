@@ -2,14 +2,7 @@ import type { CredentialValidationResult, ResolvedCredential } from "../../core/
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import {
-  optionalBoolean,
-  optionalInteger,
-  optionalRecord,
-  optionalString,
-  recordOrEmpty,
-  requiredString,
-} from "../../core/cast.ts";
+import { optionalBoolean, optionalInteger, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,

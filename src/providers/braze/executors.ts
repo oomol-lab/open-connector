@@ -8,7 +8,6 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
-  requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
