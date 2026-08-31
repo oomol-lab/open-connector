@@ -17,6 +17,7 @@ import {
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "rosette_text_analytics";
@@ -177,14 +178,14 @@ async function readRosettePayload(response: Response): Promise<unknown> {
 }
 
 function normalizeLanguageResult(payload: unknown): Record<string, unknown> {
-  const record = requireProviderObject(payload, "Rosette language response");
+  const record = requiredResponseRecord(payload, "Rosette language response");
   if (!Array.isArray(record.languageDetections)) {
     throw new ProviderRequestError(502, "Rosette language response must include a languageDetections array");
   }
 
   return {
     languageDetections: record.languageDetections.map((item) => {
-      const detection = requireProviderObject(item, "Rosette language detection");
+      const detection = requiredResponseRecord(item, "Rosette language detection");
       return {
         language: requiredProviderString(detection.language, "Rosette language detection language"),
         confidence: nullableNumber(detection.confidence),
@@ -196,7 +197,7 @@ function normalizeLanguageResult(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeEntitiesResult(payload: unknown): Record<string, unknown> {
-  const record = requireProviderObject(payload, "Rosette entities response");
+  const record = requiredResponseRecord(payload, "Rosette entities response");
   const entitiesResponse = Array.isArray(record.entitiesResponse) ? record.entitiesResponse : record.entities;
 
   return {
@@ -206,7 +207,7 @@ function normalizeEntitiesResult(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeSentimentResult(payload: unknown): Record<string, unknown> {
-  const record = requireProviderObject(payload, "Rosette sentiment response");
+  const record = requiredResponseRecord(payload, "Rosette sentiment response");
 
   return {
     document: optionalLabelScore(record.document),
@@ -216,7 +217,7 @@ function normalizeSentimentResult(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeCategoriesResult(payload: unknown): Record<string, unknown> {
-  const record = requireProviderObject(payload, "Rosette categories response");
+  const record = requiredResponseRecord(payload, "Rosette categories response");
 
   return {
     categories: objectArray(record.categories).map((category) => ({
@@ -230,7 +231,7 @@ function normalizeCategoriesResult(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeTokensResult(payload: unknown): Record<string, unknown> {
-  const record = requireProviderObject(payload, "Rosette tokens response");
+  const record = requiredResponseRecord(payload, "Rosette tokens response");
   if (!Array.isArray(record.tokens)) {
     throw new ProviderRequestError(502, "Rosette tokens response must include a tokens array");
   }
@@ -322,10 +323,6 @@ function objectArray(value: unknown): Array<Record<string, unknown>> {
   return value
     .map((item) => optionalRecord(item))
     .filter((item): item is Record<string, unknown> => item !== undefined);
-}
-
-function requireProviderObject(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, providerResponseError);
 }
 
 function nullableNumber(value: unknown): number | null {

@@ -10,7 +10,12 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredResponseRecord,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 const kommoCredentialHelpUrl = "https://developers.kommo.com/docs/long-lived-token";
 const kommoPrivateIntegrationHelpUrl = "https://developers.kommo.com/docs/private-integration";
@@ -54,7 +59,7 @@ export const kommoActionHandlers: ProviderActionHandlers<"kommo", KommoActionHan
 
     return {
       account: normalizeAccount(raw),
-      raw: requireRecord(raw, "Kommo account response"),
+      raw: requiredResponseRecord(raw, "Kommo account response"),
     };
   },
   list_leads(input, context) {
@@ -191,7 +196,7 @@ export async function validateKommoCredential(
     signal,
     phase: "validate",
   });
-  const account = requireRecord(payload, "Kommo account response");
+  const account = requiredResponseRecord(payload, "Kommo account response");
   const accountId = optionalInteger(account.id);
   const currentUserId = optionalInteger(account.current_user_id);
   const accountName = optionalString(account.name);
@@ -247,7 +252,7 @@ async function listRecords<TRecord extends Record<string, unknown>>(input: {
     signal: input.context.signal,
     phase: "execute",
   });
-  const response = requireRecord(raw, `Kommo ${input.collection} response`);
+  const response = requiredResponseRecord(raw, `Kommo ${input.collection} response`);
   const records = readHalCollection(response, input.collection).map(input.normalizer);
 
   return {
@@ -277,7 +282,7 @@ async function getRecord<TRecord extends Record<string, unknown>>(input: {
     signal: input.context.signal,
     phase: "execute",
   });
-  const record = requireRecord(raw, `Kommo ${input.entity} response`);
+  const record = requiredResponseRecord(raw, `Kommo ${input.entity} response`);
   return {
     [input.entity]: input.normalizer(record),
     raw: record,
@@ -511,11 +516,11 @@ function readHalCollection(payload: Record<string, unknown>, collection: KommoCo
   if (!Array.isArray(items)) {
     throw new ProviderRequestError(502, `Kommo ${collection} response must be an array`);
   }
-  return items.map((item, index) => requireRecord(item, `Kommo ${collection} item ${index + 1}`));
+  return items.map((item, index) => requiredResponseRecord(item, `Kommo ${collection} item ${index + 1}`));
 }
 
 function normalizeAccount(value: unknown): Record<string, unknown> {
-  const record = requireRecord(value, "Kommo account response");
+  const record = requiredResponseRecord(value, "Kommo account response");
   return compactObject({
     id: asNullableInteger(record.id),
     name: nullableString(record.name),
@@ -632,14 +637,6 @@ function readPipelineStatuses(record: Record<string, unknown>): Record<string, u
     return undefined;
   }
   return Array.isArray(statuses) ? statuses.filter(isRecord) : undefined;
-}
-
-function requireRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 export type StannpRegion = "eu" | "us";
 
@@ -24,7 +29,7 @@ const stannpBaseUrlByRegion: Record<StannpRegion, string> = {
 export const stannpActionHandlers: ProviderActionHandlers<"stannp", ProviderRuntimeHandler<StannpActionContext>> = {
   async get_account_balance(_input, context) {
     const data = await stannpGetJson("/v1/accounts/balance", {}, context, "execute");
-    const payload = objectFromStannp(data, "stannp account balance response data");
+    const payload = requiredResponseRecord(data, "stannp account balance response data");
     return {
       balance: stringFrom(payload.balance),
       raw: data,
@@ -50,13 +55,13 @@ export const stannpActionHandlers: ProviderActionHandlers<"stannp", ProviderRunt
     const recipientId = readPathId(input.recipientId, "recipientId");
     const data = await stannpGetJson(`/v1/recipients/get/${encodeURIComponent(recipientId)}`, {}, context, "execute");
     return {
-      recipient: objectFromStannp(data, "stannp recipient response data"),
+      recipient: requiredResponseRecord(data, "stannp recipient response data"),
       raw: data,
     };
   },
   async create_recipient(input, context) {
     const data = await stannpPostForm("/v1/recipients/new", recipientFormFields(input), context, "execute");
-    const payload = objectFromStannp(data, "stannp recipient creation response data");
+    const payload = requiredResponseRecord(data, "stannp recipient creation response data");
     return {
       recipientId: stringFrom(payload.id),
       valid: nullableBoolean(payload.valid),
@@ -152,7 +157,7 @@ export const stannpActionHandlers: ProviderActionHandlers<"stannp", ProviderRunt
       context,
       "execute",
     );
-    const address = objectFromStannp(data, "stannp address validation response data");
+    const address = requiredResponseRecord(data, "stannp address validation response data");
     return {
       isValid: booleanFromStannp(address.is_valid),
       address,
@@ -185,7 +190,7 @@ export async function validateStannpCredential(
   const region = readStannpRegion(regionInput);
   const apiBaseUrl = buildStannpApiBaseUrl(region);
   const data = await stannpGetJson("/v1/accounts/balance", {}, { apiKey, region, fetcher, signal }, "validate");
-  const balance = stringFrom(objectFromStannp(data, "stannp account balance response data").balance);
+  const balance = stringFrom(requiredResponseRecord(data, "stannp account balance response data").balance);
   return {
     profile: {
       accountId: `stannp:${region}`,
@@ -389,15 +394,7 @@ function arrayFrom(value: unknown, fieldName: string): Array<Record<string, unkn
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(502, `${fieldName} must be an array`);
   }
-  return value.map((item) => objectFromStannp(item, fieldName));
-}
-
-function objectFromStannp(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
+  return value.map((item) => requiredResponseRecord(item, fieldName));
 }
 
 function readPathId(value: unknown, fieldName: string): string {

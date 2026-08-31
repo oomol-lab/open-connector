@@ -9,6 +9,7 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "haveibeenpwned";
@@ -342,7 +343,7 @@ function normalizeBreachArray(value: unknown, label: string): Array<Record<strin
 }
 
 function normalizeBreach(value: unknown, label: string): Record<string, unknown> {
-  const record = requireObject(value, label);
+  const record = requiredResponseRecord(value, label);
 
   return {
     Name: requireString(record.Name, `${label}.Name`),
@@ -376,7 +377,7 @@ function normalizePasteArray(value: unknown, label: string): Array<Record<string
 }
 
 function normalizePaste(value: unknown, label: string): Record<string, unknown> {
-  const record = requireObject(value, label);
+  const record = requiredResponseRecord(value, label);
 
   return {
     Source: requireString(record.Source, `${label}.Source`),
@@ -388,7 +389,7 @@ function normalizePaste(value: unknown, label: string): Record<string, unknown> 
 }
 
 function normalizeSubscription(value: unknown): HaveIBeenPwnedSubscription {
-  const record = requireObject(value, "HIBP /subscription/status response");
+  const record = requiredResponseRecord(value, "HIBP /subscription/status response");
 
   return {
     SubscriptionName: requireString(record.SubscriptionName, "subscription.SubscriptionName"),
@@ -412,14 +413,6 @@ function normalizeSubscription(value: unknown): HaveIBeenPwnedSubscription {
     IncludesCustomerDomains: requireBoolean(record.IncludesCustomerDomains, "subscription.IncludesCustomerDomains"),
     IncludesKAnon: requireBoolean(record.IncludesKAnon, "subscription.IncludesKAnon"),
   };
-}
-
-function requireObject(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function requireString(value: unknown, label: string): string {

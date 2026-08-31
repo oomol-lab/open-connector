@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 const contentfulApiBaseUrl = "https://api.contentful.com";
 const contentfulJsonContentType = "application/vnd.contentful.management.v1+json";
@@ -78,8 +83,8 @@ export async function validateContentfulCredential(
     invalidInputMessage: "invalid Contentful personal access token",
   });
 
-  const user = requireObjectPayload(payload, "Contentful user profile");
-  const sys = requireObjectPayload(user.sys, "Contentful user sys");
+  const user = requiredResponseRecord(payload, "Contentful user profile");
+  const sys = requiredResponseRecord(user.sys, "Contentful user sys");
   const userId = optionalString(sys.id);
   if (!userId) {
     throw new ProviderRequestError(502, "Contentful user profile must include sys.id");
@@ -268,7 +273,7 @@ async function createEntry(
       "x-contentful-content-type": contentType,
     },
     body: compactObject({
-      fields: requireObjectPayload(input.fields, "Contentful entry fields"),
+      fields: requiredResponseRecord(input.fields, "Contentful entry fields"),
       metadata: optionalRecord(input.metadata),
     }),
   });
@@ -298,7 +303,7 @@ async function updateEntry(
       "x-contentful-version": String(version),
     },
     body: compactObject({
-      fields: requireObjectPayload(input.fields, "Contentful entry fields"),
+      fields: requiredResponseRecord(input.fields, "Contentful entry fields"),
       metadata: optionalRecord(input.metadata),
     }),
   });
@@ -373,7 +378,7 @@ function createContentfulError(
 }
 
 function parseCollectionPayload(payload: unknown, label: string): ContentfulCollectionShape {
-  const record = requireObjectPayload(payload, label);
+  const record = requiredResponseRecord(payload, label);
   if (!Array.isArray(record.items)) {
     throw new ProviderRequestError(502, `${label} response must include an items array`);
   }
@@ -384,12 +389,4 @@ function parseCollectionPayload(payload: unknown, label: string): ContentfulColl
     limit: optionalInteger(record.limit) ?? record.items.length,
     includes: optionalRecord(record.includes),
   };
-}
-
-function requireObjectPayload(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }

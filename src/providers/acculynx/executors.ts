@@ -8,6 +8,7 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "acculynx";
@@ -391,7 +392,7 @@ function readRequiredInteger(value: unknown, fieldName: string) {
 }
 
 function normalizeCompanySettings(payload: unknown) {
-  const record = readObject(payload, "company settings");
+  const record = requiredResponseRecord(payload, "company settings");
   const timeZoneInfo = optionalRecord(record.timeZoneInfo);
   return compactObject({
     id: requiredInputString(record.id, "id"),
@@ -411,7 +412,7 @@ function normalizeCompanySettings(payload: unknown) {
 
 function normalizeContactTypesCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
-    const record = readObject(item, "contact type");
+    const record = requiredResponseRecord(item, "contact type");
     return {
       id: requiredInputString(record.id, "id"),
       name: requiredInputString(record.name, "name"),
@@ -426,7 +427,7 @@ function normalizeLeadSourcesCollection(payload: unknown) {
 
 function normalizeJobCategoriesCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
-    const record = readObject(item, "job category");
+    const record = requiredResponseRecord(item, "job category");
     return {
       id: readRequiredInteger(record.id, "id"),
       name: requiredInputString(record.name, "name"),
@@ -436,7 +437,7 @@ function normalizeJobCategoriesCollection(payload: unknown) {
 
 function normalizeTradeTypesCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
-    const record = readObject(item, "trade type");
+    const record = requiredResponseRecord(item, "trade type");
     return {
       id: requiredInputString(record.tradeId, "tradeId"),
       name: requiredInputString(record.name, "name"),
@@ -446,7 +447,7 @@ function normalizeTradeTypesCollection(payload: unknown) {
 
 function normalizeWorkTypesCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
-    const record = readObject(item, "work type");
+    const record = requiredResponseRecord(item, "work type");
     return {
       id: readRequiredInteger(record.id, "id"),
       name: requiredInputString(record.name, "name"),
@@ -458,7 +459,7 @@ function normalizeWorkTypesCollection(payload: unknown) {
 
 function normalizeCalendarsCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
-    const record = readObject(item, "calendar");
+    const record = requiredResponseRecord(item, "calendar");
     return {
       id: requiredInputString(record.id, "id"),
       name: requiredInputString(record.name, "name"),
@@ -468,7 +469,7 @@ function normalizeCalendarsCollection(payload: unknown) {
 
 function normalizeCalendarAppointmentsCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
-    const record = readObject(item, "calendar appointment");
+    const record = requiredResponseRecord(item, "calendar appointment");
     return compactObject({
       id: requiredInputString(record.id, "id"),
       title: requiredInputString(record.title, "title"),
@@ -486,7 +487,7 @@ function normalizeCalendarAppointmentsCollection(payload: unknown) {
 }
 
 function normalizeInitialAppointment(payload: unknown) {
-  const record = readObject(payload, "initial appointment");
+  const record = requiredResponseRecord(payload, "initial appointment");
   return {
     link: requiredInputString(record._link, "_link"),
     startDate: optionalString(record.startDate) ?? null,
@@ -496,10 +497,10 @@ function normalizeInitialAppointment(payload: unknown) {
 }
 
 function normalizeLeadSource(payload: unknown) {
-  const record = readObject(payload, "lead source");
+  const record = requiredResponseRecord(payload, "lead source");
   const children = Array.isArray(record.children)
     ? record.children.map((item) => {
-        const child = readObject(item, "lead source child");
+        const child = requiredResponseRecord(item, "lead source child");
         return {
           id: requiredInputString(child.id, "id"),
           parentId: requiredInputString(child.parentId, "parentId"),
@@ -518,7 +519,7 @@ function normalizeLeadSource(payload: unknown) {
 }
 
 function normalizeLinkResource(payload: unknown, resourceName: string) {
-  const record = readObject(payload, resourceName);
+  const record = requiredResponseRecord(payload, resourceName);
   return {
     id: requiredInputString(record.id, "id"),
     link: requiredInputString(record._link, `${resourceName}._link`),
@@ -526,7 +527,7 @@ function normalizeLinkResource(payload: unknown, resourceName: string) {
 }
 
 function normalizePagedCollection<T>(payload: unknown, mapItem: (item: unknown) => T) {
-  const record = readObject(payload, "paged collection");
+  const record = requiredResponseRecord(payload, "paged collection");
   const items = Array.isArray(record.items) ? record.items.map(mapItem) : [];
   return {
     count: readRequiredInteger(record.count, "count"),
@@ -541,12 +542,4 @@ function readRequiredBoolean(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `${fieldName} must be a boolean`);
   }
   return value;
-}
-
-function readObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
 }

@@ -17,6 +17,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "accredible_certificates";
@@ -107,7 +108,7 @@ async function executeListGroups(context: ApiKeyProviderContext): Promise<Record
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible list groups response");
+  const record = requiredResponseRecord(payload, "Accredible list groups response");
 
   return {
     groups: normalizeGroupList(record.groups),
@@ -127,7 +128,7 @@ async function executeGetGroup(
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible get group response");
+  const record = requiredResponseRecord(payload, "Accredible get group response");
 
   return {
     group: normalizeGroup(record.group),
@@ -147,7 +148,7 @@ async function executeSearchGroups(
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible search groups response");
+  const record = requiredResponseRecord(payload, "Accredible search groups response");
 
   return {
     groups: normalizeGroupList(record.groups),
@@ -180,7 +181,7 @@ async function executeListCredentials(
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible list credentials response");
+  const record = requiredResponseRecord(payload, "Accredible list credentials response");
 
   return {
     credentials: normalizeCredentialList(record.credentials),
@@ -200,7 +201,7 @@ async function executeGetCredential(
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible get credential response");
+  const record = requiredResponseRecord(payload, "Accredible get credential response");
 
   return {
     credential: normalizeCredential(record.credential),
@@ -220,7 +221,7 @@ async function executeSearchCredentials(
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible search credentials response");
+  const record = requiredResponseRecord(payload, "Accredible search credentials response");
 
   return {
     credentials: normalizeCredentialList(record.credentials),
@@ -241,7 +242,7 @@ async function executeCreateCredential(
     signal: context.signal,
     phase: "execute",
   });
-  const record = requireProviderObject(payload, "Accredible create credential response");
+  const record = requiredResponseRecord(payload, "Accredible create credential response");
 
   return {
     credential: normalizeCredential(record.credential),
@@ -414,8 +415,8 @@ function extractAccredibleCertificatesErrorMessage(payload: unknown): string | u
 }
 
 function normalizeIssuer(payload: unknown): AccredibleIssuer {
-  const record = requireProviderObject(payload, "Accredible issuer response");
-  const issuer = requireProviderObject(record.issuer, "Accredible issuer");
+  const record = requiredResponseRecord(payload, "Accredible issuer response");
+  const issuer = requiredResponseRecord(record.issuer, "Accredible issuer");
 
   return {
     id: optionalNumber(issuer.id),
@@ -433,7 +434,7 @@ function normalizeGroupList(value: unknown): Array<Record<string, unknown>> {
 }
 
 function normalizeGroup(value: unknown): Record<string, unknown> {
-  const record = requireProviderObject(value, "Accredible group");
+  const record = requiredResponseRecord(value, "Accredible group");
   const id = optionalNumber(record.id);
   if (id === undefined) {
     throw new ProviderRequestError(502, "Accredible group is missing id", record);
@@ -460,7 +461,7 @@ function normalizeCredentialList(value: unknown): Array<Record<string, unknown>>
 }
 
 function normalizeCredential(value: unknown): Record<string, unknown> {
-  const record = requireProviderObject(value, "Accredible credential");
+  const record = requiredResponseRecord(value, "Accredible credential");
   const id = requireStringLike(record.id, "credential.id");
 
   return {
@@ -482,7 +483,7 @@ function normalizeCredential(value: unknown): Record<string, unknown> {
 }
 
 function normalizeRecipient(value: unknown): Record<string, unknown> {
-  const record = requireProviderObject(value, "Accredible recipient");
+  const record = requiredResponseRecord(value, "Accredible recipient");
   return {
     id: record.id === undefined || record.id === null ? null : requireStringLike(record.id, "id"),
     name: nullableString(record.name),
@@ -525,10 +526,6 @@ function stringifyQueryValues(input: Record<string, unknown>): Record<string, st
     result[key] = String(value);
   }
   return result;
-}
-
-function requireProviderObject(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, (message) => new ProviderRequestError(502, message));
 }
 
 function requireStringLike(value: unknown, fieldName: string): string {

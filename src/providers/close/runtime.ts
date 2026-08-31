@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export const closeApiBaseUrl = "https://api.close.com/api/v1";
@@ -112,7 +113,7 @@ async function getLead(input: Record<string, unknown>, context: ApiKeyProviderCo
     "execution",
     context.signal,
   );
-  return { lead: readRequiredObject(payload, "lead") };
+  return { lead: requiredResponseRecord(payload, "lead") };
 }
 
 async function createLead(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -126,7 +127,7 @@ async function createLead(input: Record<string, unknown>, context: ApiKeyProvide
     "execution",
     context.signal,
   );
-  return { lead: readRequiredObject(payload, "lead") };
+  return { lead: requiredResponseRecord(payload, "lead") };
 }
 
 async function updateLead(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -142,7 +143,7 @@ async function updateLead(input: Record<string, unknown>, context: ApiKeyProvide
     "execution",
     context.signal,
   );
-  return { lead: readRequiredObject(payload, "lead") };
+  return { lead: requiredResponseRecord(payload, "lead") };
 }
 
 async function listLeads(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -194,7 +195,7 @@ async function getContact(input: Record<string, unknown>, context: ApiKeyProvide
     "execution",
     context.signal,
   );
-  return { contact: readRequiredObject(payload, "contact") };
+  return { contact: requiredResponseRecord(payload, "contact") };
 }
 
 async function createContact(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -208,7 +209,7 @@ async function createContact(input: Record<string, unknown>, context: ApiKeyProv
     "execution",
     context.signal,
   );
-  return { contact: readRequiredObject(payload, "contact") };
+  return { contact: requiredResponseRecord(payload, "contact") };
 }
 
 async function updateContact(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -224,7 +225,7 @@ async function updateContact(input: Record<string, unknown>, context: ApiKeyProv
     "execution",
     context.signal,
   );
-  return { contact: readRequiredObject(payload, "contact") };
+  return { contact: requiredResponseRecord(payload, "contact") };
 }
 
 async function listTasks(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -261,7 +262,7 @@ async function getTask(input: Record<string, unknown>, context: ApiKeyProviderCo
     "execution",
     context.signal,
   );
-  return { task: readRequiredObject(payload, "task") };
+  return { task: requiredResponseRecord(payload, "task") };
 }
 
 async function createTask(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -275,7 +276,7 @@ async function createTask(input: Record<string, unknown>, context: ApiKeyProvide
     "execution",
     context.signal,
   );
-  return { task: readRequiredObject(payload, "task") };
+  return { task: requiredResponseRecord(payload, "task") };
 }
 
 async function updateTask(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -291,7 +292,7 @@ async function updateTask(input: Record<string, unknown>, context: ApiKeyProvide
     "execution",
     context.signal,
   );
-  return { task: readRequiredObject(payload, "task") };
+  return { task: requiredResponseRecord(payload, "task") };
 }
 
 async function listOpportunities(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -333,7 +334,7 @@ async function getOpportunity(input: Record<string, unknown>, context: ApiKeyPro
     "execution",
     context.signal,
   );
-  return { opportunity: readRequiredObject(payload, "opportunity") };
+  return { opportunity: requiredResponseRecord(payload, "opportunity") };
 }
 
 async function createOpportunity(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -347,7 +348,7 @@ async function createOpportunity(input: Record<string, unknown>, context: ApiKey
     "execution",
     context.signal,
   );
-  return { opportunity: readRequiredObject(payload, "opportunity") };
+  return { opportunity: requiredResponseRecord(payload, "opportunity") };
 }
 
 async function updateOpportunity(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
@@ -367,7 +368,7 @@ async function updateOpportunity(input: Record<string, unknown>, context: ApiKey
     "execution",
     context.signal,
   );
-  return { opportunity: readRequiredObject(payload, "opportunity") };
+  return { opportunity: requiredResponseRecord(payload, "opportunity") };
 }
 
 async function closeRequest(
@@ -426,7 +427,7 @@ async function readClosePayload(response: Response): Promise<Record<string, unkn
   }
   try {
     const payload = JSON.parse(text) as unknown;
-    return readRequiredObject(payload, "Close response");
+    return requiredResponseRecord(payload, "Close response");
   } catch (error) {
     if (error instanceof ProviderRequestError) {
       throw error;
@@ -458,7 +459,7 @@ function buildCloseError(
 
 function paginatedResult(payload: Record<string, unknown>, key: string): Record<string, unknown> {
   return {
-    [key]: readRequiredArray(payload.data, "data").map((item, index) => readRequiredObject(item, `data[${index}]`)),
+    [key]: readRequiredArray(payload.data, "data").map((item, index) => requiredResponseRecord(item, `data[${index}]`)),
     hasMore: optionalBoolean(payload.has_more) ?? false,
   };
 }
@@ -472,14 +473,6 @@ function readRequiredArray(value: unknown, fieldName: string): unknown[] {
 
 function readOptionalArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
-}
-
-function readRequiredObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {
@@ -513,10 +506,10 @@ function buildLeadBody(input: Record<string, unknown>, isUpdate: boolean): Recor
     status_id: typeof input.statusId === "string" ? input.statusId : undefined,
     url: typeof input.url === "string" ? input.url : undefined,
     addresses: Array.isArray(input.addresses)
-      ? input.addresses.map((item, index) => buildLeadAddress(readRequiredObject(item, `addresses[${index}]`)))
+      ? input.addresses.map((item, index) => buildLeadAddress(requiredResponseRecord(item, `addresses[${index}]`)))
       : undefined,
     contacts: Array.isArray(input.contacts)
-      ? input.contacts.map((item, index) => buildNestedLeadContact(readRequiredObject(item, `contacts[${index}]`)))
+      ? input.contacts.map((item, index) => buildNestedLeadContact(requiredResponseRecord(item, `contacts[${index}]`)))
       : undefined,
   });
 }
@@ -532,13 +525,13 @@ function buildContactBody(input: Record<string, unknown>, isUpdate: boolean): Re
     name: typeof input.name === "string" ? input.name : undefined,
     title: typeof input.title === "string" ? input.title : undefined,
     emails: Array.isArray(input.emails)
-      ? input.emails.map((item, index) => buildEmailValue(readRequiredObject(item, `emails[${index}]`)))
+      ? input.emails.map((item, index) => buildEmailValue(requiredResponseRecord(item, `emails[${index}]`)))
       : undefined,
     phones: Array.isArray(input.phones)
-      ? input.phones.map((item, index) => buildPhoneValue(readRequiredObject(item, `phones[${index}]`)))
+      ? input.phones.map((item, index) => buildPhoneValue(requiredResponseRecord(item, `phones[${index}]`)))
       : undefined,
     urls: Array.isArray(input.urls)
-      ? input.urls.map((item, index) => buildUrlValue(readRequiredObject(item, `urls[${index}]`)))
+      ? input.urls.map((item, index) => buildUrlValue(requiredResponseRecord(item, `urls[${index}]`)))
       : undefined,
   });
 }
@@ -560,10 +553,10 @@ function buildNestedLeadContact(input: Record<string, unknown>): Record<string, 
     name: readRequiredInputString(input.name, "contacts.name"),
     title: optionalString(input.title),
     emails: Array.isArray(input.emails)
-      ? input.emails.map((item, index) => buildEmailValue(readRequiredObject(item, `contacts.emails[${index}]`)))
+      ? input.emails.map((item, index) => buildEmailValue(requiredResponseRecord(item, `contacts.emails[${index}]`)))
       : undefined,
     phones: Array.isArray(input.phones)
-      ? input.phones.map((item, index) => buildPhoneValue(readRequiredObject(item, `contacts.phones[${index}]`)))
+      ? input.phones.map((item, index) => buildPhoneValue(requiredResponseRecord(item, `contacts.phones[${index}]`)))
       : undefined,
   });
 }

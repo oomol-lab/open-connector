@@ -11,6 +11,7 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export const taniumGatewayPath = "/plugin/products/gateway/graphql";
@@ -208,7 +209,7 @@ function normalizeTaniumGraphqlResult(payload: TaniumGraphqlPayload): Record<str
       ? null
       : payload.data === undefined
         ? undefined
-        : expectObject(payload.data, "Tanium Gateway data");
+        : requiredResponseRecord(payload.data, "Tanium Gateway data");
   const errors = readGraphqlErrors(payload.errors);
   const extensions = optionalRecord(payload.extensions);
   const message = summarizeGraphqlErrors(errors);
@@ -301,14 +302,6 @@ function summarizeGraphqlErrors(errors: Array<Record<string, unknown>> | undefin
 function readGraphqlErrorCode(error: Record<string, unknown>): string | undefined {
   const extensions = optionalRecord(error.extensions);
   return optionalString(extensions?.code);
-}
-
-function expectObject(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function buildTokenFingerprint(apiKey: string): string {

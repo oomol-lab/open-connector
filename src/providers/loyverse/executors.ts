@@ -9,6 +9,7 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "loyverse";
@@ -115,7 +116,7 @@ async function validateLoyverseCredential(
     path: "/merchant/",
     signal,
   });
-  const merchantObject = requireObject(merchant, "Loyverse merchant profile");
+  const merchantObject = requiredResponseRecord(merchant, "Loyverse merchant profile");
   const merchantId = optionalString(merchantObject.id);
   const merchantName =
     optionalString(merchantObject.name) ??
@@ -174,14 +175,14 @@ async function requestLoyverseList(
     path,
     query,
   });
-  const objectPayload = requireObject(payload, `Loyverse ${propertyName} response`);
+  const objectPayload = requiredResponseRecord(payload, `Loyverse ${propertyName} response`);
   const records = objectPayload[propertyName];
   if (!Array.isArray(records)) {
     throw new ProviderRequestError(502, `Loyverse response missing ${propertyName} array`);
   }
 
   return {
-    [propertyName]: records.map((record) => requireObject(record, `Loyverse ${propertyName} record`)),
+    [propertyName]: records.map((record) => requiredResponseRecord(record, `Loyverse ${propertyName} record`)),
     cursor: optionalString(objectPayload.cursor) ?? null,
     raw: objectPayload,
   };
@@ -197,7 +198,7 @@ async function requestLoyverseItem(
     path,
   });
   return {
-    [propertyName]: requireObject(payload, `Loyverse ${propertyName} response`),
+    [propertyName]: requiredResponseRecord(payload, `Loyverse ${propertyName} response`),
   };
 }
 
@@ -260,7 +261,7 @@ function readLoyverseErrors(payload: unknown): Array<Record<string, unknown>> {
   if (!record || !Array.isArray(record.errors)) {
     return [];
   }
-  return record.errors.map((error) => requireObject(error, "Loyverse error object"));
+  return record.errors.map((error) => requiredResponseRecord(error, "Loyverse error object"));
 }
 
 function mapLoyverseError(status: number, errors: Array<Record<string, unknown>>): ProviderRequestError {
@@ -280,12 +281,4 @@ function mapLoyverseError(status: number, errors: Array<Record<string, unknown>>
     return new ProviderRequestError(400, message);
   }
   return new ProviderRequestError(502, message);
-}
-
-function requireObject(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }

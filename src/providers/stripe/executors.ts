@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { ProviderRequestError, defineApiKeyProviderExecutors, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 type StripeActionContext = ApiKeyProviderContext;
 
@@ -130,7 +135,7 @@ async function validateStripeCredential(
   grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
-  const payload = readObject(
+  const payload = requiredResponseRecord(
     await stripeRequest(stripeAccountPath, {
       apiKey,
       fetcher,
@@ -162,7 +167,7 @@ async function validateStripeCredential(
 }
 
 async function executeIdentifyAccount(context: StripeActionContext) {
-  const payload = readObject(
+  const payload = requiredResponseRecord(
     await stripeRequest(stripeAccountPath, {
       apiKey: context.apiKey,
       fetcher: context.fetcher,
@@ -249,11 +254,11 @@ async function executeStripeList(
     method: "GET",
     query: input,
   });
-  return { [outputKey]: readObject(payload, "stripe list response") };
+  return { [outputKey]: requiredResponseRecord(payload, "stripe list response") };
 }
 
 async function executeStripeDelete(path: string, context: StripeActionContext) {
-  const payload = readObject(
+  const payload = requiredResponseRecord(
     await stripeRequest(path, {
       apiKey: context.apiKey,
       fetcher: context.fetcher,
@@ -372,8 +377,4 @@ function mapStripeError(status: number, message: string): ProviderRequestError {
   }
 
   return new ProviderRequestError(502, message, status);
-}
-
-function readObject(value: unknown, context: string): Record<string, unknown> {
-  return requiredRecord(value, context, (message) => new ProviderRequestError(502, message));
 }

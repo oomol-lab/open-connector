@@ -6,6 +6,7 @@ import {
   getProviderActionHandler,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export interface ZylvieCredentialCheck {
@@ -175,7 +176,7 @@ export async function validateZylvieCredential(
     fetcher,
     phase: "validate",
   });
-  const user = requireRecord(payload, "Zylvie current-user response");
+  const user = requiredResponseRecord(payload, "Zylvie current-user response");
   const brand = optionalString(user.brand)?.trim();
   const email = optionalString(user.email)?.trim();
 
@@ -312,14 +313,6 @@ function extractErrorMessage(payload: unknown) {
     }
   }
   return undefined;
-}
-
-function requireRecord(value: unknown, label: string) {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function requireString(value: unknown, fieldName: string) {

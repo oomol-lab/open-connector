@@ -17,6 +17,7 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const vimeoApiBaseUrl = "https://api.vimeo.com";
@@ -229,7 +230,7 @@ async function vimeoGetVideoDownloadLinks(
   input: Record<string, unknown>,
   context: VimeoActionContext,
 ): Promise<{ downloadLinks: Array<Record<string, unknown> & { link: string }> }> {
-  const video = requireRecord(
+  const video = requiredResponseRecord(
     await vimeoRequestJson({
       path: `/videos/${input.videoId}`,
       accessToken: context.accessToken,
@@ -509,7 +510,7 @@ async function fetchVimeoCurrentAccount(
   signal?: AbortSignal,
 ): Promise<{ accountId: string; displayName: string; metadata: Record<string, unknown> }> {
   const payload = await vimeoRequestJson({ path: "/me", accessToken, fetcher, signal });
-  const user = requireRecord(payload, "Vimeo user");
+  const user = requiredResponseRecord(payload, "Vimeo user");
   const uri = optionalString(user.uri) ?? "/me";
   const name = optionalString(user.name) ?? "Vimeo User";
 
@@ -730,12 +731,4 @@ function extractVimeoErrorMessage(payload: unknown): string | undefined {
 
 function userPath(value: unknown): string {
   return typeof value === "number" ? `/users/${value}` : "/me";
-}
-
-function requireRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
 }

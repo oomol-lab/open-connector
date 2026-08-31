@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "flowiseai";
@@ -244,7 +245,7 @@ function readFlowiseErrorMessage(payload: unknown): string | undefined {
 }
 
 function normalizeChatflow(payload: unknown): FlowiseaiChatflowResponse {
-  const record = readObject(payload, "chatflow response");
+  const record = requiredResponseRecord(payload, "chatflow response");
   const id = requireProviderString(record.id, "id");
 
   return {
@@ -266,7 +267,7 @@ function normalizeChatflow(payload: unknown): FlowiseaiChatflowResponse {
 }
 
 function normalizePrediction(payload: unknown): Record<string, unknown> {
-  const record = readObject(payload, "prediction response");
+  const record = requiredResponseRecord(payload, "prediction response");
 
   return {
     text: readProviderString(record.text, "text"),
@@ -283,7 +284,7 @@ function normalizePrediction(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeSourceDocument(value: unknown, index: number): Record<string, unknown> {
-  const record = readObject(value, `sourceDocuments[${index}]`);
+  const record = requiredResponseRecord(value, `sourceDocuments[${index}]`);
   const metadata = optionalRecord(record.metadata);
 
   return {
@@ -293,7 +294,7 @@ function normalizeSourceDocument(value: unknown, index: number): Record<string, 
 }
 
 function normalizeUsedTool(value: unknown, index: number): Record<string, unknown> {
-  const record = readObject(value, `usedTools[${index}]`);
+  const record = requiredResponseRecord(value, `usedTools[${index}]`);
 
   return {
     tool: readProviderString(record.tool, `usedTools[${index}].tool`),
@@ -308,7 +309,7 @@ function normalizeHistory(value: unknown): Array<Record<string, unknown>> | unde
   }
 
   return value.map((entry, index) => {
-    const record = readObject(entry, `history[${index}]`);
+    const record = requiredResponseRecord(entry, `history[${index}]`);
     const role = requireProviderString(record.role, `history[${index}].role`, 400);
     if (role !== "apiMessage" && role !== "userMessage") {
       throw new ProviderRequestError(400, `history[${index}].role must be apiMessage or userMessage`);
@@ -374,14 +375,6 @@ function assertSendMessageInput(input: Record<string, unknown>): void {
   }
 }
 
-function readObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
-}
-
 function readProviderBoolean(value: unknown, fieldName: string): boolean {
   if (typeof value !== "boolean") {
     throw new ProviderRequestError(502, `${fieldName} must be a boolean`);
@@ -423,7 +416,7 @@ function readNullableObject(value: unknown): Record<string, unknown> | null {
     return null;
   }
 
-  return readObject(value, "FlowiseAI object field");
+  return requiredResponseRecord(value, "FlowiseAI object field");
 }
 
 function readNullableString(value: unknown): string | null {

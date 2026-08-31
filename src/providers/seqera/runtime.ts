@@ -23,6 +23,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "seqera";
@@ -98,8 +99,8 @@ export async function validateSeqeraCredential(
     phase: "validate",
   });
 
-  const response = requireObjectPayload(payload, "Seqera user info response");
-  const user = requireObjectPayload(response.user, "Seqera user profile");
+  const response = requiredResponseRecord(payload, "Seqera user info response");
+  const user = requiredResponseRecord(response.user, "Seqera user profile");
   const userId = requirePositiveIntegerResponse(user.id, "user.id");
   const email = optionalString(user.email);
   const userName = optionalString(user.userName);
@@ -151,7 +152,7 @@ async function listUserWorkspaces(input: Record<string, unknown>, context: Seqer
     path: `/user/${userId}/workspaces`,
     phase: "execute",
   });
-  const response = requireObjectPayload(payload, "Seqera user workspace list response");
+  const response = requiredResponseRecord(payload, "Seqera user workspace list response");
 
   return {
     orgsAndWorkspaces: requireArrayPayload(response.orgsAndWorkspaces, "Seqera orgsAndWorkspaces response"),
@@ -168,9 +169,9 @@ async function getWorkspace(input: Record<string, unknown>, context: SeqeraActio
     notFoundAsInvalidInput: true,
   });
 
-  const response = requireObjectPayload(payload, "Seqera workspace response");
+  const response = requiredResponseRecord(payload, "Seqera workspace response");
   return {
-    workspace: requireObjectPayload(response.workspace, "Seqera workspace"),
+    workspace: requiredResponseRecord(response.workspace, "Seqera workspace"),
   };
 }
 
@@ -191,7 +192,7 @@ async function listPipelines(input: Record<string, unknown>, context: SeqeraActi
     phase: "execute",
   });
 
-  const response = requireObjectPayload(payload, "Seqera pipeline list response");
+  const response = requiredResponseRecord(payload, "Seqera pipeline list response");
   return {
     pipelines: requireArrayPayload(response.pipelines, "Seqera pipelines response"),
     totalSize: optionalInteger(response.totalSize),
@@ -212,9 +213,9 @@ async function getPipeline(input: Record<string, unknown>, context: SeqeraAction
     notFoundAsInvalidInput: true,
   });
 
-  const response = requireObjectPayload(payload, "Seqera pipeline response");
+  const response = requiredResponseRecord(payload, "Seqera pipeline response");
   return {
-    pipeline: requireObjectPayload(response.pipeline, "Seqera pipeline"),
+    pipeline: requiredResponseRecord(response.pipeline, "Seqera pipeline"),
   };
 }
 
@@ -233,7 +234,7 @@ async function listWorkflows(input: Record<string, unknown>, context: SeqeraActi
     phase: "execute",
   });
 
-  const response = requireObjectPayload(payload, "Seqera workflow list response");
+  const response = requiredResponseRecord(payload, "Seqera workflow list response");
   return {
     workflows: requireArrayPayload(response.workflows, "Seqera workflows response"),
     totalSize: optionalInteger(response.totalSize),
@@ -258,7 +259,7 @@ async function getWorkflow(input: Record<string, unknown>, context: SeqeraAction
     notFoundAsInvalidInput: true,
   });
 
-  return requireObjectPayload(payload, "Seqera workflow response");
+  return requiredResponseRecord(payload, "Seqera workflow response");
 }
 
 async function launchWorkflow(input: Record<string, unknown>, context: SeqeraActionContext): Promise<unknown> {
@@ -292,7 +293,7 @@ async function launchWorkflow(input: Record<string, unknown>, context: SeqeraAct
     phase: "execute",
   });
 
-  const response = requireObjectPayload(payload, "Seqera workflow launch response");
+  const response = requiredResponseRecord(payload, "Seqera workflow launch response");
   return {
     workflowId: requireResponseString(response.workflowId, "workflowId"),
   };
@@ -300,7 +301,7 @@ async function launchWorkflow(input: Record<string, unknown>, context: SeqeraAct
 
 async function fetchCurrentUserId(context: SeqeraActionContext): Promise<number> {
   const currentUser = await readCurrentUserInfo(context);
-  const user = requireObjectPayload(currentUser.user, "Seqera user profile");
+  const user = requiredResponseRecord(currentUser.user, "Seqera user profile");
   return requirePositiveIntegerInput(user.id, "user.id");
 }
 
@@ -311,8 +312,8 @@ async function readCurrentUserInfo(context: SeqeraActionContext): Promise<Record
     phase: "execute",
   });
 
-  const response = requireObjectPayload(payload, "Seqera user info response");
-  const user = requireObjectPayload(response.user, "Seqera user profile");
+  const response = requiredResponseRecord(payload, "Seqera user info response");
+  const user = requiredResponseRecord(response.user, "Seqera user profile");
   return compactObject({
     user,
     defaultWorkspaceId: optionalInteger(response.defaultWorkspaceId),
@@ -466,10 +467,6 @@ function normalizeSeqeraApiBaseUrl(value: string | undefined, fieldName: string)
 
 function isLocalhostHostname(hostname: string): boolean {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
-}
-
-function requireObjectPayload(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, (message) => new ProviderRequestError(502, message));
 }
 
 function requireArrayPayload(value: unknown, label: string): unknown[] {

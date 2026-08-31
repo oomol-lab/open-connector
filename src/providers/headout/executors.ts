@@ -18,6 +18,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "headout";
@@ -48,7 +49,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       phase: "execute",
     });
 
-    const record = expectObject(payload, "Headout city list response");
+    const record = requiredResponseRecord(payload, "Headout city list response");
     return {
       cities: readItems(record).map(normalizeCity),
       pagination: normalizePagination(record),
@@ -66,7 +67,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       phase: "execute",
     });
 
-    const record = expectObject(payload, "Headout category list response");
+    const record = requiredResponseRecord(payload, "Headout category list response");
     return {
       categories: readItems(record).map(normalizeCategory),
       pagination: normalizePagination(record),
@@ -86,7 +87,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       phase: "execute",
     });
 
-    const record = expectObject(payload, "Headout city product list response");
+    const record = requiredResponseRecord(payload, "Headout city product list response");
     return {
       products: readItems(record).map(normalizeProductListing),
       pagination: normalizePagination(record),
@@ -106,7 +107,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       phase: "execute",
     });
 
-    const record = expectObject(payload, "Headout category product list response");
+    const record = requiredResponseRecord(payload, "Headout category product list response");
     return {
       products: readItems(record).map(normalizeProductListing),
       pagination: normalizePagination(record),
@@ -126,7 +127,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
     });
 
     return {
-      product: normalizeProduct(expectObject(payload, "Headout product response")),
+      product: normalizeProduct(requiredResponseRecord(payload, "Headout product response")),
     };
   },
   async list_inventory_by_variant(input, context) {
@@ -144,7 +145,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       phase: "execute",
     });
 
-    const record = expectObject(payload, "Headout inventory list response");
+    const record = requiredResponseRecord(payload, "Headout inventory list response");
     return {
       inventories: readItems(record).map(normalizeInventory),
       pagination: normalizePagination(record),
@@ -161,7 +162,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       phase: "execute",
     });
 
-    const record = expectObject(payload, "Headout booking list response");
+    const record = requiredResponseRecord(payload, "Headout booking list response");
     return {
       bookings: readItems(record).map(normalizeBooking),
       pagination: normalizePagination(record),
@@ -177,7 +178,7 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
     });
 
     return {
-      booking: normalizeBooking(expectObject(payload, "Headout booking response")),
+      booking: normalizeBooking(requiredResponseRecord(payload, "Headout booking response")),
     };
   },
 };
@@ -348,7 +349,9 @@ function normalizePagination(record: Record<string, unknown>): Record<string, un
 }
 
 function readItems(record: Record<string, unknown>): Array<Record<string, unknown>> {
-  return Array.isArray(record.items) ? record.items.map((item) => expectObject(item, "Headout list item")) : [];
+  return Array.isArray(record.items)
+    ? record.items.map((item) => requiredResponseRecord(item, "Headout list item"))
+    : [];
 }
 
 function normalizeCity(record: Record<string, unknown>): Record<string, unknown> {
@@ -372,7 +375,7 @@ function normalizeCategory(record: Record<string, unknown>): Record<string, unkn
 }
 
 function normalizeImage(value: unknown): Record<string, unknown> {
-  const record = expectObject(value, "Headout image");
+  const record = requiredResponseRecord(value, "Headout image");
   return {
     url: requireStringish(record.url, "image.url"),
   };
@@ -749,14 +752,6 @@ function normalizeTicket(record: Record<string, unknown>): Record<string, unknow
     publicId: readStringish(record.publicId),
     url: readStringish(record.url),
   };
-}
-
-function expectObject(value: unknown, context: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${context} must be an object`);
-  }
-  return record;
 }
 
 function requireStringish(value: unknown, fieldName: string): string {

@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const lemonSqueezyApiBaseUrl = "https://api.lemonsqueezy.com/v1";
@@ -480,15 +481,11 @@ function readResourceArray(response: LemonSqueezyListResponse): Array<Record<str
   if (!Array.isArray(response.data)) {
     throw new ProviderRequestError(502, "Lemon Squeezy list response did not return an array", response);
   }
-  return response.data.map((item) => readResource(item, "Lemon Squeezy resource"));
+  return response.data.map((item) => requiredResponseRecord(item, "Lemon Squeezy resource"));
 }
 
 function readSingleResource(response: LemonSqueezySingleResponse): Record<string, unknown> {
-  return readResource(response.data, "Lemon Squeezy resource");
-}
-
-function readResource(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, (message) => new ProviderRequestError(502, message));
+  return requiredResponseRecord(response.data, "Lemon Squeezy resource");
 }
 
 function readOptionalTopLevelTestMode(response: LemonSqueezySingleResponse): boolean | undefined {

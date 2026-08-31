@@ -17,6 +17,7 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
   requiredInputString,
+  requiredResponseRecord,
   setSearchParams,
 } from "../provider-runtime.ts";
 
@@ -112,7 +113,7 @@ export const credentialValidators: CredentialValidators = {
       context: { fetcher, signal },
       phase: "validate",
     });
-    const body = requiredProviderRecord(payload, "Teamtailor jobs response");
+    const body = requiredResponseRecord(payload, "Teamtailor jobs response");
     const jobs = readRequiredArray(body.data, "Teamtailor jobs response data");
 
     return {
@@ -208,7 +209,7 @@ function readStack(value: unknown): TeamtailorStack {
 }
 
 function normalizeListResponse(payload: unknown, label: string): Record<string, unknown> {
-  const body = requiredProviderRecord(payload, label);
+  const body = requiredResponseRecord(payload, label);
   return {
     data: readRequiredArray(body.data, `${label} data`),
     included: readArray(body.included),
@@ -219,9 +220,9 @@ function normalizeListResponse(payload: unknown, label: string): Record<string, 
 }
 
 function normalizeSingleResourceResponse(payload: unknown, label: string): Record<string, unknown> {
-  const body = requiredProviderRecord(payload, label);
+  const body = requiredResponseRecord(payload, label);
   return {
-    data: requiredProviderRecord(body.data, `${label} data`),
+    data: requiredResponseRecord(body.data, `${label} data`),
     included: readArray(body.included),
     links: optionalRecord(body.links) ?? null,
     meta: optionalRecord(body.meta) ?? null,
@@ -249,14 +250,14 @@ function readOptionalPositiveIntegerString(value: unknown, fieldName: string): s
 }
 
 function readArray(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? value.map((item) => requiredProviderRecord(item, "Teamtailor resource")) : [];
+  return Array.isArray(value) ? value.map((item) => requiredResponseRecord(item, "Teamtailor resource")) : [];
 }
 
 function readRequiredArray(value: unknown, label: string): Array<Record<string, unknown>> {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(502, `${label} was not an array`);
   }
-  return value.map((item) => requiredProviderRecord(item, "Teamtailor resource"));
+  return value.map((item) => requiredResponseRecord(item, "Teamtailor resource"));
 }
 
 async function readJsonPayload(response: Response): Promise<unknown> {
@@ -297,8 +298,4 @@ function readTeamtailorErrorMessage(payload: unknown): string | undefined {
   return firstError
     ? (optionalString(firstError.detail) ?? optionalString(firstError.title))
     : (optionalString(body?.message) ?? optionalString(body?.error));
-}
-
-function requiredProviderRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, (message) => new ProviderRequestError(502, message));
 }

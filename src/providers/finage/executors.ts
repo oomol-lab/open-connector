@@ -18,6 +18,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "finage";
@@ -191,7 +192,7 @@ async function finageGet(
     if (!response.ok || isFinageErrorPayload(payload)) {
       throw buildFinageError(phase, response.status, payload);
     }
-    return readRequiredObject(payload, "payload");
+    return requiredResponseRecord(payload, "payload");
   } catch (error) {
     if (error instanceof ProviderRequestError) {
       throw error;
@@ -352,14 +353,6 @@ function normalizeSnapshotTrade(input: Record<string, unknown>): Record<string, 
     tradeSize: readRequiredInteger(input.sz, "sz"),
     timestamp: readRequiredInteger(input.t, "t"),
   };
-}
-
-function readRequiredObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {

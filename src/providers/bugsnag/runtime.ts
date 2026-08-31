@@ -11,6 +11,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export const bugsnagApiBaseUrl: string = "https://api.bugsnag.com";
@@ -61,7 +62,7 @@ export async function validateBugsnagCredential(input: {
     phase: "validate",
   });
 
-  const user = requireResponseRecord(payload, "bugsnag user");
+  const user = requiredResponseRecord(payload, "bugsnag user");
   const userId = requiredString(user.id, "bugsnag user id", providerResponseError);
   const email = optionalString(user.email);
   const name = optionalString(user.name);
@@ -113,7 +114,7 @@ async function getOrganization(input: Record<string, unknown>, context: ApiKeyPr
   });
 
   return {
-    organization: requireResponseRecord(response.payload, "bugsnag organization"),
+    organization: requiredResponseRecord(response.payload, "bugsnag organization"),
   };
 }
 
@@ -201,7 +202,7 @@ async function getLatestErrorEvent(input: Record<string, unknown>, context: ApiK
   });
 
   return {
-    event: requireResponseRecord(response.payload, "bugsnag latest event"),
+    event: requiredResponseRecord(response.payload, "bugsnag latest event"),
   };
 }
 
@@ -364,10 +365,6 @@ function requireArrayPayload(payload: unknown, label: string): unknown[] {
     throw new ProviderRequestError(502, `${label} payload is invalid`, payload);
   }
   return payload;
-}
-
-function requireResponseRecord(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, providerResponseError);
 }
 
 function requiredOptionalRecord(value: unknown): Record<string, unknown> | undefined {

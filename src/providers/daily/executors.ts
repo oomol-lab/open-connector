@@ -17,6 +17,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "daily";
@@ -204,7 +205,7 @@ async function dailyRequestObject(
     if (!response.ok) {
       throw createDailyError(response, payload, phase);
     }
-    return readDailyObject(payload, "Daily response");
+    return requiredResponseRecord(payload, "Daily response");
   } catch (error) {
     if (error instanceof ProviderRequestError) {
       throw error;
@@ -262,17 +263,9 @@ function createDailyError(response: Response, payload: unknown, phase: DailyRequ
   return new ProviderRequestError(response.status || 502, message);
 }
 
-function readDailyObject(value: unknown, fieldName: string): Record<string, unknown> {
-  const object = optionalRecord(value);
-  if (!object) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return object;
-}
-
 function readDailyArray(value: unknown, fieldName: string): Array<Record<string, unknown>> {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(502, `${fieldName} must be an array`);
   }
-  return value.map((item, index) => readDailyObject(item, `${fieldName}[${index}]`));
+  return value.map((item, index) => requiredResponseRecord(item, `${fieldName}[${index}]`));
 }

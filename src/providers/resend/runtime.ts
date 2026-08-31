@@ -21,6 +21,7 @@ import {
   readProviderJsonBody,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
   setSearchParams,
 } from "../provider-runtime.ts";
 
@@ -158,7 +159,7 @@ async function sendBatchEmails(input: Record<string, unknown>, context: ResendRe
   const data = readRequiredArray(payload, "data", "Resend batch send response");
   return {
     emailIds: data.map((item) =>
-      readRequiredString(requireResponseObject(item, "Resend batch item"), "id", "Resend batch item"),
+      readRequiredString(requiredResponseRecord(item, "Resend batch item"), "id", "Resend batch item"),
     ),
   };
 }
@@ -298,7 +299,7 @@ async function resendRequestJson(
   if (!response.ok) {
     throw createResendError(response.status, payload, phase);
   }
-  return requireResponseObject(payload, "Resend response");
+  return requiredResponseRecord(payload, "Resend response");
 }
 
 function resendHeaders(apiKey: string): Record<string, string> {
@@ -444,7 +445,7 @@ function normalizeEmailList(
 }
 
 function normalizeSentEmailSummary(value: unknown): Record<string, unknown> {
-  const email = requireResponseObject(value, "Resend sent email");
+  const email = requiredResponseRecord(value, "Resend sent email");
   return {
     ...normalizeEmailEnvelope(email, "Resend sent email"),
     subject: readRequiredString(email, "subject", "Resend sent email"),
@@ -454,7 +455,7 @@ function normalizeSentEmailSummary(value: unknown): Record<string, unknown> {
 }
 
 function normalizeSentEmail(value: unknown): Record<string, unknown> {
-  const email = requireResponseObject(value, "Resend sent email");
+  const email = requiredResponseRecord(value, "Resend sent email");
   return {
     ...normalizeEmailEnvelope(email, "Resend sent email"),
     subject: readRequiredString(email, "subject", "Resend sent email"),
@@ -467,7 +468,7 @@ function normalizeSentEmail(value: unknown): Record<string, unknown> {
 }
 
 function normalizeReceivedEmailSummary(value: unknown): Record<string, unknown> {
-  const email = requireResponseObject(value, "Resend received email");
+  const email = requiredResponseRecord(value, "Resend received email");
   return {
     ...normalizeEmailEnvelope(email, "Resend received email"),
     subject: readNullableString(email.subject, "subject"),
@@ -478,7 +479,7 @@ function normalizeReceivedEmailSummary(value: unknown): Record<string, unknown> 
 }
 
 function normalizeReceivedEmail(value: unknown): Record<string, unknown> {
-  const email = requireResponseObject(value, "Resend received email");
+  const email = requiredResponseRecord(value, "Resend received email");
   const raw = email.raw;
   return {
     ...normalizeEmailEnvelope(email, "Resend received email"),
@@ -507,7 +508,7 @@ function normalizeEmailEnvelope(email: Record<string, unknown>, label: string): 
 }
 
 function normalizeRawEmail(value: unknown): Record<string, unknown> {
-  const raw = requireResponseObject(value, "Resend raw email");
+  const raw = requiredResponseRecord(value, "Resend raw email");
   return {
     downloadUrl: readRequiredString(raw, "download_url", "Resend raw email"),
     expiresAt: readRequiredString(raw, "expires_at", "Resend raw email"),
@@ -529,7 +530,7 @@ function normalizeAttachmentList(payload: Record<string, unknown>): Record<strin
 }
 
 function normalizeAttachment(value: unknown): Record<string, unknown> {
-  const attachment = requireResponseObject(value, "Resend attachment");
+  const attachment = requiredResponseRecord(value, "Resend attachment");
   return {
     ...normalizeAttachmentReference(attachment),
     size: readRequiredInteger(attachment, "size", "Resend attachment"),
@@ -540,7 +541,7 @@ function normalizeAttachment(value: unknown): Record<string, unknown> {
 }
 
 function normalizeAttachmentReference(value: unknown): Record<string, unknown> {
-  const attachment = requireResponseObject(value, "Resend attachment");
+  const attachment = requiredResponseRecord(value, "Resend attachment");
   return {
     id: readRequiredString(attachment, "id", "Resend attachment"),
     filename: readNullableString(attachment.filename, "filename"),
@@ -553,10 +554,6 @@ function normalizeAttachmentReference(value: unknown): Record<string, unknown> {
 
 function readPathId(input: Record<string, unknown>, fieldName: string): string {
   return encodePathSegment(requiredString(input[fieldName], fieldName, providerInputError));
-}
-
-function requireResponseObject(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, providerResponseError);
 }
 
 function readRequiredString(input: Record<string, unknown>, key: string, label: string): string {

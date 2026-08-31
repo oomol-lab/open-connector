@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
 const mailjetApiBaseUrl = "https://api.mailjet.com/v3/REST";
 const mailjetValidationPath = "/contact?Limit=1";
@@ -236,7 +236,7 @@ function extractMailjetErrorMessage(payload: unknown): string | undefined {
 }
 
 function normalizeContactListResponse(payload: unknown): Record<string, unknown> {
-  const response = requireRecord(payload, "Mailjet contact list response");
+  const response = requiredResponseRecord(payload, "Mailjet contact list response");
   const contacts = readArray(response.Data, "Mailjet contact list Data").map((item) => normalizeContact(item));
   return {
     count: readOptionalInteger(response.Count) ?? contacts.length,
@@ -255,7 +255,7 @@ function normalizeSingleContactResponse(payload: unknown): Record<string, unknow
 }
 
 function normalizeContact(value: unknown): Record<string, unknown> {
-  const record = requireRecord(value, "Mailjet contact");
+  const record = requiredResponseRecord(value, "Mailjet contact");
   return {
     id: readRequiredInteger(record.ID, "Mailjet contact ID"),
     email: readRequiredString(record.Email, "Mailjet contact Email"),
@@ -334,14 +334,6 @@ function readNullableBoolean(value: unknown): boolean | null {
     return false;
   }
   return null;
-}
-
-function requireRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function readArray(value: unknown, fieldName: string): unknown[] {

@@ -17,6 +17,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const mailsSoApiBaseUrl = "https://api.mails.so";
@@ -89,8 +90,8 @@ async function requestSingleValidation(input: {
     query: { email: input.email },
   });
 
-  const body = requireObject(payload, "mails_so single validation response");
-  const record = requireObject(body.data, "mails_so single validation data");
+  const body = requiredResponseRecord(payload, "mails_so single validation response");
+  const record = requiredResponseRecord(body.data, "mails_so single validation data");
   return normalizeValidationResult(record);
 }
 
@@ -106,7 +107,7 @@ async function requestCreateBatch(input: {
     method: "POST",
     body: { emails: input.emails },
   });
-  return normalizeBatchRecord(requireObject(payload, "mails_so create batch response"));
+  return normalizeBatchRecord(requiredResponseRecord(payload, "mails_so create batch response"));
 }
 
 async function requestBatch(input: {
@@ -120,14 +121,16 @@ async function requestBatch(input: {
     phase: input.phase,
   });
 
-  const record = requireObject(payload, "mails_so batch response");
+  const record = requiredResponseRecord(payload, "mails_so batch response");
   if (!Array.isArray(record.emails)) {
     throw new ProviderRequestError(502, "mails_so batch response is missing emails");
   }
 
   return {
     ...normalizeBatchRecord(record),
-    emails: record.emails.map((item) => normalizeValidationResult(requireObject(item, "mails_so batch email result"))),
+    emails: record.emails.map((item) =>
+      normalizeValidationResult(requiredResponseRecord(item, "mails_so batch email result")),
+    ),
   };
 }
 
@@ -248,14 +251,6 @@ function normalizeValidationResult(record: Record<string, unknown>): Record<stri
     result: requireProviderString(record.result, "result"),
     reason: requireProviderString(record.reason, "reason"),
   };
-}
-
-function requireObject(value: unknown, label: string): Record<string, unknown> {
-  const object = optionalRecord(value);
-  if (!object) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return object;
 }
 
 function requireProviderString(value: unknown, fieldName: string): string {

@@ -17,6 +17,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "templated";
@@ -280,34 +281,34 @@ function extractTemplatedErrorMessage(payload: unknown): string | undefined {
 
 function readCollection(payload: unknown, entityName: string): Array<Record<string, unknown>> {
   if (Array.isArray(payload)) {
-    return payload.map((item) => requiredProviderRecord(item, entityName));
+    return payload.map((item) => requiredResponseRecord(item, entityName));
   }
-  const record = requiredProviderRecord(payload, entityName);
+  const record = requiredResponseRecord(payload, entityName);
   const data = record.data;
   if (Array.isArray(data)) {
-    return data.map((item) => requiredProviderRecord(item, entityName));
+    return data.map((item) => requiredResponseRecord(item, entityName));
   }
   const pluralEntity = `${entityName}s`;
   const pluralData = record[pluralEntity];
   if (Array.isArray(pluralData)) {
-    return pluralData.map((item) => requiredProviderRecord(item, entityName));
+    return pluralData.map((item) => requiredResponseRecord(item, entityName));
   }
   throw new ProviderRequestError(502, `templated returned an unexpected ${pluralEntity} payload`);
 }
 
 function readRenderCreatePayload(payload: unknown): Array<Record<string, unknown>> {
   if (Array.isArray(payload)) {
-    return payload.map((item) => requiredProviderRecord(item, "render"));
+    return payload.map((item) => requiredResponseRecord(item, "render"));
   }
-  const record = requiredProviderRecord(payload, "render");
+  const record = requiredResponseRecord(payload, "render");
   if (Array.isArray(record.data)) {
-    return record.data.map((item) => requiredProviderRecord(item, "render"));
+    return record.data.map((item) => requiredResponseRecord(item, "render"));
   }
   return [record];
 }
 
 function normalizeAccount(payload: unknown): Record<string, unknown> {
-  const record = requiredProviderRecord(payload, "account");
+  const record = requiredResponseRecord(payload, "account");
   const user = optionalRecord(record.user);
   return compactObject({
     id: optionalString(record.id) ?? optionalString(user?.id),
@@ -320,7 +321,7 @@ function normalizeAccount(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeTemplate(payload: unknown): Record<string, unknown> {
-  const record = requiredProviderRecord(payload, "template");
+  const record = requiredResponseRecord(payload, "template");
   return compactObject({
     id: requiredResponseString(record.id, "template.id"),
     name: requiredResponseString(record.name, "template.name"),
@@ -340,7 +341,7 @@ function normalizeTemplate(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeRender(payload: unknown): Record<string, unknown> {
-  const record = requiredProviderRecord(payload, "render");
+  const record = requiredResponseRecord(payload, "render");
   return compactObject({
     id: requiredResponseString(record.id, "render.id"),
     url: nullableStringValue(record.url),
@@ -375,10 +376,6 @@ function requiredResponseString(value: unknown, fieldName: string): string {
   );
 }
 
-function requiredProviderRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, (message) => new ProviderRequestError(502, message));
-}
-
 function readOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {
   if (value == null) {
     return undefined;
@@ -393,11 +390,11 @@ function readOptionalLayerOverrides(value: unknown): Record<string, Record<strin
   if (value == null) {
     return undefined;
   }
-  const overrides = requiredProviderRecord(value, "layers");
+  const overrides = requiredResponseRecord(value, "layers");
   return Object.fromEntries(
     Object.entries(overrides).map(([layerName, layerValue]) => [
       layerName,
-      requiredProviderRecord(layerValue, `layers.${layerName}`),
+      requiredResponseRecord(layerValue, `layers.${layerName}`),
     ]),
   );
 }

@@ -20,6 +20,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  requiredResponseRecord,
   runProviderRequest,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -46,7 +47,7 @@ export const cronitorActionHandlers: ProviderActionHandlers<"cronitor", Cronitor
       path: `/monitors/${encodeURIComponent(key)}`,
       phase: "execute",
     });
-    return { monitor: requireObject(payload, "Cronitor monitor response") };
+    return { monitor: requiredResponseRecord(payload, "Cronitor monitor response") };
   },
   async create_monitor(input, context) {
     const payload = await requestCronitorJson({
@@ -56,7 +57,7 @@ export const cronitorActionHandlers: ProviderActionHandlers<"cronitor", Cronitor
       body: buildMonitorMutationBody(input),
       phase: "execute",
     });
-    return { monitor: requireObject(payload, "Cronitor create monitor response") };
+    return { monitor: requiredResponseRecord(payload, "Cronitor create monitor response") };
   },
   async update_monitor(input, context) {
     const key = requiredString(input.key, "key", providerInputError);
@@ -71,7 +72,7 @@ export const cronitorActionHandlers: ProviderActionHandlers<"cronitor", Cronitor
       body,
       phase: "execute",
     });
-    return { monitor: requireObject(payload, "Cronitor update monitor response") };
+    return { monitor: requiredResponseRecord(payload, "Cronitor update monitor response") };
   },
   async delete_monitor(input, context) {
     const key = requiredString(input.key, "key", providerInputError);
@@ -248,13 +249,9 @@ function readMonitorsPayload(payload: unknown): unknown[] {
   if (Array.isArray(payload)) {
     return payload;
   }
-  const record = requireObject(payload, "Cronitor monitors response");
+  const record = requiredResponseRecord(payload, "Cronitor monitors response");
   if (!Array.isArray(record.monitors)) {
     throw new ProviderRequestError(502, "Cronitor monitors response is missing monitors");
   }
   return record.monitors;
-}
-
-function requireObject(value: unknown, context: string): Record<string, unknown> {
-  return requiredRecord(value, context, (message) => new ProviderRequestError(502, message));
 }

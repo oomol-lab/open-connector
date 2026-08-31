@@ -9,6 +9,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export const nusiiProposalsApiBaseUrl = "https://app.nusii.com/api/v2/";
@@ -217,9 +218,9 @@ export async function validateNusiiProposalsCredential(
     signal,
     phase: "validate",
   });
-  const account = requireObject(payload, "Nusii account response");
-  const data = requireObject(account.data, "Nusii account data");
-  const attributes = requireObject(data.attributes, "Nusii account attributes");
+  const account = requiredResponseRecord(payload, "Nusii account response");
+  const data = requiredResponseRecord(account.data, "Nusii account data");
+  const attributes = requiredResponseRecord(data.attributes, "Nusii account attributes");
   const name = optionalString(attributes.name);
   const email = optionalString(attributes.email);
   const subdomain = optionalString(attributes.subdomain);
@@ -395,12 +396,4 @@ function extractNusiiErrorMessage(payload: unknown) {
     }
   }
   return undefined;
-}
-
-function requireObject(value: unknown, label: string) {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }

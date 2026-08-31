@@ -7,6 +7,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export interface DopplerMarketingAutomationCredentialCheck {
@@ -56,7 +57,7 @@ export const dopplerMarketingAutomationActionHandlers: ProviderActionHandlers<
       fetcher,
       phase: "execute",
     });
-    const record = requireObject(payload, "Doppler list");
+    const record = requiredResponseRecord(payload, "Doppler list");
     return {
       list: normalizeList(record),
       data: record,
@@ -132,7 +133,7 @@ export const dopplerMarketingAutomationActionHandlers: ProviderActionHandlers<
       fetcher,
       phase: "execute",
     });
-    const record = requireObject(payload, "Doppler subscriber");
+    const record = requiredResponseRecord(payload, "Doppler subscriber");
     return {
       subscriber: normalizeSubscriber(record),
       data: record,
@@ -322,7 +323,7 @@ function readErrorMessage(payload: unknown) {
 }
 
 function normalizeListCollection(payload: unknown) {
-  const record = requireObject(payload, "Doppler list collection");
+  const record = requiredResponseRecord(payload, "Doppler list collection");
   return {
     lists: requireObjectArray(record.items, "Doppler list collection items").map(normalizeList),
     ...normalizePagination(record),
@@ -331,7 +332,7 @@ function normalizeListCollection(payload: unknown) {
 }
 
 function normalizeSubscriberCollection(payload: unknown) {
-  const record = requireObject(payload, "Doppler subscriber collection");
+  const record = requiredResponseRecord(payload, "Doppler subscriber collection");
   return {
     subscribers: requireObjectArray(record.items, "Doppler subscriber collection items").map(normalizeSubscriber),
     ...normalizePagination(record),
@@ -382,7 +383,7 @@ function normalizeSubscriber(record: Record<string, unknown>) {
 }
 
 function normalizeCreationResult(payload: unknown) {
-  const record = requireObject(payload, "Doppler creation result");
+  const record = requiredResponseRecord(payload, "Doppler creation result");
   const createdResourceId = record.createdResourceId;
   return {
     createdResourceId:
@@ -393,7 +394,7 @@ function normalizeCreationResult(payload: unknown) {
 }
 
 function normalizeMessageResult(payload: unknown) {
-  const record = requireObject(payload, "Doppler operation result");
+  const record = requiredResponseRecord(payload, "Doppler operation result");
   return {
     message: readRequiredString(record.message, "message"),
     data: record,
@@ -432,19 +433,11 @@ function readListId(input: Record<string, unknown>) {
   return readRequiredInteger(input.listId, "listId");
 }
 
-function requireObject(value: unknown, label: string) {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
-}
-
 function requireObjectArray(value: unknown, label: string) {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(502, `${label} must be an array`);
   }
-  return value.map((item) => requireObject(item, label));
+  return value.map((item) => requiredResponseRecord(item, label));
 }
 
 function readOptionalObjectArray(value: unknown) {

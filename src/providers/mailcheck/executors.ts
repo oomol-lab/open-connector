@@ -16,6 +16,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "mailcheck";
@@ -74,10 +75,10 @@ async function validateMailcheckCredential(
     context: { fetcher, signal },
     phase: "validate",
   });
-  const account = requireMailcheckObject(payload.account, "/status.account");
-  const user = requireMailcheckObject(account.user, "/status.account.user");
-  const plan = requireMailcheckObject(account.plan, "/status.account.plan");
-  const usage = requireMailcheckObject(payload.usage, "/status.usage");
+  const account = requiredResponseRecord(payload.account, "/status.account");
+  const user = requiredResponseRecord(account.user, "/status.account.user");
+  const plan = requiredResponseRecord(account.plan, "/status.account.plan");
+  const usage = requiredResponseRecord(payload.usage, "/status.usage");
   const userEmail = requireMailcheckString(user.email, "/status.account.user.email");
 
   return {
@@ -111,7 +112,7 @@ async function requestMailcheckStatus(input: {
     phase: input.phase,
   });
 
-  return requireMailcheckObject(payload, "/status");
+  return requiredResponseRecord(payload, "/status");
 }
 
 async function requestMailcheckEmail(input: {
@@ -127,7 +128,7 @@ async function requestMailcheckEmail(input: {
     phase: input.phase,
   });
 
-  return requireMailcheckObject(payload, "/email/{email}");
+  return requiredResponseRecord(payload, "/email/{email}");
 }
 
 async function requestMailcheckDomain(input: {
@@ -143,7 +144,7 @@ async function requestMailcheckDomain(input: {
     phase: input.phase,
   });
 
-  return requireMailcheckObject(payload, "/domain/{domain}");
+  return requiredResponseRecord(payload, "/domain/{domain}");
 }
 
 async function requestMailcheckJson(input: {
@@ -231,10 +232,6 @@ function extractMailcheckErrorMessage(payload: unknown): string | undefined {
 
   const record = optionalRecord(payload);
   return optionalString(record?.error) ?? optionalString(record?.message);
-}
-
-function requireMailcheckObject(value: unknown, context: string): Record<string, unknown> {
-  return requiredRecord(value, context, (message) => new ProviderRequestError(502, message));
 }
 
 function requireMailcheckString(value: unknown, context: string): string {

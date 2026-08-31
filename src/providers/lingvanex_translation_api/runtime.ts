@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 export const lingvanexTranslationApiBaseUrl = "https://api-gl.lingvanex.com";
 
@@ -79,10 +84,10 @@ async function translateText(input: Record<string, unknown>, context: ApiKeyProv
     context,
     "execute",
   );
-  const root = readRecord(payload, "Lingvanex translation response");
-  const data = readRecord(root.data, "Lingvanex translation response data");
+  const root = requiredResponseRecord(payload, "Lingvanex translation response");
+  const data = requiredResponseRecord(root.data, "Lingvanex translation response data");
   const translations = readArray(data.translations, "Lingvanex translation response translations").map((value) => {
-    const translation = readRecord(value, "Lingvanex translation");
+    const translation = requiredResponseRecord(value, "Lingvanex translation");
     return {
       translatedText: readRequiredRawString(translation.translatedText, "translatedText", 502),
       detectedSourceLanguage: optionalRawString(translation.detectedSourceLanguage) ?? null,
@@ -109,11 +114,11 @@ async function detectLanguage(input: Record<string, unknown>, context: ApiKeyPro
     context,
     "execute",
   );
-  const root = readRecord(payload, "Lingvanex detection response");
-  const data = readRecord(root.data, "Lingvanex detection response data");
+  const root = requiredResponseRecord(payload, "Lingvanex detection response");
+  const data = requiredResponseRecord(root.data, "Lingvanex detection response data");
   const detections = readArray(data.detections, "Lingvanex detection response detections").map((group) =>
     readArray(group, "Lingvanex detection candidate group").map((value) => {
-      const detection = readRecord(value, "Lingvanex detection candidate");
+      const detection = requiredResponseRecord(value, "Lingvanex detection candidate");
       return {
         language: readRequiredRawString(detection.language, "language", 502),
         isReliable: typeof detection.isReliable == "boolean" ? detection.isReliable : null,
@@ -149,10 +154,10 @@ async function listLanguages(
     context,
     phase,
   );
-  const root = readRecord(payload, "Lingvanex languages response");
-  const data = readRecord(root.data, "Lingvanex languages response data");
+  const root = requiredResponseRecord(payload, "Lingvanex languages response");
+  const data = requiredResponseRecord(root.data, "Lingvanex languages response data");
   const languages = readArray(data.languages, "Lingvanex languages response languages").map((value) => {
-    const language = readRecord(value, "Lingvanex language");
+    const language = requiredResponseRecord(value, "Lingvanex language");
     return {
       language: readRequiredRawString(language.language, "language", 502),
       name: optionalRawString(language.name) ?? null,
@@ -280,14 +285,6 @@ function readRequiredRawString(value: unknown, fieldName: string, status = 400):
     throw new ProviderRequestError(status, `${fieldName} is required.`);
   }
   return value;
-}
-
-function readRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function readArray(value: unknown, label: string): unknown[] {

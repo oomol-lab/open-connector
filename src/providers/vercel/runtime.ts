@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject, queryFlag, queryParams } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
 const vercelApiBaseUrl = "https://api.vercel.com";
 
@@ -1011,7 +1011,7 @@ function userLabel(user: VercelUser): string {
 }
 
 function mapProject(value: unknown): Record<string, unknown> {
-  const project = requireObject(value, "project");
+  const project = requiredResponseRecord(value, "project");
   return compactObject({
     id: requireString(project.id, "project.id"),
     name: requireString(project.name, "project.name"),
@@ -1028,7 +1028,7 @@ function mapProject(value: unknown): Record<string, unknown> {
 }
 
 function mapDeployment(value: unknown): Record<string, unknown> {
-  const deployment = requireObject(value, "deployment");
+  const deployment = requiredResponseRecord(value, "deployment");
   return compactObject({
     id: requireString(deployment.id, "deployment.id"),
     name: optionalString(deployment.name),
@@ -1052,16 +1052,16 @@ function mapDeploymentEvent(value: unknown): {
   type: string;
   payload: Record<string, unknown>;
 } {
-  const event = requireObject(value, "deployment event");
+  const event = requiredResponseRecord(value, "deployment event");
   return {
     created: requireNumber(event.created, "event.created"),
     type: requireString(event.type, "event.type"),
-    payload: requireObject(event.payload, "event.payload"),
+    payload: requiredResponseRecord(event.payload, "event.payload"),
   };
 }
 
 function mapRuntimeLog(value: unknown): Record<string, unknown> {
-  const log = requireObject(value, "runtime log");
+  const log = requiredResponseRecord(value, "runtime log");
   return compactObject({
     timestampInMs: requireNumber(log.timestampInMs, "log.timestampInMs"),
     level: requireString(log.level, "log.level"),
@@ -1074,7 +1074,7 @@ function mapRuntimeLog(value: unknown): Record<string, unknown> {
 }
 
 function mapEnv(value: unknown): Record<string, unknown> {
-  const env = requireObject(value, "env");
+  const env = requiredResponseRecord(value, "env");
   return compactObject({
     id: requireString(env.id, "env.id"),
     key: requireString(env.key, "env.key"),
@@ -1088,7 +1088,7 @@ function mapEnv(value: unknown): Record<string, unknown> {
 }
 
 function mapDomain(value: unknown): Record<string, unknown> {
-  const domain = requireObject(value, "domain");
+  const domain = requiredResponseRecord(value, "domain");
   return compactObject({
     name: requireString(domain.name, "domain.name"),
     apexName: optionalString(domain.apexName),
@@ -1105,7 +1105,7 @@ function mapDomain(value: unknown): Record<string, unknown> {
 }
 
 function mapWebhook(value: unknown): Record<string, unknown> {
-  const webhook = requireObject(value, "webhook");
+  const webhook = requiredResponseRecord(value, "webhook");
   return compactObject({
     id: requireString(webhook.id, "webhook.id"),
     url: requireString(webhook.url, "webhook.url"),
@@ -1133,14 +1133,6 @@ function normalizeArray(value: unknown): unknown[] {
 
 function normalizeStringArray(value: unknown): string[] | undefined {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : undefined;
-}
-
-function requireObject(value: unknown, label: string): Record<string, unknown> {
-  const object = optionalRecord(value);
-  if (!object) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return object;
 }
 
 function requireString(value: unknown, label: string): string {

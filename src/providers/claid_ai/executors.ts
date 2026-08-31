@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 const service = "claid_ai";
 const claidAiApiBaseUrl = "https://api.claid.ai";
@@ -132,15 +137,15 @@ function extractClaidAiErrorMessage(payload: unknown): string | undefined {
 function normalizeEditResult(payload: unknown): Record<string, unknown> {
   const data = unwrapClaidResponseData(payload, "edit response");
   return compactObject({
-    input: normalizeProcessingImage(requireResponseRecord(data.input, "data.input")),
-    output: normalizeProcessingImage(requireResponseRecord(data.output, "data.output")),
+    input: normalizeProcessingImage(requiredResponseRecord(data.input, "data.input")),
+    output: normalizeProcessingImage(requiredResponseRecord(data.output, "data.output")),
     profiling: data.profiling,
   });
 }
 
 function normalizeAsyncTask(payload: unknown): Record<string, unknown> {
   const data = unwrapClaidResponseData(payload, "async task response");
-  const request = requireResponseRecord(data.request, "data.request");
+  const request = requiredResponseRecord(data.request, "data.request");
   return {
     id: requireResponseInteger(data.id, "id"),
     status: requireInputString(data.status, "status"),
@@ -155,7 +160,7 @@ function normalizeAsyncTask(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeAsyncError(value: unknown, label: string): Record<string, unknown> {
-  const record = requireResponseRecord(value, label);
+  const record = requiredResponseRecord(value, label);
   const inputObject = optionalRecord(record.input_object);
   return compactObject({
     error: optionalNonEmptyString(record.error),
@@ -165,17 +170,17 @@ function normalizeAsyncError(value: unknown, label: string): Record<string, unkn
 }
 
 function normalizeAsyncResult(value: unknown): Record<string, unknown> {
-  const record = requireResponseRecord(value, "result");
+  const record = requiredResponseRecord(value, "result");
   return {
-    input_object: normalizeProcessingImage(requireResponseRecord(record.input_object, "result.input_object")),
-    output_object: normalizeProcessingImage(requireResponseRecord(record.output_object, "result.output_object")),
+    input_object: normalizeProcessingImage(requiredResponseRecord(record.input_object, "result.input_object")),
+    output_object: normalizeProcessingImage(requiredResponseRecord(record.output_object, "result.output_object")),
   };
 }
 
 function normalizeRequestEcho(record: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
     input: requireInputString(record.input, "request.input"),
-    operations: requireResponseRecord(record.operations, "request.operations"),
+    operations: requiredResponseRecord(record.operations, "request.operations"),
     output: record.output,
   });
 }
@@ -197,22 +202,14 @@ function normalizeProcessingImage(record: Record<string, unknown>): Record<strin
 }
 
 function unwrapClaidResponseData(payload: unknown, label: string): Record<string, unknown> {
-  const record = requireResponseRecord(payload, label);
-  return requireResponseRecord(record.data, `${label}.data`);
+  const record = requiredResponseRecord(payload, label);
+  return requiredResponseRecord(record.data, `${label}.data`);
 }
 
 function requireInputRecord(value: unknown, fieldName: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
     throw new ProviderRequestError(400, `${fieldName} must be an object`);
-  }
-  return record;
-}
-
-function requireResponseRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
   }
   return record;
 }

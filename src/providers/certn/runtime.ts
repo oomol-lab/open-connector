@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const certnValidationPath = "/api/public/cases/";
@@ -394,7 +395,7 @@ function appendRepeatedSearchParam(searchParams: URLSearchParams, key: string, v
 }
 
 function normalizePaginatedPayload(payload: unknown, resultKey: string): Record<string, unknown> {
-  const record = requireObjectPayload(payload, "Certn paginated response");
+  const record = requiredResponseRecord(payload, "Certn paginated response");
   return {
     [resultKey]: normalizeArray(record.results, "Certn paginated response results"),
     pagination: normalizePagination(record),
@@ -426,14 +427,6 @@ function normalizeArray(value: unknown, fieldName: string): unknown[] {
 function normalizeObjectOrNull(value: unknown): Record<string, unknown> | null {
   const record = optionalRecord(value);
   return record ? compactObject({ ...record }) : null;
-}
-
-function requireObjectPayload(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
 }
 
 function resolveCertnRegion(value: unknown): (typeof certnRegions)[CertnRegionId] {

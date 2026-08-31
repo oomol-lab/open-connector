@@ -7,6 +7,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "addresszen";
@@ -76,7 +77,7 @@ export const credentialValidators: CredentialValidators = {
       },
       "validate",
     );
-    const result = requireObjectRecord(payload.result, "AddressZen key availability result");
+    const result = requiredResponseRecord(payload.result, "AddressZen key availability result");
 
     return {
       profile: {
@@ -152,7 +153,7 @@ async function requestAddresszen(
     throw createAddresszenError(response, payload, phase);
   }
 
-  return requireObjectRecord(payload, "AddressZen response");
+  return requiredResponseRecord(payload, "AddressZen response");
 }
 
 async function readAddresszenPayload(response: Response): Promise<unknown> {
@@ -191,12 +192,4 @@ function createAddresszenError(
   }
 
   return new ProviderRequestError(response.status || 500, message, payload);
-}
-
-function requireObjectRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }

@@ -7,7 +7,12 @@ import { createHash, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 const wecomMcpConfigUrl = "https://qyapi.weixin.qq.com/cgi-bin/aibot/cli/get_mcp_config";
 const wecomSmartBotHelpUrl = "https://open.work.weixin.qq.com/help2/pc/cat?doc_id=21677";
@@ -281,7 +286,7 @@ async function fetchWecomMcpConfig(
     fetcher,
     wecomSmartBotRequestTimeoutMs,
   );
-  const payload = requireProviderObject(response.payload, "WeCom MCP config response");
+  const payload = requiredResponseRecord(response.payload, "WeCom MCP config response");
   const errcode = readInteger(payload.errcode) ?? 0;
   if (!response.ok || errcode !== 0) {
     throw normalizeWecomSmartBotError(payload, response.status, "validate");
@@ -387,7 +392,7 @@ async function callWecomToolAtEndpoint(
     fetcher,
     toolName === "get_msg_media" ? wecomSmartBotMediaTimeoutMs : wecomSmartBotRequestTimeoutMs,
   );
-  const result = requireProviderObject(payload.result, `WeCom ${toolName} MCP result`);
+  const result = requiredResponseRecord(payload.result, `WeCom ${toolName} MCP result`);
   if (result.isError === true) {
     throw new ProviderRequestError(502, readMcpContentMessage(result.content) ?? `WeCom ${toolName} failed`);
   }
@@ -440,7 +445,7 @@ async function sendWecomMcpRequest(
     }
     throw error;
   }
-  const payload = requireProviderObject(response.payload, "WeCom MCP response");
+  const payload = requiredResponseRecord(response.payload, "WeCom MCP response");
   const rpcError = optionalRecord(payload.error);
   const code = readInteger(rpcError?.code);
   if (code != null && code !== 0) {
@@ -487,7 +492,7 @@ async function fetchWecomJson(url: string, init: RequestInit, fetcher: typeof fe
 }
 
 function normalizeWecomBusinessResult(value: unknown, toolName: string) {
-  const result = requireProviderObject(value, `WeCom ${toolName} result`);
+  const result = requiredResponseRecord(value, `WeCom ${toolName} result`);
   const errcode = readInteger(result.errcode);
   if (errcode != null && errcode !== 0) {
     throw normalizeWecomSmartBotError(result, 200, "execute");
@@ -537,7 +542,7 @@ async function pollWecomDocumentContent(input: Record<string, unknown>, runtime:
       compactObject({ ...identifier, type: 2, task_id: taskId }),
       runtime,
     );
-    const record = requireProviderObject(result, "WeCom get_doc_content result");
+    const record = requiredResponseRecord(result, "WeCom get_doc_content result");
     if (record.task_done === true) {
       const content = optionalString(record.content);
       if (content == null) {
@@ -568,14 +573,14 @@ async function pollWecomSmartPageExport(input: Record<string, unknown>, runtime:
     { ...buildDocumentIdentifier(input), content_type: 1 },
     runtime,
   );
-  const taskId = optionalString(requireProviderObject(task, "WeCom smart-page export task").task_id);
+  const taskId = optionalString(requiredResponseRecord(task, "WeCom smart-page export task").task_id);
   if (!taskId) {
     throw new ProviderRequestError(502, "WeCom smart-page export returned no task_id");
   }
 
   for (let pollCount = 1; pollCount <= wecomExportMaxPolls; pollCount++) {
     const result = await callWecomTool("doc", "smartpage_get_export_result", { task_id: taskId }, runtime);
-    const record = requireProviderObject(result, "WeCom smart-page export result");
+    const record = requiredResponseRecord(result, "WeCom smart-page export result");
     if (record.task_done === true) {
       const content = optionalString(record.content);
       if (content == null) {
@@ -600,8 +605,8 @@ async function downloadWecomMessageMedia(mediaId: string, runtime: WecomSmartBot
     throw new ProviderRequestError(503, "Local transit file storage is not enabled");
   }
   const result = await callWecomTool("msg", "get_msg_media", { media_id: mediaId }, runtime);
-  const mediaItem = requireProviderObject(
-    requireProviderObject(result, "WeCom get_msg_media result").media_item,
+  const mediaItem = requiredResponseRecord(
+    requiredResponseRecord(result, "WeCom get_msg_media result").media_item,
     "WeCom message media item",
   );
   const base64 = optionalString(mediaItem.base64_data);
@@ -734,7 +739,7 @@ async function uploadSmartSheetFile(fileUrl: string, suppliedName: string | unde
     },
     runtime,
   );
-  const fileId = optionalString(requireProviderObject(result, "WeCom file upload result").fileid);
+  const fileId = optionalString(requiredResponseRecord(result, "WeCom file upload result").fileid);
   if (!fileId) {
     throw new ProviderRequestError(502, "WeCom file upload returned no fileid");
   }
@@ -1157,14 +1162,6 @@ function readMcpContentMessage(value: unknown) {
     }
   }
   return undefined;
-}
-
-function requireProviderObject(value: unknown, label: string) {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function readInteger(value: unknown) {

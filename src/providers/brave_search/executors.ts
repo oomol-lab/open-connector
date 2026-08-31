@@ -16,6 +16,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "brave_search";
@@ -213,7 +214,7 @@ function buildImageSearchQuery(input: Record<string, unknown>): Record<string, B
 }
 
 function normalizeWebSearchResponse(payload: unknown): Record<string, unknown> {
-  const record = requireOutputRecord(payload, "Brave Search response");
+  const record = requiredResponseRecord(payload, "Brave Search response");
 
   return compactObject({
     type: optionalString(record.type) ?? "search",
@@ -232,7 +233,7 @@ function normalizeWebSearchResponse(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeCollectionResponse(payload: unknown): Record<string, unknown> {
-  const record = requireOutputRecord(payload, "Brave Search response");
+  const record = requiredResponseRecord(payload, "Brave Search response");
 
   return compactObject({
     type: optionalString(record.type) ?? "search",
@@ -315,7 +316,7 @@ function optionalObjectArray(value: unknown): Array<Record<string, unknown>> | u
   if (!Array.isArray(value)) {
     return undefined;
   }
-  return value.map((item) => requireOutputRecord(item, "Brave Search result item"));
+  return value.map((item) => requiredResponseRecord(item, "Brave Search result item"));
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {
@@ -332,8 +333,4 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
   }
 
   return result.length > 0 ? result : undefined;
-}
-
-function requireOutputRecord(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, (message) => new ProviderRequestError(502, message));
 }

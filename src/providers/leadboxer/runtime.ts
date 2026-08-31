@@ -8,6 +8,7 @@ import {
   getProviderActionHandler,
   ProviderRequestError,
   providerUserAgent,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 export interface LeadboxerCredentialCheck {
@@ -43,7 +44,7 @@ export async function validateLeadboxerCredential(
     fetcher,
     phase: "validate",
   });
-  const body = requireRecord(payload, "LeadBoxer credit grants response");
+  const body = requiredResponseRecord(payload, "LeadBoxer credit grants response");
   if (!Array.isArray(body.data)) {
     throw new ProviderRequestError(502, "LeadBoxer credit grants response data must be an array");
   }
@@ -139,7 +140,7 @@ async function executeLookup(
     phase: "execute",
   });
 
-  return requireRecord(payload, `LeadBoxer ${lookupField} lookup response`);
+  return requiredResponseRecord(payload, `LeadBoxer ${lookupField} lookup response`);
 }
 
 function normalizeLookupValue(value: unknown, field: "ip" | "domain"): string {
@@ -258,14 +259,6 @@ function extractLeadboxerErrorMessage(payload: unknown) {
   }
 
   return undefined;
-}
-
-function requireRecord(value: unknown, label: string) {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} must be an object`);
-  }
-  return record;
 }
 
 function requireString(value: unknown, fieldName: string) {

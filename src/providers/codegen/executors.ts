@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -32,7 +33,7 @@ export const codegenActionHandlers: ProviderActionHandlers<"codegen", CodegenAct
       context,
     });
     return {
-      user: requireProviderObject(user, "Codegen current user response"),
+      user: requiredResponseRecord(user, "Codegen current user response"),
     };
   },
   async list_organizations(input, context) {
@@ -94,7 +95,7 @@ export const codegenActionHandlers: ProviderActionHandlers<"codegen", CodegenAct
       context,
     });
     return {
-      agent_run: requireProviderObject(payload, "Codegen agent run response"),
+      agent_run: requiredResponseRecord(payload, "Codegen agent run response"),
     };
   },
 };
@@ -140,7 +141,7 @@ export const credentialValidators: CredentialValidators = {
       context,
     });
 
-    const user = requireProviderObject(userPayload, "Codegen current user response");
+    const user = requiredResponseRecord(userPayload, "Codegen current user response");
     const organization = await findCodegenOrganization({
       apiKey,
       organizationId,
@@ -206,7 +207,7 @@ async function findCodegenOrganization(input: {
 
 function readOrganizationPage(payload: unknown): { items: Array<Record<string, unknown>>; total: number } {
   const label = "Codegen organizations response";
-  const body = requireProviderObject(payload, label);
+  const body = requiredResponseRecord(payload, label);
   return {
     items: readPageItems(body, label),
     total: readRequiredInteger(body.total, `${label} total`),
@@ -252,7 +253,7 @@ function buildPathWithQuery(path: string, input: Record<string, unknown>, allowe
 }
 
 function normalizePage(payload: unknown, itemKey: string, label: string): Record<string, unknown> {
-  const body = requireProviderObject(payload, label);
+  const body = requiredResponseRecord(payload, label);
   return {
     [itemKey]: readPageItems(body, label),
     pagination: {
@@ -265,11 +266,11 @@ function normalizePage(payload: unknown, itemKey: string, label: string): Record
 }
 
 function readPageItems(payload: unknown, label: string): Array<Record<string, unknown>> {
-  const body = requireProviderObject(payload, label);
+  const body = requiredResponseRecord(payload, label);
   if (!Array.isArray(body.items)) {
     throw new ProviderRequestError(502, `${label} items is invalid`);
   }
-  return body.items.map((item, index) => requireProviderObject(item, `${label} item ${index + 1}`));
+  return body.items.map((item, index) => requiredResponseRecord(item, `${label} item ${index + 1}`));
 }
 
 async function readCodegenPayload(response: Response): Promise<unknown> {
@@ -351,8 +352,4 @@ function readRequiredInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `${fieldName} is invalid`);
   }
   return value;
-}
-
-function requireProviderObject(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, (message) => new ProviderRequestError(502, message));
 }

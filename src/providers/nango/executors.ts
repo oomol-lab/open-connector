@@ -17,6 +17,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 const service = "nango";
@@ -186,7 +187,7 @@ async function requestNangoJson(input: {
     throw createNangoError(response.status, payload);
   }
 
-  return readProviderObject(payload, "payload");
+  return requiredResponseRecord(payload, "payload");
 }
 
 function buildNangoUrl(path: string, query: Record<string, QueryValue> = {}): URL {
@@ -262,10 +263,6 @@ function extractErrorMessage(payload: unknown): string | undefined {
 
 function readRequiredObject(value: unknown, fieldName: string): Record<string, unknown> {
   return requiredRecord(value, fieldName, providerInputError);
-}
-
-function readProviderObject(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, (message) => new ProviderRequestError(502, message));
 }
 
 function readOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {

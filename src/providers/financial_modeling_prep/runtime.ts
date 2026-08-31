@@ -8,7 +8,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 type FinancialModelingPrepPhase = "validate" | "execute";
 type FinancialModelingPrepQueryValue = boolean | number | string | undefined;
@@ -42,7 +47,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
 
     return {
       results: readRequiredArray(payload, "payload").map((item, index) =>
-        normalizeSymbolSearchItem(readRequiredObject(item, `payload[${index}]`)),
+        normalizeSymbolSearchItem(requiredResponseRecord(item, `payload[${index}]`)),
       ),
     };
   },
@@ -111,7 +116,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
       { symbol: requiredInputString(input.symbol, "symbol") },
       context,
     );
-    return { quote: readRequiredObject(rows[0], "payload[0]") };
+    return { quote: requiredResponseRecord(rows[0], "payload[0]") };
   },
   async get_asset_quote(input, context) {
     const assetType = requiredInputString(input.assetType, "assetType");
@@ -124,7 +129,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     const symbol = requiredInputString(input.symbol, "symbol");
     const rows = await getArrayPayload(readEndpoint(endpointByType, assetType, "assetType"), {}, context);
     const quote = rows.find((row) => optionalString(optionalRecord(row)?.symbol) === symbol) ?? rows[0];
-    return { quote: readRequiredObject(quote, "payload[0]") };
+    return { quote: requiredResponseRecord(quote, "payload[0]") };
   },
   async get_historical_prices(input, context) {
     const symbol = requiredInputString(input.symbol, "symbol");
@@ -142,7 +147,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return {
       symbol,
       historical: readRequiredArray(payload, "payload").map((item, index) =>
-        normalizeHistoricalPrice(readRequiredObject(item, `payload[${index}]`)),
+        normalizeHistoricalPrice(requiredResponseRecord(item, `payload[${index}]`)),
       ),
     };
   },
@@ -172,7 +177,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     const payload = await financialModelingPrepGet("/profile", { symbol }, context, "execute");
     const rows = readRequiredArray(payload, "payload");
     return {
-      profile: readRequiredObject(rows[0], "payload[0]"),
+      profile: requiredResponseRecord(rows[0], "payload[0]"),
     };
   },
   async get_company_profile_by_cik(input, context) {
@@ -267,7 +272,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     const payload = await financialModelingPrepGet(endpoint, {}, context, "execute");
     return {
       movers: readRequiredArray(payload, "payload").map((item, index) =>
-        normalizeQuote(readRequiredObject(item, `payload[${index}]`)),
+        normalizeQuote(requiredResponseRecord(item, `payload[${index}]`)),
       ),
     };
   },
@@ -467,7 +472,7 @@ async function getQuote(
 ) {
   const payload = await financialModelingPrepGet("/quote", { symbol }, context, phase);
   const rows = readRequiredArray(payload, "payload");
-  return normalizeQuote(readRequiredObject(rows[0], "payload[0]"));
+  return normalizeQuote(requiredResponseRecord(rows[0], "payload[0]"));
 }
 
 async function getStatementRows(
@@ -488,7 +493,7 @@ async function getStatementRows(
 
   return {
     statements: readRequiredArray(payload, "payload").map((item, index) =>
-      readRequiredObject(item, `payload[${index}]`),
+      requiredResponseRecord(item, `payload[${index}]`),
     ),
   };
 }
@@ -728,14 +733,6 @@ function normalizeHistoricalPrice(input: Record<string, unknown>) {
     adjClose: readRequiredNumber(input.adjClose, "adjClose"),
     volume: readRequiredNumber(input.volume, "volume"),
   };
-}
-
-function readRequiredObject(value: unknown, fieldName: string) {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${fieldName} must be an object`);
-  }
-  return record;
 }
 
 function readRequiredArray(value: unknown, fieldName: string) {
