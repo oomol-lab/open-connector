@@ -10,9 +10,11 @@ import { describe, expect, it } from "vitest";
 // when a provider grows an `AbortError`-only check again, which the
 // private-to-OSS sync has repeatedly done. Both a named predicate (declared as a
 // function or as an arrow constant, in the same file or a sibling of the same
-// provider directory) and an inline `error.name === "AbortError"` test count. A
-// check disjoined with the timeout signal's own `.aborted` flag stays reachable
-// and is therefore allowed.
+// provider directory) and an inline `error.name === "AbortError"` test count.
+// Only a branch that reports a timeout, by status 504 or by message, is read as
+// the timeout branch, so a provider that tells a caller cancellation apart from
+// a timeout keeps its `AbortError` test. A check disjoined with the timeout
+// signal's own `.aborted` flag stays reachable and is therefore allowed.
 
 const providersDir = fileURLToPath(new URL(".", import.meta.url));
 const repoDir = fileURLToPath(new URL("../..", import.meta.url));
@@ -20,11 +22,18 @@ const abortNameComparison = /name\s*===\s*"AbortError"/;
 const predicateDeclaration =
   /(?:function\s+([A-Za-z_$][\w$]*)\s*\(|const\s+([A-Za-z_$][\w$]*)\s*(?::[^=;]*)?=\s*(?:async\s+)?[(<])/g;
 const requestHelperBody = /\b(?:await|fetch|throw)\b/;
+const timeoutBranch = /\b504\b|timed out/i;
 const declarationWindowChars = 2000;
 const predicateBodyChars = 500;
 const conditionWindowLines = 3;
+const branchWindowLines = 6;
 
 interface PredicateBody {
+  text: string;
+  end: number;
+}
+
+interface EnclosingCondition {
   text: string;
   end: number;
 }
@@ -121,7 +130,7 @@ function abortChecks(source: string): AbortChecks {
 }
 
 /** Join the lines around `index` that make up the enclosing condition, so a wrapped disjunction is read as one. */
-function enclosingCondition(lines: string[], index: number): string {
+function enclosingCondition(lines: string[], index: number): EnclosingCondition {
   let first = index;
   while (first > 0 && index - first < conditionWindowLines && !/\bif\s*\(/.test(lines[first] as string)) {
     first -= 1;
@@ -130,7 +139,28 @@ function enclosingCondition(lines: string[], index: number): string {
   while (last < lines.length - 1 && last - index < conditionWindowLines && !/\)\s*\{/.test(lines[last] as string)) {
     last += 1;
   }
-  return lines.slice(first, last + 1).join("\n");
+  return { text: lines.slice(first, last + 1).join("\n"), end: last };
+}
+
+/** Read the branch a condition ending on `line` guards, so it can be told apart from a non-timeout branch. */
+function guardedBranch(lines: string[], line: number): string {
+  const branch: string[] = [];
+  let braces = 0;
+  for (let index = line; index < lines.length && index - line <= branchWindowLines; index += 1) {
+    const text = lines[index] as string;
+    branch.push(text);
+    for (const char of text) {
+      if (char === "{") {
+        braces += 1;
+      } else if (char === "}") {
+        braces -= 1;
+        if (braces === 0) {
+          return branch.join("\n");
+        }
+      }
+    }
+  }
+  return branch.join("\n");
 }
 
 function findDeadTimeoutGuards(file: ProviderSource, names: string[]): string[] {
@@ -149,10 +179,15 @@ function findDeadTimeoutGuards(file: ProviderSource, names: string[]): string[] 
       return;
     }
     const condition = enclosingCondition(lines, index);
-    if (!callsPredicate && condition.includes('"TimeoutError"')) {
+    if (!callsPredicate && condition.text.includes('"TimeoutError"')) {
       return;
     }
-    if (condition.includes("||") && condition.includes(".aborted")) {
+    if (condition.text.includes("||") && condition.text.includes(".aborted")) {
+      return;
+    }
+    if (!timeoutBranch.test(guardedBranch(lines, condition.end))) {
+      // Not the timeout branch. An `AbortError` test that reports something else,
+      // a caller cancellation for instance, stays reachable and stays correct.
       return;
     }
     dead.push(`${relative(repoDir, file.path)}:${index + 1}`);
