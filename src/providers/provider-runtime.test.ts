@@ -652,6 +652,26 @@ describe("defineProviderProxy request deadline", () => {
     return signals;
   }
 
+  // Headers arrive immediately; the body never enqueues. Erroring the stream on
+  // abort mirrors how fetch implementations propagate the request signal into
+  // an in-flight body read.
+  function stubStalledBodyFetch(): AbortSignal[] {
+    const signals: AbortSignal[] = [];
+    vi.stubGlobal("fetch", (_input: RequestInfo | URL, init?: RequestInit) => {
+      const signal = init?.signal ?? undefined;
+      if (signal) {
+        signals.push(signal);
+      }
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          signal?.addEventListener("abort", () => controller.error(signal.reason));
+        },
+      });
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+    return signals;
+  }
+
   const hangingProxy = defineProviderProxy({
     service: "test_service",
     baseUrl: "https://api.example.com",
@@ -663,6 +683,39 @@ describe("defineProviderProxy request deadline", () => {
     vi.useFakeTimers();
     try {
       const signals = stubHangingFetch();
+      const pending = hangingProxy({ method: "GET", endpoint: "/items" }, executionContext);
+      let settled = false;
+      void pending.then(() => {
+        settled = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(vi.getTimerCount()).toBe(1);
+
+      await vi.advanceTimersByTimeAsync(29_000);
+      expect(settled).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(1_500);
+      expect(settled).toBe(true);
+      expect(signals[0]?.aborted).toBe(true);
+      await expect(pending).resolves.toEqual({
+        ok: false,
+        error: {
+          code: "provider_error",
+          message: "test_service request timed out",
+          details: { status: 504, details: undefined },
+        },
+      });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("applies the same budget to a response whose body stalls after headers arrive", async () => {
+    vi.useFakeTimers();
+    try {
+      const signals = stubStalledBodyFetch();
       const pending = hangingProxy({ method: "GET", endpoint: "/items" }, executionContext);
       let settled = false;
       void pending.then(() => {
