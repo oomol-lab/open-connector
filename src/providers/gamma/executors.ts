@@ -7,6 +7,7 @@ import { compactJson } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
@@ -319,7 +320,7 @@ async function gammaRequest(input: GammaRequestInput): Promise<unknown> {
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "Gamma request timed out", error);
     }
     const message = error instanceof Error ? `Gamma request failed: ${error.message}` : "Gamma request failed";
@@ -467,10 +468,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     globalThis.setTimeout(resolve, ms);
   });
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

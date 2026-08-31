@@ -10,6 +10,7 @@ import { compactObject, optionalRawString, optionalRecord, optionalString } from
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -284,7 +285,7 @@ async function requestForemJson<T>(context: ForemActionContext, input: ForemRequ
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "Forem request timed out", error);
     }
 
@@ -519,10 +520,6 @@ function assertCommentTarget(input: Record<string, unknown>): void {
   if (hasArticleId === hasPodcastEpisodeId) {
     throw new ProviderRequestError(400, "exactly one of articleId or podcastEpisodeId is required");
   }
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }
 
 async function foremProxyBaseUrl(context: ExecutionContext, service: string): Promise<string> {

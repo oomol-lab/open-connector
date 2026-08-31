@@ -22,6 +22,7 @@ import {
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
   normalizeProviderProxyQuery,
@@ -1074,7 +1075,7 @@ async function fetchFuxinSource(
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "failed to fetch multipart source: request timed out", error);
     }
     const message = error instanceof Error ? error.message : "failed to fetch multipart source";
@@ -1151,7 +1152,7 @@ async function sendFuxinRequest(url: URL, input: FuxinRequestInput): Promise<Res
       signal,
     });
   } catch (error) {
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, `fuxin ${input.path} request timed out`, error);
     }
     const message = error instanceof Error ? error.message : "fuxin request failed";
@@ -1511,8 +1512,4 @@ function setOptionalFormDataNumber(formData: FormData, key: string, value: numbe
   if (value !== undefined) {
     formData.set(key, String(value));
   }
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }

@@ -13,6 +13,7 @@ import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optiona
 import {
   createProviderProxyUrl,
   defineProviderExecutors,
+  isAbortLikeError,
   normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
@@ -392,7 +393,7 @@ async function datadogRequestJson(
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (isAbortError(error)) {
+    if (isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "Datadog request timed out");
     }
     throw new ProviderRequestError(
@@ -558,8 +559,4 @@ function booleanQuery(value: unknown): string | undefined {
 function numberQuery(value: unknown): string | undefined {
   const numberValue = optionalNumber(value);
   return numberValue === undefined ? undefined : String(numberValue);
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }

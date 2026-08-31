@@ -5,6 +5,7 @@ import { isIP } from "node:net";
 import { nullableString, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -235,7 +236,7 @@ async function requestAbuseipdbJson<T>(input: {
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (isAbortError(error)) {
+    if (isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "AbuseIPDB request timed out");
     }
     throw new ProviderRequestError(
@@ -508,10 +509,6 @@ function serializeStringList(value: unknown): string | undefined {
     .filter((item) => item !== "");
 
   return values.length > 0 ? values.join(",") : undefined;
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function isRateLimitLike402Message(message: string): boolean {

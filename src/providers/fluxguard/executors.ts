@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
@@ -240,7 +241,7 @@ async function requestFluxguardJson(context: FluxguardActionContext, input: Flux
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "Fluxguard request timed out", error);
     }
 
@@ -431,10 +432,6 @@ function readFirstString(record: Record<string, unknown>, keys: string[]): strin
     }
   }
   return null;
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

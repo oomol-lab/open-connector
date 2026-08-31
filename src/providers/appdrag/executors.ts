@@ -12,6 +12,7 @@ import {
   createProviderFetch,
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
+  isAbortLikeError,
   normalizeProviderProxyHeaders,
   providerInputError,
   ProviderRequestError,
@@ -273,7 +274,7 @@ async function requestAppdrag(
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "AppDrag request timed out");
     }
 
@@ -370,8 +371,4 @@ function inferResponseFormat(body: unknown): "empty" | "json" | "text" {
     return "text";
   }
   return "json";
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

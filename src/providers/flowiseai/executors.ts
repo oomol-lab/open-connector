@@ -5,6 +5,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -169,7 +170,7 @@ async function requestFlowiseJson(input: FlowiseaiRequestInput): Promise<unknown
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    if (timeoutSignal.aborted && isAbortError(error)) {
+    if (timeoutSignal.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "FlowiseAI request timed out", error);
     }
 
@@ -447,8 +448,4 @@ function readChatflowType(value: unknown): FlowiseaiChatflowType {
 
 function stringifyRecordValues(input: Record<string, unknown>): Record<string, string> {
   return Object.fromEntries(Object.entries(input).map(([key, value]) => [key, value == null ? "" : String(value)]));
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }
