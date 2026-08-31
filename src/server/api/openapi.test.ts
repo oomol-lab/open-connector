@@ -3,6 +3,7 @@ import type { OpenApiDocumentOptions } from "./openapi.ts";
 
 import { describe, expect, it } from "vitest";
 import { createOpenApiDocument } from "./openapi.ts";
+import { mapRuntimeErrorStatus, runtimeErrorCodes } from "./runtime-api.ts";
 
 interface RunOperation {
   description: string;
@@ -80,6 +81,21 @@ describe("action execution OpenAPI", () => {
       expect(path.post.description).toContain("does not guarantee exactly-once execution");
     },
   );
+
+  it("documents every status the runtime error table can answer on both /v1 routes", () => {
+    const document = createOpenApiDocument([provider]);
+    const documentedStatuses = (path: string): string[] =>
+      Object.keys((document.paths[path] as { post: { responses: Record<string, unknown> } }).post.responses);
+    // `details.status` drives these two independently of the error code, so the
+    // table alone does not name them.
+    const detailsDrivenStatuses = [404, 413];
+    const answerableStatuses = [
+      ...new Set([...runtimeErrorCodes.map((code) => mapRuntimeErrorStatus(code)), ...detailsDrivenStatuses]),
+    ].map(String);
+
+    expect(documentedStatuses("/v1/actions/{actionId}")).toEqual(expect.arrayContaining(answerableStatuses));
+    expect(documentedStatuses("/v1/proxy/{service}")).toEqual(expect.arrayContaining(answerableStatuses));
+  });
 
   it("documents public /v1 catalog routes with the runtime envelope", () => {
     const document = createOpenApiDocument([provider]);
