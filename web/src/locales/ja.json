@@ -394,7 +394,7 @@
     "policy": {
       "title": "アクセス policy",
       "description": "Action と provider proxy request を制限します。",
-      "deployment": "Deployment policy（読み取り専用）",
+      "deployment": "Deployment の policy（読み取り専用）",
       "runtime": "Runtime の policy",
       "allowedActions": "許可する actions",
       "blockedActions": "Block する actions",
@@ -467,7 +467,7 @@
       "connectionsUnrestricted": "すべての接続",
       "connectionsRestricted": "接続: {{names}}",
       "editor": {
-        "title": "Runtime policy を編集",
+        "title": "Runtime の policy を編集",
         "description": "保存前に deployment 制約と組み合わせて影響を確認します。",
         "resourceLabel": "Policy の対象",
         "actionsTab": "Action 権限",

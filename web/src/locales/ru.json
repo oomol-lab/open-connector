@@ -402,7 +402,7 @@
     "policy": {
       "title": "Policy доступа",
       "description": "Ограничивайте actions и provider proxy requests.",
-      "deployment": "Deployment policy (только чтение)",
+      "deployment": "Policy уровня deployment (только чтение)",
       "runtime": "Policy уровня runtime",
       "allowedActions": "Разрешенные actions",
       "blockedActions": "Заблокированные actions",
@@ -475,7 +475,7 @@
       "connectionsUnrestricted": "Все подключения",
       "connectionsRestricted": "Подключения: {{names}}",
       "editor": {
-        "title": "Изменить runtime policy",
+        "title": "Изменить policy уровня runtime",
         "description": "Перед сохранением изменения проверяются вместе с ограничениями deployment.",
         "resourceLabel": "Ресурс policy",
         "actionsTab": "Разрешения actions",
