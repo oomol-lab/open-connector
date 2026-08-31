@@ -637,6 +637,109 @@ describe("provider egress SSRF guard", () => {
   });
 });
 
+describe("defineProviderProxy request deadline", () => {
+  function stubHangingFetch(): AbortSignal[] {
+    const signals: AbortSignal[] = [];
+    vi.stubGlobal("fetch", (_input: RequestInfo | URL, init?: RequestInit) => {
+      const signal = init?.signal ?? undefined;
+      if (signal) {
+        signals.push(signal);
+      }
+      return new Promise<never>((_resolve, reject) => {
+        signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+      });
+    });
+    return signals;
+  }
+
+  const hangingProxy = defineProviderProxy({
+    service: "test_service",
+    baseUrl: "https://api.example.com",
+    auth: { type: "bearer" },
+    skipDnsValidation: true,
+  });
+
+  it("fails a never-answering upstream at the default 30 second budget instead of hanging", async () => {
+    vi.useFakeTimers();
+    try {
+      const signals = stubHangingFetch();
+      const pending = hangingProxy({ method: "GET", endpoint: "/items" }, executionContext);
+      let settled = false;
+      void pending.then(() => {
+        settled = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(vi.getTimerCount()).toBe(1);
+
+      await vi.advanceTimersByTimeAsync(29_000);
+      expect(settled).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(1_500);
+      expect(settled).toBe(true);
+      expect(signals[0]?.aborted).toBe(true);
+      await expect(pending).resolves.toEqual({
+        ok: false,
+        error: {
+          code: "provider_error",
+          message: "test_service request timed out",
+          details: { status: 504, details: undefined },
+        },
+      });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Deliberate divergence from runProviderRequest, which reports any abort as "<label> request timed out".
+  it("maps a caller abort to internal_error rather than the timeout runProviderRequest would report", async () => {
+    vi.useFakeTimers();
+    try {
+      const signals = stubHangingFetch();
+      const controller = new AbortController();
+      const pending = hangingProxy(
+        { method: "GET", endpoint: "/items" },
+        { ...executionContext, signal: controller.signal },
+      );
+      await vi.advanceTimersByTimeAsync(0);
+      // The upstream request runs under the deadline's own signal, not the caller's.
+      expect(signals).toHaveLength(1);
+      expect(signals[0]).not.toBe(controller.signal);
+      controller.abort();
+
+      await expect(pending).resolves.toEqual({
+        ok: false,
+        error: {
+          code: "internal_error",
+          message: "provider request failed",
+        },
+      });
+      expect(signals[0]?.aborted).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("clears the deadline timer once the request completes", async () => {
+    vi.useFakeTimers();
+    try {
+      let answer: ((response: Response) => void) | undefined;
+      vi.stubGlobal("fetch", () => new Promise<Response>((resolve) => (answer = resolve)));
+      const pending = hangingProxy({ method: "GET", endpoint: "/items" }, executionContext);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(vi.getTimerCount()).toBe(1);
+
+      answer?.(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+      await expect(pending).resolves.toMatchObject({ ok: true });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe("provider runtime fetch", () => {
   it("maps transport failures to provider errors without exposing the native message", async () => {
     vi.stubGlobal("fetch", async () => {

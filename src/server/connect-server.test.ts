@@ -3308,6 +3308,41 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("reports a provider proxy timeout as HTTP 500 with data.status 504", async () => {
+    const app = createTestServer([apiKeyProvider], {
+      providerLoader: new ProxyProviderLoader(async () => ({
+        // The failure defineProviderProxy returns once its per-request deadline fires.
+        ok: false,
+        error: {
+          code: "provider_error",
+          message: "example request timed out",
+          details: { status: 504, details: undefined },
+        },
+      })),
+    }).createApp();
+
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+
+    const response = await app.request("/v1/proxy/example", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    });
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      message: "example request timed out",
+      data: { status: 504 },
+      errorCode: "provider_error",
+      meta: { service: "example" },
+    });
+  });
+
   it("applies stored runtime token proxy grants independently of action rules", async () => {
     const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
     const app = createTestServer([apiKeyProvider], {

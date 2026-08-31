@@ -288,6 +288,12 @@ stored credentials local and lets the provider proxy executor apply provider-spe
 Successful responses use the standard `/v1` success envelope with `data.status`, `data.headers`, and
 `data.data`.
 
+Most proxies run under the same 30 second per-request budget as actions, covering the upstream request
+and the response body read. A provider that does not answer in time returns HTTP 500 with `errorCode`
+`provider_error` and `data.status` 504. A minority of providers ship a hand-written proxy that keeps
+whatever budget it sets for itself, and most of those set none. Use the provider's asynchronous job
+endpoints for work that legitimately takes longer.
+
 Deployment and runtime proxy access is controlled by `OOMOL_CONNECT_ALLOWED_PROXIES` and
 `OOMOL_CONNECT_BLOCKED_PROXIES`; Action policy does not affect it. Persistent runtime tokens add an
 independent `allowedProxies` grant that can only narrow those rules. The requested provider must be

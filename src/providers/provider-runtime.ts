@@ -560,30 +560,41 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
       }
 
-      const init: RequestInit = {
-        method: proxyInput.method,
-        headers,
-        signal: context.signal,
-      };
-      if (proxyInput.body !== undefined) {
-        init.body = typeof proxyInput.body === "string" ? proxyInput.body : JSON.stringify(proxyInput.body);
-        if (!headers.has("content-type") && typeof proxyInput.body !== "string") {
-          headers.set("content-type", "application/json");
+      const timeout = createProviderTimeout(context.signal);
+      try {
+        const init: RequestInit = {
+          method: proxyInput.method,
+          headers,
+          signal: timeout.signal,
+        };
+        if (proxyInput.body !== undefined) {
+          init.body = typeof proxyInput.body === "string" ? proxyInput.body : JSON.stringify(proxyInput.body);
+          if (!headers.has("content-type") && typeof proxyInput.body !== "string") {
+            headers.set("content-type", "application/json");
+          }
         }
-      }
 
-      const response = await egressFetch(url, init);
-      if (!response.ok) {
-        throw new ProviderRequestError(
-          response.status,
-          await readProviderProxyErrorMessage(response, `provider request failed with HTTP ${response.status}`),
-        );
-      }
+        const response = await egressFetch(url, init);
+        if (!response.ok) {
+          throw new ProviderRequestError(
+            response.status,
+            await readProviderProxyErrorMessage(response, `provider request failed with HTTP ${response.status}`),
+          );
+        }
 
-      return {
-        ok: true,
-        response: await readProviderProxyResponse(response),
-      };
+        return {
+          ok: true,
+          response: await readProviderProxyResponse(response),
+        };
+      } catch (error) {
+        // Only the local budget becomes the shared 504 timeout; a caller abort stays an abort.
+        if (error instanceof ProviderRequestError || !timeout.didTimeout()) {
+          throw error;
+        }
+        throw new ProviderRequestError(504, `${input.service} request timed out`);
+      } finally {
+        timeout.cleanup();
+      }
     } catch (error) {
       return toProviderProxyError(error, "provider request failed");
     }
