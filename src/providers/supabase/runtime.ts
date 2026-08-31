@@ -16,7 +16,12 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
-import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+  readTransitFileInput,
+} from "../provider-runtime.ts";
 import { supabaseProviderScopes } from "./scopes.ts";
 
 const supabaseApiBaseUrl = "https://api.supabase.com/v1";
@@ -118,6 +123,9 @@ export const supabaseActionHandlers: ProviderActionHandlers<"supabase", Supabase
   },
   download_storage_object(input, context) {
     return supabaseDownloadStorageObject(input, context);
+  },
+  upload_storage_object(input, context) {
+    return supabaseUploadStorageObject(input, context);
   },
   list_edge_functions(input, context) {
     return supabaseListEdgeFunctions(input, context);
@@ -606,6 +614,74 @@ async function supabaseDownloadStorageObject(
     mimeType,
     sizeBytes: file.sizeBytes,
     file,
+  };
+}
+
+async function supabaseUploadStorageObject(
+  input: SupabaseActionInput,
+  context: BearerProviderContext,
+): Promise<unknown> {
+  if (!context.transitFiles) {
+    throw new ProviderRequestError(400, "Transit file storage is not enabled.");
+  }
+  const projectRef = readStorageProjectRef(input);
+  const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
+  const objectPath = requiredRawString(input.objectPath, "objectPath", providerInputError);
+  if (objectPath.length === 0) {
+    throw providerInputError("objectPath must not be empty");
+  }
+  if (objectPath.startsWith("/")) {
+    throw providerInputError("objectPath must not start with a slash");
+  }
+  if (objectPath.split("/").some((segment) => segment === "." || segment === "..")) {
+    throw providerInputError("objectPath must not contain . or .. path segments");
+  }
+  const source = await readTransitFileInput(input.file, context);
+  const mime = optionalString(input.contentType) ?? source.mimeType ?? "application/octet-stream";
+  const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
+  const upsert = input.upsert === false ? false : true;
+  const method: "PUT" | "POST" = upsert ? "POST" : "POST";
+  const url = new URL(
+    `https://${projectRef}${supabaseProjectHostSuffix}/storage/v1/object/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
+  );
+  const headers: Record<string, string> = {
+    apikey: storageKey.value,
+    "content-type": mime,
+    "user-agent": providerUserAgent,
+  };
+  if (storageKey.authorizationBearer) {
+    headers.authorization = `Bearer ${storageKey.value}`;
+  }
+  if (upsert) {
+    headers["x-upsert"] = "true";
+  }
+  const cacheControl = optionalString(input.cacheControl);
+  if (cacheControl) {
+    headers["cache-control"] = cacheControl;
+  }
+  const body = new Uint8Array(await source.file.arrayBuffer());
+  const response = await context.fetcher(url, {
+    method,
+    headers,
+    body,
+    signal: context.signal,
+  });
+  if (!response.ok) {
+    const bytes = await readBoundedResponseBytes(response, {
+      maxBytes: 64 * 1024,
+      fieldName: "Supabase Storage upload error response",
+      createError: (message) => new ProviderRequestError(413, message),
+    });
+    throw createSupabaseError(response, parseSupabaseStorageError(bytes), "execute");
+  }
+  return {
+    bucketId,
+    objectPath,
+    fileId: `${bucketId}/${objectPath}`,
+    name: source.name,
+    mimeType: mime,
+    sizeBytes: source.sizeBytes,
+    etag: response.headers.get("etag") ?? null,
   };
 }
 

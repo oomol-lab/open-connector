@@ -269,6 +269,152 @@ describe("Supabase download_storage_object", () => {
   });
 });
 
+describe("Supabase upload_storage_object", () => {
+  it("uploads a transit file via secret key with PUT and etag", async () => {
+    const uploadBody = new Uint8Array([1, 2, 3]);
+    const file = new File([uploadBody], "hello.txt", { type: "text/plain" });
+    const requests = stubResponses([
+      Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
+      new Response(JSON.stringify({ Key: "documents/hello.txt" }), { headers: { etag: '"etag-up-1"' } }),
+    ]);
+    const { store } = createTransitFileStoreWithRead(1024, file);
+
+    const result = await executeUpload(
+      { projectRef, bucketId: "documents", objectPath: "hello.txt", file: { fileId: "transit-file-1" } },
+      store,
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        bucketId: "documents",
+        objectPath: "hello.txt",
+        fileId: "documents/hello.txt",
+        name: "hello.txt",
+        mimeType: "text/plain",
+        sizeBytes: uploadBody.length,
+        etag: '"etag-up-1"',
+      },
+    });
+    expect(requests).toHaveLength(2);
+    expect(requests[1]?.url.hostname).toBe(`${projectRef}.supabase.co`);
+    expect(requests[1]?.url.pathname).toBe("/storage/v1/object/documents/hello.txt");
+    expect(requests[1]?.apiKey).toBe("sb_secret_test");
+    expect(requests[1]?.authorization).toBeNull();
+  });
+
+  it("uses Authorization header for legacy service_role when explicitly selected", async () => {
+    const file = new File([new Uint8Array([1, 2])], "b.txt", { type: "application/octet-stream" });
+    const requests = stubResponses([
+      Response.json(
+        apiKeyRecord({ id: "service-role-1", name: "service_role", type: "legacy", api_key: "legacy-jwt" }),
+      ),
+      new Response("", { headers: { etag: '"etag-legacy"' } }),
+    ]);
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      {
+        projectRef,
+        bucketId: "documents",
+        objectPath: "b.txt",
+        file: { fileId: "transit-file-1" },
+        apiKeyId: "service-role-1",
+      },
+      store,
+    );
+    expect(result.ok).toBe(true);
+    expect(requests[1]?.apiKey).toBe("legacy-jwt");
+    expect(requests[1]?.authorization).toBe("Bearer legacy-jwt");
+  });
+
+  it("rejects dot segments before any egress", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      { projectRef, bucketId: "documents", objectPath: "a/../secret", file: { fileId: "transit-file-1" } },
+      store,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", message: "objectPath must not contain . or .. path segments" },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a projectRef that could change the Storage host", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      {
+        projectRef: "evil.example.com",
+        bucketId: "documents",
+        objectPath: "a.txt",
+        file: { fileId: "transit-file-1" },
+      },
+      store,
+    );
+    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("returns clear error before egress when transit storage is unavailable", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const result = await executeUpload({
+      projectRef,
+      bucketId: "documents",
+      objectPath: "a.txt",
+      file: { fileId: "transit-file-1" },
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", message: "Transit file storage is not enabled." },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("preserves boundary whitespace in objectPath", async () => {
+    const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
+    const requests = stubResponses([
+      Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
+      new Response("", { headers: {} }),
+    ]);
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      { projectRef, bucketId: "documents", objectPath: " reports/a.txt ", file: { fileId: "transit-file-1" } },
+      store,
+    );
+    expect(result.ok).toBe(true);
+    expect(requests[1]?.url.pathname).toBe("/storage/v1/object/documents/%20reports/a.txt%20");
+  });
+
+  it("sends cache-control and content-type overrides", async () => {
+    const file = new File([new Uint8Array([1])], "a.txt", { type: "text/plain" });
+    const requests = stubResponses([
+      Response.json([apiKeyRecord({ id: "secret-1", name: "default", type: "secret", api_key: "sb_secret_test" })]),
+      new Response("", { headers: { etag: '"etag-2"' } }),
+    ]);
+    const { store } = createTransitFileStoreWithRead(1024, file);
+    const result = await executeUpload(
+      {
+        projectRef,
+        bucketId: "documents",
+        objectPath: "a.txt",
+        file: { fileId: "transit-file-1" },
+        contentType: "text/csv",
+        cacheControl: "3600",
+      },
+      store,
+    );
+    expect(result.ok).toBe(true);
+    expect(requests[1]?.url.pathname).toBe("/storage/v1/object/documents/a.txt");
+  });
+});
+
 function apiKeyRecord(input: {
   id: string;
   name: string;
@@ -300,6 +446,35 @@ function stubResponses(responses: Response[]): CapturedRequest[] {
   return requests;
 }
 
+function createTransitFileStoreWithRead(
+  maxBytes: number,
+  file: File,
+): {
+  store: TransitFileStore;
+  create: ReturnType<typeof vi.fn<TransitFileStore["create"]>>;
+} {
+  const create = vi.fn<TransitFileStore["create"]>(async (f) => ({
+    fileId: "transit-file-1",
+    downloadUrl: "http://localhost/api/files/transit-file-1",
+    sizeBytes: f.size,
+    name: f.name,
+    mimeType: f.type,
+  }));
+  return {
+    create,
+    store: {
+      maxBytes,
+      create,
+      async read() {
+        return { file, sizeBytes: file.size, name: file.name, mimeType: file.type };
+      },
+      async delete() {
+        return false;
+      },
+    },
+  };
+}
+
 function createTransitFileStore(maxBytes: number): {
   store: TransitFileStore;
   create: ReturnType<typeof vi.fn<TransitFileStore["create"]>>;
@@ -324,6 +499,24 @@ function createTransitFileStore(maxBytes: number): {
       },
     },
   };
+}
+
+async function executeUpload(input: Record<string, unknown>, transitFiles?: TransitFileStore) {
+  const context: ExecutionContext = {
+    getCredential: async (service) => {
+      expect(service).toBe("supabase");
+      return oauthCredential;
+    },
+  };
+  if (transitFiles) {
+    context.transitFiles = transitFiles;
+  }
+  return executeAction(
+    provider.actions.find((action) => action.name === "upload_storage_object")!,
+    executors["supabase.upload_storage_object"],
+    input,
+    context,
+  );
 }
 
 async function executeDownload(input: Record<string, unknown>, transitFiles?: TransitFileStore) {
