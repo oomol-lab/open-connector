@@ -114,7 +114,7 @@ export const openweatherApiActionHandlers: ProviderActionHandlers<"openweather_a
     return executeGetStationMeasurements(input, context);
   },
   get_weather_triggers() {
-    throw new ProviderRequestError(410, retiredWeatherTriggersMessage);
+    throw new ProviderRequestError(400, retiredWeatherTriggersMessage);
   },
 };
 
