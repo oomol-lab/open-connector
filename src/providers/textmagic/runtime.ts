@@ -22,7 +22,6 @@ import {
 export const textmagicApiBaseUrl = "https://rest.textmagic.com/api/v2";
 
 const textmagicValidationPath = "/user";
-const textmagicRequestTimeoutMs = 30_000;
 
 export interface TextmagicActionContext {
   apiKey: string;
@@ -175,7 +174,7 @@ async function requestTextmagicJson(
     url.searchParams.set(name, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, textmagicRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {

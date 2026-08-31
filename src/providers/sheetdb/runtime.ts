@@ -189,7 +189,7 @@ async function deleteRows(input: Record<string, unknown>, context: SheetDbContex
 
 export async function requestSheetDb(input: SheetDbRequestInput): Promise<unknown> {
   const url = buildSheetDbUrl(input.apiId, input.path, input.query);
-  const timeout = createProviderTimeout(input.signal, 30_000);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

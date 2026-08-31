@@ -5,7 +5,6 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 export const referralheroApiBaseUrl = "https://app.referralhero.com/api/v2";
-const timeoutMs = 30_000;
 interface Spec {
   method: string;
   path: string;
@@ -117,7 +116,7 @@ async function request(spec: Spec, context: ApiKeyProviderContext, phase: "valid
   const url = new URL(`${referralheroApiBaseUrl}${spec.path}`);
   for (const [key, value] of Object.entries(spec.query ?? {}))
     if (value !== undefined) url.searchParams.set(key, String(value));
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: spec.method,

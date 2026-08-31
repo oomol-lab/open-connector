@@ -12,7 +12,6 @@ import {
 
 const contentstackContentDeliveryApiBaseUrl = "https://cdn.contentstack.io/v3";
 const contentstackContentDeliveryRequestBaseUrl = `${contentstackContentDeliveryApiBaseUrl}/`;
-const contentstackContentDeliveryDefaultTimeoutMs = 30_000;
 
 type ContentstackPhase = "validate" | "execute";
 
@@ -270,7 +269,7 @@ async function requestContentstackJson(input: {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, contentstackContentDeliveryDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildContentstackUrl(input.path, input.query, input.arrayQuery), {
       method: "GET",

@@ -116,7 +116,7 @@ async function request(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(signal, 30_000);
+  const timeout = createProviderTimeout(signal);
   try {
     const response = await fetcher(`${apiBaseUrl}${path}`, {
       method: "POST",

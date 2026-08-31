@@ -14,7 +14,6 @@ const service = "openfootball_worldcup";
 const openfootballRawBaseUrl = "https://raw.githubusercontent.com/openfootball/worldcup.json/master";
 const openfootballJsdelivrBaseUrl = "https://cdn.jsdelivr.net/gh/openfootball/worldcup.json@master";
 const openfootballEsmBaseUrl = "https://esm.sh/gh/openfootball/worldcup.json@master";
-const defaultRequestTimeoutMs = 30_000;
 
 type DatasetKind = "matches" | "groups" | "teams" | "stadiums" | "squads" | "qualiPlayoffs";
 
@@ -148,7 +147,7 @@ function buildDatasetUrls(season: number, kind: DatasetKind): string[] {
 }
 
 async function requestJson(url: string, context: OpenfootballWorldcupContext, label: string): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, defaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",

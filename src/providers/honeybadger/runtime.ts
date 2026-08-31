@@ -7,7 +7,6 @@ import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "
 export const defaultHoneybadgerApiBaseUrl = "https://api.honeybadger.io";
 export const honeybadgerValidationPath = "/v1/notices";
 
-const honeybadgerRequestTimeoutMs = 30_000;
 const allowedHoneybadgerApiHosts = new Set(["api.honeybadger.io", "eu-api.honeybadger.io"]);
 
 export interface HoneybadgerActionContext extends ApiKeyProviderContext {
@@ -261,7 +260,7 @@ async function requestHoneybadger(input: {
   contentType?: string | null;
   acceptedStatuses?: number[];
 }): Promise<HoneybadgerResponse> {
-  const timeout = createProviderTimeout(input.signal, honeybadgerRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const headers = new Headers();
   headers.set("accept", "application/json");
   headers.set("user-agent", providerUserAgent);

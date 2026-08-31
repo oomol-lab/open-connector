@@ -1,5 +1,4 @@
 const dataciteApiBaseUrl = "https://api.datacite.org";
-const dataciteRequestTimeoutMs = 30_000;
 
 type DatacitePhase = "validate" | "execute";
 
@@ -95,7 +94,7 @@ function buildListParams(input: Record<string, unknown>): Record<string, string 
 }
 
 async function requestDataciteJson(input: DataciteRequestInput) {
-  const timeoutHandle = createProviderTimeout(undefined, dataciteRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   const url = new URL(input.path, `${dataciteApiBaseUrl}/`);
   for (const [name, value] of Object.entries(input.params)) {
     if (value !== undefined) {

@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const defaultNamespace = "default";
-const grafanaDefaultRequestTimeoutMs = 30_000;
 const folderParentAnnotation = "grafana.app/folder";
 const grafanaDefaultApiVersion = "v1";
 const grafanaApiVersionCacheMaxEntries = 256;
@@ -414,7 +413,7 @@ async function grafanaRequestJson(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, grafanaDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: request.method,

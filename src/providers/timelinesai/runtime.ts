@@ -6,7 +6,6 @@ import { compactObject, optionalBoolean, optionalRecord, optionalString } from "
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const timelinesAiApiBaseUrl = "https://app.timelines.ai/integrations/api";
-const timelinesAiRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 export const timelinesAiActionHandlers: ProviderActionHandlers<
@@ -168,7 +167,7 @@ async function request(input: RequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, timelinesAiRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

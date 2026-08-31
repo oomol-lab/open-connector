@@ -23,8 +23,6 @@ import {
 
 export const envoyApiBaseUrl = "https://api.envoy.com";
 
-const envoyDefaultRequestTimeoutMs = 30_000;
-
 interface EnvoyRequestInput {
   path: string;
   apiKey: string;
@@ -242,7 +240,7 @@ async function requestEnvoy(input: EnvoyRequestInput): Promise<Record<string, un
   let response: Response;
   let rawBody: string;
   input.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(input.signal, envoyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     response = await input.fetcher(url, {
       method: "GET",

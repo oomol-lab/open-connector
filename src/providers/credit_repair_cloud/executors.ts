@@ -22,7 +22,6 @@ import {
 const service = "credit_repair_cloud";
 const creditRepairCloudApiBaseUrl = "https://app.creditrepaircloud.com/api";
 const validationRecordId = "MQ==";
-const creditRepairCloudRequestTimeoutMs = 30_000;
 const creditRepairCloudMaxResponseBytes = 10 * 1024 * 1024;
 
 interface CreditRepairCloudActionSpec {
@@ -207,7 +206,7 @@ async function requestCreditRepairCloud(context: CreditRepairCloudRequestContext
   const body = new URLSearchParams();
   body.set("xmlData", xmlData);
 
-  const timeout = createProviderTimeout(context.signal, creditRepairCloudRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "POST",

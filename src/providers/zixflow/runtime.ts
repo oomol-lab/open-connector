@@ -15,7 +15,6 @@ import {
 export const zixflowApiBaseUrl = "https://api.zixflow.com/api/v1";
 
 const zixflowValidationPath = "/workspace-members";
-const zixflowDefaultRequestTimeoutMs = 30_000;
 
 type ZixflowRequestPhase = "validate" | "execute";
 type ZixflowActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -243,7 +242,7 @@ async function requestZixflowRaw(input: ZixflowRequestOptions): Promise<Record<s
 }
 
 async function fetchZixflow(input: ZixflowRequestOptions): Promise<Response> {
-  const timeout = createProviderTimeout(input.context.signal, zixflowDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

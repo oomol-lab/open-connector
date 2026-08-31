@@ -151,6 +151,27 @@ describe("provider action contracts", () => {
 });
 
 describe("createProviderTimeout", () => {
+  it("times out after 30 seconds unless a budget is passed", () => {
+    vi.useFakeTimers();
+    try {
+      const timeout = createProviderTimeout(undefined);
+      vi.advanceTimersByTime(29_999);
+      expect(timeout.didTimeout()).toBe(false);
+      expect(timeout.signal.aborted).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(timeout.didTimeout()).toBe(true);
+      expect(timeout.signal.aborted).toBe(true);
+      timeout.cleanup();
+
+      const custom = createProviderTimeout(undefined, 5);
+      vi.advanceTimersByTime(5);
+      expect(custom.didTimeout()).toBe(true);
+      custom.cleanup();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("inherits an already-aborted parent signal", () => {
     const parent = new AbortController();
     parent.abort(new Error("cancelled"));

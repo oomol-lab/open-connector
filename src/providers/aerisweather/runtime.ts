@@ -23,8 +23,6 @@ import {
 
 export const aerisweatherApiBaseUrl = "https://data.api.xweather.com";
 
-const aerisweatherRequestTimeoutMs = 30_000;
-
 type AerisWeatherRequestPhase = "validate" | "execute";
 type AerisWeatherQueryValue = string | number | undefined;
 
@@ -138,7 +136,7 @@ async function requestAerisWeatherJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, aerisweatherRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       headers: {

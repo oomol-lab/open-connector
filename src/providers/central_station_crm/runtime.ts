@@ -16,7 +16,6 @@ const centralStationCrmHostSuffix = ".centralstationcrm.net";
 const centralStationCrmApiPath = "/api";
 const centralStationCrmValidationEndpoint = "/check_connection";
 const centralStationCrmUserEndpoint = "/user";
-const centralStationCrmDefaultRequestTimeoutMs = 30_000;
 
 type CentralStationCrmPhase = "validate" | "execute";
 type CentralStationCrmEntity = "person" | "company" | "deal";
@@ -408,7 +407,7 @@ async function deleteRecord(input: { input: CentralStationCrmActionInput; fetche
 }
 
 async function requestCentralStationCrmJson(input: CentralStationCrmRequestInput) {
-  const timeoutHandle = createProviderTimeout(input.signal, centralStationCrmDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildCentralStationCrmUrl(input.apiBaseUrl, input.path, input.query), {

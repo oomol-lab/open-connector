@@ -7,7 +7,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 export const dropcontactApiBaseUrl = "https://api.dropcontact.com";
 
-const requestTimeoutMs = 30_000;
 const textContactFields = [
   "email",
   "first_name",
@@ -99,7 +98,7 @@ async function requestDropcontactJson(
     url.searchParams.set(name, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: input.method,

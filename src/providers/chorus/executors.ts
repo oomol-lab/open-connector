@@ -14,7 +14,6 @@ import {
 const service = "chorus";
 const chorusApiBaseUrl = "https://chorus.ai";
 const chorusValidationPath = "/api/v1/users/me";
-const chorusDefaultRequestTimeoutMs = 30_000;
 
 type ChorusPhase = "validate" | "execute";
 type ChorusAcceptHeader = "application/json" | "application/vnd.api+json";
@@ -160,7 +159,7 @@ async function requestChorusJson(input: {
   context: ChorusContext;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, chorusDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildChorusUrl(input.path, input.query), {

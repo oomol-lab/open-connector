@@ -25,7 +25,6 @@ import {
 
 const hotjarApiBaseUrl = "https://api.hotjar.io";
 const hotjarTokenUrl = `${hotjarApiBaseUrl}/v1/oauth/token`;
-const hotjarRequestTimeoutMs = 30_000;
 const hotjarMaxResponseBytes = 10 * 1024 * 1024;
 const hotjarFetch = createProviderFetch({ skipDnsValidation: true });
 
@@ -287,7 +286,7 @@ async function fetchHotjarResponse(input: {
   operation: string;
   signal?: AbortSignal;
 }) {
-  const timeout = createProviderTimeout(input.signal, hotjarRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     return await input.fetcher(input.url, { ...input.init, signal: timeout.signal });
   } catch (error) {

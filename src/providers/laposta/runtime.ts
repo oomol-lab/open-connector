@@ -18,8 +18,6 @@ type LapostaActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 export const lapostaApiBaseUrl = "https://api.laposta.nl";
 
-const lapostaDefaultRequestTimeoutMs = 30_000;
-
 export const lapostaActionHandlers: ProviderActionHandlers<"laposta", LapostaActionHandler> = {
   list_lists(_input, context) {
     return listResources("list", context);
@@ -220,7 +218,7 @@ async function requestLapostaJson(
   }
 
   input.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(input.signal, lapostaDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

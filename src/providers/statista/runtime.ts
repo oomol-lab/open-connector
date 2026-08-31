@@ -13,7 +13,6 @@ import {
 export const statistaApiBaseUrl = "https://api.statista.ai";
 
 const statistaValidationPath = "/v1/search/statistics";
-const statistaDefaultTimeoutMs = 30_000;
 
 type StatistaMode = "validate" | "execute";
 type StatistaQuery = Record<string, string | undefined>;
@@ -120,7 +119,7 @@ async function requestStatistaJson(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, statistaDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url, {

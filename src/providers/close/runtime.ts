@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const closeApiBaseUrl = "https://api.close.com/api/v1";
-export const closeDefaultRequestTimeoutMs = 30_000;
 
 type CloseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type CloseQueryValue = string | number | undefined;
@@ -387,7 +386,7 @@ async function closeRequest(
     url.searchParams.set(key, String(value));
   }
 
-  const timeout = createProviderTimeout(signal, closeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   let response: Response;
   try {
     response = await fetcher(url, {

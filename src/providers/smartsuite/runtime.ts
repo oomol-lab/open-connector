@@ -10,7 +10,6 @@ interface ApiKeyProviderActionInput {
 }
 
 export const smartsuiteApiBaseUrl = "https://app.smartsuite.com/api/v1";
-const smartsuiteRequestTimeoutMs = 30_000;
 
 interface SmartsuiteActionInput extends ApiKeyProviderActionInput {
   actionName: string;
@@ -158,7 +157,7 @@ async function requestSmartsuite(input: SmartsuiteRequestInput) {
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(undefined, smartsuiteRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

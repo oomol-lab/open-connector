@@ -29,7 +29,6 @@ interface RequestInput {
 
 export const snykApiBaseUrl = "https://api.snyk.io/rest";
 const apiVersion = "2024-10-15";
-const timeoutMs = 30_000;
 
 export const snykActionHandlers: ProviderActionHandlers<"snyk", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async get_self(_input, context) {
@@ -174,7 +173,7 @@ export async function validateSnykCredential(
 }
 
 async function requestJson(input: RequestInput): Promise<SnykResponse> {
-  const timeout = createProviderTimeout(input.context.signal, timeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const url = buildUrl(input.path, input.query, input.commaArrays);
     const response = await input.context.fetcher(url, {

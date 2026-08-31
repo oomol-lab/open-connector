@@ -23,7 +23,6 @@ import {
 
 export const castingwordsApiBaseUrl = "https://castingwords.com/store/API4";
 
-const castingwordsRequestTimeoutMs = 30_000;
 const castingwordsRunningStatuses = new Set([
   "Audio Processing",
   "Awaiting Edit",
@@ -177,7 +176,7 @@ async function requestCastingwords(input: {
         })
       : undefined;
 
-  const timeout = createProviderTimeout(input.context.signal, castingwordsRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   try {
     response = await input.context.fetcher(url, {

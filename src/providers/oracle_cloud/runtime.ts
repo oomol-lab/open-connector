@@ -23,7 +23,6 @@ import {
 import { oracleInstanceActions, oracleInstanceAgentMaxWaitSeconds } from "./actions.ts";
 import { parseOracleApiPrivateKey, signOracleApiRequest } from "./request-signer.ts";
 
-const requestTimeoutMs = 30_000;
 const commandWaitMs = oracleInstanceAgentMaxWaitSeconds * 1_000;
 const defaultRealm = "oc1";
 
@@ -623,7 +622,7 @@ export async function requestOracle(input: OracleRequestInput): Promise<OracleRe
   const body = input.body === undefined ? undefined : JSON.stringify(input.body);
   const headers = signOracleApiRequest(input.context, { method, url, body });
   headers.set("user-agent", providerUserAgent);
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   let response: Response;
   let text: string;

@@ -23,7 +23,6 @@ import {
 
 const service = "gosquared";
 const gosquaredApiBaseUrl = "https://api.gosquared.com";
-const gosquaredDefaultRequestTimeoutMs = 30_000;
 const gosquaredTokenInfoPath = "/auth/v1/tokeninfo";
 
 interface GosquaredActionContext {
@@ -180,7 +179,7 @@ async function requestGosquaredReport(
 }
 
 async function requestGosquaredJson(options: GosquaredRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(options.signal, gosquaredDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
 
   try {
     const response = await options.fetcher(buildGosquaredUrl(options), {

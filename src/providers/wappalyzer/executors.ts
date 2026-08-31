@@ -13,7 +13,6 @@ import {
 
 const service = "wappalyzer";
 const wappalyzerApiBaseUrl = "https://api.wappalyzer.com/v2/";
-const wappalyzerDefaultTimeoutMs = 30_000;
 
 interface WappalyzerJsonResponse {
   payload: unknown;
@@ -156,7 +155,7 @@ async function requestWappalyzerJson(input: {
   signal?: AbortSignal;
   query?: Record<string, string | undefined>;
 }): Promise<WappalyzerJsonResponse> {
-  const timeout = createProviderTimeout(input.signal, wappalyzerDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildWappalyzerUrl(input.path, input.query), {
       method: "GET",

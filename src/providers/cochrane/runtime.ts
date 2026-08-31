@@ -4,8 +4,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 const cochraneApiBaseUrl = "https://archie.cochrane.org";
 
-const requestTimeoutMs = 30_000;
-
 interface CochraneCredential {
   authMethod: "basic" | "bearer";
   username?: string;
@@ -141,7 +139,7 @@ async function requestCochraneJson(input: CochraneRequestInput) {
 }
 
 async function requestCochrane(input: CochraneRequestInput) {
-  const timeoutHandle = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   const headers = new Headers({
     accept: input.phase == "validate" ? "application/xml;charset=utf-8" : "application/json",
     "user-agent": providerUserAgent,

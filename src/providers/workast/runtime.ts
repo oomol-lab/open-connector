@@ -12,7 +12,6 @@ import {
 
 export const workastApiBaseUrl = "https://api.todobot.io";
 
-const workastRequestTimeoutMs = 30_000;
 const taskWriteKeys = ["text", "description", "startDate", "dueDate", "dueDateTimezone", "dueDateTime"] as const;
 
 type WorkastRequestPhase = "validate" | "execute";
@@ -180,7 +179,7 @@ async function getTask(
 }
 
 async function requestWorkastJson(options: WorkastRequestOptions) {
-  const timeout = createProviderTimeout(options.signal, workastRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   const url = new URL(`${workastApiBaseUrl}${options.path}`);
   appendQuery(url, options.query);
   const headers: Record<string, string> = {

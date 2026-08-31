@@ -17,7 +17,6 @@ import {
 
 const service = "api_void";
 const apiVoidApiBaseUrl = "https://api.apivoid.com";
-const apiVoidRequestTimeoutMs = 30_000;
 
 type ApiVoidRequestPhase = "validate" | "execute";
 
@@ -155,7 +154,7 @@ function requestApiVoidForAction(
 }
 
 async function requestApiVoid(input: ApiVoidRequestInput): Promise<ApiVoidActionOutput> {
-  const timeout = createProviderTimeout(input.context.signal, apiVoidRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   let payload: unknown;
   try {

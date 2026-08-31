@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const benzingaApiBaseUrl = "https://api.benzinga.com";
-const benzingaDefaultRequestTimeoutMs = 30_000;
 
 type BenzingaPhase = "validate" | "execute";
 type BenzingaContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -116,7 +115,7 @@ async function requestBenzingaJson(input: {
   params: Record<string, string | undefined>;
   phase: BenzingaPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, benzingaDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildBenzingaUrl(input.path, input.context.apiKey, input.params), {

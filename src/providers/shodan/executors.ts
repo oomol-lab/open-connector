@@ -13,7 +13,6 @@ import {
 
 const service = "shodan";
 const shodanApiBaseUrl = "https://api.shodan.io";
-const shodanDefaultRequestTimeoutMs = 30_000;
 const validationEndpoint = "/api-info";
 
 type ShodanPhase = "validate" | "execute";
@@ -134,7 +133,7 @@ async function requestShodanJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   phase: ShodanPhase,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, shodanDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildShodanUrl(input, context.apiKey), {
       method: "GET",

@@ -15,7 +15,6 @@ import {
 
 const service = "coinmarketcal";
 const coinmarketcalApiBaseUrl = "https://developers.coinmarketcal.com/v1";
-const requestTimeoutMs = 30_000;
 
 type CoinmarketcalActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -98,7 +97,7 @@ async function requestCoinmarketcalJson(
   context: ApiKeyProviderContext,
   mode: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildCoinmarketcalUrl(path, query), {
       method: "GET",

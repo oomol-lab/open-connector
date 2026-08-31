@@ -16,7 +16,6 @@ import {
 export const postalyticsApiBaseUrl = "https://api.postalytics.com/api/v1";
 
 const postalyticsValidationPath = "/account/me";
-const postalyticsRequestTimeoutMs = 30_000;
 
 type PostalyticsRequestPhase = "validate" | "execute";
 
@@ -171,7 +170,7 @@ async function requestPostalyticsJson(input: PostalyticsRequestInput): Promise<u
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, postalyticsRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

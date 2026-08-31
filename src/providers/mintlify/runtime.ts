@@ -2,7 +2,6 @@ import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const mintlifyApiBaseUrl = "https://api.mintlify.com/v1";
-const mintlifyDefaultRequestTimeoutMs = 30_000;
 type MintlifyRequestPhase = "validate" | "execute";
 
 export async function validateMintlifyCredential(
@@ -69,7 +68,7 @@ async function requestMintlifyJson(input: {
   fetcher: typeof fetch;
   phase: MintlifyRequestPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, mintlifyDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(new URL(`${mintlifyApiBaseUrl}${input.path}`), {
       method: input.method,

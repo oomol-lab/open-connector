@@ -13,7 +13,6 @@ import {
 } from "../provider-runtime.ts";
 
 const webOfScienceApiBaseUrl = "https://api.clarivate.com/apis/wos-starter/v1";
-const webOfScienceRequestTimeoutMs = 30_000;
 
 type WebOfSciencePhase = "validate" | "execute";
 type WebOfScienceContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -128,7 +127,7 @@ async function requestWebOfScienceJson(
   input: WebOfScienceRequest,
   context: WebOfScienceContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, webOfScienceRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildWebOfScienceUrl(input.path, input.query), {
       method: "GET",

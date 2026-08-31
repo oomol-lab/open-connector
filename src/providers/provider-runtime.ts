@@ -318,6 +318,7 @@ const blockedProxyRequestHeaders = new Set([
 const defaultProviderProxyMaxResponseBytes = 20 * 1024 * 1024;
 const defaultProviderJsonMaxResponseBytes = 20 * 1024 * 1024;
 const defaultProviderErrorMaxResponseBytes = 64 * 1024;
+const defaultProviderRequestTimeoutMs = 30_000;
 
 export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, queryInput?: unknown): URL {
   const endpoint = normalizeProviderProxyEndpoint(endpointInput);
@@ -630,9 +631,14 @@ async function applyProviderProxyAuth(
 
 /**
  * Return an abort signal that fires when either the parent signal aborts or the
- * provider-local timeout expires.
+ * provider-local timeout expires. The timeout defaults to 30 seconds, the value
+ * almost every provider request uses; pass `timeoutMs` only for endpoints that
+ * genuinely need a different budget.
  */
-export function createProviderTimeout(parentSignal: AbortSignal | undefined, timeoutMs: number): ProviderTimeout {
+export function createProviderTimeout(
+  parentSignal: AbortSignal | undefined,
+  timeoutMs: number = defaultProviderRequestTimeoutMs,
+): ProviderTimeout {
   const controller = new AbortController();
   let timeoutReached = false;
   const timeoutId = setTimeout(() => {

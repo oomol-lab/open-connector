@@ -14,7 +14,6 @@ import {
 
 const service = "chargeblast";
 const chargeblastApiBaseUrl = "https://api.chargeblast.com";
-const defaultRequestTimeoutMs = 30_000;
 const maxNonJsonErrorMessageLength = 300;
 const chargeblastMaxResponseBytes = 10 * 1024 * 1024;
 
@@ -211,7 +210,7 @@ async function requestChargeblastJson(
   context: ApiKeyProviderContext,
   phase: ChargeblastPhase,
 ) {
-  const timeoutHandle = createProviderTimeout(context.signal, defaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(new URL(path, chargeblastApiBaseUrl), {

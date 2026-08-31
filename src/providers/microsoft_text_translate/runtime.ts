@@ -8,7 +8,6 @@ import {
 
 export const microsoftTextTranslateApiBaseUrl = "https://api.cognitive.microsofttranslator.com";
 export const microsoftTextTranslateApiVersion = "3.0";
-const requestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 
@@ -151,7 +150,7 @@ export async function validateMicrosoftTextTranslateCredential(context: Microsof
 }
 
 async function requestMicrosoftTextTranslate(input: MicrosoftTextTranslateRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const url = new URL(input.path, microsoftTextTranslateApiBaseUrl);
     url.searchParams.set("api-version", microsoftTextTranslateApiVersion);

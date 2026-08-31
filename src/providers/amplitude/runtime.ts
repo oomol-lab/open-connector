@@ -15,7 +15,6 @@ export const amplitudeApiBaseUrl = "https://amplitude.com";
 export const amplitudeEuApiBaseUrl = "https://analytics.eu.amplitude.com";
 
 const amplitudeValidationPath = "/api/2/events/list";
-const amplitudeDefaultTimeoutMs = 30_000;
 
 export interface AmplitudeActionContext {
   apiKeyId: string;
@@ -166,7 +165,7 @@ async function requestAmplitudeJson(input: AmplitudeRequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, amplitudeDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url.toString(), {

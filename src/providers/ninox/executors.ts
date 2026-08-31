@@ -14,7 +14,6 @@ import {
 export const ninoxApiBaseUrl = "https://api.ninox.com/v1";
 
 const service = "ninox";
-const ninoxDefaultRequestTimeoutMs = 30_000;
 const ninoxValidationPath = "/teams";
 
 type NinoxPhase = "validate" | "execute";
@@ -319,7 +318,7 @@ async function deleteRecords(input: Record<string, unknown>, context: ApiKeyProv
 }
 
 async function requestNinoxJson(input: NinoxRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, ninoxDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildNinoxUrl(input.path, input.query), {

@@ -13,8 +13,6 @@ import {
 export const optimorouteApiBaseUrl = "https://api.optimoroute.com/v1";
 export const optimorouteValidationPath = "/get_orders";
 
-const optimorouteDefaultRequestTimeoutMs = 30_000;
-
 type OptimoroutePhase = "validate" | "execute";
 type OptimorouteActionContext = ApiKeyProviderContext;
 type OptimorouteActionHandler = (input: Record<string, unknown>, context: OptimorouteActionContext) => Promise<unknown>;
@@ -133,7 +131,7 @@ async function optimorouteRequest(
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
   const url = new URL(normalizedPath, `${optimorouteApiBaseUrl}/`);
   url.searchParams.set("key", context.apiKey);
-  const timeout = createProviderTimeout(context.signal, optimorouteDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(url.toString(), {

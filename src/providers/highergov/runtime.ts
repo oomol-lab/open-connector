@@ -15,8 +15,6 @@ export const highergovApiBaseUrl = "https://www.highergov.com/api-external/";
 
 type HighergovRequestPhase = "validate" | "execute";
 
-const highergovDefaultRequestTimeoutMs = 30_000;
-
 export const highergovActionHandlers: ProviderActionHandlers<
   "highergov",
   ProviderRuntimeHandler<ApiKeyProviderContext>
@@ -71,7 +69,7 @@ async function requestHighergovList(
   let response: Response;
   let payload: unknown;
   context.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(context.signal, highergovDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     response = await context.fetcher(url, {
       method: "GET",

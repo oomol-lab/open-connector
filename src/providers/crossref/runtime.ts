@@ -1,6 +1,5 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 const crossrefApiBaseUrl = "https://api.crossref.org/v1";
-const crossrefRequestTimeoutMs = 30_000;
 const crossrefMaxResponseBytes = 4 * 1024 * 1024;
 const crossrefCursorPrefix = "crossref_cursor_v1.";
 
@@ -281,7 +280,7 @@ async function requestCrossref(input: {
   apiKey?: string;
   phase?: "execute" | "validate";
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, crossrefRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const headers = new Headers({

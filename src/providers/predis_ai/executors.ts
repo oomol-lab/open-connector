@@ -17,7 +17,6 @@ const apiBaseUrl = "https://brain.predis.ai/predis_api/v1";
 const createContentPath = "/create_content/";
 const getPostsPath = "/get_posts/";
 const getTemplatesPath = "/get_templates/";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 const validationBrandId = "__oomol_validation_brand__";
 
@@ -145,7 +144,7 @@ async function requestPredisAi(input: PredisAiRequest): Promise<{ payload: unkno
   for (const [key, value] of input.query ?? []) {
     url.searchParams.append(key, value);
   }
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method,

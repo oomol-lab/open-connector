@@ -22,7 +22,6 @@ import {
 export const cartesApiBaseUrl = "https://cartes.io/api";
 
 const cartesRequestBaseUrl = `${cartesApiBaseUrl}/`;
-const cartesDefaultTimeoutMs = 30_000;
 
 type CartesActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 type CartesQueryValue = string | number | boolean | readonly (string | number)[] | undefined;
@@ -276,7 +275,7 @@ async function cartesRequest(
   appendQuery(url, options.query);
 
   const method = options.method ?? "GET";
-  const timeoutHandle = createProviderTimeout(context.signal, cartesDefaultTimeoutMs);
+  const timeoutHandle = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {

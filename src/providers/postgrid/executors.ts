@@ -21,7 +21,6 @@ import {
 
 const service = "postgrid";
 const postgridApiBaseUrl = "https://api.postgrid.com/print-mail/v1";
-const postgridDefaultRequestTimeoutMs = 30_000;
 
 type PostgridPhase = "validate" | "execute";
 type PostgridActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -173,7 +172,7 @@ async function requestPostgridJson(input: {
   context: ApiKeyProviderContext;
   phase: PostgridPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, postgridDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildPostgridUrl(input.path, input.params ?? {}), {

@@ -22,7 +22,6 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const oktaRequestTimeoutMs = 30_000;
 export const oktaApiTokenHelpUrl = "https://developer.okta.com/docs/guides/create-an-api-token/main/";
 const oktaLifecycleOperations: Set<string> = new Set([
   "activate",
@@ -380,7 +379,7 @@ async function requestOktaObject(
 }
 
 async function requestOkta(input: OktaRequestInput): Promise<OktaResponse> {
-  const timeout = createProviderTimeout(input.signal, oktaRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildOktaUrl(input), {
       method: input.method,

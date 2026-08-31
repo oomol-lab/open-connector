@@ -31,7 +31,6 @@ const service = "mongo_db_atlas_administration";
 const mongoDbAtlasAdministrationApiBaseUrl = "https://cloud.mongodb.com/api/atlas/v2";
 const atlasFetch = createProviderFetch({ skipDnsValidation: true });
 const atlasAcceptHeader = "application/vnd.atlas.2024-08-05+json";
-const defaultRequestTimeoutMs = 30_000;
 
 type AtlasPhase = "validate" | "execute";
 
@@ -230,7 +229,7 @@ async function requestAtlasJson(input: {
   phase: AtlasPhase;
   query?: Record<string, string | undefined>;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, defaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = buildAtlasUrl(input.path, input.query);
 
   try {

@@ -15,7 +15,6 @@ import {
 const service = "codegen";
 const codegenApiBaseUrl = "https://api.codegen.com";
 const codegenValidationPath = "/v1/users/me";
-const codegenDefaultRequestTimeoutMs = 30_000;
 
 type CodegenPhase = "validate" | "execute";
 type CodegenActionContext = ApiKeyProviderContext & {
@@ -222,7 +221,7 @@ async function requestCodegenJson(input: {
   phase: CodegenPhase;
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, codegenDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(new URL(input.path, codegenApiBaseUrl), {

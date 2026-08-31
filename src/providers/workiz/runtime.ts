@@ -6,7 +6,6 @@ import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requi
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const workizApiBaseUrl = "https://api.workiz.com/api/v1";
-const timeoutMs = 30_000;
 
 function setQuery(query: URLSearchParams, name: string, value: unknown) {
   if (value !== undefined) query.set(name, String(value));
@@ -55,7 +54,7 @@ export async function validateWorkizCredential(
   };
 }
 async function request(path: string, context: ApiKeyProviderContext, phase: "validate" | "execute") {
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(`${workizApiBaseUrl}/${encodeURIComponent(context.apiKey)}${path}`, {
       headers: { accept: "application/json", "user-agent": providerUserAgent },

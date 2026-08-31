@@ -20,7 +20,6 @@ import {
 
 export const giftUpApiBaseUrl = "https://api.giftup.app";
 
-const giftUpDefaultRequestTimeoutMs = 30_000;
 const giftUpValidationEndpoint = "/company";
 
 type GiftUpRequestPhase = "validate" | "execute";
@@ -370,7 +369,7 @@ async function requestGiftUpJson(input: {
   query?: Record<string, GiftUpQueryValue>;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, giftUpDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildGiftUpUrl(input.path, input.query), {

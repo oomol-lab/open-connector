@@ -20,7 +20,6 @@ import {
 } from "../provider-runtime.ts";
 
 const zerobounceApiBaseUrl = "https://api.zerobounce.net";
-const zerobounceDefaultRequestTimeoutMs = 30_000;
 
 type ZerobounceRequestPhase = "validate" | "execute";
 type ZerobounceActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -245,7 +244,7 @@ async function requestZerobounceJson(
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(input.signal, zerobounceDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: "GET",

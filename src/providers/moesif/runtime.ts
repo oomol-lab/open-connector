@@ -21,7 +21,6 @@ import {
 
 export const moesifApiBaseUrl = "https://api.moesif.com/v1";
 
-const moesifDefaultRequestTimeoutMs = 30_000;
 const defaultOrganizationId = "~";
 const defaultAppId = "~";
 const defaultTake = 20;
@@ -174,7 +173,7 @@ export async function validateMoesifCredential(
 }
 
 async function requestMoesifJson(input: MoesifRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, moesifDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(buildMoesifUrl(input.path, input.params, input.repeatedParams), {

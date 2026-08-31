@@ -9,7 +9,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const freshstatusApiBaseUrl = "https://public-api.freshstatus.io/api/v1/";
-const requestTimeoutMs = 30_000;
 
 interface FreshstatusCredential {
   apiKey: string;
@@ -208,7 +207,7 @@ function mapDisplayOptions(value: unknown, mapping: Record<string, string>): Rec
 }
 
 async function requestFreshstatus(input: FreshstatusRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(new URL(input.path, freshstatusApiBaseUrl), {
       method: input.method ?? "GET",

@@ -34,7 +34,6 @@ type OpenAiActionHandler = (input: Record<string, unknown>, context: OpenAiActio
 const service = "openai";
 const openaiApiBaseUrl = "https://api.openai.com/v1";
 const openaiAudioSourceMaxBytes = 25 * 1024 * 1024;
-const openaiAudioSourceFetchTimeoutMs = 30_000;
 
 export const openaiActionHandlers: ProviderActionHandlers<"openai", OpenAiActionHandler> = {
   list_models(_input, context) {
@@ -561,7 +560,7 @@ async function fetchPublicAudioUrl(
   context: Pick<OpenAiActionContext, "fetcher" | "signal">,
 ): Promise<Response> {
   assertPublicAudioUrl(url);
-  const timeout = createProviderTimeout(context.signal, openaiAudioSourceFetchTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url, { signal: timeout.signal });

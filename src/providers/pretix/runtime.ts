@@ -26,8 +26,6 @@ export interface PretixActionContext extends PretixCredential {
 
 type PretixActionHandler = (input: Record<string, unknown>, context: PretixActionContext) => Promise<unknown>;
 
-const requestTimeoutMs = 30_000;
-
 export const pretixActionHandlers: ProviderActionHandlers<"pretix", PretixActionHandler> = {
   async list_organizers(input, context) {
     return normalizePage(await requestPretix(context, "/api/v1/organizers/", pickPageQuery(input)), "organizers");
@@ -151,7 +149,7 @@ async function requestPretix(
 ): Promise<unknown> {
   const url = new URL(`${context.baseUrl}${path}`);
   setSearchParams(url, query);
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       headers: {

@@ -13,7 +13,6 @@ import {
 
 const databoxApiBaseUrl = "https://api.databox.com";
 const validateKeyPath = "/v1/auth/validate-key";
-const databoxDefaultRequestTimeoutMs = 30_000;
 
 type DataboxPhase = "validate" | "execute";
 type DataboxMethod = "GET" | "POST" | "DELETE";
@@ -122,7 +121,7 @@ async function databoxRequestJson(input: {
   phase: DataboxPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, databoxDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

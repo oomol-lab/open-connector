@@ -60,7 +60,7 @@ async function search(
   for (const [name, value] of Object.entries(input)) {
     if (value != null) url.searchParams.set(name, Array.isArray(value) ? value.join(",") : String(value));
   }
-  const timeout = createProviderTimeout(context.signal, 30_000);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },

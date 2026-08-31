@@ -14,7 +14,6 @@ import {
 
 const service = "quipteams";
 const quipteamsApiBaseUrl = "https://api.quipteams.com";
-const quipteamsRequestTimeoutMs = 30_000;
 
 type QuipteamsRequestPhase = "validate" | "execute";
 type QuipteamsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -134,7 +133,7 @@ async function requestQuipteamsJson(input: {
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: QuipteamsRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, quipteamsRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   let payload: unknown;
   try {

@@ -28,7 +28,6 @@ import {
 
 const service = "mymind";
 const myMindApiBaseUrl = "https://api.mymind.com";
-const requestTimeoutMs = 30_000;
 /** mymind recommends a five-minute lifetime for the JWT signed for each request. */
 const accessTokenTtlSeconds = 300;
 const markdownMediaType = "text/markdown";
@@ -532,7 +531,7 @@ async function send(
   context: MyMindContext,
   phase: RequestPhase,
 ): Promise<{ response: Response; timeout: ReturnType<typeof createProviderTimeout> }> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   const url = new URL(`${myMindApiBaseUrl}${path}`);
   for (const [name, value] of Object.entries(init.query ?? {})) {
     for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value]) {

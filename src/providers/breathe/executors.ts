@@ -13,7 +13,6 @@ import {
 
 const service = "breathe";
 const breatheApiBaseUrl = "https://api.breathehr.com/v1";
-const breatheDefaultRequestTimeoutMs = 30_000;
 
 type BreathePhase = "validate" | "execute";
 type BreatheActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -136,7 +135,7 @@ async function requestBreatheJson(input: {
   params: Record<string, string | undefined>;
   phase: BreathePhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, breatheDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   let payload: unknown;
 

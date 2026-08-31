@@ -21,7 +21,6 @@ import {
 
 const service = "nocrm_io";
 const nocrmValidationPath = "/api/v2/ping";
-const nocrmRequestTimeoutMs = 30_000;
 
 interface NocrmContext {
   apiKey: string;
@@ -217,7 +216,7 @@ interface NocrmRequestOptions {
 }
 
 async function requestNocrmJson(context: NocrmContext, input: NocrmRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, nocrmRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildNocrmUrl(context.baseUrl, input.path, input.query), {
       method: input.method ?? "GET",

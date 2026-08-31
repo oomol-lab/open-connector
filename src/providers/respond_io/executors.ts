@@ -15,7 +15,6 @@ import {
 
 const service = "respond_io";
 const apiBaseUrl = "https://api.respond.io/v2";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 const mutableContactFields = [
   "firstName",
@@ -220,7 +219,7 @@ async function requestRespondIoJson(input: RespondIoRequest): Promise<unknown> {
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method,

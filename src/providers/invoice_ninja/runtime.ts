@@ -232,7 +232,7 @@ async function requestJson(input: {
   notFound?: boolean;
   signal?: AbortSignal;
 }) {
-  const timeout = createProviderTimeout(input.signal, 30_000);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(`${input.apiBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));

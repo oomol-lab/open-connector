@@ -138,7 +138,7 @@ async function requestGrafanaCloud(
   url: URL,
   phase: GrafanaCloudRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, 30_000);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",

@@ -14,7 +14,6 @@ import {
 
 const service = "chatarmin";
 const chatarminApiBaseUrl = "https://api.chatarmin.com/api/public";
-const chatarminDefaultRequestTimeoutMs = 30_000;
 
 type ChatarminRequestPhase = "validate" | "execute";
 type ChatarminMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -277,7 +276,7 @@ async function chatarminRequestJson(
   context: ChatarminContext,
   phase: ChatarminRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, chatarminDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildChatarminUrl(input.path, input.query), {

@@ -13,7 +13,6 @@ import {
 
 const service = "calendarific";
 const calendarificApiBaseUrl = "https://calendarific.com/api/v2";
-const requestTimeoutMs = 30_000;
 
 type CalendarificPhase = "validate" | "execute";
 type CalendarificActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -115,7 +114,7 @@ async function requestCalendarificJson(input: {
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: CalendarificPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildCalendarificUrl(input.path, input.context.apiKey, input.params), {

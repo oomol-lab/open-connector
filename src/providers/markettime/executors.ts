@@ -20,7 +20,6 @@ import {
 
 const service = "markettime";
 const markettimeApiBaseUrl = "https://publicapi.markettime.com";
-const markettimeRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 
@@ -124,7 +123,7 @@ async function requestMarkettime(input: MarkettimeRequestInput): Promise<unknown
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value != null) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal, markettimeRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method ?? "GET",

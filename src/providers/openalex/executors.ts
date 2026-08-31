@@ -14,7 +14,6 @@ import {
 import { openalexApiBaseUrl, openalexEntityValues } from "./constants.ts";
 
 const service = "openalex";
-const openalexDefaultRequestTimeoutMs = 30_000;
 const openalexEntities = new Set(openalexEntityValues);
 
 type OpenAlexPhase = "validate" | "execute";
@@ -149,7 +148,7 @@ async function requestOpenAlexJson(input: {
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
   phase: OpenAlexPhase;
 }): Promise<Record<string, unknown>> {
-  const timeoutHandle = createProviderTimeout(input.context.signal, openalexDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildOpenAlexUrl(input.path, input.apiKey, input.params), {

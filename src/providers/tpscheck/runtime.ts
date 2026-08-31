@@ -19,7 +19,6 @@ import {
 } from "../provider-runtime.ts";
 
 const tpscheckApiBaseUrl = "https://api.tpscheck.uk";
-const tpscheckDefaultRequestTimeoutMs = 30_000;
 
 type TpscheckRequestPhase = "validate" | "execute";
 type TpscheckActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -99,7 +98,7 @@ async function requestTpscheckJson(
     if (value) url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, tpscheckDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {

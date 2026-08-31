@@ -24,7 +24,6 @@ import {
 } from "../provider-runtime.ts";
 
 const vultrApiBaseUrl = "https://api.vultr.com/v2";
-const requestTimeoutMs = 30_000;
 
 type VultrRequestPhase = "validate" | "execute";
 
@@ -274,7 +273,7 @@ async function vultrFetch(input: VultrRequestInput): Promise<Response> {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

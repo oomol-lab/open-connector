@@ -21,7 +21,6 @@ import {
 export const tremendousApiBaseUrl = "https://api.tremendous.com/api/v2";
 export const tremendousValidationPath = "/organizations";
 const service = "tremendous";
-const tremendousDefaultRequestTimeoutMs = 30_000;
 
 type TremendousPhase = "validate" | "execute";
 type TremendousActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -274,7 +273,7 @@ async function requestTremendousJson(input: {
   query?: URLSearchParams;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, tremendousDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildTremendousUrl(input), {

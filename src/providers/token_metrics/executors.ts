@@ -15,7 +15,6 @@ import {
 const service = "token_metrics";
 const tokenMetricsApiBaseUrl = "https://api.tokenmetrics.com/v2";
 const tokenMetricsValidationPath = "/tokens";
-const tokenMetricsRequestTimeoutMs = 30_000;
 
 type TokenMetricsPhase = "validate" | "execute";
 type TokenMetricsQueryValue = string | number | undefined;
@@ -119,7 +118,7 @@ async function tokenMetricsGet(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, tokenMetricsRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",

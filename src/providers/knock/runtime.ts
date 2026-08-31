@@ -14,8 +14,6 @@ import {
 
 export const knockApiBaseUrl = "https://api.knock.app/v1";
 
-const requestTimeoutMs = 30_000;
-
 type KnockRequestMode = "validate" | "execute";
 type KnockActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -155,7 +153,7 @@ async function requestKnockJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   mode: KnockRequestMode,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const headers = knockHeaders(context.apiKey);

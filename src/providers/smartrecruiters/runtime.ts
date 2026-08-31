@@ -12,8 +12,6 @@ import {
 
 export const smartrecruitersApiBaseUrl = "https://api.smartrecruiters.com";
 
-const smartrecruitersDefaultTimeoutMs = 30_000;
-
 type SmartRecruitersPhase = "validate" | "execute";
 type SmartRecruitersActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 type SmartRecruitersQuery = Record<string, string | readonly string[] | undefined>;
@@ -117,7 +115,7 @@ async function requestSmartRecruitersJson(
   input: SmartRecruitersRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, smartrecruitersDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildSmartRecruitersUrl(input.path, input.query), {
       method: input.method,

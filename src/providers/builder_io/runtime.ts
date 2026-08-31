@@ -12,7 +12,6 @@ import {
 export const builderIoWriteApiBaseUrl = "https://builder.io";
 
 const builderIoApiBaseUrl = "https://cdn.builder.io";
-const builderIoDefaultRequestTimeoutMs = 30_000;
 
 type BuilderIoActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -159,7 +158,7 @@ async function requestBuilderIoJson(input: {
     headers["content-type"] = "application/json";
   }
 
-  const timeout = createProviderTimeout(input.context.signal, builderIoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(input.url, {
       method: input.method,

@@ -15,7 +15,6 @@ import {
 const service = "klicktipp";
 const klicktippApiBaseUrl = "https://api.klicktipp.com";
 const klicktippDocsUrl = "https://developers.klicktipp.com/guides/listbuilding-api";
-const klicktippRequestTimeoutMs = 30_000;
 
 type KlicktippActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type KlicktippActionHandler = (input: Record<string, unknown>, context: KlicktippActionContext) => Promise<unknown>;
@@ -87,7 +86,7 @@ async function requestKlicktippJson(
   body: Record<string, unknown>,
   context: KlicktippActionContext,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, klicktippRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {

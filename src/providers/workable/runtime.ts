@@ -10,8 +10,6 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const workableDefaultRequestTimeoutMs = 30_000;
-
 interface WorkableContext {
   apiKey: string;
   subdomain: string;
@@ -161,7 +159,7 @@ async function requestWorkableJson(input: WorkableRequestInput): Promise<Record<
 }
 
 async function rawWorkableRequest(input: WorkableRequestInput): Promise<Response> {
-  const timeout = createProviderTimeout(input.signal, workableDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(`${buildWorkableApiBaseUrl(input.subdomain)}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));

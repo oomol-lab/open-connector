@@ -16,7 +16,6 @@ import {
 export const sellerSpriteApiBaseUrl = "https://api.sellersprite.com";
 
 const sellerSpriteValidationPath = "/v1/visits";
-const sellerSpriteRequestTimeoutMs = 30_000;
 const sellerSpriteMarketplaces = new Set(["US", "JP", "UK", "DE", "FR", "IT", "ES", "CA", "IN"]);
 const competitorStringFields: readonly string[] = ["brand", "sellerName", "nodeIdPath", "keyword"];
 const researchStringFields: readonly string[] = [
@@ -144,7 +143,7 @@ export function toSellerSpriteExecutionError(error: unknown): ExecutionResult {
 }
 
 async function requestSellerSpriteData(input: SellerSpriteRequest): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, sellerSpriteRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   let payload: unknown;
 

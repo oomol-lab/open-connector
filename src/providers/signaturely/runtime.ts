@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const signaturelyApiBaseUrl = "https://api.signaturely.com/api/v1/";
-const timeoutMs = 30_000;
 export const signaturelyActionHandlers: ProviderActionHandlers<
   "signaturely",
   ProviderRuntimeHandler<ApiKeyProviderContext>
@@ -91,7 +90,7 @@ async function request(
   method = "GET",
   body?: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(path, signaturelyApiBaseUrl), {
       method,

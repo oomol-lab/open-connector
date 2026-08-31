@@ -12,7 +12,6 @@ import {
 
 export const triggercmdApiBaseUrl = "https://www.triggercmd.com";
 
-const triggercmdRequestTimeoutMs = 30_000;
 const listCommandsPath = "/api/command/list";
 
 type TriggercmdRequestPhase = "validate" | "execute";
@@ -93,7 +92,7 @@ export async function validateTriggercmdCredential(
 }
 
 async function requestTriggercmdPayload(input: TriggercmdRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, triggercmdRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     const headers: Record<string, string> = {

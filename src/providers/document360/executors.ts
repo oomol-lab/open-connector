@@ -23,7 +23,6 @@ import {
 
 const service = "document360";
 const apiBaseUrl = "https://apihub.document360.io";
-const requestTimeoutMs = 30_000;
 
 interface Document360Context {
   apiKey: string;
@@ -155,7 +154,7 @@ async function requestJson(input: {
   phase: Phase;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildUrl(input.path, input.query), {
       method: "GET",

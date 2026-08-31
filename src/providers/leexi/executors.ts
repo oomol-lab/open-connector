@@ -37,7 +37,6 @@ const service = "leexi";
 const leexiApiBaseUrl = "https://public-api.leexi.ai/v1";
 const leexiRequestBaseUrl = "https://public-api.leexi.ai/v1/";
 const leexiValidationPath = "/users";
-const leexiDefaultTimeoutMs = 30_000;
 const leexiFetch = createProviderFetch({ skipDnsValidation: true });
 
 type LeexiRequestPhase = "validate" | "execute";
@@ -296,7 +295,7 @@ async function requestLeexiJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, leexiDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   try {
     response = await input.context.fetcher(url, {

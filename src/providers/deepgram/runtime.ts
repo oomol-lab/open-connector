@@ -18,7 +18,6 @@ import {
 } from "../provider-runtime.ts";
 
 const deepgramApiBaseUrl = "https://api.deepgram.com/v1";
-const deepgramDefaultRequestTimeoutMs = 30_000;
 
 type DeepgramPhase = "validate" | "execute";
 type DeepgramActionHandler = (
@@ -166,7 +165,7 @@ async function requestDeepgramJson(input: {
   fetcher: typeof fetch;
   phase: DeepgramPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, deepgramDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildDeepgramUrl(input), {

@@ -15,7 +15,6 @@ import {
 const service = "clari_copilot";
 const clariCopilotApiBaseUrl = "https://rest-api.copilot.clari.com";
 const clariCopilotValidationPath = "/users";
-const clariCopilotRequestTimeoutMs = 30_000;
 
 type ClariCopilotPhase = "validate" | "execute";
 
@@ -138,7 +137,7 @@ async function requestClariCopilotJson(input: {
   context: ClariCopilotContext;
   phase: ClariCopilotPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, clariCopilotRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildClariCopilotUrl(input.path, input.query), {

@@ -22,7 +22,6 @@ import {
 export const wacheteApiBaseUrl = "https://api.wachete.com";
 
 const wacheteLoginPath = "/thirdparty/v1/user/apilogin";
-const wacheteRequestTimeoutMs = 30_000;
 
 type WacheteRequestPhase = "validate" | "execute";
 type WacheteActionHandler = (input: Record<string, unknown>, context: WacheteContext) => Promise<unknown>;
@@ -159,7 +158,7 @@ export async function requestWacheteToken(input: {
   signal?: AbortSignal;
   phase: WacheteRequestPhase;
 }): Promise<string> {
-  const timeout = createProviderTimeout(input.signal, wacheteRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildWacheteUrl(wacheteLoginPath), {
       method: "POST",
@@ -208,7 +207,7 @@ async function requestWacheteJson(input: {
     signal: input.context.signal,
     phase: "execute",
   });
-  const timeout = createProviderTimeout(input.context.signal, wacheteRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const headers: Record<string, string> = {
     accept: "application/json",
     authorization: `Bearer ${token}`,

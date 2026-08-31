@@ -14,7 +14,6 @@ import {
 
 const service = "fullenrich";
 const fullenrichApiBaseUrl = "https://app.fullenrich.com/api/v2";
-const fullenrichRequestTimeoutMs = 30_000;
 
 type FullenrichPhase = "validate" | "execute";
 type FullenrichActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -145,7 +144,7 @@ function validateCompanyLookupInput(input: Record<string, unknown>): void {
 }
 
 async function requestFullenrichJson(options: FullenrichRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(options.context.signal, fullenrichRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

@@ -12,8 +12,6 @@ import {
 
 export const bitriseApiBaseUrl = "https://api.bitrise.io/v0.1";
 
-const bitriseDefaultRequestTimeoutMs = 30_000;
-
 interface BitriseActionHandler {
   (input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown>;
 }
@@ -189,7 +187,7 @@ async function bitriseFetch(input: BitriseRequestInput) {
     url.search = input.query.toString();
   }
 
-  const timeout = createProviderTimeout(input.signal, bitriseDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     return await input.fetcher(url, {
       method: input.method ?? "GET",

@@ -19,7 +19,6 @@ import {
 
 const service = "talenox";
 const talenoxApiBaseUrl = "https://api.talenox.com/api/v2";
-const talenoxDefaultRequestTimeoutMs = 30_000;
 const talenoxValidationPath = "/company_settings";
 
 interface TalenoxRequestOptions {
@@ -149,7 +148,7 @@ async function getTalenoxEntity(
 
 async function requestTalenoxJson(options: TalenoxRequestOptions): Promise<unknown> {
   const url = new URL(`${talenoxApiBaseUrl}${options.path}`);
-  const timeout = createProviderTimeout(options.signal, talenoxDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   try {
     const response = await options.fetcher(url, {
       method: "GET",

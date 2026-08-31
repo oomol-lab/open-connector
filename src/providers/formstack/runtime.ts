@@ -5,7 +5,6 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const formstackApiBaseUrl = "https://www.formstack.com/api/v2025";
-const requestTimeoutMs = 30_000;
 
 export type FormstackRequestPhase = "validate" | "execute" | "trigger";
 
@@ -228,7 +227,7 @@ async function requestFormstack(options: {
   for (const [key, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await options.fetcher(url, {
       method: options.method,

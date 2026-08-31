@@ -15,7 +15,6 @@ import {
 
 const service = "lob";
 const lobApiBaseUrl = "https://api.lob.com/v1";
-const lobDefaultRequestTimeoutMs = 30_000;
 
 type LobActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -169,7 +168,7 @@ async function requestLobJson(input: {
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal, lobDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method,

@@ -11,7 +11,6 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const benchmarkEmailDefaultRequestTimeoutMs = 30_000;
 const benchmarkEmailValidationMethod = "clientGetProfileDetails";
 
 type BenchmarkEmailRequestPhase = "validate" | "execute";
@@ -119,7 +118,7 @@ async function requestBenchmarkEmailJson(input: {
   phase: BenchmarkEmailRequestPhase;
   query?: Record<string, string | undefined>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, benchmarkEmailDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(

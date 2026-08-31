@@ -30,7 +30,6 @@ import {
 
 const service = "nocodb";
 const nocodbValidationPath = "/api/v1/auth/user/me";
-const nocodbRequestTimeoutMs = 30_000;
 
 interface NocodbContext {
   apiKey: string;
@@ -406,7 +405,7 @@ interface NocodbRequestOptions {
 }
 
 async function requestNocodbJson(context: NocodbContext, input: NocodbRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, nocodbRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildNocodbUrl(context.baseUrl, input.path, input.query), {
       method: input.method ?? "GET",

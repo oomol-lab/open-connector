@@ -5,7 +5,6 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const bitbucketRequestTimeoutMs = 30_000;
 const bitbucketMaxResponseBytes = 10 * 1024 * 1024;
 
 export async function fetchBitbucketText(
@@ -13,7 +12,7 @@ export async function fetchBitbucketText(
   input: string | URL,
   init: RequestInit,
 ): Promise<{ response: Response; text: string }> {
-  const timeout = createProviderTimeout(init.signal ?? undefined, bitbucketRequestTimeoutMs);
+  const timeout = createProviderTimeout(init.signal ?? undefined);
   try {
     const headers = new Headers(init.headers);
     headers.set("user-agent", providerUserAgent);

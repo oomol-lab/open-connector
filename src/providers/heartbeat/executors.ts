@@ -16,7 +16,6 @@ import {
 
 const service = "heartbeat";
 const apiBaseUrl = "https://api.heartbeat.chat/v0";
-const requestTimeoutMs = 30_000;
 const credentialHelpUrl = "https://help.heartbeat.chat/hc/en-us/articles/33257714954001-Heartbeat-API";
 
 type HeartbeatRequestPhase = "validate" | "execute";
@@ -158,7 +157,7 @@ async function requestHeartbeatJson(input: {
       url.searchParams.set(name, value);
     }
   }
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(url, {

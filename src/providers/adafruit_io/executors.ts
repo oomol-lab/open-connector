@@ -28,7 +28,6 @@ import {
 
 const service = "adafruit_io";
 const adafruitIoApiBaseUrl = "https://io.adafruit.com/api/v2";
-const adafruitIoDefaultRequestTimeoutMs = 30_000;
 
 type AdafruitIoPhase = "validate" | "execute";
 
@@ -253,7 +252,7 @@ async function requestAdafruitIoJson(input: {
   phase: AdafruitIoPhase;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, adafruitIoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const headers: Record<string, string> = {

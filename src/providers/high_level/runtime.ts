@@ -15,7 +15,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 const highLevelApiBaseUrl = "https://services.leadconnectorhq.com";
 const highLevelApiVersion = "2021-07-28";
-const highLevelDefaultRequestTimeoutMs = 30_000;
 
 type HighLevelRequestPhase = "validate" | "execute";
 
@@ -151,7 +150,7 @@ export function readHighLevelLocationId(value: unknown): string {
 }
 
 async function requestHighLevelJson(input: HighLevelRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, highLevelDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildHighLevelUrl(input.path), {
       method: input.method,

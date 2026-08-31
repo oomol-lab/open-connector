@@ -15,7 +15,6 @@ import {
 const service = "companycam";
 const companycamApiBaseUrl = "https://api.companycam.com/v2";
 const companycamApiOrigin = "https://api.companycam.com";
-const companycamDefaultRequestTimeoutMs = 30_000;
 
 type CompanycamRequestPhase = "validate" | "execute";
 type CompanycamContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -228,7 +227,7 @@ async function requestCompanycamJson(input: CompanycamRequest): Promise<unknown>
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, companycamDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

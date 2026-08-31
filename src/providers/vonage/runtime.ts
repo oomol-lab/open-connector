@@ -15,7 +15,6 @@ import {
 
 export const vonageApiBaseUrl = "https://rest.nexmo.com";
 export const vonageReportsApiBaseUrl = "https://api.nexmo.com";
-const vonageRequestTimeoutMs = 30_000;
 const invalidInputSmsStatuses = new Set(["2", "3", "6", "7", "12", "15", "17", "22", "23", "29", "33"]);
 
 export interface VonageContext {
@@ -139,7 +138,7 @@ async function requestVonage(input: VonageRequestInput): Promise<unknown> {
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal, vonageRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",

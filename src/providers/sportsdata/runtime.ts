@@ -14,7 +14,6 @@ import {
 export const sportsdataApiBaseUrl = "https://api.sportsdata.io";
 
 const apiKeyHeader = "Ocp-Apim-Subscription-Key";
-const requestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 type SportsdataActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -107,7 +106,7 @@ async function requestSportsdata(
   signal: AbortSignal | undefined,
   phase: RequestPhase,
 ): Promise<unknown[]> {
-  const timeout = createProviderTimeout(signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   try {
     const response = await fetcher(new URL(path, sportsdataApiBaseUrl), {
       headers: { accept: "application/json", [apiKeyHeader]: apiKey, "user-agent": providerUserAgent },

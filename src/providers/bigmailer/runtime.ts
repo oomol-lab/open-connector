@@ -11,7 +11,6 @@ import {
 
 export const bigmailerApiBaseUrl: string = "https://api.bigmailer.io";
 
-const bigmailerDefaultRequestTimeoutMs = 30_000;
 const bigmailerValidationEndpoint = "/v1/brands";
 
 type BigmailerRequestPhase = "validate" | "execute";
@@ -293,7 +292,7 @@ async function requestBigmailerJson(input: {
   query?: Record<string, string | number | boolean | undefined>;
   body?: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, bigmailerDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildBigmailerUrl(input.path, input.query), {

@@ -24,7 +24,6 @@ import {
 const netsuiteRecordPathPrefix = "/services/rest/record/v1";
 const netsuiteQueryPathPrefix = "/services/rest/query/v1";
 const netsuiteValidationPath = `${netsuiteRecordPathPrefix}/metadata-catalog`;
-const netsuiteRequestTimeoutMs = 30_000;
 
 type NetsuiteMode = "validate" | "execute";
 type NetsuiteActionHandler = ProviderRuntimeHandler<NetsuiteContext>;
@@ -237,7 +236,7 @@ async function requestNetsuiteJson(input: NetsuiteRequestOptions): Promise<unkno
 }
 
 async function requestNetsuiteJsonWithMetadata(input: NetsuiteRequestOptions): Promise<NetsuiteResponsePayload> {
-  const timeout = createProviderTimeout(input.context.signal, netsuiteRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     let response: Response;
     try {

@@ -12,7 +12,6 @@ import {
 export const keywordApiBaseUrl = "https://app.keyword.com";
 
 const keywordApiPathPrefix = "/api/v2";
-const keywordDefaultRequestTimeoutMs = 30_000;
 
 type KeywordRequestPhase = "validate" | "execute";
 
@@ -107,7 +106,7 @@ async function requestKeywordJson(
     query?: Record<string, string | undefined>;
   },
 ) {
-  const timeout = createProviderTimeout(context.signal, keywordDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildKeywordUrl(request.path, request.query), {

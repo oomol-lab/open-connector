@@ -16,8 +16,6 @@ import {
 export const context7ApiBaseUrl = "https://context7.com/api";
 export const context7ValidationEndpoint = "/v2/libs/search";
 
-const context7DefaultRequestTimeoutMs = 30_000;
-
 type Context7RequestPhase = "validate" | "execute";
 
 export async function validateContext7Credential(input: {
@@ -97,7 +95,7 @@ async function requestContext7Json(input: {
   setSearchParams(url, input.query);
 
   input.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(input.signal, context7DefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: "GET",

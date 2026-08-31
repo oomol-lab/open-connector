@@ -17,7 +17,6 @@ export const metaGraphApiBaseUrl: string = `https://graph.facebook.com/${metaGra
 const service = "meta";
 const metaValidationPath = "/me";
 const metaMeFields = "id,name";
-const metaDefaultTimeoutMs = 30_000;
 const defaultAdAccountFields = "id,account_id,name,currency,timezone_name,account_status,business_name";
 const defaultCampaignFields = "id,name,status,effective_status,objective,buying_type,created_time,updated_time";
 const defaultInsightFields =
@@ -197,7 +196,7 @@ async function requestMetaJson<T>(input: {
   phase: MetaRequestPhase;
   signal?: AbortSignal;
 }): Promise<T> {
-  const timeout = createProviderTimeout(input.signal, metaDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildMetaUrl(input.path, input.query), {
       method: "GET",

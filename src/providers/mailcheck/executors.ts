@@ -20,7 +20,6 @@ import {
 
 const service = "mailcheck";
 const mailcheckApiBaseUrl = "https://api.usercheck.com";
-const mailcheckDefaultRequestTimeoutMs = 30_000;
 
 type MailcheckRequestPhase = "validate" | "execute";
 type MailcheckActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -154,7 +153,7 @@ async function requestMailcheckJson(input: {
   phase: MailcheckRequestPhase;
 }): Promise<unknown> {
   const url = new URL(input.path, mailcheckApiBaseUrl);
-  const timeout = createProviderTimeout(input.context.signal, mailcheckDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   let response: Response;
   let payload: unknown;

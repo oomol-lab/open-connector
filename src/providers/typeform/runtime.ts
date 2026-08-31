@@ -19,7 +19,6 @@ import {
 
 export const typeformApiBaseUrl: string = "https://api.typeform.com";
 const typeformValidationPath = "/me";
-const typeformDefaultRequestTimeoutMs = 30_000;
 
 type TypeformRequestPhase = "validate" | "execute";
 type TypeformQueryValue = string | number | undefined;
@@ -211,7 +210,7 @@ async function requestTypeformJson(input: {
     }
   }
 
-  const timeoutHandle = createProviderTimeout(input.signal, typeformDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(url, {

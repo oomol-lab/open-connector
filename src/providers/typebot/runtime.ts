@@ -20,7 +20,6 @@ import {
 
 export const typebotApiBaseUrl = "https://app.typebot.com/api";
 const validationPath = "/v1/workspaces";
-const timeoutMs = 30_000;
 
 const get =
   (
@@ -87,7 +86,7 @@ async function requestTypebot(
 ): Promise<Record<string, unknown>> {
   const url = new URL(`${typebotApiBaseUrl}${path}`);
   for (const [name, value] of Object.entries(query ?? {})) url.searchParams.set(name, value);
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       headers: {

@@ -9,7 +9,6 @@ import {
 
 export const trendshiftApiBaseUrl = "https://api.trendshift.io";
 export const trendshiftValidationPath = "/v1/trending/daily";
-const requestTimeoutMs = 30_000;
 
 type TrendshiftRequestMode = "validate" | "execute";
 type QueryValue = number | string | undefined;
@@ -141,7 +140,7 @@ async function requestTrendshiftJson(input: {
   for (const [name, value] of Object.entries(input.request.query ?? {})) {
     if (value !== undefined) url.searchParams.set(name, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

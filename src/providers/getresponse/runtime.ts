@@ -14,7 +14,6 @@ export const getresponseMaxApiBaseUrls = [
   "https://api3.getresponse360.pl/v3",
 ] as const;
 
-const getresponseRequestTimeoutMs = 30_000;
 const getresponseCredentialHelpUrl = "https://app.getresponse.com/api";
 
 type GetresponseRequestPhase = "validate" | "execute";
@@ -330,7 +329,7 @@ async function requestGetresponseJson(input: {
   query?: Record<string, GetresponseQueryValue>;
   body?: Record<string, unknown>;
 }): Promise<GetresponseRequestResult> {
-  const timeout = createProviderTimeout(undefined, getresponseRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   const url = buildGetresponseUrl(input.connection.apiBaseUrl, input.path, input.query);
   const method = input.method ?? "GET";
   const headers = new Headers({

@@ -16,7 +16,6 @@ const surveyMonkeyApiBaseUrls = [
   "https://api.surveymonkey.ca",
 ] as const;
 
-const surveyMonkeyDefaultRequestTimeoutMs = 30_000;
 const surveyMonkeyValidationPath = "/v3/users/me";
 
 type SurveyMonkeyRequestPhase = "validate" | "execute" | "trigger";
@@ -325,7 +324,7 @@ async function requestSurveyMonkeyJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(undefined, surveyMonkeyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

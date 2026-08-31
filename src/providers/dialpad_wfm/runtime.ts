@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 const dialpadWfmApiBaseUrl = "https://api.teamsurfboard.com/api/v1";
-const dialpadWfmRequestTimeoutMs = 30_000;
 const validationScheduleQuery = {
   start: "2024-06-25T00:00:00.000Z",
   end: "2024-06-25T00:01:00.000Z",
@@ -89,7 +88,7 @@ export async function validateDialpadWfmCredential(
 }
 
 async function requestDialpadWfmJson(input: DialpadWfmRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, dialpadWfmRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   try {
     response = await input.context.fetcher(buildDialpadWfmUrl(input), {

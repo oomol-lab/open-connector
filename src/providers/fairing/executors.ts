@@ -13,7 +13,6 @@ import {
 
 const service = "fairing";
 const fairingApiBaseUrl = "https://app.fairing.co/api";
-const fairingRequestTimeoutMs = 30_000;
 
 type FairingPhase = "validate" | "execute";
 type FairingActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -100,7 +99,7 @@ async function requestFairingJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, fairingRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

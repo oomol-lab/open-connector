@@ -17,7 +17,6 @@ import { slackConversationTypes } from "./constants.ts";
 
 const slackApiBaseUrl = "https://slack.com/api";
 const slackFileUrlMaxBytes = 100 * 1024 * 1024;
-const slackFileUrlFetchTimeoutMs = 30_000;
 
 type SlackActionContext = Omit<OAuthProviderContext, "providerSecret" | "tokenType">;
 type SlackOAuthTokenKind = "bot" | "user";
@@ -773,7 +772,7 @@ async function resolveSlackFileContent(
 ): Promise<Uint8Array> {
   const fileUrl = requiredString(input.fileUrl, "fileUrl", (message) => new ProviderRequestError(400, message));
   assertFetchableFileUrl(fileUrl);
-  const timeout = createProviderTimeout(context.signal, slackFileUrlFetchTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(fileUrl, { signal: timeout.signal });
     if (!response.ok) {

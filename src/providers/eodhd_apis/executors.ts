@@ -16,7 +16,6 @@ type EodhdApisActionHandler = (input: Record<string, unknown>, context: ApiKeyPr
 
 const service = "eodhd_apis";
 const eodhdApisApiBaseUrl = "https://eodhd.com/api";
-const eodhdApisDefaultRequestTimeoutMs = 30_000;
 
 const eodhdApisActionHandlers: ProviderActionHandlers<"eodhd_apis", EodhdApisActionHandler> = {
   search_instruments(input, context) {
@@ -236,7 +235,7 @@ async function eodhdApisGet(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(signal, eodhdApisDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
 
   let response: Response;
   try {

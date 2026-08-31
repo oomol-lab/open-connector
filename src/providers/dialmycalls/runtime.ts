@@ -26,8 +26,6 @@ interface ApiKeyProviderActionInput {
 
 export const dialMyCallsApiBaseUrl = "https://api.dialmycalls.com/2.0";
 
-const dialMyCallsDefaultRequestTimeoutMs = 30_000;
-
 type DialMyCallsPhase = "validate" | "execute";
 type DialMyCallsMethod = "GET" | "POST" | "PUT" | "DELETE";
 type DialMyCallsActionHandler = (
@@ -204,7 +202,7 @@ async function requestDialMyCallsJson(input: {
   body?: Record<string, unknown>;
   range?: string;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, dialMyCallsDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildDialMyCallsUrl(input.path), {

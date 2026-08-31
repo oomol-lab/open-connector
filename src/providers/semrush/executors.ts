@@ -14,7 +14,6 @@ import {
 
 export const semrushApiBaseUrl = "https://api.semrush.com";
 
-const semrushDefaultRequestTimeoutMs = 30_000;
 const semrushEmptyResultPrefix = "ERROR 50 :: NOTHING FOUND";
 
 type SemrushPhase = "validate" | "execute";
@@ -129,7 +128,7 @@ async function requestSemrushReport(input: {
   fetcher: typeof fetch;
   phase: SemrushPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, semrushDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildSemrushUrl(input.apiKey, input.params), {

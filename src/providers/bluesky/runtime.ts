@@ -12,7 +12,6 @@ export interface BlueskyContext extends ApiKeyProviderContext {
 
 export const blueskyApiBaseUrl = "https://bsky.social";
 
-const blueskyDefaultRequestTimeoutMs = 30_000;
 const createSessionPath = "/xrpc/com.atproto.server.createSession";
 
 export type BlueskyRequestPhase = "validate" | "execute";
@@ -238,7 +237,7 @@ function buildTextPostRecord(input: Record<string, unknown>): Record<string, unk
 
 async function requestBlueskyJson(options: BlueskyRequestOptions): Promise<unknown> {
   const url = buildBlueskyUrl(options.path, options.query);
-  const timeout = createProviderTimeout(options.signal, blueskyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   try {
     let response: Response;
     try {

@@ -15,7 +15,6 @@ import { deviceSortColumns, sensorSortColumns } from "./constants.ts";
 export const prtgClassicTablePath = "/table.json";
 
 const prtgClassicApiPathPrefix = "/api";
-const prtgClassicRequestTimeoutMs = 30_000;
 
 type PrtgClassicRequestMode = "validate" | "execute";
 type QueryValue = string | number | boolean | readonly (string | number | boolean)[] | undefined;
@@ -187,7 +186,7 @@ async function requestPrtgClassicTableJson(options: PrtgClassicRequestOptions): 
   });
   assertPrtgClassicRequestUrl(url);
 
-  const timeout = createProviderTimeout(options.context.signal, prtgClassicRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.context.signal);
   try {
     const response = await options.context.fetcher(url, {
       method: "GET",

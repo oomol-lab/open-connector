@@ -15,7 +15,6 @@ import {
 
 const service = "linkly";
 const linklyApiBaseUrl = "https://api.linklyhq.com";
-const linklyRequestTimeoutMs = 30_000;
 const linklyApiPrefix = "/api/v1";
 const filterKeys = ["domain", "slug", "utm_campaign", "utm_content", "utm_medium", "utm_source", "utm_term"] as const;
 const linkMutationFields = [
@@ -201,7 +200,7 @@ async function requestLinklyJson(input: {
   query?: LinklyQuery;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, linklyRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildLinklyUrl(input.path, input.query), {

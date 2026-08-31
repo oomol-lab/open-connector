@@ -42,7 +42,6 @@ interface Digistore24RequestInput {
 }
 
 const digistore24ApiBaseUrl = "https://www.digistore24.com/api/call";
-const digistore24RequestTimeoutMs = 30_000;
 const digistore24MaxResponseBytes = 10 * 1024 * 1024;
 
 export const digistore24ActionHandlers: ProviderActionHandlers<"digistore24", Digistore24ActionHandler> = {
@@ -278,7 +277,7 @@ async function digistore24Request(
 ) {
   let response: Response;
   let payload: unknown;
-  const timeout = createProviderTimeout(signal, digistore24RequestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
 
   try {
     response = await fetcher(buildDigistore24Url(input), {

@@ -27,7 +27,6 @@ import {
 const service = "openstatus";
 export const openstatusApiBaseUrl = "https://api.openstatus.dev";
 
-const openstatusRequestTimeoutMs = 30_000;
 const monitorService = "openstatus.monitor.v1.MonitorService";
 
 type OpenstatusRequestPhase = "validate" | "execute";
@@ -321,7 +320,7 @@ async function openstatusFetch(input: {
   body?: Record<string, unknown>;
 }): Promise<Response> {
   const url = new URL(input.path, openstatusApiBaseUrl);
-  const timeout = createProviderTimeout(input.signal, openstatusRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     return await input.fetcher(url, {

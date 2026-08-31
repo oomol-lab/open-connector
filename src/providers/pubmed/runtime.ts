@@ -210,7 +210,6 @@ const pubmedSortValues: Record<PubmedSort, string> = {
 };
 const anonymousRequestIntervalMs = 334;
 const apiKeyRequestIntervalMs = 100;
-const pubmedRequestTimeoutMs = 30_000;
 const maximumJsonResponseBytes = 1024 * 1024;
 const maximumXmlResponseBytes = 10 * 1024 * 1024;
 const maximumCachedApiKeyRequestGates = 100;
@@ -665,7 +664,7 @@ async function requestNcbiTextOnce(
   options: NcbiTextRequestOptions,
   context: PubmedActionContext,
 ): Promise<{ response: Response; text: string }> {
-  const timeout = createProviderTimeout(context.signal, pubmedRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       ...options.init,

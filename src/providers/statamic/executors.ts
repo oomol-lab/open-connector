@@ -14,7 +14,6 @@ import {
 
 const service = "statamic";
 const statamicApiBaseUrl = "https://statamic.com/api/v1";
-const statamicDefaultRequestTimeoutMs = 30_000;
 
 type StatamicPhase = "validate" | "execute";
 type StatamicActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -113,7 +112,7 @@ async function requestStatamicJson(input: {
   phase: StatamicPhase;
   body?: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, statamicDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

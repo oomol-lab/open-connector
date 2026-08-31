@@ -19,8 +19,6 @@ import {
 export const opsgenieUsApiBaseUrl = "https://api.opsgenie.com";
 export const opsgenieEuApiBaseUrl = "https://api.eu.opsgenie.com";
 
-const opsgenieDefaultTimeoutMs = 30_000;
-
 type OpsgenieEnvironment = "us" | "eu";
 type OpsgenieRequestPhase = "validate" | "execute";
 type OpsgenieActionHandler = (input: Record<string, unknown>, context: OpsgenieContext) => Promise<unknown>;
@@ -235,7 +233,7 @@ async function requestOpsgenieJson<T>(input: OpsgenieRequestInput): Promise<T> {
     appendQueryParam(url, key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal, opsgenieDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = compactObject({
       accept: "application/json",

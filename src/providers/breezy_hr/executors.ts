@@ -14,7 +14,6 @@ import {
 
 const service = "breezy_hr";
 const breezyHrApiBaseUrl = "https://api.breezy.hr/v3";
-const breezyHrRequestTimeoutMs = 30_000;
 const breezyHrMaxResponseBytes = 10 * 1024 * 1024;
 
 type BreezyHrPhase = "validate" | "execute";
@@ -209,7 +208,7 @@ async function requestBreezyHrJson(input: BreezyHrRequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, breezyHrRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: "GET",

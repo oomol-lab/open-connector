@@ -21,7 +21,6 @@ import {
 
 const service = "ritekit";
 const apiBaseUrl = "https://api.ritekit.com";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 type RiteKitPhase = "validate" | "execute";
 type QueryEntry = [string, unknown];
@@ -137,7 +136,7 @@ async function requestRiteKit(
   for (const [name, value] of query) {
     if (value != null && value !== "") url.searchParams.set(name, String(value));
   }
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",

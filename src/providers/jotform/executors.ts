@@ -21,7 +21,6 @@ import {
 
 const service = "jotform";
 const jotformApiBaseUrl = "https://api.jotform.com";
-const jotformRequestTimeoutMs = 30_000;
 
 type JotformRequestPhase = "validate" | "execute";
 type JotformQueryValue = string | number | undefined;
@@ -263,7 +262,7 @@ async function requestJotformEnvelope(input: JotformRequestInput): Promise<Jotfo
     headers.set("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
   }
 
-  const timeout = createProviderTimeout(input.signal, jotformRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url, {

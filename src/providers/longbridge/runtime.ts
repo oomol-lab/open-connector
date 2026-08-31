@@ -26,7 +26,6 @@ import { indexSymbolToCounterId, symbolToCounterId } from "./counter-id.ts";
 import { longbridgeReadonlyActionSpecs, longbridgeScreenerDefaultReturns } from "./readonly-action-specs.ts";
 
 const longbridgeApiBaseUrl = "https://openapi.longbridge.com";
-const longbridgeRequestTimeoutMs = 30_000;
 
 export type LongbridgeHttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 type LongbridgeRequestPhase = "connect" | "execute";
@@ -380,7 +379,7 @@ export async function validateLongbridgeCredential(
 
 export async function requestLongbridgeJson(input: LongbridgeRequestOptions): Promise<unknown> {
   const url = buildLongbridgeUrl(input.path, input.query);
-  const timeout = createProviderTimeout(input.context.signal, longbridgeRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, buildLongbridgeRequestInit(input, timeout.signal));
     const payload = await readLongbridgeJson(response);

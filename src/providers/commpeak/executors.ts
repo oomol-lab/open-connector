@@ -22,7 +22,6 @@ import {
 
 const service = "commpeak";
 const commpeakTextPeakBaseUrl = "https://gw.commpeak.com/textpeak";
-const commpeakRequestTimeoutMs = 30_000;
 const commpeakMaxResponseBytes = 10 * 1024 * 1024;
 
 type CommpeakActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -289,7 +288,7 @@ async function commpeakRequestJson(
   fetcher: typeof fetch,
   options: CommpeakRequestOptions = {},
 ) {
-  const timeout = createProviderTimeout(options.signal, commpeakRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   try {
     const response = await fetcher(url, { ...init, signal: timeout.signal });
     const payload = await readCommpeakPayload(response);

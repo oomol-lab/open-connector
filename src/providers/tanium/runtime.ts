@@ -15,7 +15,6 @@ import {
 
 export const taniumGatewayPath = "/plugin/products/gateway/graphql";
 
-const taniumRequestTimeoutMs = 30_000;
 const taniumValidationOperationName = "OomolConnectValidation";
 const taniumValidationQuery = "query OomolConnectValidation { __typename }";
 
@@ -140,7 +139,7 @@ async function requestTaniumGraphql(input: {
   operationName?: string;
   variables?: Record<string, unknown>;
 }): Promise<TaniumGraphqlPayload> {
-  const timeout = createProviderTimeout(input.signal, taniumRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(input.gatewayUrl, {
       method: "POST",

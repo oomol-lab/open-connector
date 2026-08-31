@@ -5,7 +5,6 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 export const megaventoryApiBaseUrl = "https://api.megaventory.com/v2017a";
-const timeoutMs = 30_000;
 const recordAction = "InsertOrUpdateNonEmptyFields";
 const lists: Record<string, { path: string; responseKey: string; outputKey: string }> = {
   list_products: { path: "/Product/ProductGet", responseKey: "mvProducts", outputKey: "products" },
@@ -162,7 +161,7 @@ async function request(
   context: ApiKeyProviderContext,
   phase: "validate" | "execute",
 ) {
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(`${megaventoryApiBaseUrl}${path}`, {
       method: "POST",

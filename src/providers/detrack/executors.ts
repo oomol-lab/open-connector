@@ -18,7 +18,6 @@ import {
 } from "../provider-runtime.ts";
 
 const detrackApiBaseUrl = "https://app.detrack.com/api/v2";
-const detrackRequestTimeoutMs = 30_000;
 const detrackMaxResponseBytes = 10 * 1024 * 1024;
 
 type DetrackRequestPhase = "validate" | "execute";
@@ -393,7 +392,7 @@ async function detrackRequest(input: DetrackRequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, detrackRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

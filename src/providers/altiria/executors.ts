@@ -22,7 +22,6 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "altiria";
-const altiriaRequestTimeoutMs = 30_000;
 const altiriaMaxResponseBytes = 10 * 1024 * 1024;
 const altiriaRestPath = "/api/rest";
 
@@ -299,7 +298,7 @@ async function requestAltiria(input: AltiriaRequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, altiriaRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const fetcher = createProviderFetch({ fetch: input.fetcher });
 
   try {

@@ -15,7 +15,6 @@ export const dartApiBaseUrl = "https://app.dartai.com/api/v0/public";
 
 type DartRequestPhase = "validate" | "execute";
 
-const dartDefaultRequestTimeoutMs = 30_000;
 const listTaskQueryKeys = [
   "title",
   "ids",
@@ -179,7 +178,7 @@ async function requestDart(input: {
   }
 
   input.context.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(input.context.signal, dartDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   init.signal = timeout.signal;
   try {
     const response = await input.context.fetcher(url, init);

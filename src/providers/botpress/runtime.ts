@@ -31,7 +31,6 @@ export const botpressApiBaseUrl = "https://api.botpress.cloud/v1/admin";
 
 const botpressRequestBaseUrl = "https://api.botpress.cloud/v1/admin/";
 const botpressValidationPath = "/bots";
-const botpressDefaultTimeoutMs = 30_000;
 
 export const botpressActionHandlers: ProviderActionHandlers<"botpress", ProviderRuntimeHandler<BotpressContext>> = {
   async list_workspaces(input, context) {
@@ -104,7 +103,7 @@ async function botpressRequest(input: BotpressRequestInput): Promise<unknown> {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, botpressDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

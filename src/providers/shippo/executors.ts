@@ -26,7 +26,6 @@ import {
 const service = "shippo";
 const shippoApiBaseUrl = "https://api.goshippo.com";
 const shippoApiVersion = "2018-02-08";
-const shippoDefaultRequestTimeoutMs = 30_000;
 const shippoValidationEndpoint = "/addresses/";
 const shippoFetch = createProviderFetch({ skipDnsValidation: true });
 
@@ -207,7 +206,7 @@ async function requestShippoJson(input: ShippoRequestInput): Promise<unknown> {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, shippoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

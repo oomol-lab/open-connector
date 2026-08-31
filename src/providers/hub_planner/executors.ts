@@ -16,7 +16,6 @@ import {
 const service = "hub_planner";
 const hubPlannerApiBaseUrl = "https://api.hubplanner.com/v1";
 const hubPlannerValidationPath = "/project";
-const hubPlannerRequestTimeoutMs = 30_000;
 const hubPlannerMaxResponseBytes = 10 * 1024 * 1024;
 
 type HubPlannerPhase = "validate" | "execute";
@@ -207,7 +206,7 @@ async function requestHubPlannerJson<T>(input: {
   signal?: AbortSignal;
 }): Promise<T> {
   const url = buildHubPlannerUrl(input.path, input.query);
-  const timeout = createProviderTimeout(input.signal, hubPlannerRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

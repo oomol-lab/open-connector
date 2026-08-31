@@ -15,7 +15,6 @@ import {
 const service = "opengraph_io";
 const opengraphIoApiBaseUrl = "https://opengraph.io";
 const opengraphIoValidationTargetUrl = "https://example.com";
-const opengraphIoRequestTimeoutMs = 30_000;
 
 type OpenGraphIoRequestPhase = "validate" | "execute";
 type OpenGraphIoQueryValue = string | number | boolean | undefined;
@@ -191,7 +190,7 @@ async function opengraphIoRequest(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, opengraphIoRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

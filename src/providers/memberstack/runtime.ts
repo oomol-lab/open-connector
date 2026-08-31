@@ -18,7 +18,6 @@ import {
 } from "../provider-runtime.ts";
 
 const memberstackApiBaseUrl = "https://admin.memberstack.com";
-const memberstackDefaultRequestTimeoutMs = 30_000;
 
 type MemberstackPhase = "validate" | "execute";
 type MemberstackActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -173,7 +172,7 @@ async function requestMemberstackJson(input: {
   emptySuccess?: boolean;
   phase: MemberstackPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, memberstackDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const body = input.body && Object.keys(input.body).length > 0 ? input.body : undefined;

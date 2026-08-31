@@ -23,8 +23,6 @@ import {
 
 export const wrikeApiBaseUrl = "https://www.wrike.com/api/v4";
 
-const wrikeDefaultRequestTimeoutMs = 30_000;
-
 type WrikeRequestPhase = "validate" | "execute";
 type WrikeActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -227,7 +225,7 @@ async function wrikeRequest(input: WrikeRequestOptions): Promise<Record<string, 
     appendQueryParam(url, key, value);
   }
 
-  const timeout = createProviderTimeout(input.signal, wrikeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url, {

@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const certnValidationPath = "/api/public/cases/";
-const certnDefaultRequestTimeoutMs = 30_000;
 
 export const certnRegions = {
   ca: {
@@ -224,7 +223,7 @@ async function requestCertn(input: {
     url.searchParams.append(key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal, certnDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     return await input.context.fetcher(url, {
       method: input.method,

@@ -15,7 +15,6 @@ import {
 const service = "minerstat";
 const minerstatApiOrigin = "https://api.minerstat.com";
 const minerstatApiBaseUrl = `${minerstatApiOrigin}/v2`;
-const minerstatRequestTimeoutMs = 30_000;
 
 type MinerstatRequestPhase = "validate" | "execute";
 type MinerstatActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -101,7 +100,7 @@ async function requestMinerstatArray(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, minerstatRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

@@ -20,7 +20,6 @@ import {
 
 export const timebuzzerApiBaseUrl = "https://my.timebuzzer.com";
 const apiPath = "/open-api";
-const timeoutMs = 30_000;
 
 export const timebuzzerActionHandlers: ProviderActionHandlers<
   "timebuzzer",
@@ -130,7 +129,7 @@ async function requestTimebuzzer(
 ): Promise<unknown> {
   const url = new URL(`${apiPath}${path}`, timebuzzerApiBaseUrl);
   for (const [name, value] of Object.entries(options.query ?? {})) url.searchParams.set(name, value);
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",

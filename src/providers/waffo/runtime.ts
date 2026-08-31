@@ -17,8 +17,6 @@ import {
 
 export const waffoApiBaseUrl = "https://api.waffo.ai";
 
-const waffoRequestTimeoutMs = 30_000;
-
 export interface WaffoCredential {
   merchantId: string;
   privateKey: KeyObject;
@@ -343,7 +341,7 @@ export async function requestWaffoJson(input: WaffoRequestInput): Promise<Record
     headers,
   });
 
-  const timeout = createProviderTimeout(input.context.signal, waffoRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(`${waffoApiBaseUrl}${input.path}`, {
       method: "POST",

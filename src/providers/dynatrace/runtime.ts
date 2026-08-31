@@ -33,7 +33,6 @@ interface DynatraceRequestOptions {
   query?: Record<string, string | number | undefined>;
 }
 
-const dynatraceDefaultRequestTimeoutMs = 30_000;
 const dynatraceCredentialHelpUrl =
   "https://docs.dynatrace.com/docs/manage/identity-access-management/access-tokens-and-oauth-clients/access-tokens";
 const validationChecks: DynatraceValidationCheck[] = [
@@ -192,7 +191,7 @@ async function requestDynatraceJson(options: DynatraceRequestOptions): Promise<u
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(options.signal, dynatraceDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   try {
     const response = await options.fetcher(url, {
       method: "GET",

@@ -24,7 +24,6 @@ const service = "semantic_scholar";
 
 const graphApiBaseUrl = "https://api.semanticscholar.org/graph/v1";
 const recommendationsApiBaseUrl = "https://api.semanticscholar.org/recommendations/v1";
-const semanticScholarDefaultRequestTimeoutMs = 30_000;
 
 type SemanticScholarPhase = "validate" | "execute";
 type SemanticScholarApiFamily = "graph" | "recommendations";
@@ -348,7 +347,7 @@ async function requestSemanticScholarJson(input: {
   fetcher: typeof fetch;
   phase: SemanticScholarPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, semanticScholarDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildSemanticScholarUrl(input), {

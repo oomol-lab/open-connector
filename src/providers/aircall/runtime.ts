@@ -9,7 +9,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 export const aircallApiBaseUrl = "https://api.aircall.io";
 const aircallRequestBaseUrl = "https://api.aircall.io/";
 const aircallValidationPath = "/v1/ping";
-const aircallDefaultTimeoutMs = 30_000;
 
 type AircallRequestPhase = "validate" | "execute";
 
@@ -178,7 +177,7 @@ async function requestAircallJson(context: AircallActionContext, input: AircallR
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, aircallDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",

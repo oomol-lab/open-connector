@@ -25,8 +25,6 @@ import {
 export const krispcallApiBaseUrl = "https://api.krispcall.com";
 export const krispcallTokenUrl = "https://app-login.krispcall.com/api/login/oauth/access_token";
 
-const krispcallRequestTimeoutMs = 30_000;
-
 export interface KrispCallCredential {
   readonly clientId: string;
   readonly clientSecret: string;
@@ -320,7 +318,7 @@ async function fetchKrispCallResponse(input: {
   readonly init: RequestInit;
   readonly operation: string;
 }) {
-  const timeout = createProviderTimeout(input.init.signal ?? undefined, krispcallRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.init.signal ?? undefined);
   try {
     return await input.fetcher(input.url, { ...input.init, signal: timeout.signal });
   } catch (error) {

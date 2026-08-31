@@ -12,8 +12,6 @@ import {
 const clinicalKeyApiBaseUrl = "https://api.elsevier.com/sushi/r51";
 const clinicalKeyPlatformCode = "ck";
 
-const clinicalKeyRequestTimeoutMs = 30_000;
-
 type ClinicalKeyRequestPhase = "validate" | "execute";
 type ClinicalKeyCredentials = {
   apiKey: string;
@@ -143,7 +141,7 @@ async function requestClinicalKeyJson(input: {
   fetcher: typeof fetch;
   phase: ClinicalKeyRequestPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, clinicalKeyRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildClinicalKeyUrl(input.path, input.query, input.credentials), {

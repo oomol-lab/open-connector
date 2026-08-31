@@ -15,7 +15,6 @@ import {
 const service = "oncehub";
 const oncehubApiBaseUrl = "https://api.oncehub.com";
 const oncehubValidationPath = "/test";
-const oncehubRequestTimeoutMs = 30_000;
 
 type OncehubRequestPhase = "validate" | "execute";
 type OncehubActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -132,7 +131,7 @@ async function requestOncehubJson(input: OncehubRequestInput): Promise<unknown> 
 }
 
 async function requestOncehubResponse(input: OncehubRequestInput): Promise<Response> {
-  const timeout = createProviderTimeout(input.context.signal, oncehubRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     return await input.context.fetcher(buildOncehubUrl(input.path, input.query), {
       method: "GET",

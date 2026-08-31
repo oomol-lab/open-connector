@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const tursoApiBaseUrl = "https://api.turso.tech";
-const tursoRequestTimeoutMs = 30_000;
 
 type TursoPhase = "validate" | "execute";
 type TursoMethod = "GET" | "POST" | "DELETE";
@@ -166,7 +165,7 @@ async function requestTursoJson(
   input: TursoRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, tursoRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(input.path, tursoApiBaseUrl), {
       method: input.method,

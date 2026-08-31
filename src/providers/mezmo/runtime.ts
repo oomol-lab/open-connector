@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const mezmoApiBaseUrl = "https://api.mezmo.com";
-const mezmoDefaultTimeoutMs = 30_000;
 
 type MezmoPhase = "validate" | "execute";
 type MezmoActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -130,7 +129,7 @@ async function requestMezmoJson(input: {
   context: MezmoActionContext;
   phase: MezmoPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, mezmoDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildMezmoUrl(input.path, input.params), {

@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 const jazzhrApiBaseUrl = "https://api.resumatorapi.com/v1";
-const jazzhrDefaultRequestTimeoutMs = 30_000;
 
 type JazzhrRequestPhase = "validate" | "execute";
 
@@ -206,7 +205,7 @@ async function requestJazzhrJson(input: {
   signal?: AbortSignal;
   phase: JazzhrRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, jazzhrDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildJazzhrUrl(input.apiKey, input.path, input.query), {
       method: "GET",

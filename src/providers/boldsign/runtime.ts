@@ -33,7 +33,6 @@ interface BoldSignRequestInput extends BoldSignActionContext {
 
 type BoldSignActionHandler = (input: Record<string, unknown>, context: BoldSignActionContext) => Promise<unknown>;
 
-const boldSignRequestTimeoutMs = 30_000;
 const boldSignCreditsPath = "/v1/plan/apiCreditsCount";
 
 const boldSignApiBaseUrlByRegion: Record<BoldSignRegion, string> = {
@@ -223,7 +222,7 @@ function buildSendFromTemplateBody(input: Record<string, unknown>) {
 }
 
 async function requestBoldSignJson(input: BoldSignRequestInput) {
-  const timeout = createProviderTimeout(input.signal, boldSignRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const url = new URL(input.path, `${input.apiBaseUrl}/`);
     appendQuery(url, input.query);

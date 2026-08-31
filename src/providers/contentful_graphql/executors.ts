@@ -24,7 +24,6 @@ const contentfulGraphqlGlobalApiBaseUrl = "https://graphql.contentful.com";
 const contentfulGraphqlEuApiBaseUrl = "https://graphql.eu.contentful.com";
 const contentfulGraphqlDefaultEnvironmentId = "master";
 const contentfulGraphqlDefaultRegion = "global";
-const contentfulGraphqlDefaultTimeoutMs = 30_000;
 
 type ContentfulGraphqlRegion = "global" | "eu";
 type ContentfulGraphqlPhase = "validate" | "execute";
@@ -181,7 +180,7 @@ async function requestContentfulGraphql(input: {
   region: ContentfulGraphqlRegion;
   signal?: AbortSignal;
 }): Promise<ContentfulGraphqlResponse> {
-  const timeout = createProviderTimeout(input.signal, contentfulGraphqlDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

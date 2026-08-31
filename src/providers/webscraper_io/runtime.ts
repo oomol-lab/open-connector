@@ -19,7 +19,6 @@ import {
 } from "../provider-runtime.ts";
 
 const webscraperIoApiBaseUrl = "https://api.webscraper.io/api/v1";
-const webscraperIoRequestTimeoutMs = 30_000;
 
 type WebscraperIoPhase = "validate" | "execute";
 type WebscraperIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -175,7 +174,7 @@ async function requestWebscraperIoJson(
   input: WebscraperIoRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, webscraperIoRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildWebscraperIoUrl(input.path, context.apiKey, input.query), {
       method: input.method ?? "GET",
@@ -212,7 +211,7 @@ async function requestWebscraperIoText(
   input: Pick<WebscraperIoRequestInput, "path" | "query" | "phase">,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<string> {
-  const timeout = createProviderTimeout(context.signal, webscraperIoRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildWebscraperIoUrl(input.path, context.apiKey, input.query), {
       method: "GET",

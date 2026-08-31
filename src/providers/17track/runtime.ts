@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const seventeenTrackApiBaseUrl = "https://api.17track.net/track/v2.4";
-const seventeenTrackRequestTimeoutMs = 30_000;
 const seventeenTrackMaxResponseBytes = 1_048_576;
 
 export const seventeenTrackActionHandlers: ProviderActionHandlers<
@@ -66,7 +65,7 @@ async function requestSeventeenTrack(
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
   phase: "validate" | "execute",
 ) {
-  const timeout = createProviderTimeout(context.signal, seventeenTrackRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(`${seventeenTrackApiBaseUrl}/${path}`, {
       method: "POST",

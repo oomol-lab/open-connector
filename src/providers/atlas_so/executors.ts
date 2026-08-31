@@ -13,7 +13,6 @@ import {
 
 const service = "atlas_so";
 const atlasSoApiBaseUrl = "https://api.atlas.so";
-const atlasSoDefaultRequestTimeoutMs = 30_000;
 
 type AtlasSoPhase = "validate" | "execute";
 type AtlasSoMethod = "GET" | "POST";
@@ -227,7 +226,7 @@ async function requestAtlasSoJson(input: {
   query?: Record<string, AtlasSoQueryValue>;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, atlasSoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildAtlasSoUrl(input.path, input.query), {

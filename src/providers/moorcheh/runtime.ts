@@ -8,7 +8,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 export const moorchehApiBaseUrl = "https://api.moorcheh.ai/v1";
 
-const requestTimeoutMs = 30_000;
 const namespaceNamePattern = /^[A-Za-z0-9_-]+$/u;
 
 type RequestPhase = "validate" | "execute";
@@ -149,7 +148,7 @@ async function requestMoorchehJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   phase: RequestPhase,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {

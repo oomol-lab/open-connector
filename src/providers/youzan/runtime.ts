@@ -12,7 +12,6 @@ import {
 
 export const youzanApiBaseUrl = "https://open.youzanyun.com";
 const youzanTokenUrl = `${youzanApiBaseUrl}/auth/token`;
-const requestTimeoutMs = 30_000;
 
 type YouzanPhase = "validate" | "execute";
 
@@ -367,7 +366,7 @@ async function fetchYouzanJson(
   fetcher: ProviderFetch,
   parentSignal?: AbortSignal,
 ): Promise<{ response: Response; payload: Record<string, unknown> }> {
-  const timeout = createProviderTimeout(parentSignal, requestTimeoutMs);
+  const timeout = createProviderTimeout(parentSignal);
   try {
     const response = await fetcher(url, { ...init, signal: timeout.signal });
     const text = await response.text();

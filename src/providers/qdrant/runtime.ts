@@ -24,7 +24,6 @@ import {
 import { qdrantUuidPattern } from "./actions.ts";
 
 const service = "qdrant";
-const requestTimeoutMs = 30_000;
 const qdrantHostnameSuffix = ".cloud.qdrant.io";
 
 type QdrantRequestPhase = "validate" | "execute";
@@ -201,7 +200,7 @@ async function requestQdrantJson(
   body: object | undefined,
   phase: QdrantRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(path, `${context.clusterUrl.origin}/`), {
       method,

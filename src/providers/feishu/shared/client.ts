@@ -58,7 +58,6 @@ interface FeishuEnvelope {
 }
 
 const feishuOpenBaseUrl = "https://open.feishu.cn/open-apis";
-const feishuRequestTimeoutMs = 30_000;
 const feishuRateLimitedErrorCodes = new Set([11232, 11233, 11247, 230020, 230047, 99991400, 1000004, 1000005]);
 const feishuCredentialExpiredErrorCodes = new Set([
   4001, 10005, 10012, 10013, 10014, 10015, 20002, 20005, 20013, 20014, 99991543, 99991661, 99991663, 99991664, 99991665,
@@ -71,7 +70,7 @@ export function createFeishuJsonRequest(input: CreateFeishuJsonRequestInput): Fe
     const url = new URL(`${feishuOpenBaseUrl}${request.path}`);
     appendQuery(url, request.query);
 
-    const timeout = createProviderTimeout(input.signal, feishuRequestTimeoutMs);
+    const timeout = createProviderTimeout(input.signal);
     try {
       const response = await input.fetcher(url, {
         method: request.method ?? "GET",
@@ -111,7 +110,7 @@ export function createFeishuJsonRequest(input: CreateFeishuJsonRequestInput): Fe
 }
 
 export async function requestFeishuMultipart(input: FeishuMultipartRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, feishuRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(`${feishuOpenBaseUrl}${input.path}`, {
       method: "POST",
@@ -154,7 +153,7 @@ export async function withFeishuRawResponse<T>(
 ): Promise<T> {
   const url = new URL(`${feishuOpenBaseUrl}${input.path}`);
   appendQuery(url, input.query);
-  const timeout = createProviderTimeout(input.signal, feishuRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       headers: {

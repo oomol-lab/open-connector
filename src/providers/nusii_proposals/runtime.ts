@@ -13,8 +13,6 @@ import {
 
 export const nusiiProposalsApiBaseUrl = "https://app.nusii.com/api/v2/";
 
-const nusiiProposalsRequestTimeoutMs = 30_000;
-
 type NusiiProposalsRequestPhase = "validate" | "execute";
 type NusiiProposalsMethod = "GET" | "POST" | "PUT";
 type NusiiProposalsContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -299,7 +297,7 @@ async function requestNusiiJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, nusiiProposalsRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url, {

@@ -22,8 +22,6 @@ import {
 export const docsbotAiAdminBaseUrl = "https://docsbot.ai/api";
 export const docsbotAiApiBaseUrl = "https://api.docsbot.ai";
 
-const docsbotAiDefaultRequestTimeoutMs = 30_000;
-
 type DocsbotAiPhase = "validate" | "execute";
 type DocsbotAiContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type DocsbotAiActionHandler = (input: Record<string, unknown>, context: DocsbotAiContext) => Promise<unknown>;
@@ -159,7 +157,7 @@ async function requestDocsbotAiJson(input: {
   body?: Record<string, unknown>;
   phase: DocsbotAiPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, docsbotAiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       authorization: `Bearer ${input.context.apiKey}`,

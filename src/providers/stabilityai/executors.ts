@@ -17,7 +17,6 @@ const service = "stabilityai";
 const stabilityAiApiBaseUrl = "https://api.stability.ai";
 const stabilityAiValidationPath = "/v1/user/account";
 const stabilityAiTextToAudioPath = "/v2beta/audio/stable-audio-2/text-to-audio";
-const stabilityAiDefaultRequestTimeoutMs = 30_000;
 
 type StabilityAiPhase = "validate" | "execute";
 type StabilityAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -199,7 +198,7 @@ async function requestStabilityAiJson(input: StabilityAiRequestInput): Promise<u
 }
 
 async function requestStabilityAiResponse(input: StabilityAiRequestInput): Promise<Response> {
-  const timeout = createProviderTimeout(input.signal, stabilityAiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(new URL(input.path, stabilityAiApiBaseUrl), {
       method: input.method ?? "GET",

@@ -16,7 +16,6 @@ import {
 const anrokApiBaseUrl = "https://api.anrok.com";
 const anrokCredentialHelpUrl = "https://app.anrok.com/-/api-keys";
 const anrokValidationPath = "/v1/seller/productTaxCategories/list";
-const anrokDefaultRequestTimeoutMs = 30_000;
 
 type AnrokPhase = "validate" | "execute";
 type AnrokActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -133,7 +132,7 @@ async function requestAnrokJson(input: {
   phase: AnrokPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, anrokDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildAnrokUrl(input.path), {

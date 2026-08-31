@@ -19,8 +19,6 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const homeAssistantRequestTimeoutMs = 30_000;
-
 export interface HomeAssistantActionContext {
   apiKey: string;
   baseUrl: string;
@@ -276,7 +274,7 @@ export async function requestHomeAssistantText(input: HomeAssistantRequest): Pro
 }
 
 async function requestHomeAssistant(input: HomeAssistantRequest): Promise<Response> {
-  const timeout = createProviderTimeout(input.context.signal, homeAssistantRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildHomeAssistantUrl(input), {
       method: input.method,

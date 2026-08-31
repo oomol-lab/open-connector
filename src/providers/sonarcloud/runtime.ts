@@ -22,7 +22,6 @@ import {
 } from "../provider-runtime.ts";
 import { sonarCloudAllowedApiBaseUrls, sonarCloudDefaultApiBaseUrl } from "./constants.ts";
 
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 
 type SonarCloudPhase = "validate" | "execute";
@@ -170,7 +169,7 @@ export async function validateSonarCloudCredential(
 }
 
 async function requestSonarCloudJson(input: SonarCloudRequest): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildSonarCloudUrl(input), {
       method: "GET",

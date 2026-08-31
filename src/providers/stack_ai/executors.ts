@@ -24,7 +24,6 @@ import {
 
 const service = "stack_ai";
 const stackAiInferenceBaseUrl = "https://stack-inference.com";
-const stackAiRequestTimeoutMs = 30_000;
 
 const stackAiFetch = createProviderFetch({ skipDnsValidation: true });
 
@@ -183,7 +182,7 @@ async function stackAiJsonRequest(
   },
   context: StackAiContext,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, stackAiRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const url = new URL(input.path, stackAiInferenceBaseUrl);
     for (const [key, value] of Object.entries(input.query ?? {})) {

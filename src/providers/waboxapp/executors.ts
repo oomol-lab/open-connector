@@ -13,7 +13,6 @@ import {
 const service = "waboxapp";
 const waboxappApiBaseUrl = "https://www.waboxapp.com";
 const waboxappValidationPath = "/api/status/{uid}";
-const waboxappRequestTimeoutMs = 30_000;
 
 type WaboxappPhase = "validate" | "execute";
 
@@ -247,7 +246,7 @@ async function requestWaboxapp(
   fetcher: typeof fetch,
   phase: WaboxappPhase,
 ): Promise<WaboxappRequestPayload> {
-  const timeout = createProviderTimeout(input.signal, waboxappRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await fetcher(input.url, {

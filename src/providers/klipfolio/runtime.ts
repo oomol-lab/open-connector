@@ -10,7 +10,6 @@ import {
 } from "../provider-runtime.ts";
 
 const klipfolioApiBaseUrl = "https://api.klipfolio.com/api/1.0";
-const klipfolioDefaultRequestTimeoutMs = 30_000;
 
 type KlipfolioPhase = "validate" | "execute";
 type KlipfolioAssetKey = "clients" | "dashboards" | "klips" | "datasources";
@@ -135,7 +134,7 @@ async function requestKlipfolioJson(input: {
   signal?: AbortSignal;
   phase: KlipfolioPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, klipfolioDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildKlipfolioUrl(input.path, input.params ?? {}), {

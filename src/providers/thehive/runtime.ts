@@ -160,7 +160,7 @@ async function request(
   path: string,
   options: TheHiveRequestOptions = {},
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, 30_000);
+  const timeout = createProviderTimeout(context.signal);
   const url = new URL(path, `${context.baseUrl}/`);
   try {
     const headers: Record<string, string> = {

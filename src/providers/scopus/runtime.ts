@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const scopusApiBaseUrl = "https://api.elsevier.com/content";
-const scopusRequestTimeoutMs = 30_000;
 
 type ScopusPhase = "validate" | "execute";
 
@@ -247,7 +246,7 @@ interface ScopusRequest {
 }
 
 async function requestScopusJson(input: ScopusRequest, context: ScopusContext): Promise<ScopusResponse> {
-  const timeout = createProviderTimeout(context.signal, scopusRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildScopusUrl(input.path, input.query), {
       method: "GET",

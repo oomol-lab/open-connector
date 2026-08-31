@@ -22,7 +22,6 @@ import {
 } from "../provider-runtime.ts";
 
 const zendeskCurrentUserPath = "/api/v2/users/me.json";
-const zendeskRequestTimeoutMs = 30_000;
 
 type ZendeskActionContext =
   | {
@@ -278,7 +277,7 @@ async function requestZendeskJson<T>(input: {
   phase: "validate" | "execute";
   notFoundAsInvalidInput?: boolean;
 }): Promise<T> {
-  const timeout = createProviderTimeout(input.context.signal, zendeskRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildZendeskUrl(input.context.baseUrl, input.path, input.query), {
       method: input.method ?? "GET",

@@ -25,7 +25,6 @@ interface ApiKeyProviderActionInput {
 }
 
 export const helpdeskApiBaseUrl = "https://api.helpdesk.com";
-const helpdeskRequestTimeoutMs = 30_000;
 const helpdeskValidationEndpoint = "/v1/licenses";
 
 type HelpdeskRequestPhase = "validate" | "execute";
@@ -368,7 +367,7 @@ async function requestHelpdesk(input: {
   query?: URLSearchParams;
   body?: Record<string, unknown>;
 }) {
-  const timeout = createProviderTimeout(undefined, helpdeskRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   const url = new URL(input.path, helpdeskApiBaseUrl);
   if (input.query) {
     url.search = input.query.toString();

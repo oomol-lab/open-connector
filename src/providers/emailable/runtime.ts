@@ -20,7 +20,6 @@ import {
 } from "../provider-runtime.ts";
 
 const emailableApiBaseUrl = "https://api.emailable.com";
-const emailableDefaultRequestTimeoutMs = 30_000;
 
 type EmailableRequestPhase = "validate" | "execute";
 type EmailableActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -203,7 +202,7 @@ async function requestEmailableJson(
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, emailableDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const hasJsonBody = input.body !== undefined;
     const response = await input.fetcher(url, {

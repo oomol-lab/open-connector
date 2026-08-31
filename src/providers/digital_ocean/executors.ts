@@ -22,7 +22,6 @@ import {
 
 const service = "digital_ocean";
 const digitalOceanApiBaseUrl = "https://api.digitalocean.com/v2";
-const requestTimeoutMs = 30_000;
 
 interface DigitalOceanContext {
   apiKey: string;
@@ -251,7 +250,7 @@ async function digitalOceanFetch(input: {
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const headers = jsonObject({
       accept: "application/json",

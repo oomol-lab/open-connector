@@ -7,7 +7,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 export const brexApiBaseUrl = "https://api.brex.com";
 const brexValidationPath = "/v2/users/me";
-const brexDefaultRequestTimeoutMs = 30_000;
 
 type BrexRequestPhase = "validate" | "execute";
 type BrexActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -247,7 +246,7 @@ export async function validateBrexCredential(
 }
 
 async function requestBrexJson(input: BrexRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, brexDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const url = new URL(input.path.startsWith("/") ? input.path.slice(1) : input.path, `${brexApiBaseUrl}/`);
     if (input.query) {

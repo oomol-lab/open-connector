@@ -49,7 +49,6 @@ export async function readFeishuSourceBytes(
   return requireInMemoryFeishuSource(source).slice(start, end);
 }
 
-const requestTimeoutMs = 30_000;
 const defaultMaxBytes = 30 * 1024 * 1024;
 const maximumBufferedSourceBytes = 100 * 1024 * 1024;
 
@@ -106,7 +105,7 @@ export async function downloadFeishuSource(
   const canonicalUrl = input.sourceUrl;
   const guardedFetcher = createProviderFetch({ fetch: fetcher });
   const maxBytes = Math.min(input.maxBytes ?? defaultMaxBytes, maximumBufferedSourceBytes);
-  const timeout = createProviderTimeout(signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   try {
     const response = await guardedFetcher(canonicalUrl, {
       headers: { "user-agent": providerUserAgent },

@@ -14,7 +14,6 @@ import {
 
 const service = "starton";
 const startonApiBaseUrl = "https://api.starton.com";
-const startonDefaultRequestTimeoutMs = 30_000;
 
 type StartonPhase = "validate" | "execute";
 type StartonActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -145,7 +144,7 @@ async function requestStartonJson(input: {
   query?: Record<string, string | boolean | undefined>;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, startonDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildStartonUrl(input.path, input.query ?? {}), {
       method: input.method,

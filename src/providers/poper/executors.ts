@@ -23,7 +23,6 @@ import {
 
 const service = "poper";
 const baseUrl = "https://api.poper.ai/general/v1";
-const timeoutMs = 30_000;
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, {
   list_popups(_input, context) {
@@ -86,7 +85,7 @@ async function requestPoper(
   signal?: AbortSignal,
   validation = false,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(signal, timeoutMs);
+  const timeout = createProviderTimeout(signal);
   try {
     const response = await fetcher(`${baseUrl}${path}`, {
       method: "POST",

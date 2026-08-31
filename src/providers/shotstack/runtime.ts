@@ -9,8 +9,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 const shotstackApiBaseUrl = "https://api.shotstack.io/edit/v1";
 export const shotstackProxyBaseUrl = "https://api.shotstack.io";
 
-const shotstackRequestTimeoutMs = 30_000;
-
 type ShotstackRequestPhase = "validate" | "execute";
 
 export const shotstackActionHandlers: ProviderActionHandlers<
@@ -128,7 +126,7 @@ async function requestShotstackJson(input: {
   signal?: AbortSignal;
   phase: ShotstackRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, shotstackRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const headers: Record<string, string> = {
     accept: "application/json",
     "x-api-key": input.apiKey,

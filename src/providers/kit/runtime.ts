@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const kitApiBaseUrl = "https://api.kit.com/v4";
-const kitDefaultRequestTimeoutMs = 30_000;
 
 type KitPhase = "validate" | "execute";
 type KitMethod = "GET" | "POST" | "PUT";
@@ -220,7 +219,7 @@ async function requestKitJson(input: {
   phase: KitPhase;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, kitDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const headers: Record<string, string> = {

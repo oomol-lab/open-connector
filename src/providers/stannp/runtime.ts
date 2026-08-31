@@ -16,7 +16,6 @@ export interface StannpActionContext {
 
 type StannpRequestPhase = "validate" | "execute";
 
-const stannpDefaultRequestTimeoutMs = 30_000;
 const stannpBaseUrlByRegion: Record<StannpRegion, string> = {
   eu: "https://api-eu1.stannp.com",
   us: "https://api-us1.stannp.com",
@@ -246,7 +245,7 @@ async function stannpRequest(
   init: RequestInit,
   phase: StannpRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, stannpDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       ...init,

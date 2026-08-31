@@ -13,8 +13,6 @@ import {
 
 export const ciscoMerakiApiBaseUrl = "https://api.meraki.com/api/v1";
 
-const ciscoMerakiRequestTimeoutMs = 30_000;
-
 type CiscoMerakiRequestPhase = "validate" | "execute";
 
 interface CiscoMerakiRequest {
@@ -171,7 +169,7 @@ async function requestCiscoMerakiResponse(
     url.searchParams.append(key, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, ciscoMerakiRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     return await context.fetcher(url, {
       headers: {

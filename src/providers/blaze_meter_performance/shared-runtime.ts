@@ -20,7 +20,6 @@ export const blazeMeterApiBaseUrl = "https://a.blazemeter.com/api/v4";
 export const blazeMeterValidationPath = "/user";
 
 const blazeMeterRequestBaseUrl = "https://a.blazemeter.com/api/v4/";
-const blazeMeterDefaultTimeoutMs = 30_000;
 const blazeMeterFetch = createProviderFetch({ skipDnsValidation: true });
 
 export type BlazeMeterPhase = "validate" | "execute";
@@ -192,7 +191,7 @@ async function requestBlazeMeter(
     appendBlazeMeterQueryValue(url, key, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, blazeMeterDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url.toString(), {
       method: input.method ?? "GET",

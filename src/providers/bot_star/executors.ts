@@ -16,7 +16,6 @@ const service = "bot_star";
 const botStarApiBaseUrl = "https://apis.botstar.com/v1";
 const botStarRequestBaseUrl = "https://apis.botstar.com/v1/";
 const botStarValidationPath = "/bots/";
-const botStarDefaultTimeoutMs = 30_000;
 
 type BotStarPhase = "validate" | "execute";
 type BotStarQueryValue = boolean | number | string | undefined;
@@ -280,7 +279,7 @@ async function botStarRequest(input: BotStarRequestInput): Promise<unknown> {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, botStarDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

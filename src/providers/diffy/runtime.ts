@@ -4,7 +4,6 @@ import { optionalInteger, optionalRecord, optionalString } from "../../core/cast
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const diffyApiBaseUrl = "https://app.diffy.website/api/";
-const timeoutMs = 30_000;
 interface DiffyContext {
   apiKey: string;
   fetcher: typeof fetch;
@@ -89,7 +88,7 @@ async function requestDiffyJson(
   token?: string,
   init: RequestInit = {},
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const headers = new Headers(init.headers);
     headers.set("accept", "application/json");

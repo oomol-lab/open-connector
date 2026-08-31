@@ -17,7 +17,6 @@ import {
 
 export const skioApiBaseUrl = "https://api.skio.com/public-rest-api-http";
 const validationPath = "/subscriptions";
-const timeoutMs = 30_000;
 
 type SkioPhase = "validate" | "execute";
 type SkioActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -143,7 +142,7 @@ async function requestSkioJson(input: {
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, timeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildSkioUrl(input.path, input.query), {
       method: "GET",

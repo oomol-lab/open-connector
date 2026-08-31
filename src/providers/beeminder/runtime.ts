@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const beeminderApiBaseUrl = "https://www.beeminder.com/api/v1";
-const beeminderDefaultRequestTimeoutMs = 30_000;
 
 type BeeminderPhase = "validate" | "execute";
 type BeeminderContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -187,7 +186,7 @@ async function requestBeeminderJson(input: {
   context: BeeminderContext;
   phase: BeeminderPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, beeminderDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const body = input.form ? buildBeeminderForm(input.context.apiKey, input.form) : undefined;
 
   try {

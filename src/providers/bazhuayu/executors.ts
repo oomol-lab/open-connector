@@ -34,7 +34,6 @@ import {
 } from "./runtime.ts";
 
 const service = "bazhuayu";
-const requestTimeoutMs = 30_000;
 
 const handlers: ProviderActionHandlers<
   "bazhuayu",
@@ -115,7 +114,7 @@ async function fetchProxy(
       headers.set("content-type", "application/json");
     }
   }
-  const timeout = createProviderTimeout(parentSignal, requestTimeoutMs);
+  const timeout = createProviderTimeout(parentSignal);
   try {
     return await providerFetch(url, { ...init, signal: timeout.signal });
   } finally {

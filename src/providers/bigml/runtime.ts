@@ -33,7 +33,6 @@ interface BigmlStatus {
 }
 
 export const bigmlApiBaseUrl = "https://bigml.io/andromeda";
-const timeoutMs = 30_000;
 export const bigmlActionHandlers: ProviderActionHandlers<"bigml", ProviderRuntimeHandler<BigmlContext>> = {
   async list_models(input, context) {
     const payload = await request("/model", "GET", buildListQuery(input), undefined, context, "execute");
@@ -137,7 +136,7 @@ async function request(
   context: BigmlContext,
   phase: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const url = new URL(path.startsWith("/") ? path.slice(1) : path, `${bigmlApiBaseUrl}/`);
     url.searchParams.set("username", context.username);

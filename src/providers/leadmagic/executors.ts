@@ -28,7 +28,6 @@ import {
 
 const service = "leadmagic";
 const leadmagicApiBaseUrl = "https://api.leadmagic.io/v1";
-const leadmagicDefaultRequestTimeoutMs = 30_000;
 
 type LeadmagicMode = "validate" | "execute";
 type LeadmagicActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -184,7 +183,7 @@ async function requestLeadmagicJson(
   input: LeadmagicRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, leadmagicDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildLeadmagicUrl(input.path), {

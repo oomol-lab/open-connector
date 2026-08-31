@@ -13,7 +13,6 @@ import {
 
 export const ordinalApiBaseUrl = "https://app.tryordinal.com/api/v1";
 
-const ordinalRequestTimeoutMs = 30_000;
 const ordinalValidationPath = "/workspace";
 
 type OrdinalRequestPhase = "validate" | "execute";
@@ -165,7 +164,7 @@ async function requestOrdinalResponse(input: {
   query?: Record<string, unknown>;
 }): Promise<Response> {
   const apiKey = requiredString(input.context.apiKey, "apiKey", (message) => new ProviderRequestError(401, message));
-  const timeout = createProviderTimeout(input.context.signal, ordinalRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     return await input.context.fetcher(buildOrdinalUrl(input.path, input.query), {
       method: "GET",

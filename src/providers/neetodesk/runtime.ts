@@ -13,7 +13,6 @@ import {
 } from "../provider-runtime.ts";
 
 const apiPath = "/api/external/v2";
-const timeoutMs = 30_000;
 
 export interface NeetodeskContext {
   apiKey: string;
@@ -126,7 +125,7 @@ interface NeetodeskRequest {
 async function requestNeetodesk(input: NeetodeskRequest): Promise<unknown> {
   const url = new URL(`${neetodeskBaseUrl(input.context.subdomain)}${input.path}`);
   for (const [name, value] of Object.entries(input.query ?? {})) url.searchParams.set(name, value);
-  const timeout = createProviderTimeout(input.context.signal, timeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method,

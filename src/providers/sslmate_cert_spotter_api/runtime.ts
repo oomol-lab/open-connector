@@ -13,8 +13,6 @@ import {
 export const certSpotterMonitoringApiBaseUrl: string = "https://sslmate.com/api/v3/monitoring";
 export const certSpotterCtSearchApiBaseUrl: string = "https://api.certspotter.com/v1";
 
-const certSpotterDefaultRequestTimeoutMs = 30_000;
-
 type CertSpotterRequestPhase = "validate" | "execute";
 type CertSpotterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -190,7 +188,7 @@ async function requestCertSpotterJson(input: {
   body?: string;
   phase: CertSpotterRequestPhase;
 }): Promise<{ response: Response; payload: unknown }> {
-  const timeout = createProviderTimeout(input.context.signal, certSpotterDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(input.url, {
       method: input.method,

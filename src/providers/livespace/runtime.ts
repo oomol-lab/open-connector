@@ -364,7 +364,7 @@ async function postLivespaceForm(
   formData: Record<string, string>,
   credentialPhase: boolean,
 ) {
-  const timeout = createProviderTimeout(context.signal, 30_000);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {

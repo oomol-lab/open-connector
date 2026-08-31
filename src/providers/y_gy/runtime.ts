@@ -14,7 +14,6 @@ import {
 export const yGyApiBaseUrl = "https://api.y.gy/api/v1";
 const linksPath = "/link";
 const maxResponseBytes = 10 * 1024 * 1024;
-const requestTimeoutMs = 30_000;
 const updateFields = [
   "destination_url",
   "password",
@@ -210,7 +209,7 @@ async function requestYGy(
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) headers["content-type"] = "application/json";
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",

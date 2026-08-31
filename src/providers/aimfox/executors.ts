@@ -21,7 +21,6 @@ import {
 } from "../provider-runtime.ts";
 
 const aimfoxApiBaseUrl = "https://api.aimfox.com/api/v2";
-const aimfoxDefaultRequestTimeoutMs = 30_000;
 const leadSearchBodyKeys = [
   "keywords",
   "current_companies",
@@ -277,7 +276,7 @@ async function requestAimfoxJson(input: {
     init.body = JSON.stringify(input.body);
   }
 
-  const timeout = createProviderTimeout(input.context.signal, aimfoxDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       ...init,

@@ -10,7 +10,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const holdedApiBaseUrl = "https://api.holded.com/api/v2";
-const holdedDefaultRequestTimeoutMs = 30_000;
 
 type HoldedPhase = "validate" | "execute";
 type HoldedActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -156,7 +155,7 @@ export async function validateHoldedCredential(
 }
 
 async function requestHoldedJson(input: HoldedRequestInput): Promise<unknown> {
-  const timeoutHandle = createProviderTimeout(input.context.signal, holdedDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildHoldedUrl(input.path, input.query), {
       method: input.method,

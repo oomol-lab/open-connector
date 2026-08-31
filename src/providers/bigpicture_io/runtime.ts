@@ -15,7 +15,6 @@ const bigpictureIpApiBaseUrl = "https://ip.bigpicture.io";
 const bigpictureCompanyFindPath = "/v1/companies/find";
 const bigpictureIpLookupPath = "/v2/companies/ip";
 const bigpictureValidationIp = "204.4.143.118";
-const bigpictureRequestTimeoutMs = 30_000;
 
 type BigpictureRequestPhase = "validate" | "execute";
 type BigpictureActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -99,7 +98,7 @@ async function requestBigpictureJson(input: {
   phase: BigpictureRequestPhase;
   allowAccepted: boolean;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, bigpictureRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   let response: Response;
   let payload: unknown;

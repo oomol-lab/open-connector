@@ -20,7 +20,6 @@ import {
 } from "../provider-runtime.ts";
 
 const mediastackApiBaseUrl = "https://api.mediastack.com/v1";
-const mediastackDefaultRequestTimeoutMs = 30_000;
 
 type MediastackPhase = "validate" | "execute";
 type MediastackQueryValue = string | number | undefined;
@@ -125,7 +124,7 @@ async function searchLiveNews(input: Record<string, unknown>, context: Mediastac
 }
 
 async function requestMediastackJson(input: MediastackRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, mediastackDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildMediastackUrl(input.path, input.query, input.apiKey), {

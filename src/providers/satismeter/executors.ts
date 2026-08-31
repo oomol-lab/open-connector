@@ -13,7 +13,6 @@ import {
 
 const service = "satismeter";
 const satismeterApiBaseUrl = "https://app.satismeter.com/api/v3";
-const satismeterDefaultRequestTimeoutMs = 30_000;
 const satismeterValidationProbeProjectId = "000000000000000000000000";
 const satismeterValidationPath = `/projects/${satismeterValidationProbeProjectId}`;
 
@@ -213,7 +212,7 @@ async function requestSatismeterResponse(input: {
   query?: URLSearchParams;
   mode: SatismeterMode;
 }): Promise<{ httpResponse: Response; payload: unknown }> {
-  const timeout = createProviderTimeout(input.signal, satismeterDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const httpResponse = await satismeterFetch({
       apiKey: input.apiKey,

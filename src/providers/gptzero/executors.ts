@@ -29,7 +29,6 @@ import {
 const service = "gptzero";
 const gptzeroApiBaseUrl = "https://api.gptzero.me";
 const gptzeroPredictTextPath = "/v2/predict/text";
-const gptzeroDefaultRequestTimeoutMs = 30_000;
 const gptzeroValidationDocument = "This is a GPTZero API key validation request.";
 
 type GptzeroRequestPhase = "validate" | "execute";
@@ -92,7 +91,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestGptzeroJson(input: GptzeroJsonRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, gptzeroDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(new URL(gptzeroPredictTextPath, gptzeroApiBaseUrl), {
       method: "POST",

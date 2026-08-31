@@ -14,7 +14,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 export const brightDataApiBaseUrl = "https://api.brightdata.com";
 const brightDataStatusPath = "/status";
-const brightDataRequestTimeoutMs = 30_000;
 
 type BrightDataRequestPhase = "validate" | "execute";
 type BrightDataQueryValue = string | number | boolean | undefined;
@@ -204,7 +203,7 @@ async function getSnapshotParts(input: Record<string, unknown>, context: BrightD
 }
 
 async function requestBrightDataJson(input: BrightDataRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, brightDataRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(input.path, brightDataApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {

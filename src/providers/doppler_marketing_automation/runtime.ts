@@ -26,8 +26,6 @@ interface ApiKeyProviderActionInput {
 
 export const dopplerMarketingAutomationApiBaseUrl = "https://restapi.fromdoppler.com";
 
-const requestTimeoutMs = 30_000;
-
 type RequestPhase = "validate" | "execute";
 type QueryValue = string | number | boolean | undefined;
 
@@ -236,7 +234,7 @@ export async function executeDopplerMarketingAutomationAction(
 }
 
 async function requestDopplerMarketingJson(input: DopplerMarketingRequest) {
-  const timeout = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   const url = buildDopplerMarketingUrl(input.path, input.query);
   const method = input.method ?? "GET";
 

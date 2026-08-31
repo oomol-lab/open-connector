@@ -13,7 +13,6 @@ import {
 
 const service = "capsule_crm";
 const capsuleCrmApiBaseUrl = "https://api.capsulecrm.com/api/v2";
-const requestTimeoutMs = 30_000;
 
 type CapsuleCrmActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -214,7 +213,7 @@ async function requestJsonWithHeaders(input: CapsuleCrmRequestInput) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
 
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

@@ -12,7 +12,6 @@ import {
 
 export const unsplashApiBaseUrl: string = "https://api.unsplash.com";
 const unsplashValidationPath = "/photos";
-const unsplashTimeoutMs = 30_000;
 
 type UnsplashActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -175,7 +174,7 @@ async function requestUnsplashJson(input: {
   query?: Record<string, string | number | undefined>;
   phase: "validate" | "execute";
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, unsplashTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildUnsplashUrl(input.path, input.query), {
       method: "GET",

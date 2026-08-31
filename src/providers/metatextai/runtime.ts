@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const metatextaiApiBaseUrl = "https://guard-api.metatext.ai";
-const metatextaiDefaultRequestTimeoutMs = 30_000;
 
 type MetatextaiPhase = "validate" | "execute";
 type MetatextaiActionHandler = (input: Record<string, unknown>, context: MetatextaiActionContext) => Promise<unknown>;
@@ -134,7 +133,7 @@ async function metatextaiRequestJson(input: {
   phase: MetatextaiPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, metatextaiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildUrl(input.path), {

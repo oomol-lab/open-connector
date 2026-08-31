@@ -7,8 +7,6 @@ import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "
 
 export const loopReturnsApiBaseUrl = "https://api.loopreturns.com/api/v1";
 
-const loopReturnsRequestTimeoutMs = 30_000;
-
 type LoopReturnsRequestPhase = "validate" | "execute";
 type QueryValue = string | number | boolean | undefined;
 type LoopReturnsContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -195,7 +193,7 @@ export async function validateLoopReturnsCredential(
 }
 
 async function requestLoopReturnsJson(options: LoopReturnsRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(options.signal, loopReturnsRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   const url = new URL(`${loopReturnsApiBaseUrl}${options.path}`);
   appendQuery(url, options.query);
 

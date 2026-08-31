@@ -27,7 +27,6 @@ import {
 const service = "lemlist";
 const lemlistApiBaseUrl = "https://api.lemlist.com/api";
 const lemlistValidationPath = "/team";
-const lemlistDefaultRequestTimeoutMs = 30_000;
 const lemlistFetch = createProviderFetch({ skipDnsValidation: true });
 
 type LemlistRequestPhase = "validate" | "execute";
@@ -181,7 +180,7 @@ async function requestLemlistJson(input: {
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(input.context.signal, lemlistDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   let response: Response;
   let payload: unknown;

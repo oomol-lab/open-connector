@@ -9,8 +9,6 @@ export const hookdeckApiVersion = "2025-07-01";
 export const hookdeckApiPrefix: string = `/${hookdeckApiVersion}`;
 export const hookdeckValidationPath = "/sources";
 
-const hookdeckRequestTimeoutMs = 30_000;
-
 type HookdeckActionContext = ApiKeyProviderContext;
 type HookdeckActionHandler = (input: Record<string, unknown>, context: HookdeckActionContext) => Promise<unknown>;
 
@@ -180,7 +178,7 @@ async function hookdeckRequestJson(
   body?: Record<string, unknown>,
   query?: Record<string, unknown>,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, hookdeckRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(buildHookdeckUrl(path, query), {

@@ -19,7 +19,6 @@ import {
 const service = "knowbe4";
 const knowbe4ReportingValidationPath = "/v1/account";
 const knowbe4DefaultRegion = "us";
-const knowbe4DefaultRequestTimeoutMs = 30_000;
 
 const knowbe4RegionBaseUrls = {
   us: "https://us.api.knowbe4.com",
@@ -204,7 +203,7 @@ async function requestKnowbe4JsonWithResponse(
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, knowbe4DefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

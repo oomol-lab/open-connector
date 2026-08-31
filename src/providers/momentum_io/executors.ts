@@ -14,7 +14,6 @@ import {
 
 const service = "momentum_io";
 const momentumIoApiBaseUrl = "https://api.momentum.io";
-const momentumIoDefaultRequestTimeoutMs = 30_000;
 const momentumIoValidationPath = "/v1/users?pageSize=1";
 
 type MomentumIoRequestPhase = "validate" | "execute";
@@ -135,7 +134,7 @@ async function requestMomentumIoJson(
 ): Promise<unknown> {
   let response: Response;
   let payload: unknown;
-  const timeout = createProviderTimeout(context.signal, momentumIoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     response = await context.fetcher(new URL(path, momentumIoApiBaseUrl), {

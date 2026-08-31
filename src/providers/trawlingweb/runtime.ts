@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const trawlingwebApiBaseUrl = "https://api.trawlingweb.com";
-const timeoutMs = 30_000;
 
 export const trawlingwebActionHandlers: ProviderActionHandlers<
   "trawlingweb",
@@ -61,7 +60,7 @@ async function requestNews(
   const url = new URL("/", trawlingwebApiBaseUrl);
   url.searchParams.set("token", context.apiKey);
   for (const [name, value] of Object.entries(query)) url.searchParams.set(name, value);
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       headers: { accept: "application/json", "user-agent": providerUserAgent },

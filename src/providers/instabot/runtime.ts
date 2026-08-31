@@ -25,7 +25,6 @@ interface ApiKeyProviderActionInput {
 }
 
 const instabotApiBaseUrl = "https://api.instabot.io/v1";
-const instabotDefaultRequestTimeoutMs = 30_000;
 
 type InstabotPhase = "validate" | "execute";
 type InstabotCredential = {
@@ -197,7 +196,7 @@ async function listUsers(
 }
 
 async function requestInstabotJson(input: InstabotRequestInput) {
-  const timeoutHandle = createProviderTimeout(undefined, instabotDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   try {
     const url = new URL(input.path.replace(/^\//, ""), `${instabotApiBaseUrl}/`);
     for (const [key, value] of Object.entries(input.query ?? {})) {

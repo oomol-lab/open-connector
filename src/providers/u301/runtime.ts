@@ -12,7 +12,6 @@ import {
 const u301ApiBaseUrl = "https://api.u301.com";
 const u301DomainsPath = "/v3/shorten/domains";
 const u301ShortenBulkPath = "/v3/shorten/bulk";
-const u301TimeoutMs = 30_000;
 
 type U301RequestPhase = "validate" | "execute";
 type U301ActionHandler = (input: Record<string, unknown>, context: U301ActionContext) => Promise<unknown>;
@@ -132,7 +131,7 @@ async function u301Request(input: U301RequestInput): Promise<unknown> {
     url.searchParams.set("workspaceId", input.workspaceId);
   }
 
-  const timeout = createProviderTimeout(input.signal, u301TimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

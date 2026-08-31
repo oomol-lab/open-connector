@@ -22,7 +22,6 @@ import {
 
 const service = "nyne_ai";
 const nyneAiApiBaseUrl = "https://api.nyne.ai";
-const nyneAiRequestTimeoutMs = 30_000;
 
 type NyneAiMode = "validate" | "execute";
 type NyneAiActionHandler = ProviderRuntimeHandler<NyneAiActionContext>;
@@ -277,7 +276,7 @@ async function requestNyneAiJson(
   input: NyneAiRequestInput,
   context: NyneAiActionContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, nyneAiRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildNyneAiUrl(input), {
       method: input.method,

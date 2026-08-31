@@ -21,7 +21,6 @@ import {
 
 export const delightedApiBaseUrl = "https://api.delighted.com/v1";
 const delightedValidationPath = "/metrics.json";
-const delightedDefaultRequestTimeoutMs = 30_000;
 
 type DelightedQueryValue = string | number | boolean | Array<string | number | boolean> | undefined;
 type DelightedActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -265,7 +264,7 @@ function requestContext(
 }
 
 async function requestDelightedJson(input: DelightedRequestOptions): Promise<DelightedResponse> {
-  const timeout = createProviderTimeout(input.signal, delightedDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const url = new URL(`${delightedApiBaseUrl}${input.path}`);
     appendQuery(url, input.query);

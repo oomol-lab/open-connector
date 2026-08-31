@@ -22,7 +22,6 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "braze";
-const brazeRequestTimeoutMs = 30_000;
 const brazeCredentialHelpUrl = "https://www.braze.com/docs/api/basics";
 
 type BrazeRequestPhase = "validate" | "execute";
@@ -202,7 +201,7 @@ async function requestBrazeJson(input: {
   query?: Array<[string, unknown]>;
   phase: BrazeRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, brazeRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   let payload: unknown;
 

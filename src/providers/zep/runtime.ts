@@ -13,7 +13,6 @@ import {
 
 export const zepApiBaseUrl = "https://api.getzep.com/api/v2";
 const validationEndpoint = "/projects/info";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 
 interface ZepRequestInput {
@@ -181,7 +180,7 @@ async function requestZepJson(
     headers.set("content-type", "application/json");
     body = JSON.stringify(input.body);
   }
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",

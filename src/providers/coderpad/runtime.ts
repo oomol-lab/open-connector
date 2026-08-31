@@ -3,7 +3,6 @@ import { jsonObject } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const coderpadApiBaseUrl = "https://app.coderpad.io";
-const coderpadRequestTimeoutMs = 30_000;
 
 type CoderpadRequestPhase = "validate" | "execute";
 
@@ -134,7 +133,7 @@ function buildPaginationQuery(input: Record<string, unknown>) {
 }
 
 async function requestCoderpadJson(input: CoderpadRequestInput): Promise<unknown> {
-  const timeoutHandle = createProviderTimeout(undefined, coderpadRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   const url = new URL(input.path, coderpadApiBaseUrl);
   for (const [name, value] of Object.entries(input.query ?? {})) {
     if (value != null) url.searchParams.set(name, String(value));

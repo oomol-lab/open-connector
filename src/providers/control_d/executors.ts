@@ -13,7 +13,6 @@ import {
 
 const service = "control_d";
 const apiBaseUrl = "https://api.controld.com";
-const defaultRequestTimeoutMs = 30_000;
 
 type ControlDRequestPhase = "validate" | "execute";
 
@@ -247,7 +246,7 @@ async function requestControlD(input: {
 
   let response: Response;
   let payload: unknown;
-  const timeout = createProviderTimeout(input.context.signal, defaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     response = await input.context.fetcher(new URL(input.path, apiBaseUrl), {
       method: input.method ?? "GET",

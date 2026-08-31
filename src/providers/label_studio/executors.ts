@@ -31,7 +31,6 @@ import {
 
 const service = "label_studio";
 const labelStudioValidationPath = "/api/current-user/whoami";
-const labelStudioDefaultRequestTimeoutMs = 30_000;
 
 type LabelStudioPhase = "validate" | "execute";
 type LabelStudioMethod = "GET" | "POST";
@@ -272,7 +271,7 @@ async function requestLabelStudioJson(input: {
   body?: unknown;
   notFoundAsInvalidInput?: boolean;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, labelStudioDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildLabelStudioUrl(input.baseUrl, input.path, input.query), {

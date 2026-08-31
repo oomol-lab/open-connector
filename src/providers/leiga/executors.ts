@@ -13,7 +13,6 @@ import {
 
 const service = "leiga";
 const leigaApiBaseUrl = "https://app.leiga.com/openapi/api";
-const leigaDefaultRequestTimeoutMs = 30_000;
 
 type LeigaPhase = "validate" | "execute";
 type LeigaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -177,7 +176,7 @@ async function validateLeigaCredential(context: ApiKeyProviderContext): Promise<
 async function requestLeigaJson(
   input: LeigaRequestInput & { context: ApiKeyProviderContext },
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, leigaDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildLeigaUrl(input.path, input.query ?? {}), {

@@ -16,7 +16,6 @@ export const wejamAiApiBaseUrl: string = "https://api.wejam.ai";
 export const wejamAiDataExportPathPrefix: string = "/api/v1/data-exports";
 export const wejamAiValidationPath: string = `${wejamAiDataExportPathPrefix}/users`;
 
-const wejamAiDefaultRequestTimeoutMs = 30_000;
 const wejamAiExportResourceSet = new Set<string>(wejamAiExportResourceValues);
 
 type WejamAiPhase = "validate" | "execute";
@@ -87,7 +86,7 @@ async function requestWejamAiJson(input: {
   signal?: AbortSignal;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, wejamAiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   let response: Response;
   let payload: unknown;

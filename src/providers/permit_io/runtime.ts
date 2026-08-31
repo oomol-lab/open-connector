@@ -204,7 +204,7 @@ function resolveContext(context: PermitIoContext, input: Record<string, unknown>
 }
 
 async function requestPermitIoJson(options: PermitIoRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(options.signal, 30_000);
+  const timeout = createProviderTimeout(options.signal);
   const url = new URL(options.path, permitIoApiBaseUrl);
   for (const [name, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) {

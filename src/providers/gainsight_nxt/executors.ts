@@ -20,7 +20,6 @@ import {
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
-const gainsightNxtRequestTimeoutMs = 30_000;
 const gainsightNxtMaxResponseBytes = 10 * 1024 * 1024;
 const companyPath = "/v1/data/objects/Company";
 const companyQueryPath = "/v1/data/objects/query/Company";
@@ -158,7 +157,7 @@ async function requestGainsightJson(input: {
   signal?: AbortSignal;
   url?: URL;
 }) {
-  const timeout = createProviderTimeout(input.signal, gainsightNxtRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = input.url ?? buildGainsightUrl(input.baseUrl, input.path ?? "");
 
   try {

@@ -15,7 +15,6 @@ import {
 
 const service = "one_password";
 const onePasswordValidationPath = "/v1/vaults";
-const onePasswordRequestTimeoutMs = 30_000;
 
 type OnePasswordPhase = "validate" | "execute";
 type OnePasswordActionHandler = (input: Record<string, unknown>, context: OnePasswordContext) => Promise<unknown>;
@@ -166,7 +165,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestOnePasswordJson(input: OnePasswordRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, onePasswordRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildOnePasswordUrl(input), {
       method: "GET",

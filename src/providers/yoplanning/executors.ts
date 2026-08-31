@@ -17,7 +17,6 @@ import {
 
 const service = "yoplanning";
 const yoplanningApiBaseUrl = "https://yoplanning.pro/api/v3.1";
-const yoplanningRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 type YoplanningHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -166,7 +165,7 @@ async function requestYoplanningJson(input: YoplanningRequestInput): Promise<unk
     if (value !== undefined) url.searchParams.set(name, String(value));
   }
 
-  const timeout = createProviderTimeout(input.context.signal, yoplanningRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

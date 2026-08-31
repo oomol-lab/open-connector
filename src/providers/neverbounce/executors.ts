@@ -20,7 +20,6 @@ import {
 
 const service = "neverbounce";
 const neverbounceApiBaseUrl = "https://api.neverbounce.com/v4.2";
-const neverbounceDefaultRequestTimeoutMs = 30_000;
 
 type NeverBouncePhase = "validate" | "execute";
 type NeverBounceActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -150,7 +149,7 @@ async function requestNeverBounceRaw(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, neverbounceDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const headers: Record<string, string> = {
       accept: options.accept,

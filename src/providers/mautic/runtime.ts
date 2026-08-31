@@ -34,7 +34,6 @@ type MauticActionHandler = (
   signal?: AbortSignal,
 ) => Promise<unknown>;
 
-const mauticRequestTimeoutMs = 30_000;
 const mauticMaxResponseBytes = 10 * 1024 * 1024;
 
 export const mauticActionHandlers: Record<string, MauticActionHandler> = {
@@ -275,7 +274,7 @@ async function requestMauticJson(input: MauticRequest): Promise<Record<string, u
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(input.signal, mauticRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

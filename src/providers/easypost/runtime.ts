@@ -13,8 +13,6 @@ import {
 
 export const easypostApiBaseUrl = "https://api.easypost.com/v2";
 
-const easypostDefaultRequestTimeoutMs = 30_000;
-
 type EasypostPhase = "validate" | "execute";
 type EasypostContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type EasypostActionHandler = (input: Record<string, unknown>, context: EasypostContext) => Promise<unknown>;
@@ -132,7 +130,7 @@ async function requestEasypost(request: EasypostRequest): Promise<unknown> {
     }
   }
 
-  const timeout = createProviderTimeout(request.context.signal, easypostDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(request.context.signal);
   try {
     const response = await request.context.fetcher(url.toString(), {
       method: request.method,

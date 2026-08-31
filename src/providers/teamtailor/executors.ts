@@ -23,7 +23,6 @@ const service = "teamtailor";
 const teamtailorEuApiBaseUrl = "https://api.teamtailor.com";
 const teamtailorNaApiBaseUrl = "https://api.na.teamtailor.com";
 const teamtailorApiVersion = "20240904";
-const teamtailorDefaultRequestTimeoutMs = 30_000;
 
 type TeamtailorStack = "eu" | "na";
 type TeamtailorPhase = "validate" | "execute";
@@ -165,7 +164,7 @@ async function requestTeamtailorJson(input: {
 }): Promise<unknown> {
   const url = new URL(input.path, `${getTeamtailorBaseUrl(input.stack)}/`);
   setSearchParams(url, input.query ?? {});
-  const timeout = createProviderTimeout(input.context.signal, teamtailorDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url.toString(), {
       method: "GET",

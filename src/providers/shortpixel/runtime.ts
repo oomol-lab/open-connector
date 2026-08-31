@@ -12,7 +12,6 @@ import {
 
 const shortpixelAccountApiBaseUrl = "https://api.shortpixel.com/v2";
 const shortpixelCdnApiBaseUrl = "https://no-cdn.shortpixel.ai";
-const shortpixelDefaultRequestTimeoutMs = 30_000;
 
 type ShortpixelPhase = "validate" | "execute";
 type ShortpixelActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -132,7 +131,7 @@ async function requestShortpixelJson(
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
   phase: ShortpixelPhase,
 ) {
-  const timeoutHandle = createProviderTimeout(context.signal, shortpixelDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(input.url, {

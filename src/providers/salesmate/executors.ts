@@ -25,7 +25,6 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "salesmate";
-const salesmateDefaultRequestTimeoutMs = 30_000;
 
 type SalesmatePhase = "validate" | "execute";
 type SalesmateMethod = "GET" | "POST" | "DELETE";
@@ -190,7 +189,7 @@ async function requestSalesmateJson(
   input: SalesmateRequestInput,
   context: SalesmateRequestContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, salesmateDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildSalesmateUrl(input, context.linkName), {
       method: input.method,

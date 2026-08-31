@@ -12,7 +12,6 @@ import {
 
 export const streamtimeApiBaseUrl = "https://api.streamtime.net/v2";
 const streamtimeValidationPath = "/organisation";
-const streamtimeRequestTimeoutMs = 30_000;
 
 type StreamtimeMode = "validation" | "execution";
 type StreamtimeMethod = "GET" | "POST" | "PUT";
@@ -161,7 +160,7 @@ async function streamtimeRequest(
   mode: StreamtimeMode,
 ): Promise<unknown> {
   const url = new URL(path.startsWith("/") ? path.slice(1) : path, `${streamtimeApiBaseUrl}/`);
-  const timeout = createProviderTimeout(context.signal, streamtimeRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   let response: Response;
   try {

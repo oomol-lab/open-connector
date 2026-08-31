@@ -19,7 +19,6 @@ import {
 
 const service = "demio";
 const demioApiBaseUrl = "https://my.demio.com/api/v1";
-const demioRequestTimeoutMs = 30_000;
 const demioMaxResponseBytes = 10 * 1024 * 1024;
 
 type DemioRequestPhase = "validate" | "execute";
@@ -173,7 +172,7 @@ async function requestDemioJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, demioRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

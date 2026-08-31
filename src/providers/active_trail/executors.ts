@@ -13,7 +13,6 @@ import {
 
 const service = "active_trail";
 const activeTrailApiBaseUrl = "https://webapi.mymarketing.co.il/api";
-const activeTrailDefaultRequestTimeoutMs = 30_000;
 
 type ActiveTrailPhase = "validate" | "execute";
 type ActiveTrailMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -234,7 +233,7 @@ async function requestActiveTrailJson(input: {
   body?: Record<string, unknown>;
   phase: ActiveTrailPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, activeTrailDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const headers: Record<string, string> = {

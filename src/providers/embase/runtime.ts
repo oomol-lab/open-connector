@@ -10,7 +10,6 @@ import {
 } from "../provider-runtime.ts";
 
 const embaseApiBaseUrl = "https://api.elsevier.com/content/embase";
-const embaseDefaultRequestTimeoutMs = 30_000;
 
 type EmbasePhase = "validate" | "execute";
 interface EmbaseCredentials {
@@ -113,7 +112,7 @@ async function requestEmbaseJson(input: {
   fetcher: typeof fetch;
   phase: EmbasePhase;
 }): Promise<EmbaseResponse> {
-  const timeoutHandle = createProviderTimeout(undefined, embaseDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildEmbaseUrl(input.path, input.params), {

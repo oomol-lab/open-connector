@@ -10,7 +10,6 @@ import {
 
 const service = "formaloo";
 const formalooApiBaseUrl = "https://api.formaloo.me/v3.0";
-const formalooRequestTimeoutMs = 30_000;
 interface FormalooCredentials {
   apiKey: string;
   apiSecret: string;
@@ -148,7 +147,7 @@ async function requestFormaloo(input: FormalooRequestInput): Promise<unknown> {
   const token = await obtainAuthorizationToken(input.credentials, input.fetcher, input.phase);
   const url = new URL(`${formalooApiBaseUrl}${input.path}`);
   appendQuery(url, input.query);
-  const timeout = createProviderTimeout(undefined, formalooRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
@@ -178,7 +177,7 @@ async function obtainAuthorizationToken(
   fetcher: typeof fetch,
   phase: "validate" | "execute",
 ) {
-  const timeout = createProviderTimeout(undefined, formalooRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await fetcher(`${formalooApiBaseUrl}/oauth2/authorization-token/`, {
       method: "POST",

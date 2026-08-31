@@ -22,7 +22,6 @@ import {
 export const flagsmithApiBaseUrl = "https://edge.api.flagsmith.com/api/v1";
 const service = "flagsmith";
 const flagsmithValidationPath = "/flags/";
-const flagsmithDefaultRequestTimeoutMs = 30_000;
 
 type FlagsmithRequestPhase = "validate" | "execute";
 type FlagsmithActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -139,7 +138,7 @@ async function requestFlagsmithJson(input: {
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: FlagsmithRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, flagsmithDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = new Headers({
       accept: "application/json",

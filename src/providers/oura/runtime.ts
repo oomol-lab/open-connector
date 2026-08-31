@@ -28,7 +28,6 @@ import {
 } from "./collections.ts";
 
 const ouraPersonalInfoPath = `${ouraUserCollectionPath}/personal_info`;
-const ouraRequestTimeoutMs = 30_000;
 
 type OuraRequestPhase = "validate" | "execute";
 type OuraActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
@@ -188,7 +187,7 @@ async function requestOuraObject(input: OuraRequestInput): Promise<Record<string
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(input.signal, ouraRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: "GET",

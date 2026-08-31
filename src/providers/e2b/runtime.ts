@@ -19,7 +19,6 @@ import {
 
 export const e2bApiBaseUrl = "https://api.e2b.app";
 
-const e2bDefaultRequestTimeoutMs = 30_000;
 const e2bValidationPath = "/v2/sandboxes";
 
 type E2bRequestPhase = "validate" | "execute";
@@ -176,7 +175,7 @@ async function requestE2bSandboxArray(input: E2bRequestOptions): Promise<Array<R
 }
 
 async function requestE2bJson(input: E2bRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, e2bDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildE2bUrl(input.path, input.query), {
       method: input.method ?? "GET",

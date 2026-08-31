@@ -7,7 +7,6 @@ import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "
 export const twochatApiBaseUrl = "https://api.p.2chat.io";
 
 const twochatValidationPath = "/open/info";
-const twochatRequestTimeoutMs = 30_000;
 
 type TwochatRequestPhase = "validate" | "execute";
 type TwochatQueryValue = string | number | boolean | undefined;
@@ -160,7 +159,7 @@ async function requestTwochatJson(input: TwochatRequestInput): Promise<unknown> 
 }
 
 async function requestTwochat(input: TwochatRequestInput): Promise<TwochatResponse> {
-  const timeout = createProviderTimeout(input.signal, twochatRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(input.path, `${twochatApiBaseUrl}/`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {

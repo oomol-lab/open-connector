@@ -21,7 +21,6 @@ import {
 
 export const owlProtocolApiBaseUrl = "https://api.owl.build";
 
-const owlProtocolDefaultRequestTimeoutMs = 30_000;
 const authProbePath = "/api/auth";
 const projectInfoPath = "/api/project/info";
 
@@ -149,7 +148,7 @@ async function requestOwlProtocolJson(input: {
   phase: OwlProtocolRequestPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, owlProtocolDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const apiKey = requiredString(input.context.apiKey, "apiKey", (message) => new ProviderRequestError(401, message));
 
   try {

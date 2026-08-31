@@ -6,7 +6,6 @@ import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "
 export const qingflowApiBaseUrl = "https://api.qingflow.com";
 
 const qingflowValidationPath = "/app";
-const qingflowRequestTimeoutMs = 30_000;
 
 type QingflowRequestPhase = "validate" | "execute";
 type QingflowActionContext = { accessToken: string; fetcher: typeof fetch };
@@ -350,7 +349,7 @@ async function requestQingflowEnvelope(input: QingflowRequestInput) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
 
-  const timeout = createProviderTimeout(undefined, qingflowRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

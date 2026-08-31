@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const expofpApiBaseUrl = "https://app.expofp.com/api/v1";
-const expofpDefaultRequestTimeoutMs = 30_000;
 
 type ExpofpPhase = "validate" | "execute";
 type ExpofpActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -141,7 +140,7 @@ async function requestExpofpJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   phase: ExpofpPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, expofpDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(path.replace(/^\//, ""), `${expofpApiBaseUrl}/`), {
       method: "POST",

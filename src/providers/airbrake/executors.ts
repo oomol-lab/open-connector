@@ -20,7 +20,6 @@ import {
 
 const service = "airbrake";
 const airbrakeApiBaseUrl = "https://api.airbrake.io";
-const airbrakeRequestTimeoutMs = 30_000;
 
 type AirbrakeRequestPhase = "validate" | "execute";
 type AirbrakeQueryValue = string | number | boolean | undefined;
@@ -253,7 +252,7 @@ function requestAirbrakeForAction(
 }
 
 async function requestAirbrake(input: AirbrakeRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, airbrakeRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildAirbrakeUrl(input.path, input.apiKey, input.query ?? {}), {
       method: input.method ?? "GET",

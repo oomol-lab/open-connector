@@ -13,7 +13,6 @@ import {
 
 const eveniumApiBaseUrl = "https://evenium.com";
 const eveniumValidationPath = "/api/1/events";
-const eveniumDefaultTimeoutMs = 30_000;
 
 type EveniumRequestMode = "validate" | "execute";
 type EveniumContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -172,7 +171,7 @@ async function requestEveniumObject(
 }
 
 async function requestEveniumJson(options: EveniumRequestOptions, context: EveniumContext): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, eveniumDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const url = new URL(options.path, eveniumApiBaseUrl);
     for (const [key, value] of Object.entries(options.query ?? {})) {

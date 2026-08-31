@@ -22,8 +22,6 @@ import {
 
 export const wootApiBaseUrl = "https://developer.woot.com";
 
-const wootRequestTimeoutMs = 30_000;
-
 type WootRequestPhase = "validate" | "execute";
 
 interface WootRequestContext {
@@ -105,7 +103,7 @@ export async function validateWootCredential(
 }
 
 async function requestWootJson(input: WootJsonRequest): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, wootRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(input.url, {
       method: input.method,

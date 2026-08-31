@@ -22,7 +22,6 @@ const service = "beebole";
 const beeboleApiBaseUrl = "https://app.beebole.com";
 const beeboleGraphqlPath = "/graphql";
 const beeboleGraphqlEndpoint = `${beeboleApiBaseUrl}${beeboleGraphqlPath}`;
-const beeboleRequestTimeoutMs = 30_000;
 
 type BeeboleRequestPhase = "validate" | "execute";
 
@@ -96,7 +95,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestBeeboleGraphql(input: BeeboleGraphqlRequestOptions): Promise<BeeboleGraphqlPayload> {
-  const timeout = createProviderTimeout(input.context.signal, beeboleRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(beeboleGraphqlEndpoint, {
       method: "POST",

@@ -13,7 +13,6 @@ import {
 
 const wecomBotApiBaseUrl = "https://qyapi.weixin.qq.com";
 const wecomBotWebhookPath = "/cgi-bin/webhook/send";
-const wecomBotRequestTimeoutMs = 30_000;
 const wecomBotValidationSuccessCodes = new Set([0, 40008, 40058, 93017]);
 const utf8Encoder = new TextEncoder();
 
@@ -148,7 +147,7 @@ async function requestWecomBot(input: {
   fetcher: ProviderFetch;
   signal?: AbortSignal;
 }): Promise<WecomBotRequestResult> {
-  const timeout = createProviderTimeout(input.signal, wecomBotRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildWecomBotWebhookUrl(input.apiKey), {
       method: "POST",

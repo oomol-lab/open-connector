@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const fiberAiApiBaseUrl = "https://api.fiber.ai";
-const fiberAiRequestTimeoutMs = 30_000;
 const getOrgCreditsPath = "/v1/get-org-credits";
 const getRateLimitsPath = "/v1/rate-limits";
 
@@ -130,7 +129,7 @@ async function fiberAiGetJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, fiberAiRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

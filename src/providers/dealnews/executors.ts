@@ -13,7 +13,6 @@ import {
 
 const service = "dealnews";
 const dealNewsBaseUrl = "https://www.dealnews.com";
-const dealNewsRequestTimeoutMs = 30_000;
 const rssParser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "",
@@ -56,7 +55,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<DealNewsCont
 });
 
 async function requestFeed(url: URL, context: DealNewsContext): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, dealNewsRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       headers: {

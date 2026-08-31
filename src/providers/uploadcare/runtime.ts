@@ -24,7 +24,6 @@ export const uploadcareApiBaseUrl = "https://api.uploadcare.com";
 
 export const uploadcareRestAcceptHeader: string = "application/vnd.uploadcare-v0.7+json";
 export const uploadcareJsonContentType: string = "application/json";
-const uploadcareDefaultRequestTimeoutMs = 30_000;
 
 type UploadcareRequestPhase = "validate" | "execute";
 
@@ -189,7 +188,7 @@ async function requestUploadcareJson(
     secretKey: context.secretKey,
   });
 
-  const timeout = createProviderTimeout(context.signal, uploadcareDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url.toString(), {
       method: request.method,

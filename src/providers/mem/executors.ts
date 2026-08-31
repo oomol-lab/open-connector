@@ -14,7 +14,6 @@ import {
 
 const service = "mem";
 const memApiBaseUrl = "https://api.mem.ai/v2";
-const memRequestTimeoutMs = 30_000;
 const memMaxResponseBytes = 10 * 1024 * 1024;
 
 type MemRequestPhase = "validate" | "execute";
@@ -114,7 +113,7 @@ async function requestMemJson(
   context: MemActionContext,
   phase: MemRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, memRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   const headers = new Headers({
     accept: "application/json",
     authorization: `Bearer ${context.apiKey}`,

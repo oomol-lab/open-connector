@@ -32,8 +32,6 @@ type ResourceConfig = {
 
 export const sageSalesManagementApiBaseUrl = "https://api.forcemanager.com/api/v4";
 
-const requestTimeoutMs = 30_000;
-
 const accountsConfig = {
   resourcePath: "accounts",
   listOutputKey: "accounts",
@@ -355,7 +353,7 @@ async function requestSageSalesManagementJsonWithStatus(input: {
   extraHeaders?: Record<string, string>;
   body?: Record<string, unknown>;
 }) {
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildSageSalesManagementUrl(input.path, input.query), {

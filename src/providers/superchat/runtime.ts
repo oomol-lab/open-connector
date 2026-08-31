@@ -13,7 +13,6 @@ import {
 
 const superchatApiBaseUrl = "https://api.superchat.com";
 const superchatApiVersionPath = "/v1.0";
-const superchatRequestTimeoutMs = 30_000;
 
 type SuperchatPhase = "validate" | "execute";
 type SuperchatMethod = "GET" | "POST" | "PATCH";
@@ -310,7 +309,7 @@ function buildSender(input: Record<string, unknown>): Record<string, unknown> {
 }
 
 async function requestSuperchatJson(input: SuperchatRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, superchatRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(`${superchatApiVersionPath}${input.path}`, superchatApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));

@@ -14,7 +14,6 @@ import {
 const service = "simplybook_me";
 const simplybookMeApiBaseUrl = "https://user-api.simplybook.me";
 const simplybookMeLoginUrl = `${simplybookMeApiBaseUrl}/login`;
-const simplybookMeDefaultRequestTimeoutMs = 30_000;
 
 interface SimplybookMeContext {
   companyLogin: string;
@@ -152,7 +151,7 @@ function callPublicMethod(context: SimplybookMeContext, method: string, params: 
 }
 
 async function callJsonRpc(input: JsonRpcRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, simplybookMeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(input.url, {
       method: "POST",

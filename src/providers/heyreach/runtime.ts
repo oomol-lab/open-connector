@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 const heyreachApiBaseUrl = "https://api.heyreach.io/api/public";
-const heyreachDefaultRequestTimeoutMs = 30_000;
 
 type HeyreachPhase = "validate" | "execute";
 
@@ -209,7 +208,7 @@ export async function validateHeyreachCredential(
 }
 
 async function requestHeyreachJson(input: HeyreachRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, heyreachDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildHeyreachUrl(input.path, input.query), {
       method: input.method,

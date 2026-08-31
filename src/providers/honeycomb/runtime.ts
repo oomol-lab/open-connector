@@ -13,7 +13,6 @@ import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "
 
 export const defaultHoneycombApiBaseUrl = "https://api.honeycomb.io";
 
-const honeycombRequestTimeoutMs = 30_000;
 const allowedHoneycombApiOrigins = new Set([defaultHoneycombApiBaseUrl, "https://api.eu1.honeycomb.io"]);
 
 export interface HoneycombActionContext extends ApiKeyProviderContext {
@@ -211,7 +210,7 @@ async function requestHoneycombJson(input: {
   signal?: AbortSignal;
   phase: HoneycombRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, honeycombRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const headers = new Headers();
   headers.set("accept", "application/json");
   headers.set("user-agent", providerUserAgent);

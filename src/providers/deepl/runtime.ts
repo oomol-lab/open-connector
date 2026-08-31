@@ -8,7 +8,6 @@ export const deeplApiFreeBaseUrl = "https://api-free.deepl.com";
 export const deeplTranslatePath = "/v2/translate";
 export const deeplLanguagesPath = "/v2/languages";
 export const deeplUsagePath = "/v2/usage";
-export const deeplDefaultRequestTimeoutMs = 30_000;
 
 type DeeplRequestMode = "validate" | "execute";
 type DeeplLanguageType = "source" | "target";
@@ -143,7 +142,7 @@ async function requestDeepl(apiKey: string, input: DeeplRequestInput, fetcher: t
     headers.set("content-type", "application/json");
   }
 
-  const timeout = createProviderTimeout(undefined, deeplDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
 
   let response: Response;
   try {

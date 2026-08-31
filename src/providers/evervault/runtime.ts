@@ -75,7 +75,7 @@ async function request(
   context: EvervaultContext,
   phase: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, 30_000);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(path, evervaultApiBaseUrl), {
       method: "POST",

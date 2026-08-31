@@ -11,7 +11,6 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const clickhouseDefaultRequestTimeoutMs = 30_000;
 const clickhouseDefaultDatabase = "default";
 const clickhouseValidationQuery = "SELECT currentDatabase() AS database, version() AS version";
 
@@ -358,7 +357,7 @@ async function ensureDatabaseExists(database: string, context: ClickhouseActionC
 }
 
 async function requestClickhouseJson(input: ClickhouseRequestInput): Promise<ClickhouseJsonPayload> {
-  const timeout = createProviderTimeout(input.context.signal, clickhouseDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = new URL(input.context.baseUrl);
   url.searchParams.set("default_format", "JSON");
   url.searchParams.set("database", input.database ?? input.context.defaultDatabase);

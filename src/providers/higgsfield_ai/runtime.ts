@@ -17,7 +17,6 @@ const higgsfieldAiValidationPath = `/requests/${higgsfieldAiValidationRequestId}
 const higgsfieldAiValidationNotFoundStatus = "request_not_found";
 const higgsfieldAiDefaultImageModelId = "higgsfield-ai/soul/standard";
 const higgsfieldAiDefaultVideoModelId = "higgsfield-ai/dop/standard";
-const higgsfieldAiRequestTimeoutMs = 30_000;
 
 type HiggsfieldAiRequestPhase = "validate" | "execute";
 
@@ -150,7 +149,7 @@ async function requestHiggsfieldAiJson(input: HiggsfieldAiRequestInput): Promise
 }
 
 async function requestHiggsfieldAiResponse(input: HiggsfieldAiRequestInput): Promise<Response> {
-  const timeout = createProviderTimeout(input.context.signal, higgsfieldAiRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     return await input.context.fetcher(buildHiggsfieldAiUrl(input.path, input.query), {
       method: input.method,

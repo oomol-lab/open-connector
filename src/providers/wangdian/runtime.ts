@@ -19,7 +19,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const wangdianApiBaseUrl = "https://api.wangdian.cn/openapi2";
-const requestTimeoutMs = 30_000;
 const maximumWindowMs = 30 * 24 * 60 * 60 * 1_000;
 const maximumOrderWindowMs = 60 * 60 * 1_000;
 const chinaTimeOffsetMs = 8 * 60 * 60 * 1_000;
@@ -415,7 +414,7 @@ function normalizeParameters(parameters: Record<string, unknown>): Record<string
 }
 
 async function requestWangdian(input: WangdianRequest): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(`${wangdianApiBaseUrl}/${input.endpoint}`, {
       method: "POST",

@@ -17,7 +17,6 @@ export interface MoxieActionContext {
   signal?: AbortSignal;
 }
 
-const timeoutMs = 30_000;
 const maxResponseBytes = 4 * 1024 * 1024;
 const validationPath = "action/pipelineStages/list";
 
@@ -101,7 +100,7 @@ async function requestMoxieJson(input: {
     const text = optionalString(value);
     if (text != null) url.searchParams.set(key, text);
   }
-  const timeout = createProviderTimeout(input.signal, timeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": input.apiKey },

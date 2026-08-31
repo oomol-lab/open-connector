@@ -14,7 +14,6 @@ import {
 
 const service = "wakatime";
 const wakatimeApiBaseUrl = "https://wakatime.com/api/v1";
-const wakatimeDefaultRequestTimeoutMs = 30_000;
 
 type WakatimeRequestPhase = "validate" | "execute";
 
@@ -193,7 +192,7 @@ async function requestWakatimeJson(input: {
   signal?: AbortSignal;
   query?: URLSearchParams;
 }): Promise<{ response: Response; payload: Record<string, unknown> }> {
-  const timeout = createProviderTimeout(input.signal, wakatimeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const normalizedPath = input.path.startsWith("/") ? input.path.slice(1) : input.path;
     const url = new URL(normalizedPath, `${wakatimeApiBaseUrl}/`);

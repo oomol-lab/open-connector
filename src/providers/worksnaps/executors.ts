@@ -15,7 +15,6 @@ import {
 export const worksnapsApiBaseUrl = "https://api.worksnaps.com/api";
 const service = "worksnaps";
 const worksnapsValidationPath = "/me.xml";
-const worksnapsRequestTimeoutMs = 30_000;
 
 interface XmlNode {
   name: string;
@@ -205,7 +204,7 @@ async function requestWorksnapsXml(input: {
   phase: "validate" | "execute";
   query?: Record<string, string | undefined>;
 }): Promise<XmlNode> {
-  const timeout = createProviderTimeout(input.context.signal, worksnapsRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildWorksnapsUrl(input.path, input.query), {
       method: "GET",

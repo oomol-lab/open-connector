@@ -14,7 +14,6 @@ import {
 
 const service = "la_growth_machine";
 const laGrowthMachineApiBaseUrl = "https://apiv2.lagrowthmachine.com/flow";
-const laGrowthMachineRequestTimeoutMs = 30_000;
 
 type JsonObject = Record<string, unknown>;
 type LaGrowthMachineContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -171,7 +170,7 @@ async function requestLaGrowthMachine(request: {
     appendQueryValue(url, key, value);
   }
 
-  const timeout = createProviderTimeout(request.context.signal, laGrowthMachineRequestTimeoutMs);
+  const timeout = createProviderTimeout(request.context.signal);
   let response: Response;
   let payload: unknown;
   try {

@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const tapfiliateApiBaseUrl: string = "https://api.tapfiliate.com/1.6";
-const tapfiliateDefaultRequestTimeoutMs = 30_000;
 
 type TapfiliatePhase = "validate" | "execute";
 type TapfiliateActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -283,7 +282,7 @@ async function requestTapfiliateJson(input: {
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: TapfiliatePhase;
 }): Promise<TapfiliateJsonResponse> {
-  const timeout = createProviderTimeout(input.context.signal, tapfiliateDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const headers: Record<string, string> = {

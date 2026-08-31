@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const unipileValidationPath = "/api/v1/accounts";
-const unipileRequestTimeoutMs = 30_000;
 
 type UnipileRequestPhase = "validate" | "execute";
 type UnipileActionHandler = (input: Record<string, unknown>, context: UnipileActionContext) => Promise<unknown>;
@@ -142,7 +141,7 @@ export async function validateUnipileCredential(
 }
 
 async function requestUnipileJson(input: UnipileRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, unipileRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildUnipileUrl(input.dsn, input.path, input.query), {
       method: "GET",

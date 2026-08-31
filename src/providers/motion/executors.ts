@@ -20,7 +20,6 @@ import {
 
 const service = "motion";
 const motionApiBaseUrl = "https://api.usemotion.com/v1";
-const motionDefaultRequestTimeoutMs = 30_000;
 const taskUpdateFieldNames = [
   "name",
   "workspaceId",
@@ -262,7 +261,7 @@ async function requestMotionJson(input: {
   query?: Record<string, string>;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, motionDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildMotionUrl(input.path, input.query), {

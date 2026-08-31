@@ -2,7 +2,6 @@ import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const snipcartApiBaseUrl = "https://app.snipcart.com/api";
-const snipcartRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 
@@ -107,7 +106,7 @@ async function requestSnipcartJson(input: {
   fetcher: typeof fetch;
   phase: RequestPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, snipcartRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   const url = new URL(`${snipcartApiBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {

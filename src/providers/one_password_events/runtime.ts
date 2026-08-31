@@ -26,8 +26,6 @@ import {
 
 export const onePasswordEventsValidationPath = "/api/v2/auth/introspect";
 
-const onePasswordEventsRequestTimeoutMs = 30_000;
-
 type OnePasswordEventsPhase = "validate" | "execute";
 type OnePasswordEventsActionHandler = ProviderRuntimeHandler<OnePasswordEventsContext>;
 
@@ -191,7 +189,7 @@ async function requestOnePasswordEventsJson(input: {
   phase: OnePasswordEventsPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, onePasswordEventsRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(new URL(input.path, `${input.context.baseUrl}/`), {
       method: input.method,

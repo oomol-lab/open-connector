@@ -49,8 +49,6 @@ interface TaigaListResult {
 
 type TaigaActionHandler = (input: Record<string, unknown>, context: TaigaContext) => Promise<unknown>;
 
-const requestTimeoutMs = 30_000;
-
 export const taigaActionHandlers: Record<string, TaigaActionHandler> = {
   list_projects: actionHandler("list_projects"),
   get_project: actionHandler("get_project"),
@@ -210,7 +208,7 @@ async function requestWithoutToken(input: TaigaRequestInput, authToken?: string)
     "user-agent": providerUserAgent,
   });
   if (authToken) headers.set("authorization", `Bearer ${authToken}`);
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

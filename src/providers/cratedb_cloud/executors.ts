@@ -22,7 +22,6 @@ const service = "cratedb_cloud";
 const cratedbCloudApiBaseUrl = "https://console.cratedb.cloud";
 const cratedbCloudRequestBaseUrl = `${cratedbCloudApiBaseUrl}/`;
 const cratedbCloudValidationPath = "/api/v2/users/me/";
-const cratedbCloudDefaultTimeoutMs = 30_000;
 const cratedbCloudMaxResponseBytes = 10 * 1024 * 1024;
 
 type CratedbCloudRequestPhase = "validate" | "execute";
@@ -224,7 +223,7 @@ async function requestCratedbCloudJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, cratedbCloudDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method,

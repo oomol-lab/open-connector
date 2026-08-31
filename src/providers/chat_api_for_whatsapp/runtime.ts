@@ -24,8 +24,6 @@ import {
 
 export const chatApiForWhatsappApiOrigin = "https://api.chat-api.com";
 
-const chatApiForWhatsappRequestTimeoutMs = 30_000;
-
 type ChatApiForWhatsappPhase = "validate" | "execute";
 
 export interface ChatApiForWhatsappContext {
@@ -233,7 +231,7 @@ async function requestChatApiForWhatsapp(input: {
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;
 }): Promise<ChatApiForWhatsappResponse> {
-  const timeout = createProviderTimeout(input.context.signal, chatApiForWhatsappRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = new URL(
     input.path.startsWith("/") ? input.path.slice(1) : input.path,
     resolveChatApiForWhatsappBaseUrl(input.context.instanceId),

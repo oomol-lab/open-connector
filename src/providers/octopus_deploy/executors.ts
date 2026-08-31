@@ -23,7 +23,6 @@ import {
 
 const service = "octopus_deploy";
 const validationPath = "/users/me";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 
 interface OctopusDeployContext {
@@ -229,7 +228,7 @@ async function requestOctopusDeployObject(
 ): Promise<Record<string, unknown>> {
   const url = new URL(path.replace(/^\/+/, ""), `${context.apiBaseUrl}/`);
   appendQuery(url, query);
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",

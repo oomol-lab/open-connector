@@ -13,7 +13,6 @@ import {
 export const simplesatApiBaseUrl = "https://api.simplesat.io";
 export const simplesatValidationPath = "/api/v1/surveys";
 
-const simplesatDefaultRequestTimeoutMs = 30_000;
 const simplesatCredentialHelpUrl = "https://app.simplesat.io/settings/api-keys/";
 
 type SimplesatRequestPhase = "validate" | "execute";
@@ -226,7 +225,7 @@ export async function validateSimplesatCredential(
 }
 
 async function requestSimplesatJson(input: SimplesatRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, simplesatDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildSimplesatUrl(input), {

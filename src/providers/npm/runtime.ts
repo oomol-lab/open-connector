@@ -37,7 +37,6 @@ interface DownloadPoint {
 
 const downloadPeriodPresets = new Set(["last-day", "last-week", "last-month", "last-year"]);
 const npmMaxResponseBytes = 10 * 1024 * 1024;
-const npmRequestTimeoutMs = 30_000;
 
 export const npmActionHandlers: ProviderActionHandlers<"npm", NpmActionHandler> = {
   async get_current_user(_input, context) {
@@ -288,7 +287,7 @@ async function requestNpmJson(input: {
     headers.set("content-type", "application/json");
   }
 
-  const timeout = createProviderTimeout(input.signal, npmRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(new URL(input.path, input.baseUrl ?? npmRegistryBaseUrl), {
       method: input.method ?? "GET",

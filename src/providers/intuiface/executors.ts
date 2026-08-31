@@ -14,7 +14,6 @@ import {
 const service = "intuiface";
 const intuifaceApiOrigin = "https://api.intuiface.com";
 const intuifaceWebTriggersBaseUrl = `${intuifaceApiOrigin}/webtriggers/v1`;
-const intuifaceDefaultRequestTimeoutMs = 30_000;
 
 interface IntuifaceRequestInput {
   method: "GET" | "POST";
@@ -103,7 +102,7 @@ async function requestIntuifaceJson(
   context: ApiKeyProviderContext,
   phase: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, intuifaceDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   const url = new URL(`${intuifaceWebTriggersBaseUrl}${input.path}`);
   appendQuery(url, input.query);
 

@@ -18,8 +18,6 @@ type InfluxdbCloudActionHandler = (
   context: InfluxdbCloudActionContext,
 ) => Promise<unknown>;
 
-const influxdbCloudDefaultRequestTimeoutMs = 30_000;
-
 export interface InfluxdbCloudActionContext {
   apiKey: string;
   apiBaseUrl: string;
@@ -195,7 +193,7 @@ async function requestInfluxdbCloud(input: {
   let response: Response;
   let payload: unknown;
   input.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(input.signal, influxdbCloudDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     response = await input.fetcher(url, {
       method: input.method ?? "GET",

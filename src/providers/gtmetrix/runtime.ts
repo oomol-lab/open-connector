@@ -23,7 +23,6 @@ import {
 
 const gtmetrixApiBaseUrl = "https://gtmetrix.com/api/2.0";
 const gtmetrixJsonMediaType = "application/vnd.api+json";
-const gtmetrixDefaultRequestTimeoutMs = 30_000;
 
 type GtmetrixRequestPhase = "validate" | "execute";
 type GtmetrixQueryValue = string | number | boolean | readonly string[] | readonly number[] | undefined;
@@ -347,7 +346,7 @@ async function requestGtmetrixJson(input: GtmetrixRequestInput): Promise<{
 }
 
 async function fetchGtmetrix(input: GtmetrixRequestInput): Promise<Response> {
-  const timeout = createProviderTimeout(input.signal, gtmetrixDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(normalizePath(input.path), `${gtmetrixApiBaseUrl}/`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value === undefined) continue;

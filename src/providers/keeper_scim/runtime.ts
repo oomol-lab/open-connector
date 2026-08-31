@@ -21,7 +21,6 @@ const keeperScimRegionBaseUrls = {
 
 const defaultKeeperScimRegion = "us";
 const keeperScimConfigPath = "/ServiceProviderConfig";
-const keeperScimRequestTimeoutMs = 30_000;
 
 type KeeperScimRegion = keyof typeof keeperScimRegionBaseUrls;
 type KeeperScimRequestPhase = "validate" | "execute";
@@ -166,7 +165,7 @@ async function requestKeeperScimJson(input: {
 }): Promise<unknown> {
   let response: Response;
   let payload: unknown;
-  const timeout = createProviderTimeout(input.context.signal, keeperScimRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const url = new URL(`${input.context.config.nodeBaseUrl}${input.path}`);
     for (const [key, value] of input.searchParams ?? []) {

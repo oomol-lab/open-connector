@@ -21,7 +21,6 @@ import {
 
 const service = "dns_filter";
 const dnsFilterApiBaseUrl = "https://api.dnsfilter.com";
-const dnsFilterRequestTimeoutMs = 30_000;
 
 type DnsFilterRequestPhase = "validate" | "execute";
 type DnsFilterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -221,7 +220,7 @@ async function dnsFilterFetch(input: {
     url.search = input.query.toString();
   }
 
-  const timeout = createProviderTimeout(input.signal, dnsFilterRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     return await input.fetcher(url, {
       method: "GET",

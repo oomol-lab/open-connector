@@ -1,8 +1,6 @@
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const helpscoutRequestTimeoutMs = 30_000;
-
 interface HelpscoutActionContext {
   accessToken: string;
   fetcher: typeof fetch;
@@ -402,7 +400,7 @@ async function requestHelpscout(options: HelpscoutRequestOptions) {
     headers.set("content-type", "application/json");
   }
 
-  const timeoutHandle = createProviderTimeout(undefined, helpscoutRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
   try {
     const response = await options.fetcher(url, {
       method: options.method ?? "GET",

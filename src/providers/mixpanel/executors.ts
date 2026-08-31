@@ -32,7 +32,6 @@ import {
 const service = "mixpanel";
 const mixpanelDefaultBaseUrl = "https://mixpanel.com";
 const mixpanelDefaultExportBaseUrl = "https://data.mixpanel.com";
-const mixpanelDefaultRequestTimeoutMs = 30_000;
 const mixpanelAllowedHostSuffix = ".mixpanel.com";
 
 type MixpanelPhase = "validate" | "execute";
@@ -555,7 +554,7 @@ async function requestMixpanelText(input: MixpanelRequestInput): Promise<string>
 }
 
 async function requestMixpanel(input: MixpanelRequestInput): Promise<{ text: string; payload: unknown }> {
-  const timeout = createProviderTimeout(input.signal, mixpanelDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const url = buildMixpanelUrl(input.baseUrl, input.path);
     for (const [key, value] of Object.entries(input.query ?? {})) {

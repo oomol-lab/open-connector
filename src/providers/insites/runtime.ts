@@ -11,7 +11,6 @@ export interface InsitesCredentialCheck {
 }
 
 export const insitesApiBaseUrl = "https://api.insites.com/api/v1";
-const insitesDefaultRequestTimeoutMs = 30_000;
 
 type InsitesRequestPhase = "validate" | "execute";
 
@@ -164,7 +163,7 @@ async function requestInsites(input: {
     init.body = JSON.stringify(input.body);
   }
 
-  const timeout = createProviderTimeout(undefined, insitesDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   init.signal = timeout.signal;
   try {
     const response = await input.fetcher(url, init);

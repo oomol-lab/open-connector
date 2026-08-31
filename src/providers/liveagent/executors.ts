@@ -24,7 +24,6 @@ const service = "liveagent";
 const liveagentCredentialHelpUrl = "https://support.liveagent.com/741982-API-key";
 const liveagentValidationPath = "/my_account/_link";
 const liveagentApiPathPrefix = "/api/v3";
-const liveagentDefaultRequestTimeoutMs = 30_000;
 const liveagentMaxResponseBytes = 10 * 1024 * 1024;
 
 type LiveagentMode = "validate" | "execute";
@@ -351,7 +350,7 @@ async function requestLiveagentJson(input: {
   readonly body?: unknown;
   readonly signal?: AbortSignal;
 }) {
-  const timeout = createProviderTimeout(input.signal, liveagentDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildLiveagentUrl(input.apiBaseUrl, input.path, input.query), {

@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const beamerApiBaseUrl = "https://api.getbeamer.com/v0";
-const beamerTimeoutMs = 30_000;
 
 type BeamerPhase = "validate" | "execute";
 type BeamerActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -215,7 +214,7 @@ async function requestBeamerJson(
   context: BeamerContext,
   phase: BeamerPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, beamerTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(url, {

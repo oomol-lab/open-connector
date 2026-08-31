@@ -10,7 +10,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const onfleetApiBaseUrl = "https://onfleet.com/api/v2";
-const onfleetRequestTimeoutMs = 30_000;
 
 type OnfleetRequestPhase = "validate" | "execute";
 export interface OnfleetActionContext {
@@ -113,7 +112,7 @@ export async function requestOnfleetJson(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, onfleetRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url, {

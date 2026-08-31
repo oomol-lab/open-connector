@@ -27,7 +27,6 @@ const service = "gagelist";
 const gagelistApiBaseUrl = "https://gagelist.net/GageList/api";
 const gagelistTokenUrl = "https://gagelist.net/api/token";
 
-const gagelistRequestTimeoutMs = 30_000;
 const gagelistMaxResponseBytes = 10 * 1024 * 1024;
 const gagelistFetch = createProviderFetch({ skipDnsValidation: true });
 
@@ -488,7 +487,7 @@ async function fetchGagelistResponse(input: {
   readonly operation: string;
   readonly signal?: AbortSignal;
 }) {
-  const timeout = createProviderTimeout(input.signal, gagelistRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     return await input.fetcher(input.url, { ...input.init, signal: timeout.signal });
   } catch (error) {

@@ -14,7 +14,6 @@ import {
 
 const service = "emelia";
 const emeliaApiBaseUrl = "https://api.emelia.io";
-const emeliaRequestTimeoutMs = 30_000;
 
 type EmeliaRequestPhase = "validate" | "execute";
 
@@ -136,7 +135,7 @@ async function requestEmeliaJson(
     url.searchParams.append(key, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, emeliaRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: input.method,

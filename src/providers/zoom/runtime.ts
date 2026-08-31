@@ -13,8 +13,6 @@ import {
 
 export const zoomApiBaseUrl = "https://api.zoom.us/v2";
 
-const zoomDefaultRequestTimeoutMs = 30_000;
-
 type ZoomRequestPhase = "validate" | "execute";
 type ZoomActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
 
@@ -122,7 +120,7 @@ export async function fetchZoomCurrentAccount(
 }
 
 async function requestZoomJson(input: ZoomRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, zoomDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

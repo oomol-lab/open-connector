@@ -14,7 +14,6 @@ import {
 
 const service = "jina_ai";
 const apiBaseUrl = "https://api.jina.ai";
-const requestTimeoutMs = 30_000;
 
 type JinaAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -75,7 +74,7 @@ async function jinaPost(
   path: string,
   mode: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(`${apiBaseUrl}${path}`, {
       method: "POST",

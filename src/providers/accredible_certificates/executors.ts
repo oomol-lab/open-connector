@@ -21,7 +21,6 @@ import {
 
 const service = "accredible_certificates";
 const accredibleCertificatesApiBaseUrl = "https://api.accredible.com/";
-const accredibleCertificatesDefaultRequestTimeoutMs = 30_000;
 
 type AccredibleCertificatesRequestPhase = "validate" | "execute";
 type AccredibleCertificatesMethod = "GET" | "POST" | "DELETE";
@@ -280,7 +279,7 @@ async function requestAccredibleCertificatesJson(input: {
   signal?: AbortSignal;
   phase: AccredibleCertificatesRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, accredibleCertificatesDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const method = input.method ?? "GET";
 
   let response: Response;

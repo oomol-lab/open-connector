@@ -43,8 +43,6 @@ interface SeaTableRequestOptions {
 
 type SeaTableActionHandler = (input: Record<string, unknown>, context: SeaTableContext) => Promise<unknown>;
 
-const requestTimeoutMs = 30_000;
-
 export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
   async get_metadata(_input, context) {
     return {
@@ -197,7 +195,7 @@ async function getBaseAccess(
   phase: "execute" | "validate",
   signal?: AbortSignal,
 ): Promise<SeaTableBaseAccess> {
-  const timeout = createProviderTimeout(signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   try {
     const response = await fetcher(new URL("api/v2.1/dtable/app-access-token/", serverUrl), {
       headers: requestHeaders(apiToken),
@@ -233,7 +231,7 @@ async function requestBaseJson(
   for (const [key, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",

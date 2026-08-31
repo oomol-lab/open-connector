@@ -28,7 +28,6 @@ export const mxApiBaseUrl = "https://api.mx.com";
 const mxRequestBaseUrl = "https://api.mx.com/";
 const mxVersion = "v20250224";
 const mxValidationPath = "/users";
-const mxDefaultTimeoutMs = 30_000;
 
 type MxPhase = "validate" | "execute";
 export interface MxContext {
@@ -174,7 +173,7 @@ async function requestMxJson(input: MxRequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, mxDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url, {

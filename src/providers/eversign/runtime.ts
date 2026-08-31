@@ -22,8 +22,6 @@ import {
 export const eversignApiBaseUrl = "https://api.eversign.com";
 export const eversignValidationPath = "/business";
 
-const eversignRequestTimeoutMs = 30_000;
-
 type EversignPhase = "validate" | "execute";
 
 interface EversignCredentialSummary {
@@ -254,7 +252,7 @@ async function requestEversignJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, eversignRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

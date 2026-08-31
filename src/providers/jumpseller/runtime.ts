@@ -21,8 +21,6 @@ import {
 
 export const jumpsellerApiBaseUrl = "https://api.jumpseller.com/v1/";
 
-const jumpsellerDefaultTimeoutMs = 30_000;
-
 type JumpsellerRequestPhase = "validate" | "execute";
 type JumpsellerResourceKey = "store" | "product" | "order" | "customer" | "category";
 
@@ -365,7 +363,7 @@ async function requestJumpsellerJson(input: JumpsellerRequestInput) {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, jumpsellerDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url, {

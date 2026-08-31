@@ -16,7 +16,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const timelinkApiBaseUrl: string = "https://api.timelink.io/api/v1";
-const timelinkRequestTimeoutMs = 30_000;
 
 type TimelinkPhase = "validate" | "execute";
 type TimelinkActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -309,7 +308,7 @@ async function requestTimelinkJson(input: {
   fetcher: typeof fetch;
   phase: TimelinkPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, timelinkRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildTimelinkUrl(input.path, input.query), {

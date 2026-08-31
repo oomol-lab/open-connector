@@ -30,7 +30,6 @@ interface NylasRequestOptions {
 }
 
 export const nylasApiBaseUrl = "https://api.us.nylas.com/v3";
-const nylasDefaultRequestTimeoutMs = 30_000;
 
 export const nylasActionHandlers: ProviderActionHandlers<"nylas", NylasActionHandler> = {
   async list_grants(input, context) {
@@ -170,7 +169,7 @@ export async function validateNylasCredential(
 }
 
 async function requestNylasJson(options: NylasRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(options.context.signal, nylasDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.context.signal);
   try {
     const response = await options.context.fetcher(buildNylasUrl(options.path, options.params ?? {}), {
       method: "GET",

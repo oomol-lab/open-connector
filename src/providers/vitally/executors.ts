@@ -14,7 +14,6 @@ import {
 
 const service = "vitally";
 const vitallyEuBaseUrl = "https://rest.vitally-eu.io";
-const vitallyRequestTimeoutMs = 30_000;
 
 type VitallyRegion = "us" | "eu";
 type VitallyRequestPhase = "validate" | "execute";
@@ -189,7 +188,7 @@ async function deleteAccount(input: Record<string, unknown>, context: VitallyAct
 }
 
 async function requestVitally(input: VitallyRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, vitallyRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const url = new URL(input.path, input.baseUrl);
     if (input.searchParams) {

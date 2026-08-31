@@ -19,7 +19,6 @@ import {
 } from "../provider-runtime.ts";
 
 const theDogApiBaseUrl = "https://api.thedogapi.com/v1/";
-const defaultTimeoutMs = 30_000;
 
 type TheDogApiMethod = "GET" | "POST" | "DELETE";
 type TheDogApiHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -196,7 +195,7 @@ async function requestTheDogApiJson(input: {
   body?: Record<string, unknown>;
   phase?: "validate" | "execute";
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, defaultTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = new URL(input.path.startsWith("/") ? input.path.slice(1) : input.path, theDogApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, value);

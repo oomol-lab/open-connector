@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const smartsheetApiBaseUrl = "https://api.smartsheet.com/2.0";
-const smartsheetDefaultRequestTimeoutMs = 30_000;
 const smartsheetIntegrationSource = "AI,OOMOL,oomol-connect";
 
 type SmartsheetPhase = "validate" | "execute";
@@ -163,7 +162,7 @@ async function requestSmartsheetJson(input: {
   phase: SmartsheetPhase;
   body?: unknown;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, smartsheetDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildSmartsheetUrl(input.path, input.params), {
       method: input.method,

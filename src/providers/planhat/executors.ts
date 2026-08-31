@@ -21,7 +21,6 @@ import {
 
 const service = "planhat";
 const apiBaseUrl = "https://api.planhat.com";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 
 type PlanhatPhase = "validate" | "execute";
@@ -179,7 +178,7 @@ async function requestPlanhatJson(request: PlanhatRequest): Promise<unknown> {
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(request.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(request.context.signal);
   try {
     const response = await request.context.fetcher(url, {
       method: request.method,

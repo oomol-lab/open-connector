@@ -20,8 +20,6 @@ import {
 
 export const discolikeApiBaseUrl = "https://api.discolike.com/v1";
 
-const discolikeDefaultRequestTimeoutMs = 30_000;
-
 type DiscolikePhase = "validate" | "execute";
 type DiscolikeQueryValue = string | number | boolean | readonly string[] | undefined;
 type DiscolikeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -163,7 +161,7 @@ async function requestDiscolikeJson(input: {
   context: DiscolikeContext;
   phase: DiscolikePhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, discolikeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildDiscolikeUrl(input.path, input.query), {
       method: "GET",

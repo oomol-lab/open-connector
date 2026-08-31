@@ -21,7 +21,6 @@ import {
 const service = "flexmail";
 const flexmailApiBaseUrl = "https://api.flexmail.eu";
 
-const flexmailDefaultRequestTimeoutMs = 30_000;
 const flexmailMaxResponseBytes = 10 * 1024 * 1024;
 const supportedLanguageSet = new Set([
   "nl",
@@ -423,7 +422,7 @@ async function flexmailRequest(input: FlexmailRequestInput) {
 }
 
 async function flexmailRawRequest(input: FlexmailRequestInput) {
-  const timeoutHandle = createProviderTimeout(input.context.signal, flexmailDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.context.signal);
   const headers: Record<string, string> = {
     accept: "application/hal+json, application/json",
     authorization: buildFlexmailAuthorization(input.context.accountId, input.context.personalAccessToken),

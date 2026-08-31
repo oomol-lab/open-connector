@@ -14,7 +14,6 @@ import {
 const service = "onesignal_rest_api";
 const onesignalRestApiBaseUrl = "https://api.onesignal.com";
 const onesignalValidationPath = "/notifications";
-const onesignalDefaultRequestTimeoutMs = 30_000;
 
 type OneSignalRequestPhase = "validate" | "execute";
 type OneSignalActionHandler = (input: Record<string, unknown>, context: OneSignalContext) => Promise<unknown>;
@@ -146,7 +145,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestOneSignalJson(input: OneSignalRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, onesignalDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const headers = new Headers({

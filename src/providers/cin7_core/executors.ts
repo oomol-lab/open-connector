@@ -27,7 +27,6 @@ const service = "cin7_core";
 const cin7CoreApiBaseUrl = "https://inventory.dearsystems.com/ExternalApi/v2/";
 const cin7CoreFetch = createProviderFetch({ skipDnsValidation: true });
 const cin7CoreValidationPath = "/me";
-const cin7CoreDefaultRequestTimeoutMs = 30_000;
 
 type Cin7CorePhase = "validate" | "execute";
 
@@ -257,7 +256,7 @@ async function requestCin7CoreJson(input: {
   phase: Cin7CorePhase;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, cin7CoreDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildCin7CoreUrl(input), {

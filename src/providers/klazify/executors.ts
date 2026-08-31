@@ -20,7 +20,6 @@ import {
 
 const service = "klazify";
 const klazifyApiBaseUrl = "https://www.klazify.com/api";
-const klazifyDefaultRequestTimeoutMs = 30_000;
 
 type KlazifyPhase = "validate" | "execute";
 type KlazifyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -243,7 +242,7 @@ async function requestKlazifyJson(input: {
   signal?: AbortSignal;
   phase: KlazifyPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, klazifyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildKlazifyUrl(input.path), {

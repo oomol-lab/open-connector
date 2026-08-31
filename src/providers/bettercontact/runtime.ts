@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const bettercontactApiBaseUrl = "https://app.bettercontact.rocks/api/v2";
-const bettercontactDefaultRequestTimeoutMs = 30_000;
 
 type BettercontactMode = "validate" | "execute";
 type BettercontactActionHandler = ProviderRuntimeHandler<BettercontactContext>;
@@ -159,7 +158,7 @@ async function requestBettercontactJson(
   input: BettercontactRequestInput,
   context: BettercontactContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, bettercontactDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildBettercontactUrl(input, context.apiKey), {

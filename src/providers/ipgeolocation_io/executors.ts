@@ -13,7 +13,6 @@ import {
 
 const service = "ipgeolocation_io";
 const ipgeolocationIoApiBaseUrl = "https://api.ipgeolocation.io";
-const ipgeolocationIoDefaultRequestTimeoutMs = 30_000;
 
 type IpgeolocationIoPhase = "validate" | "execute";
 type IpgeolocationIoActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -124,7 +123,7 @@ async function requestIpgeolocationIoJson(
   },
   context: IpgeolocationIoActionContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, ipgeolocationIoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildIpgeolocationIoUrl(input.path, context.apiKey, input.params), {
       method: "GET",

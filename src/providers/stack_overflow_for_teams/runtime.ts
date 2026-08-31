@@ -13,7 +13,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const stackOverflowForTeamsApiBaseUrl = "https://api.stackoverflowteams.com/v3/";
-const requestTimeoutMs = 30_000;
 
 export interface StackOverflowForTeamsContext {
   apiKey: string;
@@ -114,7 +113,7 @@ async function requestPaginated(
 async function requestJson(input: RequestInput): Promise<unknown> {
   const url = new URL(`teams/${encodeURIComponent(input.team)}/${input.path}`, stackOverflowForTeamsApiBaseUrl);
   if (input.query) url.search = input.query.toString();
-  const timeout = createProviderTimeout(input.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       headers: {

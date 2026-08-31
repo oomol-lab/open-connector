@@ -6,7 +6,6 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const birdApiBaseUrl: string = "https://api.bird.com";
-const birdRequestTimeoutMs = 30_000;
 
 type BirdRequestPhase = "validate" | "execute";
 type BirdRequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
@@ -374,7 +373,7 @@ async function birdRequest(
     url.searchParams.append(key, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, birdRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url, {

@@ -14,7 +14,6 @@ export const clicksendApiBaseUrl = "https://rest.clicksend.com/v3";
 
 const clicksendRequestBaseUrl = "https://rest.clicksend.com/v3/";
 const clicksendValidationPath = "/account";
-const clicksendDefaultTimeoutMs = 30_000;
 
 type ClicksendPhase = "validate" | "execute";
 type ClicksendActionHandler = (input: Record<string, unknown>, context: ClicksendActionContext) => Promise<unknown>;
@@ -202,7 +201,7 @@ async function requestClicksendJson(input: ClicksendRequestInput): Promise<Recor
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, clicksendDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

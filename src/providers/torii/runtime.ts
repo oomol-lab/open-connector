@@ -13,7 +13,6 @@ import {
 export const toriiApiBaseUrl = "https://api.toriihq.com/v1.0";
 
 const toriiValidationPath = "/orgs/my";
-const toriiDefaultRequestTimeoutMs = 30_000;
 
 type ToriiPhase = "validate" | "execute";
 
@@ -219,7 +218,7 @@ async function requestToriiJson(
   options: ToriiRequestOptions,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, toriiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const headers: Record<string, string> = {

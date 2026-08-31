@@ -67,7 +67,6 @@ interface HithinkFinanceProxyInput {
 }
 export const hithinkFinanceProxyMaxResponseBytes: number = 4 * 1024 * 1024;
 const hithinkFinanceActionMaxResponseBytes = 16 * 1024 * 1024;
-const hithinkFinanceRequestTimeoutMs = 30_000;
 
 export const hithinkFinanceApiBaseUrl = "https://fuyao.aicubes.cn";
 
@@ -610,7 +609,7 @@ async function hithinkFinanceGet(
     url.searchParams.set(key, String(value));
   }
 
-  const timeout = createProviderTimeout(signal, hithinkFinanceRequestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   let response: Response;
   try {
     const upstreamResponse = await fetcher(url, {

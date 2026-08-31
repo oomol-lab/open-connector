@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const taveApiBaseUrl = "https://workspace.vsco.co/api/v2";
-const defaultTimeoutMs = 30_000;
 
 type TaveActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type TaveContactKind = "person" | "company" | "location" | "employee";
@@ -93,7 +92,7 @@ interface TaveRequestInput {
 }
 
 async function requestTaveJson(input: TaveRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, defaultTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const url = new URL(input.path.startsWith("/") ? input.path.slice(1) : input.path, `${taveApiBaseUrl}/`);
     setSearchParams(url, input.params);

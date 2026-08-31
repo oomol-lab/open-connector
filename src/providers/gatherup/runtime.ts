@@ -21,8 +21,6 @@ export const gatherupApiBaseUrl = "https://app.gatherup.com/api/v2";
 export const gatherupCredentialHelpUrl =
   "https://help.gatherup.com/s/article/GatherUp-API-Client-ID-Private-Key-and-Bearer-Token";
 
-const gatherupDefaultRequestTimeoutMs = 30_000;
-
 type GatherupRequestPhase = "validate" | "execute";
 type GatherupQueryValue = string | number | boolean | undefined;
 interface GatherupRequestInput {
@@ -115,7 +113,7 @@ export async function validateGatherupCredential(
 }
 
 async function requestGatherupJson(input: GatherupRequestInput) {
-  const timeout = createProviderTimeout(input.signal, gatherupDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildGatherupUrl(input), {

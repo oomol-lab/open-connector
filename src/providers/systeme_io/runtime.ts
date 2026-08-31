@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const systemeIoApiBaseUrl = "https://api.systeme.io";
-const systemeIoDefaultRequestTimeoutMs = 30_000;
 
 type SystemeIoPhase = "validate" | "execute";
 type SystemeIoMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -380,7 +379,7 @@ function pageParams(input: Record<string, unknown>): Record<string, string | und
 }
 
 async function requestSystemeIoJson(input: SystemeIoRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, systemeIoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const headers: Record<string, string> = {
       "x-api-key": input.apiKey,

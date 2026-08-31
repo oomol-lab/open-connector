@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const timecampApiBaseUrl = "https://app.timecamp.com/third_party/api";
-const timecampDefaultRequestTimeoutMs = 30_000;
 
 type TimecampPhase = "validate" | "execute";
 type TimecampQueryValue = string | number | boolean | readonly (string | number)[] | undefined;
@@ -241,7 +240,7 @@ async function requestTimecampJson(input: {
   body?: Record<string, unknown>;
   phase: TimecampPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, timecampDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildTimecampUrl(input.path, input.params ?? {}), {

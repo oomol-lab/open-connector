@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const buildkiteApiBaseUrl = "https://api.buildkite.com/v2";
-const buildkiteDefaultRequestTimeoutMs = 30_000;
 
 type BuildkiteRequestPhase = "validate" | "execute";
 type BuildkiteQueryValue = string | number | boolean | undefined;
@@ -397,7 +396,7 @@ async function buildkiteFetch(input: {
     body = JSON.stringify(input.body);
   }
 
-  const timeout = createProviderTimeout(input.signal, buildkiteDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     return await input.fetcher(url, {
       method: input.method ?? "GET",

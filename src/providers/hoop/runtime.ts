@@ -12,8 +12,6 @@ import {
 export const hoopApiBaseUrl = "https://use.hoop.dev/api";
 export const hoopValidationPath = "/userinfo";
 
-const hoopRequestTimeoutMs = 30_000;
-
 type HoopRequestPhase = "validate" | "execute";
 type HoopActionContext = ApiKeyProviderContext;
 type HoopActionHandler = (input: Record<string, unknown>, context: HoopActionContext) => Promise<unknown>;
@@ -132,7 +130,7 @@ export async function validateHoopCredential(
 }
 
 async function requestHoopJson(input: HoopRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, hoopRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(buildHoopUrl(input.path, input.query), {

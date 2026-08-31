@@ -21,8 +21,6 @@ interface ValidateCredentialResult {
   providerMetadata: Record<string, unknown>;
 }
 
-const pinpointRequestTimeoutMs = 30_000;
-
 interface PinpointRequestInput {
   apiBaseUrl: string;
   apiKey: string;
@@ -148,7 +146,7 @@ function appendQueryValue(query: URLSearchParams, name: string, value: unknown) 
 }
 
 async function requestPinpoint(input: PinpointRequestInput) {
-  const timeout = createProviderTimeout(undefined, pinpointRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   const guardedFetch = input.fetcher;
   const url = new URL(`${input.apiBaseUrl}${input.path}`);
   if (input.query) url.search = input.query.toString();

@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 const jigsawstackApiBaseUrl = "https://api.jigsawstack.com";
-const jigsawstackDefaultRequestTimeoutMs = 30_000;
 const jigsawstackValidationPath = "/v1/web/search/suggest";
 const jigsawstackValidationQuery = "oomol";
 
@@ -160,7 +159,7 @@ async function requestJigsawstackJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   request: JigsawstackRequest,
 ): Promise<Record<string, unknown>> {
-  const timeoutHandle = createProviderTimeout(context.signal, jigsawstackDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildJigsawstackUrl(request.path, request.query), {

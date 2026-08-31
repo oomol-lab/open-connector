@@ -24,8 +24,6 @@ export interface SevenShiftsContext extends ApiKeyProviderContext {
 
 export const sevenShiftsApiBaseUrl = "https://api.7shifts.com";
 
-const sevenShiftsDefaultRequestTimeoutMs = 30_000;
-
 type SevenShiftsRequestPhase = "validate" | "execute";
 type SevenShiftsEntityKind = "company" | "location" | "department" | "role" | "user";
 type SevenShiftsActionHandler = (input: Record<string, unknown>, context: SevenShiftsContext) => Promise<unknown>;
@@ -181,7 +179,7 @@ export async function validateSevenShiftsCredential(
 }
 
 async function requestSevenShiftsJson(options: SevenShiftsRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(options.signal, sevenShiftsDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
 
   try {
     const response = await options.fetcher(buildSevenShiftsUrl(options.path, options.query), {

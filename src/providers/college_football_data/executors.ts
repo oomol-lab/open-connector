@@ -14,7 +14,6 @@ import {
 
 const service = "college_football_data";
 const collegeFootballDataApiBaseUrl = "https://api.collegefootballdata.com";
-const collegeFootballDataDefaultRequestTimeoutMs = 30_000;
 
 type CollegeFootballDataPhase = "validate" | "execute";
 type CollegeFootballDataContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -118,7 +117,7 @@ async function requestCollegeFootballDataJson(
   context: CollegeFootballDataContext,
   phase: CollegeFootballDataPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, collegeFootballDataDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildCollegeFootballDataUrl(path, query), {

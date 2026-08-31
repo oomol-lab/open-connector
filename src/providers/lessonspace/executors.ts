@@ -21,7 +21,6 @@ import {
 const service = "lessonspace";
 const lessonspaceApiBaseUrl = "https://api.thelessonspace.com/v2";
 const lessonspaceValidationPath = "/hello/";
-const lessonspaceDefaultRequestTimeoutMs = 30_000;
 
 type LessonspacePhase = "validate" | "execute";
 type LessonspaceActionHandler = (input: Record<string, unknown>, context: LessonspaceContext) => Promise<unknown>;
@@ -247,7 +246,7 @@ function buildLaunchBody(input: Record<string, unknown>): Record<string, unknown
 async function lessonspaceRequestJson(
   input: LessonspaceRequestInput & { context: LessonspaceContext },
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, lessonspaceDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const headers: Record<string, string> = {

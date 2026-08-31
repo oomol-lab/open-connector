@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 const data247ApiBaseUrl = "https://api.data247.com/v3.0";
-const data247DefaultRequestTimeoutMs = 30_000;
 
 type Data247ApiCode = "B" | "CT" | "VP" | "DC" | "AG";
 type Data247Phase = "validate" | "execute";
@@ -150,7 +149,7 @@ async function requestData247Json(input: Data247RequestInput): Promise<unknown> 
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, data247DefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url, {

@@ -13,7 +13,6 @@ import {
 
 const service = "statuscake";
 const statuscakeApiBaseUrl = "https://api.statuscake.com/v1";
-const statuscakeDefaultRequestTimeoutMs = 30_000;
 
 type StatuscakePhase = "validate" | "execute";
 type StatuscakeActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -248,7 +247,7 @@ async function statuscakeFetch(input: {
     url.search = input.query.toString();
   }
 
-  const timeout = createProviderTimeout(input.context.signal, statuscakeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     return await input.context.fetcher(url, {
       method: input.method ?? "GET",

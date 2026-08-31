@@ -12,8 +12,6 @@ export interface LineCredentialCheck {
 
 export const lineApiBaseUrl = "https://api.line.me";
 
-const lineRequestTimeoutMs = 30_000;
-
 type LineRequestPhase = "validate" | "execute";
 
 export async function validateLineCredential(apiKey: string, fetcher: typeof fetch): Promise<LineCredentialCheck> {
@@ -134,7 +132,7 @@ async function requestLineObject(input: {
   fetcher: typeof fetch;
   phase: LineRequestPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, lineRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const headers = new Headers({

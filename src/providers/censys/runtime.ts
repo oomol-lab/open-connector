@@ -10,7 +10,6 @@ type CensysRequestPhase = "validate" | "execute";
 type CensysQueryValue = string | undefined;
 
 export const censysApiBaseUrl = "https://api.platform.censys.io/v3";
-const censysDefaultRequestTimeoutMs = 30_000;
 
 export const censysActionHandlers: ProviderActionHandlers<"censys", CensysActionHandler> = {
   async get_host(input, context) {
@@ -107,7 +106,7 @@ async function requestCensysJson(
 ): Promise<Record<string, unknown>> {
   let response: Response;
   let payload: unknown;
-  const timeoutSignal = createProviderTimeout(signal, censysDefaultRequestTimeoutMs);
+  const timeoutSignal = createProviderTimeout(signal);
 
   try {
     response = await fetcher(buildCensysUrl(input), {

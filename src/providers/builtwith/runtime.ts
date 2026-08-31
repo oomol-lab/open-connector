@@ -12,7 +12,6 @@ import {
 
 const builtwithApiBaseUrl = "https://api.builtwith.com";
 const builtwithValidationPath = "/whoamiv1/api.json";
-const builtwithDefaultRequestTimeoutMs = 30_000;
 
 type BuiltwithActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -166,7 +165,7 @@ async function builtwithRequest(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   phase: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, builtwithDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildBuiltwithUrl(input, context.apiKey), {

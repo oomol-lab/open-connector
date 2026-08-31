@@ -22,7 +22,6 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "upstash_redis";
-const requestTimeoutMs = 30_000;
 const upstashHostnameSuffix = ".upstash.io";
 
 type UpstashRequestPhase = "validate" | "execute";
@@ -142,7 +141,7 @@ async function executeUpstashCommand(
   command: readonly UpstashCommandArgument[],
   phase: UpstashRequestPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(context.restUrl), {
       method: "POST",

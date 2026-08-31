@@ -13,7 +13,6 @@ import {
 
 const lexofficeApiBaseUrl = "https://api.lexware.io";
 const lexofficeValidationPath = "/v1/profile";
-const lexofficeDefaultRequestTimeoutMs = 30_000;
 
 type LexofficeRequestPhase = "validate" | "execute";
 type LexofficeActionContext = ApiKeyProviderContext;
@@ -208,7 +207,7 @@ export async function validateLexofficeCredential(
 }
 
 async function requestLexofficeJson(input: LexofficeRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, lexofficeDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildLexofficeUrl(input.path, input.query), {
       method: input.method,

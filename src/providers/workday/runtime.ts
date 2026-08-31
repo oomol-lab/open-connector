@@ -11,8 +11,6 @@ import {
 } from "../provider-runtime.ts";
 import { workdayOAuthScopes } from "./scopes.ts";
 
-const workdayRequestTimeoutMs = 30_000;
-
 interface WorkdayContext {
   accessToken: string;
   metadata: Record<string, unknown>;
@@ -166,7 +164,7 @@ export async function validateWorkdayCredential(
 }
 
 async function requestWorkdayJson(input: WorkdayRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, workdayRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = buildWorkdayApiUrl(
     resolveWorkdayBaseUrl(input.metadata),
     resolveWorkdayTenant(input.metadata),

@@ -22,8 +22,6 @@ import {
 
 export const ongageApiBaseUrl = "https://api.ongage.com";
 
-const ongageRequestTimeoutMs = 30_000;
-
 type OngageRequestPhase = "validate" | "execute";
 type OngageRequestMethod = "GET" | "POST" | "PUT";
 type OngageQuery = Record<string, boolean | number | string | undefined>;
@@ -213,7 +211,7 @@ async function changeContactStatus(input: Record<string, unknown>, context: ApiK
 }
 
 async function requestOngage(input: OngageRequestOptions): Promise<OngageResponseEnvelope> {
-  const timeout = createProviderTimeout(input.signal, ongageRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildOngageUrl(input.path, input.query), {
       method: input.method,

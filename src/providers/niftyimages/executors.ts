@@ -14,7 +14,6 @@ import {
 
 const service = "niftyimages";
 const niftyimagesApiBaseUrl = "https://api.niftyimages.com/v1";
-const niftyimagesRequestTimeoutMs = 30_000;
 const niftyimagesMaxResponseBytes = 10 * 1024 * 1024;
 
 type NiftyimagesRequestPhase = "validate" | "execute";
@@ -158,7 +157,7 @@ async function requestNiftyimagesJson(
   },
   context: NiftyimagesContext,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, niftyimagesRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildNiftyimagesUrl(input.path, input.params), {
       method: "GET",

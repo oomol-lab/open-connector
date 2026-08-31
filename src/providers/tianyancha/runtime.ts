@@ -18,7 +18,6 @@ import {
 
 export const tianyanchaApiBaseUrl = "https://open.api.tianyancha.com";
 
-const tianyanchaRequestTimeoutMs = 30_000;
 const tenderSearchTypeCode: Record<string, number> = { title: 1, purchaser: 2, supplier: 3 };
 const tenderNoticeTypeCode: Record<string, number> = { forecast: 1, announcement: 2, result: 4 };
 const relationshipTypeCode: Record<string, string> = {
@@ -218,7 +217,7 @@ async function requestTianyanchaResult(input: {
     if (value !== undefined) url.searchParams.set(name, String(value));
   }
 
-  const timeout = createProviderTimeout(input.context.signal, tianyanchaRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

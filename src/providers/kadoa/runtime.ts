@@ -12,8 +12,6 @@ export interface KadoaCredentialCheck {
 
 export const kadoaApiBaseUrl = "https://api.kadoa.com";
 
-const kadoaRequestTimeoutMs = 30_000;
-
 type KadoaRequestPhase = "validate" | "execute";
 
 export async function validateKadoaCredential(apiKey: string, fetcher: typeof fetch): Promise<KadoaCredentialCheck> {
@@ -142,7 +140,7 @@ async function requestKadoaObject(input: {
   fetcher: typeof fetch;
   phase: KadoaRequestPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, kadoaRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildKadoaUrl(input.path, input.query), {

@@ -27,7 +27,6 @@ import {
 
 const service = "proxiedmail";
 const proxiedmailApiBaseUrl = "https://proxiedmail.com/api/v1";
-const proxiedmailRequestTimeoutMs = 30_000;
 
 type ProxiedmailRequestPhase = "validate" | "execute";
 type ProxiedmailMethod = "GET" | "POST" | "PATCH";
@@ -207,7 +206,7 @@ async function requestProxiedmailJson(input: {
   signal?: AbortSignal;
   phase: ProxiedmailRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, proxiedmailRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildProxiedmailUrl(input.path), {
       method: input.method,

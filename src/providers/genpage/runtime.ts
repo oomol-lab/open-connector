@@ -83,7 +83,7 @@ async function request(input: RequestInput): Promise<unknown> {
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, Array.isArray(value) ? value.join(",") : String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal, 30_000);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method,

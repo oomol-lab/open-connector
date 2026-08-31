@@ -27,7 +27,6 @@ type AnySearchContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "sign
 
 export const anySearchApiBaseUrl = "https://api.anysearch.com";
 const anySearchMcpEndpoint = anySearchApiBaseUrl + "/mcp";
-const anySearchRequestTimeoutMs = 30_000;
 const anySearchClientHeader = "connector/1.0.0";
 const authenticatedQuotaResponse = Symbol("authenticatedQuotaResponse");
 const credentialErrorSymbols = new Set([
@@ -197,7 +196,7 @@ async function requestAnySearchJson(
   phase: AnySearchRequestPhase,
   extraHeaders: Record<string, string> = {},
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, anySearchRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(url, {

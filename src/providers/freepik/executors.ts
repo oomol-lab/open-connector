@@ -15,7 +15,6 @@ import {
 const service = "freepik";
 const freepikApiBaseUrl = "https://api.magnific.com";
 const freepikResourcesPath = "/v1/resources";
-const freepikRequestTimeoutMs = 30_000;
 
 type FreepikPhase = "validate" | "execute";
 type FreepikActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -174,7 +173,7 @@ async function requestFreepikJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, freepikRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: "GET",

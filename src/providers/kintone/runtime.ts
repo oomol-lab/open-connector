@@ -23,7 +23,6 @@ type KintonePhase = "validate" | "execute";
 type KintoneQueryValue = string | number | readonly (string | number)[];
 type KintoneActionHandler = ProviderRuntimeHandler<KintoneActionContext>;
 
-const kintoneRequestTimeoutMs = 30_000;
 const kintoneCredentialHelpUrl =
   "https://kintone.dev/en/docs/common/user-api/overview/user-api-overview/#api-token-authentication";
 
@@ -171,7 +170,7 @@ async function requestKintoneJson(input: {
   query?: Record<string, KintoneQueryValue | undefined>;
   phase: KintonePhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, kintoneRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildKintoneUrl(input.context.apiBaseUrl, input.path, input.query), {
       method: "GET",

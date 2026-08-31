@@ -13,7 +13,6 @@ import { intercomGrantedPermissions } from "./scopes.ts";
 const intercomDefaultApiBaseUrl = "https://api.intercom.io";
 const intercomApiVersion = "2.13";
 const intercomJobsApiVersion = "2.15";
-const intercomRequestTimeoutMs = 30_000;
 
 const intercomRegionBaseUrlByCode: Record<string, string> = {
   US: "https://api.intercom.io",
@@ -556,7 +555,7 @@ async function intercomRequestJson<T>(input: IntercomJsonRequestInput): Promise<
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, intercomRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const headers = new Headers({
       accept: "application/json",

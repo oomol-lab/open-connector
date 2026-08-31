@@ -13,7 +13,6 @@ import {
 
 const service = "sling";
 const slingApiBaseUrl = "https://api.getsling.com/v1";
-const slingRequestTimeoutMs = 30_000;
 
 type SlingPhase = "validate" | "execute";
 type SlingQueryValue = string | number | boolean | readonly (string | number)[];
@@ -142,7 +141,7 @@ async function requestSlingJson(input: {
   phase: SlingPhase;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, slingRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildSlingUrl(input.path, input.query), {
       method: "GET",

@@ -18,7 +18,6 @@ import {
 
 const theCatApiBaseUrl = "https://api.thecatapi.com/v1/";
 const theCatApiValidationPath = "/breeds";
-const theCatApiDefaultTimeoutMs = 30_000;
 
 type TheCatApiRequestPhase = "validate" | "execute";
 type TheCatApiContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -164,7 +163,7 @@ async function requestTheCatApiJson(input: {
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
   phase: TheCatApiRequestPhase;
 }) {
-  const timeout = createProviderTimeout(input.context.signal, theCatApiDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = buildTheCatApiUrl(input.path, input.query);
 
   try {

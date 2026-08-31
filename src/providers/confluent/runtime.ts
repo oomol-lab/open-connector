@@ -5,7 +5,6 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const confluentApiBaseUrl = "https://api.confluent.cloud";
-const timeoutMs = 30_000;
 
 export interface ConfluentContext {
   apiKeyId: string;
@@ -158,7 +157,7 @@ export async function requestConfluentJson(context: ConfluentContext, input: Req
   const url = new URL(input.path, `${confluentApiBaseUrl}/`);
   for (const [key, value] of Object.entries(input.query ?? {}))
     if (value !== undefined) url.searchParams.set(key, value);
-  const timeout = createProviderTimeout(context.signal, timeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",

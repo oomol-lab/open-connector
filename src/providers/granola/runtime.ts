@@ -12,8 +12,6 @@ import {
 
 export const granolaApiBaseUrl = "https://public-api.granola.ai";
 
-const granolaRequestTimeoutMs = 30_000;
-
 type GranolaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type GranolaRequestMode = "validate" | "execute";
 
@@ -114,7 +112,7 @@ async function requestGranola(
   url: URL,
   mode: GranolaRequestMode,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, granolaRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url.toString(), {

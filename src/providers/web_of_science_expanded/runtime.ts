@@ -20,7 +20,6 @@ import {
 } from "../provider-runtime.ts";
 
 const webOfScienceExpandedApiBaseUrl = "https://wos-api.clarivate.com/api/wos";
-const webOfScienceExpandedRequestTimeoutMs = 30_000;
 
 type WebOfScienceExpandedPhase = "validate" | "execute";
 type WebOfScienceExpandedContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -267,7 +266,7 @@ async function requestWebOfScienceExpandedJson(
   input: WebOfScienceExpandedRequest,
   context: WebOfScienceExpandedContext,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, webOfScienceExpandedRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildWebOfScienceExpandedUrl(input.path, input.query), {
       method: "GET",

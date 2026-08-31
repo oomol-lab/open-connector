@@ -10,7 +10,6 @@ interface ApiKeyProviderActionInput {
 }
 
 export const practitestApiBaseUrl = "https://api.practitest.com/api/v2";
-const requestTimeoutMs = 30_000;
 
 interface PractitestActionInput extends ApiKeyProviderActionInput {
   actionName: string;
@@ -210,7 +209,7 @@ function buildTestBody(input: Record<string, unknown>, includeSteps: boolean) {
 }
 
 async function requestPractitest(options: PractitestRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   const url = new URL(`${practitestApiBaseUrl}${options.path}`);
   for (const [name, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) url.searchParams.set(name, String(value));

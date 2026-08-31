@@ -22,8 +22,6 @@ import {
 export const customerioTrackApiBaseUrl = "https://track.customer.io";
 export const customerioTrackEuApiBaseUrl = "https://track-eu.customer.io";
 
-const customerioDefaultRequestTimeoutMs = 30_000;
-
 type CustomerioPhase = "validate" | "execute";
 
 export interface CustomerioCredentialContext {
@@ -184,7 +182,7 @@ async function customerioRequest(input: {
   phase: CustomerioPhase;
   parseResponse?: boolean;
 }): Promise<unknown> {
-  const timeoutHandle = createProviderTimeout(input.context.signal, customerioDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.context.signal);
   const headers: Record<string, string> = {
     accept: "application/json",
     authorization: buildCustomerioAuthorization(input.context.siteId, input.context.apiKey),

@@ -18,7 +18,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const printavoApiBaseUrl = "https://www.printavo.com/api/v2";
-const printavoDefaultRequestTimeoutMs = 30_000;
 
 export interface PrintavoActionContext {
   token: string;
@@ -400,7 +399,7 @@ async function printavoGraphql(
   context: Pick<PrintavoActionContext, "token" | "email" | "fetcher" | "signal">,
   phase: PrintavoRequestPhase,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, printavoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(printavoApiBaseUrl, {
       method: "POST",

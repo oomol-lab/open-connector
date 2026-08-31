@@ -25,7 +25,6 @@ interface ApiKeyProviderActionInput {
 }
 
 export const vidaApiBaseUrl = "https://api.vida.dev";
-export const vidaDefaultRequestTimeoutMs = 30_000;
 
 type VidaPhase = "validate" | "execute";
 type VidaActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch, apiKey: string) => Promise<unknown>;
@@ -144,7 +143,7 @@ async function requestVidaJson(input: {
   fetcher: typeof fetch;
   phase: VidaPhase;
 }) {
-  const timeoutHandle = createProviderTimeout(undefined, vidaDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildVidaUrl(input.path, input.apiKey, input.params), {

@@ -19,8 +19,6 @@ const paypalApiBaseUrls = {
   live: "https://api-m.paypal.com",
 } as const satisfies Record<PayPalEnvironment, string>;
 
-const paypalRequestTimeoutMs = 30_000;
-
 type PayPalRequestPhase = "validate" | "execute";
 
 type PayPalCredentialContext = {
@@ -387,7 +385,7 @@ async function paypalApiRequest(input: PayPalApiRequestInput) {
 }
 
 async function fetchPayPalPayload(fetcher: typeof fetch, url: string | URL, init: RequestInit) {
-  const timeout = createProviderTimeout(undefined, paypalRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await fetcher(url, { ...init, signal: timeout.signal });
     return { response, payload: await readPayPalPayload(response) };

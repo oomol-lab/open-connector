@@ -12,8 +12,6 @@ import {
 
 export const retentlyApiBaseUrl = "https://app.retently.com";
 
-const retentlyDefaultRequestTimeoutMs = 30_000;
-
 type RetentlyPhase = "validate" | "execute";
 type RetentlyActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -221,7 +219,7 @@ function buildListFeedbackParams(input: Record<string, unknown>): Record<string,
 }
 
 async function requestRetentlyJson(input: RetentlyRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, retentlyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildRetentlyUrl(input.path, input.params, input.attributes), {
       method: input.method,

@@ -22,7 +22,6 @@ import {
 export const amiliaApiOrigin = "https://app.amilia.com";
 
 const amiliaJwtHelpUrl = "https://app.amilia.com/apidocs/Index.html#authentication";
-const amiliaRequestTimeoutMs = 30_000;
 
 type AmiliaRequestPhase = "validate" | "execute";
 type AmiliaQueryValue = string | number | boolean | undefined;
@@ -177,7 +176,7 @@ async function requestAmiliaJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, amiliaRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       headers: {

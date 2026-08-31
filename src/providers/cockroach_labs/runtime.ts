@@ -13,7 +13,6 @@ import {
 
 export const cockroachLabsApiBaseUrl = "https://cockroachlabs.cloud";
 const cockroachLabsApiVersion = "2024-09-16";
-const cockroachLabsDefaultRequestTimeoutMs = 30_000;
 
 interface CockroachLabsCredentialInput {
   apiKey: string;
@@ -204,7 +203,7 @@ async function requestCockroachLabsJson(input: {
   phase: CockroachLabsRequestPhase;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, cockroachLabsDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildCockroachLabsUrl(input.path, input.query), {
       method: "GET",

@@ -14,7 +14,6 @@ import {
 
 export const captainBiApiBaseUrl: string = "https://openapi.captainbi.com";
 export const captainBiTokenUrl: string = `${captainBiApiBaseUrl}/oauth2/token`;
-const captainBiRequestTimeoutMs = 30_000;
 const defaultPage = 1;
 const defaultRows = 100;
 
@@ -322,7 +321,7 @@ async function fetchCaptainBiResponse(input: {
   init: RequestInit;
   operation: string;
 }) {
-  const timeout = createProviderTimeout(undefined, captainBiRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     return await input.fetcher(input.url, { ...input.init, signal: timeout.signal });
   } catch (error) {

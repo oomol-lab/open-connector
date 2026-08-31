@@ -20,7 +20,6 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "membervault";
-const membervaultDefaultTimeoutMs = 30_000;
 const membervaultMaxResponseBytes = 10 * 1024 * 1024;
 const defaultRootDomain = "mvsite.app";
 const legacyRootDomain = "vipmembervault.com";
@@ -158,7 +157,7 @@ async function requestMembervaultJson(
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(context.signal, membervaultDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       headers: { accept: "application/json", "user-agent": providerUserAgent },

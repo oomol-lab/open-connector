@@ -17,7 +17,6 @@ interface ApiKeyProviderActionInput {
 }
 
 const happyScribeApiBaseUrl = "https://www.happyscribe.com/api/v1";
-const requestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 type ActionHandler = (input: Record<string, unknown>, fetcher: typeof fetch, apiKey: string) => Promise<unknown>;
@@ -236,7 +235,7 @@ async function requestHappyScribe(input: {
   fetcher: typeof fetch;
   phase: RequestPhase;
 }) {
-  const timeout = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(buildUrl(input.path, input.params), {
       method: input.method,

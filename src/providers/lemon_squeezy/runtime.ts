@@ -12,7 +12,6 @@ import {
 
 const lemonSqueezyApiBaseUrl = "https://api.lemonsqueezy.com/v1";
 const lemonSqueezyValidationPath = "/users/me";
-const lemonSqueezyDefaultRequestTimeoutMs = 30_000;
 
 type LemonSqueezyRequestPhase = "validate" | "execute";
 type LemonSqueezyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -384,7 +383,7 @@ async function requestLemonSqueezy(input: LemonSqueezyRequestInput): Promise<Res
       url.searchParams.set(key, String(value));
     }
   }
-  const timeout = createProviderTimeout(input.context.signal, lemonSqueezyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     return await input.context.fetcher(url, {

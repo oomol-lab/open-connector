@@ -29,7 +29,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const promptLayerApiBaseUrl = "https://api.promptlayer.com";
-const promptLayerDefaultRequestTimeoutMs = 30_000;
 
 type PromptLayerPhase = "validate" | "execute";
 type PromptLayerMethod = "GET" | "POST";
@@ -196,7 +195,7 @@ export async function validatePromptLayerCredential(
 }
 
 async function requestPromptLayerJson(input: PromptLayerRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, promptLayerDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

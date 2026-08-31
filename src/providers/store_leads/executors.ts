@@ -16,7 +16,6 @@ import {
 const service = "store_leads";
 const storeLeadsApiBaseUrl = "https://storeleads.app/json/api/v1/all";
 const storeLeadsValidationPath = "/app";
-const storeLeadsDefaultRequestTimeoutMs = 30_000;
 
 type StoreLeadsPhase = "validate" | "execute";
 type StoreLeadsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -138,7 +137,7 @@ async function requestStoreLeadsJson(input: {
   phase: StoreLeadsPhase;
   query?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, storeLeadsDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildStoreLeadsUrl(input.path, input.query), {
       method: "GET",

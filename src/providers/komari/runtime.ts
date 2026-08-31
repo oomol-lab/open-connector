@@ -29,7 +29,6 @@ export interface KomariActionContext {
   signal?: AbortSignal;
 }
 
-const defaultRequestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 const rpcPath = "api/rpc2";
 const rpcErrorStatusByCode = new Map<number, number>([
@@ -321,7 +320,7 @@ async function requestKomariRpc(
   phase: KomariRequestPhase,
 ): Promise<unknown> {
   const url = new URL(rpcPath, `${context.baseUrl}/`);
-  const timeout = createProviderTimeout(context.signal, defaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "POST",

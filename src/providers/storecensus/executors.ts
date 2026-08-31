@@ -15,7 +15,6 @@ import {
 const service = "storecensus";
 const storecensusApiBaseUrl = "https://www.storecensus.com/api/v1";
 const storecensusValidationPath = "/app-categories";
-const storecensusDefaultRequestTimeoutMs = 30_000;
 
 type StorecensusPhase = "validate" | "execute";
 type StorecensusActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -115,7 +114,7 @@ async function requestStorecensusJson(input: {
   query?: URLSearchParams;
   body?: unknown;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, storecensusDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

@@ -27,7 +27,6 @@ import {
 
 const fullContactApiBaseUrl = "https://api.fullcontact.com/v3";
 
-const fullContactDefaultRequestTimeoutMs = 30_000;
 const fullContactMaxResponseBytes = 10 * 1024 * 1024;
 
 type FullContactMode = "validate" | "execute";
@@ -185,7 +184,7 @@ async function requestFullContactJson(
   },
   context: FullContactRequestContext,
 ) {
-  const timeoutHandle = createProviderTimeout(context.signal, fullContactDefaultRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(new URL(input.endpoint, `${fullContactApiBaseUrl}/`), {

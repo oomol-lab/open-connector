@@ -10,8 +10,6 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const kandjiDefaultRequestTimeoutMs = 30_000;
-
 type KandjiPhase = "validate" | "execute";
 type KandjiActionHandler = (input: Record<string, unknown>, context: KandjiActionContext) => Promise<unknown>;
 
@@ -181,7 +179,7 @@ async function requestKandjiJson(input: {
   phase: KandjiPhase;
   notFoundAsInvalidInput?: boolean;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, kandjiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildKandjiUrl(input.apiUrl, input.path, input.query), {

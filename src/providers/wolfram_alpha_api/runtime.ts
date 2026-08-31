@@ -13,7 +13,6 @@ import {
 export const wolframAlphaApiBaseUrl = "https://api.wolframalpha.com";
 export const wolframAlphaQueryRecognizerUrl = "https://www.wolframalpha.com/queryrecognizer/query.jsp";
 
-const wolframAlphaDefaultRequestTimeoutMs = 30_000;
 const wolframAlphaValidationQuery = "integrate x^2";
 
 type WolframAlphaPhase = "validate" | "execute";
@@ -190,7 +189,7 @@ async function executeRequest(
   signal: AbortSignal | undefined,
   phase: WolframAlphaPhase,
 ): Promise<string> {
-  const timeout = createProviderTimeout(signal, wolframAlphaDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   try {
     const response = await fetcher(url, {
       method: "GET",

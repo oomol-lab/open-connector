@@ -10,7 +10,6 @@ interface ApiKeyProviderActionInput {
 }
 
 export const unthreadApiBaseUrl = "https://api.unthread.io/api";
-const requestTimeoutMs = 30_000;
 
 interface UnthreadActionInput extends ApiKeyProviderActionInput {
   actionName: string;
@@ -124,7 +123,7 @@ export async function executeUnthreadAction(input: UnthreadActionInput, fetcher:
 }
 
 async function requestUnthread(options: UnthreadRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await options.fetcher(`${unthreadApiBaseUrl}${options.path}`, {
       method: options.method,

@@ -15,7 +15,6 @@ import {
 
 const emailListVerifyApiBaseUrl = "https://apps.emaillistverify.com";
 const emailListVerifyApiKeyRejectedStatus = "error_credit";
-const emailListVerifyDefaultRequestTimeoutMs = 30_000;
 
 type EmailListVerifyRequestPhase = "validate" | "execute";
 type EmailListVerifyResponseType = "auto" | "binary";
@@ -327,7 +326,7 @@ async function requestEmailListVerifyApi(
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, emailListVerifyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",

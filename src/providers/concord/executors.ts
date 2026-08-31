@@ -24,7 +24,6 @@ import {
 
 const service = "concord";
 const concordApiBaseUrl = "https://api.concordnow.com/api/rest/1";
-const concordRequestTimeoutMs = 30_000;
 
 type ConcordPhase = "validate" | "execute";
 type ConcordActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -132,7 +131,7 @@ async function requestConcordJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   phase: ConcordPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, concordRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(`${concordApiBaseUrl}${path}`, {
       headers: {

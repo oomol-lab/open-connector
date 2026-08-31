@@ -12,8 +12,6 @@ import {
 
 export const smtp2goApiBaseUrl = "https://api.smtp2go.com/v3";
 
-const smtp2goDefaultRequestTimeoutMs = 30_000;
-
 type Smtp2goPhase = "validate" | "execute";
 type Smtp2goActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -202,7 +200,7 @@ async function requestSmtp2goJson(input: {
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: Smtp2goPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, smtp2goDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildSmtp2goUrl(input.path), {

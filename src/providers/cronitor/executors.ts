@@ -28,7 +28,6 @@ import {
 const service = "cronitor";
 const cronitorApiBaseUrl = "https://cronitor.io/api";
 const cronitorApiVersion = "2025-11-28";
-const cronitorDefaultRequestTimeoutMs = 30_000;
 
 const cronitorFetch = createProviderFetch({ skipDnsValidation: true });
 
@@ -151,7 +150,7 @@ async function requestCronitorJson(input: {
   method?: CronitorMethod;
   body?: Record<string, unknown>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, cronitorDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildCronitorUrl(input.path), {
       method: input.method ?? "GET",

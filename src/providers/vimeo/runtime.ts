@@ -20,7 +20,6 @@ import {
 } from "../provider-runtime.ts";
 
 const vimeoApiBaseUrl = "https://api.vimeo.com";
-const vimeoDefaultRequestTimeoutMs = 30_000;
 
 type VimeoActionContext = OAuthProviderContext;
 type VimeoActionHandler = ProviderRuntimeHandler<VimeoActionContext>;
@@ -532,7 +531,7 @@ async function vimeoRequestJson(input: VimeoRequestInput): Promise<unknown> {
   }
 
   const method = input.method ?? "GET";
-  const timeout = createProviderTimeout(input.signal, vimeoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const headers: Record<string, string> = {
       authorization: `Bearer ${input.accessToken}`,
@@ -648,7 +647,7 @@ function selectDownloadLink(
 }
 
 async function fetchVimeoDownloadLink(link: string, fetcher: ProviderFetch, signal?: AbortSignal): Promise<Response> {
-  const timeout = createProviderTimeout(signal, vimeoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   try {
     return await fetcher(link, { signal: timeout.signal });
   } catch (error) {

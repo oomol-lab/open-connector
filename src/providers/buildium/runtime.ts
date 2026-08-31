@@ -13,7 +13,6 @@ import {
 
 export const buildiumApiBaseUrl: string = "https://api.buildium.com";
 const rentalsPath = "/v1/rentals";
-const buildiumDefaultRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 type BuildiumActionHandler = ProviderRuntimeHandler<BuildiumActionContext>;
@@ -135,7 +134,7 @@ async function buildiumRequestJson(input: {
   phase: RequestPhase;
   searchParams?: URLSearchParams;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, buildiumDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = new URL(input.path, buildiumApiBaseUrl);
   for (const [key, value] of input.searchParams ?? []) {
     url.searchParams.set(key, value);

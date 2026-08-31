@@ -34,7 +34,6 @@ const service = "voiceflow";
 const generalRuntimeBaseUrl = "https://general-runtime.voiceflow.com";
 const realtimeBaseUrl = "https://realtime-api.voiceflow.com";
 const defaultEnvironmentAlias = "main";
-const voiceflowRequestTimeoutMs = 30_000;
 
 // Fixed-host proxy egress (generalRuntimeBaseUrl / realtimeBaseUrl); DNS-rebinding check is redundant here.
 const voiceflowFetch = createProviderFetch({ skipDnsValidation: true });
@@ -280,7 +279,7 @@ async function listEnvironments(context: VoiceflowActionContext): Promise<unknow
 }
 
 async function requestVoiceflow(input: VoiceflowRequestOptions): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, voiceflowRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(`${input.baseUrl}${input.path}`, {
       method: input.method,

@@ -260,7 +260,7 @@ async function requestJson(path: string, context: PaperformContext, phase: Paper
 
 async function paperformFetch(path: string, context: PaperformContext): Promise<Response> {
   const url = new URL(path, paperformApiBaseUrl);
-  const timeout = createProviderTimeout(context.signal, 30_000);
+  const timeout = createProviderTimeout(context.signal);
   try {
     return await context.fetcher(url, {
       headers: {

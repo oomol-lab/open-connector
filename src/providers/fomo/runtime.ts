@@ -11,7 +11,6 @@ import {
 
 const fomoApiBaseUrl = "https://api.fomo.com/api/v1";
 const fomoEventsPath = "/applications/me/events";
-const fomoRequestTimeoutMs = 30_000;
 
 type FomoRequestMode = "validate" | "execute";
 type FomoEventPayload = Record<string, unknown>;
@@ -156,7 +155,7 @@ async function requestFomoJson(
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, fomoRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await fetcher(url, {
       method: input.method,

@@ -16,7 +16,6 @@ import {
 const service = "arcgis_online";
 const arcgisOnlineApiBaseUrl = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer";
 const arcgisOnlineValidationPath = "/suggest";
-const arcgisOnlineRequestTimeoutMs = 30_000;
 
 type ArcgisOnlineQueryValue = string | number | boolean | undefined;
 type ArcgisOnlineActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -120,7 +119,7 @@ async function requestArcgisOnline(input: {
   query: Record<string, ArcgisOnlineQueryValue>;
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, arcgisOnlineRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildArcgisOnlineUrl(input.path, input.query, input.context.apiKey), {
       method: "GET",

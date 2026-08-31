@@ -14,7 +14,6 @@ import {
 
 const service = "crunchbase";
 const crunchbaseApiBaseUrl = "https://api.crunchbase.com/v4";
-const crunchbaseRequestTimeoutMs = 30_000;
 
 type CrunchbasePhase = "validate" | "execute";
 type CrunchbaseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -156,7 +155,7 @@ async function requestCrunchbaseJson(input: {
     appendQueryValue(url, key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal, crunchbaseRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",

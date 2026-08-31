@@ -14,7 +14,6 @@ import {
 const service = "sensibo";
 const sensiboApiBaseUrl = "https://home.sensibo.com/api/v2";
 const sensiboValidationPath = "/users/me/pods";
-const sensiboTimeoutMs = 30_000;
 const defaultDeviceFields = "id,name,room,measurements,acState,connectionStatus,productModel";
 
 type SensiboPhase = "validate" | "execute";
@@ -140,7 +139,7 @@ async function requestSensiboJson(input: {
   phase: SensiboPhase;
 }): Promise<unknown> {
   const url = buildSensiboUrl(input.path, input.apiKey, input.query);
-  const timeout = createProviderTimeout(input.context.signal, sensiboTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(url, {
       method: input.method,

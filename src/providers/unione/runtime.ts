@@ -12,7 +12,6 @@ import {
 
 export const unioneApiBaseUrl = "https://api.unione.io/en/transactional/api/v1";
 
-const unioneRequestTimeoutMs = 30_000;
 const unioneValidationPath = "/system/info.json";
 
 type UnionePhase = "validate" | "execute";
@@ -121,7 +120,7 @@ export async function validateUnioneCredential(
 
 async function requestUnioneJson(options: UnioneRequestOptions): Promise<UnioneJsonObject> {
   const url = new URL(options.path, unioneApiBaseUrl);
-  const timeout = createProviderTimeout(options.context.signal, unioneRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.context.signal);
   let response: Response;
   try {
     response = await options.context.fetcher(url, {

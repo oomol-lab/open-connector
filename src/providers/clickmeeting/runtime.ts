@@ -13,8 +13,6 @@ import {
 
 export const clickMeetingApiBaseUrl = "https://api.clickmeeting.com/v1";
 
-const clickMeetingDefaultRequestTimeoutMs = 30_000;
-
 type ClickMeetingPhase = "validate" | "execute";
 type ClickMeetingActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
@@ -352,7 +350,7 @@ async function requestClickMeetingJson(
   context: ClickMeetingRequestContext,
   phase: ClickMeetingPhase,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, clickMeetingDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     const response = await context.fetcher(buildClickMeetingUrl(input.path, input.query), {

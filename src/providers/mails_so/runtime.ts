@@ -19,7 +19,6 @@ import {
 } from "../provider-runtime.ts";
 
 const mailsSoApiBaseUrl = "https://api.mails.so";
-const mailsSoDefaultRequestTimeoutMs = 30_000;
 
 type MailsSoRequestPhase = "validate" | "execute";
 type MailsSoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -144,7 +143,7 @@ async function requestMailsSoJson(input: {
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(input.context.signal, mailsSoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = new Headers({
       accept: "application/json",

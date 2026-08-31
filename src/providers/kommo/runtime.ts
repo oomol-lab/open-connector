@@ -21,7 +21,6 @@ const kommoCredentialHelpUrl = "https://developers.kommo.com/docs/long-lived-tok
 const kommoPrivateIntegrationHelpUrl = "https://developers.kommo.com/docs/private-integration";
 const kommoHostSuffix = ".kommo.com";
 const kommoValidationEndpoint = "/api/v4/account";
-const kommoDefaultRequestTimeoutMs = 30_000;
 
 type KommoPhase = "validate" | "execute";
 type KommoCollection = "leads" | "contacts" | "companies" | "tasks" | "users" | "pipelines";
@@ -291,7 +290,7 @@ async function getRecord<TRecord extends Record<string, unknown>>(input: {
 }
 
 async function requestKommoJson(input: KommoRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, kommoDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildKommoUrl(input.apiBaseUrl, input.path, input.query), {

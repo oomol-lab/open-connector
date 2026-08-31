@@ -18,7 +18,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const acuitySchedulingApiBaseUrl = "https://acuityscheduling.com/api/v1";
-const acuitySchedulingRequestTimeoutMs = 30_000;
 
 type AcuitySchedulingCredential = {
   userId: string;
@@ -277,7 +276,7 @@ async function requestAcuityScheduling(input: {
   query?: Record<string, AcuitySchedulingQueryValue>;
   body?: unknown;
 }) {
-  const timeoutHandle = createProviderTimeout(input.signal, acuitySchedulingRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.signal);
   const headers = new Headers({
     accept: "application/json",
     authorization: `Basic ${Buffer.from(`${input.credential.userId}:${input.credential.apiKey}`).toString("base64")}`,

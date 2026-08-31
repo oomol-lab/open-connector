@@ -15,7 +15,6 @@ import {
 
 const service = "govee";
 const goveeApiBaseUrl = "https://openapi.api.govee.com";
-const goveeRequestTimeoutMs = 30_000;
 
 type GoveeRequestPhase = "validate" | "execute";
 
@@ -172,7 +171,7 @@ function buildDevicePayload(input: Record<string, unknown>): Record<string, unkn
 }
 
 async function requestGovee(input: GoveeRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, goveeRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

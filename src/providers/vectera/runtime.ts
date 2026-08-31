@@ -21,7 +21,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const vecteraApiBaseUrl = "https://www.vectera.com/api/v2";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 type VecteraPhase = "validate" | "execute";
 
@@ -197,7 +196,7 @@ async function requestVecteraJson(input: VecteraRequestInput): Promise<VecteraJs
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value != null) url.searchParams.set(key, String(value));
   }
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = new Headers({
       accept: "application/json",

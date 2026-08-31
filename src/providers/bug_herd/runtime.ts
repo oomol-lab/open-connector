@@ -13,7 +13,6 @@ import {
 } from "../provider-runtime.ts";
 
 const bugHerdApiBaseUrl = "https://www.bugherd.com";
-const bugHerdRequestTimeoutMs = 30_000;
 
 type BugHerdPhase = "validate" | "execute";
 type BugHerdQuery = Record<string, string | number | boolean | undefined>;
@@ -285,7 +284,7 @@ async function requestBugHerdJson(input: {
   signal?: AbortSignal;
   notFoundAsInvalidInput?: boolean;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.signal, bugHerdRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(buildBugHerdUrl(input.path, input.query), {
       method: input.method,

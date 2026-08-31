@@ -14,8 +14,6 @@ import {
 
 export const lifxApiBaseUrl = "https://api.lifx.com/v1";
 
-const lifxRequestTimeoutMs = 30_000;
-
 type LifxRequestPhase = "validate" | "execute";
 
 interface LifxRequestInput {
@@ -194,7 +192,7 @@ async function requestLifx(input: LifxRequestInput): Promise<unknown> {
 
 async function requestLifxUrl(input: Omit<LifxRequestInput, "path"> & { url: URL }): Promise<unknown> {
   input.signal?.throwIfAborted();
-  const timeout = createProviderTimeout(input.signal, lifxRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {

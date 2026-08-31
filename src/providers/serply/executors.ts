@@ -13,7 +13,6 @@ import {
 
 const service = "serply";
 const serplyBaseUrl = "https://api.serply.io";
-const serplyDefaultRequestTimeoutMs = 30_000;
 
 type SerplyPhase = "validate" | "execute";
 
@@ -125,7 +124,7 @@ async function requestSerplyJson(
 ): Promise<unknown> {
   let response: Response;
   let payload: unknown;
-  const timeout = createProviderTimeout(context.signal, serplyDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     response = await context.fetcher(buildSerplyUrl(path, query), {

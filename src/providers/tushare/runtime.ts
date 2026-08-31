@@ -34,7 +34,6 @@ interface TushareRequestInput {
 type TushareActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const tushareApiBaseUrl: string = "https://api.tushare.pro";
-const tushareRequestTimeoutMs = 30_000;
 
 const stockBasicFields = [
   "ts_code",
@@ -343,7 +342,7 @@ async function tushareRequest(
   input: TushareRequestInput,
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, tushareRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(tushareApiBaseUrl, {
       method: "POST",

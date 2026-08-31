@@ -19,7 +19,6 @@ import {
 
 export const courierApiBaseUrl = "https://api.courier.com";
 
-const courierDefaultRequestTimeoutMs = 30_000;
 const courierValidationPath = "/lists";
 
 type CourierRequestPhase = "validate" | "execute";
@@ -268,7 +267,7 @@ export async function validateCourierCredential(
 }
 
 async function requestCourierJson(input: CourierRequestInput): Promise<CourierResponse> {
-  const timeout = createProviderTimeout(input.context.signal, courierDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const headers: Record<string, string> = {

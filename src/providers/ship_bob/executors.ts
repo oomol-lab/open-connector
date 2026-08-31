@@ -13,7 +13,6 @@ import {
 const service = "ship_bob";
 const shipBobApiBaseUrl = "https://api.shipbob.com";
 const shipBobApiVersionPath = "/2026-01";
-const shipBobRequestTimeoutMs = 30_000;
 
 type ShipBobRequestPhase = "validate" | "execute";
 type QueryValue = string | number | boolean | readonly (string | number | boolean)[] | undefined;
@@ -170,7 +169,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestShipBobJson(options: ShipBobRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(options.context.signal, shipBobRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.context.signal);
   const url = new URL(`${shipBobApiBaseUrl}${shipBobApiVersionPath}${options.path}`);
   appendQuery(url, options.query);
 

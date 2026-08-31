@@ -14,7 +14,6 @@ import {
 
 const service = "serveravatar";
 const serverAvatarApiBaseUrl = "https://api.serveravatar.com";
-const serverAvatarRequestTimeoutMs = 30_000;
 
 type ServerAvatarRequestPhase = "validate" | "execute";
 type QueryValue = string | number | undefined;
@@ -127,7 +126,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestServerAvatarJson(input: ServerAvatarRequestInput): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, serverAvatarRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   const url = new URL(input.path, serverAvatarApiBaseUrl);
   appendQuery(url, input.query);
 

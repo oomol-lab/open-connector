@@ -16,7 +16,6 @@ import {
 const service = "ambivo";
 const ambivoApiBaseUrl = "https://fapi.ambivo.com";
 const ambivoValidationPath = "/crm/leads";
-const ambivoRequestTimeoutMs = 30_000;
 const ambivoMaxResponseBytes = 10 * 1024 * 1024;
 
 interface AmbivoRequestOptions {
@@ -244,7 +243,7 @@ async function requestAmbivoJson(options: AmbivoRequestOptions) {
     headers["content-type"] = "application/json";
   }
 
-  const timeout = createProviderTimeout(options.signal, ambivoRequestTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   try {
     const response = await options.fetcher(url, {
       method: options.method ?? "GET",

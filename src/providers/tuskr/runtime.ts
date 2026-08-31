@@ -12,7 +12,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const tuskrApiBaseUrl = "https://api.tuskr.live/api";
-const requestTimeoutMs = 30_000;
 const maxResponseBytes = 10 * 1024 * 1024;
 
 export interface TuskrActionContext {
@@ -100,7 +99,7 @@ async function tuskrRequest(
   context: TuskrActionContext,
   phase: "validate" | "execute",
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const headers = new Headers(init.headers);
     headers.set("authorization", `Bearer ${context.accessToken}`);

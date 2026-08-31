@@ -31,7 +31,6 @@ type LeadboxerActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof
 export const leadboxerApiBaseUrl = "https://api.leadboxer.com";
 
 const leadboxerValidationEndpoint = "/v1/management/credits";
-const leadboxerRequestTimeoutMs = 30_000;
 
 const leadboxerActionHandlers: ProviderActionHandlers<"leadboxer", LeadboxerActionHandler> = {
   lookup_ip(input, fetcher) {
@@ -96,7 +95,7 @@ export async function requestLeadboxerJson(input: {
   fetcher: typeof fetch;
   phase: LeadboxerRequestPhase;
 }): Promise<unknown> {
-  const timeoutHandle = createProviderTimeout(undefined, leadboxerRequestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(buildLeadboxerUrl(input.path, input.query), {

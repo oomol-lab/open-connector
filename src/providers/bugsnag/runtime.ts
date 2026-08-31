@@ -13,7 +13,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const bugsnagApiBaseUrl: string = "https://api.bugsnag.com";
-const bugsnagDefaultRequestTimeoutMs = 30_000;
 
 type BugsnagQueryValue = string | number | boolean | undefined;
 type BugsnagRequestPhase = "validate" | "execute";
@@ -238,7 +237,7 @@ async function requestBugsnagJson(input: {
   phase: BugsnagRequestPhase;
   notFoundAsInvalidInput?: boolean;
 }): Promise<BugsnagJsonResponse> {
-  const timeout = createProviderTimeout(input.signal, bugsnagDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(input.path, bugsnagApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {

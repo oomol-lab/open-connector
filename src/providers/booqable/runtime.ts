@@ -28,8 +28,6 @@ interface BooqableRequestInput {
   notFoundAsInvalidInput?: boolean;
 }
 
-const booqableRequestTimeoutMs = 30_000;
-
 export const booqableActionHandlers: ProviderActionHandlers<"booqable", ProviderRuntimeHandler<BooqableContext>> = {
   async get_current_company(input, context) {
     return normalizeSingleResponse(
@@ -234,7 +232,7 @@ function readSearchBody(input: Record<string, unknown>): JsonObject {
 }
 
 async function requestBooqableJson(input: BooqableRequestInput): Promise<JsonObject> {
-  const timeout = createProviderTimeout(input.context.signal, booqableRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const response = await input.context.fetcher(buildBooqableUrl(input.context.companySlug, input.path, input.query), {
       method: input.method,

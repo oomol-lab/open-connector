@@ -15,7 +15,6 @@ import {
 const service = "ngrok";
 const ngrokApiBaseUrl = "https://api.ngrok.com";
 const ngrokApiVersion = "2";
-const ngrokDefaultRequestTimeoutMs = 30_000;
 const ngrokValidationPath = "/endpoints";
 
 type NgrokRequestPhase = "validate" | "execute";
@@ -124,7 +123,7 @@ async function requestNgrokJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, ngrokDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(url.toString(), {

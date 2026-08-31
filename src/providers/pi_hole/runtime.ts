@@ -25,7 +25,6 @@ import {
   readTransitFileInput,
 } from "../provider-runtime.ts";
 
-const piHoleRequestTimeoutMs = 30_000;
 const defaultPiHoleApiPath = "api";
 const piHoleGravityOutputTailChars = 2_000;
 // Keep in sync with the server-side upload cap (FTL MAXFILESIZE).
@@ -128,7 +127,7 @@ async function performPiHoleRequest(options: PiHoleRequestOptions & { sid: strin
     body = JSON.stringify(options.body);
   }
 
-  const timeout = createProviderTimeout(context.signal, piHoleRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     return await context.fetcher(url, {
       method: options.method,

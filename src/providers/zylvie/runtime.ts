@@ -28,8 +28,6 @@ type ActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof fetch) =
 
 export const zylvieApiBaseUrl = "https://api.zylvie.com";
 
-const requestTimeoutMs = 30_000;
-
 const productFieldMap = {
   title: "title",
   url: "url",
@@ -220,7 +218,7 @@ export async function requestZylvieJson(input: {
   for (const [key, value] of Object.entries(input.query ?? {})) {
     url.searchParams.set(key, value);
   }
-  const timeoutHandle = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeoutHandle = createProviderTimeout(undefined);
 
   try {
     const response = await input.fetcher(url, {

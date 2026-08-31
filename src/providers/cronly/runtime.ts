@@ -118,7 +118,7 @@ interface CronlyRequestInput {
   body?: Record<string, unknown>;
 }
 async function requestCronlyJson(input: CronlyRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, 30_000);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const path = input.path.startsWith("/") ? input.path.slice(1) : input.path;
     const response = await input.context.fetcher(new URL(path, `${cronlyApiBaseUrl}/`), {

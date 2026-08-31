@@ -19,7 +19,6 @@ import {
 
 const encodianDefaultApiBaseUrl = "https://api.apps-encodian.com";
 const encodianCreateGuidPath = "/api/v1/Utility/CreateGuid";
-const encodianRequestTimeoutMs = 30_000;
 
 type EncodianPhase = "validate" | "execute";
 
@@ -197,7 +196,7 @@ async function requestEncodianJson(input: {
   phase: EncodianPhase;
 }): Promise<unknown> {
   const url = new URL(input.path, input.context.apiBaseUrl);
-  const timeout = createProviderTimeout(input.context.signal, encodianRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   let response: Response;
   let payload: unknown;
 

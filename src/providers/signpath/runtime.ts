@@ -21,7 +21,6 @@ type SignpathActionHandler = (input: Record<string, unknown>, context: SignpathA
 type SignpathPhase = "validate" | "execute";
 
 export const signpathApiBaseUrl = "https://app.signpath.io/api/v1";
-const signpathDefaultRequestTimeoutMs = 30_000;
 
 export const signpathActionHandlers: ProviderActionHandlers<"signpath", SignpathActionHandler> = {
   async list_signing_policies(input, context) {
@@ -145,7 +144,7 @@ async function requestSignpathJson(
   signal: AbortSignal | undefined,
   phase: SignpathPhase,
 ) {
-  const timeoutSignal = createProviderTimeout(signal, signpathDefaultRequestTimeoutMs);
+  const timeoutSignal = createProviderTimeout(signal);
 
   try {
     const response = await fetcher(buildSignpathUrl(input), {

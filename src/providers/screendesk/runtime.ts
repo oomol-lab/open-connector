@@ -7,7 +7,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const screendeskApiBaseUrl = "https://app.screendesk.io/api/v2";
-const requestTimeoutMs = 30_000;
 
 export interface ScreendeskContext {
   apiKey: string;
@@ -90,7 +89,7 @@ export async function validateScreendeskCredential(context: ScreendeskContext): 
 }
 
 async function requestScreendesk(input: ScreendeskRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
   try {
     const relativePath = input.path.startsWith("/") ? input.path.slice(1) : input.path;
     const url = new URL(relativePath, `${screendeskApiBaseUrl}/`);

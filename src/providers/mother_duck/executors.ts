@@ -14,7 +14,6 @@ import {
 
 const service = "mother_duck";
 const motherDuckApiBaseUrl = "https://api.motherduck.com";
-const motherDuckRequestTimeoutMs = 30_000;
 const motherDuckTokenHelpUrl = "https://app.motherduck.com/settings/tokens";
 
 type MotherDuckMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -183,7 +182,7 @@ async function setUserDucklingConfig(input: Record<string, unknown>, context: Ap
 }
 
 async function requestMotherDuckJson(input: MotherDuckRequestInput): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, motherDuckRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(new URL(input.path, motherDuckApiBaseUrl), {

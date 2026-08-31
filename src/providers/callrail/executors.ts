@@ -14,7 +14,6 @@ import {
 
 const service = "callrail";
 const callrailApiBaseUrl = "https://api.callrail.com";
-const requestTimeoutMs = 30_000;
 
 type CallrailRequestPhase = "validate" | "execute";
 type CallrailActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -154,7 +153,7 @@ async function requestCallrailJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(url, {

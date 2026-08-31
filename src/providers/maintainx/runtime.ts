@@ -12,8 +12,6 @@ import {
 
 export const maintainxApiBaseUrl = "https://api.getmaintainx.com/v1";
 
-const maintainxDefaultTimeoutMs = 30_000;
-
 type MaintainxRequestPhase = "validate" | "execute";
 type QueryValue = string | number | boolean | readonly (string | number | boolean)[] | undefined;
 type MaintainxActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -255,7 +253,7 @@ export async function validateMaintainxCredential(
 }
 
 async function requestMaintainxJson(options: MaintainxRequestOptions): Promise<unknown> {
-  const timeout = createProviderTimeout(options.signal, maintainxDefaultTimeoutMs);
+  const timeout = createProviderTimeout(options.signal);
   const url = new URL(`${maintainxApiBaseUrl}${options.path}`);
   appendQuery(url, options.query);
 

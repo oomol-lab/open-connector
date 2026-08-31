@@ -13,7 +13,6 @@ import {
 
 const service = "radar";
 const radarApiBaseUrl = "https://api.radar.io";
-const radarDefaultRequestTimeoutMs = 30_000;
 const radarValidationPath = "/v1/geocode/ip";
 
 type RadarRequestPhase = "validate" | "execute";
@@ -160,7 +159,7 @@ async function requestRadarJson(input: {
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
   phase: RadarRequestPhase;
 }): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(input.context.signal, radarDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildRadarUrl(input.path, input.query), {

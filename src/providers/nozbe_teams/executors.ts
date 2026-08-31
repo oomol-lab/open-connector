@@ -15,7 +15,6 @@ import {
 const service = "nozbe_teams";
 const nozbeTeamsApiBaseUrl = "https://api4.nozbe.com/v1/api";
 const nozbeTeamsValidationPath = "/teams";
-const nozbeTeamsRequestTimeoutMs = 30_000;
 const nozbeTeamsMaxResponseBytes = 10 * 1024 * 1024;
 
 type NozbeRequestPhase = "validate" | "execute";
@@ -178,7 +177,7 @@ async function requestNozbeJson(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, nozbeTeamsRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: input.method,

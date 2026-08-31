@@ -289,7 +289,7 @@ export async function requestKoboToolboxJson(input: {
   notFound?: boolean;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, 30_000);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(input.path, `${normalizeKoboToolboxBaseUrl(input.baseUrl)}/`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) url.searchParams.set(key, String(value));

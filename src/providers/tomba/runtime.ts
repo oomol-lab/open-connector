@@ -10,7 +10,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const tombaApiBaseUrl: string = "https://api.tomba.io/v1";
-const tombaDefaultRequestTimeoutMs = 30_000;
 
 type TombaMode = "validate" | "execute";
 
@@ -152,7 +151,7 @@ async function requestTombaJson(
   input: TombaRequestInput,
   context: TombaActionContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, tombaDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildTombaUrl(input), {
       method: input.method,

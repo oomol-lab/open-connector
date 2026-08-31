@@ -12,7 +12,6 @@ import {
 
 const everhourApiBaseUrl = "https://api.everhour.com";
 const everhourValidationPath = "/users/me";
-const everhourDefaultRequestTimeoutMs = 30_000;
 
 type EverhourRequestPhase = "validate" | "execute";
 type EverhourMethod = "GET" | "POST" | "DELETE";
@@ -236,7 +235,7 @@ async function requestEverhourJson(input: EverhourRequestInput, context: Everhou
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, everhourDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url.toString(), {

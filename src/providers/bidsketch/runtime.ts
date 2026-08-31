@@ -11,7 +11,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const bidsketchApiBaseUrl: string = "https://bidsketch.com/api/v1";
-const bidsketchRequestTimeoutMs = 30_000;
 const bidsketchValidationPath = "/proposals/stats.json";
 
 type BidsketchPhase = "validate" | "execute";
@@ -131,7 +130,7 @@ async function requestBidsketchJson(input: {
   phase: BidsketchPhase;
   query?: Record<string, number | undefined>;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, bidsketchRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   try {
     const response = await input.context.fetcher(buildBidsketchUrl(input.path, input.query), {

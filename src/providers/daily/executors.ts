@@ -21,7 +21,6 @@ import {
 
 const service = "daily";
 const dailyApiBaseUrl = "https://api.daily.co/v1";
-const requestTimeoutMs = 30_000;
 
 type DailyRequestPhase = "validate" | "execute";
 
@@ -188,7 +187,7 @@ async function dailyRequestObject(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   try {
     response = await context.fetcher(url, {
