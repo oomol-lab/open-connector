@@ -90,19 +90,53 @@ describe("locales", () => {
   // ever caught here.
   const enEntries = flattenLocale(en);
 
+  // Product and protocol names every locale renders in English on purpose. A
+  // multi-word value that matches en without being one of these is an
+  // untranslated string, not a deliberate one.
+  const englishTerms = new Set([
+    "API Key",
+    "API key",
+    "API Reference",
+    "Callback URL",
+    "Client ID",
+    "Client Secret",
+    "Connector Marketplace",
+    "Discovery URL",
+    "MCP URL",
+    "OAuth Apps",
+    "OpenAPI JSON",
+  ]);
+
+  // Entries whose English wording is also the correct wording in that locale.
+  const englishKeys: Record<string, string[]> = {
+    // "{{count}} actions" is spelled the same way in French.
+    fr: ["actions.actionsCount"],
+  };
+
   it.each([
     ["zh-CN", zhCN],
     ["zh-TW", zhTW],
     ["ja", ja],
     ["ru", ru],
     ["fr", fr],
-  ] satisfies [string, LocaleTree][])("%s matches the en keys and placeholders", (_lang, locale) => {
-    const entries = flattenLocale(locale);
-    expect(entries.map(([key]) => key)).toEqual(enEntries.map(([key]) => key));
+  ] satisfies [string, LocaleTree][])(
+    "%s matches the en keys and placeholders and translates every value",
+    (lang, locale) => {
+      const entries = flattenLocale(locale);
+      expect(entries.map(([key]) => key)).toEqual(enEntries.map(([key]) => key));
 
-    const translations = new Map(entries);
-    for (const [key, value] of enEntries) {
-      expect(placeholders(translations.get(key) ?? "")).toEqual(placeholders(value));
-    }
-  });
+      const translations = new Map(entries);
+      for (const [key, value] of enEntries) {
+        expect(placeholders(translations.get(key) ?? "")).toEqual(placeholders(value));
+      }
+
+      const allowedKeys = englishKeys[lang] ?? [];
+      const untranslated = enEntries
+        .filter(([key, value]) => translations.get(key) === value)
+        .filter(([, value]) => value.trim().split(/\s+/).length > 1)
+        .filter(([key, value]) => !englishTerms.has(value) && !allowedKeys.includes(key))
+        .map(([key]) => key);
+      expect(untranslated).toEqual([]);
+    },
+  );
 });
