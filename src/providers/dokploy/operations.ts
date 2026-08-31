@@ -123,7 +123,3 @@ export const dokployOperations: readonly DokployOperation[] = [
   volumeBackupsOperations,
   whitelabelingOperations,
 ].flat();
-
-export const dokployOperationByActionName: ReadonlyMap<string, DokployOperation> = new Map(
-  dokployOperations.map((operation) => [operation.name, operation]),
-);

@@ -163,11 +163,6 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
 ];
 
-export const mendeleyConnectorScopes: Record<string, string> = {
-  documentsRead: readScope,
-  documentsWrite: writeScope,
-};
-
 export const mendeleyProviderScopes: Record<string, string> = {
   all: "all",
 };

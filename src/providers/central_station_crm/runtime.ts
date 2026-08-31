@@ -4,7 +4,6 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
-  getProviderActionHandler,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -282,18 +281,6 @@ export async function validateCentralStationCrmCredential(
       credentialHelpUrl: centralStationCrmCredentialHelpUrl,
     }),
   };
-}
-
-export async function executeCentralStationCrmAction(
-  input: CentralStationCrmActionInput,
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const handler = getProviderActionHandler(centralStationCrmActionHandlers, input.actionName);
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown central_station_crm action: ${input.actionName}`);
-  }
-
-  return handler(input, fetcher);
 }
 
 export function buildCentralStationCrmApiBaseUrl(account: unknown): string {

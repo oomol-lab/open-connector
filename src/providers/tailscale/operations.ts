@@ -88,47 +88,6 @@ const governedTailnetSettings: readonly { scope: string; fields: readonly string
   { scope: "policy_file", fields: ["aclsExternallyManagedOn", "aclsExternalLink"] },
 ];
 
-/** Official endpoints that cannot be called with Tailscale OAuth client access tokens. */
-interface TailscaleUnsupportedOAuthClientOperation {
-  operationId: string;
-  reason: string;
-}
-
-export const tailscaleUnsupportedOAuthClientOperations: readonly TailscaleUnsupportedOAuthClientOperation[] = [
-  {
-    operationId: "createDeviceInvites",
-    reason: "Device invite creation is scoped to a user-owned access key.",
-  },
-  {
-    operationId: "listUserInvites",
-    reason: "User invite workflows do not expose an OAuth client scope.",
-  },
-  {
-    operationId: "createUserInvites",
-    reason: "User invite creation requires an inviting user and a user-owned access key.",
-  },
-  {
-    operationId: "getUserInvite",
-    reason: "User invite workflows do not expose an OAuth client scope.",
-  },
-  {
-    operationId: "deleteUserInvite",
-    reason: "User invite deletion requires a user-owned access key.",
-  },
-  {
-    operationId: "resendUserInvite",
-    reason: "User invite resend requires an inviting user and a user-owned access key.",
-  },
-  {
-    operationId: "resendDeviceInvite",
-    reason: "Device invite resend is scoped to a user-owned access key.",
-  },
-  {
-    operationId: "acceptDeviceInvite",
-    reason: "Device invite acceptance is scoped to a user and cannot use an OAuth client token.",
-  },
-];
-
 export interface TailscaleQueryParameter {
   inputName: string;
   parameterName: string;

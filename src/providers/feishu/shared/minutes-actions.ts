@@ -2,17 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-export const feishuMinutesProviderPermissions: readonly string[] = [
-  "minutes:minutes.search:read",
-  "minutes:minutes.basic:read",
-  "minutes:minutes.artifacts:read",
-  "minutes:minutes.media:export",
-  "minutes:minutes:update",
-  "minutes:permission:apply",
-  "vc:meeting.search:read",
-  "vc:meeting.meetingevent:read",
-  "vc:record:readonly",
-];
 const minuteToken = s.string("The Feishu Minutes token.", { minLength: 1 });
 const meetingId = s.string("The Feishu video meeting ID.", { minLength: 1 });
 const pageSize = s.positiveInteger("The maximum number of results on this page.", {

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { RaygunActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -189,24 +188,6 @@ export async function validateRaygunCredential(
       accessibleApplicationCount: response.totalCount,
     },
   };
-}
-
-export async function executeRaygunAction(
-  input: { apiKey: string; actionName: RaygunActionName; input: Record<string, unknown> } & {
-    actionName: RaygunActionName;
-    input: Record<string, unknown>;
-  },
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const handler = raygunActionHandlers[input.actionName];
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown Raygun action: ${input.actionName}`);
-  }
-
-  return handler(input.input, {
-    apiKey: input.apiKey,
-    fetcher,
-  });
 }
 
 async function raygunRequest(input: RaygunRequestInput, context: RaygunContext) {

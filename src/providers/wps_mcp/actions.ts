@@ -5,17 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "wps_mcp";
 
-export type WpsMcpActionName =
-  | "list_tools"
-  | "call_tool"
-  | "search_files"
-  | "list_my_files"
-  | "list_files"
-  | "get_file_info"
-  | "read_file"
-  | "create_file_with_content"
-  | "create_folder";
-
 const fileTypeSchema = s.stringEnum("The kind of file system entry to include.", ["file", "folder", "shortcut"]);
 
 const orderSchema = s.stringEnum("The result sort direction.", ["asc", "desc"]);

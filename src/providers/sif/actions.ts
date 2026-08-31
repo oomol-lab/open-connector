@@ -234,8 +234,6 @@ const sifMarketActions: ActionDefinition[] = [
   }),
 ];
 
-export type SifActionName = "list_tools" | "call_tool" | (typeof sifMarketActions)[number]["name"];
-
 export const sifActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",

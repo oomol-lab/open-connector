@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ShortcutActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -91,21 +90,6 @@ export async function validateShortcutCredential(
       memberEmail: readOptionalString(profile.email_address),
     }),
   };
-}
-
-export async function executeShortcutAction(
-  input: {
-    actionName: ShortcutActionName;
-    input: Record<string, unknown>;
-    apiKey?: string;
-  },
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const apiKey = readRequiredApiKey(input.apiKey);
-  return shortcutActionHandlers[input.actionName](input.input, {
-    apiKey,
-    fetcher,
-  });
 }
 
 async function listMembers(input: Record<string, unknown>, context: { apiKey: string; fetcher: typeof fetch }) {

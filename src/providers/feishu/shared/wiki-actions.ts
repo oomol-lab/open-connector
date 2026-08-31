@@ -2,20 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-export const feishuWikiProviderPermissions: readonly string[] = [
-  "wiki:space:retrieve",
-  "wiki:space:read",
-  "wiki:space:write_only",
-  "wiki:node:retrieve",
-  "wiki:node:read",
-  "wiki:node:create",
-  "wiki:node:copy",
-  "wiki:node:move",
-  "wiki:member:retrieve",
-  "wiki:member:create",
-  "wiki:member:update",
-  "space:document:move",
-];
 const spaceId = s.string("The Feishu Wiki space ID.", { minLength: 1 });
 const nodeToken = s.string("The Wiki node_token.", { minLength: 1 });
 const pageSize = s.positiveInteger("The maximum number of results on this page.", {

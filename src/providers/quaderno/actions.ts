@@ -283,17 +283,3 @@ export const quadernoActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type QuadernoActionName =
-  | "get_account"
-  | "list_contacts"
-  | "get_contact"
-  | "create_contact"
-  | "update_contact"
-  | "delete_contact"
-  | "list_products"
-  | "get_product"
-  | "create_product"
-  | "update_product"
-  | "delete_product"
-  | "calculate_tax_rate";

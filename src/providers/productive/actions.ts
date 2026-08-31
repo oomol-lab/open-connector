@@ -149,13 +149,3 @@ export const productiveActions: ProviderActionDefinition[] = [
     }),
   }),
 ];
-
-export type ProductiveActionName =
-  | "list_tasks"
-  | "get_task"
-  | "create_task"
-  | "update_task"
-  | "list_time_entries"
-  | "create_time_entry"
-  | "update_time_entry"
-  | "delete_time_entry";

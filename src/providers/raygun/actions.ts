@@ -247,15 +247,3 @@ export const raygunActions: ProviderActionDefinition[] = [
     outputSchema: errorGroupOutputSchema,
   }),
 ] satisfies Array<ProviderActionDefinition<any>>;
-
-export type RaygunActionName =
-  | "list_applications"
-  | "get_application"
-  | "list_deployments"
-  | "get_latest_deployment"
-  | "get_deployment"
-  | "create_deployment"
-  | "update_deployment"
-  | "delete_deployment"
-  | "list_error_groups"
-  | "get_error_group";

@@ -798,25 +798,3 @@ export const spyfuActions: ActionDefinition[] = [
     }),
   }),
 ] as const satisfies ActionDefinition[];
-
-export type SpyfuActionName =
-  | "get_monthly_usage"
-  | "get_usage_breakdown"
-  | "get_latest_domain_stats"
-  | "get_bulk_domain_stats"
-  | "find_matching_domains"
-  | "get_seo_keywords"
-  | "get_top_pages"
-  | "get_serp_analysis"
-  | "get_live_seo_stats"
-  | "get_domain_ranking_history"
-  | "get_keyword_domain_rankings"
-  | "get_domain_keyword_rankings"
-  | "get_competitors"
-  | "get_competing_keywords"
-  | "get_keyword_information"
-  | "get_keyword_expansions"
-  | "get_ppc_keywords"
-  | "get_domain_ad_history"
-  | "get_keyword_ad_history"
-  | "get_keyword_ad_history_with_stats";

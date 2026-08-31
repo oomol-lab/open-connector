@@ -4,14 +4,12 @@
  * such as `accounting.transactions.read` and `accounting.reports.read` are
  * deprecated for new apps and are NOT requested by this provider:
  * https://developer.xero.com/documentation/guides/oauth2/scopes
+ *
+ * `app.connections` is also left out on purpose: it is meant for
+ * client-credentials Custom Connection apps, requesting it on a web-app
+ * authorize URL returned access_denied ("Requested wrong apps scopes") in
+ * testing, and GET /connections works with a user access token without it.
  */
-/**
- * The `app.connections` scope is for client-credentials Custom Connection apps.
- * It is kept out of this provider's authorization-code request list. Requesting
- * it on a web-app authorize URL returned access_denied ("Requested wrong apps
- * scopes") in testing; GET /connections still works with a user access token.
- */
-export const xeroConnectionsScope = "app.connections";
 export const xeroSettingsReadScope = "accounting.settings.read";
 export const xeroContactsReadScope = "accounting.contacts.read";
 export const xeroInvoicesReadScope = "accounting.invoices.read";

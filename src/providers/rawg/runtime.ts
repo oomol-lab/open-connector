@@ -1,9 +1,8 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { RawgActionName } from "./actions.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { getProviderActionHandler, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type RawgActionContext = {
   apiKey: string;
@@ -133,21 +132,6 @@ export const rawgActionHandlers: ProviderActionHandlers<"rawg", RawgActionHandle
     return getGameSubresource(input, "reddit", "post", context);
   },
 };
-
-export async function executeRawgAction(
-  input: { apiKey: string; actionName: RawgActionName; input: Record<string, unknown> },
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const handler = getProviderActionHandler(rawgActionHandlers, input.actionName);
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown rawg action: ${input.actionName}`);
-  }
-
-  return handler(input.input, {
-    apiKey: input.apiKey,
-    fetcher,
-  });
-}
 
 function buildListGamesQuery(input: Record<string, unknown>) {
   return compactObject({

@@ -10,7 +10,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const bazhuayuApiBaseUrl = "https://openapi.bazhuayu.com";
-export const bazhuayuApiDocsUrl = "https://openapi.bazhuayu.com/zh-CN/";
 
 export const maximumBazhuayuResponseBytes: number = 10 * 1024 * 1024;
 const tokenRefreshLeewayMs = 60_000;
@@ -423,16 +422,6 @@ async function requestToken(
     refreshToken: optionalString(data.refresh_token) ?? fallbackRefreshToken,
     refreshAt: Date.now() + expiresInMs - Math.min(tokenRefreshLeewayMs, expiresInMs / 10),
   };
-}
-
-export async function requestBazhuayuJson(
-  url: URL,
-  init: RequestInit,
-  fetcher: ProviderFetch,
-  phase: "validate" | "execute",
-  signal?: AbortSignal,
-): Promise<Record<string, unknown>> {
-  return requestJson(url, init, fetcher, phase, signal);
 }
 
 async function requestJson(

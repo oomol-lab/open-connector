@@ -560,8 +560,6 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
 ] satisfies ProviderActionDefinition[];
 
-export type WebexActionName = (typeof webexActions)[number]["name"];
-
 function resourceCrudActions<const TResource extends string>(definition: {
   resource: TResource;
   plural: string;

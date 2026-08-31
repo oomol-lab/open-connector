@@ -19,9 +19,6 @@ export function createCanvaExecutors(service: string, apiBaseUrl: string): Provi
   return defineOAuthProviderExecutors(service, createCanvaActionHandlers(apiBaseUrl));
 }
 
-export const canvaActionHandlers: ProviderActionHandlers<"canva", CanvaActionHandler> =
-  createCanvaActionHandlers(canvaApiBaseUrl);
-
 export const executors: ProviderExecutors = createCanvaExecutors(service, canvaApiBaseUrl);
 
 /** Build Canva credential validators for one regional OAuth API base URL. */

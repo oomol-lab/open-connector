@@ -162,9 +162,7 @@ const indexSource =
   `  contentType?: string | null;\n  supportStatus?: DokployOperationSupportStatus;\n` +
   `  supportReason?: string;\n  inputSchema: JsonSchema;\n  outputSchema: JsonSchema;\n}\n\n` +
   `export type DokployOperation = DokployOperationDefinition;\n\n` +
-  `export const dokployOperations: readonly DokployOperation[] = [\n${arrays}\n].flat();\n\n` +
-  `export const dokployOperationByActionName: ReadonlyMap<string, DokployOperation> = new Map(\n` +
-  `  dokployOperations.map((operation) => [operation.name, operation]),\n);\n`;
+  `export const dokployOperations: readonly DokployOperation[] = [\n${arrays}\n].flat();\n`;
 await writeFile(indexPath, indexSource);
 formatGeneratedFiles();
 

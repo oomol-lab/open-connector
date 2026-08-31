@@ -63,10 +63,6 @@ export async function validateMicrosoftClarityCredential(
   };
 }
 
-export function clearMicrosoftClarityValidationCache(): void {
-  validationCache.clear();
-}
-
 async function exportLiveInsights(
   input: Record<string, unknown>,
   context: MicrosoftClarityActionContext,

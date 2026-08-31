@@ -1,7 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
 import type { ExecutionContext } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { QuadernoActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
 import {
@@ -139,15 +138,6 @@ export async function validateQuadernoCredential(
       validationEndpoint: "/authorization",
     },
   };
-}
-
-export async function executeQuadernoAction(input: QuadernoExecuteInput, fetcher: typeof fetch): Promise<unknown> {
-  const handler =
-    quadernoActionHandlers[(input as QuadernoExecuteInput & { actionName: QuadernoActionName }).actionName];
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown quaderno action`);
-  }
-  return handler(input, fetcher);
 }
 
 const quadernoRuntimeHandlers: ProviderActionHandlers<

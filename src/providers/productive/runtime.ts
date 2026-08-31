@@ -1,11 +1,9 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProductiveActionName } from "./actions.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
-  getProviderActionHandler,
   isAbortLikeError,
   providerFetch,
   ProviderRequestError,
@@ -78,35 +76,6 @@ export async function validateProductiveCredential(
         readOptionalString(organization.attributes.name) ?? readOptionalString(organization.attributes.company_name),
     }),
   };
-}
-
-export async function executeProductiveAction(
-  input: {
-    actionName: ProductiveActionName;
-    input: Record<string, unknown>;
-    apiKey?: string;
-    providerMetadata?: Record<string, unknown>;
-    values?: Record<string, string>;
-  },
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const apiKey = readRequiredApiKey(input.apiKey);
-  const organizationId =
-    readOptionalString(input.values?.organizationId) ?? readOptionalString(input.providerMetadata?.organizationId);
-  if (!organizationId) {
-    throw new ProviderRequestError(400, "organizationId is required");
-  }
-
-  const handler = getProviderActionHandler(productiveActionHandlers, input.actionName);
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown productive action: ${String(input.actionName)}`);
-  }
-
-  return handler(input.input, {
-    apiKey,
-    organizationId,
-    fetcher,
-  });
 }
 
 export const executors: ProviderExecutors = defineProviderExecutors({

@@ -60,5 +60,3 @@ export const projectmanagerActions: ProviderActionDefinition[] = [
     ),
   }),
 ];
-
-export type ProjectmanagerActionName = "list_projects" | "get_project" | "list_tasks";

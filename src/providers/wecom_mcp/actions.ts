@@ -5,8 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "wecom_mcp";
 
-export type WecomMcpActionName = "list_tools" | "call_tool";
-
 const toolAnnotationsSchema = s.looseObject("MCP behavior hints supplied by the connected WeCom server.", {
   title: s.optional(s.string("A human-readable title for the tool.")),
   readOnlyHint: s.optional(s.boolean("Whether the tool is expected not to modify WeCom data.")),

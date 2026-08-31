@@ -490,5 +490,3 @@ export const getresponseActions: ActionDefinition[] = [
   listCustomFieldsAction,
   listTagsAction,
 ] satisfies ActionDefinition[];
-
-export type GetresponseActionName = (typeof getresponseActions)[number]["name"];

@@ -63,10 +63,6 @@ function resolveEapiDomains(credential: ZLibraryCredential): string[] {
   return [...new Set(configuredDomains.map((value) => normalizeEapiDomain(value, "Z-Library EAPI domain")))];
 }
 
-export function resolveEapiDomain(credential: ZLibraryCredential): string {
-  return resolveEapiDomains(credential)[0];
-}
-
 function buildEapiUrl(domain: string, path: string): string {
   return `https://${domain}${path}`;
 }

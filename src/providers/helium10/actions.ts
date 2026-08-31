@@ -9,8 +9,6 @@ export const helium10ProviderScopes = {
   tools: "mcp:tools",
 } as const;
 
-export type Helium10ActionName = "list_tools" | "call_tool";
-
 const actionScopes = [helium10ProviderScopes.tools];
 const mcpToolSummarySchema = s.object(
   "A tool currently exposed by the connected Helium 10 MCP server.",

@@ -543,5 +543,3 @@ export const helpscoutActions: ActionDefinition[] = [
     }),
   }),
 ] as const satisfies ActionDefinition[];
-
-export type HelpscoutActionName = (typeof helpscoutActions)[number]["name"];

@@ -389,5 +389,3 @@ export const surveyMonkeyActions: ActionDefinition[] = [
     }),
   }),
 ] satisfies ActionDefinition[];
-
-export type SurveyMonkeyActionName = (typeof surveyMonkeyActions)[number]["name"];

@@ -21,11 +21,6 @@ interface ApiKeyProviderActionInput {
   providerMetadata: Record<string, unknown>;
   signal?: AbortSignal;
 }
-interface ProviderProxyFetchInput {
-  fetcher: typeof fetch;
-  url: URL;
-  init?: RequestInit;
-}
 interface ValidateCredentialResult {
   providerAccountId?: string;
   accountLabel: string;
@@ -267,14 +262,6 @@ export function normalizeKoboToolboxBaseUrl(
   url.search = "";
   url.hash = "";
   return url.toString().replace(/\/$/, "");
-}
-
-export function resolveKoboToolboxBaseUrl(context: { providerMetadata: Record<string, unknown> }): string {
-  return storedBaseUrl(context.providerMetadata);
-}
-
-export async function fetchKoboToolboxProxy(input: ProviderProxyFetchInput): Promise<Response> {
-  return input.fetcher(input.url, input.init);
 }
 
 export async function requestKoboToolboxJson(input: {

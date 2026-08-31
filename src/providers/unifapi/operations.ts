@@ -96,7 +96,3 @@ export const unifapiOperations: readonly UnifapiOperation[] = operationDefinitio
   ...operation,
   outputSchema: operation.paginated ? paginatedOutputSchema : baseOutputSchema,
 }));
-
-export const unifapiOperationByActionName: Map<string, UnifapiOperation> = new Map(
-  unifapiOperations.map((operation) => [operation.name, operation]),
-);

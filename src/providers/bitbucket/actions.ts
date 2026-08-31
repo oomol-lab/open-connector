@@ -700,5 +700,3 @@ export const bitbucketActions: ActionDefinition[] = [
     required: ["workspace", "repository"],
   }),
 ] as const satisfies ActionDefinition[];
-
-export type BitbucketActionName = (typeof bitbucketActions)[number]["name"];

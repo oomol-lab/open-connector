@@ -564,5 +564,3 @@ export const paypalActions: ActionDefinition[] = [
     }),
   }),
 ] as const satisfies ActionDefinition[];
-
-export type PayPalActionName = (typeof paypalActions)[number]["name"];

@@ -76,11 +76,3 @@ export const prospeoActions: ProviderActionDefinition[] = [
     outputSchema: s.looseObject("The normalized Prospeo search suggestions response.", { raw }),
   }),
 ];
-
-export type ProspeoActionName =
-  | "get_account_information"
-  | "enrich_person"
-  | "enrich_company"
-  | "search_people"
-  | "search_companies"
-  | "search_suggestions";

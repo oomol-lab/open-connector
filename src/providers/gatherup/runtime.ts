@@ -18,8 +18,6 @@ export interface GatherupContext {
 }
 
 export const gatherupApiBaseUrl = "https://app.gatherup.com/api/v2";
-export const gatherupCredentialHelpUrl =
-  "https://help.gatherup.com/s/article/GatherUp-API-Client-ID-Private-Key-and-Bearer-Token";
 
 type GatherupRequestPhase = "validate" | "execute";
 type GatherupQueryValue = string | number | boolean | undefined;

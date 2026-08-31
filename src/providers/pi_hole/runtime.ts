@@ -77,23 +77,6 @@ export function clearPiHoleSessionCache(): void {
   piHoleLoginInFlight.clear();
 }
 
-/**
- * Release the session currently held in the cache. Best-effort logout used by
- * short-lived callers such as the E2E harness; a failed logout is ignored
- * because the session expires on its own.
- */
-export async function logoutPiHoleSession(context: PiHoleActionContext): Promise<void> {
-  const key = piHoleSessionCacheKey(context);
-  const entry = piHoleSessionCache.get(key);
-  piHoleSessionCache.delete(key);
-  if (!entry?.sid) {
-    return;
-  }
-  try {
-    await performPiHoleRequest({ context, method: "DELETE", path: "auth", sid: entry.sid });
-  } catch {}
-}
-
 function buildPiHoleApiUrl(
   context: PiHoleActionContext,
   path: string,

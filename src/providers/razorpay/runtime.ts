@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { RazorpayActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -34,14 +33,6 @@ function createTimeoutSignal(input: { timeoutMs: number }): {
 }
 
 type RazorpayRequestPhase = "validate" | "execute";
-type RazorpayActionInput = {
-  apiKey: string;
-  values?: Record<string, string>;
-  metadata?: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  actionName: RazorpayActionName;
-  input: Record<string, unknown>;
-};
 type RazorpayActionHandler = (input: Record<string, unknown>, context: RazorpayActionContext) => Promise<unknown>;
 
 type RazorpayActionContext = {
@@ -103,19 +94,6 @@ export async function validateRazorpayCredential(
       firstPaymentStatus: trimOptionalString(firstPayment?.status),
     }),
   };
-}
-
-export async function executeRazorpayAction(input: RazorpayActionInput, fetcher: typeof fetch): Promise<unknown> {
-  const handler = razorpayActionHandlers[input.actionName];
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown razorpay action: ${input.actionName}`);
-  }
-
-  return handler(input.input, {
-    keyId: requireStoredRazorpayKeyId(input),
-    keySecret: input.apiKey,
-    fetcher,
-  });
 }
 
 async function createOrder(input: Record<string, unknown>, context: RazorpayActionContext) {
@@ -359,17 +337,6 @@ function requireRazorpayKeyId(input: Record<string, string>) {
   const keyId = trimOptionalString(input.keyId);
   if (!keyId) {
     throw new ProviderRequestError(400, "keyId is required");
-  }
-  return keyId;
-}
-
-function requireStoredRazorpayKeyId(input: RazorpayActionInput) {
-  const keyId =
-    trimOptionalString(input.values?.keyId) ??
-    trimOptionalString(input.providerMetadata?.keyId) ??
-    trimOptionalString((input.providerMetadata as Record<string, unknown> | undefined)?.keyId);
-  if (!keyId) {
-    throw new ProviderRequestError(500, "stored keyId is missing for razorpay credential");
   }
   return keyId;
 }

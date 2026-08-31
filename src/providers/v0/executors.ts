@@ -3,12 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { V0ActionInput } from "./runtime-client.ts";
 
-import {
-  defineApiKeyProviderExecutors,
-  getProviderActionHandler,
-  mapProviderActionSources,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-runtime.ts";
 import {
   v0FindRateLimit,
   v0GetBilling,
@@ -222,12 +217,3 @@ export const credentialValidators: CredentialValidators = {
     return validateV0Credential({ apiKey: input.apiKey }, fetcher);
   },
 };
-
-export async function executeV0Action(input: V0ActionInput, fetcher: typeof fetch): Promise<unknown> {
-  const handler = input.actionName ? getProviderActionHandler(v0ActionHandlers, input.actionName) : undefined;
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown v0 action: ${input.actionName}`);
-  }
-
-  return handler(input, fetcher);
-}

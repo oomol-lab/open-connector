@@ -1,5 +1,4 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { SpyfuActionName } from "./actions.ts";
 
 import {
   optionalBoolean,
@@ -489,22 +488,6 @@ export async function validateSpyfuCredential(
       usageEntryCount: usage.length,
     },
   };
-}
-
-export async function executeSpyfuAction(
-  input: {
-    apiKey: string;
-    actionName: SpyfuActionName;
-    input: Record<string, unknown>;
-  },
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const handler = spyfuActionHandlers[input.actionName];
-  if (!handler) {
-    throw new ProviderRequestError(500, `spyfu action is not implemented yet: ${input.actionName}`);
-  }
-
-  return handler(input.input, fetcher, requiredApiKey(input));
 }
 
 function buildSharedKeywordQuery(input: Record<string, unknown>): SpyfuQuery {

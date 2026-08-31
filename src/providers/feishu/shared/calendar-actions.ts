@@ -2,14 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-export const feishuCalendarProviderPermissions: readonly string[] = [
-  "calendar:calendar.event:read",
-  "calendar:calendar.event:create",
-  "calendar:calendar.event:update",
-  "calendar:calendar.event:delete",
-  "calendar:calendar.event:reply",
-  "calendar:calendar.free_busy:read",
-];
 const calendarId = s.string("The Feishu calendar ID. Use `primary` for the caller's primary calendar.", {
   minLength: 1,
 });

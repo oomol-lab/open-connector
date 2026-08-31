@@ -5,19 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "invoice_ninja" as const;
 
-export type InvoiceNinjaActionName =
-  | "list_clients"
-  | "get_client"
-  | "create_client"
-  | "update_client"
-  | "list_invoices"
-  | "get_invoice"
-  | "create_invoice"
-  | "update_invoice"
-  | "list_payments"
-  | "get_payment"
-  | "create_payment";
-
 const resourceId = s.nonEmptyString("The Invoice Ninja hashed resource ID.");
 const paginationInputFields = {
   page: s.positiveInteger("The 1-based result page to return."),

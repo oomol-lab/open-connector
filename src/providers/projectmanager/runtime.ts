@@ -1,7 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ProjectmanagerActionName } from "./actions.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -77,19 +76,6 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
     (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
   >,
 );
-
-export function executeProjectmanagerAction(input: {
-  actionName: ProjectmanagerActionName;
-  input: Record<string, unknown>;
-  apiKey: string;
-  fetcher: typeof fetch;
-}): Promise<unknown> {
-  const handler = projectmanagerActionHandlers[input.actionName];
-  return handler(input.input, {
-    apiKey: input.apiKey,
-    fetcher: input.fetcher,
-  });
-}
 
 function buildOdataQuery(input: Record<string, unknown>) {
   return [

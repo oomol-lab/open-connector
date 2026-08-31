@@ -105,10 +105,6 @@ export function buildAliyunSlsCanonicalResource(path: string, query?: Record<str
   return `${path}?${entries.map(([key, value]) => `${key}=${value}`).join("&")}`;
 }
 
-export function aliyunSlsUtf8Bytes(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
-}
-
 function isAliyunSlsCanonicalHeader(name: string): boolean {
   const normalized = name.toLowerCase();
   return normalized.startsWith("x-log-") || normalized.startsWith("x-acs-");

@@ -232,5 +232,3 @@ export const formstackActions: ActionDefinition[] = [
     }),
   }),
 ] as const satisfies ActionDefinition[];
-
-export type FormstackActionName = (typeof formstackActions)[number]["name"];

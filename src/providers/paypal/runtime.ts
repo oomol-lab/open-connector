@@ -323,10 +323,6 @@ export function createPayPalAccessTokenRequest(input: {
   };
 }
 
-export function readPayPalAccessToken(payload: unknown): string | null {
-  return optionalString(optionalRecord(payload)?.access_token) ?? null;
-}
-
 function resolvePayPalCredential(input: Record<string, string>, fetcher: typeof fetch): PayPalCredentialContext {
   return {
     clientId: requireCredentialField(input.clientId, "clientId"),

@@ -149,10 +149,6 @@ export function buildBoldSignApiBaseUrl(region: BoldSignRegion): string {
   return boldSignApiBaseUrlByRegion[region];
 }
 
-export function resolveStoredBoldSignApiBaseUrl(providerMetadata: Record<string, unknown>): string {
-  return buildBoldSignApiBaseUrl(normalizeBoldSignRegion(providerMetadata.region));
-}
-
 export async function validateBoldSignCredential(
   input: { apiKey: string; values: Record<string, string> },
   fetcher: typeof fetch,

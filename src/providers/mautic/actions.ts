@@ -158,5 +158,3 @@ export const mauticActions: ActionDefinition[] = [
   addContactToSegment,
   removeContactFromSegment,
 ] as const satisfies ActionDefinition[];
-
-export type MauticActionName = (typeof mauticActions)[number]["name"];

@@ -180,16 +180,11 @@ export function signBaiduMapsProxyUrl(url: URL, sk: string | undefined): void {
 /**
  * Compute the Baidu Maps SN signature over a request path and query.
  *
- * Exported for unit tests. The signing rule follows the Baidu LBS docs
- * (lbsyun.baidu.com appendix):
+ * The signing rule follows the Baidu LBS docs (lbsyun.baidu.com appendix):
  *   sn = md5(urlencode(path + "?" + query_string_including_ak + sk))
  * where `urlencode` is the RFC-1738 (PHP `urlencode` / Python `quote_plus`)
  * form and the whole `path?query+sk` string is encoded once more before md5.
  */
-export function computeBaiduMapsSnForTest(path: string, query: Record<string, QueryValue>, sk: string): string {
-  return computeBaiduMapsSn(path, query, sk);
-}
-
 function computeBaiduMapsSn(path: string, query: Record<string, QueryValue>, sk: string): string {
   const rawSigningString = `${path}?${baiduQueryString(query)}${sk}`;
   return createHash("md5").update(baiduUrlEncode(rawSigningString), "utf8").digest("hex");

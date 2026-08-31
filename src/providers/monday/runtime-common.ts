@@ -138,15 +138,6 @@ export async function fetchMondayCurrentUser(
   );
 }
 
-export async function fetchMondayCurrentAccountProfile(
-  accessToken: string,
-  fetcher: typeof fetch,
-  phase: MondayRequestPhase = "execute",
-): Promise<MondayAccountProfile> {
-  const currentUser = await fetchMondayCurrentUser(accessToken, fetcher, phase);
-  return buildMondayAccountProfile(currentUser.me);
-}
-
 export async function mondayGraphqlRequest<TData>(
   apiKey: string,
   input: {

@@ -66,10 +66,6 @@ export const orcidActions: ActionDefinition[] = [
   }),
 ];
 
-export const orcidConnectorScopes: Record<string, string> = {
-  recordsRead: readScope,
-};
-
 export const orcidProviderScopes: Record<string, string> = {
   openid: "openid",
 };

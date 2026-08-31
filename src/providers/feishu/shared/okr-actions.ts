@@ -2,15 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-export const feishuOkrProviderPermissions: readonly string[] = [
-  "okr:okr.period:readonly",
-  "okr:okr.content:readonly",
-  "okr:okr.content:writeonly",
-  "okr:okr.progress:readonly",
-  "okr:okr.progress:writeonly",
-  "okr:okr.progress:delete",
-  "okr:okr.setting:read",
-];
 const userIdType = s.stringEnum("The identifier type used for user fields.", ["open_id", "union_id", "user_id"]);
 const departmentIdType = s.stringEnum("The identifier type used for departments.", [
   "department_id",

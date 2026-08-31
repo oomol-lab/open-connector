@@ -1,5 +1,4 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -10,8 +9,6 @@ const trimmedString = (description: string) => s.string(description, { minLength
 
 const cursorSchema = trimmedString("The pagination cursor returned by a previous Pylon request.");
 const requestIdSchema = s.nullable(s.string("The Pylon request ID for tracking this API call."));
-const pylonRawObjectSchema = s.looseObject("The raw object returned by Pylon.");
-const pylonRawObjectArraySchema = s.array("The raw objects returned by Pylon.", pylonRawObjectSchema);
 
 const paginationSchema = s.object("Cursor pagination metadata returned by Pylon.", {
   cursor: s.string("The cursor for the next page of results."),
@@ -535,6 +532,3 @@ export const pylonActions: ProviderActionDefinition[] = [
   searchContactsAction,
   createContactAction,
 ];
-
-export const pylonRawObjectOutputSchema: JsonSchema = pylonRawObjectSchema;
-export const pylonRawObjectArrayOutputSchema: JsonSchema = pylonRawObjectArraySchema;

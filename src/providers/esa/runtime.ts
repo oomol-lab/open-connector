@@ -114,16 +114,6 @@ export async function requestEsaJson<T>(context: EsaActionContext, input: EsaReq
   return payload as T;
 }
 
-export function buildEsaUrl(path: string, query?: Record<string, string | number | boolean | undefined>): string {
-  const url = new URL(`${esaApiBaseUrl}${path}`);
-  for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined) {
-      url.searchParams.set(key, String(value));
-    }
-  }
-  return url.toString();
-}
-
 function esaHeaders(accessToken: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",

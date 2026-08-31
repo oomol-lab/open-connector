@@ -7,14 +7,6 @@ interface ApiKeyProviderActionInput {
   input: Record<string, unknown>;
   providerMetadata: Record<string, unknown>;
 }
-interface ProviderProxyContext {
-  providerMetadata: Record<string, unknown>;
-}
-interface ProviderProxyFetchInput {
-  fetcher: typeof fetch;
-  url: URL;
-  init?: RequestInit;
-}
 interface ValidateCredentialResult {
   providerAccountId?: string;
   accountLabel: string;
@@ -65,15 +57,6 @@ export async function executePinpointAction(
     phase: "execute",
     fetcher,
   });
-}
-
-export function resolvePinpointProxyBaseUrl(context: ProviderProxyContext): string {
-  return requireStoredPinpointApiBaseUrl(context.providerMetadata);
-}
-
-export async function fetchPinpointProxy(input: ProviderProxyFetchInput): Promise<Response> {
-  const guardedFetch = input.fetcher;
-  return guardedFetch(input.url, input.init);
 }
 
 export function normalizePinpointApiBaseUrl(value: unknown): string {

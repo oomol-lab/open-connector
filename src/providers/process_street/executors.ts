@@ -1,4 +1,4 @@
-import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -158,26 +158,6 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
 });
-
-export async function validateProcessStreetCredential(
-  input: Record<string, string>,
-  fetcher: typeof fetch,
-): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(401, message));
-  const response = await requestProcessStreet({
-    path: "/testAuth",
-    method: "GET",
-    params: {},
-    context: { apiKey, fetcher },
-    phase: "validate",
-  });
-  const apiKeyLabel = requiredResponseString(response.apiKeyLabel, "apiKeyLabel", "validate");
-  return {
-    profile: { accountId: apiKeyLabel, displayName: apiKeyLabel, grantedScopes: [] },
-    grantedScopes: [],
-    metadata: { validationEndpoint: "/testAuth", apiKeyLabel },
-  };
-}
 
 async function get(
   path: string,

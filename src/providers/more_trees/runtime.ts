@@ -27,8 +27,6 @@ interface ApiKeyProviderActionInput {
 export const moreTreesAccountOrigin = "https://user-management-service.platform.moretrees.eco";
 export const moreTreesProjectOrigin = "https://project-management-service.platform.moretrees.eco";
 export const moreTreesTransactionOrigin = "https://transaction-management-service.platform.moretrees.eco";
-export const moreTreesAccountSettingsUrl = "https://platform.moretrees.eco/settings/?tab=account-settings";
-export const moreTreesIntegrationSettingsUrl = "https://platform.moretrees.eco/manage/API";
 export const moreTreesRequestTimeoutMs = 30_000;
 
 const moreTreesAccountPath = "/user-management-api/external/accounts";

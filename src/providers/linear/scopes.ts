@@ -9,5 +9,3 @@ export const linearOAuthScopes: string[] = [
   linearIssuesCreateScope,
   linearCommentsCreateScope,
 ];
-
-export const linearApiKeyGrantedScopes: string[] = [...linearOAuthScopes];

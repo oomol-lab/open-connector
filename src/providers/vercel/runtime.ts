@@ -1,6 +1,5 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { VercelActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject, queryFlag, queryParams } from "../../core/request.ts";
@@ -168,19 +167,6 @@ export async function validateVercelCredential(
       teamName: team?.name,
     }),
   };
-}
-
-export async function executeVercelAction(
-  actionName: VercelActionName,
-  input: VercelActionInput,
-  context: VercelActionContext,
-): Promise<unknown> {
-  const handler = vercelActionHandlers[actionName];
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown vercel action: ${actionName}`);
-  }
-
-  return handler(input, context);
 }
 
 /**

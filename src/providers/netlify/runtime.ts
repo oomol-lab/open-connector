@@ -1,5 +1,4 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { NetlifyActionName } from "./actions.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -331,19 +330,6 @@ export async function validateNetlifyCredential(
       siteCount: user.site_count,
     }),
   };
-}
-
-export async function executeNetlifyAction(
-  actionName: NetlifyActionName,
-  input: Record<string, unknown>,
-  context: NetlifyActionContext,
-): Promise<unknown> {
-  const handler = netlifyActionHandlers[actionName];
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown netlify action: ${actionName}`);
-  }
-
-  return handler(input, context);
 }
 
 async function postDeployAction(

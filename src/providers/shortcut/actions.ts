@@ -641,20 +641,3 @@ export const shortcutActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ShortcutActionName =
-  | "list_members"
-  | "get_member"
-  | "list_workflows"
-  | "get_workflow"
-  | "list_projects"
-  | "get_project"
-  | "list_epics"
-  | "get_epic"
-  | "create_epic"
-  | "update_epic"
-  | "list_stories"
-  | "get_story"
-  | "create_story"
-  | "update_story"
-  | "search_stories";

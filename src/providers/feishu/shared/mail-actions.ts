@@ -2,15 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-export const feishuMailProviderPermissions: readonly string[] = [
-  "mail:user_mailbox:readonly",
-  "mail:user_mailbox.message:readonly",
-  "mail:user_mailbox.message.address:read",
-  "mail:user_mailbox.message.subject:read",
-  "mail:user_mailbox.message.body:read",
-  "mail:user_mailbox.message:modify",
-  "mail:user_mailbox.message:send",
-];
 const mailboxId = s.string("The mailbox email address. Use `me` for the authorized user's mailbox.", { minLength: 1 });
 const messageId = s.string("The Feishu mail message ID.", { minLength: 1 });
 const draftId = s.string("The Feishu mail draft ID.", { minLength: 1 });

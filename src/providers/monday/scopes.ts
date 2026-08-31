@@ -19,10 +19,6 @@ const mondayAuthorizationScopes = [
 const mondayProviderScopeSurface = [...mondayAuthorizationScopes, "manage_account_security", "forms:write"] as const;
 const mondayKnownScopeSet = new Set<string>(mondayProviderScopeSurface);
 
-export const mondayOauthScopes: Record<string, string[]> = Object.fromEntries(
-  mondayAuthorizationScopes.map((scope) => [scope, [scope]]),
-);
-
 export function getMondayAuthorizationScopes(): string[] {
   return [...mondayAuthorizationScopes];
 }

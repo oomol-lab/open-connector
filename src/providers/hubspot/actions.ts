@@ -36,37 +36,6 @@ export const hubspotConnectorScopes = {
   schemasRead: "hubspot.schemas.read",
 };
 
-export const hubspotConnectorScopeList: string[] = [
-  hubspotConnectorScopes.crmRead,
-  hubspotConnectorScopes.crmWrite,
-  hubspotConnectorScopes.contactsRead,
-  hubspotConnectorScopes.contactsWrite,
-  hubspotConnectorScopes.companiesRead,
-  hubspotConnectorScopes.companiesWrite,
-  hubspotConnectorScopes.dealsRead,
-  hubspotConnectorScopes.dealsWrite,
-  hubspotConnectorScopes.ticketsRead,
-  hubspotConnectorScopes.ticketsWrite,
-  hubspotConnectorScopes.lineItemsRead,
-  hubspotConnectorScopes.lineItemsWrite,
-  hubspotConnectorScopes.productsRead,
-  hubspotConnectorScopes.productsWrite,
-  hubspotConnectorScopes.callsRead,
-  hubspotConnectorScopes.callsWrite,
-  hubspotConnectorScopes.emailsRead,
-  hubspotConnectorScopes.emailsWrite,
-  hubspotConnectorScopes.meetingsRead,
-  hubspotConnectorScopes.meetingsWrite,
-  hubspotConnectorScopes.notesRead,
-  hubspotConnectorScopes.notesWrite,
-  hubspotConnectorScopes.tasksRead,
-  hubspotConnectorScopes.tasksWrite,
-  hubspotConnectorScopes.campaignsRead,
-  hubspotConnectorScopes.campaignsWrite,
-  hubspotConnectorScopes.ownersRead,
-  hubspotConnectorScopes.schemasRead,
-];
-
 const genericHubspotObjectTypeField = s.nonEmptyString(
   "HubSpot CRM object type accepted by the MCP server, such as contacts, companies, deals, tickets, line_items, products, calls, emails, meetings, notes, tasks, campaigns, or a custom object type.",
 );

@@ -1,12 +1,10 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
-import type { ProspeoActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
-  getProviderActionHandler,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -162,25 +160,6 @@ export async function validateProspeoCredential(
       credits: account.credits ?? undefined,
     }),
   };
-}
-
-export async function executeProspeoAction(
-  input: {
-    actionName: ProspeoActionName;
-    input: Record<string, unknown>;
-    apiKey: string;
-  },
-  fetcher: typeof fetch,
-): Promise<unknown> {
-  const handler = getProviderActionHandler(prospeoActionHandlers, input.actionName);
-  if (!handler) {
-    throw new ProviderRequestError(400, `unknown prospeo action: ${input.actionName}`);
-  }
-
-  return handler(input.input, {
-    apiKey: input.apiKey,
-    fetcher,
-  });
 }
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

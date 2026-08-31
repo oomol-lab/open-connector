@@ -2,13 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-export const feishuTaskProviderPermissions: readonly string[] = [
-  "task:task:read",
-  "task:task:write",
-  "task:comment:write",
-  "task:tasklist:read",
-  "task:tasklist:write",
-];
 const taskGuid = s.string("The Feishu task GUID or task ID.", { minLength: 1 });
 const tasklistGuid = s.string("The Feishu tasklist GUID.", { minLength: 1 });
 const pageSize = s.positiveInteger("The maximum number of results on this page.", {

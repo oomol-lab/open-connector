@@ -200,12 +200,3 @@ export const avochatoActions: ActionDefinition[] = [
     outputSchema: s.object("The queued Avochato message.", { message: messageSchema }),
   }),
 ];
-
-export type AvochatoActionName =
-  | "get_current_identity"
-  | "list_contacts"
-  | "get_contacts"
-  | "upsert_contact"
-  | "list_messages"
-  | "get_message"
-  | "send_message";

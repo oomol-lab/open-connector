@@ -4,9 +4,6 @@ export const googleOpenIdScope = "openid";
 export const googleEmailScope = "email";
 export const googleProfileScope = "profile";
 
-export const googleChatSpaceReadScopes: string[] = [googleChatSpacesReadonlyScope];
-export const googleChatMessageReadScopes: string[] = [googleChatMessagesReadonlyScope];
-
 export const googleChatOAuthScopes: string[] = [
   googleChatSpacesReadonlyScope,
   googleChatMessagesReadonlyScope,

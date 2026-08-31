@@ -56,5 +56,3 @@ export const zipArchiveApiActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export type ZipArchiveApiActionName = "compress_files" | "extract_archive";

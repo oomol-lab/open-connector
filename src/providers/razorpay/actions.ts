@@ -237,11 +237,3 @@ export const razorpayActions: ProviderActionDefinition[] = [
   listPaymentsAction,
   createRefundAction,
 ] as const satisfies Array<ProviderActionDefinition<any>>;
-
-export type RazorpayActionName =
-  | "create_order"
-  | "list_orders"
-  | "get_order"
-  | "get_payment"
-  | "list_payments"
-  | "create_refund";

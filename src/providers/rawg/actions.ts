@@ -315,26 +315,3 @@ export const rawgActions: ProviderActionDefinition[] = [
     outputSchema: s.actionOutput({ post: redditPostSchema }, "Reddit post response documented by RAWG for one game."),
   }),
 ];
-
-export type RawgActionName =
-  | "list_games"
-  | "get_game"
-  | "list_platforms"
-  | "get_platform"
-  | "list_genres"
-  | "get_genre"
-  | "list_stores"
-  | "get_store"
-  | "list_developers"
-  | "get_developer"
-  | "list_publishers"
-  | "get_publisher"
-  | "list_tags"
-  | "get_tag"
-  | "list_parent_platforms"
-  | "list_game_screenshots"
-  | "list_game_stores"
-  | "list_game_additions"
-  | "list_game_series"
-  | "list_game_movies"
-  | "list_game_reddit_posts";

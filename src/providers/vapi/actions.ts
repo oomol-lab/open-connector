@@ -238,47 +238,6 @@ const uploadableFileSchema = s.object(
   { required: ["name"], optional: ["mimetype", "url", "contentBase64"] },
 );
 
-export const vapiActionNames = [
-  "list_assistants",
-  "create_assistant",
-  "get_assistant",
-  "update_assistant",
-  "list_calls",
-  "get_call",
-  "delete_call",
-  "list_chats",
-  "get_chat",
-  "delete_chat",
-  "create_openai_chat",
-  "create_analytics_query",
-  "create_eval",
-  "get_eval",
-  "update_eval",
-  "delete_eval",
-  "delete_eval_run",
-  "list_evals",
-  "get_file",
-  "upload_file",
-  "list_monitoring_policies",
-  "create_policy",
-  "list_provider_resources",
-  "create_provider_resource",
-  "list_phone_numbers",
-  "create_phone_number",
-  "update_phone_number",
-  "delete_phone_number",
-  "list_structured_outputs",
-  "list_insights",
-  "update_insight",
-  "create_scorecard",
-  "list_scorecards",
-  "create_session",
-  "list_sessions",
-  "get_tool",
-  "update_tool",
-  "test_code_tool_execution",
-] as const;
-
 function inputSchema(description: string, properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {
   return s.object(description, properties, { required, additionalProperties: true });
 }
