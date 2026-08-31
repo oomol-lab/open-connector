@@ -52,12 +52,15 @@ const maxReportedMatchesPerFile = 5;
  * - The proxy pattern counts every `proxy` declaration that is NOT the wanted
  *   `defineProviderProxy` form, rather than the whole class, which grows with
  *   every new provider. A hand-written proxy in any spelling counts: `async`,
- *   plain arrow, a call to a provider-local proxy factory, and the same three
- *   without the `ProviderProxyExecutor` annotation.
- * - The timeout class counts the redundant explicit 30 s as well as the local
- *   constant, since `createProviderTimeout(signal, 30_000)` re-declares the
- *   default just as much as `= 30_000` does. A `Math.min(..., 30_000)` retry
- *   cap is a different fact and is not matched.
+ *   plain arrow, a `function` declaration, a call to a provider-local proxy
+ *   factory, and each of those without the `ProviderProxyExecutor` annotation.
+ *   `ProviderLoader` reads `module.proxy`, so the declaration form ships just
+ *   as well as the assignment and has to count the same.
+ * - The timeout class counts the value rather than one way of typing it:
+ *   `30_000`, `30000` and `30 * 1000` are the same fact, and the redundant
+ *   explicit `createProviderTimeout(signal, 30_000)` re-declares the default
+ *   just as much as a local `= 30_000` constant does. A `Math.min(..., 30_000)`
+ *   retry cap is a different fact and is not matched.
  * - The action-name bookkeeping the skill describes in prose is matched as
  *   `type *ActionName` / `const *ActionByName`.
  * - The cast class is matched by body, not by signature: a `(value: unknown)`
@@ -92,7 +95,8 @@ const cloneClasses: CloneClass[] = [
     id: "local-request-timeout-constant",
     owner: "the 30 s default of createProviderTimeout in src/providers/provider-runtime.ts",
     ownerFile: providerRuntimeFile,
-    pattern: /= 30_000|\b(?:createProviderTimeout|AbortSignal\.timeout)\([^)]*\b30_000\b/,
+    pattern:
+      /= (?:30_?000|30 \* 1_?000)\b|\b(?:createProviderTimeout|AbortSignal\.timeout)\([^)]*(?:\b30_?000\b|\b30 \* 1_?000\b)/,
   },
   {
     id: "local-provider-error-factory",
@@ -111,7 +115,8 @@ const cloneClasses: CloneClass[] = [
     id: "hand-written-proxy",
     owner: "defineProviderProxy in src/providers/provider-runtime.ts",
     ownerFile: providerRuntimeFile,
-    pattern: /export const proxy(?:: ProviderProxyExecutor)? =(?!\s*defineProviderProxy\b)/,
+    pattern:
+      /export (?:const proxy(?:: ProviderProxyExecutor)? =(?!\s*defineProviderProxy\b)|(?:async )?function proxy\b)/,
   },
   {
     id: "local-crypto-encoding-helper",
@@ -137,6 +142,135 @@ const cloneClasses: CloneClass[] = [
     id: "local-action-by-name-map",
     owner: "the generated registry and ProviderLoader, which already index actions by name",
     pattern: /^[^\S\n]*(?:export )?const \w+ActionByName\b/,
+  },
+];
+
+/**
+ * The spellings each clone class has to see. `clones` are copies of the shared
+ * owner that must be counted however they are written; `callers` are lines that
+ * name the same owner without copying it - a call, an import, or a provider
+ * helper that builds on the owner instead of re-declaring it - and must stay
+ * uncounted.
+ *
+ * These tables are what keeps a class matched by shape: without them a pattern
+ * quietly narrows to the one spelling that happened to exist when it was
+ * written, and the next sync writes the fact a different way and passes. A new
+ * clone class has to bring its own table.
+ */
+interface CloneSpellings {
+  /** Matches a `CloneClass.id`. */
+  id: string;
+  clones: string[];
+  callers: string[];
+}
+
+const cloneSpellings: CloneSpellings[] = [
+  {
+    id: "local-abort-predicate",
+    clones: [
+      "function isAbortLikeError(error: unknown): boolean {",
+      'const isAbortError = (error: unknown): boolean => error instanceof Error && error.name === "AbortError";',
+      '  if (error instanceof Error && error.name === "AbortError") {',
+      "function isTimeoutError(error: unknown): boolean {",
+    ],
+    callers: [
+      'import { isAbortLikeError } from "../provider-runtime.ts";',
+      "    if (isAbortLikeError(error)) {",
+      "  const controller = new AbortController();",
+    ],
+  },
+  {
+    id: "local-request-timeout-constant",
+    clones: [
+      "const echotikRequestTimeoutMs = 30_000;",
+      "const requestTimeoutMs = 30000;",
+      "const requestTimeoutMs = 30 * 1000;",
+      "  const timeout = createProviderTimeout(signal, 30_000);",
+      "  const timeout = AbortSignal.timeout(30000);",
+    ],
+    callers: [
+      "  const timeout = createProviderTimeout(signal);",
+      "const pollIntervalMs = 3000;",
+      "const uploadTimeoutMs = 300_000;",
+      "  const delay = Math.min(attempt * 1000, 30_000);",
+    ],
+  },
+  {
+    id: "local-provider-error-factory",
+    clones: [
+      "function arkResponseError(message: string): ProviderRequestError {\n  return new ProviderRequestError(502, message);\n}",
+      "const inputError = (message: string): ProviderRequestError => new ProviderRequestError(400, message);",
+    ],
+    callers: [
+      '  throw providerResponseError("Volcengine Ark response is malformed");',
+      "    createError: (message) => new ProviderRequestError(400, message),",
+      '  throw new ProviderRequestError(429, "Rate limited by the provider");',
+    ],
+  },
+  {
+    id: "local-api-key-action-input",
+    clones: ["interface ApiKeyProviderActionInput {", "interface EchotikApiKeyActionInput {"],
+    callers: [
+      'import type { ApiKeyActionRequest } from "../provider-runtime.ts";',
+      "async function runAction(request: ApiKeyActionRequest): Promise<unknown> {",
+    ],
+  },
+  {
+    id: "hand-written-proxy",
+    clones: [
+      "export const proxy: ProviderProxyExecutor = async (input, context) => {",
+      "export const proxy = async (input, context) => {",
+      "export async function proxy(input: ProxyExecutionInput): Promise<ProxyExecutionResult> {",
+      "export function proxy(input: ProxyExecutionInput): Promise<ProxyExecutionResult> {",
+      "export const proxy: ProviderProxyExecutor = createEchotikProxy();",
+    ],
+    callers: [
+      "export const proxy = defineProviderProxy({",
+      "export const proxy: ProviderProxyExecutor = defineProviderProxy({",
+      "  const proxy = await loadProviderProxy(service);",
+    ],
+  },
+  {
+    id: "local-crypto-encoding-helper",
+    clones: [
+      "async function sha256Hex(value: string): Promise<string> {",
+      "function encodeRfc3986(value: string): string {",
+    ],
+    callers: [
+      'import { encodeRfc3986, sha256Hex } from "../../core/aws-sigv4.ts";',
+      "  const digest = await sha256Hex(payload);",
+    ],
+  },
+  {
+    id: "local-cast-reader-body",
+    clones: [
+      'function readOptionalString(value: unknown): string | undefined {\n  return typeof value === "string" ? value : undefined;\n}',
+      'const optionalText = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);',
+      'function isRecord(value: unknown): boolean {\n  return typeof value === "object" && value !== null && !Array.isArray(value);\n}',
+      "function readArray(value: unknown): unknown[] {\n  return Array.isArray(value) ? value : [];\n}",
+      'function readString(value: unknown): string | undefined {\n  if (typeof value !== "string") {\n    return undefined;\n  }\n  return value;\n}',
+    ],
+    callers: [
+      "  const name = optionalRawString(input.name);",
+      "  const record = recordOrEmpty(payload);",
+      '  return typeof value === "string" ? value : String(value);',
+    ],
+  },
+  {
+    id: "local-action-name-union",
+    clones: [
+      'export type EchotikActionName =\n  | "list_videos"\n  | "get_video";',
+      'type ArkActionName = "create_response" | "get_response";',
+    ],
+    callers: [
+      'import type { ProviderActionName } from "../provider-registry.generated.ts";',
+      "  const actionName: string = request.actionName;",
+    ],
+  },
+  {
+    id: "local-action-by-name-map",
+    clones: ["export const echotikActionByName = {", "const arkActionByName: Record<string, ArkActionHandler> = {"],
+    callers: ["  const handler = actionByName[actionName];", 'import { executors } from "./executors.ts";'],
   },
 ];
 
@@ -207,6 +341,47 @@ describe("provider clone-class ratchet", () => {
     expect(Object.keys(baseline).sort()).toEqual(cloneClasses.map((cloneClass) => cloneClass.id).sort());
   });
 });
+
+describe("clone-class patterns", () => {
+  it("counts a clone however it is spelled", () => {
+    const missed = cloneSpellings.flatMap((spellings) =>
+      spellings.clones
+        .filter((clone) => !patternOf(spellings.id).test(clone))
+        .map((clone) => `${spellings.id} misses:\n${clone}`),
+    );
+
+    expect(missed.join("\n\n")).toBe("");
+  });
+
+  it("leaves the shared owner's own callers uncounted", () => {
+    const flagged = cloneSpellings.flatMap((spellings) =>
+      spellings.callers
+        .filter((caller) => patternOf(spellings.id).test(caller))
+        .map((caller) => `${spellings.id} wrongly counts:\n${caller}`),
+    );
+
+    expect(flagged.join("\n\n")).toBe("");
+  });
+
+  it("pins the spellings of every clone class it scans for", () => {
+    expect(cloneSpellings.map((spellings) => spellings.id).sort()).toEqual(
+      cloneClasses.map((cloneClass) => cloneClass.id).sort(),
+    );
+  });
+});
+
+/**
+ * The scan reads whole files, so a pattern anchored to a line start needs the
+ * multiline flag here too.
+ */
+function patternOf(id: string): RegExp {
+  const cloneClass = cloneClasses.find((candidate) => candidate.id === id);
+  if (!cloneClass) {
+    throw new Error(`Unknown clone class ${id}`);
+  }
+
+  return new RegExp(cloneClass.pattern.source, "m");
+}
 
 function readBaseline(): CloneCounts {
   const parsed = JSON.parse(readFileSync(baselinePath, "utf8")) as { counts: CloneCounts };
