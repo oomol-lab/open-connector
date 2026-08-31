@@ -445,8 +445,8 @@ export async function executeMailAction(
         // switch and resolve to undefined, which the runtime reports as an
         // empty success. The never assignment makes the compiler reject the
         // next action name that skips this switch.
-        const unreachable: never = actionName;
-        throw new ProviderRequestError(500, `Unsupported mail action: ${String(unreachable)}`);
+        const exhaustiveActionName: never = actionName;
+        throw new ProviderRequestError(500, `Unsupported mail action: ${exhaustiveActionName}`);
       }
     }
   } catch (error) {

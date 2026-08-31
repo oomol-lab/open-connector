@@ -59,15 +59,13 @@ describe("IMAP/SMTP mail runtime", () => {
   });
 
   it("fails a mail action that has no dispatch branch instead of reporting an empty success", async () => {
-    const protocol = { listFolders: vi.fn(async () => []) } as unknown as MailProtocol;
-
     const error = await executeMailAction(
       "archive_email" as MailActionName,
       {},
       {
         values: { email: "user@qq.com", authorizationCode },
         fetcher: fetch,
-        protocol,
+        protocol: {} as unknown as MailProtocol,
         config: qqMailRuntimeConfig,
       },
     ).then(
