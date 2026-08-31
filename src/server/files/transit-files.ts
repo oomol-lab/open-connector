@@ -132,6 +132,7 @@ export class TransitFileService implements IStagedTransitFileService {
     }
     if (Date.now() - stats.mtimeMs > this.ttlMs) {
       await unlink(path).catch(() => undefined);
+      await unlink(metadataPath(path)).catch(() => undefined);
       throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
     }
 
