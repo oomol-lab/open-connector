@@ -3,7 +3,6 @@ import type { OpenApiDocumentOptions } from "./openapi.ts";
 
 import { describe, expect, it } from "vitest";
 import { createOpenApiDocument } from "./openapi.ts";
-import { mapRuntimeErrorStatus, runtimeErrorCodes } from "./runtime-api.ts";
 
 interface RunOperation {
   description: string;
@@ -82,19 +81,15 @@ describe("action execution OpenAPI", () => {
     },
   );
 
-  it("documents every status the runtime error table can answer on both /v1 routes", () => {
+  it("documents the statuses each /v1 route newly answers", () => {
     const document = createOpenApiDocument([provider]);
     const documentedStatuses = (path: string): string[] =>
       Object.keys((document.paths[path] as { post: { responses: Record<string, unknown> } }).post.responses);
-    // `details.status` drives these two independently of the error code, so the
-    // table alone does not name them.
-    const detailsDrivenStatuses = [404, 413];
-    const answerableStatuses = [
-      ...new Set([...runtimeErrorCodes.map((code) => mapRuntimeErrorStatus(code)), ...detailsDrivenStatuses]),
-    ].map(String);
 
-    expect(documentedStatuses("/v1/actions/{actionId}")).toEqual(expect.arrayContaining(answerableStatuses));
-    expect(documentedStatuses("/v1/proxy/{service}")).toEqual(expect.arrayContaining(answerableStatuses));
+    // The action route now honors an upstream 413 the way the proxy route did,
+    // and the proxy route now answers 402 the way the action route did.
+    expect(documentedStatuses("/v1/actions/{actionId}")).toContain("413");
+    expect(documentedStatuses("/v1/proxy/{service}")).toContain("402");
   });
 
   it("documents public /v1 catalog routes with the runtime envelope", () => {

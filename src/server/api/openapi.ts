@@ -1437,7 +1437,6 @@ function actionRunResponses(output: JsonSchema): Record<string, unknown> {
   return {
     200: jsonResponse(runtimeSuccessSchema(output, actionResultMetaSchema)),
     400: jsonResponse(failure, "invalid_input, action_blocked, or action_not_allowed."),
-    402: jsonResponse(failure, "insufficient_credit."),
     403: jsonResponse(failure, "authorization_failed."),
     404: jsonResponse(failure, "unknown_action or connection_not_found."),
     409: jsonResponse(failure, idempotencyConflictDescription),

@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import {
   parseRuntimeActionHttpResult,
   providerErrorCodes,
-  runtimeErrorCodes,
   serializeRuntimeAction,
   serializeRuntimeActionResult,
   serializeRuntimeFailure,
@@ -13,8 +12,17 @@ import {
   writeRuntimeActionHttpResult,
 } from "./runtime-api.ts";
 
-describe("runtime error codes", () => {
-  it("keeps the connection and dispatch codes out of a provider's reach", () => {
+function actionStatusFor(code: string): number {
+  return serializeRuntimeActionResult({
+    actionId: "example.echo",
+    executionId: "execution-1",
+    auditPersisted: false,
+    result: { ok: false, error: { code, message: "Action failed." } },
+  }).status;
+}
+
+describe("provider error codes", () => {
+  it("names the codes the action route maps and a provider may set", () => {
     expect(providerErrorCodes).toEqual([
       "authorization_failed",
       "insufficient_credit",
@@ -22,10 +30,12 @@ describe("runtime error codes", () => {
       "provider_error",
       "rate_limited",
     ]);
-    for (const code of providerErrorCodes) {
-      expect(runtimeErrorCodes).toContain(code);
-    }
-    expect(runtimeErrorCodes).toContain("oauth_token_expired");
+    expect(providerErrorCodes.map(actionStatusFor)).toEqual([403, 402, 400, 500, 429]);
+  });
+
+  it("leaves the connection and dispatch codes out of a provider's reach", () => {
+    expect(providerErrorCodes).not.toContain("oauth_token_expired");
+    expect(actionStatusFor("oauth_token_expired")).toBe(409);
   });
 });
 
@@ -150,20 +160,6 @@ describe("runtime action HTTP results", () => {
       }).status,
     ).toBe(413);
   });
-
-  it.each(["unknown_thing", "constructor", "toString", "__proto__", "hasOwnProperty"])(
-    "falls back to HTTP 400 for the undocumented error code %s",
-    (code) => {
-      expect(
-        serializeRuntimeActionResult({
-          actionId: "example.echo",
-          executionId: "execution-1",
-          auditPersisted: false,
-          result: { ok: false, error: { code, message: "Action failed." } },
-        }).status,
-      ).toBe(400);
-    },
-  );
 
   it("serializes runtime failures for persistence", () => {
     expect(

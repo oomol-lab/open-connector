@@ -7,9 +7,6 @@ import { optionalInteger, optionalRecord, requiredRecord } from "../../core/cast
 
 type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
-/** The HTTP statuses both `/v1` front doors derive from a runtime error code. */
-export type RuntimeErrorStatus = 400 | 402 | 403 | 404 | 409 | 413 | 429 | 500;
-
 export type RuntimeResponseMeta = Record<string, unknown>;
 
 export interface RuntimeSuccessEnvelope<TData> {
@@ -202,7 +199,7 @@ export function serializeRuntimeActionResult(input: RuntimeActionResultInput): R
   }
 
   return serializeRuntimeFailure({
-    status: mapRuntimeErrorStatus(result.error?.code, result.error?.details),
+    status: mapExecutionErrorStatus(result.error?.code, result.error?.details),
     errorCode: result.error?.code ?? "provider_error",
     message: result.error?.message ?? "Action execution failed.",
     data: result.error?.details ?? null,
@@ -248,65 +245,46 @@ export function mapConnectionErrorStatus(error: ConnectionError): 400 | 404 | 40
 }
 
 /**
- * The documented runtime error codes and the HTTP status each maps to. This is
- * the only place that pairing is written down, and both `/v1` front doors read
- * it through `mapRuntimeErrorStatus`, so the action route and the proxy route
- * cannot disagree about the same error object.
+ * The error codes a provider may put in `ProviderRequestError`'s `code`
+ * argument. Every other code `mapExecutionErrorStatus` knows is raised by the
+ * connection, policy or dispatch layer, and a provider that borrowed one would
+ * answer with a status that has nothing to do with what its upstream said.
  */
-const runtimeStatusByErrorCode = new Map<string, RuntimeErrorStatus>([
-  ["authorization_failed", 403],
-  ["connection_not_allowed", 403],
-  ["connection_not_found", 404],
-  ["executor_unavailable", 500],
-  ["insufficient_credit", 402],
-  ["internal_error", 500],
-  ["invalid_input", 400],
-  ["oauth_refresh_unavailable", 409],
-  ["oauth_token_expired", 409],
-  ["provider_error", 500],
-  ["rate_limited", 429],
-  ["unknown_action", 404],
-  ["unknown_service", 404],
-]);
+export const providerErrorCodes: readonly string[] = [
+  "authorization_failed",
+  "insufficient_credit",
+  "invalid_input",
+  "provider_error",
+  "rate_limited",
+];
 
-/**
- * The codes the connection, policy and dispatch layers raise on their own. A
- * provider that borrowed one would answer with a status that has nothing to do
- * with what its upstream said.
- */
-const runtimeInternalErrorCodes = new Set([
-  "connection_not_allowed",
-  "connection_not_found",
-  "executor_unavailable",
-  "internal_error",
-  "oauth_refresh_unavailable",
-  "oauth_token_expired",
-  "unknown_action",
-  "unknown_service",
-]);
-
-/** Every error code the runtime routes map to a documented HTTP status. */
-export const runtimeErrorCodes: readonly string[] = [...runtimeStatusByErrorCode.keys()];
-
-/** The codes a provider may put in `ProviderRequestError`'s `code` argument. */
-export const providerErrorCodes: readonly string[] = runtimeErrorCodes.filter(
-  (code) => !runtimeInternalErrorCodes.has(code),
-);
-
-/**
- * Map a runtime error onto the HTTP status the `/v1` routes answer with. An
- * upstream status the provider preserved in `details.status` wins where the
- * runtime has a status for it and the code alone does not.
- */
-export function mapRuntimeErrorStatus(code: string | undefined, details?: unknown): RuntimeErrorStatus {
+function mapExecutionErrorStatus(code: string | undefined, details?: unknown): RuntimeStatus {
   const upstreamStatus = optionalInteger(optionalRecord(details)?.status);
   if (upstreamStatus === 413) {
     return 413;
   }
+  if (code === "insufficient_credit") {
+    return 402;
+  }
   if (code === "invalid_input" && upstreamStatus === 404) {
     return 404;
   }
-  return (code === undefined ? undefined : runtimeStatusByErrorCode.get(code)) ?? 400;
+  if (code === "internal_error" || code === "provider_error" || code === "executor_unavailable") {
+    return 500;
+  }
+  if (code === "oauth_token_expired" || code === "oauth_refresh_unavailable") {
+    return 409;
+  }
+  if (code === "connection_not_found" || code === "unknown_service" || code === "unknown_action") {
+    return 404;
+  }
+  if (code === "authorization_failed" || code === "connection_not_allowed") {
+    return 403;
+  }
+  if (code === "rate_limited") {
+    return 429;
+  }
+  return 400;
 }
 
 function isRuntimeStatus(value: unknown): value is RuntimeStatus {
