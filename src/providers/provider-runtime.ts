@@ -13,7 +13,14 @@ import type {
 import type { ProviderActionNames } from "./action-contracts.generated.ts";
 
 import { Buffer } from "node:buffer";
-import { CastError, optionalRecord, optionalScalarString, optionalString, requiredString } from "../core/cast.ts";
+import {
+  CastError,
+  optionalRecord,
+  optionalScalarString,
+  optionalString,
+  requiredRecord,
+  requiredString,
+} from "../core/cast.ts";
 import { createGuardedFetch } from "../core/guarded-fetch.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
 
@@ -279,6 +286,24 @@ export function providerInputError(message: string): ProviderRequestError {
  */
 export function providerResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, message);
+}
+
+/**
+ * Read a required string action input, raising the 400 error providers map
+ * missing or blank fields to. Example: `requiredInputString(" x ", "name") => "x"`;
+ * `requiredInputString("", "name")` throws `name is required.`.
+ */
+export function requiredInputString(value: unknown, fieldName: string): string {
+  return requiredString(value, fieldName, providerInputError);
+}
+
+/**
+ * Read a record out of an upstream response, raising the 502 error providers
+ * map malformed payloads to. Example: `requiredResponseRecord([], "payload")`
+ * throws `payload must be an object`.
+ */
+export function requiredResponseRecord(value: unknown, label: string): Record<string, unknown> {
+  return requiredRecord(value, label, providerResponseError);
 }
 
 export interface ProviderTimeout {

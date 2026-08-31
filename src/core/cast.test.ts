@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   base64Bytes,
+  booleanString,
+  looseArray,
   optionalIntegerOrNull,
   optionalStringArray,
   positiveInteger,
+  rawStringOrNull,
+  recordOrEmpty,
   requiredBoolean,
   requiredRawString,
   requiredStringArray,
@@ -67,5 +71,25 @@ describe("cast helpers", () => {
     expect(optionalStringArray([])).toEqual([]);
     expect(optionalStringArray(["one", 2])).toBeUndefined();
     expect(optionalStringArray(undefined)).toBeUndefined();
+  });
+
+  it("reads loose arrays, raw string-or-null, record-or-empty and boolean strings", () => {
+    expect(looseArray([1, "a"])).toEqual([1, "a"]);
+    expect(looseArray("a")).toEqual([]);
+    expect(looseArray(undefined)).toEqual([]);
+
+    expect(rawStringOrNull(" x ")).toBe(" x ");
+    expect(rawStringOrNull("")).toBe("");
+    expect(rawStringOrNull(1)).toBeNull();
+    expect(rawStringOrNull(undefined)).toBeNull();
+
+    expect(recordOrEmpty({ a: 1 })).toEqual({ a: 1 });
+    expect(recordOrEmpty([])).toEqual({});
+    expect(recordOrEmpty(null)).toEqual({});
+
+    expect(booleanString(true)).toBe("true");
+    expect(booleanString(false)).toBe("false");
+    expect(booleanString("true")).toBeUndefined();
+    expect(booleanString(undefined)).toBeUndefined();
   });
 });

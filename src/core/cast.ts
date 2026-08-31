@@ -429,3 +429,35 @@ export function positiveInteger(
 
   throw createError(`${fieldName} must be a positive integer`);
 }
+
+/**
+ * Return the value when it is an array, otherwise an empty array. Example:
+ * `looseArray([1]) => [1]`, `looseArray("x") => []`.
+ */
+export function looseArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+/**
+ * Return a string exactly as provided, or `null` for any other value. Examples:
+ * `rawStringOrNull("") => ""`, `rawStringOrNull(1) => null`.
+ */
+export function rawStringOrNull(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+/**
+ * Return a plain object record, or an empty record for any other value. Example:
+ * `recordOrEmpty([]) => {}`.
+ */
+export function recordOrEmpty(value: unknown): Record<string, unknown> {
+  return optionalRecord(value) ?? {};
+}
+
+/**
+ * Return a boolean rendered as `"true"` / `"false"` for query parameters, or
+ * undefined for any other value.
+ */
+export function booleanString(value: unknown): string | undefined {
+  return typeof value === "boolean" ? String(value) : undefined;
+}

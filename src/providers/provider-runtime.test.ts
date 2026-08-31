@@ -17,6 +17,8 @@ import {
   ProviderRequestError,
   providerResponseError,
   readProviderJson,
+  requiredInputString,
+  requiredResponseRecord,
   runProviderRequest,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
@@ -200,6 +202,33 @@ describe("providerInputError and providerResponseError", () => {
     expect(response.status).toBe(502);
     expect(response.message).toBe("payload must be an object");
     expect(toProviderExecutionError(response, "fallback").error?.code).toBe("provider_error");
+  });
+});
+
+describe("requiredInputString and requiredResponseRecord", () => {
+  it("bind the shared cast helpers to the 400 and 502 provider errors", () => {
+    expect(requiredInputString(" x ", "name")).toBe("x");
+    const missing = (() => {
+      try {
+        requiredInputString("", "name");
+      } catch (error) {
+        return error;
+      }
+    })() as ProviderRequestError;
+    expect(missing).toBeInstanceOf(ProviderRequestError);
+    expect(missing.status).toBe(400);
+    expect(missing.message).toBe("name is required.");
+
+    expect(requiredResponseRecord({ id: 1 }, "payload")).toEqual({ id: 1 });
+    const malformed = (() => {
+      try {
+        requiredResponseRecord([], "payload");
+      } catch (error) {
+        return error;
+      }
+    })() as ProviderRequestError;
+    expect(malformed.status).toBe(502);
+    expect(malformed.message).toBe("payload must be an object");
   });
 });
 
