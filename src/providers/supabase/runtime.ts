@@ -622,7 +622,7 @@ async function supabaseUploadStorageObject(
   context: BearerProviderContext,
 ): Promise<unknown> {
   if (!context.transitFiles) {
-    throw new ProviderRequestError(400, "Transit file storage is not enabled.");
+    throw providerInputError("supabase upload_storage_object requires local transit file storage");
   }
   const projectRef = readStorageProjectRef(input);
   const bucketId = requiredString(input.bucketId, "bucketId", providerInputError);
@@ -637,10 +637,13 @@ async function supabaseUploadStorageObject(
     throw providerInputError("objectPath must not contain . or .. path segments");
   }
   const source = await readTransitFileInput(input.file, context);
-  const mime = optionalString(input.contentType) ?? source.mimeType ?? "application/octet-stream";
+  if (source.sizeBytes > context.transitFiles.maxBytes) {
+    throw new ProviderRequestError(413, `Supabase Storage upload exceeds ${context.transitFiles.maxBytes} bytes`);
+  }
+  const mime = optionalString(input.contentType) ?? optionalString(source.mimeType) ?? "application/octet-stream";
   const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
   const upsert = input.upsert === false ? false : true;
-  const method: "PUT" | "POST" = upsert ? "POST" : "POST";
+  const method = "POST";
   const url = new URL(
     `https://${projectRef}${supabaseProjectHostSuffix}/storage/v1/object/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
   );
@@ -659,7 +662,7 @@ async function supabaseUploadStorageObject(
   if (cacheControl) {
     headers["cache-control"] = cacheControl;
   }
-  const body = new Uint8Array(await source.file.arrayBuffer());
+  const body = source.file;
   const response = await context.fetcher(url, {
     method,
     headers,

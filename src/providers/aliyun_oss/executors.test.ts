@@ -2,7 +2,9 @@ import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../
 
 import AliOss from "ali-oss";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { executeAction as executeValidatedAction } from "../../core/execution.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
+import { provider } from "./definition.ts";
 import { executors } from "./executors.ts";
 
 interface CapturedRequest {
@@ -186,6 +188,39 @@ describe("Alibaba Cloud OSS download_object", () => {
       error: {
         code: "invalid_input",
         message: "aliyun_oss download_object requires local transit file storage",
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("Alibaba Cloud OSS put_object validation", () => {
+  it("rejects when multiple content sources are provided simultaneously", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const action = provider.actions.find((a) => a.name === "put_object")!;
+    expect(action).toBeDefined();
+    const context: ExecutionContext = {
+      getCredential: async (service) => {
+        expect(service).toBe("aliyun_oss");
+        return credential;
+      },
+    };
+    const result = await executeValidatedAction(
+      action,
+      executors["aliyun_oss.put_object"],
+      {
+        bucket: "documents",
+        objectKey: "reports/conflict.bin",
+        sourceUrl: "https://example.com/file.bin",
+        contentText: "hello",
+      },
+      context,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
       },
     });
     expect(fetch).not.toHaveBeenCalled();

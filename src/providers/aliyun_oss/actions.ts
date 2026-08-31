@@ -188,7 +188,7 @@ export const aliyunOssActions: ActionDefinition[] = [
           ],
         },
       ),
-      anyOf: [{ required: ["sourceUrl"] }, { required: ["contentText"] }, { required: ["contentBase64"] }],
+      oneOf: [{ required: ["sourceUrl"] }, { required: ["contentText"] }, { required: ["contentBase64"] }],
     },
     outputSchema: s.object("The output payload for this action.", {
       bucket: s.string("The bucket that received the object."),
