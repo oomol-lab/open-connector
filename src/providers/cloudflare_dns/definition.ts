@@ -23,7 +23,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://dash.cloudflare.com/oauth2/auth",
       tokenUrl: "https://dash.cloudflare.com/oauth2/token",
       refreshTokenUrl: "https://dash.cloudflare.com/oauth2/token",
-      scopes: ["zone.read", "dns.read", "dns.write"],
+      scopes: ["offline_access", "zone.read", "dns.read", "dns.write"],
       tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],

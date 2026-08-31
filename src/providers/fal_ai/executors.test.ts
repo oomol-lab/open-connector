@@ -129,15 +129,13 @@ describe("fal_ai.submit_queue_request", () => {
 });
 
 describe("fal_ai.queue_get_status", () => {
-  it("prefers the explicit statusUrl over reconstructing a path from modelId", async () => {
+  it("uses the statusUrl returned by submit_queue_request", async () => {
     const calls = stubFetch(() =>
       Response.json({ status: "COMPLETED", response_url: null, queue_position: null, logs: [] }),
     );
 
     await executors["fal_ai.queue_get_status"]!(
       {
-        modelId: "fal-ai/flux/schnell",
-        requestId: "req-1",
         statusUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1/status",
       },
       context,
@@ -147,76 +145,22 @@ describe("fal_ai.queue_get_status", () => {
     expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/flux/requests/req-1/status");
   });
 
-  it("falls back to a per-segment encoded path when no explicit URL is given", async () => {
-    const calls = stubFetch(() =>
-      Response.json({ status: "COMPLETED", response_url: null, queue_position: null, logs: [] }),
-    );
-
-    await executors["fal_ai.queue_get_status"]!({ modelId: "fal-ai/fast-sdxl", requestId: "req-1" }, context);
-
-    expect(calls).toHaveLength(1);
-    // The path must keep literal slashes between segments, not collapse the
-    // whole model id into a single %2F-escaped segment fal will not route.
-    expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/fast-sdxl/requests/req-1/status");
-  });
-
-  it("truncates a model id with a sub-path to the owner/alias application path", async () => {
-    const calls = stubFetch(() =>
-      Response.json({ status: "COMPLETED", response_url: null, queue_position: null, logs: [] }),
-    );
-
-    await executors["fal_ai.queue_get_status"]!({ modelId: "fal-ai/flux/schnell", requestId: "req-1" }, context);
-
-    expect(calls).toHaveLength(1);
-    // fal serves the status route under the application path only; keeping the
-    // trailing `schnell` sub-path makes the queue host answer with a 405.
-    expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/flux/requests/req-1/status");
-  });
-
-  it("keeps three segments for the namespaced workflows and comfy prefixes", async () => {
-    const calls = stubFetch(() =>
-      Response.json({ status: "COMPLETED", response_url: null, queue_position: null, logs: [] }),
-    );
-
-    await executors["fal_ai.queue_get_status"]!(
-      { modelId: "workflows/owner/alias/extra", requestId: "req-1" },
-      context,
-    );
-
-    expect(calls[0]!.url).toBe("https://queue.fal.run/workflows/owner/alias/requests/req-1/status");
-  });
-
-  it("rejects a model id containing relative path segments", async () => {
+  it("requires statusUrl", async () => {
     const calls = stubFetch(() => Response.json({}));
 
-    const result = await executors["fal_ai.queue_get_status"]!(
-      { modelId: "fal-ai/../admin", requestId: "req-1" },
-      context,
-    );
-
-    expect(result).toMatchObject({
-      ok: false,
-      error: { code: "invalid_input", details: { status: 400 } },
-    });
-    expect(calls).toHaveLength(0);
-  });
-
-  it("requires modelId and requestId when no statusUrl is supplied", async () => {
-    const calls = stubFetch(() => Response.json({}));
-
-    const result = await executors["fal_ai.queue_get_status"]!({ requestId: "req-1" }, context);
+    const result = await executors["fal_ai.queue_get_status"]!({}, context);
 
     expect(result).toMatchObject({
       ok: false,
       error: {
         code: "invalid_input",
-        message: expect.stringContaining("modelId and requestId are required when statusUrl is not provided"),
+        message: expect.stringContaining("statusUrl"),
       },
     });
     expect(calls).toHaveLength(0);
   });
 
-  it("accepts a statusUrl on its own, without modelId or requestId", async () => {
+  it("accepts the statusUrl without unrelated identifiers", async () => {
     const calls = stubFetch(() =>
       Response.json({ status: "IN_PROGRESS", response_url: null, queue_position: null, logs: [] }),
     );
@@ -228,37 +172,6 @@ describe("fal_ai.queue_get_status", () => {
 
     expect(result).toMatchObject({ ok: true, output: { status: "IN_PROGRESS" } });
     expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/flux/requests/req-1/status");
-  });
-
-  it("passes fal's failure fields through and defaults them to null", async () => {
-    stubFetch(() =>
-      Response.json({
-        status: "COMPLETED",
-        response_url: null,
-        logs: [],
-        error: "Invalid prompt",
-        error_type: "ValidationError",
-      }),
-    );
-
-    const failed = await executors["fal_ai.queue_get_status"]!(
-      { statusUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1/status" },
-      context,
-    );
-
-    expect(failed).toMatchObject({
-      ok: true,
-      output: { status: "COMPLETED", error: "Invalid prompt", errorType: "ValidationError" },
-    });
-
-    stubFetch(() => Response.json({ status: "COMPLETED", response_url: null, logs: [] }));
-
-    const succeeded = await executors["fal_ai.queue_get_status"]!(
-      { statusUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1/status" },
-      context,
-    );
-
-    expect(succeeded).toMatchObject({ ok: true, output: { error: null, errorType: null } });
   });
 
   it("rejects a non-object status body with a provider error", async () => {
@@ -279,7 +192,7 @@ describe("fal_ai.queue_get_status", () => {
     const calls = stubFetch(() => Response.json({}));
 
     const result = await executors["fal_ai.queue_get_status"]!(
-      { modelId: "fal-ai/flux/schnell", requestId: "req-1", statusUrl: "https://evil.example.com/steal" },
+      { statusUrl: "https://evil.example.com/steal" },
       context,
     );
 
@@ -322,8 +235,6 @@ describe("fal_ai.queue_get_status_stream", () => {
 
     await executors["fal_ai.queue_get_status_stream"]!(
       {
-        modelId: "fal-ai/flux/schnell",
-        requestId: "req-1",
         statusUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1/status?logs=1",
       },
       context,
@@ -346,8 +257,6 @@ describe("fal_ai.get_queue_request_result", () => {
 
     const result = await executors["fal_ai.get_queue_request_result"]!(
       {
-        modelId: "fal-ai/flux/schnell",
-        requestId: "req-1",
         responseUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1",
       },
       context,
@@ -359,44 +268,16 @@ describe("fal_ai.get_queue_request_result", () => {
     });
     expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/flux/requests/req-1");
   });
-
-  it("reads the result from the truncated application path when no responseUrl is given", async () => {
-    const rawResult = { images: [{ url: "https://v3b.fal.media/files/b/example.jpg" }], seed: 42 };
-    const calls = stubFetch(() => Response.json(rawResult));
-
-    const result = await executors["fal_ai.get_queue_request_result"]!(
-      { modelId: "fal-ai/flux/schnell", requestId: "req-1" },
-      context,
-    );
-
-    expect(result).toMatchObject({ ok: true, output: { status: "COMPLETED", response: rawResult } });
-    expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/flux/requests/req-1");
-  });
 });
 
 describe("fal_ai.cancel_queue_request", () => {
-  it("PUTs to the explicit cancelUrl when provided", async () => {
+  it("PUTs to the cancelUrl returned by submit_queue_request", async () => {
     const calls = stubFetch(() => Response.json({ status: "CANCELLATION_REQUESTED" }));
 
     const result = await executors["fal_ai.cancel_queue_request"]!(
       {
-        modelId: "fal-ai/flux/schnell",
-        requestId: "req-1",
         cancelUrl: "https://queue.fal.run/fal-ai/flux/requests/req-1/cancel",
       },
-      context,
-    );
-
-    expect(result).toMatchObject({ ok: true, output: { status: "CANCELLATION_REQUESTED" } });
-    expect(calls[0]!.method).toBe("PUT");
-    expect(calls[0]!.url).toBe("https://queue.fal.run/fal-ai/flux/requests/req-1/cancel");
-  });
-
-  it("PUTs to the truncated application path when no cancelUrl is given", async () => {
-    const calls = stubFetch(() => Response.json({ status: "CANCELLATION_REQUESTED" }, { status: 202 }));
-
-    const result = await executors["fal_ai.cancel_queue_request"]!(
-      { modelId: "fal-ai/flux/schnell", requestId: "req-1" },
       context,
     );
 

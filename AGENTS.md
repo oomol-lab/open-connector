@@ -49,6 +49,7 @@
 ## TypeScript And Tooling
 
 - Use native Node.js TypeScript execution. Do not add `tsx` or `--experimental-strip-types`.
+- Prefer stable object shapes for optional fields. Avoid `...(condition ? { field } : {})`; use `field: condition ? value : undefined` when omission and `undefined` are equivalent, or a small explicit mutation when the serialized object must truly omit the property.
 - `src/`, `scripts/`, and `examples/` each have their own `tsconfig.json`; `npm run typecheck` checks all three projects (`src`, `scripts`, `examples`).
 - Exported top-level functions and public types should have explicit return types and useful JSDoc when it explains business meaning.
 - Use `oxfmt` and `oxlint`; do not add Prettier.

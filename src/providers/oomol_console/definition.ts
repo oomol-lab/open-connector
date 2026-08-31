@@ -7,21 +7,14 @@ export const provider: ProviderDefinition = {
   displayName: "OOMOL Console",
   description: "Inspect OOMOL teams, billing, usage, members, and connector execution history.",
   categories: ["Productivity", "Developer Tools"],
-  authTypes: ["custom_credential"],
+  authTypes: ["api_key"],
   auth: [
     {
-      type: "custom_credential",
-      fields: [
-        {
-          key: "accessToken",
-          label: "OOMOL Access Token",
-          inputType: "password",
-          required: true,
-          secret: true,
-          placeholder: "OOMOL_ACCESS_TOKEN",
-          description:
-            "OOMOL user access token used to call Console APIs. Obtain it from your account at https://console.oomol.com.",
-        },
+      type: "api_key",
+      label: "OOMOL API Key",
+      placeholder: "OOMOL_API_KEY",
+      description: "OOMOL API key used as a Bearer token for Console APIs.",
+      extraFields: [
         {
           key: "teamId",
           label: "Default Team ID",

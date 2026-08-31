@@ -1,9 +1,21 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { JsonSchema } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "oomol_console";
+function extendObjectSchema(description: string, base: JsonSchema, properties: Record<string, JsonSchema>): JsonSchema {
+  const baseProperties = (base.properties ?? {}) as Record<string, JsonSchema>;
+  const baseRequired = Array.isArray(base.required) ? (base.required as string[]) : [];
+  return {
+    ...base,
+    description,
+    properties: { ...baseProperties, ...properties },
+    required: [...baseRequired, ...Object.keys(properties)],
+  };
+}
+
+const service = "oomol_console" as const;
 
 const teamRoleSchema = s.stringEnum("The role held by the principal in the team.", [
   "creator",
@@ -97,6 +109,93 @@ const executionLogItemSchema = s.object(
   { optional: ["userId"] },
 );
 
+const connectionSchema = s.object("A manageable Connection in the current OOMOL team.", {
+  appId: s.nonWhitespaceString("The Connector App ID."),
+  service: s.nonWhitespaceString("The provider service identifier."),
+  displayName: s.string("The Connection display name."),
+  alias: s.nullableString("The optional team-local Connection alias."),
+  accountLabel: s.nullableString("The provider account label for the Connection."),
+  status: s.nullable(
+    s.stringEnum("The current Connection status.", ["active", "reauth_required", "error", "disconnected"]),
+  ),
+  isDefault: s.boolean("Whether this is the default Connection for its provider."),
+});
+
+const selectedActionNamesSchema = {
+  ...s.stringArray("The exact provider action names allowed by the permission group.", {
+    minItems: 1,
+    itemDescription: "A configurable provider action name.",
+  }),
+  uniqueItems: true,
+};
+
+const actionPermissionSchema = s.oneOf(
+  [
+    s.object("Permission to use every provider action and generic execution surface.", {
+      mode: s.literal("all", { description: "Allow every provider action." }),
+    }),
+    s.object("Permission that denies every provider action.", {
+      mode: s.literal("none", { description: "Deny every provider action." }),
+    }),
+    s.object("Permission to use only an explicit non-empty action allowlist.", {
+      mode: s.literal("selected", { description: "Allow only selected provider actions." }),
+      actionNames: selectedActionNamesSchema,
+    }),
+  ],
+  { description: "The action permission assigned by a permission group." },
+);
+
+const defaultPermissionGroupSchema = s.object("The non-deletable default permission group.", {
+  kind: s.literal("default", { description: "The permission group kind." }),
+  name: s.literal("Default permission group", { description: "The stable default permission group name." }),
+  memberScope: s.literal("all", { description: "The members covered by the default permission group." }),
+  deletable: s.literal(false, { description: "Whether the default permission group can be deleted." }),
+  actionPermission: actionPermissionSchema,
+});
+
+const customPermissionGroupSchema = s.object("A custom Connection permission group.", {
+  kind: s.literal("custom", { description: "The permission group kind." }),
+  groupId: s.nonWhitespaceString("The stable permission group identifier."),
+  name: s.nonWhitespaceString("The permission group display name."),
+  memberIds: s.array(
+    "The current-team member identifiers assigned to this permission group.",
+    s.nonWhitespaceString("An assigned OOMOL team member identifier."),
+  ),
+  actionPermission: actionPermissionSchema,
+});
+
+const configurableActionSchema = s.object("A provider action that can be considered for permission-group access.", {
+  name: s.nonWhitespaceString("The provider action name."),
+  description: s.string("The provider action description."),
+  operationType: s.stringEnum("The provider action operation type.", ["read", "write", "destructive"]),
+  configurable: s.boolean("Whether this action can be selected individually."),
+});
+
+const permissionGroupsSnapshotSchema = s.object("The current permission-group configuration for one Connection.", {
+  connection: connectionSchema,
+  revision: s.nonWhitespaceString("The ETag revision required by subsequent permission-group mutations."),
+  defaultGroup: defaultPermissionGroupSchema,
+  groups: s.array("The custom permission groups for the Connection.", customPermissionGroupSchema),
+  members: s.array("The members of the current OOMOL team.", teamMemberSchema),
+  availableActions: s.array(
+    "The provider actions available when configuring permission groups.",
+    configurableActionSchema,
+  ),
+});
+
+const permissionMutationBaseInputSchema = {
+  appId: s.nonWhitespaceString("The Connector App ID in the current OOMOL team."),
+  revision: s.nonWhitespaceString("The exact revision returned by list_connection_permission_groups."),
+};
+
+const memberIdsInputSchema = {
+  ...s.array(
+    "The complete member set that should belong to the permission group after this mutation.",
+    s.nonWhitespaceString("An exact current-team member identifier."),
+  ),
+  uniqueItems: true,
+};
+
 const emptyInputSchema = (description: string) => s.object(description, {});
 
 const billingWindowInputSchema = (description: string) =>
@@ -113,10 +212,10 @@ const billingWindowInputSchema = (description: string) =>
     }),
   });
 
-export const oomolConsoleActions: ProviderActionDefinition[] = [
+export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_scope",
-    description: "Return the current OOMOL team scope and authenticated principal.",
+    description: "Return the current OOMOL team scope.",
     requiredScopes: [],
     inputSchema: emptyInputSchema("The input payload for reading the current OOMOL scope."),
     outputSchema: s.object("The current OOMOL execution scope.", {
@@ -124,14 +223,6 @@ export const oomolConsoleActions: ProviderActionDefinition[] = [
         kind: s.literal("team", { description: "The execution scope kind." }),
         team: teamSchema,
       }),
-      principal: s.object(
-        "The principal authenticated for the current action execution.",
-        {
-          kind: s.stringEnum("The authenticated OOMOL principal type.", ["user", "service_account", "team_token"]),
-          id: s.string("The user or service-account identifier when one is available."),
-        },
-        { optional: ["id"] },
-      ),
     }),
   }),
   defineProviderAction(service, {
@@ -233,6 +324,91 @@ export const oomolConsoleActions: ProviderActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    name: "list_team_connections",
+    description: "List the Connections manageable by an administrator of the current OOMOL team.",
+    requiredScopes: [],
+    inputSchema: emptyInputSchema("The input payload for listing current-team Connections."),
+    outputSchema: s.object("The manageable Connections in the current OOMOL team.", {
+      connections: s.array("The manageable current-team Connections.", connectionSchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_connection_permission_groups",
+    description: "List the default and custom permission groups for one current-team Connection.",
+    requiredScopes: [],
+    inputSchema: s.object("The Connection whose permission groups should be returned.", {
+      appId: s.nonWhitespaceString("The Connector App ID in the current OOMOL team."),
+    }),
+    outputSchema: permissionGroupsSnapshotSchema,
+  }),
+  defineProviderAction(service, {
+    name: "update_connection_default_permission_group",
+    description: "Replace the action permission of a Connection's non-deletable default permission group.",
+    requiredScopes: [],
+    inputSchema: s.object("The new default permission-group configuration.", {
+      ...permissionMutationBaseInputSchema,
+      actionPermission: actionPermissionSchema,
+    }),
+    outputSchema: permissionGroupsSnapshotSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_connection_permission_group",
+    description: "Create a custom Connection permission group and replace the assignments of its members.",
+    requiredScopes: [],
+    inputSchema: s.object("The custom permission group to create.", {
+      ...permissionMutationBaseInputSchema,
+      name: s.nonWhitespaceString("The permission group display name."),
+      memberIds: memberIdsInputSchema,
+      actionPermission: actionPermissionSchema,
+    }),
+    outputSchema: extendObjectSchema(
+      "The updated permission groups and the created group identifier.",
+      permissionGroupsSnapshotSchema,
+      {
+        createdGroupId: s.nonWhitespaceString("The created permission group identifier."),
+      },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "update_connection_permission_group",
+    description: "Replace the name, member assignments, and action permission of a custom Connection permission group.",
+    requiredScopes: [],
+    inputSchema: s.object("The complete replacement for a custom permission group.", {
+      ...permissionMutationBaseInputSchema,
+      groupId: s.nonWhitespaceString("The permission group identifier to update."),
+      name: s.nonWhitespaceString("The new permission group display name."),
+      memberIds: memberIdsInputSchema,
+      actionPermission: actionPermissionSchema,
+    }),
+    outputSchema: extendObjectSchema(
+      "The updated permission groups and canonical updated group identifier.",
+      permissionGroupsSnapshotSchema,
+      {
+        updatedGroupId: s.nonWhitespaceString("The canonical permission group identifier after any legacy migration."),
+      },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "delete_connection_permission_group",
+    description: "Delete a custom Connection permission group so its members return to the default group.",
+    requiredScopes: [],
+    inputSchema: s.object("The custom permission group to delete.", {
+      ...permissionMutationBaseInputSchema,
+      groupId: s.nonWhitespaceString("The permission group identifier to delete."),
+    }),
+    outputSchema: extendObjectSchema(
+      "The updated permission groups and details of the deleted group.",
+      permissionGroupsSnapshotSchema,
+      {
+        deletedGroupId: s.nonWhitespaceString("The deleted permission group identifier."),
+        affectedMemberIds: s.array(
+          "The members returned to the default permission group.",
+          s.nonWhitespaceString("An affected OOMOL team member identifier."),
+        ),
+      },
+    ),
+  }),
+  defineProviderAction(service, {
     name: "add_member",
     description: "Add an OOMOL user to the current team with the member role.",
     requiredScopes: [],
@@ -274,4 +450,10 @@ export const oomolConsoleActions: ProviderActionDefinition[] = [
       { optional: ["nextCursor"] },
     ),
   }),
-];
+] as const;
+
+export type OomolConsoleActionName = (typeof oomolConsoleActions)[number]["name"];
+
+export const oomolConsoleActionByName: ReadonlyMap<string, ProviderActionDefinition> = new Map(
+  oomolConsoleActions.map((action) => [action.name, action] as const),
+);
