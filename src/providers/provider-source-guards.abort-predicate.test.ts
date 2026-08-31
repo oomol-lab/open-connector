@@ -27,6 +27,10 @@ const declarationWindowChars = 2000;
 const predicateBodyChars = 500;
 const conditionWindowLines = 3;
 const branchWindowLines = 6;
+// 62 provider directories reach the scan today; a floor well under that fails
+// loudly if the timeout idiom or the directory layout moves and the scan quietly
+// stops covering anything.
+const minimumScannedProviders = 20;
 
 interface PredicateBody {
   text: string;
@@ -213,11 +217,13 @@ function groupByProvider(files: string[]): string[][] {
 describe("provider abort predicates", () => {
   it("never guards a timeout branch on AbortError alone", () => {
     const dead: string[] = [];
+    let scanned = 0;
     for (const group of groupByProvider(listSourceFiles(providersDir))) {
       const sources = group.map((path) => ({ path, source: readFileSync(path, "utf8") }));
       if (!sources.some((entry) => entry.source.includes("AbortSignal.timeout"))) {
         continue;
       }
+      scanned += 1;
       const files: ProviderSource[] = sources.map((entry) => ({ ...entry, checks: abortChecks(entry.source) }));
       const names = [...new Set(files.flatMap((file) => file.checks.names))];
       dead.push(...files.flatMap((file) => findDeadTimeoutGuards(file, names)));
@@ -227,5 +233,9 @@ describe("provider abort predicates", () => {
       dead,
       "these timeout guards match AbortError only, so AbortSignal.timeout never reaches them; call isAbortLikeError from provider-runtime.ts instead",
     ).toEqual([]);
+    expect(
+      scanned,
+      "no provider directory reached the scan, so this guard protects nothing; check that providers still call AbortSignal.timeout and that the scan root still points at src/providers",
+    ).toBeGreaterThan(minimumScannedProviders);
   });
 });
