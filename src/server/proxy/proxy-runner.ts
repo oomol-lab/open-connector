@@ -23,6 +23,8 @@ export interface RunProxyInput {
   input: unknown;
   connectionName?: string;
   policy: ActionPolicySnapshot;
+  /** Cancellation signal from the HTTP request, handed to the provider proxy executor. */
+  signal?: AbortSignal;
 }
 
 export type ProxyRunResult =
@@ -125,8 +127,10 @@ export class ProxyRunner {
         };
       }
       this.options.logger?.info(logContext, "proxy request started");
+      const credentials = this.options.connections.forConnection(input.connectionName);
       const result = await executor(request.input, {
-        ...this.options.connections.forConnection(input.connectionName),
+        getCredential: credentials.getCredential,
+        signal: input.signal,
       });
       const durationMs = Date.now() - startedAtMs;
       if (result.ok) {

@@ -3260,6 +3260,54 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("propagates HTTP request cancellation to provider proxy execution", async () => {
+    const controller = new AbortController();
+    let proxyStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      proxyStarted = resolve;
+    });
+    let proxySignal: AbortSignal | undefined;
+    const app = createTestServer([apiKeyProvider], {
+      providerLoader: new ProxyProviderLoader(async (_input, context) => {
+        proxySignal = context.signal;
+        proxyStarted?.();
+        await new Promise<void>((_resolve, reject) => {
+          if (!context.signal) {
+            reject(new Error("proxy request signal missing"));
+            return;
+          }
+          context.signal.addEventListener("abort", () => reject(new Error("proxy request aborted")), { once: true });
+        });
+        return { ok: true, response: { status: 200, headers: {}, data: {} } };
+      }),
+    }).createApp();
+
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
+    });
+
+    const responsePromise = app.fetch(
+      new Request("http://localhost/v1/proxy/example", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+        signal: controller.signal,
+      }),
+    );
+    await started;
+    controller.abort();
+    const response = await responsePromise;
+
+    expect(proxySignal?.aborted).toBe(true);
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      errorCode: "internal_error",
+    });
+  });
+
   it("applies stored runtime token proxy grants independently of action rules", async () => {
     const runtimeTokens = new RuntimeTokenService(new MemoryRuntimeTokenStore());
     const app = createTestServer([apiKeyProvider], {

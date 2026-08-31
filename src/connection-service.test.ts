@@ -974,6 +974,55 @@ describe("ConnectionService", () => {
       profile: { accountId: "example-account" },
     });
   });
+
+  it("resolves each service credential once per forConnection scope", async () => {
+    const store = new MemoryConnectionStore();
+    const service = createService([apiKeyProvider, customCredentialProvider], { store });
+    await store.set("uptimerobot", "default", {
+      authType: "api_key",
+      apiKey: "monitor-key",
+      values: { apiKey: "monitor-key", accountId: "account-1" },
+      profile: testProfile,
+      metadata: {},
+    });
+    await store.set("database", "default", {
+      authType: "custom_credential",
+      values: { host: "db.example.com", password: "secret" },
+      profile: testProfile,
+      metadata: {},
+    });
+    const get = vi.spyOn(store, "get");
+
+    const connection = service.forConnection();
+    await expect(connection.getCredential("uptimerobot")).resolves.toMatchObject({ apiKey: "monitor-key" });
+    await expect(connection.getCredential("uptimerobot")).resolves.toMatchObject({ apiKey: "monitor-key" });
+    expect(get).toHaveBeenCalledTimes(1);
+
+    await expect(connection.getCredential("database")).resolves.toMatchObject({
+      values: { host: "db.example.com" },
+    });
+    expect(get).toHaveBeenCalledTimes(2);
+
+    // A fresh scope is a fresh request: it must read the store again rather than serve a stale credential.
+    await expect(service.forConnection().getCredential("uptimerobot")).resolves.toMatchObject({
+      apiKey: "monitor-key",
+    });
+    expect(get).toHaveBeenCalledTimes(3);
+  });
+
+  it("replays a failed credential resolution without reading the store again", async () => {
+    const store = new MemoryConnectionStore();
+    const service = createService([apiKeyProvider], { store });
+    const get = vi.spyOn(store, "get");
+
+    const connection = service.forConnection("missing");
+    const first = await connection.getCredential("uptimerobot").catch((error: unknown) => error);
+    const second = await connection.getCredential("uptimerobot").catch((error: unknown) => error);
+
+    expect(first).toMatchObject({ code: "connection_not_found" });
+    expect(second).toBe(first);
+    expect(get).toHaveBeenCalledTimes(1);
+  });
 });
 
 interface CreateServiceOptions {

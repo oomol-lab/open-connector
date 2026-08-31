@@ -430,6 +430,106 @@ describe("ProxyRunner", () => {
     expect(connections.forConnection).toHaveBeenCalledWith("work");
   });
 
+  it("threads the caller abort signal into the proxy execution context", async () => {
+    const controller = new AbortController();
+    let seenSignal: AbortSignal | undefined;
+    const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
+      seenSignal = context.signal;
+      return { ok: true, response: { status: 200, headers: {}, data: null } };
+    });
+    const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: openPolicy,
+        signal: controller.signal,
+      }),
+    ).resolves.toMatchObject({ ok: true });
+    expect(seenSignal).toBe(controller.signal);
+    expect(seenSignal?.aborted).toBe(false);
+  });
+
+  it("hands the proxy executor an already aborted signal when the caller aborted first", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    let aborted: boolean | undefined;
+    const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
+      aborted = context.signal?.aborted;
+      return { ok: true, response: { status: 200, headers: {}, data: null } };
+    });
+    const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
+
+    await runner.run({
+      service: "example",
+      input: { endpoint: "/items", method: "GET" },
+      policy: openPolicy,
+      signal: controller.signal,
+    });
+    expect(aborted).toBe(true);
+  });
+
+  // An aborted proxy request must settle on the existing failure envelope rather than hang. This is the
+  // shape a hand-written proxy produces: it lets the abort propagate, so the runner catches a rejection.
+  it("surfaces an abort raised during proxy execution as a stable runtime failure", async () => {
+    const controller = new AbortController();
+    const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
+      controller.abort();
+      context.signal?.throwIfAborted();
+      return { ok: true, response: { status: 200, headers: {}, data: null } };
+    });
+    const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: openPolicy,
+        signal: controller.signal,
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      status: 500,
+      errorCode: "internal_error",
+      message: "Proxy request failed unexpectedly.",
+      meta: { service: "example" },
+    });
+  });
+
+  // The shape most proxies produce: defineProviderProxy catches the abort and reports it as an error
+  // result, so a cancelled request lands on mapProxyErrorStatus's fall-through rather than the 500 above.
+  it("maps an abort a proxy executor reports as an error result onto the existing 400 envelope", async () => {
+    const controller = new AbortController();
+    const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
+      controller.abort();
+      try {
+        context.signal?.throwIfAborted();
+        return { ok: true, response: { status: 200, headers: {}, data: null } };
+      } catch {
+        // What toProviderProxyError builds for an error that is not a ProviderRequestError.
+        return { ok: false, error: { code: "internal_error", message: "provider request failed" } };
+      }
+    });
+    const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: openPolicy,
+        signal: controller.signal,
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      status: 400,
+      errorCode: "internal_error",
+      message: "provider request failed",
+      data: null,
+      meta: { service: "example" },
+    });
+  });
+
   it("passes HEAD requests through to provider proxy executors", async () => {
     const proxy: ProviderProxyExecutor = vi.fn(
       async (): Promise<ProxyExecutionResult> => ({

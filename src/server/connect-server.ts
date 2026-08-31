@@ -690,6 +690,7 @@ export class ConnectServer {
       input: body,
       connectionName: readConnectionName(context, body),
       policy,
+      signal: context.req.raw.signal,
     });
     if (result.ok) {
       return writeRuntimeSuccess(context, result.response);

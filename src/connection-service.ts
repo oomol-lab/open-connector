@@ -280,9 +280,26 @@ export class ConnectionService {
     return this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
   }
 
+  /**
+   * Return a per-request credential scope for one connection name.
+   *
+   * The returned object resolves each service at most once and caches the
+   * promise, so a provider that asks twice - a credential-derived base URL plus
+   * an auth header, for example - costs one store read and one OAuth refresh
+   * check. Caching the promise rather than its value replays a rejection
+   * identically instead of retrying it.
+   */
   forConnection(connectionName?: string): Pick<ConnectionService, "getCredential"> {
+    const resolved = new Map<string, Promise<ResolvedCredential | undefined>>();
     return {
-      getCredential: (service: string) => this.getCredential(service, connectionName),
+      getCredential: (service: string) => {
+        let credential = resolved.get(service);
+        if (!credential) {
+          credential = this.getCredential(service, connectionName);
+          resolved.set(service, credential);
+        }
+        return credential;
+      },
     };
   }
 
