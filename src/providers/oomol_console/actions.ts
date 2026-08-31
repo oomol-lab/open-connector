@@ -450,4 +450,4 @@ export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
       { optional: ["nextCursor"] },
     ),
   }),
-] as const;
+];
