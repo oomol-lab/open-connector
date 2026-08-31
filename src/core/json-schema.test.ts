@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jsonSchema } from "./json-schema.ts";
+import { describeSchemaType, jsonSchema, readSchemaProperties, readSchemaRequired } from "./json-schema.ts";
 
 describe("jsonSchema.looseObject", () => {
   it("keeps properties whose names overlap schema option names", () => {
@@ -137,5 +137,48 @@ describe("jsonSchema.requireAnyProperty", () => {
       anyOf: [{ required: ["name"] }, { required: ["color"] }],
     });
     expect(schema).not.toHaveProperty("anyOf");
+  });
+});
+
+describe("readSchemaProperties", () => {
+  it("returns the properties map of an object schema", () => {
+    expect(readSchemaProperties({ type: "object", properties: { id: { type: "string" } } })).toEqual({
+      id: { type: "string" },
+    });
+  });
+
+  it("treats a missing, non-object, or array-valued properties as empty", () => {
+    expect(readSchemaProperties({ type: "object" })).toEqual({});
+    expect(readSchemaProperties({ type: "object", properties: "id" })).toEqual({});
+    expect(readSchemaProperties({ type: "object", properties: null })).toEqual({});
+    // An array is an object at runtime; exposing its indexes as parameter names would be wrong.
+    expect(readSchemaProperties({ type: "object", properties: [{ type: "string" }] })).toEqual({});
+  });
+});
+
+describe("readSchemaRequired", () => {
+  it("keeps only the string entries of required", () => {
+    expect(readSchemaRequired({ required: ["id", 1, null, "name"] })).toEqual(["id", "name"]);
+  });
+
+  it("treats a missing or non-array required as empty", () => {
+    expect(readSchemaRequired({})).toEqual([]);
+    expect(readSchemaRequired({ required: "id" })).toEqual([]);
+  });
+});
+
+describe("describeSchemaType", () => {
+  it("renders const, enum, anyOf, and plain types", () => {
+    expect(describeSchemaType({ const: "fixed" })).toBe('"fixed"');
+    expect(describeSchemaType({ const: null, type: "null" })).toBe("null");
+    expect(describeSchemaType({ enum: ["a", 1] })).toBe('"a" | 1');
+    expect(describeSchemaType({ anyOf: [{ type: "string" }, { enum: ["x"] }] })).toBe('string | "x"');
+    expect(describeSchemaType({ type: "integer" })).toBe("integer");
+  });
+
+  it("falls back to unknown without a describable shape", () => {
+    expect(describeSchemaType(undefined)).toBe("unknown");
+    expect(describeSchemaType({})).toBe("unknown");
+    expect(describeSchemaType({ type: ["string", "null"] })).toBe("unknown");
   });
 });

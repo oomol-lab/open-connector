@@ -413,9 +413,9 @@ export function describeSchemaType(schema: JsonSchema | undefined): string {
   return typeof schema.type === "string" ? schema.type : "unknown";
 }
 
-/** Read an object schema's `properties` map, tolerating a missing or malformed value. */
+/** Read an object schema's `properties` map, tolerating a missing or malformed value (including an array). */
 export function readSchemaProperties(schema: JsonSchema): Record<string, JsonSchema> {
-  return schema.properties && typeof schema.properties === "object"
+  return schema.properties && typeof schema.properties === "object" && !Array.isArray(schema.properties)
     ? (schema.properties as Record<string, JsonSchema>)
     : {};
 }

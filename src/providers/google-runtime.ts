@@ -22,6 +22,10 @@ export interface GoogleRequestOptions {
   body?: unknown;
   rawBody?: BodyInit;
   headers?: Record<string, string>;
+  /**
+   * Request timeout as a positive number of milliseconds; defaults to 30 seconds. There is no
+   * "no timeout" value: callers that need longer than the default pass a larger positive number.
+   */
   timeoutMs?: number;
   /**
    * Provider slug used in the fallback error messages this module generates itself.
