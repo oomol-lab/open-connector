@@ -1,4 +1,3 @@
-import type { OomolConsoleActionName } from "./actions.ts";
 import type { OomolConsoleMemberDirectory } from "./member-directory.ts";
 import type { ConnectionActionPermission, ConnectionPermissionGroupsState } from "./permission-groups.ts";
 import type { OomolConsoleEndpoints } from "./request.ts";
@@ -103,7 +102,7 @@ const excludedMeteringSubjects = ["SERVICE_OOMOL_CONNECTOR", "SERVICE_AUTH_LINK"
   .join(",");
 
 export async function executeOomolConsoleAction(
-  actionName: OomolConsoleActionName,
+  actionName: string,
   input: Record<string, unknown>,
   context: OomolConsoleContext,
   fetcher: typeof fetch,

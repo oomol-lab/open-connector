@@ -7,7 +7,7 @@
     "local-api-key-action-input": 11,
     "hand-written-proxy": 114,
     "local-aws-sigv4-helper": 5,
-    "local-action-name-union": 119,
-    "local-action-by-name-map": 1
+    "local-action-name-union": 118,
+    "local-action-by-name-map": 0
   }
 }
