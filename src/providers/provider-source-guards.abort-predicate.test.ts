@@ -34,6 +34,12 @@ interface AbortChecks {
   coveredLines: Set<number>;
 }
 
+interface ProviderSource {
+  path: string;
+  source: string;
+  checks: AbortChecks;
+}
+
 function listSourceFiles(dir: string): string[] {
   const files: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -47,11 +53,11 @@ function listSourceFiles(dir: string): string[] {
   return files;
 }
 
-/** Read the body of the declaration starting at index 0 of `window`, following either a block or a concise arrow. */
-function readBody(window: string): PredicateBody | undefined {
+/** Read the body of the declaration starting at index 0 of `declaration`, either a block or a concise arrow. */
+function readBody(declaration: string): PredicateBody | undefined {
   let parens = 0;
-  for (let index = 0; index < window.length; index += 1) {
-    const char = window[index];
+  for (let index = 0; index < declaration.length; index += 1) {
+    const char = declaration[index];
     if (char === "(") {
       parens += 1;
     } else if (char === ")") {
@@ -60,19 +66,19 @@ function readBody(window: string): PredicateBody | undefined {
       continue;
     } else if (char === "{") {
       let braces = 0;
-      for (let end = index; end < window.length; end += 1) {
-        if (window[end] === "{") {
+      for (let end = index; end < declaration.length; end += 1) {
+        if (declaration[end] === "{") {
           braces += 1;
-        } else if (window[end] === "}") {
+        } else if (declaration[end] === "}") {
           braces -= 1;
           if (braces === 0) {
-            return { text: window.slice(index, end + 1), end: end + 1 };
+            return { text: declaration.slice(index, end + 1), end: end + 1 };
           }
         }
       }
       return undefined;
-    } else if (char === "=" && window[index + 1] === ">") {
-      const rest = window.slice(index + 2);
+    } else if (char === "=" && declaration[index + 1] === ">") {
+      const rest = declaration.slice(index + 2);
       if (rest.trimStart().startsWith("{")) {
         continue;
       }
@@ -127,20 +133,18 @@ function enclosingCondition(lines: string[], index: number): string {
   return lines.slice(first, last + 1).join("\n");
 }
 
-function findDeadTimeoutGuards(path: string, names: string[]): string[] {
-  const source = readFileSync(path, "utf8");
-  if (names.length === 0 && !source.includes('"AbortError"')) {
+function findDeadTimeoutGuards(file: ProviderSource, names: string[]): string[] {
+  if (names.length === 0 && !file.source.includes('"AbortError"')) {
     return [];
   }
-  const lines = source.split("\n");
-  const checks = abortChecks(source);
-  const predicateNames = [...new Set([...names, ...checks.names])];
+  const calls = names.map((name) => new RegExp(`\\b${name}\\s*\\(`));
+  const lines = file.source.split("\n");
   const dead: string[] = [];
   lines.forEach((line, index) => {
-    if (checks.coveredLines.has(index)) {
+    if (file.checks.coveredLines.has(index)) {
       return;
     }
-    const callsPredicate = predicateNames.some((name) => new RegExp(`\\b${name}\\s*\\(`).test(line));
+    const callsPredicate = calls.some((call) => call.test(line));
     if (!callsPredicate && !abortNameComparison.test(line)) {
       return;
     }
@@ -151,7 +155,7 @@ function findDeadTimeoutGuards(path: string, names: string[]): string[] {
     if (condition.includes("||") && condition.includes(".aborted")) {
       return;
     }
-    dead.push(`${relative(repoDir, path)}:${index + 1}`);
+    dead.push(`${relative(repoDir, file.path)}:${index + 1}`);
   });
   return dead;
 }
@@ -175,12 +179,13 @@ describe("provider abort predicates", () => {
   it("never guards a timeout branch on AbortError alone", () => {
     const dead: string[] = [];
     for (const group of groupByProvider(listSourceFiles(providersDir))) {
-      const sources = group.map((file) => readFileSync(file, "utf8"));
-      if (!sources.some((source) => source.includes("AbortSignal.timeout"))) {
+      const sources = group.map((path) => ({ path, source: readFileSync(path, "utf8") }));
+      if (!sources.some((entry) => entry.source.includes("AbortSignal.timeout"))) {
         continue;
       }
-      const names = sources.flatMap((source) => abortChecks(source).names);
-      dead.push(...group.flatMap((file) => findDeadTimeoutGuards(file, names)));
+      const files: ProviderSource[] = sources.map((entry) => ({ ...entry, checks: abortChecks(entry.source) }));
+      const names = [...new Set(files.flatMap((file) => file.checks.names))];
+      dead.push(...files.flatMap((file) => findDeadTimeoutGuards(file, names)));
     }
 
     expect(
