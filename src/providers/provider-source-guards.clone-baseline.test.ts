@@ -68,6 +68,13 @@ const maxReportedMatchesPerFile = 5;
  *   reader, and provider-meaning normalizers share the signature. Both the
  *   braced and the unbraced `if` spelling count, and so does the expression on
  *   its own, which is the arrow-function form of the same reader.
+ * - The required-reader class is the wrapper the cast class cannot see: a
+ *   helper whose whole body is one call to a shared `required*` reader, binding
+ *   a field name and an error factory to it. That is what `requiredInputString`
+ *   and `requiredResponseRecord` already are, so the wrapper is a rename of
+ *   them. The body has to be that single call, which keeps out a helper that
+ *   post-processes the result - `.trim()`, `.join(",")`, `.map(...)` - because
+ *   that one carries provider meaning.
  * - The error-factory pattern matches the factory a provider declares for
  *   itself, as a `return` body or as a typed one-line arrow. An inline
  *   `(message) => new ProviderRequestError(400, message)` passed as a
@@ -130,6 +137,14 @@ const cloneClasses: CloneClass[] = [
       "the readers in src/core/cast.ts: optionalRawString, optionalString, optionalRecord / recordOrEmpty, looseArray",
     pattern:
       /(?:return )?typeof \w+ === "string" \? \w+ : undefined|function \w+\(\w+: unknown\)[^\n{]*\{\s*if \(typeof \w+ !== "string"\)\s*\{?\s*return undefined;\s*\}?\s*return \w+;\s*\}|typeof \w+ === "object" && \w+ !== null && !Array\.isArray\(\w+\)|return Array\.isArray\(\w+\) \? \w+ : \[\];/,
+  },
+  {
+    id: "local-required-reader-wrapper",
+    owner:
+      "requiredInputString / requiredResponseRecord in src/providers/provider-runtime.ts, which already bind a field name and the 400 / 502 error factory to the src/core/cast.ts readers",
+    ownerFile: providerRuntimeFile,
+    pattern:
+      /(?:function \w+|const \w+ = )\(\w+: unknown[^)]*\)[^\n{=]*(?:\{\s*return |=> )required\w*\((?:[^()]|\([^()]*\))*\);/,
   },
   {
     id: "local-action-name-union",
@@ -254,6 +269,19 @@ const cloneSpellings: CloneSpellings[] = [
       "  const name = optionalRawString(input.name);",
       "  const record = recordOrEmpty(payload);",
       '  return typeof value === "string" ? value : String(value);',
+    ],
+  },
+  {
+    id: "local-required-reader-wrapper",
+    clones: [
+      "function requireArkString(value: unknown, field: string): string {\n  return requiredString(value, field, arkResponseError);\n}",
+      'function asObject(value: unknown): Record<string, unknown> {\n  return requiredRecord(value, "Ark response", providerResponseError);\n}',
+      'const requireName = (value: unknown): string => requiredInputString(value, "name");',
+    ],
+    callers: [
+      '  const name = requiredInputString(input.name, "name");',
+      '  const payload = requiredResponseRecord(body, "Volcengine Ark response");',
+      "function readTrimmedName(value: unknown, fieldName: string): string {\n  return requiredInputString(value, fieldName).trim();\n}",
     ],
   },
   {
