@@ -3,7 +3,7 @@ import type { ProductlaneActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface ProductlaneCredentialCheck {
   providerAccountId?: string;
@@ -264,7 +264,7 @@ function mapProductlaneError(status: number, payload: unknown, phase: "validate"
   }
 
   if (status === 410) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 403) {

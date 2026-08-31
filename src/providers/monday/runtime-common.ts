@@ -5,6 +5,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   providerFetch,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -227,7 +228,7 @@ function createMondayError(status: number | undefined, payload: unknown, phase: 
   }
 
   if (phase === "validate" && (status === 401 || status === 403 || code === "Unauthorized")) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && status === 401) {
@@ -253,7 +254,7 @@ function createMondayError(status: number | undefined, payload: unknown, phase: 
     code === "UserUnauthorizedException" ||
     code === "USER_ACCESS_DENIED"
   ) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if ((status !== undefined && status >= 500) || code === "API_TEMPORARILY_BLOCKED") {
