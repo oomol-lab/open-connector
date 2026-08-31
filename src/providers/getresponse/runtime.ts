@@ -684,8 +684,6 @@ function createGetresponseError(status: number, payload: unknown, phase: Getresp
     return new ProviderRequestError(
       phase === "validate" ? 400 : status,
       phase === "validate" ? `GetResponse credential validation failed: ${message}` : message,
-      undefined,
-      phase === "validate" ? "invalid_input" : "credential_expired",
     );
   }
   if (status === 429) return new ProviderRequestError(429, message, undefined, "rate_limited");

@@ -539,7 +539,7 @@ function createDynamicTikHubError(input: {
   });
 
   if (status === 401) {
-    return new TikHubRequestError("credential_expired", "TikHub rejected the API credential", 401, undefined, data);
+    return new TikHubRequestError("authorization_failed", "TikHub rejected the API credential", 401, undefined, data);
   }
   if (status === 402) {
     return new TikHubRequestError(
@@ -552,7 +552,7 @@ function createDynamicTikHubError(input: {
   }
   if (status === 403) {
     return new TikHubRequestError(
-      "scope_missing",
+      "authorization_failed",
       `TikHub rejected the endpoint scope. The API token likely needs the ${input.requiredScope} path scope.`,
       403,
       undefined,
@@ -641,14 +641,14 @@ function createUserTikHubError(status: number, payload: unknown, phase: TikHubPh
   if (status === 401) {
     return phase === "validate"
       ? new TikHubRequestError("invalid_input", message, 400, undefined, payload)
-      : new TikHubRequestError("credential_expired", message, 401, undefined, payload);
+      : new TikHubRequestError("authorization_failed", message, 401, undefined, payload);
   }
   if (status === 402) {
     return new TikHubRequestError("provider_error", `TikHub payment required: ${message}`, 402, undefined, payload);
   }
   if (status === 403) {
     return new TikHubRequestError(
-      "scope_missing",
+      "authorization_failed",
       `${message}. The TikHub API token likely needs the ${requiredScopeForPath(path)} path scope.`,
       403,
       undefined,

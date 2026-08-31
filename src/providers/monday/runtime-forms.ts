@@ -292,7 +292,7 @@ async function mondayDeactivateForm(input: MondayProviderActionInput, fetcher: t
 function normalizeCreatedMondayForm(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("provider_error", "monday created form payload is missing", 502);
+    throw mondayProviderError("monday created form payload is missing", 502);
   }
 
   return {
@@ -304,7 +304,7 @@ function normalizeCreatedMondayForm(value: unknown) {
 function normalizeMondayForm(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("provider_error", "monday form payload is missing", 502);
+    throw mondayProviderError("monday form payload is missing", 502);
   }
 
   return compactObject({
@@ -328,7 +328,7 @@ function normalizeMondayForm(value: unknown) {
 function normalizeMondayFormTag(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("provider_error", "monday form tag payload is missing", 502);
+    throw mondayProviderError("monday form tag payload is missing", 502);
   }
 
   return compactObject({
@@ -342,7 +342,7 @@ function normalizeMondayFormTag(value: unknown) {
 function normalizeMondayFormQuestion(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("provider_error", "monday form question payload is missing", 502);
+    throw mondayProviderError("monday form question payload is missing", 502);
   }
 
   return compactObject({
@@ -361,7 +361,7 @@ function normalizeMondayFormQuestion(value: unknown) {
 function normalizeMondayFormQuestionOption(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("provider_error", "monday form question option payload is missing", 502);
+    throw mondayProviderError("monday form question option payload is missing", 502);
   }
 
   return {
@@ -393,7 +393,7 @@ function toNullableObject(value: unknown) {
 function normalizeString(value: unknown, fieldName: string) {
   const normalized = toOptionalString(value);
   if (!normalized) {
-    throw mondayProviderError("provider_error", `${fieldName} is missing`, 502);
+    throw mondayProviderError(`${fieldName} is missing`, 502);
   }
   return normalized;
 }
@@ -401,14 +401,14 @@ function normalizeString(value: unknown, fieldName: string) {
 function normalizeId(value: unknown, fieldName: string) {
   const normalized = toOptionalId(value);
   if (!normalized) {
-    throw mondayProviderError("provider_error", `${fieldName} is missing`, 502);
+    throw mondayProviderError(`${fieldName} is missing`, 502);
   }
   return normalized;
 }
 
 function normalizeBoolean(value: unknown, fieldName: string) {
   if (typeof value !== "boolean") {
-    throw mondayProviderError("provider_error", `${fieldName} is missing`, 502);
+    throw mondayProviderError(`${fieldName} is missing`, 502);
   }
   return value;
 }

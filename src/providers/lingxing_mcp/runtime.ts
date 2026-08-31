@@ -380,7 +380,6 @@ async function runLingxingMcp<T>(phase: LingxingRequestPhase, run: () => Promise
         phase === "validate" ? 400 : 401,
         "Lingxing MCP Server URL or X-Mcp-Key is invalid",
         error,
-        phase === "validate" ? "invalid_input" : "credential_expired",
       );
     }
     throw error;

@@ -364,12 +364,7 @@ async function runWeComMcp<T>(phase: WeComRequestPhase, run: () => Promise<T>): 
     return await run();
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status === 401) {
-      throw new ProviderRequestError(
-        phase === "validate" ? 400 : 401,
-        "WeCom MCP URL is invalid or expired",
-        error,
-        phase === "validate" ? "invalid_input" : "credential_expired",
-      );
+      throw new ProviderRequestError(phase === "validate" ? 400 : 401, "WeCom MCP URL is invalid or expired", error);
     }
     throw error;
   }

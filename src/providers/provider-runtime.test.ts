@@ -45,11 +45,11 @@ describe("toProviderExecutionError", () => {
   it("prefers an explicit provider error code over status inference", () => {
     expect(
       toProviderExecutionError(
-        new ProviderRequestError(409, "Still processing", undefined, "request_in_progress"),
+        new ProviderRequestError(402, "Provider credit exhausted", undefined, "insufficient_credit"),
         "failed",
       ),
     ).toMatchObject({
-      error: { code: "request_in_progress" },
+      error: { code: "insufficient_credit" },
     });
   });
 

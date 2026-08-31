@@ -268,7 +268,7 @@ function createAftershipError(
     if (phase === "validate") {
       return new ProviderRequestError(400, message);
     }
-    return new ProviderRequestError(response.status, message, payload, "credential_expired");
+    return new ProviderRequestError(response.status, message, payload);
   }
 
   if (response.status === 400 || response.status === 404 || response.status === 422) {

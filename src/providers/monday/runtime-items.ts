@@ -676,5 +676,5 @@ function requireMutationItemId(value: unknown, message: string) {
     return String(id);
   }
 
-  throw mondayProviderError("provider_error", message, 502);
+  throw mondayProviderError(message, 502);
 }

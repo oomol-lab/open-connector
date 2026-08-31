@@ -403,14 +403,14 @@ function createYouzanTokenError(
   if (status >= 500) return youzanError("provider_error", message, 502, payload);
   return phase === "validate"
     ? youzanError("invalid_input", message, 400, payload)
-    : youzanError("credential_expired", message, status === 401 ? 401 : 409, payload);
+    : youzanError("authorization_failed", message, 401, payload);
 }
 
 function createYouzanApiError(status: number, payload: Record<string, unknown>): ProviderRequestError {
   const message = readYouzanMessage(payload, "Youzan API request failed");
   if (status === 429) return youzanError("rate_limited", message, 429, payload);
   if (status === 401 || status === 403 || payload.code === 40010) {
-    return youzanError("credential_expired", message, 409, payload);
+    return youzanError("authorization_failed", message, 401, payload);
   }
   return youzanError("provider_error", message, 502, payload);
 }

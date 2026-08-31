@@ -406,7 +406,7 @@ async function callHubspotMcpTool(input: HubspotMcpToolCallInput) {
     return unwrapHubspotMcpOutput(output);
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status === 401) {
-      throw new ProviderRequestError(401, error.message, undefined, "credential_expired");
+      throw new ProviderRequestError(401, error.message);
     }
     throw error;
   }
@@ -451,7 +451,7 @@ function mapHubspotMcpError(service: string, error: unknown): ProviderRequestErr
     return error;
   }
   if (error instanceof UnauthorizedError) {
-    return new ProviderRequestError(401, `${service} MCP token is invalid or expired`, error, "credential_expired");
+    return new ProviderRequestError(401, `${service} MCP token is invalid or expired`, error);
   }
   if (error instanceof SdkHttpError) {
     const status = error.status;

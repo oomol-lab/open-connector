@@ -1,12 +1,11 @@
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-export type TikHubErrorCode =
-  | "credential_expired"
-  | "invalid_input"
-  | "policy_denied"
-  | "provider_error"
-  | "rate_limited"
-  | "scope_missing";
+/**
+ * The runtime error codes TikHub raises. Only codes `mapExecutionErrorStatus`
+ * knows may reach the wire: a code it does not recognize is answered with
+ * HTTP 400 whatever status the error carries.
+ */
+export type TikHubErrorCode = "authorization_failed" | "invalid_input" | "provider_error" | "rate_limited";
 
 /** Preserves TikHub-specific error categories within the open-source runtime error contract. */
 export class TikHubRequestError extends ProviderRequestError {

@@ -5,6 +5,7 @@ import { serializeRuntimeActionResult } from "../server/api/runtime-api.ts";
 import { executors as clinicalkeyExecutors } from "./clinicalkey/executors.ts";
 import { executors as deepgramExecutors } from "./deepgram/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
+import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
 import { executors as zoomExecutors } from "./zoom/executors.ts";
 
 afterEach(() => {
@@ -51,6 +52,12 @@ const authFailureCases: AuthFailureCase[] = [
     service: "helpdesk",
     executors: helpdeskExecutors,
     actionId: "helpdesk.list_tickets",
+    credential: apiKeyCredential,
+  },
+  {
+    service: "sellersprite",
+    executors: sellerspriteExecutors,
+    actionId: "sellersprite.get_api_usage",
     credential: apiKeyCredential,
   },
   { service: "zoom", executors: zoomExecutors, actionId: "zoom.list_meetings", credential: oauthCredential },

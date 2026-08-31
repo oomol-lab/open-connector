@@ -608,10 +608,10 @@ function applyWaffoIdempotencyKey(input: {
 function buildWaffoError(status: number, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {
   const message = readWaffoErrorMessage(payload) ?? `Waffo request failed with ${status}`;
   if (status === 401) return new ProviderRequestError(phase === "validate" ? 400 : 401, message, payload);
-  if (status === 403) return new ProviderRequestError(403, message, payload, "policy_denied");
+  if (status === 403) return new ProviderRequestError(403, message, payload);
   if (status === 429) return new ProviderRequestError(429, message, payload);
   if (status === 409 && (message.includes("already being processed") || message.includes("not yet fully processed"))) {
-    return new ProviderRequestError(409, message, payload, "request_in_progress");
+    return new ProviderRequestError(409, message, payload);
   }
   if (status === 404) return new ProviderRequestError(404, message, payload);
   if (status === 400 || status === 409) return new ProviderRequestError(400, message, payload);

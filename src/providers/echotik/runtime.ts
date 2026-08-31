@@ -681,7 +681,7 @@ function createEchoTikError(httpStatus: number, envelope: EchoTikEnvelope, phase
   if (isAuthError) {
     return phase === "validate"
       ? new ProviderRequestError(400, message, errorData, "invalid_input")
-      : new ProviderRequestError(401, message, errorData, "credential_expired");
+      : new ProviderRequestError(401, message, errorData);
   }
 
   if (

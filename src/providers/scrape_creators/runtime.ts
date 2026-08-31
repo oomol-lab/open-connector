@@ -97,7 +97,7 @@ async function invokeEndpoint(
   const catalog = await loadScrapeCreatorsCatalog(fetcher);
   if (!catalog.snapshot.endpoints.some((endpoint) => endpoint.method === method && endpoint.path === path)) {
     throw new ScrapeCreatorsRequestError(
-      "policy_denied",
+      "authorization_failed",
       "endpoint is not present in the current Scrape Creators OpenAPI document",
       403,
     );
@@ -122,7 +122,7 @@ async function requestJson(
   const url = new URL(path, apiBaseUrl);
   if (url.origin !== apiBaseUrl)
     throw new ScrapeCreatorsRequestError(
-      "policy_denied",
+      "authorization_failed",
       "endpoint must resolve to the official Scrape Creators API origin",
       403,
     );
@@ -201,7 +201,11 @@ function mapError(status: number, payload: unknown, phase: "validate" | "execute
     optionalString(optionalRecord(payload)?.message) ??
     `Scrape Creators returned HTTP ${status}`;
   if (status === 401)
-    return new ScrapeCreatorsRequestError(phase === "validate" ? "invalid_input" : "credential_expired", message, 401);
+    return new ScrapeCreatorsRequestError(
+      phase === "validate" ? "invalid_input" : "authorization_failed",
+      message,
+      401,
+    );
   if (status === 402) return new ScrapeCreatorsRequestError("provider_error", message, 402);
   if (status === 429) return new ScrapeCreatorsRequestError("rate_limited", message, 429);
   return new ScrapeCreatorsRequestError("provider_error", message, status >= 500 ? 502 : status);

@@ -173,7 +173,7 @@ function invalidEndpointInput(message: string): TikHubRequestError {
 
 function policyDenied(): TikHubRequestError {
   return new TikHubRequestError(
-    "policy_denied",
+    "authorization_failed",
     "TikHub account endpoints are unavailable through dynamic invocation",
     403,
   );

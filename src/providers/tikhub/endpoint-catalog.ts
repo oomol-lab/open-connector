@@ -122,7 +122,7 @@ async function discoverTikHubEndpointsWithCache(
   }
   if (input.category !== undefined && !isEligibleTikHubEndpointCategory(input.category)) {
     throw new TikHubRequestError(
-      "policy_denied",
+      "authorization_failed",
       `TikHub account category is unavailable through dynamic discovery: ${input.category}`,
       403,
     );

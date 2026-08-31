@@ -349,28 +349,18 @@ function createSellerSpriteError(input: SellerSpriteErrorInput): ProviderRequest
   }
 
   if (input.code === "ERROR_SECRET_KEY_OVERDUE") {
-    return new ProviderRequestError(401, message, details, "credential_expired");
+    return new ProviderRequestError(401, message, details);
   }
 
   if (input.code === "ERROR_SECRET_KEY" || input.code === "ERROR_SECRET_KEY_INVALID" || input.status === 401) {
-    return new ProviderRequestError(
-      input.phase === "validate" ? 400 : 401,
-      message,
-      details,
-      input.phase === "validate" ? "invalid_input" : "credential_expired",
-    );
+    return new ProviderRequestError(input.phase === "validate" ? 400 : 401, message, details);
   }
 
   if (input.code === "ERROR_AUTH_ERROR" || input.status === 403 || isModuleAccessMessage(message)) {
-    return new ProviderRequestError(
-      input.phase === "validate" ? 400 : 403,
-      message,
-      {
-        ...details,
-        reason: "module_not_purchased_or_unavailable",
-      },
-      input.phase === "validate" ? "invalid_input" : "scope_missing",
-    );
+    return new ProviderRequestError(input.phase === "validate" ? 400 : 403, message, {
+      ...details,
+      reason: "module_not_purchased_or_unavailable",
+    });
   }
 
   if (input.code === "ERROR_PARAM" || (input.status >= 400 && input.status < 500)) {

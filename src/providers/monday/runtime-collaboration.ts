@@ -57,7 +57,7 @@ async function mondayListUpdates(input: MondayProviderActionInput, fetcher: type
   // monday rejects a half-open range on the root `updates` query, so a partial
   // range is caught here instead of spending a request to be told.
   if ((since === undefined) !== (until === undefined)) {
-    throw mondayProviderError("invalid_input", "since and until must be supplied together.", 400);
+    throw mondayProviderError("since and until must be supplied together.", 400);
   }
 
   const payload = await mondayGraphqlRequest<{

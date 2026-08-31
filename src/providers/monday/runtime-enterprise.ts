@@ -250,7 +250,7 @@ async function mondayClearUsersDepartment(input: MondayProviderActionInput, fetc
 function normalizeMondayDepartment(value: unknown) {
   const record = asOptionalObject(value);
   if (!record) {
-    throw mondayProviderError("provider_error", "monday department payload is missing", 502);
+    throw mondayProviderError("monday department payload is missing", 502);
   }
 
   return {
@@ -280,7 +280,7 @@ function toOptionalId(value: unknown) {
 function normalizeString(value: unknown, fieldName: string) {
   const normalized = toOptionalString(value);
   if (!normalized) {
-    throw mondayProviderError("provider_error", `${fieldName} is missing`, 502);
+    throw mondayProviderError(`${fieldName} is missing`, 502);
   }
   return normalized;
 }
@@ -288,14 +288,14 @@ function normalizeString(value: unknown, fieldName: string) {
 function normalizeId(value: unknown, fieldName: string) {
   const normalized = toOptionalId(value);
   if (!normalized) {
-    throw mondayProviderError("provider_error", `${fieldName} is missing`, 502);
+    throw mondayProviderError(`${fieldName} is missing`, 502);
   }
   return normalized;
 }
 
 function normalizeInteger(value: unknown, fieldName: string) {
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    throw mondayProviderError("provider_error", `${fieldName} is missing`, 502);
+    throw mondayProviderError(`${fieldName} is missing`, 502);
   }
   return value;
 }

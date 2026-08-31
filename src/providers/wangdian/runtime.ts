@@ -467,7 +467,7 @@ function createWangdianError(status: number, payload: unknown, phase: WangdianRe
   const lowerMessage = message.toLowerCase();
   if (status === 429) return wangdianError("rate_limited", message, 429, payload);
   if (message.includes("权限不足") || message.includes("无仓库访问权限")) {
-    return wangdianError("scope_missing", message, 403, payload);
+    return wangdianError("authorization_failed", message, 403, payload);
   }
   if (
     status === 401 ||
@@ -485,9 +485,9 @@ function createWangdianError(status: number, payload: unknown, phase: WangdianRe
     lowerMessage.includes("sign is")
   ) {
     return wangdianError(
-      phase === "validate" ? "invalid_input" : "credential_expired",
+      phase === "validate" ? "invalid_input" : "authorization_failed",
       message,
-      phase === "validate" ? 400 : 409,
+      phase === "validate" ? 400 : 401,
       payload,
     );
   }
