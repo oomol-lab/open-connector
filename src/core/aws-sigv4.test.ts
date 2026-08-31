@@ -4,8 +4,12 @@ import {
   canonicalizeSearchParams,
   createAwsSigV4PresignedUrl,
   encodeRfc3986,
+  encodeS3ObjectKey,
   sha256Hex,
+  signAwsSigV4Request,
 } from "./aws-sigv4.ts";
+
+const emptyPayloadSha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
 describe("AWS SigV4 presign helper", () => {
   it("matches the AWS GET query-string auth example", () => {
@@ -66,7 +70,7 @@ describe("AWS SigV4 presign helper", () => {
 
   it("encodes reserved characters with RFC 3986 rules", () => {
     expect(encodeRfc3986("file!'()*")).toBe("file%21%27%28%29%2A");
-    expect(sha256Hex("")).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    expect(sha256Hex("")).toBe(emptyPayloadSha256);
   });
 
   it("collapses tabs and repeated spaces in header values", () => {
@@ -157,5 +161,87 @@ describe("AWS SigV4 presign helper", () => {
     expect(search).not.toContain("%7E");
     // `+`, `/`, and `=` in the session token stay percent-encoded, not form-urlencoded.
     expect(search).toContain("X-Amz-Security-Token=AQoDYXdzEJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaABC%2Bde%2Ff0g%3D%3D");
+  });
+});
+
+// Vectors from "Examples: Signature Calculations in AWS Signature Version 4"
+// (Amazon S3 API Reference). AWS joins the Authorization components with ","
+// and the AWS SDKs with ", "; the service accepts both, and this repository
+// uses the SDK form.
+describe("AWS SigV4 authorization header helper", () => {
+  const credential = {
+    accessKeyId: "AKIAIOSFODNN7EXAMPLE",
+    secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+  };
+  const now = new Date("2013-05-24T00:00:00Z");
+
+  it("matches the AWS GET Object header-auth example", () => {
+    const headers = signAwsSigV4Request({
+      credential,
+      method: "GET",
+      url: new URL("https://examplebucket.s3.amazonaws.com/test.txt"),
+      region: "us-east-1",
+      headers: { range: "bytes=0-9", "x-amz-content-sha256": emptyPayloadSha256 },
+      payloadHash: emptyPayloadSha256,
+      now,
+    });
+
+    expect(headers.get("host")).toBe("examplebucket.s3.amazonaws.com");
+    expect(headers.get("x-amz-date")).toBe("20130524T000000Z");
+    expect(headers.get("range")).toBe("bytes=0-9");
+    expect(headers.has("x-amz-security-token")).toBe(false);
+    expect(headers.get("authorization")).toBe(
+      "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41",
+    );
+  });
+
+  it("matches the AWS PUT Object header-auth example", () => {
+    const payloadHash = sha256Hex("Welcome to Amazon S3.");
+    const url = new URL("https://examplebucket.s3.amazonaws.com/");
+    // The canonical URI is the RFC 3986 encoded key, so `$` must arrive as %24.
+    url.pathname = `/${encodeS3ObjectKey("test$file.text")}`;
+
+    const headers = signAwsSigV4Request({
+      credential,
+      method: "PUT",
+      url,
+      region: "us-east-1",
+      headers: {
+        date: "Fri, 24 May 2013 00:00:00 GMT",
+        "x-amz-storage-class": "REDUCED_REDUNDANCY",
+        "x-amz-content-sha256": payloadHash,
+      },
+      payloadHash,
+      now,
+    });
+
+    expect(payloadHash).toBe("44ce7dd67c959e0d3524ffac1771dfbba87d2b6b4b4e99e42034a8b803f8b072");
+    expect(headers.get("authorization")).toBe(
+      "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class, Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd",
+    );
+  });
+
+  it("signs the session token and canonical query without mutating the input headers", () => {
+    const input = new Headers({ "x-amz-content-sha256": "UNSIGNED-PAYLOAD" });
+    const url = new URL("https://sts.us-east-1.amazonaws.com/");
+    url.search = canonicalizeSearchParams(new URLSearchParams({ Version: "2011-06-15", Action: "GetCallerIdentity" }));
+
+    const headers = signAwsSigV4Request({
+      credential: { ...credential, sessionToken: "AQoDYXdzEJr//////////wEaABC+de/f0g==" },
+      method: "GET",
+      url,
+      region: "us-east-1",
+      service: "sts",
+      headers: input,
+      payloadHash: "UNSIGNED-PAYLOAD",
+      now,
+    });
+
+    expect(url.search).toBe("?Action=GetCallerIdentity&Version=2011-06-15");
+    expect(Array.from(input.keys())).toEqual(["x-amz-content-sha256"]);
+    expect(headers.get("x-amz-security-token")).toBe("AQoDYXdzEJr//////////wEaABC+de/f0g==");
+    expect(headers.get("authorization")).toBe(
+      "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/sts/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-security-token, Signature=0908fa269713fd585ca0afca91509a0af2821f7f38a810deaa0461644a2f9703",
+    );
   });
 });

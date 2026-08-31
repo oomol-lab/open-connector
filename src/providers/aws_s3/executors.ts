@@ -8,7 +8,13 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { createHash, createHmac } from "node:crypto";
+import {
+  canonicalizeSearchParams,
+  createAwsSigV4PresignedUrl,
+  encodeS3ObjectKey,
+  sha256Hex,
+  signAwsSigV4Request,
+} from "../../core/aws-sigv4.ts";
 import { compactObject, optionalRecord, optionalString, requiredRawString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import {
@@ -87,7 +93,6 @@ class AwsS3HttpError extends Error {
 
 const sourceFetchTimeoutMs = 15_000;
 const maxSourceBytes = 20 * 1024 * 1024;
-const awsServiceName = "s3";
 const service = "aws_s3";
 
 export const awsActionHandlers: ProviderActionHandlers<"aws_s3", AwsActionHandler> = {
@@ -162,29 +167,25 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
       headers.set("content-type", "application/json");
     }
-    headers.set("host", url.host);
     headers.set("x-amz-content-sha256", payloadHash);
 
-    const signedRequest = signAwsRequest(
-      createAwsS3Client({
+    const signedHeaders = signAwsSigV4Request({
+      credential: {
         accessKeyId: requireAwsField(credential.values.accessKeyId, "accessKeyId"),
         secretAccessKey: requireAwsField(credential.values.secretAccessKey, "secretAccessKey"),
         sessionToken: optionalString(credential.values.sessionToken)?.trim(),
-        region,
-        fetcher: providerFetch,
-      }),
-      {
-        method,
-        url,
-        headers: Object.fromEntries(headers.entries()),
-        payloadHash,
       },
-    );
-    signedRequest.headers.set("user-agent", providerUserAgent);
+      method,
+      url,
+      region,
+      headers,
+      payloadHash,
+    });
+    signedHeaders.set("user-agent", providerUserAgent);
 
     const response = await providerFetch(url.toString(), {
       method,
-      headers: signedRequest.headers,
+      headers: signedHeaders,
       ...(body === undefined ? {} : { body }),
       signal: context.signal,
     });
@@ -451,10 +452,11 @@ async function awsGeneratePresignedUrl(input: Record<string, unknown>, context: 
     objectKey,
     method,
     expiresSeconds,
-    url: awsPresignUrl(client, {
-      bucket,
-      objectKey,
+    url: createAwsSigV4PresignedUrl({
+      credential: client,
       method,
+      url: buildRequestTarget({ region: client.region, bucket, objectKey }).url,
+      region: client.region,
       expiresSeconds,
       headers: compactObject({
         "content-type": optionalString(input.contentType),
@@ -525,19 +527,20 @@ async function awsS3Request(client: AwsS3ClientConfig, input: AwsS3RequestInput)
   const body = normalizeRequestBody(input.body);
   const payloadHash =
     method === "PUT" ? sha256Hex(body ?? Buffer.alloc(0)) : body == null ? "UNSIGNED-PAYLOAD" : sha256Hex(body);
-  const signedRequest = signAwsRequest(client, {
+  const signedHeaders = signAwsSigV4Request({
+    credential: client,
     method,
     url: target.url,
+    region: client.region,
     headers: compactObject({
       ...input.headers,
-      host: target.url.host,
       "x-amz-content-sha256": payloadHash,
     }),
     payloadHash,
   });
   const response = await client.fetcher(target.url.toString(), {
     method,
-    headers: signedRequest.headers,
+    headers: signedHeaders,
     ...(body == null ? {} : { body }),
     signal: input.signal,
   });
@@ -549,102 +552,6 @@ async function awsS3Request(client: AwsS3ClientConfig, input: AwsS3RequestInput)
   return response;
 }
 
-function awsPresignUrl(
-  client: AwsS3ClientConfig,
-  input: {
-    bucket: string;
-    objectKey: string;
-    method: "GET" | "PUT" | "DELETE";
-    expiresSeconds: number;
-    headers?: Record<string, string | undefined>;
-  },
-) {
-  const now = new Date();
-  const amzDate = formatAmzDate(now);
-  const dateStamp = amzDate.slice(0, 8);
-  const credentialScope = `${dateStamp}/${client.region}/${awsServiceName}/aws4_request`;
-  const target = buildRequestTarget({
-    region: client.region,
-    bucket: input.bucket,
-    objectKey: input.objectKey,
-  });
-  const headers = new Headers();
-  for (const [key, value] of Object.entries(input.headers ?? {})) {
-    if (!value) {
-      continue;
-    }
-    headers.set(key, value);
-  }
-  headers.set("host", target.url.host);
-  const canonicalHeaders = buildCanonicalHeaders(headers);
-  const signedHeaders = Object.keys(canonicalHeaders).join(";");
-  const query = new URLSearchParams();
-  query.set("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
-  query.set("X-Amz-Credential", `${client.accessKeyId}/${credentialScope}`);
-  query.set("X-Amz-Date", amzDate);
-  query.set("X-Amz-Expires", String(input.expiresSeconds));
-  query.set("X-Amz-SignedHeaders", signedHeaders);
-  if (client.sessionToken) {
-    query.set("X-Amz-Security-Token", client.sessionToken);
-  }
-  target.url.search = canonicalizeSearchParams(query);
-  const canonicalRequest = [
-    input.method,
-    target.url.pathname,
-    target.url.search.slice(1),
-    formatCanonicalHeaders(canonicalHeaders),
-    signedHeaders,
-    "UNSIGNED-PAYLOAD",
-  ].join("\n");
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
-  const signature = hmacHex(
-    getSigningKey(client.secretAccessKey, dateStamp, client.region, awsServiceName),
-    stringToSign,
-  );
-  target.url.searchParams.set("X-Amz-Signature", signature);
-  return target.url.toString();
-}
-
-function signAwsRequest(
-  client: AwsS3ClientConfig,
-  input: {
-    method: "GET" | "PUT" | "HEAD" | "DELETE";
-    url: URL;
-    headers: Record<string, string>;
-    payloadHash: string;
-  },
-) {
-  const now = new Date();
-  const amzDate = formatAmzDate(now);
-  const dateStamp = amzDate.slice(0, 8);
-  const credentialScope = `${dateStamp}/${client.region}/${awsServiceName}/aws4_request`;
-  const headers = new Headers(input.headers);
-  headers.set("x-amz-date", amzDate);
-  if (client.sessionToken) {
-    headers.set("x-amz-security-token", client.sessionToken);
-  }
-  const canonicalHeaders = buildCanonicalHeaders(headers);
-  const signedHeaders = Object.keys(canonicalHeaders).join(";");
-  const canonicalRequest = [
-    input.method,
-    input.url.pathname,
-    input.url.search.slice(1),
-    formatCanonicalHeaders(canonicalHeaders),
-    signedHeaders,
-    input.payloadHash,
-  ].join("\n");
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
-  const authorization = [
-    `AWS4-HMAC-SHA256 Credential=${client.accessKeyId}/${credentialScope}`,
-    `SignedHeaders=${signedHeaders}`,
-    `Signature=${hmacHex(getSigningKey(client.secretAccessKey, dateStamp, client.region, awsServiceName), stringToSign)}`,
-  ].join(", ");
-  headers.set("authorization", authorization);
-  return {
-    headers,
-  };
-}
-
 function buildRequestTarget(input: {
   region: string;
   bucket?: string;
@@ -652,7 +559,7 @@ function buildRequestTarget(input: {
   query?: Record<string, string | number | boolean | undefined>;
 }) {
   const url = createAwsS3BaseUrl(input.region, input.bucket);
-  url.pathname = input.objectKey ? `/${encodeS3Key(input.objectKey)}` : "/";
+  url.pathname = input.objectKey ? `/${encodeS3ObjectKey(input.objectKey)}` : "/";
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value == null) {
       continue;
@@ -694,42 +601,6 @@ function buildObjectUrl(region: string, bucket: string, objectKey: string) {
   }).url.toString();
 }
 
-function buildCanonicalHeaders(headers: Headers) {
-  const entries = Array.from(headers.entries()).map(([key, value]) => ({
-    key: key.toLowerCase(),
-    value: collapseHeaderWhitespace(value),
-  }));
-  entries.sort((left, right) => left.key.localeCompare(right.key));
-  return Object.fromEntries(entries.map((entry) => [entry.key, entry.value]));
-}
-
-function formatCanonicalHeaders(headers: Record<string, string>) {
-  return `${Object.entries(headers)
-    .map(([key, value]) => `${key}:${value}`)
-    .join("\n")}\n`;
-}
-
-function canonicalizeSearchParams(searchParams: URLSearchParams) {
-  const entries = Array.from(searchParams.entries()).map(([key, value]) => ({
-    key: encodeRfc3986(key),
-    value: encodeRfc3986(value),
-  }));
-  entries.sort((left, right) => {
-    if (left.key === right.key) {
-      return left.value.localeCompare(right.value);
-    }
-    return left.key.localeCompare(right.key);
-  });
-  return entries.map((entry) => `${entry.key}=${entry.value}`).join("&");
-}
-
-function encodeS3Key(value: string) {
-  return value
-    .split("/")
-    .map((segment) => encodeRfc3986(segment))
-    .join("/");
-}
-
 function readObjectKey(input: Record<string, unknown>): string {
   const objectKey = requiredRawString(
     input.objectKey,
@@ -747,15 +618,6 @@ function readObjectKey(input: Record<string, unknown>): string {
 
 function defaultObjectFileName(objectKey: string): string {
   return objectKey.split("/").findLast((segment) => segment.length > 0) ?? "s3-object";
-}
-
-function encodeRfc3986(value: string) {
-  return encodeURIComponent(value)
-    .replaceAll("!", "%21")
-    .replaceAll("'", "%27")
-    .replaceAll("(", "%28")
-    .replaceAll(")", "%29")
-    .replaceAll("*", "%2A");
 }
 
 function normalizeRequestBody(value: AwsS3RequestInput["body"]) {
@@ -1188,37 +1050,4 @@ function parseHeaderInteger(value: string | null | undefined) {
   }
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : null;
-}
-
-function collapseHeaderWhitespace(value: string) {
-  return value.trim().split(" ").filter(Boolean).join(" ");
-}
-
-function formatAmzDate(value: Date) {
-  const year = String(value.getUTCFullYear()).padStart(4, "0");
-  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(value.getUTCDate()).padStart(2, "0");
-  const hours = String(value.getUTCHours()).padStart(2, "0");
-  const minutes = String(value.getUTCMinutes()).padStart(2, "0");
-  const seconds = String(value.getUTCSeconds()).padStart(2, "0");
-  return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
-}
-
-function sha256Hex(value: string | Uint8Array | Buffer) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function hmac(key: string | Buffer, value: string) {
-  return createHmac("sha256", key).update(value).digest();
-}
-
-function hmacHex(key: Buffer, value: string) {
-  return createHmac("sha256", key).update(value).digest("hex");
-}
-
-function getSigningKey(secretAccessKey: string, dateStamp: string, region: string, service: string) {
-  const kDate = hmac(`AWS4${secretAccessKey}`, dateStamp);
-  const kRegion = hmac(kDate, region);
-  const kService = hmac(kRegion, service);
-  return hmac(kService, "aws4_request");
 }

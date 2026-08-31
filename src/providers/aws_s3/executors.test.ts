@@ -1,7 +1,6 @@
 import type { ExecutionContext, ExecutionResult, ResolvedCredential, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createAwsSigV4PresignedUrl } from "../../core/aws-sigv4.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { executors, proxy } from "./executors.ts";
 
@@ -281,16 +280,6 @@ describe("AWS S3 SigV4 golden vectors", () => {
     const url = readOutputUrl(result);
     expect(url).toContain("X-Amz-Credential=AK~IAIOSFODNN7EXAMPLE%2F");
     expect(url).not.toContain("%7E");
-    expect(url).toBe(
-      createAwsSigV4PresignedUrl({
-        credential: { accessKeyId: "AK~IAIOSFODNN7EXAMPLE", secretAccessKey: credential.values.secretAccessKey! },
-        method: "GET",
-        url: new URL("https://documents.s3.us-east-1.amazonaws.com/test.txt"),
-        region: "us-east-1",
-        expiresSeconds: 3600,
-        now: goldenSigningTime,
-      }),
-    );
     expect(fetch).not.toHaveBeenCalled();
   });
 

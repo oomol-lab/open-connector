@@ -7,7 +7,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { createHash, createHmac } from "node:crypto";
+import { sha256Hex, signAwsSigV4Request } from "../../core/aws-sigv4.ts";
 import {
   compactObject,
   optionalInteger,
@@ -343,86 +343,24 @@ function signAwsStsRequest(input: {
   url: URL;
   body: string;
 }): Headers {
-  const amzDate = formatAmzDate(input.now);
-  const dateStamp = amzDate.slice(0, 8);
-  const credentialScope = `${dateStamp}/${input.region}/${awsServiceName}/aws4_request`;
-  const headers = new Headers({
-    accept: "application/xml",
-    "content-type": "application/x-www-form-urlencoded; charset=utf-8",
-    host: input.url.host,
-    "user-agent": providerUserAgent,
-    "x-amz-date": amzDate,
+  return signAwsSigV4Request({
+    credential: {
+      accessKeyId: input.accessKeyId,
+      secretAccessKey: input.secretAccessKey,
+      sessionToken: input.sessionToken?.trim(),
+    },
+    method: "POST",
+    url: input.url,
+    region: input.region,
+    service: awsServiceName,
+    headers: {
+      accept: "application/xml",
+      "content-type": "application/x-www-form-urlencoded; charset=utf-8",
+      "user-agent": providerUserAgent,
+    },
+    payloadHash: sha256Hex(input.body),
+    now: input.now,
   });
-  if (input.sessionToken?.trim()) {
-    headers.set("x-amz-security-token", input.sessionToken.trim());
-  }
-
-  const canonicalHeaders = buildCanonicalHeaders(headers);
-  const signedHeaders = Object.keys(canonicalHeaders).join(";");
-  const canonicalRequest = [
-    "POST",
-    input.url.pathname,
-    "",
-    formatCanonicalHeaders(canonicalHeaders),
-    signedHeaders,
-    sha256Hex(input.body),
-  ].join("\n");
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
-  headers.set(
-    "authorization",
-    [
-      `AWS4-HMAC-SHA256 Credential=${input.accessKeyId}/${credentialScope}`,
-      `SignedHeaders=${signedHeaders}`,
-      `Signature=${hmacHex(getSigningKey(input.secretAccessKey, dateStamp, input.region, awsServiceName), stringToSign)}`,
-    ].join(", "),
-  );
-  return headers;
-}
-
-function buildCanonicalHeaders(headers: Headers): Record<string, string> {
-  const entries = Array.from(headers.entries()).map(([key, value]) => ({
-    key: key.toLowerCase(),
-    value: collapseHeaderWhitespace(value),
-  }));
-  entries.sort((left, right) => left.key.localeCompare(right.key));
-  return Object.fromEntries(entries.map((entry) => [entry.key, entry.value]));
-}
-
-function formatCanonicalHeaders(headers: Record<string, string>): string {
-  return `${Object.entries(headers)
-    .map(([key, value]) => `${key}:${value}`)
-    .join("\n")}\n`;
-}
-
-function collapseHeaderWhitespace(value: string): string {
-  return value.trim().split(" ").filter(Boolean).join(" ");
-}
-
-function sha256Hex(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function hmac(key: Buffer | string, value: string): Buffer {
-  return createHmac("sha256", key).update(value).digest();
-}
-
-function hmacHex(key: Buffer | string, value: string): string {
-  return createHmac("sha256", key).update(value).digest("hex");
-}
-
-function getSigningKey(secretAccessKey: string, dateStamp: string, region: string, serviceName: string): Buffer {
-  const dateKey = hmac(`AWS4${secretAccessKey}`, dateStamp);
-  const dateRegionKey = hmac(dateKey, region);
-  const dateRegionServiceKey = hmac(dateRegionKey, serviceName);
-  return hmac(dateRegionServiceKey, "aws4_request");
-}
-
-function formatAmzDate(value: Date): string {
-  const iso = value.toISOString();
-  return `${iso.slice(0, 4)}${iso.slice(5, 7)}${iso.slice(8, 10)}T${iso.slice(11, 13)}${iso.slice(
-    14,
-    16,
-  )}${iso.slice(17, 19)}Z`;
 }
 
 function normalizeAwsStsError(response: Response, text: string, operation: string): ProviderRequestError {

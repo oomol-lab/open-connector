@@ -28,15 +28,69 @@ export interface AwsSigV4PresignInput {
 }
 
 /**
+ * `Authorization` header signing input. `url` supplies the signed host, path,
+ * and query; the query is signed verbatim, so callers canonicalize it with
+ * {@link canonicalizeSearchParams} before signing and send exactly that URL.
+ * `payloadHash` is the SHA-256 hex of the body (or `UNSIGNED-PAYLOAD`).
+ */
+export interface AwsSigV4SignInput {
+  credential: AwsSigV4Credential;
+  method: string;
+  url: URL;
+  region: string;
+  payloadHash: string;
+  service?: string;
+  headers?: HeadersInit;
+  now?: Date;
+}
+
+interface AwsSigV4SigningScope {
+  amzDate: string;
+  dateStamp: string;
+  region: string;
+  service: string;
+  credentialScope: string;
+}
+
+/**
+ * Sign a request with the SigV4 `Authorization` header scheme. Returns the
+ * headers to send: a copy of the input headers plus `host`, `x-amz-date`,
+ * `x-amz-security-token` (when the credential carries a session token), and
+ * `authorization`. Signing is local; the function does not send a network
+ * request.
+ */
+export function signAwsSigV4Request(input: AwsSigV4SignInput): Headers {
+  const scope = createSigningScope(input.now ?? new Date(), input.region, input.service ?? defaultAwsServiceName);
+  const headers = new Headers(input.headers);
+  headers.set("host", input.url.host);
+  headers.set("x-amz-date", scope.amzDate);
+  if (input.credential.sessionToken) {
+    headers.set("x-amz-security-token", input.credential.sessionToken);
+  }
+  const canonicalHeaders = buildCanonicalHeaders(headers);
+  const signedHeaders = Object.keys(canonicalHeaders).join(";");
+  const canonicalRequest = [
+    input.method,
+    input.url.pathname,
+    input.url.search.slice(1),
+    formatCanonicalHeaders(canonicalHeaders),
+    signedHeaders,
+    input.payloadHash,
+  ].join("\n");
+  const signature = signCanonicalRequest(input.credential.secretAccessKey, scope, canonicalRequest);
+  headers.set(
+    "authorization",
+    `AWS4-HMAC-SHA256 Credential=${input.credential.accessKeyId}/${scope.credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+  );
+  return headers;
+}
+
+/**
  * Build an AWS SigV4 query-string presigned URL. Signing is local; the function
  * does not send a network request.
  */
 export function createAwsSigV4PresignedUrl(input: AwsSigV4PresignInput): string {
-  const now = input.now ?? new Date();
-  const amzDate = formatAmzDate(now);
-  const dateStamp = amzDate.slice(0, 8);
-  const service = input.service ?? defaultAwsServiceName;
-  const credentialScope = `${dateStamp}/${input.region}/${service}/aws4_request`;
+  const scope = createSigningScope(input.now ?? new Date(), input.region, input.service ?? defaultAwsServiceName);
   const url = new URL(input.url.href);
   const headers = new Headers();
   for (const [key, value] of Object.entries(input.headers ?? {})) {
@@ -50,8 +104,8 @@ export function createAwsSigV4PresignedUrl(input: AwsSigV4PresignInput): string 
   const signedHeaders = Object.keys(canonicalHeaders).join(";");
   const query = new URLSearchParams();
   query.set("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
-  query.set("X-Amz-Credential", `${input.credential.accessKeyId}/${credentialScope}`);
-  query.set("X-Amz-Date", amzDate);
+  query.set("X-Amz-Credential", `${input.credential.accessKeyId}/${scope.credentialScope}`);
+  query.set("X-Amz-Date", scope.amzDate);
   query.set("X-Amz-Expires", String(input.expiresSeconds));
   query.set("X-Amz-SignedHeaders", signedHeaders);
   if (input.credential.sessionToken) {
@@ -66,11 +120,7 @@ export function createAwsSigV4PresignedUrl(input: AwsSigV4PresignInput): string 
     signedHeaders,
     "UNSIGNED-PAYLOAD",
   ].join("\n");
-  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
-  const signature = hmacHex(
-    getAwsSigningKey(input.credential.secretAccessKey, dateStamp, input.region, service),
-    stringToSign,
-  );
+  const signature = signCanonicalRequest(input.credential.secretAccessKey, scope, canonicalRequest);
   // Append the signature to the canonical query text instead of going through
   // `url.searchParams`, whose setter re-serializes as form-urlencoded and would
   // diverge from the signed bytes for `~`, space, and `*`.
@@ -135,7 +185,7 @@ export function buildCanonicalHeaders(headers: Headers): Record<string, string> 
 /**
  * Format canonical headers as `name:value` lines terminated by a blank line.
  */
-export function formatCanonicalHeaders(headers: Record<string, string>): string {
+function formatCanonicalHeaders(headers: Record<string, string>): string {
   return `${Object.entries(headers)
     .map(([key, value]) => `${key}:${value}`)
     .join("\n")}\n`;
@@ -144,7 +194,7 @@ export function formatCanonicalHeaders(headers: Record<string, string>): string 
 /**
  * Format a timestamp as the AWS `yyyyMMddTHHmmssZ` amz-date value.
  */
-export function formatAmzDate(value: Date): string {
+function formatAmzDate(value: Date): string {
   const year = String(value.getUTCFullYear()).padStart(4, "0");
   const month = String(value.getUTCMonth() + 1).padStart(2, "0");
   const day = String(value.getUTCDate()).padStart(2, "0");
@@ -164,11 +214,30 @@ export function sha256Hex(value: string | Uint8Array): string {
 /**
  * Derive the AWS SigV4 signing key for a date, region, and service.
  */
-export function getAwsSigningKey(secretAccessKey: string, dateStamp: string, region: string, service: string): Buffer {
+function getAwsSigningKey(secretAccessKey: string, dateStamp: string, region: string, service: string): Buffer {
   const kDate = hmacSha256(`AWS4${secretAccessKey}`, dateStamp);
   const kRegion = hmacSha256(kDate, region);
   const kService = hmacSha256(kRegion, service);
   return hmacSha256(kService, "aws4_request");
+}
+
+function createSigningScope(now: Date, region: string, service: string): AwsSigV4SigningScope {
+  const amzDate = formatAmzDate(now);
+  const dateStamp = amzDate.slice(0, 8);
+  return {
+    amzDate,
+    dateStamp,
+    region,
+    service,
+    credentialScope: `${dateStamp}/${region}/${service}/aws4_request`,
+  };
+}
+
+function signCanonicalRequest(secretAccessKey: string, scope: AwsSigV4SigningScope, canonicalRequest: string): string {
+  const stringToSign = ["AWS4-HMAC-SHA256", scope.amzDate, scope.credentialScope, sha256Hex(canonicalRequest)].join(
+    "\n",
+  );
+  return hmacHex(getAwsSigningKey(secretAccessKey, scope.dateStamp, scope.region, scope.service), stringToSign);
 }
 
 function hmacSha256(key: string | Buffer, value: string): Buffer {
