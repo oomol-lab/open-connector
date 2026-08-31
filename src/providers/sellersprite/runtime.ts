@@ -10,6 +10,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  requiredInputString,
   toProviderExecutionError,
 } from "../provider-runtime.ts";
 
@@ -249,7 +250,7 @@ function normalizeOptionalStrings(
 }
 
 function normalizeOptionalString(value: unknown, fieldName: string): string | undefined {
-  return value === undefined ? undefined : requireInputString(value, fieldName);
+  return value === undefined ? undefined : requiredInputString(value, fieldName);
 }
 
 function normalizeOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {
@@ -257,7 +258,7 @@ function normalizeOptionalStringArray(value: unknown, fieldName: string): string
     return undefined;
   }
   return requiredStringArray(value, fieldName, providerInputError).map((item, index) =>
-    requireInputString(item, `${fieldName}[${index}]`),
+    requiredInputString(item, `${fieldName}[${index}]`),
   );
 }
 
@@ -274,7 +275,7 @@ function normalizeOptionalMonth(value: unknown): string | undefined {
   if (value === undefined) {
     return undefined;
   }
-  const month = requireInputString(value, "month");
+  const month = requiredInputString(value, "month");
   if (!isValidMonth(month)) {
     throw new ProviderRequestError(400, "month must use YYYYMM format");
   }
@@ -300,7 +301,7 @@ function normalizeOptionalOrder(value: unknown): Record<string, unknown> | undef
 }
 
 function requireMarketplace(value: unknown): string {
-  const marketplace = requireInputString(value, "marketplace");
+  const marketplace = requiredInputString(value, "marketplace");
   if (!sellerSpriteMarketplaces.has(marketplace)) {
     throw new ProviderRequestError(400, "marketplace is not supported by SellerSprite");
   }
@@ -308,15 +309,11 @@ function requireMarketplace(value: unknown): string {
 }
 
 function requireAsin(value: unknown, fieldName: string): string {
-  const asin = requireInputString(value, fieldName).toUpperCase();
+  const asin = requiredInputString(value, fieldName).toUpperCase();
   if (!isAsin(asin)) {
     throw new ProviderRequestError(400, `${fieldName} must contain 10 ASCII letters or digits`);
   }
   return asin;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function asSellerSpriteEnvelope(value: unknown): SellerSpriteEnvelope {

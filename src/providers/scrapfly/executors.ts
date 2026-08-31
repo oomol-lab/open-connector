@@ -11,7 +11,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "scrapfly";
 const scrapflyApiBaseUrl = "https://api.scrapfly.io";
@@ -328,10 +333,6 @@ function readOptionalHeaderInteger(headers: Headers, name: string): number | nul
   }
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : null;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function looksLikeHtml(value: string): boolean {

@@ -11,7 +11,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const mailosaurApiBaseUrl = "https://mailosaur.com";
 
@@ -406,10 +406,6 @@ function extractMailosaurErrorMessage(payload: unknown): string | undefined {
 
 function buildMailosaurAuthorization(apiKey: string): string {
   return `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readNullableString(value: unknown): string | null {

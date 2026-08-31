@@ -12,7 +12,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "templated";
 const templatedApiBaseUrl = "https://api.templated.io/v1";
@@ -51,7 +56,7 @@ export const templatedActionHandlers: ProviderActionHandlers<"templated", Templa
     return { templates: readCollection(payload, "template").map((item) => normalizeTemplate(item)) };
   },
   async get_template(input, context): Promise<unknown> {
-    const templateId = requiredProviderString(input.templateId, "templateId");
+    const templateId = requiredInputString(input.templateId, "templateId");
     const payload = await requestTemplatedJson({
       apiKey: context.apiKey,
       path: `/template/${encodeURIComponent(templateId)}`,
@@ -71,7 +76,7 @@ export const templatedActionHandlers: ProviderActionHandlers<"templated", Templa
       path: "/render",
       method: "POST",
       body: compactObject({
-        template: requiredProviderString(input.templateId, "templateId"),
+        template: requiredInputString(input.templateId, "templateId"),
         format: optionalString(input.format),
         transparent: optionalBoolean(input.transparent),
         flatten: optionalBoolean(input.flatten),
@@ -101,7 +106,7 @@ export const templatedActionHandlers: ProviderActionHandlers<"templated", Templa
     return { renders: readCollection(payload, "render").map((item) => normalizeRender(item)) };
   },
   async get_render(input, context): Promise<unknown> {
-    const renderId = requiredProviderString(input.renderId, "renderId");
+    const renderId = requiredInputString(input.renderId, "renderId");
     const payload = await requestTemplatedJson({
       apiKey: context.apiKey,
       path: `/render/${encodeURIComponent(renderId)}`,
@@ -112,7 +117,7 @@ export const templatedActionHandlers: ProviderActionHandlers<"templated", Templa
     return { render: normalizeRender(payload) };
   },
   async delete_render(input, context): Promise<unknown> {
-    const renderId = requiredProviderString(input.renderId, "renderId");
+    const renderId = requiredInputString(input.renderId, "renderId");
     await requestTemplatedAck({
       apiKey: context.apiKey,
       path: `/render/${encodeURIComponent(renderId)}`,
@@ -362,10 +367,6 @@ function normalizeOptionalUser(value: unknown): Record<string, unknown> | undefi
   });
 }
 
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function requiredResponseString(value: unknown, fieldName: string): string {
   return requiredString(
     value,
@@ -385,7 +386,7 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
-  return value.map((item) => requiredProviderString(item, `${fieldName}[]`));
+  return value.map((item) => requiredInputString(item, `${fieldName}[]`));
 }
 
 function readOptionalLayerOverrides(value: unknown): Record<string, Record<string, unknown>> | undefined {

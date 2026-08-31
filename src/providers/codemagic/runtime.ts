@@ -15,6 +15,7 @@ import {
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const codemagicV3BaseUrl = "https://codemagic.io";
@@ -89,7 +90,7 @@ export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", Codema
   },
 
   async list_team_apps(input, context) {
-    const teamId = requireInputString(input.team_id, "team_id");
+    const teamId = requiredInputString(input.team_id, "team_id");
     const payload = await requestCodemagicV3Json<{
       data?: unknown;
       page_size?: unknown;
@@ -116,7 +117,7 @@ export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", Codema
   },
 
   async list_team_builds(input, context) {
-    const teamId = requireInputString(input.team_id, "team_id");
+    const teamId = requiredInputString(input.team_id, "team_id");
     const payload = await requestCodemagicV3Json<{
       data?: unknown;
       page_size?: unknown;
@@ -146,7 +147,7 @@ export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", Codema
   },
 
   async get_build(input, context) {
-    const buildId = requireInputString(input.build_id, "build_id");
+    const buildId = requiredInputString(input.build_id, "build_id");
     const payload = await requestCodemagicV3Json<{ data?: unknown }>({
       context,
       path: `/api/v3/builds/${encodeURIComponent(buildId)}`,
@@ -167,8 +168,8 @@ export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", Codema
       path: "/builds",
       method: "POST",
       body: compactObject({
-        appId: requireInputString(input.appId, "appId"),
-        workflowId: requireInputString(input.workflowId, "workflowId"),
+        appId: requiredInputString(input.appId, "appId"),
+        workflowId: requiredInputString(input.workflowId, "workflowId"),
         branch: optionalString(input.branch),
         tag: optionalString(input.tag),
         labels: readOptionalStringArray(input.labels),
@@ -184,7 +185,7 @@ export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", Codema
   },
 
   async cancel_build(input, context) {
-    const buildId = requireInputString(input.build_id, "build_id");
+    const buildId = requiredInputString(input.build_id, "build_id");
     const response = await codemagicFetch({
       baseUrl: codemagicLegacyBaseUrl,
       context,
@@ -396,10 +397,6 @@ async function readJsonResponse<T>(response: Response, providerName: string): Pr
       `${providerName} response was not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireResponsePositiveInteger(value: unknown, fieldName: string): number {

@@ -19,6 +19,7 @@ import {
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const netsuiteRecordPathPrefix = "/services/rest/record/v1";
@@ -558,10 +559,6 @@ function readInteger(value: unknown, fieldName: string, fallback: number): numbe
     return value;
   }
   throw new ProviderRequestError(502, `NetSuite ${fieldName} must be an integer`);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function optionalPositiveInteger(value: unknown, fieldName: string): number | undefined {

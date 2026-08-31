@@ -16,6 +16,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "neverbounce";
@@ -311,10 +312,6 @@ function extractNeverBounceErrorMessage(payload: unknown): string | undefined {
     optionalString(record?.error_message) ??
     optionalString(record?.reason)
   );
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredJobId(value: unknown, fieldName: string): string {

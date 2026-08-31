@@ -16,6 +16,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "gamma";
@@ -117,7 +118,7 @@ async function createGeneration(input: Record<string, unknown>, context: GammaAc
 
 async function getGeneration(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
   return {
-    generation: await fetchGeneration(readInputString(input.generationId, "generationId"), context),
+    generation: await fetchGeneration(requiredInputString(input.generationId, "generationId"), context),
   };
 }
 
@@ -166,7 +167,7 @@ async function createGenerationFromTemplateAndWait(
 }
 
 async function waitForGeneration(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
-  const generationId = readInputString(input.generationId, "generationId");
+  const generationId = requiredInputString(input.generationId, "generationId");
   const timeoutMs = toMilliseconds(input.timeoutSeconds, 120_000);
   const pollIntervalMs = toMilliseconds(input.pollIntervalSeconds, 5_000);
   const startedAt = Date.now();
@@ -237,9 +238,9 @@ async function listFolders(input: Record<string, unknown>, context: GammaActionC
 
 function buildCreateGenerationBody(input: Record<string, unknown>): Record<string, unknown> {
   return compactJson({
-    inputText: readInputString(input.inputText, "inputText"),
+    inputText: requiredInputString(input.inputText, "inputText"),
     additionalInstructions: optionalString(input.additionalInstructions),
-    textMode: readInputString(input.textMode, "textMode"),
+    textMode: requiredInputString(input.textMode, "textMode"),
     format: optionalString(input.format),
     numCards: optionalInteger(input.numCards),
     cardSplit: optionalString(input.cardSplit),
@@ -255,8 +256,8 @@ function buildCreateGenerationBody(input: Record<string, unknown>): Record<strin
 
 function buildCreateGenerationFromTemplateBody(input: Record<string, unknown>): Record<string, unknown> {
   return compactJson({
-    prompt: readInputString(input.prompt, "prompt"),
-    gammaId: readInputString(input.gammaId, "gammaId"),
+    prompt: requiredInputString(input.prompt, "prompt"),
+    gammaId: requiredInputString(input.gammaId, "gammaId"),
     themeId: optionalString(input.themeId),
     imageOptions: optionalRecord(input.imageOptions),
     sharingOptions: optionalRecord(input.sharingOptions),
@@ -451,10 +452,6 @@ function requireResponseObject(value: unknown, fieldName: string): Record<string
     throw new ProviderRequestError(502, `malformed gamma ${fieldName}`, value);
   }
   return record;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readResponseString(input: Record<string, unknown>, key: string): string {

@@ -16,6 +16,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "short_io";
@@ -149,7 +150,7 @@ function listLinks(input: Record<string, unknown>, context: ApiKeyProviderContex
 }
 
 function getLink(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const linkId = requireInputString(input.linkId, "linkId");
+  const linkId = requiredInputString(input.linkId, "linkId");
   return requestShortIoJson({
     apiKey: context.apiKey,
     path: `/links/${encodeURIComponent(linkId)}`,
@@ -166,8 +167,8 @@ function createLink(input: Record<string, unknown>, context: ApiKeyProviderConte
     path: "/links",
     method: "POST",
     body: compactObject({
-      domain: requireInputString(input.domain, "domain"),
-      originalURL: requireInputString(input.originalURL, "originalURL"),
+      domain: requiredInputString(input.domain, "domain"),
+      originalURL: requiredInputString(input.originalURL, "originalURL"),
       path: optionalString(input.path),
       title: optionalString(input.title),
       allowDuplicates: optionalBoolean(input.allowDuplicates),
@@ -179,7 +180,7 @@ function createLink(input: Record<string, unknown>, context: ApiKeyProviderConte
 }
 
 function updateLink(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const linkId = requireInputString(input.linkId, "linkId");
+  const linkId = requiredInputString(input.linkId, "linkId");
   const body = compactObject({
     originalURL: optionalString(input.originalURL),
     path: optionalString(input.path),
@@ -210,7 +211,7 @@ function updateLink(input: Record<string, unknown>, context: ApiKeyProviderConte
 }
 
 async function deleteLink(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const linkId = requireInputString(input.linkId, "linkId");
+  const linkId = requiredInputString(input.linkId, "linkId");
   const response = await shortIoFetch({
     apiKey: context.apiKey,
     path: `/links/${encodeURIComponent(linkId)}`,
@@ -236,7 +237,7 @@ async function deleteLink(input: Record<string, unknown>, context: ApiKeyProvide
 }
 
 function getLinkStatistics(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const linkId = requireInputString(input.linkId, "linkId");
+  const linkId = requiredInputString(input.linkId, "linkId");
   if (input.period === "custom" && (!optionalString(input.startDate) || !optionalString(input.endDate))) {
     throw new ProviderRequestError(400, "startDate and endDate are required when period is custom");
   }
@@ -365,10 +366,6 @@ function extractDomainList(payload: unknown): unknown[] {
   throw new ProviderRequestError(502, "Short.io returned an invalid domains response", payload);
 }
 
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function requirePositiveIntegerInput(value: unknown, fieldName: string): number {
   if (value === undefined || value === null || value === "") {
     throw new ProviderRequestError(400, `${fieldName} is required`);
@@ -390,7 +387,7 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
-  return value.map((item) => requireInputString(item, fieldName));
+  return value.map((item) => requiredInputString(item, fieldName));
 }
 
 function readOptionalExpiresAt(value: unknown): string | undefined {

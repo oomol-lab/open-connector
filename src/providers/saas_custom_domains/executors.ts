@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "saas_custom_domains";
 const saasCustomDomainsApiBaseUrl = "https://app.saascustomdomains.com/api/v1";
@@ -107,7 +112,7 @@ async function listUpstreams(
   const payload = await requestSaasCustomDomainsJson(
     {
       method: "GET",
-      path: `/accounts/${encodeURIComponent(readRequiredString(input.account_uuid, "account_uuid"))}/upstreams`,
+      path: `/accounts/${encodeURIComponent(requiredInputString(input.account_uuid, "account_uuid"))}/upstreams`,
       query: buildPaginationQuery(input, { host: optionalString(input.host) }),
     },
     context,
@@ -126,9 +131,9 @@ async function createUpstream(
       await requestSaasCustomDomainsJson(
         {
           method: "POST",
-          path: `/accounts/${encodeURIComponent(readRequiredString(input.account_uuid, "account_uuid"))}/upstreams`,
+          path: `/accounts/${encodeURIComponent(requiredInputString(input.account_uuid, "account_uuid"))}/upstreams`,
           form: compactObject({
-            host: readRequiredString(input.host, "host"),
+            host: requiredInputString(input.host, "host"),
             tls: optionalBoolean(input.tls),
             port: optionalInteger(input.port),
             bubble_io: optionalBoolean(input.bubble_io),
@@ -197,7 +202,7 @@ async function createCustomDomain(
           method: "POST",
           path: `${buildUpstreamPath(input)}/custom_domains`,
           form: compactObject({
-            host: readRequiredString(input.host, "host"),
+            host: requiredInputString(input.host, "host"),
             instructions_recipient: optionalString(input.instructions_recipient),
             prepend_path: optionalString(input.prepend_path),
             challenge_type: optionalString(input.challenge_type),
@@ -247,9 +252,9 @@ async function verifyCustomDomainDnsRecords(
   );
   const record = requiredRecord(payload, "dns records response");
   return {
-    message: readRequiredString(record.message, "message"),
-    dns_status: readRequiredString(record.dns_status, "dns_status"),
-    host: readRequiredString(record.host, "host"),
+    message: requiredInputString(record.message, "message"),
+    dns_status: requiredInputString(record.dns_status, "dns_status"),
+    host: requiredInputString(record.host, "host"),
   };
 }
 
@@ -340,11 +345,11 @@ function readErrorMessage(payload: unknown): string | undefined {
 }
 
 function buildUpstreamPath(input: Record<string, unknown>): string {
-  return `/accounts/${encodeURIComponent(readRequiredString(input.account_uuid, "account_uuid"))}/upstreams/${encodeURIComponent(readRequiredString(input.upstream_uuid, "upstream_uuid"))}`;
+  return `/accounts/${encodeURIComponent(requiredInputString(input.account_uuid, "account_uuid"))}/upstreams/${encodeURIComponent(requiredInputString(input.upstream_uuid, "upstream_uuid"))}`;
 }
 
 function buildCustomDomainPath(input: Record<string, unknown>): string {
-  return `${buildUpstreamPath(input)}/custom_domains/${encodeURIComponent(readRequiredString(input.domain_uuid, "domain_uuid"))}`;
+  return `${buildUpstreamPath(input)}/custom_domains/${encodeURIComponent(requiredInputString(input.domain_uuid, "domain_uuid"))}`;
 }
 
 function buildPaginationQuery(
@@ -367,15 +372,11 @@ function readPagination(record: Record<string, unknown>): Record<string, unknown
 
 function readMessage(payload: unknown): string {
   const record = requiredRecord(payload, "SaaS Custom Domains response body was not an object");
-  return readRequiredString(record.message, "message");
+  return requiredInputString(record.message, "message");
 }
 
 function requiredRecord(value: unknown, message: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, message);
   return record;
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

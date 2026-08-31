@@ -18,6 +18,7 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 interface SeaTableBaseAccess {
@@ -53,7 +54,7 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
     const payload = requireResponseObject(
       await requestBaseJson(context, "rows/", {
         query: {
-          table_name: requireInputString(input.tableName, "tableName"),
+          table_name: requiredInputString(input.tableName, "tableName"),
           view_name: optionalString(input.viewName),
           start: optionalInteger(input.start),
           limit: optionalInteger(input.limit),
@@ -65,12 +66,12 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
     return { rows: requireResponseObjectArray(payload.rows, "list rows") };
   },
   async get_row(input, context) {
-    const rowId = requireInputString(input.rowId, "rowId");
+    const rowId = requiredInputString(input.rowId, "rowId");
     return {
       row: requireResponseObject(
         await requestBaseJson(context, `rows/${encodeURIComponent(rowId)}/`, {
           query: {
-            table_name: requireInputString(input.tableName, "tableName"),
+            table_name: requiredInputString(input.tableName, "tableName"),
             convert_keys: optionalBoolean(input.convertKeys),
           },
         }),
@@ -83,7 +84,7 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
       await requestBaseJson(context, "rows/", {
         method: "POST",
         body: {
-          table_name: requireInputString(input.tableName, "tableName"),
+          table_name: requiredInputString(input.tableName, "tableName"),
           rows: objectArray(input.rows, "rows", providerInputError),
           apply_default: optionalBoolean(input.applyDefault),
         },
@@ -99,14 +100,14 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
   },
   async update_rows(input, context) {
     const updates = objectArray(input.updates, "updates", providerInputError).map((update) => ({
-      row_id: requireInputString(update.rowId, "updates[].rowId"),
+      row_id: requiredInputString(update.rowId, "updates[].rowId"),
       row: requiredRecord(update.row, "updates[].row", providerInputError),
     }));
     const payload = requireResponseObject(
       await requestBaseJson(context, "rows/", {
         method: "PUT",
         body: {
-          table_name: requireInputString(input.tableName, "tableName"),
+          table_name: requiredInputString(input.tableName, "tableName"),
           updates,
         },
       }),
@@ -119,7 +120,7 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
       await requestBaseJson(context, "rows/", {
         method: "DELETE",
         body: {
-          table_name: requireInputString(input.tableName, "tableName"),
+          table_name: requiredInputString(input.tableName, "tableName"),
           row_ids: requiredStringArray(input.rowIds, "rowIds", providerInputError),
         },
       }),
@@ -283,10 +284,6 @@ async function readJsonResponse(
   }
   if (response.status === 429) throw new ProviderRequestError(429, message, payload);
   throw new ProviderRequestError(response.status >= 500 ? 502 : 400, message, payload);
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireResponseObject(value: unknown, operation: string): Record<string, unknown> {

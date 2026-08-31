@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "conductor";
@@ -33,7 +34,7 @@ export const conductorActionHandlers: ProviderActionHandlers<"conductor", Conduc
       context,
       phase: "execute",
       query: {
-        website_id: readRequiredString(input.website_id, "website_id"),
+        website_id: requiredInputString(input.website_id, "website_id"),
       },
       wrapper: "array",
     });
@@ -44,8 +45,8 @@ export const conductorActionHandlers: ProviderActionHandlers<"conductor", Conduc
       context,
       phase: "execute",
       query: compactObject({
-        website_id: readRequiredString(input.website_id, "website_id"),
-        scope: readRequiredString(input.scope, "scope"),
+        website_id: requiredInputString(input.website_id, "website_id"),
+        scope: requiredInputString(input.scope, "scope"),
         captured_at: optionalString(input.captured_at),
       }),
       wrapper: "object",
@@ -63,7 +64,7 @@ export const conductorActionHandlers: ProviderActionHandlers<"conductor", Conduc
       context,
       phase: "execute",
       query: compactObject({
-        website_id: readRequiredString(input.website_id, "website_id"),
+        website_id: requiredInputString(input.website_id, "website_id"),
         per_page: readRequiredNumber(input.per_page, "per_page"),
         page,
         page_cursor: pageCursor,
@@ -79,8 +80,8 @@ export const conductorActionHandlers: ProviderActionHandlers<"conductor", Conduc
       context,
       phase: "execute",
       query: {
-        website_id: readRequiredString(input.website_id, "website_id"),
-        url: readRequiredString(input.url, "url"),
+        website_id: requiredInputString(input.website_id, "website_id"),
+        url: requiredInputString(input.url, "url"),
       },
       wrapper: "object",
     });
@@ -91,8 +92,8 @@ export const conductorActionHandlers: ProviderActionHandlers<"conductor", Conduc
       context,
       phase: "execute",
       query: compactObject({
-        website_id: readRequiredString(input.website_id, "website_id"),
-        scope: readRequiredString(input.scope, "scope"),
+        website_id: requiredInputString(input.website_id, "website_id"),
+        scope: requiredInputString(input.scope, "scope"),
         captured_at: optionalString(input.captured_at),
       }),
       wrapper: "array",
@@ -104,8 +105,8 @@ export const conductorActionHandlers: ProviderActionHandlers<"conductor", Conduc
       context,
       phase: "execute",
       query: compactObject({
-        website_id: readRequiredString(input.website_id, "website_id"),
-        issue: readRequiredString(input.issue, "issue"),
+        website_id: requiredInputString(input.website_id, "website_id"),
+        issue: requiredInputString(input.issue, "issue"),
         page: optionalNumber(input.page),
         per_page: optionalNumber(input.per_page),
       }),
@@ -303,10 +304,6 @@ function requireObjectPayload(payload: unknown, label: string): Record<string, u
     throw new ProviderRequestError(502, `${label} response must be a JSON object`, payload);
   }
   return record;
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readRequiredNumber(value: unknown, fieldName: string): number {

@@ -19,6 +19,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "braze";
@@ -68,7 +69,7 @@ export const brazeActionHandlers: ProviderActionHandlers<"braze", BrazeActionHan
     return normalizeCampaignList(payload);
   },
   async get_campaign_details(input, context) {
-    const campaignId = requireInputString(input.campaignId, "campaignId");
+    const campaignId = requiredInputString(input.campaignId, "campaignId");
     const payload = await requestBrazeJson({
       context,
       path: "/campaigns/details",
@@ -91,7 +92,7 @@ export const brazeActionHandlers: ProviderActionHandlers<"braze", BrazeActionHan
     return normalizeCanvasList(payload);
   },
   async get_canvas_details(input, context) {
-    const canvasId = requireInputString(input.canvasId, "canvasId");
+    const canvasId = requiredInputString(input.canvasId, "canvasId");
     const payload = await requestBrazeJson({
       context,
       path: "/canvas/details",
@@ -511,10 +512,6 @@ function readOptionalErrorArrayMessage(value: unknown): string | undefined {
     .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
     .filter((entry) => entry.length > 0);
   return messages.length > 0 ? messages.join("; ") : undefined;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireOutputString(value: unknown, fieldName: string): string {

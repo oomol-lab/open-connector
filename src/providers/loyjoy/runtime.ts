@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const loyjoyApiBaseUrl = "https://app-stable.loyjoy.com/api";
 type Phase = "validate" | "execute";
@@ -20,7 +20,7 @@ export const loyjoyActionHandlers: ProviderActionHandlers<
     return {
       process: readObject(
         await request(
-          `/processes/${encodeURIComponent(required(input.processId, "processId"))}`,
+          `/processes/${encodeURIComponent(requiredInputString(input.processId, "processId"))}`,
           "GET",
           undefined,
           context,
@@ -33,7 +33,7 @@ export const loyjoyActionHandlers: ProviderActionHandlers<
   async start_process(input, context) {
     return {
       variables: await request(
-        `/processes/start/${encodeURIComponent(required(input.processId, "processId"))}`,
+        `/processes/start/${encodeURIComponent(requiredInputString(input.processId, "processId"))}`,
         "POST",
         input.variables === undefined ? {} : { variables: input.variables },
         context,
@@ -48,7 +48,7 @@ export const loyjoyActionHandlers: ProviderActionHandlers<
     return {
       view: readObject(
         await request(
-          `/views/${encodeURIComponent(required(input.viewId, "viewId"))}`,
+          `/views/${encodeURIComponent(requiredInputString(input.viewId, "viewId"))}`,
           "GET",
           undefined,
           context,
@@ -75,7 +75,7 @@ export const loyjoyActionHandlers: ProviderActionHandlers<
   async create_completion(input, context) {
     const payload = readObject(
       await request(
-        `/completions/${encodeURIComponent(required(input.processId, "processId"))}`,
+        `/completions/${encodeURIComponent(requiredInputString(input.processId, "processId"))}`,
         "POST",
         compactObject({ text: input.text, locale: input.locale }),
         context,
@@ -145,9 +145,6 @@ function errorFor(response: Response, payload: unknown, phase: Phase): ProviderR
   if (phase === "execute" && (response.status === 401 || response.status === 403))
     return new ProviderRequestError(401, message);
   return new ProviderRequestError(response.status >= 400 && response.status < 500 ? 400 : 502, message);
-}
-function required(value: unknown, field: string): string {
-  return requiredString(value, field, (message) => new ProviderRequestError(400, message));
 }
 function readObject(value: unknown, label: string): Record<string, unknown> {
   const result = optionalRecord(value);

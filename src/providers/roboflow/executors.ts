@@ -24,6 +24,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "roboflow";
@@ -566,10 +567,6 @@ function normalizePrediction(prediction: unknown): Record<string, unknown> {
     detectionId: optionalScalarString(record.detection_id ?? record.detectionId) ?? null,
     raw: record,
   };
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireNumber(value: unknown, fieldName: string): number {

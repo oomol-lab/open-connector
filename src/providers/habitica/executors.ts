@@ -25,6 +25,7 @@ import {
   providerResponseError,
   providerUserAgent,
   requireApiKeyCredential,
+  requiredInputString,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -111,8 +112,8 @@ export const executors: ProviderExecutors = defineProviderExecutors<HabiticaActi
     const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
-      userId: readCredentialString(credential.values.userId ?? credential.metadata.userId, "userId"),
-      xClient: readCredentialString(credential.values.xClient ?? credential.metadata.xClient, "xClient"),
+      userId: requiredInputString(credential.values.userId ?? credential.metadata.userId, "userId"),
+      xClient: requiredInputString(credential.values.xClient ?? credential.metadata.xClient, "xClient"),
       fetcher,
       signal: context.signal,
     };
@@ -124,8 +125,8 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const credential = await requireApiKeyCredential(context, service);
     const habiticaCredential: HabiticaCredential = {
       apiKey: credential.apiKey,
-      userId: readCredentialString(credential.values.userId ?? credential.metadata.userId, "userId"),
-      xClient: readCredentialString(credential.values.xClient ?? credential.metadata.xClient, "xClient"),
+      userId: requiredInputString(credential.values.userId ?? credential.metadata.userId, "userId"),
+      xClient: requiredInputString(credential.values.xClient ?? credential.metadata.xClient, "xClient"),
     };
     const url = createProviderProxyUrl(habiticaApiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
@@ -601,14 +602,10 @@ function normalizeTag(value: unknown): Record<string, unknown> {
 
 function resolveHabiticaCredential(input: Record<string, unknown>): HabiticaCredential {
   return {
-    apiKey: readCredentialString(input.apiKey, "apiKey"),
-    userId: readCredentialString(input.userId, "userId"),
-    xClient: readCredentialString(input.xClient, "xClient"),
+    apiKey: requiredInputString(input.apiKey, "apiKey"),
+    userId: requiredInputString(input.userId, "userId"),
+    xClient: requiredInputString(input.xClient, "xClient"),
   };
-}
-
-function readCredentialString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredArray(value: unknown, label: string): unknown[] {

@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "lattice";
@@ -47,7 +48,7 @@ export const latticeActionHandlers: ProviderActionHandlers<"lattice", LatticeAct
   get_user(input, context) {
     return getSingleLatticeResource(
       "user",
-      `/v1/user/${encodeURIComponent(readInputString(input.userId, "userId"))}`,
+      `/v1/user/${encodeURIComponent(requiredInputString(input.userId, "userId"))}`,
       context,
     );
   },
@@ -57,7 +58,7 @@ export const latticeActionHandlers: ProviderActionHandlers<"lattice", LatticeAct
   get_department(input, context) {
     return getSingleLatticeResource(
       "department",
-      `/v1/department/${encodeURIComponent(readInputString(input.departmentId, "departmentId"))}`,
+      `/v1/department/${encodeURIComponent(requiredInputString(input.departmentId, "departmentId"))}`,
       context,
     );
   },
@@ -72,7 +73,7 @@ export const latticeActionHandlers: ProviderActionHandlers<"lattice", LatticeAct
   get_goal(input, context) {
     return getSingleLatticeResource(
       "goal",
-      `/v1/goal/${encodeURIComponent(readInputString(input.goalId, "goalId"))}`,
+      `/v1/goal/${encodeURIComponent(requiredInputString(input.goalId, "goalId"))}`,
       context,
     );
   },
@@ -285,8 +286,4 @@ function resolveLatticeApiBaseUrl(metadata: Record<string, unknown>, dataResiden
   }
 
   return buildLatticeApiBaseUrl(normalizeLatticeDataResidency(metadata.dataResidency ?? dataResidency));
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

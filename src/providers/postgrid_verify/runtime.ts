@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "postgrid_verify";
 const postgridVerifyApiBaseUrl = "https://api.postgrid.com/v1/addver";
@@ -38,7 +43,7 @@ export const postgridVerifyActionHandlers: ProviderActionHandlers<"postgrid_veri
     return requestPostgridVerifyJson({
       path: "/completions",
       body: compactObject({
-        partialStreet: requireInputString(input.partialStreet, "partialStreet"),
+        partialStreet: requiredInputString(input.partialStreet, "partialStreet"),
         index: optionalString(input.index),
         pcFilter: optionalString(input.pcFilter),
         cityFilter: optionalString(input.cityFilter),
@@ -53,7 +58,7 @@ export const postgridVerifyActionHandlers: ProviderActionHandlers<"postgrid_veri
     return requestPostgridVerifyJson({
       path: "/parses",
       body: {
-        address: requireInputString(input.address, "address"),
+        address: requiredInputString(input.address, "address"),
       },
       context,
       phase: "execute",
@@ -63,7 +68,7 @@ export const postgridVerifyActionHandlers: ProviderActionHandlers<"postgrid_veri
     return requestPostgridVerifyJson({
       path: postgridVerifyValidationEndpoint,
       body: {
-        postalOrZip: requireInputString(input.postalOrZip, "postalOrZip"),
+        postalOrZip: requiredInputString(input.postalOrZip, "postalOrZip"),
       },
       context,
       phase: "execute",
@@ -79,7 +84,7 @@ export async function validatePostgridVerifyCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context: ApiKeyProviderContext = {
-    apiKey: requireInputString(input.apiKey, "apiKey"),
+    apiKey: requiredInputString(input.apiKey, "apiKey"),
     fetcher,
     signal,
   };
@@ -191,10 +196,6 @@ function extractPostgridVerifyErrorMessage(payload: unknown): string | undefined
   }
 
   return optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.status);
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function optionalBooleanString(value: unknown): string | undefined {

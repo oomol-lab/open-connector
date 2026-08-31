@@ -11,7 +11,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 type PlisioActionContext = ApiKeyProviderContext;
 type PlisioActionHandler = (input: Record<string, unknown>, context: PlisioActionContext) => Promise<unknown>;
@@ -355,10 +360,6 @@ function requiredIdentifier(value: unknown, fieldName: string): string {
     return String(value);
   }
   return requiredInputString(value, fieldName);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredProviderString(value: unknown, fieldName: string): string {

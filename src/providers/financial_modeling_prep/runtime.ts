@@ -8,7 +8,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 type FinancialModelingPrepPhase = "validate" | "execute";
 type FinancialModelingPrepQueryValue = boolean | number | string | undefined;
@@ -32,7 +32,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     const payload = await financialModelingPrepGet(
       "/search-symbol",
       {
-        query: readRequiredInputString(input.query, "query"),
+        query: requiredInputString(input.query, "query"),
         limit: optionalInteger(input.limit),
         exchange: optionalString(input.exchange),
       },
@@ -50,7 +50,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(
       "/search-name",
       {
-        query: readRequiredInputString(input.query, "query"),
+        query: requiredInputString(input.query, "query"),
         limit: optionalInteger(input.limit),
         exchange: optionalString(input.exchange),
       },
@@ -85,7 +85,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     );
   },
   async list_directory(input, context) {
-    const type = readRequiredInputString(input.type, "type");
+    const type = requiredInputString(input.type, "type");
     const endpointByType: Record<string, string> = {
       stocks: "/stock-list",
       financial_symbols: "/financial-symbols-list",
@@ -102,32 +102,32 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(readEndpoint(endpointByType, type, "type"), {}, "items", context);
   },
   async get_quote(input, context) {
-    const quote = await getQuote(readRequiredInputString(input.symbol, "symbol"), context, "execute");
+    const quote = await getQuote(requiredInputString(input.symbol, "symbol"), context, "execute");
     return { quote };
   },
   async get_quote_short(input, context) {
     const rows = await getArrayPayload(
       "/quote-short",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
+      { symbol: requiredInputString(input.symbol, "symbol") },
       context,
     );
     return { quote: readRequiredObject(rows[0], "payload[0]") };
   },
   async get_asset_quote(input, context) {
-    const assetType = readRequiredInputString(input.assetType, "assetType");
+    const assetType = requiredInputString(input.assetType, "assetType");
     const endpointByType: Record<string, string> = {
       commodity: "/batch-commodity-quotes",
       crypto: "/batch-crypto-quotes",
       forex: "/batch-forex-quotes",
       index: "/batch-index-quotes",
     };
-    const symbol = readRequiredInputString(input.symbol, "symbol");
+    const symbol = requiredInputString(input.symbol, "symbol");
     const rows = await getArrayPayload(readEndpoint(endpointByType, assetType, "assetType"), {}, context);
     const quote = rows.find((row) => optionalString(optionalRecord(row)?.symbol) === symbol) ?? rows[0];
     return { quote: readRequiredObject(quote, "payload[0]") };
   },
   async get_historical_prices(input, context) {
-    const symbol = readRequiredInputString(input.symbol, "symbol");
+    const symbol = requiredInputString(input.symbol, "symbol");
     const payload = await financialModelingPrepGet(
       "/historical-price-eod/full",
       {
@@ -147,7 +147,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     };
   },
   async get_intraday_prices(input, context) {
-    const interval = readRequiredInputString(input.interval, "interval");
+    const interval = requiredInputString(input.interval, "interval");
     const endpointByInterval: Record<string, string> = {
       "1min": "/historical-chart/1min",
       "5min": "/historical-chart/5min",
@@ -159,7 +159,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(
       readEndpoint(endpointByInterval, interval, "interval"),
       {
-        symbol: readRequiredInputString(input.symbol, "symbol"),
+        symbol: requiredInputString(input.symbol, "symbol"),
         from: optionalString(input.from),
         to: optionalString(input.to),
       },
@@ -168,7 +168,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     );
   },
   async get_company_profile(input, context) {
-    const symbol = readRequiredInputString(input.symbol, "symbol");
+    const symbol = requiredInputString(input.symbol, "symbol");
     const payload = await financialModelingPrepGet("/profile", { symbol }, context, "execute");
     const rows = readRequiredArray(payload, "payload");
     return {
@@ -176,37 +176,32 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     };
   },
   async get_company_profile_by_cik(input, context) {
-    return getArrayRows("/profile-cik", { cik: readRequiredInputString(input.cik, "cik") }, "profiles", context);
+    return getArrayRows("/profile-cik", { cik: requiredInputString(input.cik, "cik") }, "profiles", context);
   },
   async get_company_peers(input, context) {
-    return getArrayRows("/stock-peers", { symbol: readRequiredInputString(input.symbol, "symbol") }, "peers", context);
+    return getArrayRows("/stock-peers", { symbol: requiredInputString(input.symbol, "symbol") }, "peers", context);
   },
   async get_company_executives(input, context) {
     return getArrayRows(
       "/key-executives",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
+      { symbol: requiredInputString(input.symbol, "symbol") },
       "executives",
       context,
     );
   },
   async get_company_notes(input, context) {
-    return getArrayRows(
-      "/company-notes",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
-      "notes",
-      context,
-    );
+    return getArrayRows("/company-notes", { symbol: requiredInputString(input.symbol, "symbol") }, "notes", context);
   },
   async get_market_cap(input, context) {
     return getArrayRows(
       "/market-capitalization",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
+      { symbol: requiredInputString(input.symbol, "symbol") },
       "rows",
       context,
     );
   },
   async get_shares_float(input, context) {
-    return getArrayRows("/shares-float", { symbol: readRequiredInputString(input.symbol, "symbol") }, "rows", context);
+    return getArrayRows("/shares-float", { symbol: requiredInputString(input.symbol, "symbol") }, "rows", context);
   },
   async get_income_statement(input, context) {
     return getStatementRows("/income-statement", input, context);
@@ -218,7 +213,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getStatementRows("/cash-flow-statement", input, context);
   },
   async get_financial_statement_growth(input, context) {
-    const statementType = readRequiredInputString(input.statementType, "statementType");
+    const statementType = requiredInputString(input.statementType, "statementType");
     const endpointByType: Record<string, string> = {
       income: "/income-statement-growth",
       balance_sheet: "/balance-sheet-statement-growth",
@@ -241,7 +236,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
   async get_financial_scores(input, context) {
     return getArrayRows(
       "/financial-scores",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
+      { symbol: requiredInputString(input.symbol, "symbol") },
       "scores",
       context,
     );
@@ -252,13 +247,13 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
   async get_dcf(input, context) {
     return getArrayRows(
       "/discounted-cash-flow",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
+      { symbol: requiredInputString(input.symbol, "symbol") },
       "valuations",
       context,
     );
   },
   async get_market_movers(input, context) {
-    const type = readRequiredInputString(input.type, "type");
+    const type = requiredInputString(input.type, "type");
     const endpointByType: Record<string, string> = {
       gainers: "/biggest-gainers",
       losers: "/biggest-losers",
@@ -277,7 +272,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     };
   },
   async get_market_performance(input, context) {
-    const type = readRequiredInputString(input.type, "type");
+    const type = requiredInputString(input.type, "type");
     const endpointByType: Record<string, string> = {
       sector_performance: "/sector-performance-snapshot",
       industry_performance: "/industry-performance-snapshot",
@@ -287,7 +282,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(readEndpoint(endpointByType, type, "type"), {}, "rows", context);
   },
   async get_news(input, context) {
-    const type = readRequiredInputString(input.type, "type");
+    const type = requiredInputString(input.type, "type");
     const latestEndpointByType: Record<string, string> = {
       general: "/news/general-latest",
       press_releases: "/news/press-releases-latest",
@@ -315,7 +310,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     );
   },
   async get_calendar(input, context) {
-    const type = readRequiredInputString(input.type, "type");
+    const type = requiredInputString(input.type, "type");
     const endpointByType: Record<string, string> = {
       earnings: "/earnings-calendar",
       dividends: "/dividends-calendar",
@@ -337,7 +332,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(
       "/economic-indicators",
       {
-        name: readRequiredInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
         from: optionalString(input.from),
         to: optionalString(input.to),
       },
@@ -349,7 +344,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(
       "/analyst-estimates",
       {
-        symbol: readRequiredInputString(input.symbol, "symbol"),
+        symbol: requiredInputString(input.symbol, "symbol"),
         period: optionalString(input.period),
         page: optionalInteger(input.page),
         limit: optionalInteger(input.limit),
@@ -359,7 +354,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     );
   },
   async get_ratings(input, context) {
-    const type = readRequiredInputString(input.type, "type");
+    const type = requiredInputString(input.type, "type");
     const endpointByType: Record<string, string> = {
       ratings_snapshot: "/ratings-snapshot",
       ratings_historical: "/ratings-historical",
@@ -371,7 +366,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(
       readEndpoint(endpointByType, type, "type"),
       {
-        symbol: readRequiredInputString(input.symbol, "symbol"),
+        symbol: requiredInputString(input.symbol, "symbol"),
         limit: optionalInteger(input.limit),
       },
       "ratings",
@@ -386,7 +381,7 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows("/insider-trading/search", query, "trades", context);
   },
   async get_congressional_trades(input, context) {
-    const chamber = readRequiredInputString(input.chamber, "chamber");
+    const chamber = requiredInputString(input.chamber, "chamber");
     const symbol = optionalString(input.symbol);
     const name = optionalString(input.name);
     const endpoint = symbol || name ? `/${chamber}-trades${name ? "-by-name" : ""}` : `/${chamber}-latest`;
@@ -421,19 +416,14 @@ export const financialModelingPrepActionHandlers: ProviderActionHandlers<
     return getArrayRows(endpoint, query, "filings", context);
   },
   async get_etf_holdings(input, context) {
-    return getArrayRows(
-      "/etf/holdings",
-      { symbol: readRequiredInputString(input.symbol, "symbol") },
-      "holdings",
-      context,
-    );
+    return getArrayRows("/etf/holdings", { symbol: requiredInputString(input.symbol, "symbol") }, "holdings", context);
   },
   async get_technical_indicator(input, context) {
-    const indicator = readRequiredInputString(input.indicator, "indicator");
+    const indicator = requiredInputString(input.indicator, "indicator");
     return getArrayRows(
       `/technical-indicators/${indicator}`,
       {
-        symbol: readRequiredInputString(input.symbol, "symbol"),
+        symbol: requiredInputString(input.symbol, "symbol"),
         periodLength: optionalInteger(input.periodLength),
         timeframe: optionalString(input.timeframe),
         from: optionalString(input.from),
@@ -488,7 +478,7 @@ async function getStatementRows(
   const payload = await financialModelingPrepGet(
     path,
     {
-      symbol: readRequiredInputString(input.symbol, "symbol"),
+      symbol: requiredInputString(input.symbol, "symbol"),
       period: optionalString(input.period),
       limit: optionalInteger(input.limit),
     },
@@ -525,7 +515,7 @@ async function getArrayRows(
 
 function statementQuery(input: Record<string, unknown>) {
   return {
-    symbol: readRequiredInputString(input.symbol, "symbol"),
+    symbol: requiredInputString(input.symbol, "symbol"),
     period: optionalString(input.period),
     limit: optionalInteger(input.limit),
   };
@@ -761,10 +751,6 @@ function readRequiredString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `${fieldName} must be a string`);
   }
   return normalized;
-}
-
-function readRequiredInputString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readRequiredNumber(value: unknown, fieldName: string) {

@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const certSpotterMonitoringApiBaseUrl: string = "https://sslmate.com/api/v3/monitoring";
 export const certSpotterCtSearchApiBaseUrl: string = "https://api.certspotter.com/v1";
@@ -60,12 +65,14 @@ async function executeListCertificateIssuances(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<unknown> {
-  validateCtSearchDomain(readInputString(input.domain, "domain"));
-  const expand = Array.isArray(input.expand) ? input.expand.map((item) => readInputString(item, "expand")) : undefined;
+  validateCtSearchDomain(requiredInputString(input.domain, "domain"));
+  const expand = Array.isArray(input.expand)
+    ? input.expand.map((item) => requiredInputString(item, "expand"))
+    : undefined;
   const { payload, response } = await requestCertSpotterJson({
     context,
     url: buildCtSearchIssuancesUrl({
-      domain: readInputString(input.domain, "domain"),
+      domain: requiredInputString(input.domain, "domain"),
       after: optionalString(input.after),
       include_subdomains: typeof input.include_subdomains === "boolean" ? input.include_subdomains : undefined,
       match_wildcards: typeof input.match_wildcards === "boolean" ? input.match_wildcards : undefined,
@@ -100,7 +107,7 @@ async function executeGetMonitoredDomain(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<unknown> {
-  const name = readInputString(input.name, "name");
+  const name = requiredInputString(input.name, "name");
   validateMonitoredDomainName(name);
   const { payload } = await requestCertSpotterJson({
     context,
@@ -119,7 +126,7 @@ async function executeUpsertMonitoredDomain(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<unknown> {
-  const name = readInputString(input.name, "name");
+  const name = requiredInputString(input.name, "name");
   validateMonitoredDomainName(name);
   const { payload } = await requestCertSpotterJson({
     context,
@@ -139,7 +146,7 @@ async function executeDeleteMonitoredDomain(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<unknown> {
-  const name = readInputString(input.name, "name");
+  const name = requiredInputString(input.name, "name");
   validateMonitoredDomainName(name);
   await requestCertSpotterJson({
     context,
@@ -256,10 +263,6 @@ function parseRetryAfterSeconds(value: string | null): number | undefined {
   if (!value) return undefined;
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function validateCtSearchDomain(value: string): void {

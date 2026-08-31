@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "dixa";
 const dixaApiBaseUrl = "https://dev.dixa.io";
@@ -182,10 +187,6 @@ function buildEndUserListQuery(input: Record<string, unknown>): Record<string, s
     phone: optionalString(input.phone),
     externalId: optionalString(input.externalId),
   });
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredConversationId(value: unknown): string {

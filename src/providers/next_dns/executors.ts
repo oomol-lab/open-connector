@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "next_dns";
@@ -30,7 +31,7 @@ export const nextDnsActionHandlers: ProviderActionHandlers<"next_dns", NextDnsAc
   },
   async get_profile(input, context) {
     const payload = await requestNextDnsJson({
-      path: `/profiles/${encodeURIComponent(readInputString(input.profileId, "profileId"))}`,
+      path: `/profiles/${encodeURIComponent(requiredInputString(input.profileId, "profileId"))}`,
       query: {},
       context,
       phase: "execute",
@@ -44,7 +45,7 @@ export const nextDnsActionHandlers: ProviderActionHandlers<"next_dns", NextDnsAc
   async get_logs(input, context) {
     return normalizeNextDnsListPayload(
       await requestNextDnsJson({
-        path: `/profiles/${encodeURIComponent(readInputString(input.profileId, "profileId"))}/logs`,
+        path: `/profiles/${encodeURIComponent(requiredInputString(input.profileId, "profileId"))}/logs`,
         query: buildLogsQuery(input),
         context,
         phase: "execute",
@@ -103,7 +104,7 @@ function requestNextDnsAnalytics(
   family: string,
 ): Promise<unknown> {
   return requestNextDnsJson({
-    path: `/profiles/${encodeURIComponent(readInputString(input.profileId, "profileId"))}/analytics/${family}`,
+    path: `/profiles/${encodeURIComponent(requiredInputString(input.profileId, "profileId"))}/analytics/${family}`,
     query: buildAnalyticsQuery(input),
     context,
     phase: "execute",
@@ -283,8 +284,4 @@ function mapNextDnsError(
   }
 
   return new ProviderRequestError(status || 502, normalizedMessage, payload);
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "telnyx";
 const telnyxApiBaseUrl = "https://api.telnyx.com/v2";
@@ -18,7 +23,7 @@ export const telnyxActionHandlers: ProviderActionHandlers<"telnyx", TelnyxAction
   },
   retrieve_message(input, context) {
     return requestTelnyx({
-      path: `/messages/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/messages/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       context,
       phase: "execute",
     });
@@ -33,7 +38,7 @@ export const telnyxActionHandlers: ProviderActionHandlers<"telnyx", TelnyxAction
   },
   retrieve_messaging_profile(input, context) {
     return requestTelnyx({
-      path: `/messaging_profiles/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/messaging_profiles/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       context,
       phase: "execute",
     });
@@ -93,7 +98,7 @@ function sendMessage(input: Record<string, unknown>, context: ApiKeyProviderCont
     method: "POST",
     context,
     body: {
-      to: readRequiredString(input.to, "to"),
+      to: requiredInputString(input.to, "to"),
       from,
       messaging_profile_id: messagingProfileId,
       text,
@@ -244,10 +249,6 @@ function readFirstResource(payload: unknown): Record<string, unknown> | undefine
   return data.map(optionalRecord).find(Boolean);
 }
 
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function readOptionalStringArray(value: unknown): string[] | undefined {
   if (value === undefined || value === null) {
     return undefined;
@@ -255,7 +256,7 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, "mediaUrls must be an array");
   }
-  return value.map((item) => readRequiredString(item, "mediaUrls"));
+  return value.map((item) => requiredInputString(item, "mediaUrls"));
 }
 
 function removeUndefined(input: Record<string, unknown>): Record<string, unknown> {

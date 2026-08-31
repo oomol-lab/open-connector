@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const zigpollApiBaseUrl = "https://v1.zigpoll.com";
 
@@ -32,7 +32,7 @@ export const zigpollActionHandlers: ProviderActionHandlers<"zigpoll", ZigpollAct
       {
         path: "/polls",
         query: {
-          accountId: readRequiredString(input.accountId, "accountId"),
+          accountId: requiredInputString(input.accountId, "accountId"),
         },
       },
       context,
@@ -44,7 +44,7 @@ export const zigpollActionHandlers: ProviderActionHandlers<"zigpoll", ZigpollAct
       {
         path: "/poll",
         query: {
-          pollId: readRequiredString(input.pollId, "pollId"),
+          pollId: requiredInputString(input.pollId, "pollId"),
         },
       },
       context,
@@ -56,7 +56,7 @@ export const zigpollActionHandlers: ProviderActionHandlers<"zigpoll", ZigpollAct
       {
         path: "/slides",
         query: {
-          pollId: readRequiredString(input.pollId, "pollId"),
+          pollId: requiredInputString(input.pollId, "pollId"),
         },
       },
       context,
@@ -89,7 +89,7 @@ export const zigpollActionHandlers: ProviderActionHandlers<"zigpoll", ZigpollAct
         path: "/generate-survey-link",
         method: "POST",
         body: compactObject({
-          pollId: readRequiredString(input.pollId, "pollId"),
+          pollId: requiredInputString(input.pollId, "pollId"),
           metadata: optionalRecord(input.metadata),
           expiresAt: optionalString(input.expiresAt),
         }),
@@ -106,7 +106,7 @@ export async function validateZigpollCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = {
-    apiKey: readRequiredString(input.apiKey, "apiKey"),
+    apiKey: requiredInputString(input.apiKey, "apiKey"),
     fetcher,
     signal,
   };
@@ -256,8 +256,4 @@ function readZigpollErrorMessage(payload: unknown): string | undefined {
   }
 
   return optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.errors);
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

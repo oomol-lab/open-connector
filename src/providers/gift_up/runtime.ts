@@ -16,6 +16,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const giftUpApiBaseUrl = "https://api.giftup.app";
@@ -154,7 +155,7 @@ async function listGiftCards(input: Record<string, unknown>, context: GiftUpRunt
 }
 
 async function getGiftCard(input: Record<string, unknown>, context: GiftUpRuntimeContext): Promise<unknown> {
-  const code = readRequiredString(input.code, "code");
+  const code = requiredInputString(input.code, "code");
   return {
     giftCard: normalizeGiftCard(
       await requestGiftUpJson({
@@ -172,7 +173,7 @@ async function giftCardEvent(
   context: GiftUpRuntimeContext,
   event: "reactivate" | "void",
 ): Promise<unknown> {
-  const code = readRequiredString(input.code, "code");
+  const code = requiredInputString(input.code, "code");
   const payload = await requestGiftUpJson({
     context,
     method: "POST",
@@ -191,7 +192,7 @@ async function giftCardBalanceOperation(
   context: GiftUpRuntimeContext,
   operation: "top-up" | "redeem",
 ): Promise<unknown> {
-  const code = readRequiredString(input.code, "code");
+  const code = requiredInputString(input.code, "code");
   return normalizeTransactionResult(
     await requestGiftUpJson({
       context,
@@ -204,7 +205,7 @@ async function giftCardBalanceOperation(
 }
 
 async function redeemGiftCardInFull(input: Record<string, unknown>, context: GiftUpRuntimeContext): Promise<unknown> {
-  const code = readRequiredString(input.code, "code");
+  const code = requiredInputString(input.code, "code");
   return normalizeTransactionResult(
     await requestGiftUpJson({
       context,
@@ -217,14 +218,14 @@ async function redeemGiftCardInFull(input: Record<string, unknown>, context: Gif
 }
 
 async function undoGiftCardRedemption(input: Record<string, unknown>, context: GiftUpRuntimeContext): Promise<unknown> {
-  const code = readRequiredString(input.code, "code");
+  const code = requiredInputString(input.code, "code");
   return normalizeTransactionResult(
     await requestGiftUpJson({
       context,
       method: "POST",
       path: `/gift-cards/${encodeURIComponent(code)}/undo-redemption`,
       body: {
-        transactionId: readRequiredString(input.transactionId, "transactionId"),
+        transactionId: requiredInputString(input.transactionId, "transactionId"),
         ...eventBody(input),
       },
       phase: "execute",
@@ -247,7 +248,7 @@ async function listItems(input: Record<string, unknown>, context: GiftUpRuntimeC
 }
 
 async function getItem(input: Record<string, unknown>, context: GiftUpRuntimeContext): Promise<unknown> {
-  const id = readRequiredString(input.id, "id");
+  const id = requiredInputString(input.id, "id");
   return {
     item: normalizeItem(
       await requestGiftUpJson({
@@ -283,7 +284,7 @@ async function listOrders(input: Record<string, unknown>, context: GiftUpRuntime
 }
 
 async function getOrder(input: Record<string, unknown>, context: GiftUpRuntimeContext): Promise<unknown> {
-  const id = readRequiredString(input.id, "id");
+  const id = requiredInputString(input.id, "id");
   return {
     order: normalizeOrder(
       await requestGiftUpJson({
@@ -348,7 +349,7 @@ async function listReportTransactions(input: Record<string, unknown>, context: G
 }
 
 async function getReportTransaction(input: Record<string, unknown>, context: GiftUpRuntimeContext): Promise<unknown> {
-  const id = readRequiredString(input.id, "id");
+  const id = requiredInputString(input.id, "id");
   return {
     transaction: normalizeTransaction(
       await requestGiftUpJson({
@@ -737,10 +738,6 @@ function normalizeStringArray(value: unknown): string[] {
   }
 
   return value.flatMap((item) => (typeof item === "string" ? [item] : []));
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalNumber(value: unknown): number | undefined {

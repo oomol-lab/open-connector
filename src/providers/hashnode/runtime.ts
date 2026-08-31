@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
-import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const hashnodeApiUrl = "https://gql-beta.hashnode.com/";
 
@@ -163,7 +168,7 @@ export const hashnodeActionHandlers: ProviderActionHandlers<
           }
         }
       `,
-      variables: { id: expectString(input.id, "id") },
+      variables: { id: requiredInputString(input.id, "id") },
       ...context,
       phase: "execute",
     });
@@ -260,7 +265,7 @@ export const hashnodeActionHandlers: ProviderActionHandlers<
           }
         }
       `,
-      variables: { id: expectString(input.id, "id") },
+      variables: { id: requiredInputString(input.id, "id") },
       ...context,
       phase: "execute",
     });
@@ -314,7 +319,7 @@ export const hashnodeActionHandlers: ProviderActionHandlers<
           }
         }
       `,
-      variables: { input: { draftId: expectString(input.draftId, "draftId") } },
+      variables: { input: { draftId: requiredInputString(input.draftId, "draftId") } },
       ...context,
       phase: "execute",
     });
@@ -332,7 +337,7 @@ export const hashnodeActionHandlers: ProviderActionHandlers<
           }
         }
       `,
-      variables: { input: { draftId: expectString(input.draftId, "draftId") } },
+      variables: { input: { draftId: requiredInputString(input.draftId, "draftId") } },
       ...context,
       phase: "execute",
     });
@@ -372,9 +377,9 @@ async function requestCurrentUser(
 
 function buildPostInput(input: Record<string, unknown>, mode: "publish" | "update") {
   return compactObject({
-    id: mode === "update" ? expectString(input.id, "id") : undefined,
-    publicationId: mode === "publish" ? expectString(input.publicationId, "publicationId") : undefined,
-    title: mode === "publish" ? expectString(input.title, "title") : readOptionalNullableString(input.title),
+    id: mode === "update" ? requiredInputString(input.id, "id") : undefined,
+    publicationId: mode === "publish" ? requiredInputString(input.publicationId, "publicationId") : undefined,
+    title: mode === "publish" ? requiredInputString(input.title, "title") : readOptionalNullableString(input.title),
     contentMarkdown: readOptionalNullableString(input.contentMarkdown),
     subtitle: readOptionalNullableString(input.subtitle),
     coverImage: readOptionalNullableString(input.coverImage),
@@ -394,8 +399,8 @@ function buildPostInput(input: Record<string, unknown>, mode: "publish" | "updat
 
 function buildDraftInput(input: Record<string, unknown>, mode: "create" | "update") {
   return compactObject({
-    draftId: mode === "update" ? expectString(input.draftId, "draftId") : undefined,
-    publicationId: mode === "create" ? expectString(input.publicationId, "publicationId") : undefined,
+    draftId: mode === "update" ? requiredInputString(input.draftId, "draftId") : undefined,
+    publicationId: mode === "create" ? requiredInputString(input.publicationId, "publicationId") : undefined,
     title: readOptionalNullableString(input.title),
     subtitle: readOptionalNullableString(input.subtitle),
     contentMarkdown: readOptionalNullableString(input.contentMarkdown),
@@ -733,10 +738,6 @@ function requireNullableResponseInteger(value: unknown, fieldName: string): numb
 
 function responseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `Hashnode returned an invalid response: ${message}`);
-}
-
-function expectString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function readInteger(value: unknown, fallback: number) {

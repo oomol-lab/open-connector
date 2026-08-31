@@ -19,6 +19,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  requiredInputString,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -228,10 +229,6 @@ function readRequiredUrl(value: unknown, fieldName: string): string {
   } catch {
     throw new ProviderRequestError(400, `${fieldName} must be a valid URL`);
   }
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalAdaptiveType(value: unknown): "mobile" | "desktop" | undefined {

@@ -16,6 +16,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const mailgunDefaultApiBaseUrl = "https://api.mailgun.net";
@@ -590,10 +591,6 @@ function extractFirstDomainName(payload: unknown): string | undefined {
   const items = Array.isArray(record?.items) ? record.items : [];
   const first = optionalRecord(items[0]);
   return optionalString(first?.name);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readSuppressionKind(value: unknown): MailgunSuppressionKind {

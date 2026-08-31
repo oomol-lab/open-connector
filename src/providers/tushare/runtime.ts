@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 interface TushareTableData {
@@ -305,7 +306,7 @@ export async function validateTushareCredential(
 async function executeQueryData(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await tushareRequest(
     {
-      apiName: readRequiredTrimmedString(input.apiName, "apiName"),
+      apiName: requiredInputString(input.apiName, "apiName"),
       params: readOptionalObject(input.params, "params"),
       fields: normalizeFieldsInput(input.fields),
     },
@@ -481,7 +482,7 @@ function normalizeFieldsInput(value: unknown): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value === "string") return value.trim() || undefined;
   if (Array.isArray(value)) {
-    const fields = value.map((item, index) => readRequiredTrimmedString(item, `fields[${index}]`));
+    const fields = value.map((item, index) => requiredInputString(item, `fields[${index}]`));
     return fields.length > 0 ? fields.join(",") : undefined;
   }
   throw new ProviderRequestError(400, "fields must be a string or an array of strings");
@@ -496,10 +497,6 @@ function readProviderObject(value: unknown, fieldName: string): Record<string, u
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `${fieldName} must be an object`);
   return record;
-}
-
-function readRequiredTrimmedString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readProviderString(value: unknown, fieldName: string): string {

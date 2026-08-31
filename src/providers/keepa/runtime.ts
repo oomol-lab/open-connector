@@ -10,6 +10,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   readProviderTextBody,
+  requiredInputString,
 } from "../provider-runtime.ts";
 import { keepaDealPriceTypes as dealPriceTypes, keepaHistoryTypes as historyTypes } from "./actions.ts";
 
@@ -172,7 +173,7 @@ export const keepaActionHandlers: ProviderActionHandlers<"keepa", KeepaActionHan
 
   async search_categories(input, context) {
     const marketplace = requireMarketplace(input.marketplace);
-    const term = readRequiredInputString(input.term, "term");
+    const term = requiredInputString(input.term, "term");
     validateCategorySearchTerm(term);
     const payload = await requestKeepa({
       path: "/search",
@@ -687,10 +688,6 @@ function requireInputObject(value: unknown, fieldName: string): Record<string, u
     throw new ProviderRequestError(400, `${fieldName} must be an object`);
   }
   return object;
-}
-
-function readRequiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireUpstreamString(value: unknown, fieldName: string): string {

@@ -21,6 +21,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -75,7 +76,7 @@ export const proxiedmailActionHandlers: ProviderActionHandlers<"proxiedmail", Pr
   },
 
   async update_proxy_binding(input, context) {
-    const proxyBindingId = readRequiredNonEmptyString(input.proxyBindingId, "proxyBindingId");
+    const proxyBindingId = requiredInputString(input.proxyBindingId, "proxyBindingId");
     const attributes = compactObject({
       real_addresses: readOptionalRealAddressUpdates(input.realAddresses),
       proxy_address: optionalString(input.proxyAddress),
@@ -107,7 +108,7 @@ export const proxiedmailActionHandlers: ProviderActionHandlers<"proxiedmail", Pr
   },
 
   async list_received_email_links(input, context) {
-    const proxyBindingId = readRequiredNonEmptyString(input.proxyBindingId, "proxyBindingId");
+    const proxyBindingId = requiredInputString(input.proxyBindingId, "proxyBindingId");
     const payload = await requestProxiedmailJson({
       apiKey: context.apiKey,
       path: `/received-emails-links/${encodeURIComponent(proxyBindingId)}`,
@@ -127,7 +128,7 @@ export const proxiedmailActionHandlers: ProviderActionHandlers<"proxiedmail", Pr
   },
 
   async get_received_email(input, context) {
-    const receivedEmailId = readRequiredNonEmptyString(input.receivedEmailId, "receivedEmailId");
+    const receivedEmailId = requiredInputString(input.receivedEmailId, "receivedEmailId");
     const payload = await requestProxiedmailJson({
       apiKey: context.apiKey,
       path: `/received-emails/${encodeURIComponent(receivedEmailId)}`,
@@ -338,10 +339,6 @@ function readOptionalRealAddressUpdates(value: unknown): Record<string, boolean>
       return [email, enabled];
     }),
   );
-}
-
-function readRequiredNonEmptyString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalString(value: unknown): string | undefined {

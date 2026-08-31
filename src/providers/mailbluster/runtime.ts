@@ -10,7 +10,12 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const mailblusterApiBaseUrl = "https://api.mailbluster.com";
 const mailblusterDefaultRequestTimeoutMs = 30_000;
@@ -37,14 +42,14 @@ export const mailblusterActionHandlers: ProviderActionHandlers<"mailbluster", Ma
     return requestMailblusterJson({
       context,
       method: "GET",
-      path: `/api/leads/${encodeURIComponent(readMailblusterString(input.lead_hash, "lead_hash"))}`,
+      path: `/api/leads/${encodeURIComponent(requiredInputString(input.lead_hash, "lead_hash"))}`,
     });
   },
   update_lead(input, context) {
     return requestMailblusterJson({
       context,
       method: "PUT",
-      path: `/api/leads/${encodeURIComponent(readMailblusterString(input.lead_hash, "lead_hash"))}`,
+      path: `/api/leads/${encodeURIComponent(requiredInputString(input.lead_hash, "lead_hash"))}`,
       body: updateLeadBody(input),
     });
   },
@@ -52,7 +57,7 @@ export const mailblusterActionHandlers: ProviderActionHandlers<"mailbluster", Ma
     return requestMailblusterJson({
       context,
       method: "DELETE",
-      path: `/api/leads/${encodeURIComponent(readMailblusterString(input.lead_hash, "lead_hash"))}`,
+      path: `/api/leads/${encodeURIComponent(requiredInputString(input.lead_hash, "lead_hash"))}`,
     });
   },
 };
@@ -226,10 +231,6 @@ function readMailblusterFields(payload: Record<string, unknown>): unknown[] {
   }
 
   throw new ProviderRequestError(502, "MailBluster /api/fields returned invalid fields");
-}
-
-function readMailblusterString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {

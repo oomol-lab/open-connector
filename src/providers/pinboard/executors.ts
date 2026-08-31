@@ -10,6 +10,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "pinboard";
@@ -77,8 +78,8 @@ const pinboardActionHandlers: ProviderActionHandlers<"pinboard", PinboardActionH
       {
         path: "/posts/add",
         query: {
-          url: readRequiredInputString(input.url, "url"),
-          description: readRequiredInputString(input.title, "title"),
+          url: requiredInputString(input.url, "url"),
+          description: requiredInputString(input.title, "title"),
           extended: optionalString(input.description),
           tags: readTagQuery(input.tags, "tags", 100),
           dt: optionalString(input.createdAt),
@@ -96,7 +97,7 @@ const pinboardActionHandlers: ProviderActionHandlers<"pinboard", PinboardActionH
     const payload = await requestPinboardJson(
       {
         path: "/posts/delete",
-        query: { url: readRequiredInputString(input.url, "url") },
+        query: { url: requiredInputString(input.url, "url") },
       },
       context,
       "execute",
@@ -325,10 +326,6 @@ function readProviderObject(value: unknown, label: string): Record<string, unkno
   return object;
 }
 
-function readRequiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function readOptionalInteger(value: unknown): string | undefined {
   if (value == null) {
     return undefined;
@@ -383,7 +380,7 @@ function readOptionalTagArray(value: unknown, fieldName: string, maxCount: numbe
 }
 
 function readTag(value: unknown, fieldName: string): string {
-  const tag = readRequiredInputString(value, fieldName);
+  const tag = requiredInputString(value, fieldName);
   if (tag.includes(",")) {
     throw new ProviderRequestError(400, `${fieldName} may not contain commas`);
   }

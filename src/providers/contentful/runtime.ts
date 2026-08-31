@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 const contentfulApiBaseUrl = "https://api.contentful.com";
 const contentfulJsonContentType = "application/vnd.contentful.management.v1+json";
@@ -157,7 +157,7 @@ async function listEnvironments(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const spaceId = requireProviderString(input.spaceId, "spaceId");
+  const spaceId = requiredInputString(input.spaceId, "spaceId");
   const payload = await requestContentfulJson({
     path: `/spaces/${encodeURIComponent(spaceId)}/environments`,
     apiKey: context.apiKey,
@@ -178,8 +178,8 @@ async function listContentTypes(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const spaceId = requireProviderString(input.spaceId, "spaceId");
-  const environmentId = requireProviderString(input.environmentId, "environmentId");
+  const spaceId = requiredInputString(input.spaceId, "spaceId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
   const payload = await requestContentfulJson({
     path: `/spaces/${encodeURIComponent(spaceId)}/environments/${encodeURIComponent(environmentId)}/content_types`,
     apiKey: context.apiKey,
@@ -205,8 +205,8 @@ async function listEntries(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const spaceId = requireProviderString(input.spaceId, "spaceId");
-  const environmentId = requireProviderString(input.environmentId, "environmentId");
+  const spaceId = requiredInputString(input.spaceId, "spaceId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
   const payload = await requestContentfulJson({
     path: `/spaces/${encodeURIComponent(spaceId)}/environments/${encodeURIComponent(environmentId)}/entries`,
     apiKey: context.apiKey,
@@ -238,9 +238,9 @@ async function getEntry(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const spaceId = requireProviderString(input.spaceId, "spaceId");
-  const environmentId = requireProviderString(input.environmentId, "environmentId");
-  const entryId = requireProviderString(input.entryId, "entryId");
+  const spaceId = requiredInputString(input.spaceId, "spaceId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
+  const entryId = requiredInputString(input.entryId, "entryId");
   const entry = await requestContentfulJson({
     path: `/spaces/${encodeURIComponent(spaceId)}/environments/${encodeURIComponent(environmentId)}/entries/${encodeURIComponent(entryId)}`,
     apiKey: context.apiKey,
@@ -255,9 +255,9 @@ async function createEntry(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const spaceId = requireProviderString(input.spaceId, "spaceId");
-  const environmentId = requireProviderString(input.environmentId, "environmentId");
-  const contentType = requireProviderString(input.contentType, "contentType");
+  const spaceId = requiredInputString(input.spaceId, "spaceId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
+  const contentType = requiredInputString(input.contentType, "contentType");
   const entry = await requestContentfulJson({
     path: `/spaces/${encodeURIComponent(spaceId)}/environments/${encodeURIComponent(environmentId)}/entries`,
     apiKey: context.apiKey,
@@ -279,10 +279,10 @@ async function updateEntry(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const spaceId = requireProviderString(input.spaceId, "spaceId");
-  const environmentId = requireProviderString(input.environmentId, "environmentId");
-  const entryId = requireProviderString(input.entryId, "entryId");
-  const contentType = requireProviderString(input.contentType, "contentType");
+  const spaceId = requiredInputString(input.spaceId, "spaceId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
+  const entryId = requiredInputString(input.entryId, "entryId");
+  const contentType = requiredInputString(input.contentType, "contentType");
   const version = optionalInteger(input.version);
   if (version === undefined || version <= 0) {
     throw new ProviderRequestError(400, "version must be a positive integer");
@@ -392,8 +392,4 @@ function requireObjectPayload(value: unknown, label: string): Record<string, unk
     throw new ProviderRequestError(502, `${label} must be an object`);
   }
   return record;
-}
-
-function requireProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

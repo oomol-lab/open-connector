@@ -21,6 +21,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readTransitFileInput,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const maxMediaUploadSourceBytes = 20 * 1024 * 1024;
@@ -133,15 +134,15 @@ export function resolveWooCommerceCredentialContext(
   signal?: AbortSignal,
   transitFiles?: TransitFileWriter,
 ): WooCommerceCredentialContext {
-  const storeUrl = normalizeStoreUrl(requiredProviderString(input.storeUrl, "storeUrl"));
+  const storeUrl = normalizeStoreUrl(requiredInputString(input.storeUrl, "storeUrl"));
   const wordpressUsername = optionalString(input.wordpressUsername);
   const wordpressApplicationPassword = optionalString(input.wordpressApplicationPassword);
   return {
     storeUrl,
     apiBaseUrl: `${storeUrl}/wp-json/wc/v3`,
     wpApiBaseUrl: `${storeUrl}/wp-json/wp/v2`,
-    consumerKey: requiredProviderString(input.consumerKey, "consumerKey"),
-    consumerSecret: requiredProviderString(input.consumerSecret, "consumerSecret"),
+    consumerKey: requiredInputString(input.consumerKey, "consumerKey"),
+    consumerSecret: requiredInputString(input.consumerSecret, "consumerSecret"),
     wordpressUsername,
     wordpressApplicationPassword,
     fetcher,
@@ -315,11 +316,8 @@ async function updateProductVariation(
 }
 
 async function uploadMedia(input: Record<string, unknown>, context: WooCommerceCredentialContext): Promise<unknown> {
-  const username = requiredProviderString(context.wordpressUsername, "wordpressUsername");
-  const applicationPassword = requiredProviderString(
-    context.wordpressApplicationPassword,
-    "wordpressApplicationPassword",
-  );
+  const username = requiredInputString(context.wordpressUsername, "wordpressUsername");
+  const applicationPassword = requiredInputString(context.wordpressApplicationPassword, "wordpressApplicationPassword");
   const source = await resolveMediaUploadSource(input, context);
   const response = await context.fetcher(`${context.wpApiBaseUrl}/media`, {
     method: "POST",
@@ -395,7 +393,7 @@ async function updateOrderStatus(
     context,
     path: `/orders/${orderId}`,
     method: "PUT",
-    body: { status: requiredProviderString(input.status, "status") },
+    body: { status: requiredInputString(input.status, "status") },
     phase: "execute",
   });
   return normalizeOrder(payload.data);
@@ -420,7 +418,7 @@ async function addOrderNote(input: Record<string, unknown>, context: WooCommerce
     path: `/orders/${orderId}/notes`,
     method: "POST",
     body: {
-      note: requiredProviderString(input.note, "note"),
+      note: requiredInputString(input.note, "note"),
       customer_note: optionalBoolean(input.customerNote) ?? false,
     },
     phase: "execute",
@@ -631,7 +629,7 @@ function buildVariationAttributeInput(input: Record<string, unknown>): Record<st
   return compactObject({
     id: optionalInteger(input.id),
     name: optionalString(input.name),
-    option: requiredProviderString(input.option, "option"),
+    option: requiredInputString(input.option, "option"),
   });
 }
 
@@ -662,7 +660,7 @@ function buildOrderLineItemInput(input: Record<string, unknown>): Record<string,
 }
 
 function buildCouponLineInput(input: Record<string, unknown>): Record<string, string> {
-  return { code: requiredProviderString(input.code, "code") };
+  return { code: requiredInputString(input.code, "code") };
 }
 
 function buildShippingLineInput(input: Record<string, unknown>): Record<string, unknown> {
@@ -742,7 +740,7 @@ async function resolveMediaUploadSource(
     };
   }
   if (fileUrl) {
-    const fileName = requiredProviderString(input.fileName, "fileName");
+    const fileName = requiredInputString(input.fileName, "fileName");
     const sourceUrl = assertPublicHttpUrl(fileUrl, { fieldName: "fileUrl", createError: providerInputError });
     return {
       bytes: await downloadSourceBytes(sourceUrl.toString(), context),
@@ -750,7 +748,7 @@ async function resolveMediaUploadSource(
       mimeType: optionalString(input.mimeType) ?? inferMimeType(fileName),
     };
   }
-  const fileName = requiredProviderString(input.fileName, "fileName");
+  const fileName = requiredInputString(input.fileName, "fileName");
   return {
     bytes: decodeBase64Content(contentBase64),
     fileName,
@@ -1035,10 +1033,6 @@ function requirePositiveInteger(value: unknown, fieldName: string): number {
   const parsed = optionalInteger(value);
   if (parsed == null || parsed <= 0) throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   return parsed;
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function nullableText(value: unknown): string | null {

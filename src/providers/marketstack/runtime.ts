@@ -11,7 +11,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const marketstackApiBaseUrl = "https://api.marketstack.com/v2";
 
@@ -365,10 +365,6 @@ function requiredInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `${fieldName} must be an integer`);
   }
   return value;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function nullableString(value: unknown): string | null {

@@ -16,6 +16,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
   setSearchParams,
 } from "../provider-runtime.ts";
 
@@ -42,7 +43,7 @@ export const teamtailorActionHandlers: ProviderActionHandlers<"teamtailor", Team
     });
   },
   async retrieve_job(input, context): Promise<unknown> {
-    const jobId = requiredProviderString(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     const payload = await requestTeamtailorJson({
       apiKey: context.apiKey,
       stack: resolveStack(input, context),
@@ -296,10 +297,6 @@ function readTeamtailorErrorMessage(payload: unknown): string | undefined {
   return firstError
     ? (optionalString(firstError.detail) ?? optionalString(firstError.title))
     : (optionalString(body?.message) ?? optionalString(body?.error));
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredProviderRecord(value: unknown, fieldName: string): Record<string, unknown> {

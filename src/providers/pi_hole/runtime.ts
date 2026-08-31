@@ -23,6 +23,7 @@ import {
   readProviderJsonBody,
   readProviderTextBody,
   readTransitFileInput,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const defaultPiHoleApiPath = "api";
@@ -303,10 +304,6 @@ export function resolvePiHoleApiPath(input: {
   return normalizePiHoleApiPath(value);
 }
 
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
-}
-
 function readRecordPayload(payload: unknown): Record<string, unknown> {
   return optionalRecord(payload) ?? {};
 }
@@ -466,7 +463,7 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
     return { history: optionalObjectArray(payload.history, "Pi-hole history response") };
   },
   async search_domain(input, context) {
-    const domain = readRequiredString(input.domain, "domain");
+    const domain = requiredInputString(input.domain, "domain");
     const payload = readRecordPayload(
       await requestPiHoleJson({
         context,
@@ -587,7 +584,7 @@ export async function validatePiHoleCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const appPassword = readRequiredString(input.apiKey, "apiKey");
+  const appPassword = requiredInputString(input.apiKey, "apiKey");
   const baseUrl = normalizePiHoleBaseUrl(input.values.baseUrl);
   const apiPath = normalizePiHoleApiPath(input.values.apiPath);
 

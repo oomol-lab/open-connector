@@ -11,7 +11,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "safetyculture";
 const safetycultureApiBaseUrl = "https://api.safetyculture.io";
@@ -103,7 +108,7 @@ async function getInspection(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const inspectionId = readRequiredString(input.inspectionId, "inspectionId");
+  const inspectionId = requiredInputString(input.inspectionId, "inspectionId");
   const payload = await requestSafetycultureJson({
     path: `/inspections/v1/inspections/${encodeURIComponent(inspectionId)}`,
     apiKey: context.apiKey,
@@ -152,7 +157,7 @@ async function getAction(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const actionId = readRequiredString(input.actionId, "actionId");
+  const actionId = requiredInputString(input.actionId, "actionId");
   const payload = await requestSafetycultureJson({
     path: `/tasks/v1/actions/${encodeURIComponent(actionId)}`,
     apiKey: context.apiKey,
@@ -176,7 +181,7 @@ async function createAction(
     method: "POST",
     body: compactObject({
       task_id: optionalString(input.taskId),
-      title: readRequiredString(input.title, "title"),
+      title: requiredInputString(input.title, "title"),
       description: optionalString(input.description),
       collaborators: readOptionalObjectArray(input.collaborators, "collaborators"),
       priority_id: optionalString(input.priorityId),
@@ -200,7 +205,7 @@ async function createAction(
     phase: "execute",
   });
   const raw = requireObjectPayload(payload, "SafetyCulture create action response");
-  return { actionId: readRequiredString(raw.action_id, "action_id"), raw };
+  return { actionId: requiredInputString(raw.action_id, "action_id"), raw };
 }
 
 async function requestSafetycultureJson(input: {
@@ -319,10 +324,6 @@ function requireObjectPayload(value: unknown, context: string): Record<string, u
 
 function readArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {

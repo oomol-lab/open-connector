@@ -9,7 +9,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const defaultHoneycombApiBaseUrl = "https://api.honeycomb.io";
 
@@ -122,7 +127,7 @@ async function listHoneycombDatasets(context: HoneycombActionContext): Promise<u
 }
 
 async function getHoneycombDataset(input: Record<string, unknown>, context: HoneycombActionContext): Promise<unknown> {
-  const datasetSlug = readInputString(input.datasetSlug, "datasetSlug");
+  const datasetSlug = requiredInputString(input.datasetSlug, "datasetSlug");
   const payload = await requestHoneycombJson({
     path: `/1/datasets/${encodeURIComponent(datasetSlug)}`,
     method: "GET",
@@ -136,7 +141,7 @@ async function getHoneycombDataset(input: Record<string, unknown>, context: Hone
 }
 
 async function listHoneycombMarkers(input: Record<string, unknown>, context: HoneycombActionContext): Promise<unknown> {
-  const datasetSlug = readInputString(input.datasetSlug, "datasetSlug");
+  const datasetSlug = requiredInputString(input.datasetSlug, "datasetSlug");
   const payload = await requestHoneycombJson({
     path: `/1/markers/${encodeURIComponent(datasetSlug)}`,
     method: "GET",
@@ -153,15 +158,15 @@ async function createHoneycombMarker(
   input: Record<string, unknown>,
   context: HoneycombActionContext,
 ): Promise<unknown> {
-  const datasetSlug = readInputString(input.datasetSlug, "datasetSlug");
+  const datasetSlug = requiredInputString(input.datasetSlug, "datasetSlug");
   const payload = await requestHoneycombJson({
     path: `/1/markers/${encodeURIComponent(datasetSlug)}`,
     method: "POST",
     apiBaseUrl: context.apiBaseUrl,
     apiKey: context.apiKey,
     body: compactObject({
-      message: readInputString(input.message, "message"),
-      type: readInputString(input.type, "type"),
+      message: requiredInputString(input.message, "message"),
+      type: requiredInputString(input.type, "type"),
       start_time: optionalNumber(input.startTime),
       end_time: optionalNumber(input.endTime),
       url: optionalString(input.url),
@@ -187,7 +192,7 @@ async function listHoneycombBoards(context: HoneycombActionContext): Promise<unk
 }
 
 async function getHoneycombBoard(input: Record<string, unknown>, context: HoneycombActionContext): Promise<unknown> {
-  const boardId = readInputString(input.boardId, "boardId");
+  const boardId = requiredInputString(input.boardId, "boardId");
   const payload = await requestHoneycombJson({
     path: `/1/boards/${encodeURIComponent(boardId)}`,
     method: "GET",
@@ -373,10 +378,6 @@ function normalizeArray<T>(payload: unknown, normalizeItem: (item: unknown) => T
     throw new ProviderRequestError(502, "Honeycomb response was not an array", payload);
   }
   return payload.map((item) => normalizeItem(item));
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readString(value: unknown): string {

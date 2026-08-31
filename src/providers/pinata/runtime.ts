@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 export const pinataApiBaseUrl = "https://api.pinata.cloud";
 const pinataV3BaseUrl = `${pinataApiBaseUrl}/v3`;
@@ -514,10 +514,6 @@ function requireObject(value: unknown, label: string): Record<string, unknown> {
 
 function readArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireOutputString(value: unknown, label: string): string {

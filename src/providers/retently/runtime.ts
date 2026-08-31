@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const retentlyApiBaseUrl = "https://app.retently.com";
@@ -58,7 +59,7 @@ export const retentlyActionHandlers: ProviderActionHandlers<"retently", Retently
   async get_customer(input, context) {
     const payload = await requestRetentlyJson({
       ...context,
-      path: `/api/v2/customers/${encodeURIComponent(requiredProviderString(input.customerId, "customerId"))}`,
+      path: `/api/v2/customers/${encodeURIComponent(requiredInputString(input.customerId, "customerId"))}`,
       method: "GET",
       phase: "execute",
     });
@@ -88,7 +89,7 @@ export const retentlyActionHandlers: ProviderActionHandlers<"retently", Retently
   async get_feedback(input, context) {
     const payload = await requestRetentlyJson({
       ...context,
-      path: `/api/v2/feedback/${encodeURIComponent(requiredProviderString(input.feedbackId, "feedbackId"))}`,
+      path: `/api/v2/feedback/${encodeURIComponent(requiredInputString(input.feedbackId, "feedbackId"))}`,
       method: "GET",
       phase: "execute",
     });
@@ -114,7 +115,7 @@ export const retentlyActionHandlers: ProviderActionHandlers<"retently", Retently
   async get_template(input, context) {
     const payload = await requestRetentlyJson({
       ...context,
-      path: `/api/v2/templates/${encodeURIComponent(requiredProviderString(input.templateId, "templateId"))}`,
+      path: `/api/v2/templates/${encodeURIComponent(requiredInputString(input.templateId, "templateId"))}`,
       method: "GET",
       phase: "execute",
     });
@@ -425,10 +426,6 @@ function appendAttributeFilters(url: URL, value: unknown): void {
     url.searchParams.set(`attributes[${index}][op]`, op);
     url.searchParams.set(`attributes[${index}][value]`, filterValue);
   });
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalIntegerString(value: unknown): string | undefined {

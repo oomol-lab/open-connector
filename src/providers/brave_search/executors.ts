@@ -11,7 +11,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "brave_search";
 const braveSearchApiBaseUrl = "https://api.search.brave.com";
@@ -143,7 +148,7 @@ function buildBraveSearchUrl(path: string, query: Record<string, BraveSearchQuer
 
 function buildWebSearchQuery(input: Record<string, unknown>): Record<string, BraveSearchQueryValue> {
   return compactObject({
-    q: readRequiredString(input.q, "q"),
+    q: requiredInputString(input.q, "q"),
     search_lang: optionalString(input.search_lang),
     ui_lang: optionalString(input.ui_lang),
     country: optionalString(input.country),
@@ -164,7 +169,7 @@ function buildWebSearchQuery(input: Record<string, unknown>): Record<string, Bra
 
 function buildNewsSearchQuery(input: Record<string, unknown>): Record<string, BraveSearchQueryValue> {
   return compactObject({
-    q: readRequiredString(input.q, "q"),
+    q: requiredInputString(input.q, "q"),
     search_lang: optionalString(input.search_lang),
     ui_lang: optionalString(input.ui_lang),
     country: optionalString(input.country),
@@ -182,7 +187,7 @@ function buildNewsSearchQuery(input: Record<string, unknown>): Record<string, Br
 
 function buildVideoSearchQuery(input: Record<string, unknown>): Record<string, BraveSearchQueryValue> {
   return compactObject({
-    q: readRequiredString(input.q, "q"),
+    q: requiredInputString(input.q, "q"),
     search_lang: optionalString(input.search_lang),
     ui_lang: optionalString(input.ui_lang),
     country: optionalString(input.country),
@@ -198,7 +203,7 @@ function buildVideoSearchQuery(input: Record<string, unknown>): Record<string, B
 
 function buildImageSearchQuery(input: Record<string, unknown>): Record<string, BraveSearchQueryValue> {
   return compactObject({
-    q: readRequiredString(input.q, "q"),
+    q: requiredInputString(input.q, "q"),
     search_lang: optionalString(input.search_lang),
     country: optionalString(input.country),
     safesearch: optionalString(input.safesearch),
@@ -311,10 +316,6 @@ function optionalObjectArray(value: unknown): Array<Record<string, unknown>> | u
     return undefined;
   }
   return value.map((item) => requireOutputRecord(item, "Brave Search result item"));
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {

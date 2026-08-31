@@ -13,7 +13,12 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const mapleBillingApiBaseUrl = "https://api.getmeasure.com/api/v1";
 const mapleBillingCredentialHelpUrl = "https://docs.getmeasure.com/pages/guides/quickstart-with-api";
@@ -530,10 +535,6 @@ function normalizeCheckoutSession(checkoutSession: Record<string, unknown>): Rec
     status: optionalString(checkoutSession.status) ?? null,
     raw: checkoutSession,
   };
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredOutputString(value: unknown, fieldName: string): string {

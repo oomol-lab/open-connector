@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 const verifiedemailApiBaseUrl = "https://api.verified.email";
 
@@ -50,7 +50,7 @@ export const verifiedemailActionHandlers: ProviderActionHandlers<"verifiedemail"
   get_list(input, context) {
     return requestVerifiedemailJson({
       ...context,
-      path: `/v1/lists/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/v1/lists/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       phase: "execute",
     });
   },
@@ -65,7 +65,7 @@ export const verifiedemailActionHandlers: ProviderActionHandlers<"verifiedemail"
   get_download(input, context) {
     return requestVerifiedemailJson({
       ...context,
-      path: `/v1/downloads/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/v1/downloads/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       phase: "execute",
     });
   },
@@ -210,8 +210,4 @@ function readVerifiedemailError(payload: Record<string, unknown>): { code?: numb
     code: optionalInteger(error.code),
     message: optionalString(error.message) ?? optionalString(error.error) ?? "VerifiedEmail request failed",
   };
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

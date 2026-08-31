@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const smugmugApiOrigin = "https://api.smugmug.com";
 const smugmugApiBasePath = "/api/v2";
@@ -157,7 +157,7 @@ async function searchUserContent(input: Record<string, unknown>, context: ApiKey
     `${buildUserPath(requireNickname(input))}!imagesearch`,
     context,
     compactObject({
-      q: readInputString(input.query, "query"),
+      q: requiredInputString(input.query, "query"),
       Order: optionalString(input.order),
       count: optionalInteger(input.count),
       start: optionalInteger(input.start),
@@ -176,7 +176,7 @@ async function getFolderByUserPath(input: Record<string, unknown>, context: ApiK
 }
 
 async function getFolderDetails(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const folder = await readObjectResource(buildNodePath(readInputString(input.nodeId, "nodeId")), context);
+  const folder = await readObjectResource(buildNodePath(requiredInputString(input.nodeId, "nodeId")), context);
   const type = optionalString(folder.Type);
   if (type && type !== "Folder") {
     throw new ProviderRequestError(400, "the requested node is not a folder");
@@ -214,7 +214,7 @@ async function getFolderAlbums(input: Record<string, unknown>, context: ApiKeyPr
 
 async function listChildNodes(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const { items, pages } = await readListResource(
-    `${buildNodePath(readInputString(input.nodeId, "nodeId"))}!children`,
+    `${buildNodePath(requiredInputString(input.nodeId, "nodeId"))}!children`,
     context,
     compactObject({
       count: optionalInteger(input.count),
@@ -226,7 +226,7 @@ async function listChildNodes(input: Record<string, unknown>, context: ApiKeyPro
 
 async function getNodeParent(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const parentNode = await readRelatedObject(
-    buildNodePath(readInputString(input.nodeId, "nodeId")),
+    buildNodePath(requiredInputString(input.nodeId, "nodeId")),
     "ParentNode",
     context,
   );
@@ -235,7 +235,7 @@ async function getNodeParent(input: Record<string, unknown>, context: ApiKeyProv
 
 async function getNodeParents(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const { items, pages } = await readRelatedList(
-    buildNodePath(readInputString(input.nodeId, "nodeId")),
+    buildNodePath(requiredInputString(input.nodeId, "nodeId")),
     "ParentNodes",
     context,
   );
@@ -244,7 +244,7 @@ async function getNodeParents(input: Record<string, unknown>, context: ApiKeyPro
 
 async function getNodeHighlightImage(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const highlightImage = await readRelatedObject(
-    buildNodePath(readInputString(input.nodeId, "nodeId")),
+    buildNodePath(requiredInputString(input.nodeId, "nodeId")),
     "HighlightImage",
     context,
   );
@@ -252,7 +252,7 @@ async function getNodeHighlightImage(input: Record<string, unknown>, context: Ap
 }
 
 async function getAlbum(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const album = await readObjectResource(buildAlbumPath(readInputString(input.albumKey, "albumKey")), context);
+  const album = await readObjectResource(buildAlbumPath(requiredInputString(input.albumKey, "albumKey")), context);
   return { album };
 }
 
@@ -261,7 +261,7 @@ async function getAlbumHighlightImage(
   context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const highlightImage = await readRelatedObject(
-    buildAlbumPath(readInputString(input.albumKey, "albumKey")),
+    buildAlbumPath(requiredInputString(input.albumKey, "albumKey")),
     "HighlightImage",
     context,
   );
@@ -270,7 +270,7 @@ async function getAlbumHighlightImage(
 
 async function getAlbumImages(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const { items, pages } = await readRelatedList(
-    buildAlbumPath(readInputString(input.albumKey, "albumKey")),
+    buildAlbumPath(requiredInputString(input.albumKey, "albumKey")),
     "AlbumImages",
     context,
     compactObject({
@@ -283,20 +283,23 @@ async function getAlbumImages(input: Record<string, unknown>, context: ApiKeyPro
 
 async function getAlbumImage(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const albumImage = await readObjectResource(
-    buildAlbumImagePath(readInputString(input.albumKey, "albumKey"), readInputString(input.imageKey, "imageKey")),
+    buildAlbumImagePath(
+      requiredInputString(input.albumKey, "albumKey"),
+      requiredInputString(input.imageKey, "imageKey"),
+    ),
     context,
   );
   return { albumImage };
 }
 
 async function getImage(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const image = await readObjectResource(buildImagePath(readInputString(input.imageKey, "imageKey")), context);
+  const image = await readObjectResource(buildImagePath(requiredInputString(input.imageKey, "imageKey")), context);
   return { image };
 }
 
 async function getImageMetadata(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const imageMetadata = await readRelatedObject(
-    buildImagePath(readInputString(input.imageKey, "imageKey")),
+    buildImagePath(requiredInputString(input.imageKey, "imageKey")),
     "ImageMetadata",
     context,
   );
@@ -305,7 +308,7 @@ async function getImageMetadata(input: Record<string, unknown>, context: ApiKeyP
 
 async function getImageSizes(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const imageSizeDetails = await readRelatedObject(
-    buildImagePath(readInputString(input.imageKey, "imageKey")),
+    buildImagePath(requiredInputString(input.imageKey, "imageKey")),
     "ImageSizeDetails",
     context,
   );
@@ -314,7 +317,7 @@ async function getImageSizes(input: Record<string, unknown>, context: ApiKeyProv
 
 async function getImageSizeDetails(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const imageSizeDetails = await readRelatedObject(
-    buildImagePath(readInputString(input.imageKey, "imageKey")),
+    buildImagePath(requiredInputString(input.imageKey, "imageKey")),
     "ImageSizeDetails",
     context,
   );
@@ -589,7 +592,7 @@ function trimSlashes(value: string): string {
 }
 
 function requireNickname(input: Record<string, unknown>): string {
-  return readInputString(input.nickname, "nickname");
+  return requiredInputString(input.nickname, "nickname");
 }
 
 function readOptionalFolderPath(input: Record<string, unknown>): string {
@@ -602,8 +605,4 @@ function assertFolderIdMatches(folder: JsonRecord, folderId: string | undefined)
   if (actualFolderId && actualFolderId !== folderId) {
     throw new ProviderRequestError(400, "folderId does not match the resolved folder");
   }
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

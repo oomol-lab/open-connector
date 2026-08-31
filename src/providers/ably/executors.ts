@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "ably";
@@ -72,7 +73,7 @@ export const ablyActionHandlers: ProviderActionHandlers<"ably", AblyActionHandle
   },
 
   async create_channel(input, context): Promise<unknown> {
-    const channelId = requireNonEmptyString(input.channel_id, "channel_id");
+    const channelId = requiredInputString(input.channel_id, "channel_id");
     const response = await ablyRequestJson(context, {
       path: `/channels/${encodePathSegment(channelId)}`,
       phase: "execute",
@@ -107,7 +108,7 @@ export const ablyActionHandlers: ProviderActionHandlers<"ably", AblyActionHandle
   },
 
   async get_channel_details(input, context): Promise<unknown> {
-    const channelId = requireNonEmptyString(input.channel_id, "channel_id");
+    const channelId = requiredInputString(input.channel_id, "channel_id");
     const response = await ablyRequestJson(context, {
       path: `/channels/${encodePathSegment(channelId)}`,
       phase: "execute",
@@ -119,7 +120,7 @@ export const ablyActionHandlers: ProviderActionHandlers<"ably", AblyActionHandle
   },
 
   async get_channel_history(input, context): Promise<unknown> {
-    const channelId = requireNonEmptyString(input.channel_id, "channel_id");
+    const channelId = requiredInputString(input.channel_id, "channel_id");
     const response = await ablyRequestJson(context, {
       path: `/channels/${encodePathSegment(channelId)}/messages`,
       query: buildHistoryQuery(input),
@@ -133,7 +134,7 @@ export const ablyActionHandlers: ProviderActionHandlers<"ably", AblyActionHandle
   },
 
   async get_presence_history(input, context): Promise<unknown> {
-    const channelId = requireNonEmptyString(input.channel_id, "channel_id");
+    const channelId = requiredInputString(input.channel_id, "channel_id");
     const response = await ablyRequestJson(context, {
       path: `/channels/${encodePathSegment(channelId)}/presence/history`,
       query: buildHistoryQuery(input),
@@ -187,7 +188,7 @@ export const ablyActionHandlers: ProviderActionHandlers<"ably", AblyActionHandle
   },
 
   async publish_message_to_channel(input, context): Promise<unknown> {
-    const channelId = requireNonEmptyString(input.channel_id, "channel_id");
+    const channelId = requiredInputString(input.channel_id, "channel_id");
     const response = await ablyRequestJson(context, {
       method: "POST",
       path: `/channels/${encodePathSegment(channelId)}/messages`,
@@ -424,14 +425,14 @@ function parseAblyLinks(headers: Headers): Record<string, string> | undefined {
 
 function normalizeChannels(value: unknown, separator: string): string[] {
   if (Array.isArray(value)) {
-    const channels = value.map((item) => requireNonEmptyString(item, "channels"));
+    const channels = value.map((item) => requiredInputString(item, "channels"));
     if (channels.length === 0) {
       throw new ProviderRequestError(400, "channels is required");
     }
     return channels;
   }
 
-  const channels = requireNonEmptyString(value, "channels")
+  const channels = requiredInputString(value, "channels")
     .split(separator)
     .map((channel) => channel.trim())
     .filter(Boolean);
@@ -454,8 +455,4 @@ function requireObjectPayload(payload: unknown, context: string): Record<string,
     throw new ProviderRequestError(502, `invalid ${context}`);
   }
   return record;
-}
-
-function requireNonEmptyString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const triggerDevApiBaseUrl = "https://api.trigger.dev";
 
@@ -30,7 +30,7 @@ export const triggerDevActionHandlers: ProviderActionHandlers<
   get_run(input, context) {
     return requestTriggerDevJson(
       {
-        path: `/api/v3/runs/${encodeURIComponent(requireInputString(input.runId, "runId"))}`,
+        path: `/api/v3/runs/${encodeURIComponent(requiredInputString(input.runId, "runId"))}`,
         mode: "execute",
       },
       context,
@@ -39,7 +39,7 @@ export const triggerDevActionHandlers: ProviderActionHandlers<
   get_run_result(input, context) {
     return requestTriggerDevJson(
       {
-        path: `/api/v1/runs/${encodeURIComponent(requireInputString(input.runId, "runId"))}/result`,
+        path: `/api/v1/runs/${encodeURIComponent(requiredInputString(input.runId, "runId"))}/result`,
         mode: "execute",
       },
       context,
@@ -48,7 +48,7 @@ export const triggerDevActionHandlers: ProviderActionHandlers<
   trigger_task(input, context) {
     return requestTriggerDevJson(
       {
-        path: `/api/v1/tasks/${encodeURIComponent(requireInputString(input.taskIdentifier, "taskIdentifier"))}/trigger`,
+        path: `/api/v1/tasks/${encodeURIComponent(requiredInputString(input.taskIdentifier, "taskIdentifier"))}/trigger`,
         method: "POST",
         body: compactObject({
           payload: input.payload,
@@ -63,7 +63,7 @@ export const triggerDevActionHandlers: ProviderActionHandlers<
   cancel_run(input, context) {
     return requestTriggerDevJson(
       {
-        path: `/api/v2/runs/${encodeURIComponent(requireInputString(input.runId, "runId"))}/cancel`,
+        path: `/api/v2/runs/${encodeURIComponent(requiredInputString(input.runId, "runId"))}/cancel`,
         method: "POST",
         mode: "execute",
       },
@@ -73,7 +73,7 @@ export const triggerDevActionHandlers: ProviderActionHandlers<
   replay_run(input, context) {
     return requestTriggerDevJson(
       {
-        path: `/api/v1/runs/${encodeURIComponent(requireInputString(input.runId, "runId"))}/replay`,
+        path: `/api/v1/runs/${encodeURIComponent(requiredInputString(input.runId, "runId"))}/replay`,
         method: "POST",
         mode: "execute",
       },
@@ -287,10 +287,6 @@ function commaSeparated(value: unknown): string | undefined {
     return undefined;
   }
   return value.map(String).join(",");
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

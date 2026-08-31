@@ -10,6 +10,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "icypeas";
@@ -26,7 +27,7 @@ export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasAct
     const payload = await requestIcypeasJson(
       {
         path: "/a/actions/subscription-information",
-        body: { email: readRequiredIcypeasString(input.email, "email") },
+        body: { email: requiredInputString(input.email, "email") },
       },
       context,
       "execute",
@@ -42,7 +43,7 @@ export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasAct
         body: jsonObject({
           firstname: readOptionalString(input.firstname, "firstname"),
           lastname: readOptionalString(input.lastname, "lastname"),
-          domainOrCompany: readRequiredIcypeasString(input.domainOrCompany, "domainOrCompany"),
+          domainOrCompany: requiredInputString(input.domainOrCompany, "domainOrCompany"),
           custom: readOptionalObject(input.custom, "custom"),
         }),
       },
@@ -57,7 +58,7 @@ export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasAct
       {
         path: "/email-verification",
         body: jsonObject({
-          email: readRequiredIcypeasString(input.email, "email"),
+          email: requiredInputString(input.email, "email"),
           custom: readOptionalObject(input.custom, "custom"),
         }),
       },
@@ -72,7 +73,7 @@ export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasAct
       {
         path: "/domain-search",
         body: jsonObject({
-          domainOrCompany: readRequiredIcypeasString(input.domainOrCompany, "domainOrCompany"),
+          domainOrCompany: requiredInputString(input.domainOrCompany, "domainOrCompany"),
           custom: readOptionalObject(input.custom, "custom"),
         }),
       },
@@ -86,7 +87,7 @@ export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasAct
     const payload = await requestIcypeasJson(
       {
         path: icypeasValidationPath,
-        body: { id: readRequiredIcypeasString(input.id, "id") },
+        body: { id: requiredInputString(input.id, "id") },
       },
       context,
       "execute",
@@ -98,7 +99,7 @@ export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasAct
     const payload = await requestIcypeasJson(
       {
         path: "/reverse-email-lookup",
-        body: { email: readRequiredIcypeasString(input.email, "email") },
+        body: { email: requiredInputString(input.email, "email") },
       },
       context,
       "execute",
@@ -134,7 +135,7 @@ async function validateIcypeasCredential(
       body: { mode: "single", limit: 1 },
     },
     {
-      apiKey: readRequiredIcypeasString(input.apiKey, "apiKey"),
+      apiKey: requiredInputString(input.apiKey, "apiKey"),
       fetcher,
       signal,
     },
@@ -350,15 +351,11 @@ function readResponseObject(value: unknown, label: string): Record<string, unkno
   return object;
 }
 
-function readRequiredIcypeasString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function readOptionalString(value: unknown, fieldName: string): string | undefined {
   if (value == null) {
     return undefined;
   }
-  return readRequiredIcypeasString(value, fieldName);
+  return requiredInputString(value, fieldName);
 }
 
 function readOptionalObject(value: unknown, fieldName: string): Record<string, unknown> | undefined {

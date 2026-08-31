@@ -9,6 +9,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const metaGraphApiVersion: string = "v25.0";
@@ -133,7 +134,7 @@ async function listCampaigns(
   input: Record<string, unknown>,
   context: MetaActionContext,
 ): Promise<Record<string, unknown>> {
-  const adAccountId = normalizeAdAccountId(readInputString(input.adAccountId, "adAccountId"));
+  const adAccountId = normalizeAdAccountId(requiredInputString(input.adAccountId, "adAccountId"));
   const payload = await requestMetaJson<MetaListPayload>({
     apiKey: context.apiKey,
     path: `/${adAccountId}/campaigns`,
@@ -160,7 +161,7 @@ async function getInsights(
   input: Record<string, unknown>,
   context: MetaActionContext,
 ): Promise<Record<string, unknown>> {
-  const objectId = readInputString(input.objectId, "objectId");
+  const objectId = requiredInputString(input.objectId, "objectId");
   const payload = await requestMetaJson<MetaListPayload>({
     apiKey: context.apiKey,
     path: `/${encodeURIComponent(objectId)}/insights`,
@@ -392,10 +393,6 @@ function requireRecordPayload(value: unknown): Record<string, unknown> {
     throw new ProviderRequestError(502, "Meta returned a non-object list item");
   }
   return record;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readRequiredPayloadString(payload: Record<string, unknown>, fieldName: string, label: string): string {

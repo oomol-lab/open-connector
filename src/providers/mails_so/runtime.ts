@@ -16,6 +16,7 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const mailsSoApiBaseUrl = "https://api.mails.so";
@@ -247,10 +248,6 @@ function normalizeValidationResult(record: Record<string, unknown>): Record<stri
     result: requireProviderString(record.result, "result"),
     reason: requireProviderString(record.reason, "reason"),
   };
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireObject(value: unknown, label: string): Record<string, unknown> {

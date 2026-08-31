@@ -21,6 +21,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 type MemosRequestPhase = "execute" | "validate";
@@ -429,10 +430,6 @@ function resourcePath(name: string, collection: "attachments" | "memos" | "users
     throw providerInputError(`name must use the ${collection}/{id} resource format`);
   }
   return `/${collection}/${encodeURIComponent(segments[1])}`;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function trimLeadingSlash(value: string): string {

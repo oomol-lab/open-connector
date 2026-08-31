@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const tursoApiBaseUrl = "https://api.turso.tech";
@@ -29,7 +30,7 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { organizations: extractResourceList(payload, ["organizations"]) };
   },
   async get_organization(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
     const payload = await requestTursoJson(
       { path: `/v1/organizations/${encodeURIComponent(organizationSlug)}`, method: "GET", phase: "execute" },
       context,
@@ -41,7 +42,7 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { locations: extractResourceList(payload, ["locations", "regions"]) };
   },
   async list_groups(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
     const payload = await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/groups`,
@@ -53,8 +54,8 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { groups: extractResourceList(payload, ["groups"]) };
   },
   async get_group(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
-    const groupName = readInputString(input.name, "name");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
+    const groupName = requiredInputString(input.name, "name");
     const payload = await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/groups/${encodeURIComponent(groupName)}`,
@@ -66,15 +67,15 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { group: extractSingleResource(payload, ["group"]) };
   },
   async create_group(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
     const payload = await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/groups`,
         method: "POST",
         phase: "execute",
         body: compactObject({
-          name: readInputString(input.name, "name"),
-          location: readInputString(input.location, "location"),
+          name: requiredInputString(input.name, "name"),
+          location: requiredInputString(input.location, "location"),
           extensions: normalizeExtensions(input.extensions),
         }),
       },
@@ -83,7 +84,7 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { group: extractSingleResource(payload, ["group"]) };
   },
   async list_databases(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
     const payload = await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/databases`,
@@ -95,8 +96,8 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { databases: extractResourceList(payload, ["databases"]) };
   },
   async get_database(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
-    const databaseName = readInputString(input.name, "name");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
+    const databaseName = requiredInputString(input.name, "name");
     const payload = await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/databases/${encodeURIComponent(databaseName)}`,
@@ -108,15 +109,15 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { database: extractSingleResource(payload, ["database"]) };
   },
   async create_database(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
     const payload = await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/databases`,
         method: "POST",
         phase: "execute",
         body: {
-          name: readInputString(input.name, "name"),
-          group: readInputString(input.group, "group"),
+          name: requiredInputString(input.name, "name"),
+          group: requiredInputString(input.group, "group"),
         },
       },
       context,
@@ -124,8 +125,8 @@ export const tursoActionHandlers: ProviderActionHandlers<"turso", TursoActionHan
     return { database: extractSingleResource(payload, ["database"]) };
   },
   async delete_database(input, context) {
-    const organizationSlug = readInputString(input.organizationSlug, "organizationSlug");
-    const databaseName = readInputString(input.name, "name");
+    const organizationSlug = requiredInputString(input.organizationSlug, "organizationSlug");
+    const databaseName = requiredInputString(input.name, "name");
     await requestTursoJson(
       {
         path: `/v1/organizations/${encodeURIComponent(organizationSlug)}/databases/${encodeURIComponent(databaseName)}`,
@@ -222,7 +223,7 @@ function normalizeExtensions(value: unknown): string | string[] | undefined {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, "extensions must be 'all' or an array");
   }
-  return value.map((item) => readInputString(item, "extensions"));
+  return value.map((item) => requiredInputString(item, "extensions"));
 }
 
 function extractResourceList(payload: unknown, keys: string[]): Array<Record<string, unknown>> {
@@ -300,8 +301,4 @@ function extractErrorMessage(payload: unknown): string | undefined {
     optionalString(nestedError?.message) ??
     optionalString(nestedError?.detail)
   );
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

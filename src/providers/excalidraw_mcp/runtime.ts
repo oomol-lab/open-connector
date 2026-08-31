@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 export interface ExcalidrawMcpContext {
   endpoint: URL;
@@ -39,7 +39,7 @@ export const excalidrawMcpActionHandlers: ProviderActionHandlers<"excalidraw_mcp
   },
   create_view(input, context) {
     return callExcalidrawMcpTool(context, "create_view", {
-      elements: requireString(input.elements, "elements"),
+      elements: requiredInputString(input.elements, "elements"),
     });
   },
 };
@@ -246,10 +246,6 @@ function mapExcalidrawMcpError(error: unknown): ProviderRequestError {
     error instanceof Error ? `Excalidraw MCP request failed: ${error.message}` : "Excalidraw MCP request failed",
     error,
   );
-}
-
-function requireString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function isAbortError(error: unknown): boolean {

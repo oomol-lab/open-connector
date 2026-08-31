@@ -10,6 +10,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "ngrok";
@@ -33,7 +34,7 @@ export const ngrokActionHandlers: ProviderActionHandlers<"ngrok", NgrokActionHan
     return requestNgrokJson({
       context,
       phase: "execute",
-      path: `/endpoints/${encodeURIComponent(readInputString(input.endpoint_id, "endpoint_id"))}`,
+      path: `/endpoints/${encodeURIComponent(requiredInputString(input.endpoint_id, "endpoint_id"))}`,
     });
   },
   list_tunnels(input, context) {
@@ -64,7 +65,7 @@ export const ngrokActionHandlers: ProviderActionHandlers<"ngrok", NgrokActionHan
     return requestNgrokJson({
       context,
       phase: "execute",
-      path: `/reserved_domains/${encodeURIComponent(readInputString(input.reserved_domain_id, "reserved_domain_id"))}`,
+      path: `/reserved_domains/${encodeURIComponent(requiredInputString(input.reserved_domain_id, "reserved_domain_id"))}`,
     });
   },
 };
@@ -208,10 +209,6 @@ function buildListQuery(input: Record<string, unknown>, includeFilter: boolean):
     before_id: optionalString(input.before_id),
     filter: includeFilter ? optionalString(input.filter) : undefined,
   });
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function buildNgrokAccountId(apiKey: string): string {

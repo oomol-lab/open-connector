@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 interface WorkableContext {
@@ -52,7 +53,7 @@ export const workableActionHandlers: ProviderActionHandlers<"workable", Provider
   async get_job(input, context): Promise<unknown> {
     const job = await requestWorkableJson({
       ...context,
-      path: `/jobs/${encodeURIComponent(requiredProviderString(input.shortcode, "shortcode"))}`,
+      path: `/jobs/${encodeURIComponent(requiredInputString(input.shortcode, "shortcode"))}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
     });
@@ -82,7 +83,7 @@ export const workableActionHandlers: ProviderActionHandlers<"workable", Provider
   async get_candidate(input, context): Promise<unknown> {
     const payload = await requestWorkableJson({
       ...context,
-      path: `/candidates/${encodeURIComponent(requiredProviderString(input.id, "id"))}`,
+      path: `/candidates/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
     });
@@ -260,10 +261,6 @@ function readArrayField(payload: Record<string, unknown>, fieldName: string): un
   const value = payload[fieldName];
   if (Array.isArray(value)) return value;
   throw new ProviderRequestError(502, `Workable response is missing ${fieldName}`);
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readIncludeFields(value: unknown): string | undefined {

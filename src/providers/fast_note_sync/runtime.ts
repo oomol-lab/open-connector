@@ -14,6 +14,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 type FastNoteSyncRequestPhase = "execute" | "validate";
@@ -492,10 +493,6 @@ function pickFields(input: Record<string, unknown>, fields: readonly string[]): 
     if (input[field] !== undefined) output[field] = input[field];
   }
   return output;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function trimLeadingSlash(value: string): string {

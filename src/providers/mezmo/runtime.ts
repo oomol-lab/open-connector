@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const mezmoApiBaseUrl = "https://api.mezmo.com";
 
@@ -249,8 +254,4 @@ function readCandidateUsageList(record: Record<string, unknown> | undefined): un
 function readOptionalIntegerString(value: unknown): string | undefined {
   const integer = optionalInteger(value);
   return integer === undefined ? undefined : String(integer);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

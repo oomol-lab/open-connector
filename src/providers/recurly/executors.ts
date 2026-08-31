@@ -22,6 +22,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "recurly";
@@ -440,10 +441,6 @@ function requireRecord(value: unknown, label: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `Recurly response is missing ${label} object`);
   return record;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredOutputString(value: unknown, fieldName: string): string {

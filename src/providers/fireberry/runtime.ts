@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const fireberryApiBaseUrl = "https://api.fireberry.com";
 export const fireberryDefaultRequestTimeoutMs = 30_000;
@@ -297,12 +297,8 @@ function readQueryRecords(payload: Record<string, unknown>) {
   return [];
 }
 
-function readRequiredString(value: unknown, field: string) {
-  return requiredString(value, field, (message) => new ProviderRequestError(400, message));
-}
-
 function readRecordIdPathSegment(value: unknown) {
-  return encodeURIComponent(readRequiredString(value, "id"));
+  return encodeURIComponent(requiredInputString(value, "id"));
 }
 
 function readSuccess(payload: Record<string, unknown>) {

@@ -17,6 +17,7 @@ import {
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const autotaskZoneInformationBaseUrl = "https://webservices.autotask.net/atservicesrest";
@@ -111,7 +112,7 @@ async function getAutotaskZoneInformation(
 ): Promise<AutotaskZoneInformation> {
   const payload = await requestAutotaskZoneInformation(username, fetcher, signal);
   const record = requireObjectPayload(payload, "Autotask zone information");
-  const apiBaseUrl = normalizeAutotaskApiBaseUrl(readRequiredString(record.url, "url"));
+  const apiBaseUrl = normalizeAutotaskApiBaseUrl(requiredInputString(record.url, "url"));
 
   return {
     apiBaseUrl,
@@ -386,11 +387,7 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
-  return value.map((item) => readRequiredString(item, fieldName));
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
+  return value.map((item) => requiredInputString(item, fieldName));
 }
 
 function requireObjectPayload(value: unknown, label: string): Record<string, unknown> {

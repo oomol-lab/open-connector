@@ -18,6 +18,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireCustomCredential,
+  requiredInputString,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -60,7 +61,7 @@ export const onePageCrmActionHandlers: ProviderActionHandlers<"one_page_crm", On
     });
   },
   get_contact(input, context) {
-    const contactId = readInputString(input.contactId, "contactId");
+    const contactId = requiredInputString(input.contactId, "contactId");
     return readRecord({
       context,
       path: `/contacts/${encodeURIComponent(contactId)}`,
@@ -85,7 +86,7 @@ export const onePageCrmActionHandlers: ProviderActionHandlers<"one_page_crm", On
     });
   },
   get_deal(input, context) {
-    const dealId = readInputString(input.dealId, "dealId");
+    const dealId = requiredInputString(input.dealId, "dealId");
     return readRecord({
       context,
       path: `/deals/${encodeURIComponent(dealId)}`,
@@ -488,10 +489,6 @@ function requireObject(value: unknown, message: string): Record<string, unknown>
     throw new ProviderRequestError(502, message);
   }
   return record;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function readOptionalInteger(value: unknown, fieldName: string): number | undefined {

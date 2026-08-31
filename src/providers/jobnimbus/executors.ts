@@ -13,7 +13,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "jobnimbus";
 const jobnimbusApiBaseUrl = "https://app.jobnimbus.com/api1";
@@ -57,7 +62,7 @@ export const jobnimbusActionHandlers: ProviderActionHandlers<"jobnimbus", Jobnim
     };
   },
   async get_contact(input, context) {
-    const contactId = readRequiredId(input.contactId, "contactId");
+    const contactId = requiredInputString(input.contactId, "contactId");
     const payload = await requestJobnimbus({
       path: `/contacts/${encodeURIComponent(contactId)}`,
       method: "GET",
@@ -85,7 +90,7 @@ export const jobnimbusActionHandlers: ProviderActionHandlers<"jobnimbus", Jobnim
     };
   },
   async update_contact(input, context) {
-    const contactId = readRequiredId(input.contactId, "contactId");
+    const contactId = requiredInputString(input.contactId, "contactId");
     const payload = await requestJobnimbus({
       path: `/contacts/${encodeURIComponent(contactId)}`,
       method: "PUT",
@@ -114,7 +119,7 @@ export const jobnimbusActionHandlers: ProviderActionHandlers<"jobnimbus", Jobnim
     };
   },
   async get_job(input, context) {
-    const jobId = readRequiredId(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     const payload = await requestJobnimbus({
       path: `/jobs/${encodeURIComponent(jobId)}`,
       method: "GET",
@@ -142,7 +147,7 @@ export const jobnimbusActionHandlers: ProviderActionHandlers<"jobnimbus", Jobnim
     };
   },
   async update_job(input, context) {
-    const jobId = readRequiredId(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     const payload = await requestJobnimbus({
       path: `/jobs/${encodeURIComponent(jobId)}`,
       method: "PUT",
@@ -250,10 +255,6 @@ function joinStringList(value: unknown, fieldName: string): string | undefined {
     .filter((item) => item !== "");
 
   return parts.length > 0 ? parts.join(",") : undefined;
-}
-
-function readRequiredId(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalId(payload: Record<string, unknown>): string | undefined {

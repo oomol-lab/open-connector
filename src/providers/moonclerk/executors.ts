@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "moonclerk";
 const moonclerkApiBaseUrl = "https://api.moonclerk.com";
@@ -202,10 +207,6 @@ function extractMoonclerkErrorMessage(payload: unknown): string | undefined {
   }
 
   return optionalString(record.error) ?? optionalString(record.message) ?? optionalString(record.detail);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredArrayField(payload: unknown, fieldName: string): unknown[] {

@@ -13,6 +13,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "teamcamp";
@@ -34,7 +35,7 @@ export const teamcampActionHandlers: ProviderActionHandlers<"teamcamp", Teamcamp
     return { projects, raw: projects };
   },
   async get_project(input, context): Promise<unknown> {
-    const projectId = requiredProviderString(input.projectId, "projectId");
+    const projectId = requiredInputString(input.projectId, "projectId");
     const project = await requestTeamcampJson<Record<string, unknown>>({
       apiKey: context.apiKey,
       path: `/project/${encodeURIComponent(projectId)}`,
@@ -49,7 +50,7 @@ export const teamcampActionHandlers: ProviderActionHandlers<"teamcamp", Teamcamp
       apiKey: context.apiKey,
       path: "/task",
       query: compactObject({
-        projectId: requiredProviderString(input.projectId, "projectId"),
+        projectId: requiredInputString(input.projectId, "projectId"),
         complete: typeof input.complete === "boolean" ? input.complete : undefined,
       }),
       context,
@@ -59,7 +60,7 @@ export const teamcampActionHandlers: ProviderActionHandlers<"teamcamp", Teamcamp
     return { tasks, raw: tasks };
   },
   async get_task(input, context): Promise<unknown> {
-    const taskId = requiredProviderString(input.taskId, "taskId");
+    const taskId = requiredInputString(input.taskId, "taskId");
     const task = await requestTeamcampJson<Record<string, unknown>>({
       apiKey: context.apiKey,
       path: `/task/${encodeURIComponent(taskId)}`,
@@ -70,13 +71,13 @@ export const teamcampActionHandlers: ProviderActionHandlers<"teamcamp", Teamcamp
     return { task, raw: task };
   },
   async post_task_comment(input, context): Promise<unknown> {
-    const taskId = requiredProviderString(input.taskId, "taskId");
+    const taskId = requiredInputString(input.taskId, "taskId");
     const comment = await requestTeamcampJson<Record<string, unknown>>({
       apiKey: context.apiKey,
       path: `/task/${encodeURIComponent(taskId)}/comments`,
       method: "POST",
       body: {
-        content: requiredProviderString(input.content, "content"),
+        content: requiredInputString(input.content, "content"),
       },
       context,
       phase: "execute",
@@ -247,8 +248,4 @@ function extractTeamcampErrorMessage(payload: unknown): string | undefined {
   return record
     ? (optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.detail))
     : undefined;
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

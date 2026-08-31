@@ -11,7 +11,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const service = "pexels";
 const pexelsApiBaseUrl = "https://api.pexels.com";
@@ -23,7 +23,7 @@ type PexelsActionHandler = (input: Record<string, unknown>, context: ApiKeyProvi
 export const pexelsActionHandlers: ProviderActionHandlers<"pexels", PexelsActionHandler> = {
   search_photos(input, context) {
     return getPhotoList("/v1/search", input, context, {
-      query: requiredText(input.query, "query"),
+      query: requiredInputString(input.query, "query"),
       orientation: optionalString(input.orientation),
       size: optionalString(input.size),
       color: optionalString(input.color),
@@ -50,7 +50,7 @@ export const pexelsActionHandlers: ProviderActionHandlers<"pexels", PexelsAction
     return getCollectionList("/v1/collections", input, context);
   },
   async collection_media(input, context) {
-    const collectionId = encodeURIComponent(requiredText(input.collectionId, "collectionId"));
+    const collectionId = encodeURIComponent(requiredInputString(input.collectionId, "collectionId"));
     const payload = requiredResponseRecord(
       await requestPexelsJson(context, `/v1/collections/${collectionId}`, {
         page: optionalInteger(input.page),
@@ -74,7 +74,7 @@ export const pexelsActionHandlers: ProviderActionHandlers<"pexels", PexelsAction
   },
   search_videos(input, context) {
     return getVideoList("/v1/videos/search", input, context, {
-      query: requiredText(input.query, "query"),
+      query: requiredInputString(input.query, "query"),
       orientation: optionalString(input.orientation),
       size: optionalString(input.size),
       locale: optionalString(input.locale),
@@ -396,10 +396,6 @@ function responseArray(value: unknown, fieldName: string): unknown[] {
     return value;
   }
   throw new ProviderRequestError(502, `Pexels response missing array field: ${fieldName}`);
-}
-
-function requiredText(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredInputInteger(value: unknown, fieldName: string): number {

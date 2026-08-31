@@ -15,6 +15,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "process_street";
@@ -362,10 +363,6 @@ function readRecordArray(value: unknown): Array<Record<string, unknown>> {
 
 function readStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String) : [];
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredResponseString(value: unknown, fieldName: string, context: string): string {

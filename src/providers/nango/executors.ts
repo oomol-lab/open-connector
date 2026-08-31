@@ -16,6 +16,7 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "nango";
@@ -32,7 +33,7 @@ export const nangoActionHandlers: ProviderActionHandlers<"nango", NangoActionHan
   get_provider(input, context) {
     return requestNangoJson({
       method: "GET",
-      path: `/providers/${encodeURIComponent(readRequiredString(input.provider, "provider"))}`,
+      path: `/providers/${encodeURIComponent(requiredInputString(input.provider, "provider"))}`,
       context,
     });
   },
@@ -42,7 +43,7 @@ export const nangoActionHandlers: ProviderActionHandlers<"nango", NangoActionHan
   get_integration(input, context) {
     return requestNangoJson({
       method: "GET",
-      path: `/integrations/${encodeURIComponent(readRequiredString(input.uniqueKey, "uniqueKey"))}`,
+      path: `/integrations/${encodeURIComponent(requiredInputString(input.uniqueKey, "uniqueKey"))}`,
       query: compactObject({
         include: readOptionalStringArray(input.include, "include"),
       }),
@@ -64,12 +65,12 @@ export const nangoActionHandlers: ProviderActionHandlers<"nango", NangoActionHan
     });
   },
   get_connection(input, context) {
-    const connectionId = readRequiredString(input.connection_id, "connection_id");
+    const connectionId = requiredInputString(input.connection_id, "connection_id");
     return requestNangoJson({
       method: "GET",
       path: `/connections/${encodeURIComponent(connectionId)}`,
       query: compactObject({
-        provider_config_key: readRequiredString(input.provider_config_key, "provider_config_key"),
+        provider_config_key: requiredInputString(input.provider_config_key, "provider_config_key"),
         force_refresh: optionalBoolean(input.force_refresh),
         refresh_token: optionalBoolean(input.refresh_token),
         refresh_github_app_jwt_token: optionalBoolean(input.refresh_github_app_jwt_token),
@@ -83,19 +84,19 @@ export const nangoActionHandlers: ProviderActionHandlers<"nango", NangoActionHan
       path: "/connections/metadata",
       body: {
         connection_id: readConnectionIdOrIds(input.connection_id),
-        provider_config_key: readRequiredString(input.provider_config_key, "provider_config_key"),
+        provider_config_key: requiredInputString(input.provider_config_key, "provider_config_key"),
         metadata: readRequiredObject(input.metadata, "metadata"),
       },
       context,
     });
   },
   patch_connection_tags(input, context) {
-    const connectionId = readRequiredString(input.connection_id, "connection_id");
+    const connectionId = requiredInputString(input.connection_id, "connection_id");
     return requestNangoJson({
       method: "PATCH",
       path: `/connections/${encodeURIComponent(connectionId)}`,
       query: {
-        provider_config_key: readRequiredString(input.provider_config_key, "provider_config_key"),
+        provider_config_key: requiredInputString(input.provider_config_key, "provider_config_key"),
       },
       body: {
         tags: readRequiredStringRecord(input.tags, "tags"),
@@ -104,12 +105,12 @@ export const nangoActionHandlers: ProviderActionHandlers<"nango", NangoActionHan
     });
   },
   delete_connection(input, context) {
-    const connectionId = readRequiredString(input.connection_id, "connection_id");
+    const connectionId = requiredInputString(input.connection_id, "connection_id");
     return requestNangoJson({
       method: "DELETE",
       path: `/connections/${encodeURIComponent(connectionId)}`,
       query: {
-        provider_config_key: readRequiredString(input.provider_config_key, "provider_config_key"),
+        provider_config_key: requiredInputString(input.provider_config_key, "provider_config_key"),
       },
       context,
     });
@@ -267,10 +268,6 @@ function readProviderObject(value: unknown, fieldName: string): Record<string, u
   return requiredRecord(value, fieldName, (message) => new ProviderRequestError(502, message));
 }
 
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
-}
-
 function readOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {
   if (value == null) {
     return undefined;
@@ -280,13 +277,13 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
 
-  return value.map((item, index) => readRequiredString(item, `${fieldName}[${index}]`));
+  return value.map((item, index) => requiredInputString(item, `${fieldName}[${index}]`));
 }
 
 function readRequiredStringRecord(value: unknown, fieldName: string): Record<string, string> {
   const record = readRequiredObject(value, fieldName);
   return Object.fromEntries(
-    Object.entries(record).map(([key, item]) => [key, readRequiredString(item, `${fieldName}.${key}`)]),
+    Object.entries(record).map(([key, item]) => [key, requiredInputString(item, `${fieldName}.${key}`)]),
   );
 }
 
@@ -300,8 +297,8 @@ function readOptionalStringRecord(value: unknown, fieldName: string): Record<str
 
 function readConnectionIdOrIds(value: unknown): string | string[] {
   if (Array.isArray(value)) {
-    return value.map((item, index) => readRequiredString(item, `connection_id[${index}]`));
+    return value.map((item, index) => requiredInputString(item, `connection_id[${index}]`));
   }
 
-  return readRequiredString(value, "connection_id");
+  return requiredInputString(value, "connection_id");
 }

@@ -20,6 +20,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "abyssale";
@@ -127,7 +128,7 @@ async function getDesign(input: Record<string, unknown>, context: AbyssaleAction
   const payload = await requestAbyssaleJson(
     {
       method: "GET",
-      path: `/designs/${encodeURIComponent(readInputString(input.designId, "designId"))}`,
+      path: `/designs/${encodeURIComponent(requiredInputString(input.designId, "designId"))}`,
       apiKey: context.apiKey,
     },
     context,
@@ -147,8 +148,8 @@ async function getDesignFormat(input: Record<string, unknown>, context: Abyssale
   const payload = await requestAbyssaleJson(
     {
       method: "GET",
-      path: `/designs/${encodeURIComponent(readInputString(input.designId, "designId"))}/formats/${encodeURIComponent(
-        readInputString(input.formatSpecifier, "formatSpecifier"),
+      path: `/designs/${encodeURIComponent(requiredInputString(input.designId, "designId"))}/formats/${encodeURIComponent(
+        requiredInputString(input.formatSpecifier, "formatSpecifier"),
       )}`,
       apiKey: context.apiKey,
     },
@@ -197,7 +198,7 @@ async function createProject(input: Record<string, unknown>, context: AbyssaleAc
       path: "/projects",
       apiKey: context.apiKey,
       body: {
-        name: readInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
       },
     },
     context,
@@ -214,7 +215,7 @@ async function generateBanner(input: Record<string, unknown>, context: AbyssaleA
   const payload = await requestAbyssaleJson(
     {
       method: "POST",
-      path: `/banner-builder/${encodeURIComponent(readInputString(input.designId, "designId"))}/generate`,
+      path: `/banner-builder/${encodeURIComponent(requiredInputString(input.designId, "designId"))}/generate`,
       apiKey: context.apiKey,
       body: compactObject({
         elements: optionalRecord(input.elements) ?? {},
@@ -236,7 +237,7 @@ async function getBanner(input: Record<string, unknown>, context: AbyssaleAction
   const payload = await requestAbyssaleJson(
     {
       method: "GET",
-      path: `/banners/${encodeURIComponent(readInputString(input.bannerId, "bannerId"))}`,
+      path: `/banners/${encodeURIComponent(requiredInputString(input.bannerId, "bannerId"))}`,
       apiKey: context.apiKey,
     },
     context,
@@ -253,7 +254,7 @@ async function createDynamicImageUrl(input: Record<string, unknown>, context: Ab
   const payload = await requestAbyssaleJson(
     {
       method: "POST",
-      path: `/designs/${encodeURIComponent(readInputString(input.designId, "designId"))}/dynamic-image-url`,
+      path: `/designs/${encodeURIComponent(requiredInputString(input.designId, "designId"))}/dynamic-image-url`,
       apiKey: context.apiKey,
       body: compactObject({
         enable_rate_limit: optionalBoolean(input.enableRateLimit),
@@ -406,10 +407,6 @@ function normalizeBanner(input: Record<string, unknown>): Record<string, unknown
     createdAt: optionalInteger(input.created_at_ts) ?? null,
     raw: input,
   };
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readDesignType(value: unknown): string | null {

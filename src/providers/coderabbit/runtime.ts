@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const coderabbitApiBaseUrl = "https://api.coderabbit.ai";
 
@@ -146,7 +151,7 @@ export const coderabbitActionHandlers: ProviderActionHandlers<"coderabbit", Code
     const payload = await requestCoderabbit(
       {
         method: "GET",
-        path: `/v1/roles/${encodeURIComponent(requireInputString(input.roleId, "roleId"))}`,
+        path: `/v1/roles/${encodeURIComponent(requiredInputString(input.roleId, "roleId"))}`,
         search: buildSearchParams({
           org_id: input.orgId,
           include_permissions: optionalBoolean(input.includePermissions),
@@ -182,7 +187,7 @@ export const coderabbitActionHandlers: ProviderActionHandlers<"coderabbit", Code
     const payload = await requestCoderabbit(
       {
         method: "PATCH",
-        path: `/v1/roles/${encodeURIComponent(requireInputString(input.roleId, "roleId"))}`,
+        path: `/v1/roles/${encodeURIComponent(requiredInputString(input.roleId, "roleId"))}`,
         body: buildRoleBody(input),
       },
       context,
@@ -198,7 +203,7 @@ export const coderabbitActionHandlers: ProviderActionHandlers<"coderabbit", Code
     await requestCoderabbit(
       {
         method: "DELETE",
-        path: `/v1/roles/${encodeURIComponent(requireInputString(input.roleId, "roleId"))}`,
+        path: `/v1/roles/${encodeURIComponent(requiredInputString(input.roleId, "roleId"))}`,
         search: buildSearchParams({ org_id: input.orgId }),
       },
       context,
@@ -436,10 +441,6 @@ function readObject(value: unknown, fieldName: string): JsonObject {
     throw new ProviderRequestError(502, `CodeRabbit returned invalid ${fieldName}`);
   }
   return object;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireStringFromResponse(value: unknown, fieldName: string): string {

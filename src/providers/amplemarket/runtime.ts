@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
-import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const amplemarketApiBaseUrl = "https://api.amplemarket.com";
 
@@ -113,7 +118,7 @@ export async function validateAmplemarketCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = {
-    apiKey: requireInputString(input.apiKey, "apiKey"),
+    apiKey: requiredInputString(input.apiKey, "apiKey"),
     fetcher,
     signal,
   };
@@ -284,10 +289,6 @@ function readAmplemarketErrorMessage(payload: unknown) {
     return optionalString(firstError?.detail) ?? optionalString(firstError?.title) ?? optionalString(firstError?.code);
   }
   return undefined;
-}
-
-function requireInputString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireRecord(value: unknown, label: string) {

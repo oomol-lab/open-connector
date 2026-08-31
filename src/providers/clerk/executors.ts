@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "clerk";
 const clerkApiBaseUrl = "https://api.clerk.com/v1";
@@ -287,8 +292,4 @@ function extractClerkErrorMessage(payload: unknown): string | undefined {
     );
   }
   return optionalString(record.message) ?? optionalString(record.error);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

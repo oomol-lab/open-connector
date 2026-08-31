@@ -8,6 +8,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   readProviderTextBody,
+  requiredInputString,
   setSearchParams,
 } from "../provider-runtime.ts";
 
@@ -62,8 +63,8 @@ export const scopusActionHandlers: ProviderActionHandlers<"scopus", ScopusAction
   },
 
   async get_abstract(input, context) {
-    const identifierType = readRequiredInput(input.identifierType, "identifierType");
-    const identifier = readRequiredInput(input.identifier, "identifier");
+    const identifierType = requiredInputString(input.identifierType, "identifierType");
+    const identifier = requiredInputString(input.identifier, "identifier");
     const response = await requestScopusJson(
       {
         path: `/abstract/${identifierType}/${encodeURIComponent(identifier)}`,
@@ -107,8 +108,8 @@ export const scopusActionHandlers: ProviderActionHandlers<"scopus", ScopusAction
   },
 
   async get_author(input, context) {
-    const identifierType = readRequiredInput(input.identifierType, "identifierType");
-    const identifier = readRequiredInput(input.identifier, "identifier");
+    const identifierType = requiredInputString(input.identifierType, "identifierType");
+    const identifier = requiredInputString(input.identifier, "identifier");
     const response = await requestScopusJson(
       {
         path: `/author/${identifierType}/${encodeURIComponent(identifier)}`,
@@ -152,8 +153,8 @@ export const scopusActionHandlers: ProviderActionHandlers<"scopus", ScopusAction
   },
 
   async get_affiliation(input, context) {
-    const identifierType = readRequiredInput(input.identifierType, "identifierType");
-    const identifier = readRequiredInput(input.identifier, "identifier");
+    const identifierType = requiredInputString(input.identifierType, "identifierType");
+    const identifier = requiredInputString(input.identifier, "identifier");
     const response = await requestScopusJson(
       {
         path: `/affiliation/${identifierType}/${encodeURIComponent(identifier)}`,
@@ -483,10 +484,6 @@ function readNullableInteger(value: unknown): number | null {
   }
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
-}
-
-function readRequiredInput(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function validateDocumentSearchInput(input: Record<string, unknown>): void {

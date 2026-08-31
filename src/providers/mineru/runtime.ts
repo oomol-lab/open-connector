@@ -11,7 +11,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const mineruApiBaseUrl = "https://mineru.net";
 const mineruValidationTaskId = "oomol-connector-validation";
@@ -390,8 +390,4 @@ function optionalStringArray(value: unknown): string[] | undefined {
     throw new ProviderRequestError(400, "string array input is required");
   }
   return value.map((item) => String(item));
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

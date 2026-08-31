@@ -7,6 +7,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "fellow";
@@ -372,8 +373,4 @@ function readRecordField(payload: unknown, key: string, context: string): Record
     throw new ProviderRequestError(502, `${context} is invalid`, payload);
   }
   return child;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

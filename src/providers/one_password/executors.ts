@@ -11,6 +11,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "one_password";
@@ -62,7 +63,7 @@ export const onePasswordActionHandlers: ProviderActionHandlers<"one_password", O
   async get_vault(input, context) {
     const vault = await requestOnePasswordJson({
       context,
-      path: `/v1/vaults/${encodeURIComponent(readInputString(input.vaultId, "vaultId"))}`,
+      path: `/v1/vaults/${encodeURIComponent(requiredInputString(input.vaultId, "vaultId"))}`,
       phase: "execute",
     });
 
@@ -73,7 +74,7 @@ export const onePasswordActionHandlers: ProviderActionHandlers<"one_password", O
   async list_items(input, context) {
     const items = await requestOnePasswordJson({
       context,
-      path: `/v1/vaults/${encodeURIComponent(readInputString(input.vaultId, "vaultId"))}/items`,
+      path: `/v1/vaults/${encodeURIComponent(requiredInputString(input.vaultId, "vaultId"))}/items`,
       query: {
         filter: optionalString(input.filter),
       },
@@ -85,8 +86,8 @@ export const onePasswordActionHandlers: ProviderActionHandlers<"one_password", O
     };
   },
   async get_item(input, context) {
-    const vaultId = readInputString(input.vaultId, "vaultId");
-    const itemId = readInputString(input.itemId, "itemId");
+    const vaultId = requiredInputString(input.vaultId, "vaultId");
+    const itemId = requiredInputString(input.itemId, "itemId");
     const item = await requestOnePasswordJson({
       context,
       path: `/v1/vaults/${encodeURIComponent(vaultId)}/items/${encodeURIComponent(itemId)}`,
@@ -280,10 +281,6 @@ function normalizeOnePasswordBaseUrl(value: unknown): string {
   url.hash = "";
   url.search = "";
   return trimTrailingSlash(url.toString());
-}
-
-function readInputString(value: unknown, key: string): string {
-  return requiredString(value, key, (message) => new ProviderRequestError(400, message));
 }
 
 function requireObjectPayload(payload: unknown, label: string): Record<string, unknown> {

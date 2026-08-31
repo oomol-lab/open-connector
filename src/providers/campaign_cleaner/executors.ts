@@ -9,6 +9,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "campaign_cleaner";
@@ -77,8 +78,8 @@ async function sendCampaign(input: Record<string, unknown>, context: ApiKeyProvi
     method: "POST",
     body: {
       send_campaign: compactObject({
-        campaign_html: requiredProviderString(input.campaign_html, "campaign_html"),
-        campaign_name: requiredProviderString(input.campaign_name, "campaign_name"),
+        campaign_html: requiredInputString(input.campaign_html, "campaign_html"),
+        campaign_name: requiredInputString(input.campaign_name, "campaign_name"),
         adjust_font_colors: optionalBoolean(input.adjust_font_colors),
         adjust_font_size: optionalBoolean(input.adjust_font_size),
         convert_h_to_p_tags: optionalBoolean(input.convert_h_to_p_tags),
@@ -270,7 +271,7 @@ function campaignIdBody(input: Record<string, unknown>) {
 }
 
 function campaignId(input: Record<string, unknown>) {
-  return requiredProviderString(input.campaign_id, "campaign_id");
+  return requiredInputString(input.campaign_id, "campaign_id");
 }
 
 function parseCampaignReference(payload: unknown) {
@@ -355,10 +356,6 @@ function requiredStringRecord(value: unknown, fieldName: string) {
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `${fieldName} must be an object`, value);
   return record;
-}
-
-function requiredProviderString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function optionalInteger(value: unknown) {

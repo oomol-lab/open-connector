@@ -15,6 +15,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "skyfire";
@@ -229,10 +230,6 @@ function requiredProviderRecord(value: unknown, label: string): Record<string, u
 function requiredArray(value: unknown, label: string): unknown[] {
   if (!Array.isArray(value)) throw new ProviderRequestError(502, `${label} is not an array`);
   return value;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function nullableString(value: unknown): string | null {

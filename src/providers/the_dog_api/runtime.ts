@@ -16,6 +16,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const theDogApiBaseUrl = "https://api.thedogapi.com/v1/";
@@ -302,10 +303,6 @@ function normalizeCategory(payload: unknown): (Record<string, unknown> & { id: s
 
 function mutationPayload(payload: unknown): Record<string, unknown> {
   return optionalRecord(payload) ?? { message: typeof payload === "string" ? payload : "ok" };
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function stringifyInteger(value: number | undefined): string | undefined {

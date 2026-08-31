@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "rebrandly";
 const rebrandlyApiBaseUrl = "https://api.rebrandly.com/v1";
@@ -276,8 +281,4 @@ function extractArrayPayload(payload: unknown): unknown[] {
     if (Array.isArray(value)) return value;
   }
   return [];
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

@@ -3,7 +3,12 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export interface FormstackDocumentsContext {
   values: Record<string, string>;
@@ -204,10 +209,6 @@ function readCredentials(values: Record<string, string>): Credentials {
     apiKey: requiredInputString(values.apiKey, "apiKey"),
     apiSecret: requiredInputString(values.apiSecret, "apiSecret"),
   };
-}
-
-function requiredInputString(value: unknown, field: string): string {
-  return requiredString(value, field, (message) => new ProviderRequestError(400, message));
 }
 
 function validateCreateDocumentInput(input: Record<string, unknown>): void {

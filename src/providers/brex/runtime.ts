@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const brexApiBaseUrl = "https://api.brex.com";
 const brexValidationPath = "/v2/users/me";
@@ -152,7 +157,7 @@ export const brexActionHandlers: ProviderActionHandlers<"brex", BrexActionHandle
   },
   async get_expense(input, context) {
     const expense = await requestBrexJson({
-      path: `/v1/expenses/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/v1/expenses/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "GET",
       apiKey: context.apiKey,
       fetcher: context.fetcher,
@@ -190,7 +195,7 @@ export const brexActionHandlers: ProviderActionHandlers<"brex", BrexActionHandle
   },
   async get_budget(input, context) {
     const budget = await requestBrexJson({
-      path: `/v2/budgets/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/v2/budgets/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "GET",
       apiKey: context.apiKey,
       fetcher: context.fetcher,
@@ -470,10 +475,6 @@ function normalizeBrexBudget(value: unknown): Record<string, unknown> {
     limitType: nullableStringField(record, "limit_type"),
     raw: record,
   });
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function pickString(record: Record<string, unknown> | undefined, fieldName: string): string | undefined {

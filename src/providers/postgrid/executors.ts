@@ -15,6 +15,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -30,7 +31,7 @@ export const postgridActionHandlers: ProviderActionHandlers<"postgrid", Postgrid
       path: "/contacts",
       method: "POST",
       body: compactObject({
-        addressLine1: readRequiredString(input.addressLine1, "addressLine1"),
+        addressLine1: requiredInputString(input.addressLine1, "addressLine1"),
         addressLine2: optionalString(input.addressLine2),
         city: optionalString(input.city),
         provinceOrState: optionalString(input.provinceOrState),
@@ -62,7 +63,7 @@ export const postgridActionHandlers: ProviderActionHandlers<"postgrid", Postgrid
   },
   get_contact(input, context) {
     return requestPostgridJson({
-      path: `/contacts/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/contacts/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "GET",
       context,
       phase: "execute",
@@ -70,7 +71,7 @@ export const postgridActionHandlers: ProviderActionHandlers<"postgrid", Postgrid
   },
   delete_contact(input, context) {
     return requestPostgridJson({
-      path: `/contacts/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/contacts/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "DELETE",
       context,
       phase: "execute",
@@ -100,7 +101,7 @@ export const postgridActionHandlers: ProviderActionHandlers<"postgrid", Postgrid
   },
   get_template(input, context) {
     return requestPostgridJson({
-      path: `/templates/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/templates/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "GET",
       context,
       phase: "execute",
@@ -108,7 +109,7 @@ export const postgridActionHandlers: ProviderActionHandlers<"postgrid", Postgrid
   },
   update_template(input, context) {
     return requestPostgridJson({
-      path: `/templates/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/templates/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "POST",
       body: compactObject({
         html: optionalString(input.html),
@@ -121,7 +122,7 @@ export const postgridActionHandlers: ProviderActionHandlers<"postgrid", Postgrid
   },
   delete_template(input, context) {
     return requestPostgridJson({
-      path: `/templates/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/templates/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       method: "DELETE",
       context,
       phase: "execute",
@@ -275,12 +276,8 @@ function buildListParams(input: Record<string, unknown>): Record<string, string 
   });
 }
 
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function readCountryCode(value: unknown): string {
-  return readRequiredString(value, "countryCode").toUpperCase();
+  return requiredInputString(value, "countryCode").toUpperCase();
 }
 
 function readOptionalNumberString(value: unknown): string | undefined {

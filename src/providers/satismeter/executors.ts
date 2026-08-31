@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "satismeter";
@@ -79,7 +80,7 @@ async function getProject(
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     signal: context.signal,
-    path: `/projects/${encodeURIComponent(requireInputString(input.projectId, "projectId"))}`,
+    path: `/projects/${encodeURIComponent(requiredInputString(input.projectId, "projectId"))}`,
     mode: "execute",
   });
   return { project: requireResponseObject(body.data, "data") };
@@ -93,7 +94,7 @@ async function listSurveys(
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     signal: context.signal,
-    path: `/projects/${encodeURIComponent(requireInputString(input.projectId, "projectId"))}/campaigns`,
+    path: `/projects/${encodeURIComponent(requiredInputString(input.projectId, "projectId"))}/campaigns`,
     mode: "execute",
   });
   return { surveys: requireResponseArray(body.data, "data") };
@@ -103,8 +104,8 @@ async function getSurvey(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const projectId = requireInputString(input.projectId, "projectId");
-  const campaignId = requireInputString(input.campaignId, "campaignId");
+  const projectId = requiredInputString(input.projectId, "projectId");
+  const campaignId = requiredInputString(input.campaignId, "campaignId");
   const body = await requestSatismeterObject({
     apiKey: context.apiKey,
     fetcher: context.fetcher,
@@ -123,7 +124,7 @@ async function listProjectResponses(
     apiKey: context.apiKey,
     fetcher: context.fetcher,
     signal: context.signal,
-    path: `/projects/${encodeURIComponent(requireInputString(input.projectId, "projectId"))}/responses`,
+    path: `/projects/${encodeURIComponent(requiredInputString(input.projectId, "projectId"))}/responses`,
     query: buildQueryParams({
       startDate: optionalString(input.startDate),
       endDate: optionalString(input.endDate),
@@ -139,8 +140,8 @@ async function listSurveyResponses(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const projectId = requireInputString(input.projectId, "projectId");
-  const campaignId = requireInputString(input.campaignId, "campaignId");
+  const projectId = requiredInputString(input.projectId, "projectId");
+  const campaignId = requiredInputString(input.campaignId, "campaignId");
   const body = await requestSatismeterObject({
     apiKey: context.apiKey,
     fetcher: context.fetcher,
@@ -161,8 +162,8 @@ async function getSurveyStatistics(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const projectId = requireInputString(input.projectId, "projectId");
-  const campaignId = requireInputString(input.campaignId, "campaignId");
+  const projectId = requiredInputString(input.projectId, "projectId");
+  const campaignId = requiredInputString(input.campaignId, "campaignId");
   const body = await requestSatismeterObject({
     apiKey: context.apiKey,
     fetcher: context.fetcher,
@@ -285,10 +286,6 @@ function buildQueryParams(input: Record<string, string | number | undefined>): U
     if (value !== undefined) query.set(key, String(value));
   }
   return query.size > 0 ? query : undefined;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalPageSize(value: unknown): number | undefined {

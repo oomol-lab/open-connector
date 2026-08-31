@@ -9,12 +9,8 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { requestPiHoleJson } from "./runtime.ts";
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
-}
 
 function readRecordPayload(payload: unknown): Record<string, unknown> {
   return optionalRecord(payload) ?? {};
@@ -185,7 +181,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async update_group(input, context) {
-    const name = readRequiredString(input.name, "name");
+    const name = requiredInputString(input.name, "name");
     const items = await readResourceItems(context, "groups", "groups");
     const current = requireExistingItem(items, (entry) => optionalString(entry.name) === name, `group ${name}`);
     const payload = readRecordPayload(
@@ -196,7 +192,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
         body: {
           name:
             input.newName !== undefined
-              ? readRequiredString(input.newName, "newName")
+              ? requiredInputString(input.newName, "newName")
               : (optionalString(current.name) ?? name),
           comment: effectiveOptionalString(input.comment, current.comment),
           enabled: effectiveOptionalBoolean(input.enabled, current.enabled),
@@ -206,7 +202,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async delete_group(input, context) {
-    const name = readRequiredString(input.name, "name");
+    const name = requiredInputString(input.name, "name");
     return deleteListedItem({ context, path: `groups/${encodeURIComponent(name)}` });
   },
 
@@ -223,7 +219,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return { lists: optionalObjectArray(payload.lists, "Pi-hole lists response") };
   },
   async add_list(input, context) {
-    const type = normalizeListType(readRequiredString(input.type, "type"));
+    const type = normalizeListType(requiredInputString(input.type, "type"));
     const payload = readRecordPayload(
       await requestPiHoleJson({
         context,
@@ -241,8 +237,8 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async update_list(input, context) {
-    const type = normalizeListType(readRequiredString(input.type, "type"));
-    const address = readRequiredString(input.address, "address");
+    const type = normalizeListType(requiredInputString(input.type, "type"));
+    const address = requiredInputString(input.address, "address");
     const items = await readResourceItems(context, "lists", "lists");
     const current = requireExistingItem(
       items,
@@ -265,8 +261,8 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async delete_list(input, context) {
-    const type = normalizeListType(readRequiredString(input.type, "type"));
-    const address = readRequiredString(input.address, "address");
+    const type = normalizeListType(requiredInputString(input.type, "type"));
+    const address = requiredInputString(input.address, "address");
     return deleteListedItem({ context, path: `lists/${encodeURIComponent(address)}`, query: { type } });
   },
 
@@ -285,8 +281,8 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return { domains: optionalObjectArray(payload.domains, "Pi-hole domains response") };
   },
   async add_domain(input, context) {
-    const type = normalizeListType(readRequiredString(input.type, "type"));
-    const kind = normalizeListType(readRequiredString(input.kind, "kind"));
+    const type = normalizeListType(requiredInputString(input.type, "type"));
+    const kind = normalizeListType(requiredInputString(input.kind, "kind"));
     const payload = readRecordPayload(
       await requestPiHoleJson({
         context,
@@ -303,9 +299,9 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async update_domain(input, context) {
-    const type = normalizeListType(readRequiredString(input.type, "type"));
-    const kind = normalizeListType(readRequiredString(input.kind, "kind"));
-    const domain = readRequiredString(input.domain, "domain");
+    const type = normalizeListType(requiredInputString(input.type, "type"));
+    const kind = normalizeListType(requiredInputString(input.kind, "kind"));
+    const domain = requiredInputString(input.domain, "domain");
     const items = await readResourceItems(context, `domains/${type}/${kind}`, "domains");
     const current = requireExistingItem(
       items,
@@ -327,9 +323,9 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async delete_domain(input, context) {
-    const type = normalizeListType(readRequiredString(input.type, "type"));
-    const kind = normalizeListType(readRequiredString(input.kind, "kind"));
-    const domain = readRequiredString(input.domain, "domain");
+    const type = normalizeListType(requiredInputString(input.type, "type"));
+    const kind = normalizeListType(requiredInputString(input.kind, "kind"));
+    const domain = requiredInputString(input.domain, "domain");
     return deleteListedItem({ context, path: `domains/${type}/${kind}/${encodeURIComponent(domain)}` });
   },
 
@@ -353,7 +349,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async update_client(input, context) {
-    const client = readRequiredString(input.client, "client");
+    const client = requiredInputString(input.client, "client");
     const items = await readResourceItems(context, "clients", "clients");
     const current = requireExistingItem(
       items,
@@ -381,7 +377,7 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
     return readProcessedPayload(payload);
   },
   async delete_client(input, context) {
-    const client = readRequiredString(input.client, "client");
+    const client = requiredInputString(input.client, "client");
     return deleteListedItem({ context, path: `clients/${encodeURIComponent(client)}` });
   },
   async batch_delete_groups(input, context) {

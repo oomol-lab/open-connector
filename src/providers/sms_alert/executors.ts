@@ -15,6 +15,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "sms_alert";
@@ -52,14 +53,14 @@ export const smsAlertActionHandlers: ProviderActionHandlers<"sms_alert", SmsAler
       context,
       path: "/push.json",
       query: {
-        sender: readInputString(input.senderId, "senderId"),
-        mobileno: readInputString(input.mobileNumbers, "mobileNumbers"),
-        text: readInputString(input.message, "message"),
+        sender: requiredInputString(input.senderId, "senderId"),
+        mobileno: requiredInputString(input.mobileNumbers, "mobileNumbers"),
+        text: requiredInputString(input.message, "message"),
       },
     });
   },
   generate_otp(input, context) {
-    const template = readInputString(input.template, "template");
+    const template = requiredInputString(input.template, "template");
     if (!hasOtpPlaceholderToken(template)) {
       throw new ProviderRequestError(400, 'template must include an "[otp]" placeholder token');
     }
@@ -67,8 +68,8 @@ export const smsAlertActionHandlers: ProviderActionHandlers<"sms_alert", SmsAler
       context,
       path: "/mverify.json",
       query: {
-        sender: readInputString(input.senderId, "senderId"),
-        mobileno: readInputString(input.mobileNumber, "mobileNumber"),
+        sender: requiredInputString(input.senderId, "senderId"),
+        mobileno: requiredInputString(input.mobileNumber, "mobileNumber"),
         template,
       },
     });
@@ -76,8 +77,8 @@ export const smsAlertActionHandlers: ProviderActionHandlers<"sms_alert", SmsAler
   validate_otp(input, context) {
     return requestOtpValidation({
       context,
-      mobileNumber: readInputString(input.mobileNumber, "mobileNumber"),
-      code: readInputString(input.code, "code"),
+      mobileNumber: requiredInputString(input.mobileNumber, "mobileNumber"),
+      code: requiredInputString(input.code, "code"),
     });
   },
 };
@@ -354,10 +355,6 @@ function requireObject(value: unknown, fieldName: string): Record<string, unknow
     throw new ProviderRequestError(502, `sms_alert returned invalid ${fieldName}`);
   }
   return record;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readResponseString(value: unknown, fieldName: string): string {

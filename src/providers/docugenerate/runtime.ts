@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const docugenerateValidationPath = "/template";
 
@@ -64,7 +64,7 @@ export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", 
   },
 
   async get_template(input, context): Promise<unknown> {
-    const templateId = readRequiredString(input.templateId, "templateId");
+    const templateId = requiredInputString(input.templateId, "templateId");
     const payload = await requestDocugenerate({
       ...context,
       path: `/template/${encodeURIComponent(templateId)}`,
@@ -82,7 +82,7 @@ export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", 
       path: "/document",
       method: "POST",
       body: compactObject({
-        template_id: readRequiredString(input.templateId, "templateId"),
+        template_id: requiredInputString(input.templateId, "templateId"),
         data: input.data,
         name: optionalString(input.name),
         output_name: optionalString(input.outputName),
@@ -104,7 +104,7 @@ export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", 
       ...context,
       path: "/document",
       query: {
-        template_id: readRequiredString(input.templateId, "templateId"),
+        template_id: requiredInputString(input.templateId, "templateId"),
       },
       phase: "execute",
     });
@@ -115,7 +115,7 @@ export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", 
   },
 
   async get_document(input, context): Promise<unknown> {
-    const documentId = readRequiredString(input.documentId, "documentId");
+    const documentId = requiredInputString(input.documentId, "documentId");
     const payload = await requestDocugenerate({
       ...context,
       path: `/document/${encodeURIComponent(documentId)}`,
@@ -128,13 +128,13 @@ export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", 
   },
 
   async update_document(input, context): Promise<unknown> {
-    const documentId = readRequiredString(input.documentId, "documentId");
+    const documentId = requiredInputString(input.documentId, "documentId");
     const payload = await requestDocugenerate({
       ...context,
       path: `/document/${encodeURIComponent(documentId)}`,
       method: "PUT",
       body: {
-        name: readRequiredString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
       },
       phase: "execute",
     });
@@ -145,7 +145,7 @@ export const docugenerateActionHandlers: ProviderActionHandlers<"docugenerate", 
   },
 
   async delete_document(input, context): Promise<unknown> {
-    const documentId = readRequiredString(input.documentId, "documentId");
+    const documentId = requiredInputString(input.documentId, "documentId");
     await requestDocugenerate({
       ...context,
       path: `/document/${encodeURIComponent(documentId)}`,
@@ -370,10 +370,6 @@ function readPayloadArray(payload: unknown, label: string): unknown[] {
   }
 
   throw new ProviderRequestError(502, `docugenerate returned invalid ${label} JSON`);
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {

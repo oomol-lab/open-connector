@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "laravel_cloud";
 const laravelCloudApiBaseUrl = "https://cloud.laravel.com/api";
@@ -54,7 +59,10 @@ export const laravelCloudActionHandlers: ProviderActionHandlers<"laravel_cloud",
     const search = new URLSearchParams();
     addInclude(search, input.include);
     const payload = await requestLaravelCloud(
-      { path: `/applications/${encodeURIComponent(readInputString(input.applicationId, "applicationId"))}`, search },
+      {
+        path: `/applications/${encodeURIComponent(requiredInputString(input.applicationId, "applicationId"))}`,
+        search,
+      },
       context,
     );
     return {
@@ -71,7 +79,7 @@ export const laravelCloudActionHandlers: ProviderActionHandlers<"laravel_cloud",
     addInclude(search, input.include);
     const payload = await requestLaravelCloud(
       {
-        path: `/applications/${encodeURIComponent(readInputString(input.applicationId, "applicationId"))}/environments`,
+        path: `/applications/${encodeURIComponent(requiredInputString(input.applicationId, "applicationId"))}/environments`,
         search,
       },
       context,
@@ -87,7 +95,10 @@ export const laravelCloudActionHandlers: ProviderActionHandlers<"laravel_cloud",
     const search = new URLSearchParams();
     addInclude(search, input.include);
     const payload = await requestLaravelCloud(
-      { path: `/environments/${encodeURIComponent(readInputString(input.environmentId, "environmentId"))}`, search },
+      {
+        path: `/environments/${encodeURIComponent(requiredInputString(input.environmentId, "environmentId"))}`,
+        search,
+      },
       context,
     );
     return {
@@ -104,7 +115,7 @@ export const laravelCloudActionHandlers: ProviderActionHandlers<"laravel_cloud",
     addInclude(search, input.include);
     const payload = await requestLaravelCloud(
       {
-        path: `/environments/${encodeURIComponent(readInputString(input.environmentId, "environmentId"))}/deployments`,
+        path: `/environments/${encodeURIComponent(requiredInputString(input.environmentId, "environmentId"))}/deployments`,
         search,
       },
       context,
@@ -120,7 +131,7 @@ export const laravelCloudActionHandlers: ProviderActionHandlers<"laravel_cloud",
     const search = new URLSearchParams();
     addInclude(search, input.include);
     const payload = await requestLaravelCloud(
-      { path: `/deployments/${encodeURIComponent(readInputString(input.deploymentId, "deploymentId"))}`, search },
+      { path: `/deployments/${encodeURIComponent(requiredInputString(input.deploymentId, "deploymentId"))}`, search },
       context,
     );
     return {
@@ -356,10 +367,6 @@ function readObject(value: unknown): JsonObject {
     return value as JsonObject;
   }
   throw new ProviderRequestError(502, "Laravel Cloud response data must be an object");
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readResponseString(value: unknown, fieldName: string): string {

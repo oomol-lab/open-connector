@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "fluxguard";
@@ -42,7 +43,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
       method: "POST",
       path: "/add-page",
       body: compactObject({
-        url: readRequiredInputString(input.url, "url"),
+        url: requiredInputString(input.url, "url"),
         siteId: optionalString(input.siteId),
         sessionId: optionalString(input.sessionId),
         nickname: optionalString(input.nickname),
@@ -58,7 +59,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
   async initiate_crawl(input, context) {
     const payload = await requestFluxguardJson(context, {
       method: "POST",
-      path: `/site/${encodeURIComponent(readRequiredInputString(input.siteId, "siteId"))}/session/${encodeURIComponent(readRequiredInputString(input.sessionId, "sessionId"))}/crawl`,
+      path: `/site/${encodeURIComponent(requiredInputString(input.siteId, "siteId"))}/session/${encodeURIComponent(requiredInputString(input.sessionId, "sessionId"))}/crawl`,
       phase: "execute",
     });
 
@@ -69,7 +70,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
   async get_page(input, context) {
     const payload = await requestFluxguardJson(context, {
       method: "GET",
-      path: `/site/${encodeURIComponent(readRequiredInputString(input.siteId, "siteId"))}/session/${encodeURIComponent(readRequiredInputString(input.sessionId, "sessionId"))}/page/${encodeURIComponent(readRequiredInputString(input.pageId, "pageId"))}`,
+      path: `/site/${encodeURIComponent(requiredInputString(input.siteId, "siteId"))}/session/${encodeURIComponent(requiredInputString(input.sessionId, "sessionId"))}/page/${encodeURIComponent(requiredInputString(input.pageId, "pageId"))}`,
       phase: "execute",
     });
 
@@ -104,7 +105,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
       method: "PUT",
       path: "/account/webhook",
       body: compactObject({
-        url: readRequiredInputString(input.url, "url"),
+        url: requiredInputString(input.url, "url"),
         siteCategoryIds: readOptionalStringArray(input.siteCategoryIds),
       }),
       phase: "execute",
@@ -142,7 +143,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
       method: "POST",
       path: "/account/category",
       body: {
-        name: readRequiredInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
       },
       phase: "execute",
     });
@@ -154,7 +155,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
   async delete_site(input, context) {
     const payload = await requestFluxguardJson(context, {
       method: "DELETE",
-      path: `/site/${encodeURIComponent(readRequiredInputString(input.siteId, "siteId"))}`,
+      path: `/site/${encodeURIComponent(requiredInputString(input.siteId, "siteId"))}`,
       phase: "execute",
     });
 
@@ -165,7 +166,7 @@ export const fluxguardActionHandlers: ProviderActionHandlers<"fluxguard", Fluxgu
   async delete_page(input, context) {
     const payload = await requestFluxguardJson(context, {
       method: "DELETE",
-      path: `/site/${encodeURIComponent(readRequiredInputString(input.siteId, "siteId"))}/session/${encodeURIComponent(readRequiredInputString(input.sessionId, "sessionId"))}/page/${encodeURIComponent(readRequiredInputString(input.pageId, "pageId"))}`,
+      path: `/site/${encodeURIComponent(requiredInputString(input.siteId, "siteId"))}/session/${encodeURIComponent(requiredInputString(input.sessionId, "sessionId"))}/page/${encodeURIComponent(requiredInputString(input.pageId, "pageId"))}`,
       phase: "execute",
     });
 
@@ -408,10 +409,6 @@ function requireRecordPayload(payload: unknown): Record<string, unknown> {
     throw new ProviderRequestError(502, "Fluxguard returned an invalid payload");
   }
   return record;
-}
-
-function readRequiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {

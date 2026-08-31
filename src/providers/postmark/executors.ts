@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "postmark";
@@ -230,10 +231,6 @@ function buildTemplatesQuery(input: Record<string, unknown>): Record<string, str
     TemplateType: optionalString(input.TemplateType),
     LayoutTemplate: optionalString(input.LayoutTemplate),
   });
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function stringifyPathValue(value: unknown, fieldName: string): string {

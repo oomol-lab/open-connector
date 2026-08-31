@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "sensibo";
@@ -37,7 +38,7 @@ export const sensiboActionHandlers: ProviderActionHandlers<"sensibo", SensiboAct
     };
   },
   async get_device(input, context) {
-    const deviceId = readInputString(input.device_id, "device_id");
+    const deviceId = requiredInputString(input.device_id, "device_id");
     const payload = await requestSensiboJson({
       apiKey: context.apiKey,
       path: `/pods/${encodeURIComponent(deviceId)}`,
@@ -54,7 +55,7 @@ export const sensiboActionHandlers: ProviderActionHandlers<"sensibo", SensiboAct
     };
   },
   async get_ac_states(input, context) {
-    const deviceId = readInputString(input.device_id, "device_id");
+    const deviceId = requiredInputString(input.device_id, "device_id");
     const limit = optionalInteger(input.limit);
     const payload = await requestSensiboJson({
       apiKey: context.apiKey,
@@ -72,7 +73,7 @@ export const sensiboActionHandlers: ProviderActionHandlers<"sensibo", SensiboAct
     };
   },
   async set_ac_state(input, context) {
-    const deviceId = readInputString(input.device_id, "device_id");
+    const deviceId = requiredInputString(input.device_id, "device_id");
     const acState = requireRecord(input.acState, "Sensibo acState");
 
     await requestSensiboJson({
@@ -239,10 +240,6 @@ function readSensiboResult(payload: unknown, label: string): unknown {
     throw new ProviderRequestError(502, `Sensibo ${label} response is missing result`, payload);
   }
   return result;
-}
-
-function readInputString(value: unknown, key: string): string {
-  return requiredString(value, key, (message) => new ProviderRequestError(400, message));
 }
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {

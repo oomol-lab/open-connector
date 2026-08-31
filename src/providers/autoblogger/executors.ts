@@ -17,6 +17,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  requiredInputString,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -304,10 +305,6 @@ function readErrorMessage(payload: unknown): string | undefined {
 
 function readDashboardEmail(value: unknown): string {
   return requiredString(value, "dashboardEmail", (message) => new ProviderRequestError(400, message));
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredResponseString(value: unknown, fieldName: string): string {

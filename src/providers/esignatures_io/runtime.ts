@@ -13,7 +13,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const esignaturesIoApiBaseUrl = "https://esignatures.com/api";
 
@@ -332,8 +332,8 @@ function extractEsignaturesIoErrorMessage(payload: unknown): string | undefined 
 
 function buildCreateTemplatePayload(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    title: readRequiredNonEmptyString(input.title, "title"),
-    markdown: readRequiredNonEmptyString(input.markdown, "markdown"),
+    title: requiredInputString(input.title, "title"),
+    markdown: requiredInputString(input.markdown, "markdown"),
     labels: readOptionalStringArray(input.labels),
   });
 }
@@ -360,7 +360,7 @@ function buildCreateContractPayload(input: Record<string, unknown>): Record<stri
 
 function buildSignerPayload(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    name: readRequiredNonEmptyString(input.name, "signer.name"),
+    name: requiredInputString(input.name, "signer.name"),
     email: optionalString(input.email),
     mobile: optionalString(input.mobile),
     company_name: optionalString(input.companyName),
@@ -384,8 +384,8 @@ function buildPlaceholderFieldPayload(input: Record<string, unknown>): Record<st
 
 function buildSignerFieldPayload(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    signer_field_id: readRequiredNonEmptyString(input.signerFieldId, "signerFieldId"),
-    default_value: readRequiredNonEmptyString(input.defaultValue, "defaultValue"),
+    signer_field_id: requiredInputString(input.signerFieldId, "signerFieldId"),
+    default_value: requiredInputString(input.defaultValue, "defaultValue"),
   };
 }
 
@@ -529,12 +529,8 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
   return readStringArray(value);
 }
 
-function readRequiredNonEmptyString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function readRequiredTrimmedString(value: unknown, fieldName: string): string {
-  return readRequiredNonEmptyString(value, fieldName).trim();
+  return requiredInputString(value, fieldName).trim();
 }
 
 function stringifyOptionalInteger(value: number | undefined): string | undefined {

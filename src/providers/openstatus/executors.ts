@@ -22,6 +22,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "openstatus";
@@ -148,7 +149,7 @@ async function getMonitor(input: Record<string, unknown>, context: ApiKeyProvide
     service: monitorService,
     method: "GetMonitor",
     body: {
-      id: requireInputString(input.id, "id"),
+      id: requiredInputString(input.id, "id"),
     },
     context,
   });
@@ -164,14 +165,14 @@ async function getMonitorStatus(input: Record<string, unknown>, context: ApiKeyP
     service: monitorService,
     method: "GetMonitorStatus",
     body: {
-      id: requireInputString(input.id, "id"),
+      id: requiredInputString(input.id, "id"),
     },
     context,
   });
   const body = requireObjectPayload(payload, "OpenStatus monitor status response");
 
   return {
-    id: optionalString(body.id) ?? requireInputString(input.id, "id"),
+    id: optionalString(body.id) ?? requiredInputString(input.id, "id"),
     regions: readArray(body.regions),
   };
 }
@@ -181,7 +182,7 @@ async function getMonitorSummary(input: Record<string, unknown>, context: ApiKey
     service: monitorService,
     method: "GetMonitorSummary",
     body: compactObject({
-      id: requireInputString(input.id, "id"),
+      id: requiredInputString(input.id, "id"),
       timeRange: optionalString(input.timeRange),
       regions: readOptionalArray(input.regions),
     }),
@@ -199,7 +200,7 @@ async function listHttpResponseLogs(input: Record<string, unknown>, context: Api
     service: monitorService,
     method: "ListMonitorHTTPResponseLogs",
     body: compactObject({
-      id: requireInputString(input.id, "id"),
+      id: requiredInputString(input.id, "id"),
       fromTimestamp: input.fromTimestamp,
       toTimestamp: input.toTimestamp,
       limit: input.limit,
@@ -244,7 +245,7 @@ async function updateHttpMonitor(input: Record<string, unknown>, context: ApiKey
     service: monitorService,
     method: "UpdateHTTPMonitor",
     body: {
-      id: requireInputString(input.id, "id"),
+      id: requiredInputString(input.id, "id"),
       monitor: buildHttpMonitorPayload(input, true),
     },
     context,
@@ -265,7 +266,7 @@ async function executeSuccessMutation(
     service: monitorService,
     method,
     body: {
-      id: requireInputString(input.id, "id"),
+      id: requiredInputString(input.id, "id"),
     },
     context,
   });
@@ -428,16 +429,12 @@ function buildHttpMonitorPayload(input: Record<string, unknown>, partial: boolea
   });
 
   if (!partial) {
-    monitor.name = requireInputString(input.name, "name");
-    monitor.url = requireInputString(input.url, "url");
-    monitor.periodicity = requireInputString(input.periodicity, "periodicity");
+    monitor.name = requiredInputString(input.name, "name");
+    monitor.url = requiredInputString(input.url, "url");
+    monitor.periodicity = requiredInputString(input.periodicity, "periodicity");
   }
 
   return monitor;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireObjectPayload(value: unknown, label: string): Record<string, unknown> {

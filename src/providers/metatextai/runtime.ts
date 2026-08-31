@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 const metatextaiApiBaseUrl = "https://guard-api.metatext.ai";
 
@@ -198,8 +203,4 @@ function readErrorMessage(payload: unknown): string | undefined {
   }
 
   return undefined;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

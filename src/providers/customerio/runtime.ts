@@ -17,6 +17,7 @@ import {
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const customerioTrackApiBaseUrl = "https://track.customer.io";
@@ -42,7 +43,7 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
     return customerioRequest({
       context,
       method: "PUT",
-      path: `/api/v1/customers/${encodeURIComponent(requireNonEmptyString(input.identifier, "identifier"))}`,
+      path: `/api/v1/customers/${encodeURIComponent(requiredInputString(input.identifier, "identifier"))}`,
       body: requiredRecord(input.attributes, "attributes", providerInputError),
       phase: "execute",
     });
@@ -56,10 +57,10 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
     return customerioRequest({
       context,
       method: "POST",
-      path: `/api/v1/customers/${encodeURIComponent(requireNonEmptyString(input.identifier, "identifier"))}/events`,
+      path: `/api/v1/customers/${encodeURIComponent(requiredInputString(input.identifier, "identifier"))}/events`,
       body: compactObject({
         anonymous_id: anonymousId,
-        name: requireNonEmptyString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
         type,
         id: optionalString(input.eventId),
         timestamp: optionalInteger(input.timestamp),
@@ -74,8 +75,8 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
       method: "POST",
       path: "/api/v1/events",
       body: compactObject({
-        anonymous_id: requireNonEmptyString(input.anonymousId, "anonymousId"),
-        name: requireNonEmptyString(input.name, "name"),
+        anonymous_id: requiredInputString(input.anonymousId, "anonymousId"),
+        name: requiredInputString(input.name, "name"),
         type: optionalString(input.type),
         id: optionalString(input.eventId),
         timestamp: optionalInteger(input.timestamp),
@@ -88,7 +89,7 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
     return customerioRequest({
       context,
       method: "DELETE",
-      path: `/api/v1/customers/${encodeURIComponent(requireNonEmptyString(input.identifier, "identifier"))}`,
+      path: `/api/v1/customers/${encodeURIComponent(requiredInputString(input.identifier, "identifier"))}`,
       phase: "execute",
     });
   },
@@ -96,7 +97,7 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
     return customerioRequest({
       context,
       method: "POST",
-      path: `/api/v1/customers/${encodeURIComponent(requireNonEmptyString(input.identifier, "identifier"))}/suppress`,
+      path: `/api/v1/customers/${encodeURIComponent(requiredInputString(input.identifier, "identifier"))}/suppress`,
       phase: "execute",
     });
   },
@@ -104,7 +105,7 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
     return customerioRequest({
       context,
       method: "POST",
-      path: `/api/v1/customers/${encodeURIComponent(requireNonEmptyString(input.identifier, "identifier"))}/unsuppress`,
+      path: `/api/v1/customers/${encodeURIComponent(requiredInputString(input.identifier, "identifier"))}/unsuppress`,
       phase: "execute",
     });
   },
@@ -289,10 +290,6 @@ function normalizeRegion(value: string | undefined, apiBaseUrl: string | undefin
 
 function buildCustomerioAuthorization(siteId: string, apiKey: string): string {
   return `Basic ${Buffer.from(`${siteId}:${apiKey}`).toString("base64")}`;
-}
-
-function requireNonEmptyString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function readPersonReference(value: unknown, fieldName: string): Record<string, unknown> {

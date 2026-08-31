@@ -17,6 +17,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const mediastackApiBaseUrl = "https://api.mediastack.com/v1";
@@ -290,8 +291,4 @@ function requiredInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `Mediastack response is missing ${fieldName}`);
   }
   return numeric;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

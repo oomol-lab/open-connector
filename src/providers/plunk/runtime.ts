@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 type PlunkActionContext = ApiKeyProviderContext;
 type PlunkActionHandler = (input: Record<string, unknown>, context: PlunkActionContext) => Promise<unknown>;
@@ -364,8 +369,4 @@ function readRequiredProviderString(value: unknown, message: string): string {
     throw new ProviderRequestError(502, message);
   }
   return value;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

@@ -9,6 +9,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -27,7 +28,7 @@ export const hubPlannerActionHandlers: ProviderActionHandlers<"hub_planner", Hub
     return listHubPlannerCollection("project", "projects", input, context);
   },
   get_project(input, context) {
-    return getHubPlannerObject("project", "project", readRequiredString(input.projectId, "projectId"), context);
+    return getHubPlannerObject("project", "project", requiredInputString(input.projectId, "projectId"), context);
   },
   create_project(input, context) {
     return createHubPlannerObject("project", "project", buildProjectBody(input), context);
@@ -36,7 +37,7 @@ export const hubPlannerActionHandlers: ProviderActionHandlers<"hub_planner", Hub
     return listHubPlannerCollection("resource", "resources", input, context);
   },
   get_resource(input, context) {
-    return getHubPlannerObject("resource", "resource", readRequiredString(input.resourceId, "resourceId"), context);
+    return getHubPlannerObject("resource", "resource", requiredInputString(input.resourceId, "resourceId"), context);
   },
   create_resource(input, context) {
     return createHubPlannerObject("resource", "resource", buildResourceBody(input), context);
@@ -148,14 +149,14 @@ function buildListQuery(input: Record<string, unknown>) {
   return compactObject({
     page: typeof input.page === "number" ? input.page : undefined,
     limit: typeof input.limit === "number" ? input.limit : undefined,
-    sort: Array.isArray(input.sort) ? input.sort.map((value) => readRequiredString(value, "sort")) : undefined,
+    sort: Array.isArray(input.sort) ? input.sort.map((value) => requiredInputString(value, "sort")) : undefined,
   });
 }
 
 function buildProjectBody(input: Record<string, unknown>) {
   validateProjectInput(input);
   return compactObject({
-    name: readRequiredString(input.name, "name"),
+    name: requiredInputString(input.name, "name"),
     note: input.note,
     status: input.status,
     projectCode: optionalString(input.projectCode),
@@ -180,7 +181,7 @@ function buildProjectBody(input: Record<string, unknown>) {
 function buildResourceBody(input: Record<string, unknown>) {
   validateResourceInput(input);
   return compactObject({
-    firstName: readRequiredString(input.firstName, "firstName"),
+    firstName: requiredInputString(input.firstName, "firstName"),
     lastName: input.lastName,
     email: input.email,
     note: input.note,
@@ -305,10 +306,6 @@ function extractHubPlannerErrorMessage(payload: unknown): string | undefined {
   return undefined;
 }
 
-function readRequiredString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function trimStringArray(value: unknown, fieldName: string): string[] | undefined {
   if (value === undefined) {
     return undefined;
@@ -316,7 +313,7 @@ function trimStringArray(value: unknown, fieldName: string): string[] | undefine
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
-  return value.map((item) => readRequiredString(item, fieldName));
+  return value.map((item) => requiredInputString(item, fieldName));
 }
 
 function validateProjectInput(input: Record<string, unknown>): void {

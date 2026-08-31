@@ -12,6 +12,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "airfocus";
@@ -44,7 +45,7 @@ export const airfocusActionHandlers: Record<string, AirfocusHandler> = {
     return normalizeSearchPage(payload, "workspaces");
   },
   async get_workspace(input, context) {
-    const workspaceId = readId(input.workspaceId, "workspaceId");
+    const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
     return {
       workspace: await requestAirfocusObject({
         path: `/workspaces/${encodeURIComponent(workspaceId)}`,
@@ -54,7 +55,7 @@ export const airfocusActionHandlers: Record<string, AirfocusHandler> = {
     };
   },
   async search_items(input, context) {
-    const workspaceId = readId(input.workspaceId, "workspaceId");
+    const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
     const payload = await requestAirfocusObject({
       path: `/workspaces/${encodeURIComponent(workspaceId)}/items/search`,
       context,
@@ -75,7 +76,7 @@ export const airfocusActionHandlers: Record<string, AirfocusHandler> = {
     };
   },
   async create_item(input, context) {
-    const workspaceId = readId(input.workspaceId, "workspaceId");
+    const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
     return {
       item: await requestAirfocusObject({
         path: `/workspaces/${encodeURIComponent(workspaceId)}/items`,
@@ -233,11 +234,10 @@ function pickFields(input: Record<string, unknown>, keys: readonly string[]): Re
 }
 
 function readItemPath(input: Record<string, unknown>): { workspaceId: string; itemId: string } {
-  return { workspaceId: readId(input.workspaceId, "workspaceId"), itemId: readId(input.itemId, "itemId") };
-}
-
-function readId(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
+  return {
+    workspaceId: requiredInputString(input.workspaceId, "workspaceId"),
+    itemId: requiredInputString(input.itemId, "itemId"),
+  };
 }
 
 function compactHeaders(headers: Record<string, string | undefined>): Record<string, string> {

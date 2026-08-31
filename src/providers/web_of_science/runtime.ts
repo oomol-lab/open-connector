@@ -9,6 +9,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
+  requiredInputString,
   setSearchParams,
 } from "../provider-runtime.ts";
 
@@ -25,7 +26,7 @@ export const webOfScienceActionHandlers: ProviderActionHandlers<"web_of_science"
       {
         path: "/documents",
         query: {
-          q: readRequiredInput(input.query, "query"),
+          q: requiredInputString(input.query, "query"),
           db: optionalString(input.database),
           limit: readOptionalIntegerString(input.limit),
           page: readOptionalIntegerString(input.page),
@@ -45,7 +46,7 @@ export const webOfScienceActionHandlers: ProviderActionHandlers<"web_of_science"
   },
 
   async get_document(input, context) {
-    const uid = readRequiredInput(input.uid, "uid");
+    const uid = requiredInputString(input.uid, "uid");
     const payload = await requestWebOfScienceJson(
       {
         path: `/documents/${encodeURIComponent(uid)}`,
@@ -72,7 +73,7 @@ export const webOfScienceActionHandlers: ProviderActionHandlers<"web_of_science"
   },
 
   async get_journal(input, context) {
-    const id = readRequiredInput(input.id, "id");
+    const id = requiredInputString(input.id, "id");
     const payload = await requestWebOfScienceJson(
       {
         path: `/journals/${encodeURIComponent(id)}`,
@@ -295,10 +296,6 @@ function requireResponseRecord(value: unknown, message: string): Record<string, 
     throw new ProviderRequestError(502, message);
   }
   return record;
-}
-
-function readRequiredInput(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalIntegerString(value: unknown): string | undefined {

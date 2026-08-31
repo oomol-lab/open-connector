@@ -18,6 +18,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  requiredInputString,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -350,10 +351,6 @@ function requireObjectPayload(payload: unknown, subject: string) {
 function requireArrayField(value: unknown, fieldName: string) {
   if (!Array.isArray(value)) throw new ProviderRequestError(502, `malformed canny payload: ${fieldName}`, value);
   return value;
-}
-
-function requiredInputString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function optionalInteger(value: unknown) {

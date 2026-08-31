@@ -4,7 +4,7 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const metasoApiBaseUrl = "https://metaso.cn/api/v1";
 
@@ -377,8 +377,4 @@ function readPositiveInteger(value: unknown, fieldName: string): number | undefi
   }
 
   throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

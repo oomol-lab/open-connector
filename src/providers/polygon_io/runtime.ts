@@ -11,7 +11,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "polygon_io";
 const polygonIoApiBaseUrl = "https://api.massive.com";
@@ -50,7 +55,7 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
     };
   },
   async get_ticker_details(input, context) {
-    const ticker = requiredInputText(input.ticker, "ticker");
+    const ticker = requiredInputString(input.ticker, "ticker");
     const response = optionalRecord(
       await requestPolygonIoJson(context, `/v3/reference/tickers/${encodeURIComponent(ticker)}`, {
         date: optionalString(input.date),
@@ -62,7 +67,7 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
     };
   },
   async get_previous_day_bar(input, context) {
-    const ticker = requiredInputText(input.ticker, "ticker");
+    const ticker = requiredInputString(input.ticker, "ticker");
     const response = optionalRecord(
       await requestPolygonIoJson(context, `/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev`, {
         adjusted: optionalBoolean(input.adjusted),
@@ -71,11 +76,11 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
     return normalizeAggregateResponse(response);
   },
   async get_aggregate_bars(input, context) {
-    const ticker = requiredInputText(input.ticker, "ticker");
+    const ticker = requiredInputString(input.ticker, "ticker");
     const multiplier = requiredInteger(input.multiplier, "multiplier");
-    const timespan = requiredInputText(input.timespan, "timespan");
-    const from = requiredInputText(input.from, "from");
-    const to = requiredInputText(input.to, "to");
+    const timespan = requiredInputString(input.timespan, "timespan");
+    const from = requiredInputString(input.from, "from");
+    const to = requiredInputString(input.to, "to");
     const path = `/v2/aggs/ticker/${encodeURIComponent(ticker)}/range/${multiplier}/${encodeURIComponent(timespan)}/${encodeURIComponent(from)}/${encodeURIComponent(to)}`;
     const response = optionalRecord(
       await requestPolygonIoJson(context, path, {
@@ -402,10 +407,6 @@ function objectItems(value: unknown): Array<Record<string, unknown>> {
     const record = optionalRecord(item);
     return record ? [record] : [];
   });
-}
-
-function requiredInputText(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredInteger(value: unknown, fieldName: string): number {

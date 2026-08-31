@@ -15,6 +15,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "configcat";
@@ -148,7 +149,7 @@ async function executeListProducts(context: ConfigcatContext): Promise<unknown> 
 }
 
 async function executeListConfigs(input: Record<string, unknown>, context: ConfigcatContext): Promise<unknown> {
-  const productId = requireInputString(input.productId, "productId");
+  const productId = requiredInputString(input.productId, "productId");
   const payload = await requestConfigcatJsonForAction(context, {
     method: "GET",
     path: `/v1/products/${encodeURIComponent(productId)}/configs`,
@@ -159,7 +160,7 @@ async function executeListConfigs(input: Record<string, unknown>, context: Confi
 }
 
 async function executeListEnvironments(input: Record<string, unknown>, context: ConfigcatContext): Promise<unknown> {
-  const productId = requireInputString(input.productId, "productId");
+  const productId = requiredInputString(input.productId, "productId");
   const payload = await requestConfigcatJsonForAction(context, {
     method: "GET",
     path: `/v1/products/${encodeURIComponent(productId)}/environments`,
@@ -170,7 +171,7 @@ async function executeListEnvironments(input: Record<string, unknown>, context: 
 }
 
 async function executeListSettings(input: Record<string, unknown>, context: ConfigcatContext): Promise<unknown> {
-  const configId = requireInputString(input.configId, "configId");
+  const configId = requiredInputString(input.configId, "configId");
   const payload = await requestConfigcatJsonForAction(context, {
     method: "GET",
     path: `/v1/configs/${encodeURIComponent(configId)}/settings`,
@@ -181,7 +182,7 @@ async function executeListSettings(input: Record<string, unknown>, context: Conf
 }
 
 async function executeGetSettingValue(input: Record<string, unknown>, context: ConfigcatContext): Promise<unknown> {
-  const environmentId = requireInputString(input.environmentId, "environmentId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
   const settingId = requireInputInteger(input.settingId, "settingId");
   const payload = await requestConfigcatJsonForAction(context, {
     method: "GET",
@@ -191,8 +192,8 @@ async function executeGetSettingValue(input: Record<string, unknown>, context: C
 }
 
 async function executeListSettingValues(input: Record<string, unknown>, context: ConfigcatContext): Promise<unknown> {
-  const configId = requireInputString(input.configId, "configId");
-  const environmentId = requireInputString(input.environmentId, "environmentId");
+  const configId = requiredInputString(input.configId, "configId");
+  const environmentId = requiredInputString(input.environmentId, "environmentId");
   const payload = await requestConfigcatJsonForAction(context, {
     method: "GET",
     path: `/v2/configs/${encodeURIComponent(configId)}/environments/${encodeURIComponent(environmentId)}/values`,
@@ -514,10 +515,6 @@ function requireArray(value: unknown, fieldName: string): unknown[] {
     throw new ProviderRequestError(502, `${fieldName} must be an array`, value);
   }
   return value;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireResponseString(value: unknown, fieldName: string): string {

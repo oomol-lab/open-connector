@@ -17,6 +17,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   readProviderTextBody,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const cartesApiBaseUrl = "https://cartes.io/api";
@@ -64,7 +65,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
     const page = await cartesRequest("maps/search", context, {
       phase: "execute",
       query: {
-        q: readRequiredString(input.query, "query"),
+        q: requiredInputString(input.query, "query"),
         page: optionalNumber(input.page),
       },
     });
@@ -82,7 +83,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async get_map(input, context) {
     const map = await cartesRequest(
-      `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}`,
+      `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}`,
       context,
       {
         phase: "execute",
@@ -94,7 +95,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async update_map(input, context) {
     const map = await cartesRequest(
-      `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}`,
+      `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}`,
       context,
       {
         method: "PATCH",
@@ -110,7 +111,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async delete_map(input, context) {
     const result = await cartesRequest(
-      `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}`,
+      `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}`,
       context,
       {
         method: "DELETE",
@@ -123,7 +124,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async list_markers(input, context) {
     const markers = await cartesRequest(
-      `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}/markers`,
+      `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}/markers`,
       context,
       {
         phase: "execute",
@@ -152,7 +153,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async create_marker(input, context) {
     const marker = await cartesRequest(
-      `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}/markers`,
+      `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}/markers`,
       context,
       {
         method: "POST",
@@ -209,7 +210,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async list_related_maps(input, context) {
     const maps = await cartesRequest(
-      `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}/related`,
+      `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}/related`,
       context,
       { phase: "execute" },
     );
@@ -229,7 +230,7 @@ export const cartesActionHandlers: ProviderActionHandlers<"cartes", CartesAction
 
   async get_user(input, context) {
     const user = await cartesRequest(
-      `users/${encodeURIComponent(readRequiredString(input.username, "username"))}`,
+      `users/${encodeURIComponent(requiredInputString(input.username, "username"))}`,
       context,
       {
         phase: "execute",
@@ -402,7 +403,7 @@ function normalizeSuccess(payload: unknown): Record<string, unknown> {
 }
 
 function markerPath(input: Record<string, unknown>): string {
-  return `maps/${encodeURIComponent(readRequiredString(input.mapUuid, "mapUuid"))}/markers/${encodeURIComponent(
+  return `maps/${encodeURIComponent(requiredInputString(input.mapUuid, "mapUuid"))}/markers/${encodeURIComponent(
     String(readRequiredNumber(input.markerId, "markerId")),
   )}`;
 }
@@ -490,10 +491,6 @@ function requireResponseObject(value: unknown, label: string): Record<string, un
 
 function requireResponseObjectArray(value: unknown, label: string): Array<Record<string, unknown>> {
   return objectArray(value, label, (message) => new ProviderRequestError(502, message, value));
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readRequiredNumber(value: unknown, fieldName: string): number {

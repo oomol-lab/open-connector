@@ -10,6 +10,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const gongDefaultApiBaseUrl = "https://api.gong.io";
@@ -106,8 +107,8 @@ export function resolveGongCredentialContext(
 ): GongContext {
   return {
     apiBaseUrl: normalizeGongApiBaseUrl(input.apiBaseUrl || gongDefaultApiBaseUrl),
-    accessKey: requireNonEmptyString(input.accessKey, "accessKey"),
-    accessKeySecret: requireNonEmptyString(input.accessKeySecret, "accessKeySecret"),
+    accessKey: requiredInputString(input.accessKey, "accessKey"),
+    accessKeySecret: requiredInputString(input.accessKeySecret, "accessKeySecret"),
     fetcher,
     signal,
   };
@@ -286,11 +287,7 @@ function buildProviderAccountId(apiBaseUrl: string, accessKey: string): string {
 }
 
 function requireInputString(value: unknown, fieldName: string): string {
-  return requireNonEmptyString(optionalString(value), fieldName);
-}
-
-function requireNonEmptyString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
+  return requiredInputString(optionalString(value), fieldName);
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

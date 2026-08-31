@@ -23,6 +23,7 @@ import {
   providerUserAgent,
   readProviderJsonBody,
   readTransitFileInput,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const pixellabApiBaseUrl = "https://api.pixellab.ai/v2";
@@ -66,7 +67,7 @@ export const pixellabActionHandlers: ProviderActionHandlerSubset<"pixellab", Pix
       compactObject({
         first_frame: firstFrame,
         last_frame: lastFrame,
-        action: readRequiredString(input.action, "action"),
+        action: requiredInputString(input.action, "action"),
         frame_count: frameCount,
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
@@ -78,7 +79,7 @@ export const pixellabActionHandlers: ProviderActionHandlerSubset<"pixellab", Pix
   },
 
   async get_background_job(input, context) {
-    const jobId = readRequiredString(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     const payload = await pixellabRequestJson(
       "GET",
       `/background-jobs/${encodeURIComponent(jobId)}`,
@@ -363,7 +364,7 @@ function normalizeSkeletonFrames(value: unknown): Array<Array<Record<string, unk
       return compactObject({
         x: requireInputNumber(record.x, `skeletonKeypoints[${frameIndex}][${pointIndex}].x`),
         y: requireInputNumber(record.y, `skeletonKeypoints[${frameIndex}][${pointIndex}].y`),
-        label: readRequiredString(record.label, `skeletonKeypoints[${frameIndex}][${pointIndex}].label`),
+        label: requiredInputString(record.label, `skeletonKeypoints[${frameIndex}][${pointIndex}].label`),
         z_index: optionalNumber(record.zIndex),
       });
     });
@@ -496,10 +497,6 @@ function requireInputNumber(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(400, `${fieldName} must be a finite number.`);
   }
   return number;
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function createPixellabError(response: Response, payload: unknown): ProviderRequestError {

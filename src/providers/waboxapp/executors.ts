@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "waboxapp";
@@ -124,9 +125,9 @@ async function sendChat(input: Record<string, unknown>, context: WaboxappActionC
     actionPath: "/api/send/chat",
     context,
     body: {
-      to: requireInputString(input.to, "to"),
-      custom_uid: requireInputString(input.customUid, "customUid"),
-      text: requireInputString(input.text, "text"),
+      to: requiredInputString(input.to, "to"),
+      custom_uid: requiredInputString(input.customUid, "customUid"),
+      text: requiredInputString(input.text, "text"),
     },
   });
   return normalizeWaboxappSendResult(payload);
@@ -137,9 +138,9 @@ async function sendImage(input: Record<string, unknown>, context: WaboxappAction
     actionPath: "/api/send/image",
     context,
     body: compactObject({
-      to: requireInputString(input.to, "to"),
-      custom_uid: requireInputString(input.customUid, "customUid"),
-      url: requireInputString(input.imageUrl, "imageUrl"),
+      to: requiredInputString(input.to, "to"),
+      custom_uid: requiredInputString(input.customUid, "customUid"),
+      url: requiredInputString(input.imageUrl, "imageUrl"),
       caption: optionalString(input.caption),
       description: optionalString(input.description),
     }) as Record<string, string>,
@@ -152,9 +153,9 @@ async function sendLink(input: Record<string, unknown>, context: WaboxappActionC
     actionPath: "/api/send/link",
     context,
     body: compactObject({
-      to: requireInputString(input.to, "to"),
-      custom_uid: requireInputString(input.customUid, "customUid"),
-      url: requireInputString(input.linkUrl, "linkUrl"),
+      to: requiredInputString(input.to, "to"),
+      custom_uid: requiredInputString(input.customUid, "customUid"),
+      url: requiredInputString(input.linkUrl, "linkUrl"),
       caption: optionalString(input.caption),
       description: optionalString(input.description),
       url_thumb: optionalString(input.urlThumb),
@@ -168,9 +169,9 @@ async function sendMedia(input: Record<string, unknown>, context: WaboxappAction
     actionPath: "/api/send/media",
     context,
     body: compactObject({
-      to: requireInputString(input.to, "to"),
-      custom_uid: requireInputString(input.customUid, "customUid"),
-      url: requireInputString(input.mediaUrl, "mediaUrl"),
+      to: requiredInputString(input.to, "to"),
+      custom_uid: requiredInputString(input.customUid, "customUid"),
+      url: requiredInputString(input.mediaUrl, "mediaUrl"),
       caption: optionalString(input.caption),
       description: optionalString(input.description),
       url_thumb: optionalString(input.urlThumb),
@@ -351,10 +352,6 @@ function extractWaboxappError(payload: unknown): string | undefined {
   }
   const record = optionalRecord(payload);
   return record ? optionalString(record.error)?.trim() || undefined : undefined;
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireResponseString(value: unknown, fieldName: string): string {

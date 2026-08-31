@@ -19,6 +19,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  requiredInputString,
   toProviderProxyError,
 } from "../provider-runtime.ts";
 
@@ -86,7 +87,7 @@ export const feishuCustomBotActionHandlers: ProviderActionHandlers<"feishu_custo
         {
           msg_type: "text",
           content: {
-            text: requiredFeishuCustomBotString(input.text, "text"),
+            text: requiredInputString(input.text, "text"),
           },
         },
         context,
@@ -108,7 +109,7 @@ export const feishuCustomBotActionHandlers: ProviderActionHandlers<"feishu_custo
         {
           msg_type: "image",
           content: {
-            image_key: requiredFeishuCustomBotString(input.imageKey, "imageKey"),
+            image_key: requiredInputString(input.imageKey, "imageKey"),
           },
         },
         context,
@@ -119,7 +120,7 @@ export const feishuCustomBotActionHandlers: ProviderActionHandlers<"feishu_custo
         {
           msg_type: "share_chat",
           content: {
-            share_chat_id: requiredFeishuCustomBotString(input.shareChatId, "shareChatId"),
+            share_chat_id: requiredInputString(input.shareChatId, "shareChatId"),
           },
         },
         context,
@@ -429,7 +430,7 @@ function normalizeFeishuCustomBotError(
 }
 
 function resolveFeishuCustomBotApiKey(apiKey: string): FeishuCustomBotCredential {
-  const trimmed = requiredFeishuCustomBotString(apiKey, "apiKey");
+  const trimmed = requiredInputString(apiKey, "apiKey");
   if (trimmed.includes("://")) {
     const webhook = parseFeishuCustomBotWebhookUrl(trimmed);
     return {
@@ -476,7 +477,7 @@ function extractFeishuCustomBotToken(webhook: URL): string {
 }
 
 function normalizeFeishuCustomBotWebhookToken(value: string): string {
-  const trimmed = requiredFeishuCustomBotString(value, "apiKey");
+  const trimmed = requiredInputString(value, "apiKey");
   if (trimmed.includes("/")) {
     throw new ProviderRequestError(400, "apiKey must be a Feishu webhook token or webhook URL");
   }
@@ -514,10 +515,6 @@ function readFeishuCustomBotInteger(value: unknown): number | null {
 
 function readFeishuCustomBotFallbackMessage(rawText: string): string | undefined {
   return optionalString(rawText);
-}
-
-function requiredFeishuCustomBotString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredFeishuCustomBotObject(value: unknown, fieldName: string): Record<string, unknown> {

@@ -18,6 +18,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   requireApiKeyCredential,
+  requiredInputString,
   runProviderRequest,
   toProviderProxyError,
 } from "../provider-runtime.ts";
@@ -63,7 +64,7 @@ export const shippoActionHandlers: ProviderActionHandlers<"shippo", ShippoAction
   },
   get_address(input, context) {
     return requestAndWrapShippoJson({
-      path: `/addresses/${encodeURIComponent(requireInputString(input.addressId, "addressId"))}/`,
+      path: `/addresses/${encodeURIComponent(requiredInputString(input.addressId, "addressId"))}/`,
       apiKey: context.apiKey,
       fetcher: context.fetcher,
       signal: context.signal,
@@ -72,7 +73,7 @@ export const shippoActionHandlers: ProviderActionHandlers<"shippo", ShippoAction
   },
   validate_address(input, context) {
     return requestAndWrapShippoJson({
-      path: `/addresses/${encodeURIComponent(requireInputString(input.addressId, "addressId"))}/validate/`,
+      path: `/addresses/${encodeURIComponent(requiredInputString(input.addressId, "addressId"))}/validate/`,
       apiKey: context.apiKey,
       fetcher: context.fetcher,
       signal: context.signal,
@@ -101,7 +102,7 @@ export const shippoActionHandlers: ProviderActionHandlers<"shippo", ShippoAction
   },
   get_parcel(input, context) {
     return requestAndWrapShippoJson({
-      path: `/parcels/${encodeURIComponent(requireInputString(input.parcelId, "parcelId"))}/`,
+      path: `/parcels/${encodeURIComponent(requiredInputString(input.parcelId, "parcelId"))}/`,
       apiKey: context.apiKey,
       fetcher: context.fetcher,
       signal: context.signal,
@@ -109,8 +110,8 @@ export const shippoActionHandlers: ProviderActionHandlers<"shippo", ShippoAction
     });
   },
   get_tracking_status(input, context) {
-    const carrier = encodeURIComponent(requireInputString(input.carrier, "carrier"));
-    const trackingNumber = encodeURIComponent(requireInputString(input.trackingNumber, "trackingNumber"));
+    const carrier = encodeURIComponent(requiredInputString(input.carrier, "carrier"));
+    const trackingNumber = encodeURIComponent(requiredInputString(input.trackingNumber, "trackingNumber"));
     return requestAndWrapShippoJson({
       path: `/tracks/${carrier}/${trackingNumber}`,
       apiKey: context.apiKey,
@@ -247,7 +248,7 @@ function buildAddressBody(input: Record<string, unknown>): Record<string, unknow
     city: optionalString(input.city),
     state: optionalString(input.state),
     zip: optionalString(input.zip),
-    country: requireInputString(input.country, "country"),
+    country: requiredInputString(input.country, "country"),
     phone: optionalString(input.phone),
     email: optionalString(input.email),
     is_residential: input.isResidential,
@@ -262,16 +263,12 @@ function buildParcelBody(input: Record<string, unknown>): Record<string, unknown
     width: optionalString(input.width),
     height: optionalString(input.height),
     distance_unit: optionalString(input.distanceUnit),
-    weight: requireInputString(input.weight, "weight"),
-    mass_unit: requireInputString(input.massUnit, "massUnit"),
+    weight: requiredInputString(input.weight, "weight"),
+    mass_unit: requiredInputString(input.massUnit, "massUnit"),
     template: optionalString(input.template),
     metadata: optionalString(input.metadata),
     extra: input.extra,
   });
-}
-
-function requireInputString(value: unknown, key: string): string {
-  return requiredString(value, key, (message) => new ProviderRequestError(400, message));
 }
 
 async function readJsonResponse(response: Response): Promise<Record<string, unknown>> {

@@ -11,7 +11,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 type NylasActionContext = ApiKeyProviderContext;
 type NylasPhase = "validate" | "execute";
@@ -312,10 +317,6 @@ function requiredRecord(value: unknown, fieldName: string): Record<string, unkno
     return record;
   }
   throw new ProviderRequestError(502, `Nylas response is missing ${fieldName}`);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requiredOutputString(value: unknown, fieldName: string): string {

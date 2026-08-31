@@ -17,6 +17,7 @@ import {
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const moesifApiBaseUrl = "https://api.moesif.com/v1";
@@ -106,7 +107,7 @@ export const moesifActionHandlers: ProviderActionHandlers<"moesif", MoesifAction
       path: buildOrganizationPath(
         input.organizationId,
         "workspaces",
-        readRequiredString(input.workspaceId, "workspaceId"),
+        requiredInputString(input.workspaceId, "workspaceId"),
       ),
       apiKey: context.apiKey,
       params: {
@@ -362,10 +363,6 @@ function requireRecord(value: unknown, message: string): Record<string, unknown>
 
 function readTake(value: unknown): number {
   return optionalInteger(value) ?? defaultTake;
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readRequiredStringList(value: unknown, fieldName: string): string[] {

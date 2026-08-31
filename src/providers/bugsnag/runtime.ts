@@ -10,6 +10,7 @@ import {
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const bugsnagApiBaseUrl: string = "https://api.bugsnag.com";
@@ -101,7 +102,7 @@ async function listOrganizations(input: Record<string, unknown>, context: ApiKey
 }
 
 async function getOrganization(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const organizationId = readRequiredInputString(input.organizationId, "organizationId");
+  const organizationId = requiredInputString(input.organizationId, "organizationId");
   const response = await requestBugsnagJson({
     apiKey: context.apiKey,
     path: `/organizations/${encodeURIComponent(organizationId)}`,
@@ -120,7 +121,7 @@ async function listOrganizationProjects(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<unknown> {
-  const organizationId = readRequiredInputString(input.organizationId, "organizationId");
+  const organizationId = requiredInputString(input.organizationId, "organizationId");
   const response = await requestBugsnagJson({
     apiKey: context.apiKey,
     path: `/organizations/${encodeURIComponent(organizationId)}/projects`,
@@ -143,7 +144,7 @@ async function listOrganizationProjects(
 }
 
 async function listProjectErrors(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const projectId = readRequiredInputString(input.projectId, "projectId");
+  const projectId = requiredInputString(input.projectId, "projectId");
   const response = await requestBugsnagJson({
     apiKey: context.apiKey,
     path: `/projects/${encodeURIComponent(projectId)}/errors`,
@@ -166,8 +167,8 @@ async function listProjectErrors(input: Record<string, unknown>, context: ApiKey
 }
 
 async function listErrorEvents(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const projectId = readRequiredInputString(input.projectId, "projectId");
-  const errorId = readRequiredInputString(input.errorId, "errorId");
+  const projectId = requiredInputString(input.projectId, "projectId");
+  const errorId = requiredInputString(input.errorId, "errorId");
   const response = await requestBugsnagJson({
     apiKey: context.apiKey,
     path: `/projects/${encodeURIComponent(projectId)}/errors/${encodeURIComponent(errorId)}/events`,
@@ -189,7 +190,7 @@ async function listErrorEvents(input: Record<string, unknown>, context: ApiKeyPr
 }
 
 async function getLatestErrorEvent(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const errorId = readRequiredInputString(input.errorId, "errorId");
+  const errorId = requiredInputString(input.errorId, "errorId");
   const response = await requestBugsnagJson({
     apiKey: context.apiKey,
     path: `/errors/${encodeURIComponent(errorId)}/latest_event`,
@@ -205,7 +206,7 @@ async function getLatestErrorEvent(input: Record<string, unknown>, context: ApiK
 }
 
 async function listProjectReleases(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const projectId = readRequiredInputString(input.projectId, "projectId");
+  const projectId = requiredInputString(input.projectId, "projectId");
   const response = await requestBugsnagJson({
     apiKey: context.apiKey,
     path: `/projects/${encodeURIComponent(projectId)}/releases`,
@@ -373,10 +374,6 @@ function requiredOptionalRecord(value: unknown): Record<string, unknown> | undef
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined;
-}
-
-function readRequiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function readString(value: unknown): string | undefined {

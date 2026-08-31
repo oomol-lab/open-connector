@@ -6,6 +6,7 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -122,7 +123,7 @@ async function executeGetContentType(
   input: Record<string, unknown>,
   context: ContentstackContentDeliveryContext,
 ): Promise<Record<string, unknown>> {
-  const contentTypeUid = requireProviderString(input.contentTypeUid, "contentTypeUid");
+  const contentTypeUid = requiredInputString(input.contentTypeUid, "contentTypeUid");
   const payload = await requestContentstackJsonForAction({
     input,
     context,
@@ -143,7 +144,7 @@ async function executeListEntries(
   input: Record<string, unknown>,
   context: ContentstackContentDeliveryContext,
 ): Promise<Record<string, unknown>> {
-  const contentTypeUid = requireProviderString(input.contentTypeUid, "contentTypeUid");
+  const contentTypeUid = requiredInputString(input.contentTypeUid, "contentTypeUid");
   const payload = await requestContentstackJsonForAction({
     input,
     context,
@@ -179,8 +180,8 @@ async function executeGetEntry(
   input: Record<string, unknown>,
   context: ContentstackContentDeliveryContext,
 ): Promise<Record<string, unknown>> {
-  const contentTypeUid = requireProviderString(input.contentTypeUid, "contentTypeUid");
-  const entryUid = requireProviderString(input.entryUid, "entryUid");
+  const contentTypeUid = requiredInputString(input.contentTypeUid, "contentTypeUid");
+  const entryUid = requiredInputString(input.entryUid, "entryUid");
   const payload = await requestContentstackJsonForAction({
     input,
     context,
@@ -396,10 +397,6 @@ function requireStoredDeliveryToken(input: ContentstackContentDeliveryContext): 
     return deliveryToken;
   }
   throw new ProviderRequestError(400, "Contentstack Content Delivery credential is missing deliveryToken");
-}
-
-function requireProviderString(value: unknown, field: string): string {
-  return requiredString(value, field, providerInputError);
 }
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {

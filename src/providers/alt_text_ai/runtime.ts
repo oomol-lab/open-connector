@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const altTextAiApiBaseUrl = "https://alttext.ai/api/v1";
 
@@ -321,8 +321,4 @@ function readNullableHeaderInteger(headers: Headers, name: string): number | nul
   }
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : null;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

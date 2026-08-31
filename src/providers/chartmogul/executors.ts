@@ -23,6 +23,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 export const chartmogulApiBaseUrl = "https://api.chartmogul.com";
@@ -158,7 +159,7 @@ async function listCustomers(input: Record<string, unknown>, context: ApiKeyProv
 }
 
 async function getCustomer(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const customerUuid = requireInputString(input.customerUuid, "customerUuid");
+  const customerUuid = requiredInputString(input.customerUuid, "customerUuid");
   const payload = await requestChartmogulJson({
     context,
     path: `/v1/customers/${encodeURIComponent(customerUuid)}`,
@@ -378,11 +379,7 @@ function normalizeInclude(value: unknown): string | undefined {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, "include must be an array of strings");
   }
-  return value.map((item) => requireInputString(item, "include")).join(",");
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
+  return value.map((item) => requiredInputString(item, "include")).join(",");
 }
 
 function readObject(value: unknown, label: string): Record<string, unknown> {

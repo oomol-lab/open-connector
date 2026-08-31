@@ -13,6 +13,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "yoplanning";
@@ -42,7 +43,7 @@ export const yoplanningActionHandlers: Record<string, YoplanningHandler> = {
     );
   },
   async get_team(input, context) {
-    const teamId = readId(input.teamId, "teamId");
+    const teamId = requiredInputString(input.teamId, "teamId");
     return {
       team: requireResourcePayload(
         await requestYoplanningJson({
@@ -55,7 +56,7 @@ export const yoplanningActionHandlers: Record<string, YoplanningHandler> = {
     };
   },
   async list_online_products(input, context) {
-    const teamId = readId(input.teamId, "teamId");
+    const teamId = requiredInputString(input.teamId, "teamId");
     return parsePaginatedPayload(
       await requestYoplanningJson({
         context,
@@ -72,8 +73,8 @@ export const yoplanningActionHandlers: Record<string, YoplanningHandler> = {
     );
   },
   async get_online_product(input, context) {
-    const teamId = readId(input.teamId, "teamId");
-    const productId = readId(input.productId, "productId");
+    const teamId = requiredInputString(input.teamId, "teamId");
+    const productId = requiredInputString(input.productId, "productId");
     return {
       product: requireResourcePayload(
         await requestYoplanningJson({
@@ -86,8 +87,8 @@ export const yoplanningActionHandlers: Record<string, YoplanningHandler> = {
     };
   },
   async list_product_availabilities(input, context) {
-    const teamId = readId(input.teamId, "teamId");
-    const productId = readId(input.productId, "productId");
+    const teamId = requiredInputString(input.teamId, "teamId");
+    const productId = requiredInputString(input.productId, "productId");
     return parsePaginatedPayload(
       await requestYoplanningJson({
         context,
@@ -103,8 +104,8 @@ export const yoplanningActionHandlers: Record<string, YoplanningHandler> = {
     );
   },
   async get_availability_details(input, context) {
-    const teamId = readId(input.teamId, "teamId");
-    const availabilityId = readId(input.availabilityId, "availabilityId");
+    const teamId = requiredInputString(input.teamId, "teamId");
+    const availabilityId = requiredInputString(input.availabilityId, "availabilityId");
     return {
       availability: requireResourcePayload(
         await requestYoplanningJson({
@@ -233,8 +234,4 @@ function requireResourcePayload(payload: unknown, actionName: string): Record<st
   const resource = optionalRecord(payload);
   if (!resource) throw new ProviderRequestError(502, `YoPlanning returned an invalid ${actionName} response`);
   return resource;
-}
-
-function readId(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const holdedApiBaseUrl = "https://api.holded.com/api/v2";
 
@@ -43,7 +48,7 @@ export const holdedActionHandlers: ProviderActionHandlers<"holded", HoldedAction
     };
   },
   async get_contact(input, context) {
-    const contactId = readRequiredString(input.contactId, "contactId");
+    const contactId = requiredInputString(input.contactId, "contactId");
     const payload = await requestHoldedJson({
       method: "GET",
       path: `/contacts/${encodeURIComponent(contactId)}`,
@@ -64,7 +69,7 @@ export const holdedActionHandlers: ProviderActionHandlers<"holded", HoldedAction
       context,
       query: {},
       body: compactObject({
-        name: readRequiredString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
         email: optionalString(input.email),
         phone: optionalString(input.phone),
         mobile: optionalString(input.mobile),
@@ -99,7 +104,7 @@ export const holdedActionHandlers: ProviderActionHandlers<"holded", HoldedAction
     };
   },
   async get_product(input, context) {
-    const productId = readRequiredString(input.productId, "productId");
+    const productId = requiredInputString(input.productId, "productId");
     const payload = await requestHoldedJson({
       method: "GET",
       path: `/products/${encodeURIComponent(productId)}`,
@@ -319,10 +324,6 @@ function readObjectId(record: Record<string, unknown>): string {
     return id;
   }
   throw new ProviderRequestError(502, "Holded response missing object identifier", record);
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalIntegerString(value: unknown): string | undefined {

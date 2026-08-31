@@ -4,7 +4,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { createHash } from "node:crypto";
 import { integer, optionalIntegerLike, optionalScalarString, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
-import { providerInputError, providerUserAgent, ProviderRequestError, readProviderJson } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderJson,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const prodBaseUrl = "https://api.open.mcd.cn";
 const uatBaseUrl = "https://api-uat.open.mcdchina.net";
@@ -69,14 +75,14 @@ export const mcdonaldsCnActionHandlers: ProviderActionHandlers<"mcdonalds_cn", M
     });
   },
   get_store(input, context) {
-    const storeCode = requiredProviderString(input.storeCode, "storeCode");
+    const storeCode = requiredInputString(input.storeCode, "storeCode");
     return requestMcdonaldsCnJson(context, {
       method: "GET",
       path: `/stores/${encodePathSegment(storeCode)}`,
     });
   },
   get_store_business(input, context) {
-    const beCode = requiredProviderString(input.beCode, "beCode");
+    const beCode = requiredInputString(input.beCode, "beCode");
     return requestMcdonaldsCnJson(context, {
       method: "GET",
       path: `/stores/be/${encodePathSegment(beCode)}`,
@@ -98,25 +104,25 @@ export const mcdonaldsCnActionHandlers: ProviderActionHandlers<"mcdonalds_cn", M
         dayPartCode: integer(input.dayPartCode, "dayPartCode", providerInputError),
         time: optionalScalarString(input.time),
         isGroupMeal: optionalIntegerLike(input.isGroupMeal, "isGroupMeal", providerInputError),
-        channelCode: requiredProviderString(input.channelCode, "channelCode"),
-        storeCode: requiredProviderString(input.storeCode, "storeCode"),
+        channelCode: requiredInputString(input.channelCode, "channelCode"),
+        storeCode: requiredInputString(input.storeCode, "storeCode"),
       },
     });
   },
   get_product_detail(input, context) {
-    const code = requiredProviderString(input.code, "code");
+    const code = requiredInputString(input.code, "code");
     return requestMcdonaldsCnJson(context, {
       method: "GET",
       path: `/products/detail/${encodePathSegment(code)}`,
       query: [
         ["beCode", optionalScalarString(input.beCode)],
         ["cardId", optionalScalarString(input.cardId)],
-        ["channelCode", requiredProviderString(input.channelCode, "channelCode")],
+        ["channelCode", requiredInputString(input.channelCode, "channelCode")],
         ["date", optionalScalarString(input.date)],
-        ["daypartCode", requiredProviderString(input.daypartCode, "daypartCode")],
+        ["daypartCode", requiredInputString(input.daypartCode, "daypartCode")],
         ["isGroupMeal", optionalScalarString(input.isGroupMeal)],
-        ["orderType", requiredProviderString(input.orderType, "orderType")],
-        ["storeCode", requiredProviderString(input.storeCode, "storeCode")],
+        ["orderType", requiredInputString(input.orderType, "orderType")],
+        ["storeCode", requiredInputString(input.storeCode, "storeCode")],
         ["time", optionalScalarString(input.time)],
       ],
     });
@@ -128,11 +134,11 @@ export const mcdonaldsCnActionHandlers: ProviderActionHandlers<"mcdonalds_cn", M
       query: [
         ["beCode", optionalScalarString(input.beCode)],
         ["date", optionalScalarString(input.date)],
-        ["daypartCode", requiredProviderString(input.daypartCode, "daypartCode")],
+        ["daypartCode", requiredInputString(input.daypartCode, "daypartCode")],
         ["isGroupMeal", optionalScalarString(input.isGroupMeal)],
-        ["keyword", requiredProviderString(input.keyword, "keyword")],
-        ["orderType", requiredProviderString(input.orderType, "orderType")],
-        ["storeCode", requiredProviderString(input.storeCode, "storeCode")],
+        ["keyword", requiredInputString(input.keyword, "keyword")],
+        ["orderType", requiredInputString(input.orderType, "orderType")],
+        ["storeCode", requiredInputString(input.storeCode, "storeCode")],
         ["time", optionalScalarString(input.time)],
       ],
     });
@@ -273,10 +279,6 @@ function readEnvironment(value: unknown): McdonaldsCnEnvironment {
     return environment;
   }
   throw new ProviderRequestError(400, "environment must be prod or uat");
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requiredCredentialString(value: unknown, fieldName: string): string {

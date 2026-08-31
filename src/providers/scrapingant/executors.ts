@@ -21,6 +21,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "scrapingant";
@@ -440,10 +441,6 @@ function stringifyOptionalBoolean(value: boolean | undefined): string | undefine
 
 function stringifyOptionalInteger(value: number | undefined): string | undefined {
   return value === undefined ? undefined : String(value);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function mergeAbortSignals(timeoutSignal: AbortSignal, contextSignal: AbortSignal | undefined): AbortSignal {

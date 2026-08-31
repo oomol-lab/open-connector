@@ -14,6 +14,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -340,10 +341,6 @@ function buildBody(input: Record<string, unknown>, options: { skip?: Set<string>
   return jsonObject(
     Object.fromEntries(Object.entries(input).filter(([key, value]) => value !== undefined && !options.skip?.has(key))),
   );
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {

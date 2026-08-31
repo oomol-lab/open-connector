@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const enchargeApiBaseUrl = "https://api.encharge.io/v1";
 
@@ -119,8 +124,8 @@ async function rawEnchargeRequest(options: EnchargeRequestOptions): Promise<Resp
 }
 
 function buildSendEmailBody(input: Record<string, unknown>): Record<string, unknown> {
-  const contentType = readRequiredString(input.contentType, "contentType");
-  const content = readRequiredString(input.content, "content");
+  const contentType = requiredInputString(input.contentType, "contentType");
+  const content = requiredInputString(input.content, "content");
   if (contentType !== "template" && !optionalString(input.subject)) {
     throw new ProviderRequestError(400, "subject is required unless contentType is template");
   }
@@ -179,10 +184,6 @@ function extractEnchargeErrorMessage(payload: unknown): string | undefined {
 
 function isMissingEmailContentError(payload: unknown): boolean {
   return extractEnchargeErrorMessage(payload)?.includes(missingEmailContentMessage) === true;
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function resolveEnchargePath(path: string): string {

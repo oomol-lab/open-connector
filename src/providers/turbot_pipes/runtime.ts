@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 type TurbotPipesRequestPhase = "validate" | "execute";
 type TurbotPipesActionHandler = (input: Record<string, unknown>, context: TurbotPipesContext) => Promise<unknown>;
@@ -26,8 +26,8 @@ export async function validateTurbotPipesCredential(
   input: { apiKey: string; values: Record<string, string> },
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CredentialValidationResult> {
-  const userHandle = readInputString(input.values.userHandle, "userHandle");
-  const workspaceHandle = readInputString(input.values.workspaceHandle, "workspaceHandle");
+  const userHandle = requiredInputString(input.values.userHandle, "userHandle");
+  const workspaceHandle = requiredInputString(input.values.workspaceHandle, "workspaceHandle");
   const queryPath = turbotPipesQueryPath(userHandle, workspaceHandle);
   const payload = await turbotPipesPostJson(
     queryPath,
@@ -60,15 +60,15 @@ export function createTurbotPipesContext(
 ): TurbotPipesContext {
   return {
     ...context,
-    userHandle: readInputString(values.userHandle, "userHandle"),
-    workspaceHandle: readInputString(values.workspaceHandle, "workspaceHandle"),
+    userHandle: requiredInputString(values.userHandle, "userHandle"),
+    workspaceHandle: requiredInputString(values.workspaceHandle, "workspaceHandle"),
   };
 }
 
 async function executeQuery(input: Record<string, unknown>, context: TurbotPipesContext): Promise<unknown> {
   const payload = await turbotPipesPostJson(
     turbotPipesQueryPath(context.userHandle, context.workspaceHandle),
-    { sql: readInputString(input.sql, "sql") },
+    { sql: requiredInputString(input.sql, "sql") },
     context,
     "execute",
   );
@@ -218,8 +218,4 @@ function extractTurbotPipesErrorMessage(payload: unknown): string | undefined {
     optionalString(error?.detail) ??
     optionalString(error?.title)
   );
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

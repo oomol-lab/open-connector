@@ -9,6 +9,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "minimax";
@@ -29,7 +30,7 @@ export const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxAct
     return minimaxGetJson("/v1/models", context);
   },
   retrieve_model(input, context) {
-    const modelId = readInputString(input.modelId, "modelId");
+    const modelId = requiredInputString(input.modelId, "modelId");
     return minimaxGetJson(`/v1/models/${encodeURIComponent(modelId)}`, context);
   },
   create_response(input, context) {
@@ -49,22 +50,22 @@ export const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxAct
     return minimaxPostJson("/v1/video_generation", normalizeMinimaxVideoBody(input), context);
   },
   query_video_generation(input, context) {
-    const taskId = readInputString(input.task_id, "task_id");
+    const taskId = requiredInputString(input.task_id, "task_id");
     return minimaxGetJson(`/v1/query/video_generation?task_id=${encodeURIComponent(taskId)}`, context);
   },
   query_video_generation_v2(input, context) {
-    const taskId = readInputString(input.task_id, "task_id");
+    const taskId = requiredInputString(input.task_id, "task_id");
     return minimaxGetJson(`/v2/query/video_generation/${encodeURIComponent(taskId)}`, context);
   },
   list_video_generation_v2(input, context) {
     return minimaxGetJson(createVideoGenerationV2ListPath(input), context);
   },
   delete_video_generation_v2(input, context) {
-    const taskId = readInputString(input.task_id, "task_id");
+    const taskId = requiredInputString(input.task_id, "task_id");
     return minimaxDeleteJson(`/v2/video_generation/${encodeURIComponent(taskId)}`, context);
   },
   download_video(input, context) {
-    const fileId = readInputString(input.file_id, "file_id");
+    const fileId = requiredInputString(input.file_id, "file_id");
     return minimaxGetJson(`/v1/files/retrieve?file_id=${encodeURIComponent(fileId)}`, context);
   },
   text_to_audio(input, context) {
@@ -362,10 +363,6 @@ function assertStreamingDisabled(input: Record<string, unknown>): void {
   if (input.stream === true) {
     throw new ProviderRequestError(400, "stream=true is not supported by connector actions");
   }
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function trimString(value: unknown): string | undefined {

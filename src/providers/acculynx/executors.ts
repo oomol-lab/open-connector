@@ -7,6 +7,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "acculynx";
@@ -151,7 +152,7 @@ export const acculynxActionHandlers: ProviderActionHandlers<"acculynx", Acculynx
     return normalizeCalendarsCollection(payload);
   },
   list_calendar_appointments: async (input, context) => {
-    const calendarId = readRequiredString(input.calendarId, "calendarId");
+    const calendarId = requiredInputString(input.calendarId, "calendarId");
     const payload = await acculynxRequestJson({
       path: `${calendarsPath}/${encodeURIComponent(calendarId)}/appointments`,
       method: "GET",
@@ -161,14 +162,14 @@ export const acculynxActionHandlers: ProviderActionHandlers<"acculynx", Acculynx
       searchParams: buildPaginationSearchParams({
         pageSize: readOptionalInteger(input.pageSize),
         pageStartIndex: readOptionalInteger(input.pageStartIndex),
-        startDate: readRequiredString(input.startDate, "startDate"),
-        endDate: readRequiredString(input.endDate, "endDate"),
+        startDate: requiredInputString(input.startDate, "startDate"),
+        endDate: requiredInputString(input.endDate, "endDate"),
       }),
     });
     return normalizeCalendarAppointmentsCollection(payload);
   },
   get_initial_appointment: async (input, context) => {
-    const jobId = readRequiredString(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     const payload = await acculynxRequestJson({
       path: `${jobsPath}/${encodeURIComponent(jobId)}/initial-appointment`,
       method: "GET",
@@ -181,7 +182,7 @@ export const acculynxActionHandlers: ProviderActionHandlers<"acculynx", Acculynx
     };
   },
   upsert_initial_appointment: async (input, context) => {
-    const jobId = readRequiredString(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     const payload = compactObject({
       startDate: optionalString(input.startDate),
       endDate: optionalString(input.endDate),
@@ -378,10 +379,6 @@ function buildPaginationSearchParams(input: Record<string, number | string | und
   return searchParams;
 }
 
-function readRequiredString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function readOptionalInteger(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) ? value : undefined;
 }
@@ -397,8 +394,8 @@ function normalizeCompanySettings(payload: unknown) {
   const record = readObject(payload, "company settings");
   const timeZoneInfo = optionalRecord(record.timeZoneInfo);
   return compactObject({
-    id: readRequiredString(record.id, "id"),
-    name: readRequiredString(record.name, "name"),
+    id: requiredInputString(record.id, "id"),
+    name: requiredInputString(record.name, "name"),
     hasInsurance: optionalBoolean(record.hasInsurance),
     timeZoneInfo: timeZoneInfo
       ? compactObject({
@@ -416,8 +413,8 @@ function normalizeContactTypesCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
     const record = readObject(item, "contact type");
     return {
-      id: readRequiredString(record.id, "id"),
-      name: readRequiredString(record.name, "name"),
+      id: requiredInputString(record.id, "id"),
+      name: requiredInputString(record.name, "name"),
       isDefault: readRequiredBoolean(record.isDefault, "isDefault"),
     };
   });
@@ -432,7 +429,7 @@ function normalizeJobCategoriesCollection(payload: unknown) {
     const record = readObject(item, "job category");
     return {
       id: readRequiredInteger(record.id, "id"),
-      name: readRequiredString(record.name, "name"),
+      name: requiredInputString(record.name, "name"),
     };
   });
 }
@@ -441,8 +438,8 @@ function normalizeTradeTypesCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
     const record = readObject(item, "trade type");
     return {
-      id: readRequiredString(record.tradeId, "tradeId"),
-      name: readRequiredString(record.name, "name"),
+      id: requiredInputString(record.tradeId, "tradeId"),
+      name: requiredInputString(record.name, "name"),
     };
   });
 }
@@ -452,9 +449,9 @@ function normalizeWorkTypesCollection(payload: unknown) {
     const record = readObject(item, "work type");
     return {
       id: readRequiredInteger(record.id, "id"),
-      name: readRequiredString(record.name, "name"),
+      name: requiredInputString(record.name, "name"),
       systemDefault: readRequiredBoolean(record.systemDefault, "systemDefault"),
-      link: readRequiredString(record._link, "_link"),
+      link: requiredInputString(record._link, "_link"),
     };
   });
 }
@@ -463,8 +460,8 @@ function normalizeCalendarsCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
     const record = readObject(item, "calendar");
     return {
-      id: readRequiredString(record.id, "id"),
-      name: readRequiredString(record.name, "name"),
+      id: requiredInputString(record.id, "id"),
+      name: requiredInputString(record.name, "name"),
     };
   });
 }
@@ -473,17 +470,17 @@ function normalizeCalendarAppointmentsCollection(payload: unknown) {
   return normalizePagedCollection(payload, (item) => {
     const record = readObject(item, "calendar appointment");
     return compactObject({
-      id: readRequiredString(record.id, "id"),
-      title: readRequiredString(record.title, "title"),
-      start: readRequiredString(record.start, "start"),
-      end: readRequiredString(record.end, "end"),
+      id: requiredInputString(record.id, "id"),
+      title: requiredInputString(record.title, "title"),
+      start: requiredInputString(record.start, "start"),
+      end: requiredInputString(record.end, "end"),
       allDay: readRequiredBoolean(record.allDay, "allDay"),
       jobId: optionalString(record.jobId),
       jobName: optionalString(record.jobName),
       location: optionalString(record.location),
       notes: optionalString(record.notes),
       eventType: optionalString(record.eventType),
-      link: readRequiredString(record._link, "_link"),
+      link: requiredInputString(record._link, "_link"),
     });
   });
 }
@@ -491,7 +488,7 @@ function normalizeCalendarAppointmentsCollection(payload: unknown) {
 function normalizeInitialAppointment(payload: unknown) {
   const record = readObject(payload, "initial appointment");
   return {
-    link: readRequiredString(record._link, "_link"),
+    link: requiredInputString(record._link, "_link"),
     startDate: optionalString(record.startDate) ?? null,
     endDate: optionalString(record.endDate) ?? null,
     notes: optionalString(record.notes) ?? null,
@@ -504,18 +501,18 @@ function normalizeLeadSource(payload: unknown) {
     ? record.children.map((item) => {
         const child = readObject(item, "lead source child");
         return {
-          id: readRequiredString(child.id, "id"),
-          parentId: readRequiredString(child.parentId, "parentId"),
-          name: readRequiredString(child.name, "name"),
-          link: readRequiredString(child._link, "_link"),
+          id: requiredInputString(child.id, "id"),
+          parentId: requiredInputString(child.parentId, "parentId"),
+          name: requiredInputString(child.name, "name"),
+          link: requiredInputString(child._link, "_link"),
         };
       })
     : undefined;
 
   return compactObject({
-    id: readRequiredString(record.id, "id"),
-    name: readRequiredString(record.name, "name"),
-    link: readRequiredString(record._link, "_link"),
+    id: requiredInputString(record.id, "id"),
+    name: requiredInputString(record.name, "name"),
+    link: requiredInputString(record._link, "_link"),
     children,
   });
 }
@@ -523,8 +520,8 @@ function normalizeLeadSource(payload: unknown) {
 function normalizeLinkResource(payload: unknown, resourceName: string) {
   const record = readObject(payload, resourceName);
   return {
-    id: readRequiredString(record.id, "id"),
-    link: readRequiredString(record._link, `${resourceName}._link`),
+    id: requiredInputString(record.id, "id"),
+    link: requiredInputString(record._link, `${resourceName}._link`),
   };
 }
 

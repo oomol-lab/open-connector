@@ -15,6 +15,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 import { partnerApiVersion } from "./constants.ts";
 
@@ -255,7 +256,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<ShopifyPartn
     const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
-      organizationId: requiredCredentialValue(credential.values.organizationId, "organizationId"),
+      organizationId: requiredInputString(credential.values.organizationId, "organizationId"),
       fetcher,
       signal: context.signal,
     };
@@ -266,7 +267,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: async (context) => {
     const credential = await requireApiKeyCredential(context, service);
-    return buildShopifyPartnerApiBaseUrl(requiredCredentialValue(credential.values.organizationId, "organizationId"));
+    return buildShopifyPartnerApiBaseUrl(requiredInputString(credential.values.organizationId, "organizationId"));
   },
   auth: { type: "api_key_header", name: "x-shopify-access-token" },
 });
@@ -276,7 +277,7 @@ export const credentialValidators = {
     input: { apiKey: string; values: Record<string, string> },
     { fetcher, signal }: { fetcher: ProviderFetch; signal?: AbortSignal },
   ): Promise<CredentialValidationResult> {
-    const organizationId = requiredCredentialValue(input.values.organizationId, "organizationId");
+    const organizationId = requiredInputString(input.values.organizationId, "organizationId");
     await requestShopifyPartnerGraphQL(
       {
         apiKey: input.apiKey,
@@ -549,8 +550,4 @@ function normalizeTransaction(input: Record<string, unknown>, cursor: string | n
     cursor,
     raw: input,
   });
-}
-
-function requiredCredentialValue(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

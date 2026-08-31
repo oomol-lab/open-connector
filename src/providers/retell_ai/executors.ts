@@ -12,7 +12,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "retell_ai";
 const retellAiApiBaseUrl = "https://api.retellai.com";
@@ -228,10 +233,6 @@ function appendQueryValue(url: URL, key: string, value: unknown): void {
   if (value !== undefined && value !== null && value !== "") {
     url.searchParams.set(key, String(value));
   }
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readArrayPayload(payload: unknown, label: string): Array<Record<string, unknown>> {

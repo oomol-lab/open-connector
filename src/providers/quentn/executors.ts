@@ -28,6 +28,7 @@ import {
   providerResponseError,
   providerUserAgent,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "quentn";
@@ -460,8 +461,8 @@ function readValidationCredential(input: { apiKey: string; values: Record<string
   serverId: string;
   apiBaseUrl: string;
 } {
-  const systemId = normalizeQuentnLabel(requiredCredentialValue(input.values.systemId, "systemId"));
-  const serverId = normalizeQuentnLabel(requiredCredentialValue(input.values.serverId, "serverId"));
+  const systemId = normalizeQuentnLabel(requiredInputString(input.values.systemId, "systemId"));
+  const serverId = normalizeQuentnLabel(requiredInputString(input.values.serverId, "serverId"));
   return {
     apiKey: input.apiKey,
     values: input.values,
@@ -475,10 +476,10 @@ function readStoredCredential(
   input: QuentnCredentialInput,
 ): Pick<QuentnActionContext, "apiKey" | "systemId" | "serverId" | "apiBaseUrl"> {
   const systemId = normalizeQuentnLabel(
-    optionalString(input.metadata?.systemId) ?? requiredCredentialValue(input.values.systemId, "systemId"),
+    optionalString(input.metadata?.systemId) ?? requiredInputString(input.values.systemId, "systemId"),
   );
   const serverId = normalizeQuentnLabel(
-    optionalString(input.metadata?.serverId) ?? requiredCredentialValue(input.values.serverId, "serverId"),
+    optionalString(input.metadata?.serverId) ?? requiredInputString(input.values.serverId, "serverId"),
   );
   return {
     apiKey: input.apiKey,
@@ -498,10 +499,6 @@ function readStoredApiBaseUrl(
     return normalizeQuentnApiBaseUrl(apiBaseUrl);
   }
   return buildQuentnApiBaseUrl(normalizedSystemId, normalizedServerId);
-}
-
-function requiredCredentialValue(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function normalizeQuentnLabel(value: string): string {

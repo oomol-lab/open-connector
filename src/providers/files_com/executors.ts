@@ -25,6 +25,7 @@ import {
   readProviderErrorTextBody,
   readProviderTextBody,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "files_com";
@@ -59,7 +60,7 @@ export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesCo
     return requestAndWrapFilesComList(
       {
         context,
-        path: `/folders/${encodeRemotePath(readInputString(input.path, "path"))}.json`,
+        path: `/folders/${encodeRemotePath(requiredInputString(input.path, "path"))}.json`,
         query: compactObject({
           page: page === undefined ? undefined : String(page),
           per_page: perPage === undefined ? undefined : String(perPage),
@@ -72,7 +73,7 @@ export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesCo
   get_file(input, context) {
     return requestAndWrapFilesComJson({
       context,
-      path: `/files/${encodeRemotePath(readInputString(input.path, "path"))}.json`,
+      path: `/files/${encodeRemotePath(requiredInputString(input.path, "path"))}.json`,
       wrapper: "file",
     });
   },
@@ -82,7 +83,7 @@ export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesCo
   create_folder(input, context) {
     return requestAndWrapFilesComJson({
       context,
-      path: `/folders/${encodeRemotePath(readInputString(input.path, "path"))}.json`,
+      path: `/folders/${encodeRemotePath(requiredInputString(input.path, "path"))}.json`,
       method: "POST",
       body: compactObject({
         mkdir_parents: input.mkdirParents,
@@ -93,7 +94,7 @@ export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesCo
   update_metadata(input, context) {
     return requestAndWrapFilesComJson({
       context,
-      path: `/files/${encodeRemotePath(readInputString(input.path, "path"))}.json`,
+      path: `/files/${encodeRemotePath(requiredInputString(input.path, "path"))}.json`,
       method: "PATCH",
       body: {
         custom_metadata: optionalRecord(input.customMetadata) ?? {},
@@ -102,7 +103,7 @@ export const filesComActionHandlers: ProviderActionHandlers<"files_com", FilesCo
     });
   },
   async delete_file(input, context) {
-    const path = readInputString(input.path, "path");
+    const path = requiredInputString(input.path, "path");
     const raw = await requestFilesComJson({
       subdomain: context.subdomain,
       apiKey: context.apiKey,
@@ -176,7 +177,7 @@ async function downloadFilesComFile(
     throw new ProviderRequestError(400, "files_com download_file requires local transit file storage");
   }
 
-  const requestedPath = readInputString(input.path, "path");
+  const requestedPath = requiredInputString(input.path, "path");
   const payload = optionalRecord(
     await requestFilesComJson({
       subdomain: context.subdomain,
@@ -359,10 +360,6 @@ function requireFilesComSubdomain(value: unknown): string {
     throw new ProviderRequestError(400, "subdomain must be a Files.com site subdomain");
   }
   return trimmed;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function encodeRemotePath(path: string): string {

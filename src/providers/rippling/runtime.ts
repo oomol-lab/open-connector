@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const ripplingApiBaseUrl = "https://rest.ripplingapis.com";
 
@@ -42,7 +42,7 @@ export const ripplingActionHandlers: ProviderActionHandlers<"rippling", Rippling
     return normalizeResourceResponse(
       await requestRippling({
         ...context,
-        path: `/workers/${encodeURIComponent(requiredProviderString(input.id, "id"))}/`,
+        path: `/workers/${encodeURIComponent(requiredInputString(input.id, "id"))}/`,
         query: buildQuery(input, ["expand"]),
       }),
     );
@@ -217,8 +217,4 @@ function extractRipplingErrorMessage(body: unknown): string | undefined {
     return undefined;
   }
   return optionalString(firstError.message) ?? optionalString(firstError.detail) ?? optionalString(firstError.title);
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

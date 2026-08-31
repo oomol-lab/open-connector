@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const needleApiBaseUrl = "https://needle.app";
@@ -86,7 +87,7 @@ async function createCollection(input: Record<string, unknown>, context: NeedleA
     path: "/api/v1/collections",
     method: "POST",
     body: compactObject({
-      name: readInputString(input.name, "name"),
+      name: requiredInputString(input.name, "name"),
       file_ids: readOptionalInputStringArray(input.file_ids, "file_ids"),
     }),
   });
@@ -98,7 +99,7 @@ async function createCollection(input: Record<string, unknown>, context: NeedleA
 
 async function getCollection(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
   const payload = await needleRequest(context, {
-    path: `/api/v1/collections/${encodeURIComponent(readInputString(input.collection_id, "collection_id"))}`,
+    path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}`,
     method: "GET",
   });
 
@@ -109,7 +110,7 @@ async function getCollection(input: Record<string, unknown>, context: NeedleActi
 
 async function getCollectionStats(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
   const payload = await needleRequest(context, {
-    path: `/api/v1/collections/${encodeURIComponent(readInputString(input.collection_id, "collection_id"))}/stats`,
+    path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}/stats`,
     method: "GET",
   });
 
@@ -126,7 +127,7 @@ async function getCollectionStats(input: Record<string, unknown>, context: Needl
 
 async function listCollectionFiles(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
   const payload = await needleRequest(context, {
-    path: `/api/v1/collections/${encodeURIComponent(readInputString(input.collection_id, "collection_id"))}/files`,
+    path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}/files`,
     method: "GET",
   });
 
@@ -143,13 +144,13 @@ async function addFilesToCollection(input: Record<string, unknown>, context: Nee
   const files = input.files.map((item) => {
     const file = optionalRecord(item);
     return {
-      name: readInputString(file?.name, "files[].name"),
-      url: normalizeNeedleFileUrl(readInputString(file?.url, "files[].url")),
+      name: requiredInputString(file?.name, "files[].name"),
+      url: normalizeNeedleFileUrl(requiredInputString(file?.url, "files[].url")),
     };
   });
 
   const payload = await needleRequest(context, {
-    path: `/api/v1/collections/${encodeURIComponent(readInputString(input.collection_id, "collection_id"))}/files`,
+    path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}/files`,
     method: "POST",
     body: {
       files,
@@ -162,13 +163,13 @@ async function addFilesToCollection(input: Record<string, unknown>, context: Nee
 }
 
 async function searchCollection(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
-  const collectionId = readInputString(input.collection_id, "collection_id");
+  const collectionId = requiredInputString(input.collection_id, "collection_id");
   const payload = await needleRequest(context, {
     baseUrl: needleSearchBaseUrl,
     path: `/api/v1/collections/${encodeURIComponent(collectionId)}/search`,
     method: "POST",
     body: compactObject({
-      text: readInputString(input.text, "text"),
+      text: requiredInputString(input.text, "text"),
       top_k: optionalNumber(input.top_k),
       offset: optionalNumber(input.offset),
     }),
@@ -393,10 +394,6 @@ function readOptionalInputStringArray(value: unknown, fieldName: string): string
   }
 
   return value;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function normalizeNeedleFileUrl(value: string): string {

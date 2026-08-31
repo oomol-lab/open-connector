@@ -13,7 +13,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
-import { providerFetch, ProviderRequestError, providerUserAgent, readTransitFileInput } from "../provider-runtime.ts";
+import {
+  providerFetch,
+  ProviderRequestError,
+  providerUserAgent,
+  readTransitFileInput,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const gladiaApiBaseUrl = "https://api.gladia.io";
 const gladiaPreRecordedPath = "/v2/pre-recorded";
@@ -616,10 +622,6 @@ function requireObject(value: unknown, fieldName: string): Record<string, unknow
     throw new ProviderRequestError(502, `${fieldName} must be an object`);
   }
   return object;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireProviderString(value: unknown, fieldName: string): string {

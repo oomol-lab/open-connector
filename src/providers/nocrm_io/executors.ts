@@ -17,6 +17,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "nocrm_io";
@@ -331,10 +332,6 @@ function normalizeNocrmSubdomain(value: unknown): string {
     );
   }
   return normalized;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function identifierValue(value: unknown): string | undefined {

@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const smartrecruitersApiBaseUrl = "https://api.smartrecruiters.com";
 
@@ -37,7 +42,7 @@ export const smartrecruitersActionHandlers: ProviderActionHandlers<"smartrecruit
       job: await requestSmartRecruitersJson(
         {
           method: "GET",
-          path: `/jobs/${encodeURIComponent(readInputString(input.jobId, "jobId"))}`,
+          path: `/jobs/${encodeURIComponent(requiredInputString(input.jobId, "jobId"))}`,
           query: compactObject({
             language: optionalString(input.language),
           }),
@@ -66,7 +71,7 @@ export const smartrecruitersActionHandlers: ProviderActionHandlers<"smartrecruit
       candidate: await requestSmartRecruitersJson(
         {
           method: "GET",
-          path: `/candidates/${encodeURIComponent(readInputString(input.candidateId, "candidateId"))}`,
+          path: `/candidates/${encodeURIComponent(requiredInputString(input.candidateId, "candidateId"))}`,
           phase: "execute",
         },
         context,
@@ -259,10 +264,6 @@ function extractSmartRecruitersMessage(payload: unknown): string | undefined {
   }
 
   return undefined;
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function optionalStringArray(value: unknown): string[] | undefined {

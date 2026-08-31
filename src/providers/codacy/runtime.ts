@@ -15,6 +15,7 @@ import {
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const codacyApiBaseUrl = "https://app.codacy.com";
@@ -61,8 +62,8 @@ export const codacyActionHandlers: ProviderActionHandlers<"codacy", CodacyAction
     const payload = await requestCodacyJson<{ data?: unknown; pagination?: unknown }>({
       context,
       path: `/analysis/organizations/${encodeURIComponent(
-        requireInputString(input.provider, "provider"),
-      )}/${encodeURIComponent(requireInputString(input.remoteOrganizationName, "remoteOrganizationName"))}/repositories`,
+        requiredInputString(input.provider, "provider"),
+      )}/${encodeURIComponent(requiredInputString(input.remoteOrganizationName, "remoteOrganizationName"))}/repositories`,
       query: compactObject({
         ...readPaginationQuery(input),
         search: optionalString(input.search),
@@ -82,9 +83,9 @@ export const codacyActionHandlers: ProviderActionHandlers<"codacy", CodacyAction
     const payload = await requestCodacyJson<{ data?: unknown }>({
       context,
       path: `/analysis/organizations/${encodeURIComponent(
-        requireInputString(input.provider, "provider"),
-      )}/${encodeURIComponent(requireInputString(input.remoteOrganizationName, "remoteOrganizationName"))}/repositories/${encodeURIComponent(
-        requireInputString(input.repositoryName, "repositoryName"),
+        requiredInputString(input.provider, "provider"),
+      )}/${encodeURIComponent(requiredInputString(input.remoteOrganizationName, "remoteOrganizationName"))}/repositories/${encodeURIComponent(
+        requiredInputString(input.repositoryName, "repositoryName"),
       )}`,
       query: compactObject({
         branch: optionalString(input.branch),
@@ -127,7 +128,7 @@ export const codacyActionHandlers: ProviderActionHandlers<"codacy", CodacyAction
   async list_tool_patterns(input, context) {
     const payload = await requestCodacyJson<{ data?: unknown; pagination?: unknown }>({
       context,
-      path: `/tools/${encodeURIComponent(requireInputString(input.toolUuid, "toolUuid"))}/patterns`,
+      path: `/tools/${encodeURIComponent(requiredInputString(input.toolUuid, "toolUuid"))}/patterns`,
       query: compactObject({
         ...readPaginationQuery(input),
         enabled: optionalBoolean(input.enabled),
@@ -145,8 +146,8 @@ export const codacyActionHandlers: ProviderActionHandlers<"codacy", CodacyAction
   async get_tool_pattern(input, context) {
     const payload = await requestCodacyJson<{ data?: unknown }>({
       context,
-      path: `/tools/${encodeURIComponent(requireInputString(input.toolUuid, "toolUuid"))}/patterns/${encodeURIComponent(
-        requireInputString(input.patternId, "patternId"),
+      path: `/tools/${encodeURIComponent(requiredInputString(input.toolUuid, "toolUuid"))}/patterns/${encodeURIComponent(
+        requiredInputString(input.patternId, "patternId"),
       )}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
@@ -313,10 +314,6 @@ function readResponseArray(value: unknown, fieldName: string): Array<Record<stri
     throw new ProviderRequestError(502, `codacy response missing ${fieldName}`);
   }
   return value.map((item) => requiredRecord(item, fieldName, providerResponseError));
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function readOptionalPositiveInteger(value: unknown, fieldName: string): number | undefined {

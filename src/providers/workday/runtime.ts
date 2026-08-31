@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  requiredInputString,
 } from "../provider-runtime.ts";
 import { workdayOAuthScopes } from "./scopes.ts";
 
@@ -50,7 +51,7 @@ export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRu
     };
   },
   async get_worker(input, context): Promise<unknown> {
-    const workerId = requiredProviderString(input.workerId, "workerId");
+    const workerId = requiredInputString(input.workerId, "workerId");
     return {
       worker: normalizeWorker(
         await requestWorkdayJson({
@@ -79,7 +80,7 @@ export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRu
     };
   },
   async get_job(input, context): Promise<unknown> {
-    const jobId = requiredProviderString(input.jobId, "jobId");
+    const jobId = requiredInputString(input.jobId, "jobId");
     return {
       job: normalizeJob(
         await requestWorkdayJson({
@@ -112,7 +113,7 @@ export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRu
     };
   },
   async get_job_posting(input, context): Promise<unknown> {
-    const jobPostingId = requiredProviderString(input.jobPostingId, "jobPostingId");
+    const jobPostingId = requiredInputString(input.jobPostingId, "jobPostingId");
     return {
       jobPosting: normalizeJobPosting(
         await requestWorkdayJson({
@@ -419,10 +420,6 @@ function appendQueryParams(
       url.searchParams.set(key, String(value));
     }
   }
-}
-
-function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readGrantedScopes(metadata: Record<string, unknown>): string[] {

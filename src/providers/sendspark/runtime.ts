@@ -21,6 +21,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "sendspark";
@@ -120,7 +121,7 @@ function createSendsparkContext(
 }
 
 async function listDynamicCampaigns(input: Record<string, unknown>, context: SendsparkContext): Promise<unknown> {
-  const workspaceId = readInputString(input.workspaceId, "workspaceId");
+  const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
   const path = buildWorkspacePath(workspaceId, "/dynamics");
   const url = new URL(path, sendsparkApiBaseUrl);
   setOptionalQuery(url, "limit", optionalInteger(input.limit));
@@ -141,8 +142,8 @@ async function listDynamicCampaigns(input: Record<string, unknown>, context: Sen
 }
 
 async function getDynamicCampaign(input: Record<string, unknown>, context: SendsparkContext): Promise<unknown> {
-  const workspaceId = readInputString(input.workspaceId, "workspaceId");
-  const dynamicId = readInputString(input.dynamicId, "dynamicId");
+  const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
+  const dynamicId = requiredInputString(input.dynamicId, "dynamicId");
   const payload = await sendsparkGetJson(
     buildWorkspacePath(workspaceId, `/dynamics/${encodeURIComponent(dynamicId)}`),
     context,
@@ -157,11 +158,11 @@ async function getDynamicCampaign(input: Record<string, unknown>, context: Sends
 }
 
 async function createDynamicCampaign(input: Record<string, unknown>, context: SendsparkContext): Promise<unknown> {
-  const workspaceId = readInputString(input.workspaceId, "workspaceId");
+  const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
   const payload = await sendsparkPostJson(
     buildWorkspacePath(workspaceId, "/dynamics"),
     {
-      name: readInputString(input.name, "name"),
+      name: requiredInputString(input.name, "name"),
     },
     context,
   );
@@ -176,8 +177,8 @@ async function createDynamicCampaign(input: Record<string, unknown>, context: Se
 }
 
 async function addProspect(input: Record<string, unknown>, context: SendsparkContext): Promise<unknown> {
-  const workspaceId = readInputString(input.workspaceId, "workspaceId");
-  const dynamicId = readInputString(input.dynamicId, "dynamicId");
+  const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
+  const dynamicId = requiredInputString(input.dynamicId, "dynamicId");
   const payload = await sendsparkPostJson(
     buildWorkspacePath(workspaceId, `/dynamics/${encodeURIComponent(dynamicId)}/prospect`),
     compactObject({
@@ -196,9 +197,9 @@ async function addProspect(input: Record<string, unknown>, context: SendsparkCon
 }
 
 async function getProspectByEmail(input: Record<string, unknown>, context: SendsparkContext): Promise<unknown> {
-  const workspaceId = readInputString(input.workspaceId, "workspaceId");
-  const dynamicId = readInputString(input.dynamicId, "dynamicId");
-  const email = readInputString(input.email, "email");
+  const workspaceId = requiredInputString(input.workspaceId, "workspaceId");
+  const dynamicId = requiredInputString(input.dynamicId, "dynamicId");
+  const email = requiredInputString(input.email, "email");
   const payload = await sendsparkGetJson(
     buildWorkspacePath(
       workspaceId,
@@ -311,10 +312,6 @@ function setOptionalQuery(url: URL, key: string, value: string | number | undefi
   if (value !== undefined) {
     url.searchParams.set(key, String(value));
   }
-}
-
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function requireProviderRecord(payload: unknown): Record<string, unknown> {

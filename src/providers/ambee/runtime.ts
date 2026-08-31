@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const ambeeApiBaseUrl = "https://api.ambeedata.com";
 
@@ -40,7 +45,7 @@ export async function validateAmbeeCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = {
-    apiKey: readRequiredString(input.apiKey, "apiKey"),
+    apiKey: requiredInputString(input.apiKey, "apiKey"),
     fetcher,
     signal,
   };
@@ -80,7 +85,7 @@ async function geocodeByPlace(input: Record<string, unknown>, context: AmbeeActi
     {
       path: "/geocode/by-place",
       query: {
-        place: readRequiredString(input.place, "place"),
+        place: requiredInputString(input.place, "place"),
       },
     },
     context,
@@ -149,8 +154,8 @@ async function getAirQualityHistoryByLatLng(input: Record<string, unknown>, cont
       path: "/history/by-lat-lng",
       query: {
         ...coordinateQuery(input),
-        from: readRequiredString(input.from, "from"),
-        to: readRequiredString(input.to, "to"),
+        from: requiredInputString(input.from, "from"),
+        to: requiredInputString(input.to, "to"),
       },
     },
     context,
@@ -300,10 +305,6 @@ function coordinateQuery(input: Record<string, unknown>) {
     lat: readRequiredNumber(input.lat, "lat"),
     lng: readRequiredNumber(input.lng, "lng"),
   };
-}
-
-function readRequiredString(value: unknown, fieldName: string) {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function readRequiredNumber(value: unknown, fieldName: string) {

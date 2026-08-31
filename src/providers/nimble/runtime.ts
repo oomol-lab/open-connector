@@ -6,7 +6,12 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 export const nimbleApiBaseUrl = "https://app.nimble.com/api/v1";
 
@@ -158,8 +163,4 @@ function requireResponseObject(value: unknown): Record<string, unknown> {
   const object = optionalRecord(value);
   if (!object) throw new ProviderRequestError(502, "Nimble returned invalid object data");
   return object;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }

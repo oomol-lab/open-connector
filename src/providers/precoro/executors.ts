@@ -14,6 +14,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "precoro";
@@ -208,8 +209,4 @@ function resolvePrecoroBaseUrl(region: unknown): string {
 
 function readPrecoroRegion(value: unknown): "com" | "us" {
   return typeof value === "string" && value.trim().toLowerCase() === "us" ? "us" : "com";
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }

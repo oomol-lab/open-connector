@@ -17,6 +17,7 @@ import {
   providerResponseError,
   readProviderJsonBody,
   readTransitFileInput,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const boxApiBaseUrl = "https://api.box.com/2.0";
@@ -44,10 +45,10 @@ export const boxActionHandlers: ProviderActionHandlers<"box", ActionHandler> = {
     return getCurrentUser(context);
   },
   get_file(input, context) {
-    return getItem("files", requireId(input.fileId, "fileId"), context);
+    return getItem("files", requiredInputString(input.fileId, "fileId"), context);
   },
   get_folder(input, context) {
-    return getItem("folders", requireId(input.folderId, "folderId"), context);
+    return getItem("folders", requiredInputString(input.folderId, "folderId"), context);
   },
   list_folder_items(input, context) {
     return listFolderItems(input, context, false);
@@ -143,7 +144,7 @@ async function listFolderItems(
   context: BoxRequestContext,
   continuation: boolean,
 ): Promise<Record<string, unknown>> {
-  const folderId = requireId(input.folderId, "folderId");
+  const folderId = requiredInputString(input.folderId, "folderId");
   const url = new URL(`${boxApiBaseUrl}/folders/${encodeURIComponent(folderId)}/items`);
   const marker = optionalString(input.marker);
   const useMarker = continuation || marker != null || optionalBoolean(input.useMarker) === true;
@@ -194,7 +195,7 @@ async function downloadFile(
     throw new ProviderRequestError(400, "box download_file requires local transit file storage");
   }
 
-  const fileId = requireId(input.fileId, "fileId");
+  const fileId = requiredInputString(input.fileId, "fileId");
   const { item } = await getItem("files", fileId, context);
   const name = optionalString(input.fileName) ?? requiredString(item.name, "Box file name", providerResponseError);
   const reportedSize = optionalNumber(item.sizeBytes);
@@ -234,7 +235,7 @@ async function createFolder(
     method: "POST",
     body: JSON.stringify({
       name: requiredString(input.name, "name", providerInputError),
-      parent: { id: requireId(input.parentFolderId, "parentFolderId") },
+      parent: { id: requiredInputString(input.parentFolderId, "parentFolderId") },
     }),
   });
   return { item: normalizeItem(payload) };
@@ -251,7 +252,7 @@ async function uploadFile(
 
   const attributes: Record<string, unknown> = {
     name: requiredString(input.name, "name", providerInputError),
-    parent: { id: requireId(input.parentFolderId, "parentFolderId") },
+    parent: { id: requiredInputString(input.parentFolderId, "parentFolderId") },
   };
   const contentCreatedAt = optionalString(input.contentCreatedAt);
   const contentModifiedAt = optionalString(input.contentModifiedAt);
@@ -277,7 +278,7 @@ async function updateItem(
   context: BoxRequestContext,
 ): Promise<{ item: Record<string, unknown> }> {
   const key = resource === "files" ? "fileId" : "folderId";
-  const id = requireId(input[key], key);
+  const id = requiredInputString(input[key], key);
   const body: Record<string, unknown> = {};
   const name = optionalString(input.name);
   const description = typeof input.description === "string" ? input.description : undefined;
@@ -306,7 +307,7 @@ async function deleteItem(
   context: BoxRequestContext,
 ): Promise<Record<string, unknown>> {
   const key = resource === "files" ? "fileId" : "folderId";
-  const id = requireId(input[key], key);
+  const id = requiredInputString(input[key], key);
   const url = new URL(`${boxApiBaseUrl}/${resource}/${encodeURIComponent(id)}`);
   const recursive = resource === "folders" ? optionalBoolean(input.recursive) : undefined;
   if (resource === "folders") setQuery(url, "recursive", recursive);
@@ -414,8 +415,4 @@ function commaSeparated(value: unknown): string | undefined {
 
 function setQuery(url: URL, name: string, value: string | number | boolean | undefined): void {
   if (value != null) url.searchParams.set(name, String(value));
-}
-
-function requireId(value: unknown, name: string): string {
-  return requiredString(value, name, providerInputError);
 }

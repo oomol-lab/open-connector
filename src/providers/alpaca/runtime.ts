@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ResolvedCredential } from "../../core/
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { readAlpacaGrantedScopes } from "./scopes.ts";
 
 const paperTradingBaseUrl = "https://paper-api.alpaca.markets";
@@ -722,10 +722,6 @@ function optionalNumberString(value: unknown): string | undefined {
 
 function optionalBooleanString(value: unknown): string | undefined {
   return typeof value === "boolean" ? String(value) : undefined;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readEnvironment(value: unknown, fallback?: Environment): Environment {

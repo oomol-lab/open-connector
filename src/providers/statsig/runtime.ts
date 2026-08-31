@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const statsigApiBaseUrl = "https://statsigapi.net";
 export const statsigApiVersion = "20240601";
@@ -46,7 +46,7 @@ export const statsigActionHandlers: ProviderActionHandlers<"statsig", StatsigAct
   },
   get_gate(input, context) {
     return readSingleStatsigData({
-      path: `/console/v1/gates/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/console/v1/gates/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       query: {
         includeArchiveMetadata: optionalBooleanString(input.includeArchiveMetadata),
       },
@@ -68,7 +68,7 @@ export const statsigActionHandlers: ProviderActionHandlers<"statsig", StatsigAct
   },
   get_dynamic_config(input, context) {
     return readSingleStatsigData({
-      path: `/console/v1/dynamic_configs/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/console/v1/dynamic_configs/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       apiKey: context.apiKey,
       fetcher: context.fetcher,
       signal: context.signal,
@@ -87,7 +87,7 @@ export const statsigActionHandlers: ProviderActionHandlers<"statsig", StatsigAct
   },
   get_segment(input, context) {
     return readSingleStatsigData({
-      path: `/console/v1/segments/${encodeURIComponent(readRequiredString(input.id, "id"))}`,
+      path: `/console/v1/segments/${encodeURIComponent(requiredInputString(input.id, "id"))}`,
       apiKey: context.apiKey,
       fetcher: context.fetcher,
       signal: context.signal,
@@ -285,10 +285,6 @@ function buildPagingQuery(input: Record<string, unknown>): Record<string, Statsi
 
 function optionalBooleanString(value: unknown): string | undefined {
   return typeof value === "boolean" ? String(value) : undefined;
-}
-
-function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readArray(value: unknown, fieldName: string): unknown[] {

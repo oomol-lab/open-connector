@@ -12,7 +12,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const service = "groqcloud";
 const groqcloudApiBaseUrl = "https://api.groq.com/openai/v1";
@@ -33,7 +38,7 @@ export const groqcloudActionHandlers: ProviderActionHandlers<"groqcloud", Groqcl
   get_model(input, context) {
     return groqcloudRequest({
       context,
-      path: `/models/${encodeURIComponent(readInputString(input.model, "model"))}`,
+      path: `/models/${encodeURIComponent(requiredInputString(input.model, "model"))}`,
       phase: "execute",
     });
   },
@@ -195,10 +200,6 @@ function tryParseJson(raw: string): unknown | undefined {
   }
 }
 
-function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
 function buildGroqcloudAudioFormData(input: Record<string, unknown>): FormData {
   const file = optionalRecord(input.file);
   if (!file) {
@@ -216,7 +217,7 @@ function buildGroqcloudAudioFormData(input: Record<string, unknown>): FormData {
 
   const formData = new FormData();
   if (contentBase64) {
-    const name = readInputString(file.name, "file.name");
+    const name = requiredInputString(file.name, "file.name");
     const bytes = base64Bytes(
       contentBase64,
       "file.content_base64",

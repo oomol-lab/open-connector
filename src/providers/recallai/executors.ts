@@ -16,6 +16,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  requiredInputString,
 } from "../provider-runtime.ts";
 
 const service = "recallai";
@@ -293,10 +294,6 @@ function readRecallAiObject(payload: unknown): Record<string, unknown> {
   const record = optionalRecord(payload);
   if (!record) throw new ProviderRequestError(502, "Recall.ai returned a non-object payload");
   return record;
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function readOptionalObject(value: unknown, fieldName: string): Record<string, unknown> | undefined {

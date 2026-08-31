@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const octaveApiBaseUrl = "https://app.octavehq.com";
 export const octaveValidationPath = "/api/v2/api-key/validate";
@@ -323,10 +323,6 @@ function requireObject(value: unknown, message: string): Record<string, unknown>
     return record;
   }
   throw new ProviderRequestError(502, message);
-}
-
-function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
 function numberQuery(value: unknown): string | undefined {

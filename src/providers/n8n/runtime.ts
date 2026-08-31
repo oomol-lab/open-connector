@@ -10,7 +10,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const n8nValidationPath = "/discover";
 const n8nCredentialHelpUrl = "https://docs.n8n.io/api/authentication/";
@@ -46,7 +51,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   get_workflow(input, context) {
-    const workflowId = requireInputString(input.workflowId, "workflowId");
+    const workflowId = requiredInputString(input.workflowId, "workflowId");
     return requestN8nJson({
       context,
       path: `/workflows/${encodeURIComponent(workflowId)}`,
@@ -58,7 +63,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   activate_workflow(input, context) {
-    const workflowId = requireInputString(input.workflowId, "workflowId");
+    const workflowId = requiredInputString(input.workflowId, "workflowId");
     return requestN8nJson({
       context,
       path: `/workflows/${encodeURIComponent(workflowId)}/activate`,
@@ -135,26 +140,26 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
       path: "/tags",
       method: "POST",
       body: {
-        name: requireInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
       },
       mode: "execute",
     });
   },
   update_tag(input, context) {
-    const tagId = requireInputString(input.tagId, "tagId");
+    const tagId = requiredInputString(input.tagId, "tagId");
     return requestN8nJson({
       context,
       path: `/tags/${encodeURIComponent(tagId)}`,
       method: "PUT",
       body: {
-        name: requireInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
       },
       mode: "execute",
       notFoundAsInvalidInput: true,
     });
   },
   delete_tag(input, context) {
-    const tagId = requireInputString(input.tagId, "tagId");
+    const tagId = requiredInputString(input.tagId, "tagId");
     return requestN8nJson({
       context,
       path: `/tags/${encodeURIComponent(tagId)}`,
@@ -164,7 +169,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   async get_workflow_tags(input, context) {
-    const workflowId = requireInputString(input.workflowId, "workflowId");
+    const workflowId = requiredInputString(input.workflowId, "workflowId");
     return {
       tags: await requestN8nJson({
         context,
@@ -175,7 +180,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     };
   },
   async update_workflow_tags(input, context) {
-    const workflowId = requireInputString(input.workflowId, "workflowId");
+    const workflowId = requiredInputString(input.workflowId, "workflowId");
     return {
       tags: await requestN8nJson({
         context,
@@ -221,8 +226,8 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
   },
   async create_variable(input, context) {
     const body = compactObject({
-      key: requireInputString(input.key, "key"),
-      value: requireInputString(input.value, "value"),
+      key: requiredInputString(input.key, "key"),
+      value: requiredInputString(input.value, "value"),
       projectId: optionalString(input.projectId),
     });
     const payload = await requestN8nJson({
@@ -235,10 +240,10 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     return withFallbackObject(payload, body);
   },
   async update_variable(input, context) {
-    const variableId = requireInputString(input.variableId, "variableId");
+    const variableId = requiredInputString(input.variableId, "variableId");
     const body = {
-      key: requireInputString(input.key, "key"),
-      value: requireInputString(input.value, "value"),
+      key: requiredInputString(input.key, "key"),
+      value: requiredInputString(input.value, "value"),
     };
     const payload = await requestN8nJson({
       context,
@@ -254,7 +259,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   async delete_variable(input, context) {
-    const variableId = requireInputString(input.variableId, "variableId");
+    const variableId = requiredInputString(input.variableId, "variableId");
     const payload = await requestN8nJson({
       context,
       path: `/variables/${encodeURIComponent(variableId)}`,
@@ -278,7 +283,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
       path: "/data-tables",
       method: "POST",
       body: compactObject({
-        name: requireInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
         columns: requireArray(input.columns, "columns"),
         projectId: optionalString(input.projectId),
       }),
@@ -286,7 +291,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   get_data_table(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}`,
@@ -295,20 +300,20 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   update_data_table(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}`,
       method: "PATCH",
       body: {
-        name: requireInputString(input.name, "name"),
+        name: requiredInputString(input.name, "name"),
       },
       mode: "execute",
       notFoundAsInvalidInput: true,
     });
   },
   async delete_data_table(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     const payload = await requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}`,
@@ -319,7 +324,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     return withFallbackObject(payload, { id: dataTableId });
   },
   list_data_table_columns(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/columns`,
@@ -328,14 +333,14 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   create_data_table_column(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/columns`,
       method: "POST",
       body: compactObject({
-        name: requireInputString(input.name, "name"),
-        type: requireInputString(input.type, "type"),
+        name: requiredInputString(input.name, "name"),
+        type: requiredInputString(input.type, "type"),
         index: optionalInteger(input.index),
       }),
       mode: "execute",
@@ -343,8 +348,8 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   update_data_table_column(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
-    const columnId = requireInputString(input.columnId, "columnId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
+    const columnId = requiredInputString(input.columnId, "columnId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/columns/${encodeURIComponent(columnId)}`,
@@ -358,8 +363,8 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   async delete_data_table_column(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
-    const columnId = requireInputString(input.columnId, "columnId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
+    const columnId = requiredInputString(input.columnId, "columnId");
     const payload = await requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/columns/${encodeURIComponent(columnId)}`,
@@ -370,7 +375,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     return withFallbackObject(payload, { id: columnId });
   },
   list_data_table_rows(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/rows`,
@@ -380,7 +385,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   insert_data_table_rows(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/rows`,
@@ -394,7 +399,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   update_data_table_rows(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/rows/update`,
@@ -410,7 +415,7 @@ export const n8nActionHandlers: ProviderActionHandlers<"n8n", N8nActionHandler> 
     });
   },
   upsert_data_table_row(input, context) {
-    const dataTableId = requireInputString(input.dataTableId, "dataTableId");
+    const dataTableId = requiredInputString(input.dataTableId, "dataTableId");
     return requestN8nJson({
       context,
       path: `/data-tables/${encodeURIComponent(dataTableId)}/rows/upsert`,
@@ -551,7 +556,7 @@ function workflowCommand(
   context: N8nActionContext,
   command: "deactivate" | "archive" | "unarchive",
 ): Promise<unknown> {
-  const workflowId = requireInputString(input.workflowId, "workflowId");
+  const workflowId = requiredInputString(input.workflowId, "workflowId");
   return requestN8nJson({
     context,
     path: `/workflows/${encodeURIComponent(workflowId)}/${command}`,
@@ -765,10 +770,6 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
     return undefined;
   }
   return value.filter((item): item is string => typeof item === "string");
-}
-
-function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireNumberId(value: unknown, fieldName: string): string {
