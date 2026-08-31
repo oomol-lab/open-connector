@@ -12,13 +12,16 @@ import {
   optionalScalarString,
   optionalString,
   optionalStringArray,
-  requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
 import {
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  requiredInputString,
+  requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { defaultSeedanceModel, fastSeedanceModel } from "./actions.ts";
@@ -83,11 +86,11 @@ export const volcengineArkActionHandlers: ProviderActionHandlers<
       method: "POST",
       body: buildSeedanceSubmitBody(normalized),
     });
-    const record = requireArkRecord(payload, "submit response");
-    return { taskId: requireArkString(record.id, "id") };
+    const record = requiredResponseRecord(payload, "submit response");
+    return { taskId: requiredString(record.id, "id", providerResponseError) };
   },
   async get_seedance_video_generation(input, context): Promise<unknown> {
-    const taskId = requireInputString(input.taskId, "taskId");
+    const taskId = requiredInputString(input.taskId, "taskId");
     const payload = await requestArkJson({
       context,
       method: "GET",
@@ -106,9 +109,9 @@ export const volcengineArkActionHandlers: ProviderActionHandlers<
       query.append("filter.task_ids", taskId);
     }
     const payload = await requestArkJson({ context, method: "GET", query });
-    const record = requireArkRecord(payload, "task list response");
-    const items = objectArray(record.items, "items", arkResponseError).map((item) =>
-      normalizeSeedanceTask(item, requireArkString(item.id, "items.id")),
+    const record = requiredResponseRecord(payload, "task list response");
+    const items = objectArray(record.items, "items", providerResponseError).map((item) =>
+      normalizeSeedanceTask(item, requiredString(item.id, "items.id", providerResponseError)),
     );
     return {
       items,
@@ -116,7 +119,7 @@ export const volcengineArkActionHandlers: ProviderActionHandlers<
     };
   },
   async delete_seedance_video_generation(input, context): Promise<unknown> {
-    const taskId = requireInputString(input.taskId, "taskId");
+    const taskId = requiredInputString(input.taskId, "taskId");
     await requestArkJson({
       context,
       method: "DELETE",
@@ -215,9 +218,9 @@ export function buildSeedanceSubmitBody(input: SeedanceSubmitInput): Record<stri
 }
 
 export function normalizeSeedanceTask(payload: unknown, fallbackTaskId: string): Record<string, unknown> {
-  const record = requireArkRecord(payload, "task response");
+  const record = requiredResponseRecord(payload, "task response");
   const taskId = optionalString(record.id) ?? fallbackTaskId;
-  const status = requireArkString(record.status, "status");
+  const status = requiredString(record.status, "status", providerResponseError);
   const common = {
     taskId,
     model: optionalString(record.model),
@@ -228,11 +231,11 @@ export function normalizeSeedanceTask(payload: unknown, fallbackTaskId: string):
     return { ...common, state: "processing", progress: optionalNumber(record.progress) };
   }
   if (status === "succeeded") {
-    const content = requireArkRecord(record.content, "content");
+    const content = requiredResponseRecord(record.content, "content");
     return {
       ...common,
       state: "succeeded",
-      videoUrl: requireArkString(content.video_url, "content.video_url"),
+      videoUrl: requiredString(content.video_url, "content.video_url", providerResponseError),
       lastFrameUrl: optionalString(content.last_frame_url),
       seed: optionalInteger(record.seed),
       resolution: optionalString(record.resolution),
@@ -300,33 +303,33 @@ function handleArkError(response: Response, payload: unknown, phase: "validate" 
 }
 
 function readImages(value: unknown): SeedanceImageInput[] {
-  return optionalObjectArray(value, "images", inputError).map((item) => ({
-    url: requireInputString(item.url, "images.url"),
+  return optionalObjectArray(value, "images", providerInputError).map((item) => ({
+    url: requiredInputString(item.url, "images.url"),
     role: readEnum(item.role, "images.role", ["first_frame", "last_frame", "reference_image"], "first_frame"),
   }));
 }
 
 function readVideos(value: unknown): SeedanceVideoInput[] {
-  return optionalObjectArray(value, "videos", inputError).map((item) => {
+  return optionalObjectArray(value, "videos", providerInputError).map((item) => {
     if (item.role !== undefined && item.role !== "reference_video") {
       throw new ProviderRequestError(400, "videos.role must be reference_video");
     }
-    return { url: requireInputString(item.url, "videos.url"), role: "reference_video" };
+    return { url: requiredInputString(item.url, "videos.url"), role: "reference_video" };
   });
 }
 
 function readAudios(value: unknown): SeedanceAudioInput[] {
-  return optionalObjectArray(value, "audios", inputError).map((item) => {
+  return optionalObjectArray(value, "audios", providerInputError).map((item) => {
     if (item.role !== undefined && item.role !== "reference_audio") {
       throw new ProviderRequestError(400, "audios.role must be reference_audio");
     }
-    return { url: requireInputString(item.url, "audios.url"), role: "reference_audio" };
+    return { url: requiredInputString(item.url, "audios.url"), role: "reference_audio" };
   });
 }
 
 function readTools(value: unknown): SeedanceToolInput[] | undefined {
   if (value === undefined) return undefined;
-  return objectArray(value, "tools", inputError).map((item) => {
+  return objectArray(value, "tools", providerInputError).map((item) => {
     if (item.type !== "web_search") throw new ProviderRequestError(400, "tools.type must be web_search");
     return { type: "web_search" };
   });
@@ -359,7 +362,7 @@ function readOutputTools(value: unknown): Array<{ type: string }> | undefined {
   return value
     .map((item) => optionalRecord(item))
     .filter((item): item is Record<string, unknown> => item !== undefined)
-    .map((item) => ({ type: requireArkString(item.type, "tools.type") }));
+    .map((item) => ({ type: requiredString(item.type, "tools.type", providerResponseError) }));
 }
 
 function normalizeUsage(value: unknown): Record<string, unknown> | undefined {
@@ -379,21 +382,9 @@ function normalizeError(value: unknown): Record<string, unknown> | undefined {
   return { code: optionalString(record.code), message: optionalString(record.message) };
 }
 
-function requireInputString(value: unknown, field: string): string {
-  return requiredString(value, field, inputError);
-}
-
-function requireArkRecord(value: unknown, field: string): Record<string, unknown> {
-  return requiredRecord(value, field, arkResponseError);
-}
-
-function requireArkString(value: unknown, field: string): string {
-  return requiredString(value, field, arkResponseError);
-}
-
 function requireArkInteger(value: unknown, field: string): number {
   const integer = optionalInteger(value);
-  if (integer === undefined) throw arkResponseError(`Volcengine Ark ${field} must be an integer`);
+  if (integer === undefined) throw providerResponseError(`Volcengine Ark ${field} must be an integer`);
   return integer;
 }
 
@@ -418,12 +409,4 @@ function numberFromString(value: unknown): number | undefined {
   if (!text) return undefined;
   const number = Number(text);
   return Number.isFinite(number) ? number : undefined;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function arkResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

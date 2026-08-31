@@ -3,7 +3,7 @@
   "counts": {
     "local-abort-predicate": 1,
     "local-request-timeout-constant": 125,
-    "local-provider-error-factory": 485,
+    "local-provider-error-factory": 483,
     "local-api-key-action-input": 11,
     "hand-written-proxy": 114,
     "local-aws-sigv4-helper": 5,
