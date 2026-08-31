@@ -406,7 +406,7 @@ async function callHubspotMcpTool(input: HubspotMcpToolCallInput) {
     return unwrapHubspotMcpOutput(output);
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status === 401) {
-      throw new ProviderRequestError(409, error.message, undefined, "credential_expired");
+      throw new ProviderRequestError(401, error.message, undefined, "credential_expired");
     }
     throw error;
   }

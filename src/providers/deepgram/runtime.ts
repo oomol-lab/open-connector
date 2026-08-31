@@ -224,7 +224,7 @@ function createDeepgramError(status: number, payload: unknown, phase: DeepgramPh
   }
 
   if (phase === "execute" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (phase === "execute" && status >= 400 && status < 500) {

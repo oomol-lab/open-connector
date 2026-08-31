@@ -313,7 +313,7 @@ function mapClickhelpError(status: number, message: string, phase: ClickhelpRequ
     return new ProviderRequestError(400, message);
   }
   if (phase === "execute" && status === 401) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if ([400, 403, 404, 409, 422].includes(status)) {
     return new ProviderRequestError(400, message);

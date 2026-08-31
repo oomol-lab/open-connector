@@ -441,7 +441,7 @@ async function sendWecomMcpRequest(
     const payload = optionalRecord(response.payload) ?? {};
     const error = normalizeWecomSmartBotError(payload, response.status, "execute");
     if (response.status === 401 || response.status === 403) {
-      throw new ProviderRequestError(409, error.message, error.details);
+      throw new ProviderRequestError(401, error.message, error.details);
     }
     throw error;
   }
@@ -520,7 +520,7 @@ function normalizeWecomSmartBotError(payload: Record<string, unknown>, status: n
     return new ProviderRequestError(400, message, payload);
   }
   if (phase === "execute" && (status === 401 || status === 403 || errcode === 853000)) {
-    return new ProviderRequestError(409, message, payload);
+    return new ProviderRequestError(401, message, payload);
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(status, message, payload);

@@ -142,7 +142,7 @@ function createWinstonAiError(
     return new ProviderRequestError(400, message, payload);
   }
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(409, message, payload);
+    return new ProviderRequestError(401, message, payload);
   }
   if (phase === "execute" && response.status >= 400 && response.status < 500) {
     return new ProviderRequestError(400, message, payload);

@@ -374,7 +374,7 @@ function createScrapingantError(status: number, payload: unknown, phase: Scrapin
     return new ProviderRequestError(400, message);
   }
   if (phase === "execute" && status === 403) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (phase === "execute" && (status === 400 || status === 404 || status === 405 || status === 422)) {
     return new ProviderRequestError(400, message);

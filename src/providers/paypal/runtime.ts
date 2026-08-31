@@ -430,7 +430,7 @@ function createPayPalError(response: Response, payload: unknown, phase: PayPalRe
     return new ProviderRequestError(400, message, data);
   }
   if (phase === "execute" && response.status === 401) {
-    return new ProviderRequestError(409, message, data);
+    return new ProviderRequestError(401, message, data);
   }
   if (phase === "execute" && response.status === 403) {
     return new ProviderRequestError(403, message, data);

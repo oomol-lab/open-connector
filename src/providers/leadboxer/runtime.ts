@@ -215,7 +215,7 @@ function createLeadboxerError(response: Response, payload: unknown, phase: Leadb
   }
 
   if (phase === "execute" && response.status === 401) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (phase === "execute" && response.status === 403) {

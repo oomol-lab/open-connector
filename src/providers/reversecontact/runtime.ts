@@ -129,7 +129,7 @@ function readReversecontactMessage(payload: Record<string, unknown>) {
 
 function mapReversecontactError(status: number, message: string) {
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

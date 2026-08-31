@@ -260,7 +260,7 @@ function mapProductlaneError(status: number, payload: unknown, phase: "validate"
   const providerCode = readErrorCode(payload);
 
   if (status === 401 || status === 410) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
 
   if (status === 403) {

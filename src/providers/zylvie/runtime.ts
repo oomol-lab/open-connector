@@ -290,7 +290,7 @@ function createRequestError(response: Response, payload: unknown, phase: Request
     return new ProviderRequestError(400, message);
   }
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if ([400, 404, 409, 422].includes(response.status)) {
     return new ProviderRequestError(400, message);

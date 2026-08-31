@@ -108,7 +108,7 @@ export function createDopplerError(
   }
 
   if (phase === "execute" && response.status === 401) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (response.status === 400 || response.status === 404) {

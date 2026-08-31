@@ -237,7 +237,7 @@ function createMondayError(status: number | undefined, payload: unknown, phase: 
   }
 
   if (phase === "execute" && status === 401) {
-    return mondayProviderError("credential_expired", message, 409);
+    return mondayProviderError("credential_expired", message, 401);
   }
 
   if (phase === "execute" && isMondayPermissionErrorCode(code)) {

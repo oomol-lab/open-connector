@@ -545,7 +545,7 @@ function normalizeWhatsAppError(input: {
       return new ProviderRequestError(input.status || 400, message, input.payload);
     }
   } else {
-    if (input.status === 401 || graphErrorCode === 190) return new ProviderRequestError(409, message, input.payload);
+    if (input.status === 401 || graphErrorCode === 190) return new ProviderRequestError(401, message, input.payload);
     if (input.status === 400 || input.status === 403 || input.status === 404) {
       return new ProviderRequestError(input.status, message, input.payload);
     }

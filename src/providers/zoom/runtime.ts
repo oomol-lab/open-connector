@@ -184,7 +184,7 @@ function createZoomError(status: number, payload: unknown, phase: ZoomRequestPha
     return new ProviderRequestError(400, message, payload);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(409, message, payload);
+    return new ProviderRequestError(401, message, payload);
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(400, message, payload);

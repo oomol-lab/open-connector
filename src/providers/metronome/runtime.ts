@@ -275,7 +275,7 @@ function createMetronomeError(
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(409, message, payload);
+    return new ProviderRequestError(401, message, payload);
   }
 
   if ([400, 404, 422].includes(response.status)) {

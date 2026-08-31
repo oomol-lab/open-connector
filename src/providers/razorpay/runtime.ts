@@ -314,7 +314,7 @@ function createRazorpayError(status: number, payload: unknown, phase: RazorpayRe
   }
 
   if (phase === "execute" && [401, 403].includes(status)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (phase === "execute" && [400, 404, 409, 422].includes(status)) {

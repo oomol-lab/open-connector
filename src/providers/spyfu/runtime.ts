@@ -584,7 +584,7 @@ function createSpyfuError(response: Response, payload: unknown, phase: SpyfuRequ
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (phase === "execute" && response.status >= 400 && response.status < 500) {

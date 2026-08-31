@@ -203,7 +203,7 @@ function mapError(status: number, payload: unknown, phase: Phase) {
     optionalString(root?.message) ??
     `ONLYOFFICE DocSpace request failed with ${status}`;
   if (phase === "validate" && (status === 401 || status === 403)) return new ProviderRequestError(400, message);
-  if (status === 401) return new ProviderRequestError(409, message);
+  if (status === 401) return new ProviderRequestError(401, message);
   if ([400, 403, 404, 409, 422].includes(status)) return new ProviderRequestError(400, message);
   if (status === 429) return new ProviderRequestError(429, message);
   return new ProviderRequestError(status >= 500 ? 502 : status, message);

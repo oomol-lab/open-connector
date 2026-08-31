@@ -242,7 +242,7 @@ function mapWalmartError(status: number, payload: unknown, phase: "validate" | "
     structuredError ??
     `walmart marketplace request failed with HTTP ${status}`;
   if (status === 401) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
   if (status === 403) {
     return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(403, message);

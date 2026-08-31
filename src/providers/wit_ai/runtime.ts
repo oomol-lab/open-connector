@@ -427,7 +427,7 @@ function createWitAiError(response: Response, payload: unknown, phase: WitAiRequ
   if (response.status === 429) return new ProviderRequestError(429, message, payload);
   if (response.status === 400 || response.status === 404) return new ProviderRequestError(400, message, payload);
   if (phase === "validate" && response.status === 401) return new ProviderRequestError(400, message, payload);
-  if (phase === "execute" && response.status === 401) return new ProviderRequestError(409, message, payload);
+  if (phase === "execute" && response.status === 401) return new ProviderRequestError(401, message, payload);
   return new ProviderRequestError(response.status || 500, message, payload);
 }
 

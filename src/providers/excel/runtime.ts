@@ -254,7 +254,7 @@ export async function assertExcelResponse(response: Response): Promise<void> {
     throw new ProviderRequestError(400, message);
   }
   if (response.status === 401) {
-    throw new ProviderRequestError(409, message);
+    throw new ProviderRequestError(401, message);
   }
   if (response.status === 403 && isScopeError(code, message)) {
     throw new ProviderRequestError(403, message);

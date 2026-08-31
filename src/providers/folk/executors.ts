@@ -369,7 +369,7 @@ function buildFolkError(status: number, payload: unknown, phase: FolkPhase): Pro
     return new ProviderRequestError(400, message, payload);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(409, message, payload);
+    return new ProviderRequestError(401, message, payload);
   }
   if (status === 400 || status === 404 || status === 422) {
     return new ProviderRequestError(400, message, payload);

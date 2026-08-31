@@ -247,7 +247,7 @@ function normalizePayrexxError(response: Response, payload: PayrexxResponse, pha
     response.status === 403 ||
     (response.status === 200 && isCredentialErrorMessage(message))
   ) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (response.status === 404) return new ProviderRequestError(404, message);
   return new ProviderRequestError(response.status >= 500 ? 502 : 400, message);

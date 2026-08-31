@@ -279,7 +279,7 @@ function mapSplunkHecError(status: number, code: number | undefined, message: st
     return new ProviderRequestError(400, message);
   }
   if (phase === "execute" && (status === 401 || status === 403 || code === 4 || code === 21 || code === 22)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 404) {
     return new ProviderRequestError(400, message);

@@ -483,7 +483,7 @@ function createSorftimeHttpError(response: Response, payload: unknown, phase: So
     return new ProviderRequestError(429, message);
   }
   if (response.status === 401 || response.status === 403) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
   if (phase === "execute" && [400, 404, 422].includes(response.status)) {
     return new ProviderRequestError(400, message);

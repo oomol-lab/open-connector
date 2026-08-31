@@ -150,7 +150,7 @@ function createMindbodyError(response: Response, payload: unknown, phase: Mindbo
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (phase === "execute" && [400, 404, 422].includes(response.status)) {

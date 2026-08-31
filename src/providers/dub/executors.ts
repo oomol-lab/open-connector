@@ -380,7 +380,7 @@ function createDubError(response: Response, payload: unknown, phase: DubRequestP
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (phase === "execute" && [400, 404, 409, 410, 422].includes(response.status)) {

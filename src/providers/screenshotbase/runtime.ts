@@ -183,7 +183,7 @@ function createScreenshotbaseError(status: number, payload: unknown, phase: Scre
     return new ProviderRequestError(400, message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 422) {
     return new ProviderRequestError(400, message);

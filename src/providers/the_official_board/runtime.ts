@@ -116,7 +116,7 @@ async function readPayload(response: Response): Promise<unknown> {
 
 function mapError(status: number, message: string, phase: "validation" | "execution") {
   if (status === 401 || status === 403) {
-    return phase === "validation" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return phase === "validation" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

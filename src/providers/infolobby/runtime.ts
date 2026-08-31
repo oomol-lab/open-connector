@@ -178,7 +178,7 @@ async function requestInfolobby(options: RequestOptions) {
 function mapInfolobbyError(status: number, text: string, mode: "validate" | "execute") {
   const message = text.trim() || `InfoLobby API request failed with status ${status}`;
   if (status === 401) {
-    return mode === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return mode === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
   if (status === 403 || status === 405) {
     return new ProviderRequestError(400, message);

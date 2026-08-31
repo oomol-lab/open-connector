@@ -200,7 +200,7 @@ function createClinicalKeyError(status: number, payload: unknown, phase: Clinica
   }
 
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (status >= 400 && status < 500) {

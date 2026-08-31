@@ -282,7 +282,7 @@ function mapAdobeCommerceError(status: number, payload: unknown, mode: AdobeComm
   if (status === 401 || status === 403) {
     return mode === "validate"
       ? new ProviderRequestError(400, message, payload)
-      : new ProviderRequestError(409, message, payload);
+      : new ProviderRequestError(401, message, payload);
   }
 
   if (status >= 400 && status < 500) {

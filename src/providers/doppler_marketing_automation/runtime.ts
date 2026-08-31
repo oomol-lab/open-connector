@@ -306,7 +306,7 @@ function createDopplerMarketingError(status: number, statusText: string, payload
     return new ProviderRequestError(400, message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(status, message);

@@ -176,7 +176,7 @@ function createEmbaseError(status: number, payload: unknown, phase: EmbasePhase)
     return new ProviderRequestError(400, message);
   }
   if (status === 401) {
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
   if (status === 403) {
     return new ProviderRequestError(403, message);

@@ -285,7 +285,7 @@ function buildRawgError(status: number, payload: unknown, phase: "validate" | "e
     if (phase === "validate") {
       return new ProviderRequestError(400, message);
     }
-    return new ProviderRequestError(409, message);
+    return new ProviderRequestError(401, message);
   }
 
   if (status === 429) {

@@ -191,7 +191,7 @@ function readErrorMessage(payload: unknown) {
 
 function mapMailsoftlyError(status: number, message: string, phase: MailsoftlyRequestPhase) {
   if (status === 401 || status === 403) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(409, message);
+    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
