@@ -7,12 +7,13 @@ import { providerErrorCodes } from "../server/api/runtime-api.ts";
 const providersDirectory = fileURLToPath(new URL(".", import.meta.url));
 
 /**
- * Matches the upstream-status test that governs a credential failure branch,
- * either as an explicit comparison or as a status list membership check. The
- * comparison is matched case-insensitively so that a locally named status such
- * as `httpStatus === 401` counts too.
+ * Matches the upstream-status test that governs a credential failure branch: a
+ * comparison against 401 or 403 in either direction, a `switch` label, or a
+ * status list membership check. The compared name is left open so that a local
+ * spelling such as `httpStatus === 401` or `code === 403` counts too.
  */
-const authStatusTestPattern = /status\s*===?\s*40[13]|\b40[13]\b[^\n]*\.includes/iu;
+const authStatusTestPattern =
+  /[A-Za-z_$][\w$]*\s*===?\s*40[13]\b|\b40[13]\s*===?\s*[A-Za-z_$]|\b40[13]\b[^\n]*\.includes|\bcase\s+40[13]\s*:/u;
 
 /** Matches a branch that tests for a genuine upstream 409 conflict. */
 const conflictStatusTestPattern = /===?\s*409/u;
@@ -115,13 +116,13 @@ const comparisonOperatorPattern = /[=!]==?$/u;
  */
 function readCodeLiterals(argumentSource: string, literalsByName: Map<string, string>): string[] {
   const codes: string[] = [];
-  for (const literal of argumentSource.matchAll(/"([^"\\]*)"/gu)) {
+  for (const literal of argumentSource.matchAll(/"([^"\\]*)"|`([^`\\$]*)`/gu)) {
     const before = argumentSource.slice(0, literal.index).trimEnd();
     const after = argumentSource.slice(literal.index + literal[0].length).trimStart();
     if (comparisonOperatorPattern.test(before) || after.startsWith("==") || after.startsWith("!=")) {
       continue;
     }
-    codes.push(literal[1]!);
+    codes.push(literal[1] ?? literal[2]!);
   }
   const named = literalsByName.get(argumentSource.trim());
   if (named !== undefined) {
@@ -133,8 +134,10 @@ function readCodeLiterals(argumentSource: string, literalsByName: Map<string, st
 /** Read the `const name = "literal"` bindings a code argument can name. */
 function readStringConstants(source: string): Map<string, string> {
   const literalsByName = new Map<string, string>();
-  for (const match of source.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*"([^"\\]*)"/gu)) {
-    literalsByName.set(match[1]!, match[2]!);
+  for (const match of source.matchAll(
+    /\bconst\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*(?:"([^"\\]*)"|`([^`\\$]*)`)/gu,
+  )) {
+    literalsByName.set(match[1]!, match[2] ?? match[3]!);
   }
   return literalsByName;
 }
@@ -194,9 +197,31 @@ function readParameterNames(source: string, openIndex: number): string[] {
   );
 }
 
+interface ArrowDeclaration {
+  name: string;
+  declarationStart: number;
+  parameterStart: number;
+}
+
+/** Find the nearest `const name = (…) =>` helper declared above an index. */
+function findEnclosingArrow(source: string, index: number): ArrowDeclaration | undefined {
+  let found: ArrowDeclaration | undefined;
+  for (const match of source
+    .slice(0, index)
+    .matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]*)?=\s*(?:async\s+)?\(/gu)) {
+    found = { name: match[1]!, declarationStart: match.index, parameterStart: match.index + match[0].length - 1 };
+  }
+  return found;
+}
+
 function findEnclosingCallable(source: string, index: number): EnclosingCallable | undefined {
   const functionStart = source.lastIndexOf("function ", index);
   const constructorStart = source.lastIndexOf("constructor(", index);
+  const arrow = findEnclosingArrow(source, index);
+  const arrowStart = arrow?.declarationStart ?? -1;
+  if (arrow && arrowStart > functionStart && arrowStart > constructorStart) {
+    return { name: arrow.name, parameterNames: readParameterNames(source, arrow.parameterStart) };
+  }
   if (constructorStart > functionStart) {
     const className = /class\s+([A-Za-z_$][\w$]*)\s+extends\s+ProviderRequestError/gu;
     let owner: string | undefined;
@@ -220,32 +245,99 @@ function findEnclosingCallable(source: string, index: number): EnclosingCallable
   };
 }
 
+/** Shared runtime modules sit directly under `src/providers` and are visible everywhere. */
+const sharedScope = "";
+
+/** The provider directory a source belongs to, which bounds where its helpers apply. */
+function providerScopeOf(file: string): string {
+  const separator = file.indexOf("/");
+  return separator === -1 ? sharedScope : file.slice(0, separator);
+}
+
+type ForwardedArgumentScopes = Map<string, Map<string, Set<number>>>;
+
+function lookupCallee(scopes: ForwardedArgumentScopes, scope: string, name: string): Set<number> | undefined {
+  return scopes.get(scope)?.get(name) ?? scopes.get(sharedScope)?.get(name);
+}
+
+function registerCallee(scopes: ForwardedArgumentScopes, scope: string, name: string, index: number): void {
+  const callees = scopes.get(scope) ?? new Map<string, Set<number>>();
+  scopes.set(scope, callees);
+  const indexes = callees.get(name) ?? new Set<number>();
+  indexes.add(index);
+  callees.set(name, indexes);
+}
+
+/** The callees a file may reach: its own provider's helpers plus the shared ones. */
+function calleesVisibleIn(scopes: ForwardedArgumentScopes, file: string): Map<string, Set<number>> {
+  const scope = providerScopeOf(file);
+  return new Map([...(scopes.get(sharedScope) ?? []), ...(scope === sharedScope ? [] : (scopes.get(scope) ?? []))]);
+}
+
+/**
+ * Register a subclass that inherits its constructor rather than declaring one,
+ * so a class two levels below `ProviderRequestError` is held to the same rule
+ * as its parent. Repeats until nothing new resolves, because a chain may be
+ * declared in any order.
+ */
+function registerInheritedConstructors(sources: ProviderSource[], scopes: ForwardedArgumentScopes): void {
+  const declarations = sources.flatMap((entry) =>
+    [...entry.source.matchAll(/\bclass\s+([A-Za-z_$][\w$]*)\s+extends\s+([A-Za-z_$][\w$]*)/gu)].map((match) => ({
+      scope: providerScopeOf(entry.file),
+      name: match[1]!,
+      parent: match[2]!,
+    })),
+  );
+  let resolved = true;
+  while (resolved) {
+    resolved = false;
+    for (const declaration of declarations) {
+      if (lookupCallee(scopes, declaration.scope, declaration.name)) {
+        continue;
+      }
+      const inherited = lookupCallee(scopes, declaration.scope, declaration.parent);
+      if (!inherited) {
+        continue;
+      }
+      for (const index of inherited) {
+        registerCallee(scopes, declaration.scope, declaration.name, index);
+      }
+      resolved = true;
+    }
+  }
+}
+
 /**
  * Find the provider-local helpers and `ProviderRequestError` subclasses that
  * forward one of their own parameters into the given constructor argument, so
  * their callers are held to the same rule as a direct construction. Without
  * this a helper that reorders or discards its arguments hides every site that
- * goes through it.
+ * goes through it. Helpers are keyed by provider directory, so two providers
+ * that spell a helper the same way cannot borrow each other's argument order.
  */
-function findForwardedArgumentIndexes(sources: string[], constructorArgumentIndex: number): Map<string, Set<number>> {
-  const indexesByCallee = new Map<string, Set<number>>([["ProviderRequestError", new Set([constructorArgumentIndex])]]);
-  for (const source of sources.filter((entry) => entry.includes("ProviderRequestError"))) {
-    for (const site of findCallSites(source, /(?:new ProviderRequestError|super)\(/gu)) {
+function findForwardedArgumentIndexes(
+  sources: ProviderSource[],
+  constructorArgumentIndex: number,
+): ForwardedArgumentScopes {
+  const scopes: ForwardedArgumentScopes = new Map([
+    [sharedScope, new Map([["ProviderRequestError", new Set([constructorArgumentIndex])]])],
+  ]);
+  for (const entry of sources.filter((source) => source.source.includes("ProviderRequestError"))) {
+    for (const site of findCallSites(entry.source, /(?:new ProviderRequestError|super)\(/gu)) {
       const forwarded = site.argumentSources[constructorArgumentIndex]?.trim();
       if (forwarded === undefined || !identifierPattern.test(forwarded)) {
         continue;
       }
-      const owner = findEnclosingCallable(source, site.index);
+      const owner = findEnclosingCallable(entry.source, site.index);
       const argumentIndex = owner?.parameterNames.indexOf(forwarded) ?? -1;
       if (!owner || argumentIndex === -1) {
         continue;
       }
-      const indexes = indexesByCallee.get(owner.name) ?? new Set<number>();
-      indexes.add(argumentIndex);
-      indexesByCallee.set(owner.name, indexes);
+      registerCallee(scopes, providerScopeOf(entry.file), owner.name, argumentIndex);
     }
   }
-  return indexesByCallee;
+  registerInheritedConstructors(sources, scopes);
+  return scopes;
 }
 
 interface BlockRange {
@@ -371,13 +463,10 @@ function lineNumberAt(source: string, index: number): number {
  * branch that also tests for 409 is a genuine upstream conflict and is kept.
  */
 function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
-  const indexesByCallee = findForwardedArgumentIndexes(
-    sources.map((entry) => entry.source),
-    0,
-  );
+  const scopes = findForwardedArgumentIndexes(sources, 0);
   const hits: AuthConflictHit[] = [];
   for (const entry of sources) {
-    for (const [callee, indexes] of indexesByCallee) {
+    for (const [callee, indexes] of calleesVisibleIn(scopes, entry.file)) {
       for (const site of findCallSitesIn(entry, callee)) {
         const raisesConflict = [...indexes].some((index) =>
           canEvaluateToStatus(site.argumentSources[index] ?? "", 409),
@@ -416,14 +505,11 @@ interface ErrorCodeArgumentHit {
  */
 function findUndocumentedErrorCodes(sources: ProviderSource[]): ErrorCodeArgumentHit[] {
   const allowed = new Set(providerErrorCodes);
-  const indexesByCallee = findForwardedArgumentIndexes(
-    sources.map((entry) => entry.source),
-    3,
-  );
+  const scopes = findForwardedArgumentIndexes(sources, 3);
   const hits: ErrorCodeArgumentHit[] = [];
   for (const entry of sources) {
     const literalsByName = readStringConstants(entry.source);
-    for (const [callee, indexes] of indexesByCallee) {
+    for (const [callee, indexes] of calleesVisibleIn(scopes, entry.file)) {
       for (const site of findCallSitesIn(entry, callee)) {
         for (const argumentIndex of indexes) {
           const codeArgument = site.argumentSources[argumentIndex];
