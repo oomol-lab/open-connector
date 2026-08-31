@@ -1,23 +1,6 @@
-import type {
-  CredentialValidators,
-  ProviderExecutors,
-  ProviderProxyExecutor,
-  ProxyExecutionResult,
-} from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import {
-  createProviderFetch,
-  createProviderProxyUrl,
-  defineApiKeyProviderExecutors,
-  normalizeProviderProxyEndpoint,
-  normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  requireApiKeyCredential,
-  toProviderProxyError,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import {
   docsbotAiActionHandlers,
   docsbotAiAdminBaseUrl,
@@ -27,40 +10,27 @@ import {
 
 const service = "docsbot_ai";
 
-const docsbotAiFetch = createProviderFetch({ skipDnsValidation: true });
-
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, docsbotAiActionHandlers, {
   skipDnsValidation: true,
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
-    const credential = await requireApiKeyCredential(context, service);
-    const endpoint = normalizeProviderProxyEndpoint(input.endpoint);
-    const url = createProviderProxyUrl(resolveDocsbotAiProxyBaseUrl(endpoint), endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("authorization", `Bearer ${credential.apiKey}`);
-    headers.set("user-agent", providerUserAgent);
-    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
-      headers.set("content-type", "application/json");
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    await requireApiKeyCredential(context, service);
+    return docsbotAiAdminBaseUrl;
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  allowedOrigins: [docsbotAiApiBaseUrl],
+  customizeRequest({ endpoint, url }) {
+    if (resolveDocsbotAiProxyBaseUrl(endpoint) === docsbotAiApiBaseUrl) {
+      url.host = new URL(docsbotAiApiBaseUrl).host;
+      url.pathname = url.pathname.slice(new URL(docsbotAiAdminBaseUrl).pathname.length);
     }
-
-    const response = await docsbotAiFetch(url, {
-      method: input.method,
-      headers,
-      body:
-        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
-      signal: context.signal,
-    });
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+  },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
