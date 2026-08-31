@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -125,7 +125,7 @@ export const statuspageActionHandlers: ProviderActionHandlers<"statuspage", Stat
   async get_automation_email(input, context) {
     const pageId = readPathSegment(input.pageId, "pageId");
     const raw = await statuspageGetJson(`/pages/${pageId}/automation_email`, context);
-    const payload = asLooseObject(raw);
+    const payload = recordOrEmpty(raw);
     const automationEmail = optionalString(payload.automation_email ?? payload.automationEmail);
     if (!automationEmail) {
       throw new ProviderRequestError(502, "Statuspage automation email response is missing automation_email.", payload);
@@ -151,7 +151,7 @@ export const credentialValidators: CredentialValidators = {
     };
     const payload = await statuspageGetJson(statuspageValidationPath, context);
     const pages = readArray(payload, "Statuspage pages response");
-    const firstPage = pages.map(asLooseObject).find((page) => optionalString(page.name));
+    const firstPage = pages.map(recordOrEmpty).find((page) => optionalString(page.name));
 
     return {
       profile: {
@@ -271,7 +271,7 @@ async function normalizeListOutput(
   normalizeItem: Normalizer,
 ): Promise<Record<string, unknown>> {
   const payload = await payloadPromise;
-  const raw = readArray(payload, `Statuspage ${key} response`).map(asLooseObject);
+  const raw = readArray(payload, `Statuspage ${key} response`).map(recordOrEmpty);
   const items = raw.map(normalizeItem);
   return { [key]: items, raw };
 }
@@ -281,7 +281,7 @@ async function normalizeSingleOutput(
   payloadPromise: Promise<unknown>,
   normalizeItem: Normalizer,
 ): Promise<Record<string, unknown>> {
-  const payload = asLooseObject(await payloadPromise);
+  const payload = recordOrEmpty(await payloadPromise);
   return { [key]: normalizeItem(payload), raw: payload };
 }
 
@@ -416,8 +416,4 @@ function readArray(value: unknown, label: string): unknown[] {
     throw new ProviderRequestError(502, `${label} is not an array.`, value);
   }
   return value;
-}
-
-function asLooseObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }

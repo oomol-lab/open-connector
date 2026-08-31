@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  recordOrEmpty,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   providerInputError,
@@ -108,7 +115,7 @@ async function listSources(context: ApiKeyProviderContext): Promise<Record<strin
   const payload = await baremetricsGetJson("/v1/sources", {}, context, "execute");
   return {
     sources: readArray(payload, "sources"),
-    raw: asRecord(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -129,7 +136,7 @@ async function listCustomers(
   );
   return {
     customers: readArray(payload, "customers"),
-    raw: asRecord(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -156,8 +163,8 @@ async function customerMutation(
     context,
   );
   return {
-    customer: optionalRecord(asRecord(payload).customer) ?? null,
-    raw: asRecord(payload),
+    customer: optionalRecord(recordOrEmpty(payload).customer) ?? null,
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -176,7 +183,7 @@ async function listPlans(
   );
   return {
     plans: readArray(payload, "plans"),
-    raw: asRecord(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -206,8 +213,8 @@ async function planMutation(
     context,
   );
   return {
-    plan: optionalRecord(asRecord(payload).plan) ?? null,
-    raw: asRecord(payload),
+    plan: optionalRecord(recordOrEmpty(payload).plan) ?? null,
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -227,7 +234,7 @@ async function listSubscriptions(
   );
   return {
     subscriptions: readArray(payload, "subscriptions"),
-    raw: asRecord(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -279,7 +286,7 @@ async function listCharges(
   );
   return {
     charges: readArray(payload, "charges"),
-    raw: asRecord(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -298,7 +305,7 @@ function subscriptionBody(input: Record<string, unknown>): Record<string, unknow
 }
 
 function normalizeSubscriptionPayload(payload: unknown): Record<string, unknown> {
-  const record = asRecord(payload);
+  const record = recordOrEmpty(payload);
   return {
     subscription: optionalRecord(record.subscription) ?? null,
     event: optionalRecord(record.event) ?? null,
@@ -417,12 +424,8 @@ function extractBaremetricsErrorMessage(payload: unknown): string | undefined {
 }
 
 function readArray(payload: unknown, key: string): unknown[] {
-  const value = asRecord(payload)[key];
+  const value = recordOrEmpty(payload)[key];
   return Array.isArray(value) ? value : [];
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function isAbortError(error: unknown): boolean {

@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalRecord,
+  optionalString,
+  recordOrEmpty,
+  requiredRecord,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -376,13 +383,13 @@ function pickBody(input: Record<string, unknown>, keys: string[]): Record<string
 
 function buildBotAttributeBody(input: Record<string, unknown>, keys: string[]): Record<string, unknown> {
   return {
-    ...readOptionalObject(input.localizedValues),
+    ...recordOrEmpty(input.localizedValues),
     ...pickBody(input, keys),
   };
 }
 
 function buildEntityItemBody(input: Record<string, unknown>, keys: string[]): Record<string, unknown> {
-  const data = readOptionalObject(input.data);
+  const data = recordOrEmpty(input.data);
   for (const key of ["name", "status"]) {
     if (Object.hasOwn(data, key)) {
       throw new ProviderRequestError(400, `data.${key} conflicts with an explicit CMS item field.`);
@@ -409,10 +416,6 @@ function readRequiredString(input: Record<string, unknown>, key: string): string
 
 function readRequiredObject(input: Record<string, unknown>, key: string): Record<string, unknown> {
   return requiredRecord(input[key], `${key} object`, providerInputError);
-}
-
-function readOptionalObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function readOptionalString(value: unknown): string | undefined {

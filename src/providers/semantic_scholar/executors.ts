@@ -6,7 +6,14 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, looseArray, optionalRawString, optionalRecord, rawStringOrNull } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalRawString,
+  optionalRecord,
+  rawStringOrNull,
+  recordOrEmpty,
+} from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
@@ -111,7 +118,7 @@ export const semanticScholarActionHandlers: ProviderActionHandlers<"semantic_sch
 
     return {
       paper: optionalRecord(payload),
-      raw: normalizeRawObject(payload),
+      raw: recordOrEmpty(payload),
     };
   },
   async autocomplete_papers(input, fetcher, apiKey) {
@@ -128,7 +135,7 @@ export const semanticScholarActionHandlers: ProviderActionHandlers<"semantic_sch
     const payloadRecord = optionalRecord(payload);
     return {
       completions: looseArray(payloadRecord?.matches ?? payloadRecord?.data),
-      raw: normalizeRawObject(payload),
+      raw: recordOrEmpty(payload),
     };
   },
   async get_paper_authors(input, fetcher, apiKey) {
@@ -246,7 +253,7 @@ export const semanticScholarActionHandlers: ProviderActionHandlers<"semantic_sch
       offset: readNullableInteger(payloadRecord?.offset),
       next: readNullableInteger(payloadRecord?.next),
       snippets: looseArray(payloadRecord?.data),
-      raw: normalizeRawObject(payload),
+      raw: recordOrEmpty(payload),
     };
   },
   async recommend_for_paper(input, fetcher, apiKey) {
@@ -501,7 +508,7 @@ function normalizePaperList(payload: unknown) {
     next: readNullableInteger(payloadRecord?.next),
     token: rawStringOrNull(payloadRecord?.token),
     papers: looseArray(payloadRecord?.data ?? payloadRecord?.recommendedPapers),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -512,7 +519,7 @@ function normalizeAuthorList(payload: unknown) {
     offset: readNullableInteger(payloadRecord?.offset),
     next: readNullableInteger(payloadRecord?.next),
     authors: looseArray(payloadRecord?.data),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -523,12 +530,8 @@ function normalizeEdgeList(payload: unknown) {
     offset: readNullableInteger(payloadRecord?.offset),
     next: readNullableInteger(payloadRecord?.next),
     data: looseArray(payloadRecord?.data),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
-}
-
-function normalizeRawObject(value: unknown) {
-  return optionalRecord(value) ?? {};
 }
 
 function readNullableInteger(value: unknown) {

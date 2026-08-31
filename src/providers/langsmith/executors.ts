@@ -14,6 +14,7 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
+  recordOrEmpty,
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
@@ -547,22 +548,18 @@ function normalizeExample(value: Record<string, unknown>): Record<string, unknow
     name: optionalString(value.name) ?? null,
     created_at: optionalString(value.created_at) ?? null,
     modified_at: optionalString(value.modified_at) ?? null,
-    inputs: normalizeObject(value.inputs),
+    inputs: recordOrEmpty(value.inputs),
     outputs: normalizeNullableObject(value.outputs),
     metadata: normalizeNullableObject(value.metadata),
     raw: value,
   };
 }
 
-function normalizeObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
-}
-
 function normalizeNullableObject(value: unknown): Record<string, unknown> | null {
   if (value == null) {
     return null;
   }
-  return normalizeObject(value);
+  return recordOrEmpty(value);
 }
 
 function ensureObject(value: unknown, label: string): Record<string, unknown> {

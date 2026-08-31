@@ -12,6 +12,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  recordOrEmpty,
   requiredString,
 } from "../../core/cast.ts";
 import {
@@ -139,7 +140,7 @@ async function getDesign(input: Record<string, unknown>, context: AbyssaleAction
     design: normalizeDesign(object),
     formats: readOptionalObjectArray(object.formats),
     elements: readOptionalObjectArray(object.elements),
-    variables: readOptionalObject(object.variables),
+    variables: recordOrEmpty(object.variables),
     raw: object,
   };
 }
@@ -160,7 +161,7 @@ async function getDesignFormat(input: Record<string, unknown>, context: Abyssale
   return {
     format: normalizeFormat(object),
     elements: readOptionalObjectArray(object.elements),
-    variables: readOptionalObject(object.variables),
+    variables: recordOrEmpty(object.variables),
     raw: object,
   };
 }
@@ -430,10 +431,6 @@ function readObjectArray(value: unknown, message: string): Record<string, unknow
     throw new ProviderRequestError(502, message);
   }
   return value.map((item) => readObject(item, message));
-}
-
-function readOptionalObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function readOptionalObjectArray(value: unknown): Record<string, unknown>[] {

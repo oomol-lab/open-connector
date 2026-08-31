@@ -4,14 +4,11 @@ import {
   optionalInteger as asOptionalInteger,
   optionalRecord,
   optionalString as asOptionalString,
+  recordOrEmpty,
 } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { bitbucketActions } from "./actions.ts";
 import { fetchBitbucketText } from "./http.ts";
-
-function asObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
-}
 
 export const bitbucketApiBaseUrl = "https://api.bitbucket.org/2.0";
 
@@ -340,7 +337,7 @@ function buildPipelineBody(input: Record<string, unknown>) {
   return compactObject({
     target,
     variables: Array.isArray(input.variables)
-      ? input.variables.map((item) => pipelineVariableBody(asObject(item)))
+      ? input.variables.map((item) => pipelineVariableBody(recordOrEmpty(item)))
       : undefined,
   });
 }

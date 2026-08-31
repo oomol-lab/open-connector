@@ -8,6 +8,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  recordOrEmpty,
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -20,11 +21,13 @@ type DailybotHandler = (input: Record<string, unknown>, context: ApiKeyProviderC
 
 export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", DailybotHandler> = {
   async get_me(_input, context) {
-    return { profile: asObject(await dailybotRequest({ path: "/v1/me/", method: "GET", context, phase: "execute" })) };
+    return {
+      profile: recordOrEmpty(await dailybotRequest({ path: "/v1/me/", method: "GET", context, phase: "execute" })),
+    };
   },
   async get_organization(_input, context) {
     return {
-      organization: asObject(
+      organization: recordOrEmpty(
         await dailybotRequest({ path: "/v1/organization/", method: "GET", context, phase: "execute" }),
       ),
     };
@@ -48,7 +51,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
   async get_user(input, context) {
     const userUuid = requiredString(input.user_uuid, "user_uuid", providerInputError);
     return {
-      user: asObject(
+      user: recordOrEmpty(
         await dailybotRequest({
           path: `/v1/users/${encodePathSegment(userUuid)}/`,
           method: "GET",
@@ -72,7 +75,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
   async get_team(input, context) {
     const teamId = requiredString(input.team_id, "team_id", providerInputError);
     return {
-      team: asObject(
+      team: recordOrEmpty(
         await dailybotRequest({
           path: `/v1/teams/${encodePathSegment(teamId)}/`,
           method: "GET",
@@ -95,7 +98,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
   },
   async send_message(input, context) {
     return {
-      delivery: asObject(
+      delivery: recordOrEmpty(
         await dailybotRequest({
           path: "/v1/messaging/send-message/",
           method: "POST",
@@ -113,7 +116,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
   },
   async send_email(input, context) {
     return {
-      delivery: asObject(
+      delivery: recordOrEmpty(
         await dailybotRequest({
           path: "/v1/messaging/send-email/",
           method: "POST",
@@ -130,7 +133,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
   },
   async open_conversation(input, context) {
     return {
-      conversation: asObject(
+      conversation: recordOrEmpty(
         await dailybotRequest({
           path: "/v1/messaging/open-conversation/",
           method: "POST",
@@ -152,7 +155,7 @@ export async function validateDailybotCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context: ApiKeyProviderContext = { apiKey, fetcher, signal };
-  const profile = asObject(await dailybotRequest({ path: "/v1/me/", method: "GET", context, phase: "validate" }));
+  const profile = recordOrEmpty(await dailybotRequest({ path: "/v1/me/", method: "GET", context, phase: "validate" }));
   const organization = optionalRecord(profile.organization);
   const accountId = optionalString(profile.email) ?? optionalString(profile.id) ?? "dailybot:token";
   return {
@@ -234,18 +237,14 @@ function extractDailybotMessage(payload: unknown): string | undefined {
 }
 
 function readListPayload(payload: unknown): { count: number; results: Array<Record<string, unknown>> } {
-  const record = asObject(payload);
+  const record = recordOrEmpty(payload);
   return {
     count: optionalInteger(record.count) ?? 0,
-    results: Array.isArray(record.results) ? record.results.map(asObject) : [],
+    results: Array.isArray(record.results) ? record.results.map(recordOrEmpty) : [],
   };
 }
 
 function buildDisplayName(firstName: unknown, lastName: unknown): string | undefined {
   const parts = [optionalString(firstName), optionalString(lastName)].filter(Boolean);
   return parts.length > 0 ? parts.join(" ") : undefined;
-}
-
-function asObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }

@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const permitIoApiBaseUrl = "https://api.permit.io";
@@ -147,7 +147,7 @@ export async function validatePermitIoCredential(
     signal,
     phase: "validate",
   });
-  const scope = readRecord(payload);
+  const scope = recordOrEmpty(payload);
   const organizationId = requiredResponseString(scope.organization_id, "organization_id");
   const projectId = optionalString(scope.project_id);
   const environmentId = optionalString(scope.environment_id);
@@ -264,7 +264,7 @@ async function readPayload(response: Response): Promise<unknown> {
 }
 
 function permitIoError(response: Response, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {
-  const record = readRecord(payload);
+  const record = recordOrEmpty(payload);
   const message =
     optionalString(record.detail) ??
     optionalString(record.message) ??
@@ -314,10 +314,6 @@ function pickBody(input: Record<string, unknown>, fields: readonly string[]): Re
 
 function pathValue(value: unknown, field: string): string {
   return encodeURIComponent(requiredInputString(value, field));
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function requiredInputString(value: unknown, field: string): string {

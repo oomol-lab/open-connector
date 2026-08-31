@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  recordOrEmpty,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -34,7 +41,7 @@ export const radarActionHandlers: ProviderActionHandlers<"radar", RadarActionHan
     });
 
     return {
-      meta: normalizeMeta(payload.meta),
+      meta: recordOrEmpty(payload.meta),
       addresses: normalizeAddressList(payload.addresses),
     };
   },
@@ -54,7 +61,7 @@ export const radarActionHandlers: ProviderActionHandlers<"radar", RadarActionHan
     });
 
     return {
-      meta: normalizeMeta(payload.meta),
+      meta: recordOrEmpty(payload.meta),
       addresses: normalizeAddressList(payload.addresses),
     };
   },
@@ -86,7 +93,7 @@ export const radarActionHandlers: ProviderActionHandlers<"radar", RadarActionHan
     });
 
     return {
-      meta: normalizeMeta(payload.meta),
+      meta: recordOrEmpty(payload.meta),
       addresses: normalizeAddressList(payload.addresses),
     };
   },
@@ -115,7 +122,7 @@ export const radarActionHandlers: ProviderActionHandlers<"radar", RadarActionHan
     });
 
     return {
-      meta: normalizeMeta(payload.meta),
+      meta: recordOrEmpty(payload.meta),
       places: normalizePlaceList(payload.places),
     };
   },
@@ -269,7 +276,7 @@ function normalizeIpGeocodePayload(payload: Record<string, unknown>): {
   }
 
   return compactObject({
-    meta: normalizeMeta(payload.meta),
+    meta: recordOrEmpty(payload.meta),
     address: normalizeAddress(address),
     proxy: optionalBoolean(payload.proxy),
     ip: optionalString(payload.ip),
@@ -279,10 +286,6 @@ function normalizeIpGeocodePayload(payload: Record<string, unknown>): {
     proxy?: boolean;
     ip?: string;
   };
-}
-
-function normalizeMeta(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function normalizeAddressList(value: unknown): Array<Record<string, unknown>> {

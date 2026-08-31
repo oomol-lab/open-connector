@@ -8,6 +8,7 @@ import {
   optionalString,
   compactObject,
   optionalBoolean,
+  recordOrEmpty,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
@@ -272,7 +273,7 @@ function normalizeProjectList(payload: unknown) {
   const payloadRecord = optionalRecord(payload);
   return {
     projects: normalizeProjectSummaryArray(payloadRecord?.projects),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -289,7 +290,7 @@ function normalizeProjectKeys(payload: unknown) {
   const payloadRecord = optionalRecord(payload);
   return {
     apiKeys: normalizeProjectKeyArray(payloadRecord?.api_keys),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -297,7 +298,7 @@ function normalizeProjectBalances(payload: unknown) {
   const payloadRecord = optionalRecord(payload);
   return {
     balances: normalizeBalanceArray(payloadRecord?.balances),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -306,7 +307,7 @@ function normalizeModelList(payload: unknown) {
   return {
     stt: normalizeModelArray(payloadRecord?.stt),
     tts: normalizeModelArray(payloadRecord?.tts),
-    raw: normalizeRawObject(payload),
+    raw: recordOrEmpty(payload),
   };
 }
 
@@ -414,10 +415,6 @@ function normalizeStringArray(value: unknown) {
     }
     return [item];
   });
-}
-
-function normalizeRawObject(value: unknown) {
-  return optionalRecord(value) ?? {};
 }
 
 function readRequiredString(value: unknown, fieldName: string) {

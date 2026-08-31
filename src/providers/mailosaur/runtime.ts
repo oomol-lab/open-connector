@@ -9,6 +9,7 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
+  recordOrEmpty,
   requiredString,
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
@@ -194,7 +195,7 @@ async function deleteAllMessages(input: Record<string, unknown>, context: ApiKey
 
 async function getUsageLimits(context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await mailosaurRequest("/api/usage/limits", { method: "GET" }, context, "execute");
-  return { limits: normalizeObject(payload) };
+  return { limits: recordOrEmpty(payload) };
 }
 
 async function listUsageTransactions(context: ApiKeyProviderContext): Promise<unknown> {
@@ -266,23 +267,23 @@ function normalizeArrayPayload(payload: unknown): unknown[] {
   if (Array.isArray(payload)) {
     return payload;
   }
-  const object = normalizeObject(payload);
+  const object = recordOrEmpty(payload);
   return Array.isArray(object.items) ? object.items : [];
 }
 
 function normalizeServer(value: unknown): Record<string, unknown> {
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     id: String(object.id ?? ""),
     name: String(object.name ?? ""),
-    users: Array.isArray(object.users) ? object.users.map(normalizeObject) : [],
+    users: Array.isArray(object.users) ? object.users.map(recordOrEmpty) : [],
     messages: normalizeNonNegativeInteger(object.messages),
     raw: object,
   };
 }
 
 function normalizeMessageSummary(value: unknown): Record<string, unknown> {
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     id: String(object.id ?? ""),
     received: readNullableString(object.received),
@@ -297,7 +298,7 @@ function normalizeMessageSummary(value: unknown): Record<string, unknown> {
 }
 
 function normalizeMessage(value: unknown): Record<string, unknown> {
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     ...normalizeMessageSummary(object),
     html: normalizeBody(object.html),
@@ -313,7 +314,7 @@ function normalizeContacts(value: unknown): Array<Record<string, unknown>> {
     return [];
   }
   return value.map((item) => {
-    const object = normalizeObject(item);
+    const object = recordOrEmpty(item);
     return {
       ...object,
       name: readNullableString(object.name),
@@ -326,7 +327,7 @@ function normalizeBody(value: unknown): Record<string, unknown> | null {
   if (value == null) {
     return null;
   }
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     ...object,
     body: readNullableString(object.body),
@@ -335,7 +336,7 @@ function normalizeBody(value: unknown): Record<string, unknown> | null {
 }
 
 function normalizeLink(value: unknown): Record<string, unknown> {
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     ...object,
     href: String(object.href ?? ""),
@@ -344,7 +345,7 @@ function normalizeLink(value: unknown): Record<string, unknown> {
 }
 
 function normalizeAttachment(value: unknown): Record<string, unknown> {
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     ...object,
     id: String(object.id ?? ""),
@@ -355,7 +356,7 @@ function normalizeAttachment(value: unknown): Record<string, unknown> {
 }
 
 function normalizeUsageTransaction(value: unknown): Record<string, unknown> {
-  const object = normalizeObject(value);
+  const object = recordOrEmpty(value);
   return {
     ...object,
     timestamp: String(object.timestamp ?? ""),
@@ -419,8 +420,4 @@ function readNullableNumber(value: unknown): number | null {
 function normalizeNonNegativeInteger(value: unknown): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
-}
-
-function normalizeObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }

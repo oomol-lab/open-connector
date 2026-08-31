@@ -1,6 +1,6 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, recordOrEmpty, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortSignalError,
@@ -69,7 +69,7 @@ export function resolveInfluxdbCloudApiBaseUrl(value: unknown): string {
 }
 
 async function listBuckets(input: Record<string, unknown>, context: InfluxdbCloudActionContext): Promise<unknown> {
-  const payload = asObject(
+  const payload = recordOrEmpty(
     await requestForAction(context, "/api/v2/buckets", {
       query: {
         limit: optionalInteger(input.limit),
@@ -93,7 +93,7 @@ async function getBucket(input: Record<string, unknown>, context: InfluxdbCloudA
 }
 
 async function queryInfluxql(input: Record<string, unknown>, context: InfluxdbCloudActionContext): Promise<unknown> {
-  const payload = asObject(
+  const payload = recordOrEmpty(
     await requestForAction(context, "/query", {
       query: {
         db: requiredString(input.database, "database", (message) => new ProviderRequestError(400, message)),
@@ -273,10 +273,6 @@ function readErrorMessage(payload: unknown): string | undefined {
   }
   const record = optionalRecord(payload);
   return optionalString(record?.message) ?? optionalString(record?.error) ?? optionalString(record?.detail);
-}
-
-function asObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function requireObject(value: unknown, fieldName: string): Record<string, unknown> {

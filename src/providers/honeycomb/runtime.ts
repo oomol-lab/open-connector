@@ -8,6 +8,7 @@ import {
   optionalRecord,
   optionalString,
   rawStringOrNull,
+  recordOrEmpty,
   requiredString,
 } from "../../core/cast.ts";
 import {
@@ -311,13 +312,13 @@ function normalizeAuthorization(payload: unknown): {
   team: { name: string; slug: string };
   raw: Record<string, unknown>;
 } {
-  const record = asRecord(payload);
-  const environment = asRecord(record.environment);
-  const team = asRecord(record.team);
+  const record = recordOrEmpty(payload);
+  const environment = recordOrEmpty(record.environment);
+  const team = recordOrEmpty(record.team);
   return {
     id: readString(record.id),
     type: readString(record.type),
-    apiKeyAccess: asRecord(record.api_key_access),
+    apiKeyAccess: recordOrEmpty(record.api_key_access),
     environment: {
       name: readString(environment.name),
       slug: readString(environment.slug),
@@ -331,7 +332,7 @@ function normalizeAuthorization(payload: unknown): {
 }
 
 function normalizeDataset(payload: unknown): Record<string, unknown> {
-  const record = asRecord(payload);
+  const record = recordOrEmpty(payload);
   return {
     name: readString(record.name),
     slug: rawStringOrNull(record.slug),
@@ -345,7 +346,7 @@ function normalizeDataset(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeMarker(payload: unknown): Record<string, unknown> {
-  const record = asRecord(payload);
+  const record = recordOrEmpty(payload);
   return {
     id: rawStringOrNull(record.id),
     message: rawStringOrNull(record.message),
@@ -361,8 +362,8 @@ function normalizeMarker(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeBoard(payload: unknown): Record<string, unknown> {
-  const record = asRecord(payload);
-  const links = asRecord(record.links);
+  const record = recordOrEmpty(payload);
+  const links = recordOrEmpty(record.links);
   return {
     id: rawStringOrNull(record.id),
     name: readString(record.name),
@@ -387,10 +388,6 @@ function readString(value: unknown): string {
 
 function readNullableInteger(value: unknown): number | null {
   return optionalInteger(value) ?? null;
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

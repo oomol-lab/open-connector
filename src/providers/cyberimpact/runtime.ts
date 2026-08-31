@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  recordOrEmpty,
+} from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
@@ -85,7 +92,7 @@ export async function validateCyberimpactCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const payload = await requestCyberimpactJson({ path: "/ping", apiKey, fetcher, signal, phase: "validate" });
-  const account = asObject(payload);
+  const account = recordOrEmpty(payload);
   const email = optionalString(account.email);
   const username = optionalString(account.username);
   const accountName = optionalString(account.account);
@@ -140,7 +147,7 @@ async function getRecord(
     signal: context.signal,
     phase: "execute",
   });
-  return { [outputField]: asObject(payload) };
+  return { [outputField]: recordOrEmpty(payload) };
 }
 
 async function writeRecord(
@@ -160,7 +167,7 @@ async function writeRecord(
     signal: context.signal,
     phase: "execute",
   });
-  return { [outputField]: asObject(payload) };
+  return { [outputField]: recordOrEmpty(payload) };
 }
 
 async function deleteRecord(resource: "members" | "groups" | "templates", id: string, context: ApiKeyProviderContext) {
@@ -172,7 +179,7 @@ async function deleteRecord(resource: "members" | "groups" | "templates", id: st
     signal: context.signal,
     phase: "execute",
   });
-  return { result: asObject(payload) };
+  return { result: recordOrEmpty(payload) };
 }
 
 function buildCyberimpactBody(input: Record<string, unknown>): Record<string, unknown> {
@@ -247,11 +254,11 @@ function normalizePaginatedPayload(
   payload: unknown,
   fieldName: "members" | "groups" | "templates",
 ): Record<string, unknown> {
-  const object = asObject(payload);
+  const object = recordOrEmpty(payload);
   const records = object[fieldName];
   if (!Array.isArray(records)) throw new ProviderRequestError(502, `Cyberimpact ${fieldName} response is invalid`);
   return {
-    [fieldName]: records.map(asObject),
+    [fieldName]: records.map(recordOrEmpty),
     totalCount: optionalInteger(object.totalCount) ?? records.length,
     page: optionalInteger(object.page) ?? 1,
     limit: optionalInteger(object.limit) ?? records.length,
@@ -275,8 +282,4 @@ function readErrorMessage(payload: unknown): string | undefined {
 
 function assertAtLeastOne(input: Record<string, unknown>, keys: string[], message: string): void {
   if (keys.every((key) => input[key] === undefined)) throw new ProviderRequestError(400, message);
-}
-
-function asObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }

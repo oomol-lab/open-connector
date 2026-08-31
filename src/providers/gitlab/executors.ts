@@ -14,6 +14,7 @@ import {
   optionalIntegerLike,
   optionalRecord,
   optionalString as asOptionalString,
+  recordOrEmpty,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
@@ -162,7 +163,7 @@ async function validateGitlabCredential(
   fetcher: typeof fetch,
 ): Promise<CredentialValidationResult> {
   const user = await gitlabRequestJson("/user", { accessToken, tokenType, apiBaseUrl, fetcher }, "validate");
-  const userObject = asGitlabObject(user);
+  const userObject = recordOrEmpty(user);
   const userId = readOptionalPrimitive(userObject.id);
   const username = asOptionalString(userObject.username);
   const name = asOptionalString(userObject.name);
@@ -649,10 +650,6 @@ function readOptionalPrimitive(value: unknown): string | undefined {
     return String(value);
   }
   return undefined;
-}
-
-function asGitlabObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function readPagination(headers: Headers): {

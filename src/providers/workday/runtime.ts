@@ -2,7 +2,14 @@ import type { CredentialValidationResult, ResolvedCredential } from "../../core/
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  recordOrEmpty,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -47,7 +54,7 @@ export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRu
     return {
       workers: extractCollectionItems(payload, ["data", "workers"]).map(normalizeWorker),
       total: extractCollectionTotal(payload),
-      raw: normalizeRawObject(payload),
+      raw: recordOrEmpty(payload),
     };
   },
   async get_worker(input, context): Promise<unknown> {
@@ -76,7 +83,7 @@ export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRu
     return {
       jobs: extractCollectionItems(payload, ["data", "jobs"]).map(normalizeJob),
       total: extractCollectionTotal(payload),
-      raw: normalizeRawObject(payload),
+      raw: recordOrEmpty(payload),
     };
   },
   async get_job(input, context): Promise<unknown> {
@@ -109,7 +116,7 @@ export const workdayActionHandlers: ProviderActionHandlers<"workday", ProviderRu
     return {
       jobPostings: extractCollectionItems(payload, ["data", "jobPostings"]).map(normalizeJobPosting),
       total: extractCollectionTotal(payload),
-      raw: normalizeRawObject(payload),
+      raw: recordOrEmpty(payload),
     };
   },
   async get_job_posting(input, context): Promise<unknown> {
@@ -292,7 +299,7 @@ function extractWorkdayErrorMessage(payload: unknown): string | undefined {
 }
 
 function normalizeWorker(value: unknown): Record<string, unknown> {
-  const record = normalizeRawObject(value);
+  const record = recordOrEmpty(value);
   return {
     id: optionalString(record.id) ?? null,
     workerId: optionalString(record.workerId) ?? optionalString(record.worker_id) ?? null,
@@ -317,7 +324,7 @@ function normalizeWorker(value: unknown): Record<string, unknown> {
 }
 
 function normalizeJob(value: unknown): Record<string, unknown> {
-  const record = normalizeRawObject(value);
+  const record = recordOrEmpty(value);
   return {
     id: optionalString(record.id) ?? null,
     descriptor: optionalString(record.descriptor) ?? null,
@@ -334,7 +341,7 @@ function normalizeJob(value: unknown): Record<string, unknown> {
 }
 
 function normalizeJobPosting(value: unknown): Record<string, unknown> {
-  const record = normalizeRawObject(value);
+  const record = recordOrEmpty(value);
   return {
     id: optionalString(record.id) ?? null,
     descriptor: optionalString(record.descriptor) ?? null,
@@ -357,7 +364,7 @@ function normalizeJobPosting(value: unknown): Record<string, unknown> {
 }
 
 function normalizePerson(value: unknown): Record<string, string | null> {
-  const record = normalizeRawObject(value);
+  const record = recordOrEmpty(value);
   return {
     id: optionalString(record.id) ?? null,
     descriptor: optionalString(record.descriptor) ?? null,
@@ -365,7 +372,7 @@ function normalizePerson(value: unknown): Record<string, string | null> {
 }
 
 function normalizeWorkerType(value: unknown): Record<string, string | null> {
-  const record = normalizeRawObject(value);
+  const record = recordOrEmpty(value);
   return {
     id: optionalString(record.id) ?? null,
     descriptor: optionalString(record.descriptor) ?? null,
@@ -373,7 +380,7 @@ function normalizeWorkerType(value: unknown): Record<string, string | null> {
 }
 
 function normalizeReference(value: unknown): Record<string, string | null> {
-  const record = normalizeRawObject(value);
+  const record = recordOrEmpty(value);
   return {
     id: optionalString(record.id) ?? null,
     href: optionalString(record.href) ?? null,
@@ -386,7 +393,7 @@ function normalizeReferenceArray(value: unknown): Array<Record<string, string | 
 }
 
 function extractCollectionItems(payload: unknown, candidates: string[]): unknown[] {
-  const record = normalizeRawObject(payload);
+  const record = recordOrEmpty(payload);
   for (const key of candidates) {
     if (Array.isArray(record[key])) return record[key] as unknown[];
   }
@@ -394,12 +401,8 @@ function extractCollectionItems(payload: unknown, candidates: string[]): unknown
 }
 
 function extractCollectionTotal(payload: unknown): number | null {
-  const record = normalizeRawObject(payload);
+  const record = recordOrEmpty(payload);
   return optionalInteger(record.total) ?? optionalInteger(record.count) ?? optionalInteger(record.totalResults) ?? null;
-}
-
-function normalizeRawObject(value: unknown): Record<string, unknown> {
-  return optionalRecord(value) ?? {};
 }
 
 function normalizeStringArray(value: unknown): string[] | undefined {
