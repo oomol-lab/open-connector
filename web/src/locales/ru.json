@@ -386,7 +386,7 @@
     "loadMoreFailed": "Не удалось загрузить больше запусков.",
     "policyAllowed": "policy разрешает",
     "policyBlocked": "policy блокирует",
-    "runtimeToken": "runtime token",
+    "runtimeToken": "Использованный runtime token",
     "table": {
       "action": "Действие",
       "context": "Контекст",
@@ -397,13 +397,13 @@
     }
   },
   "access": {
-    "title": "Runtime Tokens",
+    "title": "Список runtime tokens",
     "description": "Аутентификация клиентов /v1 и MCP.",
     "policy": {
-      "title": "Access Policy",
+      "title": "Policy доступа",
       "description": "Ограничивайте actions и provider proxy requests.",
       "deployment": "Deployment policy (только чтение)",
-      "runtime": "Runtime policy",
+      "runtime": "Policy уровня runtime",
       "allowedActions": "Разрешенные actions",
       "blockedActions": "Заблокированные actions",
       "allowedProxies": "Разрешенные proxies",
@@ -426,7 +426,7 @@
         "allowedCount": "Разрешено {{allowed}} / {{total}}",
         "catalogHint": "Расчет по текущему каталогу actions",
         "providersHint": "Providers, разрешенные proxy policy",
-        "layerCount": "Deployment {{deployment}} · Runtime {{runtime}}",
+        "layerCount": "В deployment {{deployment}} · В runtime {{runtime}}",
         "blockPriority": "Block rules имеют приоритет"
       },
       "tester": {
@@ -434,8 +434,8 @@
         "description": "Проверьте action или provider по той же многоуровневой policy, что используется при выполнении.",
         "resourceLabel": "Тип разрешения",
         "action": "Action",
-        "proxy": "Provider proxy",
-        "tokenLabel": "Runtime token",
+        "proxy": "Proxy провайдера",
+        "tokenLabel": "Проверяемый runtime token",
         "noToken": "Без token layer",
         "inputLabel": "ID action или provider",
         "actionPlaceholder": "github.create_issue",
@@ -447,8 +447,8 @@
       },
       "sources": {
         "deployment": "Ограничение deployment",
-        "runtime": "Runtime policy",
-        "token": "Token policy"
+        "runtime": "Policy уровня runtime",
+        "token": "Policy уровня token"
       },
       "outcomes": {
         "unrestricted": "Без дополнительных ограничений",
@@ -461,16 +461,16 @@
         "none": "Нет rules"
       },
       "runtimeSummary": {
-        "title": "Runtime policy",
+        "title": "Policy уровня runtime",
         "updated": "Последнее обновление {{date}}",
         "edit": "Изменить policy"
       },
       "summary": {
         "unrestricted": "Без дополнительных ограничений",
-        "restricted": "Allow rules: {{count}}",
+        "restricted": "Разрешающие rules: {{count}}",
         "withBlocked": "{{allow}} · Всегда блокировать: {{count}}"
       },
-      "layerSummary": "Actions: {{action}} · Proxies: {{proxy}}",
+      "layerSummary": "Для actions: {{action}} · Для proxies: {{proxy}}",
       "tokenSummary": "Action allow rules: {{allowed}} · Action block rules: {{blocked}} · Proxy grants: {{proxies}} · Дополнительно ограничено runtime-базой",
       "connectionsUnrestricted": "Все подключения",
       "connectionsRestricted": "Подключения: {{names}}",
@@ -479,7 +479,7 @@
         "description": "Перед сохранением изменения проверяются вместе с ограничениями deployment.",
         "resourceLabel": "Ресурс policy",
         "actionsTab": "Разрешения actions",
-        "proxiesTab": "Provider proxy",
+        "proxiesTab": "Proxy провайдера",
         "unsaved": "Есть несохраненные изменения",
         "noChanges": "Нет несохраненных изменений",
         "allowMode": "Разрешенная область",
@@ -489,7 +489,7 @@
         "proxyUnrestrictedHint": "Наследовать область providers из ограничений deployment.",
         "actionRestrictedHint": "Каждый action должен совпадать хотя бы с одним runtime allow rule.",
         "proxyRestrictedHint": "Каждый proxy должен совпадать хотя бы с одним runtime allow rule.",
-        "allowedList": "Allow rules",
+        "allowedList": "Разрешающие rules",
         "blockedList": "Всегда блокировать",
         "actionAllowedHint": "Используйте точный action ID, provider.* или *.",
         "actionBlockedHint": "Block имеет приоритет, даже если action разрешен в другом месте.",
@@ -502,8 +502,8 @@
         "proxyBlockedInput": "Найти или ввести заблокированный provider",
         "advanced": "Расширенное текстовое редактирование",
         "advancedHint": "Введите по одному raw rule в строке. Пустые allow rules не добавляют ограничений.",
-        "allowedRaw": "Raw allow rules",
-        "blockedRaw": "Raw block rules",
+        "allowedRaw": "Разрешающие raw rules",
+        "blockedRaw": "Блокирующие raw rules",
         "ruleRequired": "Введите rule перед добавлением.",
         "ruleTooLong": "Rule не должна превышать 256 UTF-8 bytes.",
         "ruleInvalid": "Используйте *, provider.*, точный provider.action или точный provider ID для proxy rules.",
@@ -523,7 +523,7 @@
         "connectionsList": "Разрешенные connections",
         "connectionsRequired": "Выберите хотя бы одно connection или отсутствие дополнительных ограничений.",
         "tooManyConnections": "Список connections не может содержать больше 128 connections.",
-        "connectionCount": "{{count}} connections",
+        "connectionCount": "Подключений: {{count}}",
         "noConnections": "В этом списке нет connections.",
         "connectionsDefaultHint": "Выберите default connection провайдера, чтобы разрешить его HTTP, MCP или proxy запросы без имени.",
         "discard": "Отменить изменения"
