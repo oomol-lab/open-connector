@@ -3,6 +3,7 @@ import type {
   ExecutionContext,
   ExecutionResult,
   ProviderExecutors,
+  ProviderProxyExecutor,
   ResolvedCredential,
 } from "../core/types.ts";
 
@@ -20,6 +21,8 @@ import { ProviderRequestError, toProviderExecutionError } from "./provider-runti
 import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
 import { executors as teableExecutors } from "./teable/executors.ts";
 import { assertTikHubEndpointEligible } from "./tikhub/endpoint-policy.ts";
+import { proxy as walmartMarketplaceProxy } from "./walmart_marketplace/executors.ts";
+import { proxy as youzanProxy } from "./youzan/executors.ts";
 import { executors as zoomExecutors } from "./zoom/executors.ts";
 
 afterEach(() => {
@@ -118,6 +121,47 @@ const validatePhaseCases: ValidatePhaseCase[] = [
   { service: "dovetail", validators: dovetailValidators, input: { apiKey: "test-key", values: {} } },
 ];
 
+interface ProxyAuthFailureCase {
+  service: string;
+  proxy: ProviderProxyExecutor;
+  credential: ResolvedCredential;
+}
+
+/**
+ * `/v1/proxy` reaches a provider's own error mapper only where the provider
+ * issues a request of its own before the proxied one, so the sweep moves the
+ * proxy route for exactly these two: youzan resolves an access token in its
+ * hand-written proxy body, and walmart_marketplace exchanges one in a
+ * `defineProviderProxy` `customizeRequest` hook, which runs inside the same
+ * `try` as the proxied request. Both answered `invalid_input` before the sweep.
+ * Every other proxy builds its error from the upstream response instead, which
+ * already carried the status. The proxy route answers `authorization_failed`
+ * with HTTP 403, pinned by the cross-route table in
+ * `src/server/proxy/proxy-runner.test.ts`.
+ */
+const proxyAuthFailureCases: ProxyAuthFailureCase[] = [
+  {
+    service: "walmart_marketplace",
+    proxy: walmartMarketplaceProxy,
+    credential: {
+      authType: "custom_credential",
+      values: { clientId: "client-1", clientSecret: "secret-1" },
+      profile: { accountId: "acct", displayName: "Test", grantedScopes: [] },
+      metadata: {},
+    },
+  },
+  {
+    service: "youzan",
+    proxy: youzanProxy,
+    credential: {
+      authType: "custom_credential",
+      values: { clientId: "client-1", clientSecret: "secret-1", grantId: "12345" },
+      profile: { accountId: "acct", displayName: "Test", grantedScopes: [] },
+      metadata: {},
+    },
+  },
+];
+
 function contextFor(credential: ResolvedCredential): ExecutionContext {
   return { getCredential: async () => credential };
 }
@@ -190,6 +234,16 @@ describe.each(validatePhaseCases)("$service validate-phase credential failures",
     const result = toProviderExecutionError(raised, `${testCase.service} credential validation failed`);
     expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
     expect(httpStatusOf(result)).toBe(400);
+  });
+});
+
+describe.each(proxyAuthFailureCases)("$service proxy-route credential failures", (testCase) => {
+  it("reports an upstream 401 as authorization_failed", async () => {
+    stubUnauthorizedUpstream(401);
+
+    const result = await testCase.proxy({ endpoint: "/items", method: "GET" }, contextFor(testCase.credential));
+
+    expect(result).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
   });
 });
 
