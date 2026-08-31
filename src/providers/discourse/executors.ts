@@ -4,7 +4,6 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
@@ -20,21 +19,15 @@ import {
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
-  createProviderProxyUrl,
   createProviderTimeout,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 export const discourseDefaultRequestTimeoutMs = 30_000;
-
-const discourseProxyFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 
 type DiscourseHttpMethod = "GET" | "POST";
 type DiscoursePhase = "validate" | "execute";
@@ -216,42 +209,33 @@ export const executors: ProviderExecutors = defineProviderExecutors<DiscourseAct
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
-    const credential = await requireApiKeyCredential(context, "discourse");
-    const discourseCredential: DiscourseCredential = {
-      baseUrl: normalizeDiscourseBaseUrl(credential.values.baseUrl ?? credential.metadata.baseUrl),
-      apiKey: credential.apiKey,
-      apiUsername: requireCredentialField(
-        credential.values.apiUsername ?? credential.metadata.apiUsername,
-        "apiUsername",
-      ),
-    };
-    const url = createProviderProxyUrl(discourseCredential.baseUrl, input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("api-key", discourseCredential.apiKey);
-    headers.set("api-username", discourseCredential.apiUsername);
-    headers.set("user-agent", providerUserAgent);
-    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
-      headers.set("content-type", "application/json");
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "discourse",
+  baseUrl: async (context) => (await readDiscourseProxyCredential(context)).baseUrl,
+  auth: { type: "api_key_header", name: "api-key" },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+  customizeRequest({ headers, credential }) {
+    if (credential?.authType !== "api_key") {
+      return;
     }
+    headers.set(
+      "api-username",
+      requireCredentialField(credential.values.apiUsername ?? credential.metadata.apiUsername, "apiUsername"),
+    );
+  },
+});
 
-    const response = await discourseProxyFetch(url, {
-      method: input.method,
-      headers,
-      body:
-        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
-      signal: context.signal,
-    });
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+async function readDiscourseProxyCredential(context: ExecutionContext): Promise<DiscourseCredential> {
+  const credential = await requireApiKeyCredential(context, "discourse");
+  return {
+    baseUrl: normalizeDiscourseBaseUrl(credential.values.baseUrl ?? credential.metadata.baseUrl),
+    apiKey: credential.apiKey,
+    apiUsername: requireCredentialField(
+      credential.values.apiUsername ?? credential.metadata.apiUsername,
+      "apiUsername",
+    ),
+  };
+}
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
