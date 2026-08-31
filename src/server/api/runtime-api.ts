@@ -244,29 +244,40 @@ export function mapConnectionErrorStatus(error: ConnectionError): 400 | 404 | 40
   return 400;
 }
 
+/**
+ * The documented runtime error codes and the HTTP status each maps to. This is
+ * the only place that pairing is written down; providers may set
+ * `ProviderRequestError`'s `code` argument to one of these codes and to nothing
+ * else, because a code the table does not know falls through to HTTP 400.
+ */
+const runtimeStatusByErrorCode: Record<string, RuntimeStatus> = {
+  authorization_failed: 403,
+  connection_not_allowed: 403,
+  connection_not_found: 404,
+  executor_unavailable: 500,
+  insufficient_credit: 402,
+  internal_error: 500,
+  invalid_input: 400,
+  oauth_refresh_unavailable: 409,
+  oauth_token_expired: 409,
+  provider_error: 500,
+  rate_limited: 429,
+  unknown_action: 404,
+  unknown_service: 404,
+};
+
+/** Every error code the runtime routes map to a documented HTTP status. */
+export const runtimeErrorCodes: readonly string[] = Object.keys(runtimeStatusByErrorCode);
+
 function mapExecutionErrorStatus(code: string | undefined, details?: unknown): RuntimeStatus {
-  if (code === "insufficient_credit") {
-    return 402;
+  const upstreamStatus = optionalInteger(optionalRecord(details)?.status);
+  if (upstreamStatus === 413) {
+    return 413;
   }
-  if (code === "invalid_input" && optionalInteger(optionalRecord(details)?.status) === 404) {
+  if (code === "invalid_input" && upstreamStatus === 404) {
     return 404;
   }
-  if (code === "internal_error" || code === "provider_error" || code === "executor_unavailable") {
-    return 500;
-  }
-  if (code === "oauth_token_expired" || code === "oauth_refresh_unavailable") {
-    return 409;
-  }
-  if (code === "connection_not_found" || code === "unknown_service" || code === "unknown_action") {
-    return 404;
-  }
-  if (code === "authorization_failed" || code === "connection_not_allowed") {
-    return 403;
-  }
-  if (code === "rate_limited") {
-    return 429;
-  }
-  return 400;
+  return (code === undefined ? undefined : runtimeStatusByErrorCode[code]) ?? 400;
 }
 
 function isRuntimeStatus(value: unknown): value is RuntimeStatus {

@@ -1,7 +1,9 @@
+import type { ExecutionResult } from "../../core/types.ts";
 import type { RuntimeActionHttpResult } from "./runtime-api.ts";
 
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
+import { mapProxyErrorStatus } from "../proxy/proxy-runner.ts";
 import {
   parseRuntimeActionHttpResult,
   serializeRuntimeAction,
@@ -10,6 +12,36 @@ import {
   unknownActionFailure,
   writeRuntimeActionHttpResult,
 } from "./runtime-api.ts";
+
+type RuntimeExecutionError = NonNullable<ExecutionResult["error"]>;
+
+interface CrossRouteErrorCase {
+  title: string;
+  error: RuntimeExecutionError;
+}
+
+/**
+ * The error codes a provider executor can put on the wire: the four
+ * `toProviderExecutionError` infers from the upstream status, plus the
+ * `insufficient_credit` a provider sets explicitly. Both `/v1` front doors
+ * serve the same object, so both must derive the same HTTP status from it.
+ */
+const crossRouteErrorCases: CrossRouteErrorCase[] = [
+  { title: "authorization_failed", error: { code: "authorization_failed", message: "Token expired." } },
+  { title: "connection_not_found", error: { code: "connection_not_found", message: "Connect the account." } },
+  { title: "insufficient_credit", error: { code: "insufficient_credit", message: "Out of credit." } },
+  { title: "invalid_input", error: { code: "invalid_input", message: "Bad input." } },
+  { title: "provider_error", error: { code: "provider_error", message: "Upstream failed." } },
+  { title: "rate_limited", error: { code: "rate_limited", message: "Slow down." } },
+  {
+    title: "an upstream not-found status",
+    error: { code: "invalid_input", message: "Task not found.", details: { status: 404 } },
+  },
+  {
+    title: "an upstream payload-too-large status",
+    error: { code: "invalid_input", message: "response exceeds 4 bytes", details: { status: 413 } },
+  },
+];
 
 describe("runtime action metadata", () => {
   it("includes the execution status advertised by the runtime catalog", () => {
@@ -118,6 +150,34 @@ describe("runtime action HTTP results", () => {
       }).status,
     ).toBe(404);
   });
+
+  it("preserves an upstream payload-too-large status the way the proxy route does", () => {
+    expect(
+      serializeRuntimeActionResult({
+        actionId: "example.download",
+        executionId: "execution-1",
+        auditPersisted: false,
+        result: {
+          ok: false,
+          error: { code: "invalid_input", message: "response exceeds 4 bytes", details: { status: 413 } },
+        },
+      }).status,
+    ).toBe(413);
+  });
+
+  it.each(crossRouteErrorCases)(
+    "returns the same HTTP status through the action route and the proxy route for $title",
+    ({ error }) => {
+      expect(
+        serializeRuntimeActionResult({
+          actionId: "example.echo",
+          executionId: "execution-1",
+          auditPersisted: false,
+          result: { ok: false, error },
+        }).status,
+      ).toBe(mapProxyErrorStatus(error.code, error.details));
+    },
+  );
 
   it("serializes runtime failures for persistence", () => {
     expect(
