@@ -4,7 +4,6 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
@@ -19,22 +18,16 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import {
-  createProviderFetch,
-  createProviderProxyUrl,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "crisp";
 const crispApiBaseUrl = "https://api.crisp.chat/v1";
-const crispFetch = createProviderFetch({ skipDnsValidation: true });
 
 type CrispRequestPhase = "validate" | "execute";
 type CrispTokenTier = "website" | "plugin";
@@ -125,38 +118,19 @@ export const executors: ProviderExecutors = defineProviderExecutors<CrispContext
   },
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
-    const credential = await requireApiKeyCredential(context, service);
-    const crispCredential = readCrispCredential({
-      apiKey: credential.apiKey,
-      values: credential.values,
-      metadata: credential.metadata,
-    });
-    const url = createProviderProxyUrl(crispApiBaseUrl, input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("user-agent", providerUserAgent);
-    applyCrispAuthHeaders(headers, crispCredential);
-    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
-      headers.set("content-type", "application/json");
-    }
-
-    const response = await crispFetch(url, {
-      method: input.method,
-      headers,
-      body:
-        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
-      signal: context.signal,
-    });
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    readCrispCredential(await requireApiKeyCredential(context, service));
+    return crispApiBaseUrl;
+  },
+  auth: { type: "none" },
+  async customizeRequest({ context, headers }) {
+    applyCrispAuthHeaders(headers, readCrispCredential(await requireApiKeyCredential(context, service)));
+  },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
