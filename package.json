@@ -39,7 +39,7 @@
     "fast-xml-builder": "^1.3.0",
     "fast-xml-parser": "^5.10.1",
     "fast-xml-validator": "^1.4.1",
-    "hono": "^4.12.27",
+    "hono": "^4.13.5",
     "imapflow": "^1.4.6",
     "jose": "^6.2.3",
     "mailparser": "^3.9.17",
