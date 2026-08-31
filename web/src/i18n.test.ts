@@ -142,6 +142,7 @@ describe("locales", () => {
       for (const [key, value] of enEntries) {
         expect(placeholders(translations.get(key) ?? "")).toEqual(placeholders(value));
       }
+      expect(entries.filter(([, value]) => value.trim() === "").map(([key]) => key)).toEqual([]);
 
       const allowedKeys = englishKeys[lang] ?? [];
       const untranslated = enEntries
