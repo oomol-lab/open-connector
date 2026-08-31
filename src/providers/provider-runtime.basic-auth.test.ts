@@ -9,10 +9,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function stubFetchOnce(): Array<{ url: string; init: RequestInit | undefined }> {
-  const calls: Array<{ url: string; init: RequestInit | undefined }> = [];
-  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
-    calls.push({ url: input instanceof Request ? input.url : String(input), init });
+interface RecordedFetchCall {
+  init: RequestInit | undefined;
+}
+
+function captureFetchCalls(): RecordedFetchCall[] {
+  const calls: RecordedFetchCall[] = [];
+  vi.stubGlobal("fetch", async (_input: RequestInfo | URL, init?: RequestInit) => {
+    calls.push({ init });
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "content-type": "application/json" },
@@ -21,7 +25,7 @@ function stubFetchOnce(): Array<{ url: string; init: RequestInit | undefined }> 
   return calls;
 }
 
-function sentAuthorization(calls: Array<{ init: RequestInit | undefined }>): string | null {
+function sentAuthorization(calls: RecordedFetchCall[]): string | null {
   return new Headers(calls[0]?.init?.headers).get("authorization");
 }
 
@@ -58,11 +62,15 @@ describe("api_key_basic proxy authorization", () => {
   // three keys pin the ASCII case (must stay byte-identical), the Latin-1
   // representable case (wrong bytes before the fix), and the case `btoa` cannot
   // encode at all (a DOMException before the fix).
-  const keys = ["waka_ascii_key", "wäka_key_ü", "密钥_key"];
+  const keys = [
+    { label: "an ASCII", key: "waka_ascii_key" },
+    { label: "a Latin-1 representable", key: "wäka_key_ü" },
+    { label: "a non-Latin-1", key: "密钥_key" },
+  ];
 
-  for (const key of keys) {
-    it(`encodes the ${JSON.stringify(key)} API key as UTF-8 base64`, async () => {
-      const calls = stubFetchOnce();
+  for (const { label, key } of keys) {
+    it(`encodes ${label} API key as UTF-8 base64`, async () => {
+      const calls = captureFetchCalls();
 
       const result = await basicProxy({ method: "GET", endpoint: "/users/current" }, apiKeyContext(key));
 
@@ -78,7 +86,7 @@ describe("api_key_basic proxy authorization", () => {
       auth: { type: "api_key_basic", suffix: ":" },
       skipDnsValidation: true,
     });
-    const calls = stubFetchOnce();
+    const calls = captureFetchCalls();
 
     const result = await suffixProxy({ method: "GET", endpoint: "/users/current" }, apiKeyContext("密钥_key"));
 
@@ -89,7 +97,7 @@ describe("api_key_basic proxy authorization", () => {
 
 describe("hand-written Basic authorization headers", () => {
   it("encodes an echotik username and password as UTF-8 base64", async () => {
-    const calls = stubFetchOnce();
+    const calls = captureFetchCalls();
     const context = customCredentialContext({ username: "echo_user", password: "密码_pässwörd" });
 
     const result = await echotikProxy({ method: "GET", endpoint: "/echotik/category/l1" }, context);
