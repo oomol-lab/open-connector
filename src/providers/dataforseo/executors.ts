@@ -3,28 +3,19 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
-  createProviderFetch,
-  createProviderProxyUrl,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   ProviderRequestError,
-  providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireCustomCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 import { dataForSeoActionHandlers, dataForSeoApiBaseUrl, requestDataForSeoUserData } from "./runtime.ts";
 
 const service = "dataforseo";
-
-const dataForSeoFetch = createProviderFetch({ skipDnsValidation: true });
 
 interface DataForSeoContext {
   login: string;
@@ -50,39 +41,27 @@ export const executors: ProviderExecutors = defineProviderExecutors<DataForSeoCo
   },
 });
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
-    const credential = await requireCustomCredential(context, service);
-    const login = requiredString(credential.values.login, "login", (message) => new ProviderRequestError(400, message));
-    const password = requiredString(
-      credential.values.password,
-      "password",
-      (message) => new ProviderRequestError(400, message),
-    );
-    const url = createProviderProxyUrl(dataForSeoApiBaseUrl, input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    readDataForSeoLogin((await requireCustomCredential(context, service)).values);
+    return dataForSeoApiBaseUrl;
+  },
+  auth: { type: "none" },
+  async customizeRequest({ context, headers }) {
+    const { login, password } = readDataForSeoLogin((await requireCustomCredential(context, service)).values);
     headers.set("authorization", `Basic ${Buffer.from(`${login}:${password}`).toString("base64")}`);
-    headers.set("user-agent", providerUserAgent);
-    if (input.body !== undefined && !headers.has("content-type") && typeof input.body !== "string") {
-      headers.set("content-type", "application/json");
-    }
+  },
+  skipDnsValidation: true,
+});
 
-    const response = await dataForSeoFetch(url, {
-      method: input.method,
-      headers,
-      body:
-        input.body === undefined ? undefined : typeof input.body === "string" ? input.body : JSON.stringify(input.body),
-      signal: context.signal,
-    });
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+function readDataForSeoLogin(values: Record<string, string>): { login: string; password: string } {
+  return {
+    login: requiredString(values.login, "login", (message) => new ProviderRequestError(400, message)),
+    password: requiredString(values.password, "password", (message) => new ProviderRequestError(400, message)),
+  };
+}
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher }) {
