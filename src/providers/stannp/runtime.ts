@@ -4,6 +4,7 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
+  basicAuthorizationHeader,
   createProviderTimeout,
   providerUserAgent,
   ProviderRequestError,
@@ -287,7 +288,7 @@ function buildStannpUrl(path: string, region: StannpRegion, query: Record<string
 
 function stannpHeaders(apiKey: string, extraHeaders?: HeadersInit): Record<string, string> {
   return {
-    authorization: `Basic ${btoa(`${apiKey}:`)}`,
+    authorization: basicAuthorizationHeader(`${apiKey}:`),
     accept: "application/json",
     "user-agent": providerUserAgent,
     ...Object.fromEntries(new Headers(extraHeaders).entries()),

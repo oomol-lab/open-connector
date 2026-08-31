@@ -1,7 +1,12 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  basicAuthorizationHeader,
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "dealroom";
 const baseUrl = "https://api.dealroom.co/api/v1/";
@@ -65,7 +70,7 @@ async function request(path: string, body: Record<string, unknown>, context: Api
   const response = await context.fetcher(new URL(path, baseUrl), {
     method: "POST",
     headers: {
-      authorization: `Basic ${btoa(`${context.apiKey}:`)}`,
+      authorization: basicAuthorizationHeader(`${context.apiKey}:`),
       accept: "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,

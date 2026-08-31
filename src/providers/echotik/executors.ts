@@ -7,6 +7,7 @@ import type {
 
 import { requiredString } from "../../core/cast.ts";
 import {
+  basicAuthorizationHeader,
   defineProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
@@ -75,7 +76,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     const credential = await requireCustomCredential(context, service);
     const username = requiredCredential(credential.values.username, "username");
     const password = requiredCredential(credential.values.password, "password");
-    headers.set("authorization", `Basic ${btoa(`${username}:${password}`)}`);
+    headers.set("authorization", basicAuthorizationHeader(`${username}:${password}`));
   },
 });
 

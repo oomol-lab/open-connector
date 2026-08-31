@@ -7,6 +7,7 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
+  basicAuthorizationHeader,
   defineProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
@@ -151,7 +152,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       throw new ProviderRequestError(401, "Configure HelpDesk account ID and API key credentials first.");
     }
     headers.delete("x-connector-api-key");
-    headers.set("authorization", `Basic ${btoa(`${credential.values.accountId}:${credential.apiKey}`)}`);
+    headers.set("authorization", basicAuthorizationHeader(`${credential.values.accountId}:${credential.apiKey}`));
   },
 });
 

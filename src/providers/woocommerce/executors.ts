@@ -7,6 +7,7 @@ import type {
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  basicAuthorizationHeader,
   createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
@@ -52,7 +53,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const headers = normalizeProviderProxyHeaders(input.headers);
     headers.set(
       "authorization",
-      `Basic ${btoa(`${credentialContext.consumerKey}:${credentialContext.consumerSecret}`)}`,
+      basicAuthorizationHeader(`${credentialContext.consumerKey}:${credentialContext.consumerSecret}`),
     );
     headers.set("user-agent", providerUserAgent);
 

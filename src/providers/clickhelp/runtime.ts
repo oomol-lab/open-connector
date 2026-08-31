@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ClickhelpActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  basicAuthorizationHeader,
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;
@@ -238,7 +243,7 @@ async function requestClickhelpJson(input: ClickhelpRequest) {
       method: input.method ?? "GET",
       headers: {
         accept: "application/json",
-        authorization: `Basic ${btoa(`${input.credential.login}:${input.credential.apiKey}`)}`,
+        authorization: basicAuthorizationHeader(`${input.credential.login}:${input.credential.apiKey}`),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

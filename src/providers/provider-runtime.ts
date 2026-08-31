@@ -442,6 +442,17 @@ export function normalizeProviderProxyHeaders(headersInput: unknown): Headers {
   return headers;
 }
 
+/**
+ * Build an HTTP Basic `authorization` header value from an already composed
+ * `user:password` credential. RFC 7617 encodes the credential from its UTF-8
+ * bytes, so this is the only correct way to build the header: `btoa` understands
+ * Latin-1 only, which silently sends the wrong bytes for accented credentials
+ * and throws on anything outside Latin-1.
+ */
+export function basicAuthorizationHeader(value: string): string {
+  return `Basic ${Buffer.from(value, "utf8").toString("base64")}`;
+}
+
 export interface ReadProviderProxyResponseOptions {
   maxBytes?: number;
 }
@@ -670,7 +681,7 @@ async function applyProviderProxyAuth(
     }
     case "api_key_basic": {
       const credential = await requireApiKeyCredential(context, input.service);
-      headers.set("authorization", `Basic ${btoa(`${credential.apiKey}${input.auth.suffix ?? ""}`)}`);
+      headers.set("authorization", basicAuthorizationHeader(`${credential.apiKey}${input.auth.suffix ?? ""}`));
       return credential;
     }
     case "api_key_authorization": {

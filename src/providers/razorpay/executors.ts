@@ -7,6 +7,7 @@ import type {
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
+  basicAuthorizationHeader,
   createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
@@ -60,7 +61,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
 
     const url = createProviderProxyUrl(razorpayApiBaseUrl, input.endpoint, input.query);
     const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("authorization", `Basic ${btoa(`${keyId}:${credential.apiKey}`)}`);
+    headers.set("authorization", basicAuthorizationHeader(`${keyId}:${credential.apiKey}`));
     headers.set("user-agent", providerUserAgent);
     if (!headers.has("accept")) {
       headers.set("accept", "application/json");

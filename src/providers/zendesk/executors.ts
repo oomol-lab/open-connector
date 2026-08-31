@@ -6,6 +6,7 @@ import type {
 } from "../../core/types.ts";
 
 import {
+  basicAuthorizationHeader,
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
@@ -110,7 +111,7 @@ function buildProxyAuthorization(credential: Awaited<ReturnType<ExecutionContext
       credential.values.email ?? stringMetadata(credential.metadata.email),
       "Zendesk email is required",
     );
-    return `Basic ${btoa(`${email}/token:${credential.apiKey}`)}`;
+    return basicAuthorizationHeader(`${email}/token:${credential.apiKey}`);
   }
   throw new ProviderRequestError(401, "Configure zendesk credentials first.");
 }
