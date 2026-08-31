@@ -576,7 +576,7 @@ async function supabaseDownloadStorageObject(
     throw providerInputError("objectPath must not contain . or .. path segments");
   }
 
-  const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
+  const storageKey = await resolveSupabaseStorageKey(input, projectRef, context, "download");
   const url = new URL(
     `https://${projectRef}${supabaseProjectHostSuffix}${supabaseStorageAuthenticatedObjectPath}/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
   );
@@ -641,7 +641,7 @@ async function supabaseUploadStorageObject(
     throw new ProviderRequestError(413, `Supabase Storage upload exceeds ${context.transitFiles.maxBytes} bytes`);
   }
   const mime = optionalString(input.contentType) ?? optionalString(source.mimeType) ?? "application/octet-stream";
-  const storageKey = await resolveSupabaseStorageKey(input, projectRef, context);
+  const storageKey = await resolveSupabaseStorageKey(input, projectRef, context, "upload");
   const upsert = input.upsert === false ? false : true;
   const method = "POST";
   const url = new URL(
@@ -697,6 +697,7 @@ async function resolveSupabaseStorageKey(
   input: SupabaseActionInput,
   projectRef: string,
   context: BearerProviderContext,
+  operation: "download" | "upload",
 ): Promise<SupabaseStorageKey> {
   const apiKeyId = optionalString(input.apiKeyId);
   const payload = await requestSupabaseJson({
@@ -722,7 +723,7 @@ async function resolveSupabaseStorageKey(
   throw providerInputError(
     apiKeyId
       ? "The selected Supabase API key is not an elevated secret or legacy service_role key."
-      : "Supabase Storage download requires a revealed secret or legacy service_role project API key.",
+      : `Supabase Storage ${operation} requires a revealed secret or legacy service_role project API key.`,
   );
 }
 

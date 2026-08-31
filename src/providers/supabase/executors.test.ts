@@ -514,6 +514,9 @@ describe("Supabase upload_storage_object", () => {
       store,
     );
     expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+    expect((result as { ok: false; error: { message: string } }).error.message).toContain(
+      "Supabase Storage upload requires a revealed secret or legacy service_role project API key",
+    );
   });
 
   it("maps storage 401 via createSupabaseError to authorization_failed", async () => {
