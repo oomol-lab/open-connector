@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { executors, qianfanApiBaseUrl, qianfanApiOrigin, validateQianfanCredential } from "./runtime.ts";
 
 export { executors };
@@ -15,7 +15,11 @@ export const credentialValidators: CredentialValidators = {
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
-  baseUrl: qianfanApiOrigin,
+  async baseUrl(context) {
+    // Reject an unusable credential before header normalization, keeping the 401/400 precedence.
+    await requireApiKeyCredential(context, service);
+    return qianfanApiOrigin;
+  },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   customizeRequest({ endpoint, url, headers }) {
     const baseUrl = qianfanProxyBaseUrl(endpoint);
