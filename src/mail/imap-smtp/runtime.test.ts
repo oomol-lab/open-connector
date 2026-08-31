@@ -1,7 +1,9 @@
+import type { MailActionName } from "./actions.ts";
 import type { MailProtocol } from "./protocol.ts";
 
 import { describe, expect, it, vi } from "vitest";
 import { neteaseMailRuntimeConfig } from "../../providers/netease_mail/config.ts";
+import { ProviderRequestError } from "../../providers/provider-runtime.ts";
 import { qqMailRuntimeConfig } from "../../providers/qq_mail/config.ts";
 import { createMailActions } from "./actions.ts";
 import { MailProtocolError } from "./errors.ts";
@@ -54,6 +56,28 @@ describe("IMAP/SMTP mail runtime", () => {
       imapHost: "imap.qq.com",
       smtpHost: "smtp.qq.com",
     });
+  });
+
+  it("fails a mail action that has no dispatch branch instead of reporting an empty success", async () => {
+    const protocol = { listFolders: vi.fn(async () => []) } as unknown as MailProtocol;
+
+    const error = await executeMailAction(
+      "archive_email" as MailActionName,
+      {},
+      {
+        values: { email: "user@qq.com", authorizationCode },
+        fetcher: fetch,
+        protocol,
+        config: qqMailRuntimeConfig,
+      },
+    ).then(
+      () => undefined,
+      (reason: unknown) => reason,
+    );
+
+    expect(error).toBeInstanceOf(ProviderRequestError);
+    expect((error as ProviderRequestError).status).toBe(500);
+    expect((error as ProviderRequestError).message).toBe("Unsupported mail action: archive_email");
   });
 
   it.each(["@qq.com", "user@", "user@@qq.com", "user name@qq.com"])(
