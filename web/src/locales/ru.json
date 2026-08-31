@@ -495,7 +495,7 @@
         "actionBlockedHint": "Block имеет приоритет, даже если action разрешен в другом месте.",
         "proxyAllowedHint": "Используйте provider ID или *.",
         "proxyBlockedHint": "Заблокированные providers не могут получать proxy requests.",
-        "ruleCount": "Rules: {{count}}",
+        "ruleCount": "Всего rules: {{count}}",
         "actionAllowedInput": "Найти или ввести разрешенный action rule",
         "actionBlockedInput": "Найти или ввести заблокированный action rule",
         "proxyAllowedInput": "Найти или ввести разрешенный provider",
