@@ -16,7 +16,7 @@ const authStatusTestPattern =
   /[A-Za-z_$][\w$]*\s*===?\s*40[13]\b|\b40[13]\s*===?\s*[A-Za-z_$]|\b40[13]\b[^\n]*\.includes|\bcase\s+40[13]\s*:/u;
 
 /** Matches a branch that tests for a genuine upstream 409 conflict. */
-const conflictStatusTestPattern = /===?\s*409/u;
+const conflictStatusTestPattern = /===?\s*409|\bcase\s+409\s*:/u;
 
 /** Lines read above a construction that no enclosing condition governs. */
 const branchContextLines = 2;
@@ -156,25 +156,52 @@ function readNumericConstants(source: string): Map<string, string> {
 
 const identifierReferencePattern = /(?<![\w.$])[A-Za-z_$][\w$]*/gu;
 
+/** Drop string literals so a number or code inside a message is not read as a value. */
+function stripStringLiterals(source: string): string {
+  let stripped = "";
+  let index = 0;
+  while (index < source.length) {
+    const character = source[index]!;
+    if (character === '"' || character === "'" || character === "`") {
+      index = skipStringLiteral(source, index);
+      continue;
+    }
+    stripped += character;
+    index += 1;
+  }
+  return stripped;
+}
+
 /**
  * Whether an argument expression can evaluate to the given numeric status.
  * Identifiers are substituted with the file's own numeric constants first, so a
  * named status counts wherever it appears, including as one arm of a ternary.
  */
 function canEvaluateToStatus(argumentSource: string, status: number, numbersByName: Map<string, string>): boolean {
-  let stripped = "";
-  let index = 0;
-  while (index < argumentSource.length) {
-    const character = argumentSource[index]!;
-    if (character === '"' || character === "'" || character === "`") {
-      index = skipStringLiteral(argumentSource, index);
-      continue;
-    }
-    stripped += character;
-    index += 1;
-  }
-  const resolved = stripped.replace(identifierReferencePattern, (name) => numbersByName.get(name) ?? name);
+  const resolved = stripStringLiterals(argumentSource).replace(
+    identifierReferencePattern,
+    (name) => numbersByName.get(name) ?? name,
+  );
   return new RegExp(String.raw`(?<![\w.])${status}(?![\w.])`, "u").test(resolved);
+}
+
+/**
+ * The literal values an argument expression always evaluates to, resolved
+ * against the declaring file's own constants. A constructor that writes the
+ * value itself passes it at every one of its call sites, so the value belongs
+ * to the callee rather than to any argument its callers wrote.
+ */
+function readConstantValues(argumentSource: string, source: string): string[] {
+  const values = readCodeLiterals(argumentSource, readStringConstants(source));
+  const numbersByName = readNumericConstants(source);
+  const resolved = stripStringLiterals(argumentSource).replace(
+    identifierReferencePattern,
+    (name) => numbersByName.get(name) ?? name,
+  );
+  for (const number of resolved.matchAll(/(?<![\w.])\d+(?![\w.])/gu)) {
+    values.push(number[0]!);
+  }
+  return values;
 }
 
 interface CallSite {
@@ -273,22 +300,30 @@ function providerScopeOf(file: string): string {
   return separator === -1 ? sharedScope : file.slice(0, separator);
 }
 
-type ForwardedArgumentScopes = Map<string, Map<string, Set<number>>>;
+/** What a callee puts in the tracked constructor argument. */
+interface CalleeArguments {
+  /** Parameter positions the callee forwards there, so its callers own the value. */
+  indexes: Set<number>;
+  /** Values the callee writes itself, so every one of its call sites carries them. */
+  constants: Set<string>;
+}
 
-function lookupCallee(scopes: ForwardedArgumentScopes, scope: string, name: string): Set<number> | undefined {
+type ForwardedArgumentScopes = Map<string, Map<string, CalleeArguments>>;
+
+function lookupCallee(scopes: ForwardedArgumentScopes, scope: string, name: string): CalleeArguments | undefined {
   return scopes.get(scope)?.get(name) ?? scopes.get(sharedScope)?.get(name);
 }
 
-function registerCallee(scopes: ForwardedArgumentScopes, scope: string, name: string, index: number): void {
-  const callees = scopes.get(scope) ?? new Map<string, Set<number>>();
+function registerCallee(scopes: ForwardedArgumentScopes, scope: string, name: string): CalleeArguments {
+  const callees = scopes.get(scope) ?? new Map<string, CalleeArguments>();
   scopes.set(scope, callees);
-  const indexes = callees.get(name) ?? new Set<number>();
-  indexes.add(index);
-  callees.set(name, indexes);
+  const registered = callees.get(name) ?? { indexes: new Set<number>(), constants: new Set<string>() };
+  callees.set(name, registered);
+  return registered;
 }
 
 /** The callees a file may reach: its own provider's helpers plus the shared ones. */
-function calleesVisibleIn(scopes: ForwardedArgumentScopes, file: string): Map<string, Set<number>> {
+function calleesVisibleIn(scopes: ForwardedArgumentScopes, file: string): Map<string, CalleeArguments> {
   const scope = providerScopeOf(file);
   return new Map([...(scopes.get(sharedScope) ?? []), ...(scope === sharedScope ? [] : (scopes.get(scope) ?? []))]);
 }
@@ -318,8 +353,12 @@ function registerInheritedConstructors(sources: ProviderSource[], scopes: Forwar
       if (!inherited) {
         continue;
       }
-      for (const index of inherited) {
-        registerCallee(scopes, declaration.scope, declaration.name, index);
+      const registered = registerCallee(scopes, declaration.scope, declaration.name);
+      for (const index of inherited.indexes) {
+        registered.indexes.add(index);
+      }
+      for (const constant of inherited.constants) {
+        registered.constants.add(constant);
       }
       resolved = true;
     }
@@ -328,31 +367,39 @@ function registerInheritedConstructors(sources: ProviderSource[], scopes: Forwar
 
 /**
  * Find the provider-local helpers and `ProviderRequestError` subclasses that
- * forward one of their own parameters into the given constructor argument, so
- * their callers are held to the same rule as a direct construction. Without
- * this a helper that reorders or discards its arguments hides every site that
- * goes through it. Helpers are keyed by provider directory, so two providers
- * that spell a helper the same way cannot borrow each other's argument order.
+ * decide the given constructor argument, so their callers are held to the same
+ * rule as a direct construction. Without this a helper that reorders or
+ * discards its arguments hides every site that goes through it. A subclass
+ * constructor that writes the argument itself rather than forwarding a
+ * parameter is recorded as a constant, so hardcoding the status or the code in
+ * a `super(...)` call cannot launder it past the guards either. Helpers are
+ * keyed by provider directory, so two providers that spell a helper the same
+ * way cannot borrow each other's argument order.
  */
 function findForwardedArgumentIndexes(
   sources: ProviderSource[],
   constructorArgumentIndex: number,
 ): ForwardedArgumentScopes {
-  const scopes: ForwardedArgumentScopes = new Map([
-    [sharedScope, new Map([["ProviderRequestError", new Set([constructorArgumentIndex])]])],
-  ]);
+  const scopes: ForwardedArgumentScopes = new Map();
+  registerCallee(scopes, sharedScope, "ProviderRequestError").indexes.add(constructorArgumentIndex);
   for (const entry of sources.filter((source) => source.source.includes("ProviderRequestError"))) {
     for (const site of findCallSites(entry.source, /(?:new ProviderRequestError|super)\(/gu)) {
-      const forwarded = site.argumentSources[constructorArgumentIndex]?.trim();
-      if (forwarded === undefined || !identifierPattern.test(forwarded)) {
+      const decided = site.argumentSources[constructorArgumentIndex]?.trim();
+      const owner = decided === undefined ? undefined : findEnclosingCallable(entry.source, site.index);
+      if (decided === undefined || !owner) {
         continue;
       }
-      const owner = findEnclosingCallable(entry.source, site.index);
-      const argumentIndex = owner?.parameterNames.indexOf(forwarded) ?? -1;
-      if (!owner || argumentIndex === -1) {
+      const argumentIndex = identifierPattern.test(decided) ? owner.parameterNames.indexOf(decided) : -1;
+      if (argumentIndex !== -1) {
+        registerCallee(scopes, providerScopeOf(entry.file), owner.name).indexes.add(argumentIndex);
         continue;
       }
-      registerCallee(scopes, providerScopeOf(entry.file), owner.name, argumentIndex);
+      if (!entry.source.startsWith("super(", site.index)) {
+        continue;
+      }
+      for (const constant of readConstantValues(decided, entry.source)) {
+        registerCallee(scopes, providerScopeOf(entry.file), owner.name).constants.add(constant);
+      }
     }
   }
   registerInheritedConstructors(sources, scopes);
@@ -438,10 +485,31 @@ function readSourceIndex(entry: ProviderSource): SourceIndex {
   return built;
 }
 
+const caseLabelPattern = /\bcase\s[^:\n]*:|\bdefault\s*:/gu;
+
 /**
- * Read the `if (...)` heads of the blocks that enclose a construction. Sibling
- * branches and the rest of the enclosing function stay out, so a genuine 409
- * raised a few lines below an unrelated 401 test is not mistaken for one.
+ * Read the `case` labels that govern a statement inside a `switch` body: the
+ * last run of consecutive labels above it. A `case` block carries no condition
+ * of its own and the `switch` head names only the value, so without this a case
+ * body longer than the context window hides which status the branch matched.
+ */
+function readSwitchCaseLabels(source: string, blockOpenIndex: number, index: number): string {
+  const body = source.slice(blockOpenIndex, index);
+  let run: string[] = [];
+  let previousEnd: number | undefined;
+  for (const label of body.matchAll(caseLabelPattern)) {
+    const contiguous = previousEnd !== undefined && body.slice(previousEnd, label.index).trim() === "";
+    run = contiguous ? [...run, label[0]] : [label[0]];
+    previousEnd = label.index + label[0].length;
+  }
+  return run.join("\n");
+}
+
+/**
+ * Read the `if (...)` heads of the blocks that enclose a construction, plus the
+ * `case` labels when one of them is a `switch`. Sibling branches and the rest of
+ * the enclosing function stay out, so a genuine 409 raised a few lines below an
+ * unrelated 401 test is not mistaken for one.
  */
 function readGoverningConditions(entry: ProviderSource, index: number): string[] {
   const { blocks, parenthesisOpenerByCloser } = readSourceIndex(entry);
@@ -455,8 +523,12 @@ function readGoverningConditions(entry: ProviderSource, index: number): string[]
       continue;
     }
     const conditionStart = parenthesisOpenerByCloser.get(head.length - 1);
-    if (conditionStart !== undefined) {
-      conditions.push(entry.source.slice(conditionStart, block.openIndex));
+    if (conditionStart === undefined) {
+      continue;
+    }
+    conditions.push(entry.source.slice(conditionStart, block.openIndex));
+    if (/\bswitch\s*$/u.test(entry.source.slice(0, conditionStart))) {
+      conditions.push(readSwitchCaseLabels(entry.source, block.openIndex, index));
     }
   }
   return conditions;
@@ -466,7 +538,14 @@ function findCallSitesIn(entry: ProviderSource, callee: string): CallSite[] {
   if (!entry.source.includes(callee)) {
     return [];
   }
-  return findCallSites(entry.source, new RegExp(String.raw`\b${callee}\(`, "gu"));
+  // A subclass reaches its parent's constructor as `super(...)`, so a file that
+  // declares one is read for both spellings. Otherwise a constructor that
+  // hardcodes the status or the code is invisible to both guards.
+  const declaresSubclass = new RegExp(String.raw`\bclass\s+[A-Za-z_$][\w$]*\s+extends\s+${callee}\b`, "u").test(
+    entry.source,
+  );
+  const callPattern = declaresSubclass ? String.raw`\b(?:${callee}|super)\(` : String.raw`\b${callee}\(`;
+  return findCallSites(entry.source, new RegExp(callPattern, "gu"));
 }
 
 function lineNumberAt(source: string, index: number): number {
@@ -486,11 +565,13 @@ function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
   const hits: AuthConflictHit[] = [];
   for (const entry of sources) {
     const numbersByName = readNumericConstants(entry.source);
-    for (const [callee, indexes] of calleesVisibleIn(scopes, entry.file)) {
+    for (const [callee, decided] of calleesVisibleIn(scopes, entry.file)) {
       for (const site of findCallSitesIn(entry, callee)) {
-        const raisesConflict = [...indexes].some((index) =>
-          canEvaluateToStatus(site.argumentSources[index] ?? "", 409, numbersByName),
-        );
+        const raisesConflict =
+          decided.constants.has("409") ||
+          [...decided.indexes].some((index) =>
+            canEvaluateToStatus(site.argumentSources[index] ?? "", 409, numbersByName),
+          );
         if (!raisesConflict) {
           continue;
         }
@@ -529,14 +610,15 @@ function findUndocumentedErrorCodes(sources: ProviderSource[]): ErrorCodeArgumen
   const hits: ErrorCodeArgumentHit[] = [];
   for (const entry of sources) {
     const literalsByName = readStringConstants(entry.source);
-    for (const [callee, indexes] of calleesVisibleIn(scopes, entry.file)) {
+    for (const [callee, decided] of calleesVisibleIn(scopes, entry.file)) {
       for (const site of findCallSitesIn(entry, callee)) {
-        for (const argumentIndex of indexes) {
+        const codes = [...decided.indexes].flatMap((argumentIndex) => {
           const codeArgument = site.argumentSources[argumentIndex];
-          for (const code of codeArgument === undefined ? [] : readCodeLiterals(codeArgument, literalsByName)) {
-            if (!allowed.has(code)) {
-              hits.push({ file: entry.file, line: lineNumberAt(entry.source, site.index), code });
-            }
+          return codeArgument === undefined ? [] : readCodeLiterals(codeArgument, literalsByName);
+        });
+        for (const code of [...decided.constants, ...codes]) {
+          if (!allowed.has(code)) {
+            hits.push({ file: entry.file, line: lineNumberAt(entry.source, site.index), code });
           }
         }
       }
