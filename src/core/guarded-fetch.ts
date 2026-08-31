@@ -44,7 +44,12 @@ export interface GuardedFetchOptions {
    * only adds a per-request lookup. On by default.
    */
   skipDnsValidation?: boolean;
-  /** Additional credential-bearing headers to drop when a redirect crosses origins. */
+  /**
+   * Additional credential-bearing headers to drop when a redirect crosses
+   * origins. Kept for compatibility with callers that name their auth header
+   * explicitly; it is now a no-op, because a cross-origin hop already drops
+   * every header outside this module's cross-origin safe list.
+   */
   additionalSensitiveHeaders?: readonly string[];
   /** Transform errors thrown by the underlying transport before they escape the guarded fetch. */
   mapTransportError?: (error: unknown) => unknown;
@@ -56,60 +61,73 @@ export interface GuardedFetchOptions {
 const defaultMaxRedirects = 20;
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
 /**
- * Credential-bearing request headers dropped when a redirect crosses origins, so
- * a cross-origin redirect cannot exfiltrate a provider credential. Covers the
- * fetch-spec set (`authorization`/`cookie`/`proxy-authorization`) plus the
- * common custom auth headers provider egress sends. This is an explicit
- * allowlist rather than a name pattern so it never strips look-alike but
- * non-credential headers (e.g. `idempotency-key`, `x-correlation-id`); add a
- * provider's header here if it authenticates with a name not already listed.
+ * The only request headers kept when a redirect crosses origins; every other
+ * header is dropped before the next hop is issued.
+ *
+ * This is deny-by-default on purpose. The previous rule dropped names on an
+ * explicit credential list, which silently forwarded any provider credential
+ * whose header name nobody had added to it, and provider egress here sends over
+ * a hundred distinct custom auth header names. A redirect target is a different
+ * party from the one the credential was issued for, so the safe direction is to
+ * keep only headers whose value is fixed by the request itself and cannot carry
+ * a secret:
+ *
+ * - content negotiation and client hints: `accept`, `accept-charset`,
+ *   `accept-encoding`, `accept-language`, `dnt`.
+ * - body descriptors: `content-type`, `content-length`, `content-language`,
+ *   `content-encoding`, `content-range`, `content-disposition`, `content-md5`.
+ *   They must survive a 307/308 hop or the replayed body arrives undescribed.
+ *   `content-range` earns its place twice over: a chunked upload that loses it
+ *   reaches the target as a well-formed full object instead of failing loudly.
+ *   Every value here is fixed by the body already being sent - a media type, a
+ *   length, a byte range, a file name, a digest - so none can carry a secret.
+ * - caching, conditional and partial fetching: `cache-control`, `range`,
+ *   `if-match`, `if-none-match`, `if-modified-since`, `if-unmodified-since`.
+ *   Their values are directives, byte offsets, dates, and ETags the target
+ *   itself issued. `range` matters because a download handed off to a CDN is
+ *   the common cross-origin hop.
+ * - request identity for logs, tracing and replay safety: `user-agent`,
+ *   `idempotency-key`, `x-request-id`, `x-correlation-id`, `x-trace`. They name
+ *   a request; they grant nothing.
+ *
+ * `referer` and `content-location` are deliberately absent: both carry a URL,
+ * and many providers here authenticate by putting the key in the query string,
+ * so forwarding either would leak the credential this rule exists to hold back.
+ * That is also why browsers downgrade `referer` cross-origin. `content-location`
+ * appears in the POST-to-GET body-header list below because the fetch spec drops
+ * it there, not because it survives an origin change; nothing in this repo sets
+ * it. A provider that legitimately redirects cross-origin and needs some other
+ * header gets a 4xx from the target, never a leak; add the header here once such
+ * a case is proven.
+ *
+ * Exported read-only so the tests can pin the list itself: widening it is the
+ * one edit that silently re-opens this hole, so the suite makes it an explicit
+ * two-place change.
  */
-const crossOriginCredentialHeaders = new Set([
-  "authorization",
-  "proxy-authorization",
-  "cookie",
-  "api-key",
-  "apikey",
-  "x-api-key",
-  "x-apikey",
-  "api-token",
-  "x-api-token",
-  "auth-token",
-  "x-auth-token",
-  "x-auth-key",
-  "access-token",
-  "x-access-token",
-  "app-key",
-  "x-app-key",
-  "api-secret",
-  "x-api-secret",
-  "client-secret",
-  "x-client-secret",
-  "x-secret",
-  "token",
-  "x-token",
-  "session-token",
-  "x-session-token",
-  "x-seq-apikey",
-  "private-token",
-  "x-private-token",
-  "x-csrf-token",
-  "x-gotify-key",
-  "x-xsrf-token",
-  "x-goog-api-key",
-  "x-acs-security-token",
-  "x-amz-security-token",
-  "x-n8n-api-key",
-  "x-shopify-access-token",
-  "x-vtex-api-appkey",
-  "x-vtex-api-apptoken",
-  "x-tomba-key",
-  "client-token",
-  "x-session-key",
-  "x-redmine-api-key",
-  "authkey",
-  "x-oksign-authorization",
-  "x-filesapi-key",
+export const crossOriginSafeHeaders: ReadonlySet<string> = new Set([
+  "accept",
+  "accept-charset",
+  "accept-encoding",
+  "accept-language",
+  "cache-control",
+  "content-disposition",
+  "content-encoding",
+  "content-language",
+  "content-length",
+  "content-md5",
+  "content-range",
+  "content-type",
+  "dnt",
+  "idempotency-key",
+  "if-match",
+  "if-modified-since",
+  "if-none-match",
+  "if-unmodified-since",
+  "range",
+  "user-agent",
+  "x-correlation-id",
+  "x-request-id",
+  "x-trace",
 ]);
 /** Body-describing headers dropped when a redirect rewrites the method to GET, mirroring the fetch spec. */
 const bodyHeaders = ["content-encoding", "content-language", "content-length", "content-location", "content-type"];
@@ -176,7 +194,6 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
   const baseFetch = unwrapGuardedFetch(options.fetch);
   const createError = options.createError ?? ((message: string) => new TypeError(message));
   const maxRedirects = options.maxRedirects ?? defaultMaxRedirects;
-  const additionalSensitiveHeaders = new Set(options.additionalSensitiveHeaders?.map((name) => name.toLowerCase()));
   const guardedFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const transport = baseFetch ?? globalThis.fetch;
     const fetchTransport = async (
@@ -264,7 +281,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
       }
       if (guardedNext.origin !== url.origin) {
         for (const name of [...headers.keys()]) {
-          if (crossOriginCredentialHeaders.has(name) || additionalSensitiveHeaders.has(name)) {
+          if (!crossOriginSafeHeaders.has(name)) {
             headers.delete(name);
           }
         }

@@ -1,7 +1,12 @@
 import type { GuardedFetchDnsLookup } from "./guarded-fetch.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createGuardedFetch, resolveGuardedEgressTarget, unwrapGuardedFetch } from "./guarded-fetch.ts";
+import {
+  createGuardedFetch,
+  crossOriginSafeHeaders,
+  resolveGuardedEgressTarget,
+  unwrapGuardedFetch,
+} from "./guarded-fetch.ts";
 import { setEgressTrustedHosts } from "./request.ts";
 
 interface RecordedCall {
@@ -69,6 +74,37 @@ describe("resolveGuardedEgressTarget", () => {
     ).rejects.toThrow("dns: mail host could not be resolved for validation");
   });
 });
+
+// Every header the cross-origin rule keeps, with a value of the shape the header
+// really carries. The 307 test sends the whole set in one hop and the fixture is
+// pinned name-for-name against `crossOriginSafeHeaders` below, so a trim fails
+// here instead of silently breaking a provider mid-upload, and a widening fails
+// here instead of silently re-opening the leak.
+const crossOriginSafeHeaderFixture: Record<string, string> = {
+  accept: "application/json",
+  "accept-charset": "utf-8",
+  "accept-encoding": "gzip",
+  "accept-language": "en-US",
+  "cache-control": "no-cache",
+  "content-disposition": 'attachment; filename="chunk.bin"',
+  "content-encoding": "identity",
+  "content-language": "en",
+  "content-length": "10",
+  "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+  "content-range": "bytes 0-9/100",
+  "content-type": "application/octet-stream",
+  dnt: "1",
+  "idempotency-key": "abc",
+  "if-match": '"etag-1"',
+  "if-modified-since": "Wed, 21 Oct 2015 07:28:00 GMT",
+  "if-none-match": '"etag-2"',
+  "if-unmodified-since": "Wed, 21 Oct 2015 07:28:00 GMT",
+  range: "bytes=0-9",
+  "user-agent": "oomol-connect/0.1",
+  "x-correlation-id": "cid",
+  "x-request-id": "req-1",
+  "x-trace": "trace-1",
+};
 
 describe("createGuardedFetch redirects", () => {
   it("follows public redirects with manual hops and returns the final response", async () => {
@@ -298,26 +334,110 @@ describe("createGuardedFetch redirects", () => {
     expect(crossOriginHeaders.get("x-correlation-id")).toBe("cid");
   });
 
-  it("strips caller-declared sensitive headers on cross-origin redirects", async () => {
+  it("drops every unlisted header on a cross-origin redirect and keeps the safe set", async () => {
     const { transport, calls } = createTransport([
+      redirectTo("https://api.example.com/moved"),
       redirectTo("https://other.example.net/away"),
       new Response("ok", { status: 200 }),
     ]);
-    const guarded = createGuardedFetch({
-      fetch: transport,
-      additionalSensitiveHeaders: ["X-Provider-Credential"],
-    });
+    const guarded = createGuardedFetch({ fetch: transport });
 
     await guarded("https://api.example.com/", {
       headers: {
-        "x-provider-credential": "secret",
+        // Provider credential headers no name list enumerated ahead of time.
+        "x-esri-authorization": "Bearer esri-secret",
+        "x-els-insttoken": "insttoken-secret",
+        secret: "autotask-secret",
+        session: "tanium-secret",
+        web_api_key: "finerworks-secret",
+        // A real stored credential (autotask) whose name matches no credential
+        // word, plus a header that is neither safe-listed nor credential-shaped.
+        // Both pin the rule as deny-by-default rather than a smarter heuristic.
+        apiintegrationcode: "autotask-integration-code",
+        "x-vendor-quirk": "anything",
+        // Non-credential headers that must survive a cross-origin hop.
         "x-trace": "keep",
+        "idempotency-key": "abc",
+        "x-correlation-id": "cid",
       },
     });
 
+    const sameOriginHeaders = new Headers(calls[1]?.init?.headers);
+    expect(sameOriginHeaders.get("x-esri-authorization")).toBe("Bearer esri-secret");
+    expect(sameOriginHeaders.get("x-els-insttoken")).toBe("insttoken-secret");
+    expect(sameOriginHeaders.get("secret")).toBe("autotask-secret");
+    expect(sameOriginHeaders.get("session")).toBe("tanium-secret");
+    expect(sameOriginHeaders.get("web_api_key")).toBe("finerworks-secret");
+    expect(sameOriginHeaders.get("apiintegrationcode")).toBe("autotask-integration-code");
+    expect(sameOriginHeaders.get("x-vendor-quirk")).toBe("anything");
+    expect(sameOriginHeaders.get("x-trace")).toBe("keep");
+    expect(sameOriginHeaders.get("idempotency-key")).toBe("abc");
+    expect(sameOriginHeaders.get("x-correlation-id")).toBe("cid");
+    const crossOriginHeaders = new Headers(calls[2]?.init?.headers);
+    expect(crossOriginHeaders.has("x-esri-authorization")).toBe(false);
+    expect(crossOriginHeaders.has("x-els-insttoken")).toBe(false);
+    expect(crossOriginHeaders.has("secret")).toBe(false);
+    expect(crossOriginHeaders.has("session")).toBe(false);
+    expect(crossOriginHeaders.has("web_api_key")).toBe(false);
+    expect(crossOriginHeaders.has("apiintegrationcode")).toBe(false);
+    expect(crossOriginHeaders.has("x-vendor-quirk")).toBe(false);
+    expect(crossOriginHeaders.get("x-trace")).toBe("keep");
+    expect(crossOriginHeaders.get("idempotency-key")).toBe("abc");
+    expect(crossOriginHeaders.get("x-correlation-id")).toBe("cid");
+  });
+
+  it("pins the cross-origin safe list name-for-name to the fixture the redirect tests send", () => {
+    // Without this, adding a provider credential name to the safe list passes
+    // every other test: the 307 assertion compares the redirected hop against
+    // the fixture it sent, not against the list, so a name added to the list and
+    // never sent is invisible. Widening the rule has to be a two-place edit.
+    expect([...crossOriginSafeHeaders].sort()).toEqual(Object.keys(crossOriginSafeHeaderFixture).sort());
+  });
+
+  it("keeps every safe-listed header and nothing else on a cross-origin 307 redirect", async () => {
+    const { transport, calls } = createTransport([
+      redirectTo("https://cdn.example.net/upload", 307),
+      new Response("ok", { status: 200 }),
+    ]);
+    const guarded = createGuardedFetch({ fetch: transport });
+
+    await guarded("https://api.example.com/upload", {
+      method: "PUT",
+      headers: { ...crossOriginSafeHeaderFixture, authorization: "Bearer secret" },
+      body: "0123456789",
+    });
+
+    expect(calls[1]?.init?.method).toBe("PUT");
+    expect(calls[1]?.init?.body).toBe("0123456789");
     const redirectedHeaders = new Headers(calls[1]?.init?.headers);
-    expect(redirectedHeaders.has("x-provider-credential")).toBe(false);
-    expect(redirectedHeaders.get("x-trace")).toBe("keep");
+    expect(Object.fromEntries(redirectedHeaders.entries())).toEqual(crossOriginSafeHeaderFixture);
+  });
+
+  it("drops a caller-declared sensitive header with or without additionalSensitiveHeaders", async () => {
+    const headers = { "x-provider-credential": "secret", "x-trace": "keep" };
+    const declared = createTransport([
+      redirectTo("https://other.example.net/away"),
+      new Response("ok", { status: 200 }),
+    ]);
+    const undeclared = createTransport([
+      redirectTo("https://other.example.net/away"),
+      new Response("ok", { status: 200 }),
+    ]);
+
+    await createGuardedFetch({
+      fetch: declared.transport,
+      additionalSensitiveHeaders: ["X-Provider-Credential"],
+    })("https://api.example.com/", { headers });
+    await createGuardedFetch({ fetch: undeclared.transport })("https://api.example.com/", { headers });
+
+    // `additionalSensitiveHeaders` is inert: the safe list already drops the
+    // header, so both runs must reach the redirect target with the same headers.
+    const declaredHeaders = new Headers(declared.calls[1]?.init?.headers);
+    expect(declaredHeaders.has("x-provider-credential")).toBe(false);
+    expect(declaredHeaders.get("x-trace")).toBe("keep");
+    expect(Object.fromEntries(new Headers(undeclared.calls[1]?.init?.headers).entries())).toEqual(
+      Object.fromEntries(declaredHeaders.entries()),
+    );
   });
 
   it("passes through when the caller handles redirects manually", async () => {
