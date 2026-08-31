@@ -4,23 +4,17 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
-  createProviderProxyUrl,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
-  providerFetch,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requireApiKeyCredential,
   runProviderRequest,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "salesmate";
@@ -110,41 +104,23 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => {
     const credential = await requireApiKeyCredential(context, service);
-    const linkName = readStoredLinkName(credential.values, credential.metadata);
-    const url = createProviderProxyUrl(salesmateApiBaseUrl(linkName), input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
+    return salesmateApiBaseUrl(readStoredLinkName(credential.values, credential.metadata));
+  },
+  auth: { type: "api_key_header", name: "accessToken" },
+  customizeRequest({ headers, credential }) {
     if (!headers.has("accept")) {
       headers.set("accept", "application/json");
     }
-    headers.set("user-agent", providerUserAgent);
-    headers.set("accessToken", credential.apiKey);
-    headers.set("x-linkname", normalizeSalesmateLinkName(linkName));
-
-    const init: RequestInit = {
-      method: input.method,
-      headers,
-      signal: context.signal,
-    };
-    if (input.body !== undefined) {
-      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
-      if (!headers.has("content-type") && typeof input.body !== "string") {
-        headers.set("content-type", "application/json");
-      }
+    if (credential?.authType !== "api_key") {
+      return;
     }
-
-    const response = await providerFetch(url, init);
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+    headers.set("x-linkname", readStoredLinkName(credential.values, credential.metadata));
+  },
+});
 
 async function validateSalesmateCredential(
   apiKey: string,
