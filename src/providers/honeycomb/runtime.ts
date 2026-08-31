@@ -7,6 +7,7 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
 import {
@@ -333,12 +334,12 @@ function normalizeDataset(payload: unknown): Record<string, unknown> {
   const record = asRecord(payload);
   return {
     name: readString(record.name),
-    slug: readNullableString(record.slug),
-    description: readNullableString(record.description),
+    slug: rawStringOrNull(record.slug),
+    description: rawStringOrNull(record.description),
     expandJsonDepth: readNullableInteger(record.expand_json_depth),
     regularColumnsCount: readNullableInteger(record.regular_columns_count),
-    createdAt: readNullableString(record.created_at),
-    lastWrittenAt: readNullableString(record.last_written_at),
+    createdAt: rawStringOrNull(record.created_at),
+    lastWrittenAt: rawStringOrNull(record.last_written_at),
     raw: record,
   };
 }
@@ -346,15 +347,15 @@ function normalizeDataset(payload: unknown): Record<string, unknown> {
 function normalizeMarker(payload: unknown): Record<string, unknown> {
   const record = asRecord(payload);
   return {
-    id: readNullableString(record.id),
-    message: readNullableString(record.message),
-    type: readNullableString(record.type),
+    id: rawStringOrNull(record.id),
+    message: rawStringOrNull(record.message),
+    type: rawStringOrNull(record.type),
     startTime: readNullableInteger(record.start_time),
     endTime: readNullableInteger(record.end_time),
-    url: readNullableString(record.url),
-    color: readNullableString(record.color),
-    createdAt: readNullableString(record.created_at),
-    updatedAt: readNullableString(record.updated_at),
+    url: rawStringOrNull(record.url),
+    color: rawStringOrNull(record.color),
+    createdAt: rawStringOrNull(record.created_at),
+    updatedAt: rawStringOrNull(record.updated_at),
     raw: record,
   };
 }
@@ -363,11 +364,11 @@ function normalizeBoard(payload: unknown): Record<string, unknown> {
   const record = asRecord(payload);
   const links = asRecord(record.links);
   return {
-    id: readNullableString(record.id),
+    id: rawStringOrNull(record.id),
     name: readString(record.name),
-    description: readNullableString(record.description),
-    type: readNullableString(record.type),
-    boardUrl: readNullableString(links.board_url),
+    description: rawStringOrNull(record.description),
+    type: rawStringOrNull(record.type),
+    boardUrl: rawStringOrNull(links.board_url),
     tags: Array.isArray(record.tags) ? record.tags.filter(isRecord) : [],
     raw: record,
   };
@@ -382,10 +383,6 @@ function normalizeArray<T>(payload: unknown, normalizeItem: (item: unknown) => T
 
 function readString(value: unknown): string {
   return typeof value === "string" ? value : "";
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readNullableInteger(value: unknown): number | null {

@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalRawString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, rawStringOrNull } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -309,20 +309,20 @@ function normalizeEvent(event: FomoEventPayload): Record<string, unknown> {
   return {
     id: readId(event.id),
     event_type_id: readId(event.event_type_id),
-    event_type_tag: readNullableString(event.event_type_tag),
-    url: readNullableString(event.url),
-    first_name: readNullableString(event.first_name),
-    email_address: readNullableString(event.email_address),
-    ip_address: readNullableString(event.ip_address),
-    city: readNullableString(event.city),
-    province: readNullableString(event.province),
-    country: readNullableString(event.country),
-    title: readNullableString(event.title),
-    external_id: readNullableString(event.external_id),
-    image_url: readNullableString(event.image_url),
-    message: readNullableString(event.message),
-    link: readNullableString(event.link),
-    created_at: readNullableString(event.created_at),
+    event_type_tag: rawStringOrNull(event.event_type_tag),
+    url: rawStringOrNull(event.url),
+    first_name: rawStringOrNull(event.first_name),
+    email_address: rawStringOrNull(event.email_address),
+    ip_address: rawStringOrNull(event.ip_address),
+    city: rawStringOrNull(event.city),
+    province: rawStringOrNull(event.province),
+    country: rawStringOrNull(event.country),
+    title: rawStringOrNull(event.title),
+    external_id: rawStringOrNull(event.external_id),
+    image_url: rawStringOrNull(event.image_url),
+    message: rawStringOrNull(event.message),
+    link: rawStringOrNull(event.link),
+    created_at: rawStringOrNull(event.created_at),
     created_at_to_seconds_from_epoch: readNullableNumber(event.created_at_to_seconds_from_epoch),
     custom_event_fields_attributes: readCustomEventFields(event.custom_event_fields_attributes),
     raw: event,
@@ -332,7 +332,7 @@ function normalizeEvent(event: FomoEventPayload): Record<string, unknown> {
 function normalizeDeletePayload(payload: unknown): Record<string, unknown> {
   const raw = isRecord(payload) ? payload : {};
   return {
-    message: readNullableString(raw.message),
+    message: rawStringOrNull(raw.message),
     raw,
   };
 }
@@ -394,10 +394,6 @@ function readId(value: unknown): string | number | null {
     return value;
   }
   return null;
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readNullableNumber(value: unknown): number | null {

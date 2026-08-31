@@ -15,6 +15,7 @@ import {
   optionalBooleanOrNull,
   optionalInteger,
   optionalString,
+  rawStringOrNull,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
@@ -505,7 +506,7 @@ function normalizeTopicListPayload(payload: unknown) {
   return {
     canCreateTopic: optionalBooleanOrNull(topicList.can_create_topic),
     perPage: toNullableInteger(topicList.per_page),
-    moreTopicsUrl: toNullableString(topicList.more_topics_url),
+    moreTopicsUrl: rawStringOrNull(topicList.more_topics_url),
     topics: readPayloadObjectArray(topicList.topics, "Discourse topics").map(normalizeTopicSummary),
     users: readOptionalPayloadObjectArray(record.users).map(normalizeUserSummary),
     raw: record,
@@ -517,14 +518,14 @@ function normalizeTopicSummary(value: unknown) {
   return {
     id: requirePayloadInteger(record.id, "Discourse topic id"),
     title: requirePayloadString(record.title, "Discourse topic title"),
-    fancyTitle: toNullableString(record.fancy_title),
-    slug: toNullableString(record.slug),
+    fancyTitle: rawStringOrNull(record.fancy_title),
+    slug: rawStringOrNull(record.slug),
     postsCount: toNullableInteger(record.posts_count),
     replyCount: toNullableInteger(record.reply_count),
     highestPostNumber: toNullableInteger(record.highest_post_number),
-    createdAt: toNullableString(record.created_at),
-    lastPostedAt: toNullableString(record.last_posted_at),
-    bumpedAt: toNullableString(record.bumped_at),
+    createdAt: rawStringOrNull(record.created_at),
+    lastPostedAt: rawStringOrNull(record.last_posted_at),
+    bumpedAt: rawStringOrNull(record.bumped_at),
     categoryId: toNullableInteger(record.category_id),
     views: toNullableInteger(record.views),
     likeCount: toNullableInteger(record.like_count),
@@ -532,7 +533,7 @@ function normalizeTopicSummary(value: unknown) {
     closed: optionalBooleanOrNull(record.closed),
     archived: optionalBooleanOrNull(record.archived),
     visible: optionalBooleanOrNull(record.visible),
-    lastPosterUsername: toNullableString(record.last_poster_username),
+    lastPosterUsername: rawStringOrNull(record.last_poster_username),
     raw: record,
   };
 }
@@ -542,10 +543,10 @@ function normalizeCategorySummary(value: unknown) {
   return {
     id: requirePayloadInteger(record.id, "Discourse category id"),
     name: requirePayloadString(record.name, "Discourse category name"),
-    slug: toNullableString(record.slug),
-    color: toNullableString(record.color),
-    textColor: toNullableString(record.text_color),
-    description: toNullableString(record.description_text ?? record.description),
+    slug: rawStringOrNull(record.slug),
+    color: rawStringOrNull(record.color),
+    textColor: rawStringOrNull(record.text_color),
+    description: rawStringOrNull(record.description_text ?? record.description),
     topicCount: toNullableInteger(record.topic_count),
     postCount: toNullableInteger(record.post_count),
     position: toNullableInteger(record.position),
@@ -561,11 +562,11 @@ function normalizeTopicDetail(payload: unknown) {
   return {
     id: requirePayloadInteger(record.id, "Discourse topic id"),
     title: requirePayloadString(record.title, "Discourse topic title"),
-    fancyTitle: toNullableString(record.fancy_title),
-    slug: toNullableString(record.slug),
+    fancyTitle: rawStringOrNull(record.fancy_title),
+    slug: rawStringOrNull(record.slug),
     postsCount: toNullableInteger(record.posts_count),
     categoryId: toNullableInteger(record.category_id),
-    createdAt: toNullableString(record.created_at),
+    createdAt: rawStringOrNull(record.created_at),
     posts: readOptionalPayloadObjectArray(postStream?.posts).map(normalizePostSummary),
     details: readOptionalPayloadObject(record.details) ?? {},
     raw: record,
@@ -577,15 +578,15 @@ function normalizePostSummary(value: unknown) {
   return {
     id: requirePayloadInteger(record.id, "Discourse post id"),
     topicId: toNullableInteger(record.topic_id),
-    topicSlug: toNullableString(record.topic_slug),
+    topicSlug: rawStringOrNull(record.topic_slug),
     postNumber: toNullableInteger(record.post_number),
     replyToPostNumber: toNullableInteger(record.reply_to_post_number),
-    username: toNullableString(record.username),
-    displayUsername: toNullableString(record.display_username),
-    name: toNullableString(record.name),
-    createdAt: toNullableString(record.created_at),
-    updatedAt: toNullableString(record.updated_at),
-    cooked: toNullableString(record.cooked),
+    username: rawStringOrNull(record.username),
+    displayUsername: rawStringOrNull(record.display_username),
+    name: rawStringOrNull(record.name),
+    createdAt: rawStringOrNull(record.created_at),
+    updatedAt: rawStringOrNull(record.updated_at),
+    cooked: rawStringOrNull(record.cooked),
     postType: toNullableInteger(record.post_type),
     raw: record,
   };
@@ -595,9 +596,9 @@ function normalizeUserSummary(value: unknown) {
   const record = requirePayloadObject(value, "Discourse user");
   return {
     id: toNullableInteger(record.id),
-    username: toNullableString(record.username),
-    name: toNullableString(record.name),
-    avatarTemplate: toNullableString(record.avatar_template),
+    username: rawStringOrNull(record.username),
+    name: rawStringOrNull(record.name),
+    avatarTemplate: rawStringOrNull(record.avatar_template),
     raw: record,
   };
 }
@@ -685,10 +686,6 @@ function requirePayloadInteger(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `${fieldName} must be an integer`);
   }
   return value as number;
-}
-
-function toNullableString(value: unknown) {
-  return typeof value === "string" ? value : null;
 }
 
 function toNullableInteger(value: unknown) {

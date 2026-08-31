@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { keepaDealPriceTypes, keepaHistoryTypes, keepaMarketplaces } from "./actions.ts";
 
-import { compactObject, optionalRawString, optionalRecord, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, optionalRecord, rawStringOrNull, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -487,11 +487,11 @@ function normalizeProductSnapshot(product: Record<string, unknown>): Record<stri
   return {
     asin,
     domainId: asNullableInteger(product.domainId),
-    title: asNullableString(product.title),
-    brand: asNullableString(product.brand),
-    manufacturer: asNullableString(product.manufacturer),
-    productGroup: asNullableString(product.productGroup),
-    parentAsin: asNullableString(product.parentAsin),
+    title: rawStringOrNull(product.title),
+    brand: rawStringOrNull(product.brand),
+    manufacturer: rawStringOrNull(product.manufacturer),
+    productGroup: rawStringOrNull(product.productGroup),
+    parentAsin: rawStringOrNull(product.parentAsin),
     rootCategory: asNullableInteger(product.rootCategory),
     categories: readIntegerArray(product.categories),
     imageUrls: collectImageUrls(product),
@@ -546,8 +546,8 @@ function normalizeProductHistory(
   const csv = Array.isArray(product.csv) ? product.csv : [];
   return {
     asin: requireUpstreamString(product.asin, "product.asin"),
-    title: asNullableString(product.title),
-    brand: asNullableString(product.brand),
+    title: rawStringOrNull(product.title),
+    brand: rawStringOrNull(product.brand),
     series: keepaMetrics
       .filter((definition) => !requestedTypes || requestedTypes.has(definition.type))
       .flatMap((definition) => {
@@ -629,7 +629,7 @@ function collectImageUrls(product: Record<string, unknown>): string[] {
 function normalizeSeller(sellerId: string, raw: Record<string, unknown>): Record<string, unknown> {
   return {
     sellerId: optionalRawString(raw.sellerId) ?? sellerId,
-    sellerName: asNullableString(raw.sellerName),
+    sellerName: rawStringOrNull(raw.sellerName),
     currentRating: asNullableInteger(raw.currentRating),
     ratingCount: Array.isArray(raw.ratingCount) ? readIntegerArray(raw.ratingCount) : null,
     hasFba: typeof raw.hasFBA === "boolean" ? raw.hasFBA : null,
@@ -768,10 +768,6 @@ function objectMapEntries(value: unknown): Array<[string, Record<string, unknown
     const child = optionalRecord(item);
     return child ? [[key, child] as [string, Record<string, unknown>]] : [];
   });
-}
-
-function asNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function asNullableInteger(value: unknown): number | null {

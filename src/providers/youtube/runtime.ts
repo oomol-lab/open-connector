@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
-import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalInteger, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
 import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -654,8 +654,8 @@ async function youtubeRawRequest(
 function normalizeSearchResult(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     id: asLooseObject(item.id),
     snippet: asNullableLooseObject(item.snippet),
     raw: item,
@@ -665,9 +665,9 @@ function normalizeSearchResult(value: unknown): Record<string, unknown> {
 function normalizeVideo(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    id: asNullableString(item.id),
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    id: rawStringOrNull(item.id),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     snippet: asNullableLooseObject(item.snippet),
     contentDetails: asNullableLooseObject(item.contentDetails),
     statistics: asNullableLooseObject(item.statistics),
@@ -680,9 +680,9 @@ function normalizeVideo(value: unknown): Record<string, unknown> {
 function normalizeChannel(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    id: asNullableString(item.id),
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    id: rawStringOrNull(item.id),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     snippet: asNullableLooseObject(item.snippet),
     contentDetails: asNullableLooseObject(item.contentDetails),
     statistics: asNullableLooseObject(item.statistics),
@@ -694,9 +694,9 @@ function normalizeChannel(value: unknown): Record<string, unknown> {
 function normalizePlaylist(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    id: asNullableString(item.id),
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    id: rawStringOrNull(item.id),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     snippet: asNullableLooseObject(item.snippet),
     contentDetails: asNullableLooseObject(item.contentDetails),
     status: asNullableLooseObject(item.status),
@@ -707,9 +707,9 @@ function normalizePlaylist(value: unknown): Record<string, unknown> {
 function normalizePlaylistItem(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    id: asNullableString(item.id),
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    id: rawStringOrNull(item.id),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     snippet: asNullableLooseObject(item.snippet),
     contentDetails: asNullableLooseObject(item.contentDetails),
     status: asNullableLooseObject(item.status),
@@ -720,9 +720,9 @@ function normalizePlaylistItem(value: unknown): Record<string, unknown> {
 function normalizeCommentThread(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    id: asNullableString(item.id),
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    id: rawStringOrNull(item.id),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     snippet: asNullableLooseObject(item.snippet),
     replies: asNullableLooseObject(item.replies),
     raw: item,
@@ -732,9 +732,9 @@ function normalizeCommentThread(value: unknown): Record<string, unknown> {
 function normalizeComment(value: unknown): Record<string, unknown> {
   const item = asLooseResource(value);
   return {
-    id: asNullableString(item.id),
-    kind: asNullableString(item.kind),
-    etag: asNullableString(item.etag),
+    id: rawStringOrNull(item.id),
+    kind: rawStringOrNull(item.kind),
+    etag: rawStringOrNull(item.etag),
     snippet: asNullableLooseObject(item.snippet),
     raw: item,
   };
@@ -758,7 +758,7 @@ function normalizeI18nRegion(value: unknown): Record<string, unknown> {
 
 function normalizeVideoRating(value: unknown): Record<string, unknown> {
   const item = asLooseObject(value);
-  return { videoId: asNullableString(item.videoId), rating: asNullableString(item.rating), raw: item };
+  return { videoId: rawStringOrNull(item.videoId), rating: rawStringOrNull(item.rating), raw: item };
 }
 
 function normalizeItems<T>(items: unknown, normalize: (value: unknown) => T): T[] {
@@ -860,10 +860,6 @@ function asLooseObject(value: unknown): Record<string, unknown> {
 
 function asNullableLooseObject(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
-}
-
-function asNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function toInteger(value: unknown): number {

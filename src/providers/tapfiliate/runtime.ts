@@ -7,6 +7,7 @@ import {
   optionalBooleanOrNull,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
 import {
@@ -428,17 +429,17 @@ function requireObjectPayload(payload: unknown, actionName: string): Record<stri
 function normalizeAffiliate(item: Record<string, unknown>): Record<string, unknown> {
   return {
     id: stringFromUnknown(item.id),
-    firstname: stringOrNull(item.firstname),
-    lastname: stringOrNull(item.lastname),
-    email: stringOrNull(item.email),
+    firstname: rawStringOrNull(item.firstname),
+    lastname: rawStringOrNull(item.lastname),
+    email: rawStringOrNull(item.email),
     company: objectOrNull(item.company),
     address: objectOrNull(item.address),
     meta_data: objectOrNull(item.meta_data),
-    parent_id: stringOrNull(item.parent_id),
-    affiliate_group_id: stringOrNull(item.affiliate_group_id),
-    created_at: stringOrNull(item.created_at),
-    promoted_at: stringOrNull(item.promoted_at),
-    promotion_method: stringOrNull(item.promotion_method),
+    parent_id: rawStringOrNull(item.parent_id),
+    affiliate_group_id: rawStringOrNull(item.affiliate_group_id),
+    created_at: rawStringOrNull(item.created_at),
+    promoted_at: rawStringOrNull(item.promoted_at),
+    promotion_method: rawStringOrNull(item.promotion_method),
     custom_fields: objectOrNull(item.custom_fields),
     raw: item,
   };
@@ -447,7 +448,7 @@ function normalizeAffiliate(item: Record<string, unknown>): Record<string, unkno
 function normalizeConversion(item: Record<string, unknown>): Record<string, unknown> {
   return {
     id: numberOrNull(item.id),
-    external_id: stringOrNull(item.external_id),
+    external_id: rawStringOrNull(item.external_id),
     amount: numberOrNull(item.amount),
     click: objectOrNull(item.click),
     commissions: Array.isArray(item.commissions)
@@ -458,7 +459,7 @@ function normalizeConversion(item: Record<string, unknown>): Record<string, unkn
     customer: objectOrNull(item.customer),
     meta_data: objectOrNull(item.meta_data),
     affiliate_meta_data: item.affiliate_meta_data ?? null,
-    created_at: stringOrNull(item.created_at),
+    created_at: rawStringOrNull(item.created_at),
     warnings: item.warnings ?? null,
     raw: item,
   };
@@ -469,17 +470,17 @@ function normalizeCommission(item: Record<string, unknown>): Record<string, unkn
     id: numberOrNull(item.id),
     amount: numberOrNull(item.amount),
     approved: optionalBooleanOrNull(item.approved),
-    created_at: stringOrNull(item.created_at),
-    commission_type: stringOrNull(item.commission_type),
-    commission_name: stringOrNull(item.commission_name),
-    kind: stringOrNull(item.kind),
-    currency: stringOrNull(item.currency),
+    created_at: rawStringOrNull(item.created_at),
+    commission_type: rawStringOrNull(item.commission_type),
+    commission_name: rawStringOrNull(item.commission_name),
+    kind: rawStringOrNull(item.kind),
+    currency: rawStringOrNull(item.currency),
     conversion: objectOrNull(item.conversion),
     affiliate: objectOrNull(item.affiliate),
     payout: item.payout ?? null,
-    comment: stringOrNull(item.comment),
+    comment: rawStringOrNull(item.comment),
     final: item.final ?? null,
-    finalization_date: stringOrNull(item.finalization_date),
+    finalization_date: rawStringOrNull(item.finalization_date),
     raw: item,
   };
 }
@@ -489,15 +490,15 @@ function normalizeProgram(
 ): Record<string, unknown> & { id: string; title: string | null } {
   return {
     id: stringFromUnknown(item.id),
-    title: stringOrNull(item.title),
-    currency: stringOrNull(item.currency),
+    title: rawStringOrNull(item.title),
+    currency: rawStringOrNull(item.currency),
     cookie_time: numberOrNull(item.cookie_time),
-    default_landing_page_url: stringOrNull(item.default_landing_page_url),
+    default_landing_page_url: rawStringOrNull(item.default_landing_page_url),
     recurring: optionalBooleanOrNull(item.recurring),
     recurring_cap: numberOrNull(item.recurring_cap),
     recurring_period_days: numberOrNull(item.recurring_period_days),
     program_category: objectOrNull(item.program_category),
-    currency_symbol: stringOrNull(item.currency_symbol),
+    currency_symbol: rawStringOrNull(item.currency_symbol),
     raw: item,
   };
 }
@@ -505,7 +506,7 @@ function normalizeProgram(
 function normalizeAffiliateGroup(item: Record<string, unknown>): Record<string, unknown> {
   return {
     id: stringFromUnknown(item.id),
-    title: stringOrNull(item.title),
+    title: rawStringOrNull(item.title),
     affiliate_count: numberOrNull(item.affiliate_count),
     raw: item,
   };
@@ -514,7 +515,7 @@ function normalizeAffiliateGroup(item: Record<string, unknown>): Record<string, 
 function normalizeClick(item: Record<string, unknown>): Record<string, unknown> {
   return {
     id: stringFromUnknown(item.id),
-    created_at: stringOrNull(item.created_at),
+    created_at: rawStringOrNull(item.created_at),
     meta_data: item.meta_data ?? null,
     details: objectOrNull(item.details),
     geolocation: objectOrNull(item.geolocation),
@@ -617,10 +618,6 @@ function stringFromUnknown(value: unknown): string {
     return String(value);
   }
   return "";
-}
-
-function stringOrNull(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function numberOrNull(value: unknown): number | null {

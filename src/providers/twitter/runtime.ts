@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { base64Bytes } from "../../core/cast.ts";
+import { base64Bytes, rawStringOrNull } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { providerFetch, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -1412,14 +1412,14 @@ function normalizeTwitterUser(value: unknown) {
     id: String(record.id ?? ""),
     name: String(record.name ?? ""),
     username: String(record.username ?? ""),
-    ...(record.description != null ? { description: nullableText(record.description) } : {}),
-    ...(record.location != null ? { location: nullableText(record.location) } : {}),
-    ...(record.url != null ? { url: nullableText(record.url) } : {}),
-    ...(record.profile_image_url != null ? { profileImageUrl: nullableText(record.profile_image_url) } : {}),
-    ...(record.profile_banner_url != null ? { profileBannerUrl: nullableText(record.profile_banner_url) } : {}),
-    ...(record.created_at != null ? { createdAt: nullableText(record.created_at) } : {}),
+    ...(record.description != null ? { description: rawStringOrNull(record.description) } : {}),
+    ...(record.location != null ? { location: rawStringOrNull(record.location) } : {}),
+    ...(record.url != null ? { url: rawStringOrNull(record.url) } : {}),
+    ...(record.profile_image_url != null ? { profileImageUrl: rawStringOrNull(record.profile_image_url) } : {}),
+    ...(record.profile_banner_url != null ? { profileBannerUrl: rawStringOrNull(record.profile_banner_url) } : {}),
+    ...(record.created_at != null ? { createdAt: rawStringOrNull(record.created_at) } : {}),
     ...(typeof record.verified === "boolean" ? { verified: record.verified } : {}),
-    ...(record.verified_type != null ? { verifiedType: nullableText(record.verified_type) } : {}),
+    ...(record.verified_type != null ? { verifiedType: rawStringOrNull(record.verified_type) } : {}),
     ...(typeof record.protected === "boolean" ? { protected: record.protected } : {}),
     ...(record.public_metrics != null ? { publicMetrics: asObject(record.public_metrics) } : {}),
     raw: record,
@@ -1431,9 +1431,9 @@ function normalizeTwitterPost(value: unknown) {
   return {
     id: String(record.id ?? ""),
     text: String(record.text ?? ""),
-    ...(record.author_id != null ? { authorId: nullableText(record.author_id) } : {}),
-    ...(record.created_at != null ? { createdAt: nullableText(record.created_at) } : {}),
-    ...(record.lang != null ? { lang: nullableText(record.lang) } : {}),
+    ...(record.author_id != null ? { authorId: rawStringOrNull(record.author_id) } : {}),
+    ...(record.created_at != null ? { createdAt: rawStringOrNull(record.created_at) } : {}),
+    ...(record.lang != null ? { lang: rawStringOrNull(record.lang) } : {}),
     ...(record.public_metrics != null ? { publicMetrics: asObject(record.public_metrics) } : {}),
     raw: record,
   };
@@ -1443,10 +1443,10 @@ function normalizeTwitterPaginationMeta(value: unknown) {
   const record = asObject(value);
   return {
     resultCount: Number(record.result_count ?? 0),
-    ...(record.next_token != null ? { nextToken: nullableText(record.next_token) } : {}),
-    ...(record.previous_token != null ? { previousToken: nullableText(record.previous_token) } : {}),
-    ...(record.newest_id != null ? { newestId: nullableText(record.newest_id) } : {}),
-    ...(record.oldest_id != null ? { oldestId: nullableText(record.oldest_id) } : {}),
+    ...(record.next_token != null ? { nextToken: rawStringOrNull(record.next_token) } : {}),
+    ...(record.previous_token != null ? { previousToken: rawStringOrNull(record.previous_token) } : {}),
+    ...(record.newest_id != null ? { newestId: rawStringOrNull(record.newest_id) } : {}),
+    ...(record.oldest_id != null ? { oldestId: rawStringOrNull(record.oldest_id) } : {}),
     raw: record,
   };
 }
@@ -1466,12 +1466,12 @@ function normalizeTwitterList(value: unknown) {
   return {
     id: String(record.id ?? ""),
     name: String(record.name ?? ""),
-    ...(record.description != null ? { description: nullableText(record.description) } : {}),
+    ...(record.description != null ? { description: rawStringOrNull(record.description) } : {}),
     ...(typeof record.private === "boolean" ? { private: record.private } : {}),
     ...(record.follower_count != null ? { followerCount: Number(record.follower_count) } : {}),
     ...(record.member_count != null ? { memberCount: Number(record.member_count) } : {}),
-    ...(record.owner_id != null ? { ownerId: nullableText(record.owner_id) } : {}),
-    ...(record.created_at != null ? { createdAt: nullableText(record.created_at) } : {}),
+    ...(record.owner_id != null ? { ownerId: rawStringOrNull(record.owner_id) } : {}),
+    ...(record.created_at != null ? { createdAt: rawStringOrNull(record.created_at) } : {}),
     raw: record,
   };
 }
@@ -1480,16 +1480,16 @@ function normalizeTwitterSpace(value: unknown) {
   const record = asObject(value);
   return {
     id: String(record.id ?? ""),
-    ...(record.title != null ? { title: nullableText(record.title) } : {}),
-    ...(record.state != null ? { state: nullableText(record.state) } : {}),
-    ...(record.creator_id != null ? { creatorId: nullableText(record.creator_id) } : {}),
+    ...(record.title != null ? { title: rawStringOrNull(record.title) } : {}),
+    ...(record.state != null ? { state: rawStringOrNull(record.state) } : {}),
+    ...(record.creator_id != null ? { creatorId: rawStringOrNull(record.creator_id) } : {}),
     ...(Array.isArray(record.host_ids) ? { hostIds: record.host_ids.map(String) } : {}),
     ...(Array.isArray(record.speaker_ids) ? { speakerIds: record.speaker_ids.map(String) } : {}),
     ...(record.participant_count != null ? { participantCount: Number(record.participant_count) } : {}),
     ...(record.subscriber_count != null ? { subscriberCount: Number(record.subscriber_count) } : {}),
-    ...(record.scheduled_start != null ? { scheduledStart: nullableText(record.scheduled_start) } : {}),
-    ...(record.started_at != null ? { startedAt: nullableText(record.started_at) } : {}),
-    ...(record.ended_at != null ? { endedAt: nullableText(record.ended_at) } : {}),
+    ...(record.scheduled_start != null ? { scheduledStart: rawStringOrNull(record.scheduled_start) } : {}),
+    ...(record.started_at != null ? { startedAt: rawStringOrNull(record.started_at) } : {}),
+    ...(record.ended_at != null ? { endedAt: rawStringOrNull(record.ended_at) } : {}),
     ...(typeof record.is_ticketed === "boolean" ? { isTicketed: record.is_ticketed } : {}),
     ...(Array.isArray(record.topic_ids) ? { topicIds: record.topic_ids.map(String) } : {}),
     raw: record,
@@ -1501,17 +1501,17 @@ function normalizeTwitterDmEvent(value: unknown) {
   return {
     id: String(record.id ?? ""),
     ...(record.event_type != null
-      ? { eventType: nullableText(record.event_type) }
+      ? { eventType: rawStringOrNull(record.event_type) }
       : record.type != null
-        ? { eventType: nullableText(record.type) }
+        ? { eventType: rawStringOrNull(record.type) }
         : {}),
-    ...(record.dm_conversation_id != null ? { dmConversationId: nullableText(record.dm_conversation_id) } : {}),
-    ...(record.sender_id != null ? { senderId: nullableText(record.sender_id) } : {}),
-    ...(record.text != null ? { text: nullableText(record.text) } : {}),
+    ...(record.dm_conversation_id != null ? { dmConversationId: rawStringOrNull(record.dm_conversation_id) } : {}),
+    ...(record.sender_id != null ? { senderId: rawStringOrNull(record.sender_id) } : {}),
+    ...(record.text != null ? { text: rawStringOrNull(record.text) } : {}),
     ...(record.created_at != null
-      ? { createdAt: nullableText(record.created_at) }
+      ? { createdAt: rawStringOrNull(record.created_at) }
       : record.created_timestamp != null
-        ? { createdAt: nullableText(record.created_timestamp) }
+        ? { createdAt: rawStringOrNull(record.created_timestamp) }
         : {}),
     ...(Array.isArray(record.participant_ids) ? { participantIds: record.participant_ids.map(String) } : {}),
     ...(record.attachments != null ? { attachments: asObject(record.attachments) } : {}),
@@ -1526,13 +1526,13 @@ function normalizeTwitterComplianceJob(value: unknown) {
     id: String(record.id ?? ""),
     type: String(record.type ?? ""),
     status: String(record.status ?? ""),
-    ...(record.name != null ? { name: nullableText(record.name) } : {}),
+    ...(record.name != null ? { name: rawStringOrNull(record.name) } : {}),
     ...(typeof record.resumable === "boolean" ? { resumable: record.resumable } : {}),
-    ...(record.created_at != null ? { createdAt: nullableText(record.created_at) } : {}),
-    ...(record.upload_url != null ? { uploadUrl: nullableText(record.upload_url) } : {}),
-    ...(record.download_url != null ? { downloadUrl: nullableText(record.download_url) } : {}),
-    ...(record.upload_expires_at != null ? { uploadExpiresAt: nullableText(record.upload_expires_at) } : {}),
-    ...(record.download_expires_at != null ? { downloadExpiresAt: nullableText(record.download_expires_at) } : {}),
+    ...(record.created_at != null ? { createdAt: rawStringOrNull(record.created_at) } : {}),
+    ...(record.upload_url != null ? { uploadUrl: rawStringOrNull(record.upload_url) } : {}),
+    ...(record.download_url != null ? { downloadUrl: rawStringOrNull(record.download_url) } : {}),
+    ...(record.upload_expires_at != null ? { uploadExpiresAt: rawStringOrNull(record.upload_expires_at) } : {}),
+    ...(record.download_expires_at != null ? { downloadExpiresAt: rawStringOrNull(record.download_expires_at) } : {}),
     raw: record,
   };
 }
@@ -1733,10 +1733,6 @@ function normalizeOptionalString(value: unknown) {
 
 function asObject(value: unknown) {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-}
-
-function nullableText(value: unknown) {
-  return typeof value === "string" ? value : null;
 }
 
 function decodeBase64(value: string) {

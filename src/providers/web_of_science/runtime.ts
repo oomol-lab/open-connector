@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  rawStringOrNull,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -248,7 +255,7 @@ function normalizeDocument(value: unknown) {
 
   return {
     uid,
-    title: readNullableString(document.title),
+    title: rawStringOrNull(document.title),
     types: readStringArray(document.types),
     sourceTypes: readStringArray(document.sourceTypes),
     source: optionalRecord(document.source) ?? null,
@@ -264,12 +271,12 @@ function normalizeDocument(value: unknown) {
 function normalizeJournal(value: unknown) {
   const journal = requireResponseRecord(value, "Web of Science returned an invalid journal");
   return {
-    id: readNullableString(journal.id),
-    name: readNullableString(journal.name),
-    jcrTitle: readNullableString(journal.jcrTitle),
-    isoTitle: readNullableString(journal.isoTitle),
-    issn: readNullableString(journal.issn),
-    eIssn: readNullableString(journal.eIssn),
+    id: rawStringOrNull(journal.id),
+    name: rawStringOrNull(journal.name),
+    jcrTitle: rawStringOrNull(journal.jcrTitle),
+    isoTitle: rawStringOrNull(journal.isoTitle),
+    issn: rawStringOrNull(journal.issn),
+    eIssn: rawStringOrNull(journal.eIssn),
     previousIssn: readStringArray(journal.previousIssn),
     links: readRecordArray(journal.links),
     raw: journal,
@@ -305,10 +312,6 @@ function readOptionalIntegerString(value: unknown): string | undefined {
 
 function readNullableInteger(value: unknown): number | null {
   return optionalInteger(value) ?? null;
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function mapDetail(value: unknown): string | undefined {

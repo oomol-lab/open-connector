@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalInteger, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   ProviderRequestError,
@@ -265,7 +265,7 @@ function normalizeMeta(value: unknown): Record<string, unknown> {
     dbResponseTimeMs: readNullableInteger(meta.db_response_time_ms),
     page: readNullableInteger(meta.page),
     perPage: readNullableInteger(meta.per_page),
-    nextCursor: readNullableString(meta.next_cursor),
+    nextCursor: rawStringOrNull(meta.next_cursor),
     groupsCount: readNullableInteger(meta.groups_count),
     raw: meta,
   };
@@ -273,25 +273,25 @@ function normalizeMeta(value: unknown): Record<string, unknown> {
 
 function normalizeEntitySummary(raw: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: readNullableString(raw.id),
+    id: rawStringOrNull(raw.id),
     openalexId: extractOpenAlexShortId(raw.id),
-    displayName: readNullableString(raw.display_name) ?? readNullableString(raw.title),
+    displayName: rawStringOrNull(raw.display_name) ?? rawStringOrNull(raw.title),
     worksCount: readNullableInteger(raw.works_count),
     citedByCount: readNullableInteger(raw.cited_by_count),
-    homepageUrl: readNullableString(raw.homepage_url),
+    homepageUrl: rawStringOrNull(raw.homepage_url),
     raw,
   };
 }
 
 function normalizeWorkSummary(raw: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: readNullableString(raw.id),
+    id: rawStringOrNull(raw.id),
     openalexId: extractOpenAlexShortId(raw.id),
-    doi: readNullableString(raw.doi),
-    title: readNullableString(raw.title) ?? readNullableString(raw.display_name),
+    doi: rawStringOrNull(raw.doi),
+    title: rawStringOrNull(raw.title) ?? rawStringOrNull(raw.display_name),
     publicationYear: readNullableInteger(raw.publication_year),
-    publicationDate: readNullableString(raw.publication_date),
-    type: readNullableString(raw.type),
+    publicationDate: rawStringOrNull(raw.publication_date),
+    type: rawStringOrNull(raw.type),
     citedByCount: readNullableInteger(raw.cited_by_count),
     openAccessUrl: readNestedNullableString(raw.open_access, "oa_url"),
     primaryLocationUrl: readNestedNullableString(raw.primary_location, "landing_page_url"),
@@ -301,8 +301,8 @@ function normalizeWorkSummary(raw: Record<string, unknown>): Record<string, unkn
 
 function normalizeGroup(raw: Record<string, unknown>): Record<string, unknown> {
   return {
-    key: readNullableString(raw.key),
-    keyDisplayName: readNullableString(raw.key_display_name),
+    key: rawStringOrNull(raw.key),
+    keyDisplayName: rawStringOrNull(raw.key_display_name),
     count: readNullableInteger(raw.count),
     raw,
   };
@@ -310,14 +310,14 @@ function normalizeGroup(raw: Record<string, unknown>): Record<string, unknown> {
 
 function normalizeAutocompleteItem(raw: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: readNullableString(raw.id),
+    id: rawStringOrNull(raw.id),
     openalexId: extractOpenAlexShortId(raw.id),
-    displayName: readNullableString(raw.display_name),
-    hint: readNullableString(raw.hint),
-    entityType: readNullableString(raw.entity_type),
+    displayName: rawStringOrNull(raw.display_name),
+    hint: rawStringOrNull(raw.hint),
+    entityType: rawStringOrNull(raw.entity_type),
     citedByCount: readNullableInteger(raw.cited_by_count),
     worksCount: readNullableInteger(raw.works_count),
-    externalId: readNullableString(raw.external_id),
+    externalId: rawStringOrNull(raw.external_id),
     raw,
   };
 }
@@ -357,10 +357,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
   return parsed;
 }
 
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
-
 function readOptionalIntegerString(value: unknown): string | undefined {
   const parsed = optionalInteger(value);
   return parsed === undefined ? undefined : String(parsed);
@@ -385,7 +381,7 @@ function readStringArrayParam(value: unknown): string | undefined {
 
 function readNestedNullableString(value: unknown, key: string): string | null {
   const record = optionalRecord(value);
-  return record ? readNullableString(record[key]) : null;
+  return record ? rawStringOrNull(record[key]) : null;
 }
 
 function normalizeOpenAlexId(value: string): string {
@@ -409,7 +405,7 @@ function trimUrlSuffix(value: string): string {
 }
 
 function extractOpenAlexShortId(value: unknown): string | null {
-  const id = readNullableString(value);
+  const id = rawStringOrNull(value);
   if (!id) {
     return null;
   }

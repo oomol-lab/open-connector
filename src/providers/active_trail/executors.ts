@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBooleanOrNull, optionalRecord } from "../../core/cast.ts";
+import { compactObject, optionalBooleanOrNull, optionalRecord, rawStringOrNull } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -381,8 +381,8 @@ function normalizeGroup(value: unknown): Record<string, unknown> {
     name: readRequiredString(record.name, "name"),
     active_counter: readNullableInteger(record.active_counter),
     counter: readNullableInteger(record.counter),
-    created: readNullableString(record.created),
-    last_generated: readNullableString(record.last_generated),
+    created: rawStringOrNull(record.created),
+    last_generated: rawStringOrNull(record.last_generated),
     data: record,
   };
 }
@@ -391,12 +391,12 @@ function normalizeContact(value: unknown): Record<string, unknown> {
   const record = requireObjectRecord(value, "ActiveTrail contact");
   return {
     id: readRequiredInteger(record.id, "id"),
-    state: readNullableString(record.state),
+    state: rawStringOrNull(record.state),
     is_optined: optionalBooleanOrNull(record.is_optined),
-    email: readNullableString(record.email),
-    sms: readNullableString(record.sms),
-    first_name: readNullableString(record.first_name),
-    last_name: readNullableString(record.last_name),
+    email: rawStringOrNull(record.email),
+    sms: rawStringOrNull(record.sms),
+    first_name: rawStringOrNull(record.first_name),
+    last_name: rawStringOrNull(record.last_name),
     data: record,
   };
 }
@@ -431,10 +431,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readRequiredInteger(value: unknown, fieldName: string): number {

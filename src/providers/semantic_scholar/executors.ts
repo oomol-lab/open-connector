@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, looseArray, optionalRawString, optionalRecord } from "../../core/cast.ts";
+import { compactObject, looseArray, optionalRawString, optionalRecord, rawStringOrNull } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
@@ -499,7 +499,7 @@ function normalizePaperList(payload: unknown) {
     total: readNullableInteger(payloadRecord?.total),
     offset: readNullableInteger(payloadRecord?.offset),
     next: readNullableInteger(payloadRecord?.next),
-    token: readNullableString(payloadRecord?.token),
+    token: rawStringOrNull(payloadRecord?.token),
     papers: looseArray(payloadRecord?.data ?? payloadRecord?.recommendedPapers),
     raw: normalizeRawObject(payload),
   };
@@ -533,10 +533,6 @@ function normalizeRawObject(value: unknown) {
 
 function readNullableInteger(value: unknown) {
   return Number.isInteger(value) ? (value as number) : null;
-}
-
-function readNullableString(value: unknown) {
-  return typeof value === "string" ? value : null;
 }
 
 function readRequiredString(value: unknown, fieldName: string) {

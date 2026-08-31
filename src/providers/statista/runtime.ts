@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
+import { looseArray, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -189,9 +189,9 @@ function normalizeStatisticSearchItem(value: unknown, fieldName: string): Record
     title: readRequiredString(record.title, `${fieldName}.title`),
     subject: readRequiredString(record.subject, `${fieldName}.subject`),
     isPremium: readRequiredBoolean(record.is_premium, `${fieldName}.is_premium`),
-    description: readNullableString(record.description),
+    description: rawStringOrNull(record.description),
     link: readRequiredString(record.link, `${fieldName}.link`),
-    date: readNullableString(record.date),
+    date: rawStringOrNull(record.date),
     platform: readRequiredString(record.platform, `${fieldName}.platform`),
     teaserImageUrls: looseArray(record.teaser_image_urls).map((image, index) =>
       normalizeTeaserImage(image, `${fieldName}.teaser_image_urls[${index}]`),
@@ -207,9 +207,9 @@ function normalizeStatisticData(payload: Record<string, unknown>): Record<string
     title: readRequiredString(payload.title, "title"),
     subject: readRequiredString(payload.subject, "subject"),
     isPremium: readRequiredBoolean(payload.is_premium, "is_premium"),
-    description: readNullableString(payload.description),
+    description: rawStringOrNull(payload.description),
     link: readRequiredString(payload.link, "link"),
-    date: readNullableString(payload.date),
+    date: rawStringOrNull(payload.date),
     platform: readRequiredString(payload.platform, "platform"),
     teaserImageUrls: looseArray(payload.teaser_image_urls).map((image, index) =>
       normalizeTeaserImage(image, `teaser_image_urls[${index}]`),
@@ -233,14 +233,14 @@ function normalizeMarketInsightItem(value: unknown, fieldName: string): Record<s
     identifier: readRequiredString(record.identifier, `${fieldName}.identifier`),
     title: readRequiredString(record.title, `${fieldName}.title`),
     subject: readRequiredString(record.subject, `${fieldName}.subject`),
-    description: readNullableString(record.description),
+    description: rawStringOrNull(record.description),
     link: readRequiredString(record.link, `${fieldName}.link`),
-    updatedAt: readNullableString(record.updated_at),
+    updatedAt: rawStringOrNull(record.updated_at),
     industries: readObjectArray(record.industries),
     coveredTimeframe: optionalRecord(record.covered_timeframe) ?? null,
     coveredGeos: optionalRecord(record.covered_geos) ?? null,
-    marketType: readNullableString(record.market_type),
-    marketTypeDescription: readNullableString(record.market_type_description),
+    marketType: rawStringOrNull(record.market_type),
+    marketTypeDescription: rawStringOrNull(record.market_type_description),
     raw: record,
   };
 }
@@ -369,10 +369,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(502, `Statista returned invalid ${fieldName}`, value);
   }
   return text;
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readRequiredInteger(value: unknown, fieldName: string): number {

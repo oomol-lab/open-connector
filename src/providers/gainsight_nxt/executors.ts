@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalInteger, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
@@ -257,7 +257,7 @@ function normalizeCompanyMutationResponse(payload: Record<string, unknown>) {
   const data = optionalRecord(payload.data);
   return {
     result: payload.result === true,
-    requestId: readNullableString(payload.requestId),
+    requestId: rawStringOrNull(payload.requestId),
     data: {
       count: readNullableInteger(data?.count),
       records: readRecordArray(data?.records),
@@ -270,7 +270,7 @@ function normalizeCompanyMutationResponse(payload: Record<string, unknown>) {
 function normalizeCompanyQueryResponse(payload: Record<string, unknown>) {
   return {
     result: payload.result === true,
-    requestId: readNullableString(payload.requestId),
+    requestId: rawStringOrNull(payload.requestId),
     records: readRecordArray(payload.data),
     rawResponse: payload,
   };
@@ -279,8 +279,8 @@ function normalizeCompanyQueryResponse(payload: Record<string, unknown>) {
 function normalizeCompanyDeleteResponse(payload: Record<string, unknown>) {
   return {
     result: payload.result === true,
-    requestId: readNullableString(payload.requestId),
-    data: readNullableString(payload.data),
+    requestId: rawStringOrNull(payload.requestId),
+    data: rawStringOrNull(payload.data),
     rawResponse: payload,
   };
 }
@@ -340,10 +340,6 @@ function requireNonEmptyString(value: unknown, fieldName: string) {
 
 function readOptionalTrimmedString(value: unknown) {
   return optionalString(value)?.trim() || undefined;
-}
-
-function readNullableString(value: unknown) {
-  return typeof value === "string" ? value : null;
 }
 
 function readNullableInteger(value: unknown) {

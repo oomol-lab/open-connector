@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalInteger, optionalNumber, optionalRecord } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalNumber,
+  optionalRecord,
+  rawStringOrNull,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -25,8 +32,8 @@ export const taveActionHandlers: ProviderActionHandlers<"tave", TaveActionHandle
         page: readOptionalIntegerString(input.page, "page"),
         pageSize: readOptionalIntegerString(input.pageSize, "pageSize"),
         includeHidden: typeof input.includeHidden === "boolean" ? String(input.includeHidden) : undefined,
-        email: readOptionalString(input.email) ?? undefined,
-        sortBy: readOptionalString(input.sortBy) ?? undefined,
+        email: rawStringOrNull(input.email) ?? undefined,
+        sortBy: rawStringOrNull(input.sortBy) ?? undefined,
       }),
       phase: "execute",
     });
@@ -65,9 +72,9 @@ export async function validateTaveCredential(
     params: {},
     phase: "validate",
   });
-  const studioId = readOptionalString(payload.id) ?? undefined;
-  const name = readOptionalString(payload.name);
-  const email = readOptionalString(payload.email);
+  const studioId = rawStringOrNull(payload.id) ?? undefined;
+  const name = rawStringOrNull(payload.name);
+  const email = rawStringOrNull(payload.email);
   return {
     profile: {
       accountId: studioId ?? email ?? "tave-api-key",
@@ -150,10 +157,7 @@ function extractTaveErrorMessage(payload: unknown): string | undefined {
   if (typeof payload === "string" && payload.trim()) return payload.trim();
   const record = optionalRecord(payload);
   return (
-    readOptionalString(record?.detail) ??
-    readOptionalString(record?.title) ??
-    readOptionalString(record?.message) ??
-    undefined
+    rawStringOrNull(record?.detail) ?? rawStringOrNull(record?.title) ?? rawStringOrNull(record?.message) ?? undefined
   );
 }
 
@@ -174,24 +178,24 @@ function normalizeContactList(value: unknown): unknown[] {
 function normalizeContact(value: unknown): Record<string, unknown> {
   const record = requireRecord(value, "contact");
   return {
-    id: readOptionalString(record.id),
+    id: rawStringOrNull(record.id),
     kind: readContactKind(record.kind),
-    name: readOptionalString(record.name),
-    firstName: readOptionalString(record.firstName),
-    lastName: readOptionalString(record.lastName),
-    companyName: readOptionalString(record.companyName),
-    displayAs: readOptionalString(record.displayAs),
-    email: readOptionalString(record.email),
-    secondaryEmail: readOptionalString(record.secondaryEmail),
-    phone: readOptionalString(record.phone),
-    cellPhone: readOptionalString(record.cellPhone),
-    homePhone: readOptionalString(record.homePhone),
-    workPhone: readOptionalString(record.workPhone),
-    created: readOptionalString(record.created),
-    modified: readOptionalString(record.modified),
+    name: rawStringOrNull(record.name),
+    firstName: rawStringOrNull(record.firstName),
+    lastName: rawStringOrNull(record.lastName),
+    companyName: rawStringOrNull(record.companyName),
+    displayAs: rawStringOrNull(record.displayAs),
+    email: rawStringOrNull(record.email),
+    secondaryEmail: rawStringOrNull(record.secondaryEmail),
+    phone: rawStringOrNull(record.phone),
+    cellPhone: rawStringOrNull(record.cellPhone),
+    homePhone: rawStringOrNull(record.homePhone),
+    workPhone: rawStringOrNull(record.workPhone),
+    created: rawStringOrNull(record.created),
+    modified: rawStringOrNull(record.modified),
     hidden: optionalBoolean(record.hidden) ?? null,
     pinned: optionalBoolean(record.pinned) ?? null,
-    url: readOptionalString(record.url),
+    url: rawStringOrNull(record.url),
     address: normalizeAddress(record.address),
     mailingAddress: normalizeAddress(record.mailingAddress),
     links: normalizeLinks(record.links),
@@ -202,22 +206,22 @@ function normalizeContact(value: unknown): Record<string, unknown> {
 function normalizeStudio(value: unknown): Record<string, unknown> {
   const record = requireRecord(value, "studio");
   return {
-    id: readOptionalString(record.id),
-    name: readOptionalString(record.name),
-    email: readOptionalString(record.email),
-    currencyCode: readOptionalString(record.currencyCode),
-    dateFormat: readOptionalString(record.dateFormat),
-    decimalSeparator: readOptionalString(record.decimalSeparator),
-    defaultBrandId: readOptionalString(record.defaultBrandId),
-    temperature: readOptionalString(record.temperature),
-    thousandsSeparator: readOptionalString(record.thousandsSeparator),
-    timeFormat: readOptionalString(record.timeFormat),
-    timezoneId: readOptionalString(record.timezoneId),
-    weekStartsOn: readOptionalString(record.weekStartsOn),
+    id: rawStringOrNull(record.id),
+    name: rawStringOrNull(record.name),
+    email: rawStringOrNull(record.email),
+    currencyCode: rawStringOrNull(record.currencyCode),
+    dateFormat: rawStringOrNull(record.dateFormat),
+    decimalSeparator: rawStringOrNull(record.decimalSeparator),
+    defaultBrandId: rawStringOrNull(record.defaultBrandId),
+    temperature: rawStringOrNull(record.temperature),
+    thousandsSeparator: rawStringOrNull(record.thousandsSeparator),
+    timeFormat: rawStringOrNull(record.timeFormat),
+    timezoneId: rawStringOrNull(record.timezoneId),
+    weekStartsOn: rawStringOrNull(record.weekStartsOn),
     readonlyEnabled: optionalBoolean(record.readonlyEnabled) ?? null,
-    readonlyEnabledAt: readOptionalString(record.readonlyEnabledAt),
-    created: readOptionalString(record.created),
-    modified: readOptionalString(record.modified),
+    readonlyEnabledAt: rawStringOrNull(record.readonlyEnabledAt),
+    created: rawStringOrNull(record.created),
+    modified: rawStringOrNull(record.modified),
     hidden: optionalBoolean(record.hidden) ?? null,
     links: normalizeLinks(record.links),
     raw: record,
@@ -228,15 +232,15 @@ function normalizeAddress(value: unknown): Record<string, unknown> | null {
   const record = optionalRecord(value);
   if (!record) return null;
   return {
-    streetAddress: readOptionalString(record.streetAddress),
-    village: readOptionalString(record.village),
-    city: readOptionalString(record.city),
-    state: readOptionalString(record.state),
-    postalCode: readOptionalString(record.postalCode),
-    country: readOptionalString(record.country),
+    streetAddress: rawStringOrNull(record.streetAddress),
+    village: rawStringOrNull(record.village),
+    city: rawStringOrNull(record.city),
+    state: rawStringOrNull(record.state),
+    postalCode: rawStringOrNull(record.postalCode),
+    country: rawStringOrNull(record.country),
     latitude: optionalNumber(record.latitude) ?? null,
     longitude: optionalNumber(record.longitude) ?? null,
-    timezone: readOptionalString(record.timezone),
+    timezone: rawStringOrNull(record.timezone),
   };
 }
 
@@ -244,9 +248,9 @@ function normalizeLinks(value: unknown): Record<string, string | null> {
   const record = optionalRecord(value);
   const selfRecord = optionalRecord(record?.self);
   return {
-    selfHref: readOptionalString(selfRecord?.href),
-    managerHref: readOptionalString(record?.managerHref),
-    clientHref: readOptionalString(record?.clientHref),
+    selfHref: rawStringOrNull(selfRecord?.href),
+    managerHref: rawStringOrNull(record?.managerHref),
+    clientHref: rawStringOrNull(record?.clientHref),
   };
 }
 
@@ -255,13 +259,9 @@ function readContactKind(value: unknown): TaveContactKind | null {
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {
-  const stringValue = readOptionalString(value);
+  const stringValue = rawStringOrNull(value);
   if (!stringValue) throw new ProviderRequestError(400, `${fieldName} is required`);
   return stringValue;
-}
-
-function readOptionalString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readOptionalIntegerString(value: unknown, fieldName: string): string | undefined {

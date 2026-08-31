@@ -11,6 +11,7 @@ import {
   optionalRawString,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredRecord,
   requiredString,
   requiredStringArray,
@@ -525,11 +526,11 @@ function normalizeProject(project: Record<string, unknown>, endpoint: string): R
     status: responseString(project.status),
     createTime: responseString(project.createTime),
     lastModifyTime: responseString(project.lastModifyTime),
-    resourceGroupId: responseNullableString(project.resourceGroupId),
-    dataRedundancyType: responseNullableString(project.dataRedundancyType),
+    resourceGroupId: rawStringOrNull(project.resourceGroupId),
+    dataRedundancyType: rawStringOrNull(project.dataRedundancyType),
     recycleBinEnabled: optionalBoolean(project.recycleBinEnabled) ?? null,
-    internetEndpoint: responseNullableString(project.internetEndpoint),
-    internalEndpoint: responseNullableString(project.internalEndpoint),
+    internetEndpoint: rawStringOrNull(project.internetEndpoint),
+    internalEndpoint: rawStringOrNull(project.internalEndpoint),
   };
 }
 
@@ -637,10 +638,6 @@ function readOptionalResponseBoolean(value: unknown): boolean | null {
 
 function responseString(value: unknown): string {
   return typeof value === "string" ? value : "";
-}
-
-function responseNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function requiredResponseHeader(headers: Headers, name: string, fieldName: string): string {

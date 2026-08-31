@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  rawStringOrNull,
+  requiredRecord,
+} from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   ProviderRequestError,
@@ -106,8 +113,8 @@ export const credentialValidators: CredentialValidators = {
         apiBaseUrl: aviationstackApiBaseUrl,
         airportCount: pagination.total,
         validationLimit: pagination.limit,
-        firstAirportName: nullableString(firstAirport?.airport_name) ?? undefined,
-        firstAirportIata: nullableString(firstAirport?.iata_code) ?? undefined,
+        firstAirportName: rawStringOrNull(firstAirport?.airport_name) ?? undefined,
+        firstAirportIata: rawStringOrNull(firstAirport?.iata_code) ?? undefined,
       }),
     };
   },
@@ -322,8 +329,8 @@ function normalizeFlight(input: Record<string, unknown>): Record<string, unknown
   const live = optionalRecord(input.live);
 
   return {
-    flightDate: nullableString(input.flight_date),
-    flightStatus: nullableString(input.flight_status),
+    flightDate: rawStringOrNull(input.flight_date),
+    flightStatus: rawStringOrNull(input.flight_status),
     departure: normalizeAirportEndpoint(departure),
     arrival: normalizeAirportEndpoint(arrival),
     airline: normalizeAirlineSummary(airline),
@@ -336,35 +343,35 @@ function normalizeFlight(input: Record<string, unknown>): Record<string, unknown
 
 function normalizeAirportEndpoint(input: Record<string, unknown> | undefined): Record<string, unknown> {
   return {
-    airport: nullableString(input?.airport),
-    timezone: nullableString(input?.timezone),
-    iata: nullableString(input?.iata),
-    icao: nullableString(input?.icao),
-    terminal: nullableString(input?.terminal),
-    gate: nullableString(input?.gate),
-    baggage: nullableString(input?.baggage),
+    airport: rawStringOrNull(input?.airport),
+    timezone: rawStringOrNull(input?.timezone),
+    iata: rawStringOrNull(input?.iata),
+    icao: rawStringOrNull(input?.icao),
+    terminal: rawStringOrNull(input?.terminal),
+    gate: rawStringOrNull(input?.gate),
+    baggage: rawStringOrNull(input?.baggage),
     delay: readNullableInteger(input?.delay),
-    scheduled: nullableString(input?.scheduled),
-    estimated: nullableString(input?.estimated),
-    actual: nullableString(input?.actual),
-    estimatedRunway: nullableString(input?.estimated_runway),
-    actualRunway: nullableString(input?.actual_runway),
+    scheduled: rawStringOrNull(input?.scheduled),
+    estimated: rawStringOrNull(input?.estimated),
+    actual: rawStringOrNull(input?.actual),
+    estimatedRunway: rawStringOrNull(input?.estimated_runway),
+    actualRunway: rawStringOrNull(input?.actual_runway),
   };
 }
 
 function normalizeAirlineSummary(input: Record<string, unknown> | undefined): Record<string, unknown> {
   return {
-    name: nullableString(input?.name),
-    iata: nullableString(input?.iata),
-    icao: nullableString(input?.icao),
+    name: rawStringOrNull(input?.name),
+    iata: rawStringOrNull(input?.iata),
+    icao: rawStringOrNull(input?.icao),
   };
 }
 
 function normalizeFlightNumber(input: Record<string, unknown> | undefined): Record<string, unknown> {
   return {
-    number: nullableString(input?.number),
-    iata: nullableString(input?.iata),
-    icao: nullableString(input?.icao),
+    number: rawStringOrNull(input?.number),
+    iata: rawStringOrNull(input?.iata),
+    icao: rawStringOrNull(input?.icao),
     codeshared: optionalRecord(input?.codeshared) ?? null,
   };
 }
@@ -380,7 +387,7 @@ function normalizeAircraftSummary(input: Record<string, unknown>): Record<string
 
 function normalizeLivePosition(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    updated: nullableString(input.updated),
+    updated: rawStringOrNull(input.updated),
     latitude: nullableNumber(input.latitude),
     longitude: nullableNumber(input.longitude),
     altitude: nullableNumber(input.altitude),
@@ -393,113 +400,113 @@ function normalizeLivePosition(input: Record<string, unknown>): Record<string, u
 
 function normalizeRoute(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    departureAirport: nullableString(input.departure_airport),
-    departureIata: nullableString(input.departure_iata),
-    departureIcao: nullableString(input.departure_icao),
-    arrivalAirport: nullableString(input.arrival_airport),
-    arrivalIata: nullableString(input.arrival_iata),
-    arrivalIcao: nullableString(input.arrival_icao),
-    airlineName: nullableString(input.airline_name),
-    airlineIata: nullableString(input.airline_iata),
-    airlineIcao: nullableString(input.airline_icao),
-    flightNumber: nullableString(input.flight_number),
+    departureAirport: rawStringOrNull(input.departure_airport),
+    departureIata: rawStringOrNull(input.departure_iata),
+    departureIcao: rawStringOrNull(input.departure_icao),
+    arrivalAirport: rawStringOrNull(input.arrival_airport),
+    arrivalIata: rawStringOrNull(input.arrival_iata),
+    arrivalIcao: rawStringOrNull(input.arrival_icao),
+    airlineName: rawStringOrNull(input.airline_name),
+    airlineIata: rawStringOrNull(input.airline_iata),
+    airlineIcao: rawStringOrNull(input.airline_icao),
+    flightNumber: rawStringOrNull(input.flight_number),
     raw: input,
   };
 }
 
 function normalizeAirport(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    name: nullableString(input.airport_name),
-    iataCode: nullableString(input.iata_code),
-    icaoCode: nullableString(input.icao_code),
+    id: rawStringOrNull(input.id),
+    name: rawStringOrNull(input.airport_name),
+    iataCode: rawStringOrNull(input.iata_code),
+    icaoCode: rawStringOrNull(input.icao_code),
     latitude: nullableNumber(input.latitude),
     longitude: nullableNumber(input.longitude),
-    timezone: nullableString(input.timezone),
-    gmt: nullableString(input.gmt),
-    countryName: nullableString(input.country_name),
-    countryIso2: nullableString(input.country_iso2),
-    cityIataCode: nullableString(input.city_iata_code),
+    timezone: rawStringOrNull(input.timezone),
+    gmt: rawStringOrNull(input.gmt),
+    countryName: rawStringOrNull(input.country_name),
+    countryIso2: rawStringOrNull(input.country_iso2),
+    cityIataCode: rawStringOrNull(input.city_iata_code),
     raw: input,
   };
 }
 
 function normalizeAirline(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    name: nullableString(input.airline_name),
-    iataCode: nullableString(input.iata_code),
-    icaoCode: nullableString(input.icao_code),
-    callsign: nullableString(input.callsign),
-    countryName: nullableString(input.country_name),
-    status: nullableString(input.status),
+    id: rawStringOrNull(input.id),
+    name: rawStringOrNull(input.airline_name),
+    iataCode: rawStringOrNull(input.iata_code),
+    icaoCode: rawStringOrNull(input.icao_code),
+    callsign: rawStringOrNull(input.callsign),
+    countryName: rawStringOrNull(input.country_name),
+    status: rawStringOrNull(input.status),
     raw: input,
   };
 }
 
 function normalizeAirplane(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    registrationNumber: nullableString(input.registration_number),
-    productionLine: nullableString(input.production_line),
-    modelName: nullableString(input.model_name),
-    modelCode: nullableString(input.model_code),
-    planeStatus: nullableString(input.plane_status),
-    airlineIataCode: nullableString(input.airline_iata_code),
-    airlineIcaoCode: nullableString(input.airline_icao_code),
-    iataType: nullableString(input.iata_type),
+    id: rawStringOrNull(input.id),
+    registrationNumber: rawStringOrNull(input.registration_number),
+    productionLine: rawStringOrNull(input.production_line),
+    modelName: rawStringOrNull(input.model_name),
+    modelCode: rawStringOrNull(input.model_code),
+    planeStatus: rawStringOrNull(input.plane_status),
+    airlineIataCode: rawStringOrNull(input.airline_iata_code),
+    airlineIcaoCode: rawStringOrNull(input.airline_icao_code),
+    iataType: rawStringOrNull(input.iata_type),
     raw: input,
   };
 }
 
 function normalizeAircraftType(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    iataCode: nullableString(input.iata_code),
-    aircraftName: nullableString(input.aircraft_name),
-    planeTypeId: nullableString(input.plane_type_id),
+    id: rawStringOrNull(input.id),
+    iataCode: rawStringOrNull(input.iata_code),
+    aircraftName: rawStringOrNull(input.aircraft_name),
+    planeTypeId: rawStringOrNull(input.plane_type_id),
     raw: input,
   };
 }
 
 function normalizeTax(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    taxId: nullableString(input.tax_id),
-    taxName: nullableString(input.tax_name),
-    iataCode: nullableString(input.iata_code),
+    id: rawStringOrNull(input.id),
+    taxId: rawStringOrNull(input.tax_id),
+    taxName: rawStringOrNull(input.tax_name),
+    iataCode: rawStringOrNull(input.iata_code),
     raw: input,
   };
 }
 
 function normalizeCity(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    cityId: nullableString(input.city_id),
-    name: nullableString(input.city_name),
-    iataCode: nullableString(input.iata_code),
-    countryIso2: nullableString(input.country_iso2),
+    id: rawStringOrNull(input.id),
+    cityId: rawStringOrNull(input.city_id),
+    name: rawStringOrNull(input.city_name),
+    iataCode: rawStringOrNull(input.iata_code),
+    countryIso2: rawStringOrNull(input.country_iso2),
     latitude: nullableNumber(input.latitude),
     longitude: nullableNumber(input.longitude),
-    timezone: nullableString(input.timezone),
-    gmt: nullableString(input.gmt),
+    timezone: rawStringOrNull(input.timezone),
+    gmt: rawStringOrNull(input.gmt),
     raw: input,
   };
 }
 
 function normalizeCountry(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: nullableString(input.id),
-    countryId: nullableString(input.country_id),
-    name: nullableString(input.country_name),
-    iso2: nullableString(input.country_iso2),
-    iso3: nullableString(input.country_iso3),
-    continent: nullableString(input.continent),
-    capital: nullableString(input.capital),
-    currencyCode: nullableString(input.currency_code),
-    currencyName: nullableString(input.currency_name),
-    phonePrefix: nullableString(input.phone_prefix),
-    population: nullableString(input.population),
+    id: rawStringOrNull(input.id),
+    countryId: rawStringOrNull(input.country_id),
+    name: rawStringOrNull(input.country_name),
+    iso2: rawStringOrNull(input.country_iso2),
+    iso3: rawStringOrNull(input.country_iso3),
+    continent: rawStringOrNull(input.continent),
+    capital: rawStringOrNull(input.capital),
+    currencyCode: rawStringOrNull(input.currency_code),
+    currencyName: rawStringOrNull(input.currency_name),
+    phonePrefix: rawStringOrNull(input.phone_prefix),
+    population: rawStringOrNull(input.population),
     raw: input,
   };
 }
@@ -507,7 +514,7 @@ function normalizeCountry(input: Record<string, unknown>): Record<string, unknow
 function pickNullableStrings(input: Record<string, unknown>, fields: Record<string, string>): Record<string, unknown> {
   const output: Record<string, unknown> = {};
   for (const [target, source] of Object.entries(fields)) {
-    output[target] = nullableString(input[source]);
+    output[target] = rawStringOrNull(input[source]);
   }
   return output;
 }
@@ -534,10 +541,6 @@ function readOptionalInteger(value: unknown): number | undefined {
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function nullableNumber(value: unknown): number | null {

@@ -8,6 +8,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
@@ -298,16 +299,16 @@ function normalizeProfile(value: unknown): Record<string, unknown> {
   const profile = readRequiredObject(value, "profile");
   return {
     id: readRequiredInteger(profile.id, "profile.id"),
-    email: readNullableString(profile.email),
-    fullName: readNullableString(profile.full_name),
-    firstName: readNullableString(profile.first_name),
-    lastName: readNullableString(profile.last_name),
+    email: rawStringOrNull(profile.email),
+    fullName: rawStringOrNull(profile.full_name),
+    firstName: rawStringOrNull(profile.first_name),
+    lastName: rawStringOrNull(profile.last_name),
     active: optionalBooleanOrNull(profile.active),
     external: optionalBooleanOrNull(profile.external),
-    avatarUrl: readNullableString(profile.avatar_url),
+    avatarUrl: rawStringOrNull(profile.avatar_url),
     unit: normalizeShortReference(profile.unit),
-    createdAt: readNullableString(profile.created_at),
-    updatedAt: readNullableString(profile.updated_at),
+    createdAt: rawStringOrNull(profile.created_at),
+    updatedAt: rawStringOrNull(profile.updated_at),
     raw: profile,
   };
 }
@@ -316,39 +317,39 @@ function normalizeCompany(value: unknown): Record<string, unknown> {
   const company = readRequiredObject(value, "company");
   return {
     id: readRequiredInteger(company.id, "company.id"),
-    type: readNullableString(company.type),
+    type: rawStringOrNull(company.type),
     name: readRequiredString(company.name, "company.name"),
-    website: readNullableString(company.website),
-    email: readNullableString(company.email),
-    phone: readNullableString(company.phone),
+    website: rawStringOrNull(company.website),
+    email: rawStringOrNull(company.email),
+    phone: rawStringOrNull(company.phone),
     tags: readStringArray(company.tags),
-    identifier: readNullableString(company.identifier),
+    identifier: rawStringOrNull(company.identifier),
     active: optionalBooleanOrNull(company.active),
-    archivedOn: readNullableString(company.archived_on),
-    createdAt: readNullableString(company.created_at),
-    updatedAt: readNullableString(company.updated_at),
+    archivedOn: rawStringOrNull(company.archived_on),
+    createdAt: rawStringOrNull(company.created_at),
+    updatedAt: rawStringOrNull(company.updated_at),
     raw: company,
   };
 }
 
 function normalizeContact(value: unknown): Record<string, unknown> {
   const contact = readRequiredObject(value, "contact");
-  const firstName = readNullableString(contact.firstname);
-  const lastName = readNullableString(contact.lastname);
+  const firstName = rawStringOrNull(contact.firstname);
+  const lastName = rawStringOrNull(contact.lastname);
   return {
     id: readRequiredInteger(contact.id, "contact.id"),
-    gender: readNullableString(contact.gender),
+    gender: rawStringOrNull(contact.gender),
     firstName,
     lastName,
     fullName: buildFullName(firstName, lastName),
-    jobPosition: readNullableString(contact.job_position),
-    mobilePhone: readNullableString(contact.mobile_phone),
-    workPhone: readNullableString(contact.work_phone),
-    workEmail: readNullableString(contact.work_email),
+    jobPosition: rawStringOrNull(contact.job_position),
+    mobilePhone: rawStringOrNull(contact.mobile_phone),
+    workPhone: rawStringOrNull(contact.work_phone),
+    workEmail: rawStringOrNull(contact.work_email),
     tags: readStringArray(contact.tags),
     company: normalizeShortCompany(contact.company),
-    createdAt: readNullableString(contact.created_at),
-    updatedAt: readNullableString(contact.updated_at),
+    createdAt: rawStringOrNull(contact.created_at),
+    updatedAt: rawStringOrNull(contact.updated_at),
     raw: contact,
   };
 }
@@ -371,7 +372,7 @@ function normalizeShortCompany(value: unknown): Record<string, unknown> | null {
   const object = readRequiredObject(value, "company");
   return {
     id: readRequiredInteger(object.id, "company.id"),
-    type: readNullableString(object.type),
+    type: rawStringOrNull(object.type),
     name: readRequiredString(object.name, "company.name"),
   };
 }
@@ -581,10 +582,6 @@ function readRequiredPositiveInteger(value: unknown, fieldName: string): number 
     throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   }
   return numberValue;
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readStringArray(value: unknown): string[] {

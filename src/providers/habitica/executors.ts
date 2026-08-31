@@ -12,6 +12,7 @@ import {
   optionalRecord,
   optionalRawString,
   optionalString,
+  rawStringOrNull,
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
@@ -180,8 +181,8 @@ export const credentialValidators: CredentialValidators = {
     const profile = optionalRecord(user.profile);
     const stats = optionalRecord(user.stats);
     const party = optionalRecord(user.party);
-    const providerAccountId = nullableString(user.id) ?? nullableString(user._id) ?? credential.userId;
-    const profileName = nullableString(profile?.name);
+    const providerAccountId = rawStringOrNull(user.id) ?? rawStringOrNull(user._id) ?? credential.userId;
+    const profileName = rawStringOrNull(profile?.name);
 
     return {
       profile: {
@@ -196,8 +197,8 @@ export const credentialValidators: CredentialValidators = {
         validationEndpoint: "/user",
         profileName,
         level: nullableInteger(stats?.lvl),
-        class: nullableString(stats?.class),
-        partyId: nullableString(party?._id),
+        class: rawStringOrNull(stats?.class),
+        partyId: rawStringOrNull(party?._id),
       }),
     };
   },
@@ -484,7 +485,7 @@ function createHabiticaError(
 }
 
 function extractHabiticaErrorMessage(payload: HabiticaEnvelope): string | undefined {
-  return nullableString(payload.message) ?? nullableString(payload.error) ?? undefined;
+  return rawStringOrNull(payload.message) ?? rawStringOrNull(payload.error) ?? undefined;
 }
 
 function buildTaskMutationBody(
@@ -523,11 +524,11 @@ function normalizeUser(value: unknown): Record<string, unknown> {
   const party = optionalRecord(record.party);
 
   return {
-    id: nullableString(record.id) ?? nullableString(record._id),
-    profileName: nullableString(profile?.name),
+    id: rawStringOrNull(record.id) ?? rawStringOrNull(record._id),
+    profileName: rawStringOrNull(profile?.name),
     level: nullableInteger(stats?.lvl),
-    class: nullableString(stats?.class),
-    partyId: nullableString(party?._id),
+    class: rawStringOrNull(stats?.class),
+    partyId: rawStringOrNull(party?._id),
     raw: record,
   };
 }
@@ -539,16 +540,16 @@ function normalizeTaskList(value: unknown): Array<Record<string, unknown>> {
 function normalizeTask(value: unknown): Record<string, unknown> {
   const record = requiredRecord(value, "Habitica task", providerResponseError);
   return {
-    id: nullableString(record.id) ?? nullableString(record._id),
-    text: nullableString(record.text),
-    alias: nullableString(record.alias),
-    type: nullableString(record.type),
-    notes: nullableString(record.notes),
+    id: rawStringOrNull(record.id) ?? rawStringOrNull(record._id),
+    text: rawStringOrNull(record.text),
+    alias: rawStringOrNull(record.alias),
+    type: rawStringOrNull(record.type),
+    notes: rawStringOrNull(record.notes),
     completed: optionalBooleanOrNull(record.completed),
     priority: nullableNumber(record.priority),
     value: nullableNumber(record.value),
-    attribute: nullableString(record.attribute),
-    date: nullableString(record.date),
+    attribute: rawStringOrNull(record.attribute),
+    date: rawStringOrNull(record.date),
     tags: optionalStringArray(record.tags) ?? [],
     checklist: normalizeChecklistList(record.checklist),
     raw: record,
@@ -559,8 +560,8 @@ function normalizeChecklistList(value: unknown): Array<Record<string, unknown>> 
   return looseArray(value).map((item) => {
     const record = requiredRecord(item, "Habitica checklist item", providerResponseError);
     return {
-      id: nullableString(record.id) ?? nullableString(record._id),
-      text: nullableString(record.text),
+      id: rawStringOrNull(record.id) ?? rawStringOrNull(record._id),
+      text: rawStringOrNull(record.text),
       completed: optionalBooleanOrNull(record.completed),
       raw: record,
     };
@@ -576,7 +577,7 @@ function normalizeScoreResult(value: unknown): Record<string, unknown> {
     exp: nullableNumber(record.exp),
     gp: nullableNumber(record.gp),
     lvl: nullableInteger(record.lvl),
-    class: nullableString(record.class),
+    class: rawStringOrNull(record.class),
     points: nullableInteger(record.points),
     str: nullableNumber(record.str),
     con: nullableNumber(record.con),
@@ -594,9 +595,9 @@ function normalizeTagList(value: unknown): Array<Record<string, unknown>> {
 function normalizeTag(value: unknown): Record<string, unknown> {
   const record = requiredRecord(value, "Habitica tag", providerResponseError);
   return {
-    id: nullableString(record.id) ?? nullableString(record._id),
-    name: nullableString(record.name),
-    challenge: nullableString(record.challenge),
+    id: rawStringOrNull(record.id) ?? rawStringOrNull(record._id),
+    name: rawStringOrNull(record.name),
+    challenge: rawStringOrNull(record.challenge),
     raw: record,
   };
 }
@@ -642,10 +643,6 @@ function optionalChecklistItems(value: unknown): Array<Record<string, unknown>> 
       completed: optionalBoolean(record.completed),
     });
   });
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function nullableNumber(value: unknown): number | null {

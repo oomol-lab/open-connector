@@ -8,6 +8,7 @@ import {
   optionalBoolean,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
 import {
@@ -329,9 +330,9 @@ function normalizeUserList(value: unknown[]): NormalizedWoodpeckerUser[] {
     const object = optionalRecord(item) ?? {};
     return {
       id: readNullableInteger(object.id),
-      name: readNullableString(object.name),
-      email: readNullableString(object.email),
-      role: readNullableString(object.role),
+      name: rawStringOrNull(object.name),
+      email: rawStringOrNull(object.email),
+      role: rawStringOrNull(object.role),
       raw: object,
     };
   });
@@ -344,8 +345,8 @@ function normalizeCampaignList(value: unknown[]): Array<Record<string, unknown>>
 function normalizeCampaign(object: Record<string, unknown>): Record<string, unknown> {
   return {
     id: readNullableInteger(object.id),
-    name: readNullableString(object.name),
-    status: readNullableString(object.status),
+    name: rawStringOrNull(object.name),
+    status: rawStringOrNull(object.status),
     raw: object,
   };
 }
@@ -355,10 +356,10 @@ function normalizeProspectList(value: unknown[]): Array<Record<string, unknown>>
     const object = optionalRecord(item) ?? {};
     return {
       id: readNullableInteger(object.id),
-      email: readNullableString(object.email),
-      status: readNullableString(object.status),
-      first_name: readNullableString(object.first_name),
-      last_name: readNullableString(object.last_name),
+      email: rawStringOrNull(object.email),
+      status: rawStringOrNull(object.status),
+      first_name: rawStringOrNull(object.first_name),
+      last_name: rawStringOrNull(object.last_name),
       raw: object,
     };
   });
@@ -373,10 +374,10 @@ function normalizeMailbox(object: Record<string, unknown>): Record<string, unkno
 
   return {
     id: readNullableInteger(object.id),
-    type: readNullableString(object.type),
-    email: readNullableString(details.email),
-    provider: readNullableString(details.provider),
-    login: readNullableString(details.login),
+    type: rawStringOrNull(object.type),
+    email: rawStringOrNull(details.email),
+    provider: rawStringOrNull(details.provider),
+    login: rawStringOrNull(details.login),
     details,
     raw: object,
   };
@@ -439,10 +440,6 @@ function normalizeWoodpeckerCoPath(path: string): string {
 function readOptionalString(value: unknown): string | undefined {
   const stringValue = optionalString(value);
   return stringValue ? stringValue : undefined;
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readNullableInteger(value: unknown): number | null {

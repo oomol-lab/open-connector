@@ -9,6 +9,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -217,7 +218,7 @@ async function docparserFetchDocumentFromUrl(
   return {
     documentId,
     parserId: upstreamParserId,
-    remoteId: nullableString(record?.remote_id),
+    remoteId: rawStringOrNull(record?.remote_id),
     message,
   };
 }
@@ -315,7 +316,7 @@ async function docparserReparseDocuments(
   const record = optionalRecord(payload);
   return {
     totalReparsed: optionalInteger(record?.total_reparsed) ?? 0,
-    msg: nullableString(record?.msg),
+    msg: rawStringOrNull(record?.msg),
   };
 }
 
@@ -336,7 +337,7 @@ async function docparserReintegrateDocuments(
   const record = optionalRecord(payload);
   return {
     totalReintegrate: optionalInteger(record?.total_reintegrate) ?? 0,
-    msg: nullableString(record?.msg),
+    msg: rawStringOrNull(record?.msg),
   };
 }
 
@@ -472,7 +473,7 @@ function normalizeDocumentImportResponse(payload: unknown): Record<string, unkno
     fileSize: optionalInteger(record?.file_size) ?? null,
     quotaUsed: optionalInteger(record?.quota_used) ?? null,
     quotaLeft: optionalInteger(record?.quota_left) ?? null,
-    quotaRefill: nullableString(record?.quota_refill),
+    quotaRefill: rawStringOrNull(record?.quota_refill),
   };
 }
 
@@ -485,10 +486,10 @@ function normalizeDocumentStatus(payload: unknown): Record<string, unknown> {
 
   return {
     token,
-    remoteId: nullableString(record?.remote_id),
-    fileSource: nullableString(record?.file_source),
-    filename: nullableString(record?.filename),
-    mimeType: nullableString(record?.mime_type),
+    remoteId: rawStringOrNull(record?.remote_id),
+    fileSource: rawStringOrNull(record?.file_source),
+    filename: rawStringOrNull(record?.filename),
+    mimeType: rawStringOrNull(record?.mime_type),
     pages: optionalInteger(record?.pages) ?? 0,
     supported: asBooleanLike(record?.supported),
     importingInProgress: asBooleanLike(record?.importing_in_progress),
@@ -531,14 +532,14 @@ function normalizeResultRows(payload: unknown): Array<Record<string, unknown>> {
     return {
       id,
       documentId,
-      remoteId: nullableString(record.remote_id),
-      fileName: nullableString(record.file_name),
-      mediaLink: nullableString(record.media_link),
-      mediaLinkOriginal: nullableString(record.media_link_original),
-      mediaLinkData: nullableString(record.media_link_data),
+      remoteId: rawStringOrNull(record.remote_id),
+      fileName: rawStringOrNull(record.file_name),
+      mediaLink: rawStringOrNull(record.media_link),
+      mediaLinkOriginal: rawStringOrNull(record.media_link_original),
+      mediaLinkData: rawStringOrNull(record.media_link_data),
       pageCount: optionalInteger(record.page_count) ?? null,
-      uploadedAt: nullableString(record.uploaded_at),
-      processedAt: nullableString(record.processed_at),
+      uploadedAt: rawStringOrNull(record.uploaded_at),
+      processedAt: rawStringOrNull(record.processed_at),
       parsedData: extractParsedData(record),
       raw: record,
     };
@@ -682,8 +683,4 @@ function normalizeStringArray(value: unknown): string[] {
     return [];
   }
   return value.map((item) => (typeof item === "string" ? item : "")).filter((item) => item !== "");
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }

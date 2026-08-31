@@ -10,6 +10,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
@@ -493,11 +494,11 @@ function readSupportbeeErrorMessage(payload: unknown): string | undefined {
 function normalizeSupportbeeTicket(value: Record<string, unknown>): Record<string, unknown> {
   return {
     id: readNullableInteger(value.id),
-    subject: readNullableString(value.subject),
+    subject: rawStringOrNull(value.subject),
     replies_count: readNullableInteger(value.replies_count),
     comments_count: readNullableInteger(value.comments_count),
-    created_at: readNullableString(value.created_at),
-    last_activity_at: readNullableString(value.last_activity_at),
+    created_at: rawStringOrNull(value.created_at),
+    last_activity_at: rawStringOrNull(value.last_activity_at),
     unanswered: optionalBooleanOrNull(value.unanswered),
     archived: optionalBooleanOrNull(value.archived),
     spam: optionalBooleanOrNull(value.spam),
@@ -511,8 +512,8 @@ function normalizeSupportbeeTicket(value: Record<string, unknown>): Record<strin
 function normalizeSupportbeeReply(value: Record<string, unknown>): Record<string, unknown> {
   return {
     id: readNullableInteger(value.id),
-    created_at: readNullableString(value.created_at),
-    summary: readNullableString(value.summary),
+    created_at: rawStringOrNull(value.created_at),
+    summary: rawStringOrNull(value.summary),
     cc: readStringArray(value.cc),
     bcc: readStringArray(value.bcc),
     replier: readObjectProperty(value, "replier"),
@@ -524,7 +525,7 @@ function normalizeSupportbeeReply(value: Record<string, unknown>): Record<string
 function normalizeSupportbeeComment(value: Record<string, unknown>): Record<string, unknown> {
   return {
     id: readNullableInteger(value.id),
-    created_at: readNullableString(value.created_at),
+    created_at: rawStringOrNull(value.created_at),
     commenter: readObjectProperty(value, "commenter"),
     content: readObjectProperty(value, "content"),
     raw: value,
@@ -534,10 +535,10 @@ function normalizeSupportbeeComment(value: Record<string, unknown>): Record<stri
 function normalizeSupportbeeUser(value: Record<string, unknown>): Record<string, unknown> {
   return {
     id: readNullableInteger(value.id),
-    type: readNullableString(value.type),
-    email: readNullableString(value.email),
-    name: readNullableString(value.name),
-    role: readNullableString(value.role),
+    type: rawStringOrNull(value.type),
+    email: rawStringOrNull(value.email),
+    name: rawStringOrNull(value.name),
+    role: rawStringOrNull(value.role),
     agent: optionalBooleanOrNull(value.agent),
     teams: readObjectArray(value, "teams"),
     raw: value,
@@ -547,7 +548,7 @@ function normalizeSupportbeeUser(value: Record<string, unknown>): Record<string,
 function normalizeSupportbeeTeam(value: Record<string, unknown>): Record<string, unknown> {
   return {
     id: readNullableInteger(value.id),
-    name: readNullableString(value.name),
+    name: rawStringOrNull(value.name),
     users: readObjectArray(value, "users"),
     raw: value,
   };
@@ -566,7 +567,7 @@ function normalizeSupportbeeLabel(value: unknown): Record<string, unknown> {
   const raw = optionalRecord(value) ?? {};
   return {
     id: readNullableInteger(raw.id),
-    label: readNullableString(raw.label),
+    label: rawStringOrNull(raw.label),
     ticket: readNullableInteger(raw.ticket),
     raw,
   };
@@ -640,13 +641,9 @@ function readLabelNames(value: unknown): string[] {
         return item;
       }
       const record = optionalRecord(item);
-      return record ? readNullableString(record.name) : null;
+      return record ? rawStringOrNull(record.name) : null;
     })
     .filter((item): item is string => Boolean(item));
-}
-
-function readNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readNullableInteger(value: unknown): number | null {

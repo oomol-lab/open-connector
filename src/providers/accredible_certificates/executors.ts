@@ -8,6 +8,7 @@ import {
   optionalNumber,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredRecord,
 } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -420,8 +421,8 @@ function normalizeIssuer(payload: unknown): AccredibleIssuer {
 
   return {
     id: optionalNumber(issuer.id),
-    name: nullableString(issuer.name),
-    email: nullableString(issuer.email),
+    name: rawStringOrNull(issuer.name),
+    email: rawStringOrNull(issuer.email),
   };
 }
 
@@ -442,11 +443,11 @@ function normalizeGroup(value: unknown): Record<string, unknown> {
 
   return {
     id,
-    name: nullableString(record.name),
-    courseName: nullableString(record.course_name),
-    courseDescription: nullableString(record.course_description),
-    language: nullableString(record.language),
-    designName: nullableString(record.design_name),
+    name: rawStringOrNull(record.name),
+    courseName: rawStringOrNull(record.course_name),
+    courseDescription: rawStringOrNull(record.course_description),
+    language: rawStringOrNull(record.language),
+    designName: rawStringOrNull(record.design_name),
     departmentId: nullableNumber(record.department_id),
     raw: record,
   };
@@ -466,15 +467,15 @@ function normalizeCredential(value: unknown): Record<string, unknown> {
 
   return {
     id,
-    name: nullableString(record.name),
-    description: nullableString(record.description),
+    name: rawStringOrNull(record.name),
+    description: rawStringOrNull(record.description),
     complete: optionalBoolean(record.complete) ?? null,
-    issuedOn: nullableString(record.issued_on),
-    expiredOn: nullableString(record.expired_on),
+    issuedOn: rawStringOrNull(record.issued_on),
+    expiredOn: rawStringOrNull(record.expired_on),
     groupId: nullableNumber(record.group_id),
-    groupName: nullableString(record.group_name),
-    url: nullableString(record.url),
-    encodedId: nullableString(record.encoded_id),
+    groupName: rawStringOrNull(record.group_name),
+    url: rawStringOrNull(record.url),
+    encodedId: rawStringOrNull(record.encoded_id),
     private: optionalBoolean(record.private) ?? null,
     recipient:
       record.recipient === undefined || record.recipient === null ? null : normalizeRecipient(record.recipient),
@@ -486,8 +487,8 @@ function normalizeRecipient(value: unknown): Record<string, unknown> {
   const record = requiredResponseRecord(value, "Accredible recipient");
   return {
     id: record.id === undefined || record.id === null ? null : requireStringLike(record.id, "id"),
-    name: nullableString(record.name),
-    email: nullableString(record.email),
+    name: rawStringOrNull(record.name),
+    email: rawStringOrNull(record.email),
     metaData: optionalRecord(record.meta_data) ?? null,
   };
 }
@@ -538,10 +539,6 @@ function requireStringLike(value: unknown, fieldName: string): string {
   }
 
   throw new ProviderRequestError(502, `Accredible response missing ${fieldName}`);
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function nullableNumber(value: unknown): number | null {

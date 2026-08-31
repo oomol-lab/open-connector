@@ -8,6 +8,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
@@ -531,10 +532,6 @@ function readObjectArray(value: unknown): Array<Record<string, unknown>> {
     : [];
 }
 
-function readString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
-
 function readNumber(value: unknown): number | null {
   return typeof value === "number" ? value : null;
 }
@@ -549,11 +546,11 @@ function mapLeagueSummary(item: Record<string, unknown>): Record<string, unknown
 
   return {
     leagueId: readNumber(league?.id) ?? 0,
-    name: readString(league?.name) ?? "",
-    type: readString(league?.type) ?? "",
-    country: readString(country?.name),
-    countryCode: readString(country?.code),
-    logoUrl: readString(league?.logo),
+    name: rawStringOrNull(league?.name) ?? "",
+    type: rawStringOrNull(league?.type) ?? "",
+    country: rawStringOrNull(country?.name),
+    countryCode: rawStringOrNull(country?.code),
+    logoUrl: rawStringOrNull(league?.logo),
     currentSeason: readNumber(selectedSeason?.year),
     coverage: {
       standings: optionalBooleanOrNull(coverage?.standings) ?? undefined,
@@ -577,12 +574,12 @@ function mapTeamSummary(item: Record<string, unknown>): Record<string, unknown> 
 
   return {
     teamId: readNumber(team?.id) ?? 0,
-    name: readString(team?.name) ?? "",
-    code: readString(team?.code),
-    country: readString(team?.country),
+    name: rawStringOrNull(team?.name) ?? "",
+    code: rawStringOrNull(team?.code),
+    country: rawStringOrNull(team?.country),
     national: optionalBooleanOrNull(team?.national),
-    logoUrl: readString(team?.logo),
-    venue: venueId ? { venueId, name: readString(venue?.name), city: readString(venue?.city) } : null,
+    logoUrl: rawStringOrNull(team?.logo),
+    venue: venueId ? { venueId, name: rawStringOrNull(venue?.name), city: rawStringOrNull(venue?.city) } : null,
   };
 }
 
@@ -593,26 +590,26 @@ function mapPlayerProfileResult(item: Record<string, unknown>): Record<string, u
 function mapPlayerProfile(player: Record<string, unknown>): Record<string, unknown> {
   return {
     playerId: readNumber(player.id) ?? 0,
-    name: readString(player.name) ?? "",
-    firstName: readString(player.firstname),
-    lastName: readString(player.lastname),
+    name: rawStringOrNull(player.name) ?? "",
+    firstName: rawStringOrNull(player.firstname),
+    lastName: rawStringOrNull(player.lastname),
     age: readNumber(player.age),
-    nationality: readString(player.nationality),
-    position: readString(player.position),
+    nationality: rawStringOrNull(player.nationality),
+    position: rawStringOrNull(player.position),
     number: readNumber(player.number),
-    photoUrl: readString(player.photo),
+    photoUrl: rawStringOrNull(player.photo),
   };
 }
 
 function mapPlayerSummary(player: Record<string, unknown>): Record<string, unknown> {
   return {
     playerId: readNumber(player.id) ?? 0,
-    name: readString(player.name) ?? "",
-    firstName: readString(player.firstname),
-    lastName: readString(player.lastname),
+    name: rawStringOrNull(player.name) ?? "",
+    firstName: rawStringOrNull(player.firstname),
+    lastName: rawStringOrNull(player.lastname),
     age: readNumber(player.age),
-    nationality: readString(player.nationality),
-    photoUrl: readString(player.photo),
+    nationality: rawStringOrNull(player.nationality),
+    photoUrl: rawStringOrNull(player.photo),
   };
 }
 
@@ -625,11 +622,11 @@ function mapFixture(item: Record<string, unknown>): Record<string, unknown> {
 
   return {
     fixtureId: readNumber(fixture?.id) ?? 0,
-    date: readString(fixture?.date) ?? "",
+    date: rawStringOrNull(fixture?.date) ?? "",
     timestamp: readNumber(fixture?.timestamp) ?? 0,
     status: {
-      short: readString(readObject(fixture?.status)?.short),
-      long: readString(readObject(fixture?.status)?.long),
+      short: rawStringOrNull(readObject(fixture?.status)?.short),
+      long: rawStringOrNull(readObject(fixture?.status)?.long),
       elapsed: readNumber(readObject(fixture?.status)?.elapsed),
     },
     league: mapFixtureLeagueSummary(league),
@@ -653,18 +650,18 @@ function mapFixture(item: Record<string, unknown>): Record<string, unknown> {
 function mapFixtureLeagueSummary(league: Record<string, unknown> | null): Record<string, unknown> {
   return {
     leagueId: readNumber(league?.id) ?? 0,
-    name: readString(league?.name) ?? "",
-    country: readString(league?.country),
+    name: rawStringOrNull(league?.name) ?? "",
+    country: rawStringOrNull(league?.country),
     season: readNumber(league?.season) ?? 0,
-    round: readString(league?.round),
+    round: rawStringOrNull(league?.round),
   };
 }
 
 function mapFixtureTeam(team: Record<string, unknown> | null): Record<string, unknown> {
   return {
     teamId: readNumber(team?.id) ?? 0,
-    name: readString(team?.name) ?? "",
-    logoUrl: readString(team?.logo),
+    name: rawStringOrNull(team?.name) ?? "",
+    logoUrl: rawStringOrNull(team?.logo),
     winner: optionalBooleanOrNull(team?.winner),
   };
 }
@@ -681,19 +678,19 @@ function mapStandingRow(item: Record<string, unknown>): Record<string, unknown> 
     rank: readNumber(item.rank) ?? 0,
     team: {
       teamId: readNumber(readObject(item.team)?.id) ?? 0,
-      name: readString(readObject(item.team)?.name) ?? "",
-      logoUrl: readString(readObject(item.team)?.logo),
+      name: rawStringOrNull(readObject(item.team)?.name) ?? "",
+      logoUrl: rawStringOrNull(readObject(item.team)?.logo),
     },
     points: readNumber(item.points),
     goalsDiff: readNumber(item.goalsDiff),
-    group: readString(item.group),
-    form: readString(item.form),
-    status: readString(item.status),
-    description: readString(item.description),
+    group: rawStringOrNull(item.group),
+    form: rawStringOrNull(item.form),
+    status: rawStringOrNull(item.status),
+    description: rawStringOrNull(item.description),
     all: mapStandingTotals(readObject(item.all)),
     home: mapStandingTotals(readObject(item.home)),
     away: mapStandingTotals(readObject(item.away)),
-    updatedAt: readString(item.update),
+    updatedAt: rawStringOrNull(item.update),
   };
 }
 
@@ -720,20 +717,20 @@ function mapEvent(item: Record<string, unknown>): Record<string, unknown> {
     extra: readNumber(time?.extra),
     team: {
       teamId: readNumber(team?.id) ?? 0,
-      name: readString(team?.name) ?? "",
-      logoUrl: readString(team?.logo),
+      name: rawStringOrNull(team?.name) ?? "",
+      logoUrl: rawStringOrNull(team?.logo),
     },
     player: {
       id: readNumber(player?.id),
-      name: readString(player?.name),
+      name: rawStringOrNull(player?.name),
     },
     assist: {
       id: readNumber(assist?.id),
-      name: readString(assist?.name),
+      name: rawStringOrNull(assist?.name),
     },
-    type: readString(item.type),
-    detail: readString(item.detail),
-    comments: readString(item.comments),
+    type: rawStringOrNull(item.type),
+    detail: rawStringOrNull(item.detail),
+    comments: rawStringOrNull(item.comments),
   };
 }
 
@@ -743,13 +740,15 @@ function mapLineup(item: Record<string, unknown>): Record<string, unknown> {
   return {
     team: {
       teamId: readNumber(team?.id) ?? 0,
-      name: readString(team?.name) ?? "",
-      logoUrl: readString(team?.logo),
+      name: rawStringOrNull(team?.name) ?? "",
+      logoUrl: rawStringOrNull(team?.logo),
     },
-    formation: readString(item.formation),
+    formation: rawStringOrNull(item.formation),
     startXI: readObjectArray(item.startXI).map(mapLineupPlayer),
     substitutes: readObjectArray(item.substitutes).map(mapLineupPlayer),
-    coach: coach ? { id: readNumber(coach.id), name: readString(coach.name), photoUrl: readString(coach.photo) } : null,
+    coach: coach
+      ? { id: readNumber(coach.id), name: rawStringOrNull(coach.name), photoUrl: rawStringOrNull(coach.photo) }
+      : null,
   };
 }
 
@@ -757,10 +756,10 @@ function mapLineupPlayer(item: Record<string, unknown>): Record<string, unknown>
   const player = readObject(item.player);
   return {
     playerId: readNumber(player?.id),
-    name: readString(player?.name),
+    name: rawStringOrNull(player?.name),
     number: readNumber(player?.number),
-    position: readString(player?.pos),
-    grid: readString(player?.grid),
+    position: rawStringOrNull(player?.pos),
+    grid: rawStringOrNull(player?.grid),
   };
 }
 
@@ -769,8 +768,8 @@ function mapFixtureStatistics(item: Record<string, unknown>): Record<string, unk
   return {
     team: {
       teamId: readNumber(team?.id) ?? 0,
-      name: readString(team?.name) ?? "",
-      logoUrl: readString(team?.logo),
+      name: rawStringOrNull(team?.name) ?? "",
+      logoUrl: rawStringOrNull(team?.logo),
     },
     statistics: readObjectArray(item.statistics).map(mapStatisticEntry),
     statistics1h: readObjectArray(item.statistics_1h).map(mapStatisticEntry),
@@ -780,7 +779,7 @@ function mapFixtureStatistics(item: Record<string, unknown>): Record<string, unk
 
 function mapStatisticEntry(item: Record<string, unknown>): Record<string, unknown> {
   return {
-    type: readString(item.type) ?? "",
+    type: rawStringOrNull(item.type) ?? "",
     value: item.value ?? null,
   };
 }
@@ -788,11 +787,11 @@ function mapStatisticEntry(item: Record<string, unknown>): Record<string, unknow
 function mapSquadPlayer(item: Record<string, unknown>): Record<string, unknown> {
   return {
     playerId: readNumber(item.id) ?? 0,
-    name: readString(item.name) ?? "",
+    name: rawStringOrNull(item.name) ?? "",
     age: readNumber(item.age),
     number: readNumber(item.number),
-    position: readString(item.position),
-    photoUrl: readString(item.photo),
+    position: rawStringOrNull(item.position),
+    photoUrl: rawStringOrNull(item.photo),
   };
 }
 
@@ -811,20 +810,20 @@ function mapInjury(item: Record<string, unknown>): Record<string, unknown> {
   return {
     player: {
       playerId: readNumber(player?.id) ?? 0,
-      name: readString(player?.name) ?? "",
-      photoUrl: readString(player?.photo),
+      name: rawStringOrNull(player?.name) ?? "",
+      photoUrl: rawStringOrNull(player?.photo),
     },
     team: {
       teamId: readNumber(team?.id) ?? 0,
-      name: readString(team?.name) ?? "",
-      logoUrl: readString(team?.logo),
+      name: rawStringOrNull(team?.name) ?? "",
+      logoUrl: rawStringOrNull(team?.logo),
     },
     fixture: {
       fixtureId: readNumber(fixture?.id) ?? 0,
-      date: readString(fixture?.date) ?? "",
+      date: rawStringOrNull(fixture?.date) ?? "",
     },
-    reason: readString(player?.reason),
-    type: readString(player?.type),
+    reason: rawStringOrNull(player?.reason),
+    type: rawStringOrNull(player?.type),
   };
 }
 

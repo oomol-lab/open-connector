@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const yuandianApiBaseUrl = "https://open.chineselaw.com/open";
@@ -371,8 +371,8 @@ function normalizeListPayload(payload: unknown) {
   const record = asRecord(payload);
   return {
     code: getPayloadCode(record) ?? 200,
-    status: pickNullableString(record.status),
-    message: pickNullableString(record.message) ?? pickNullableString(record.msg),
+    status: rawStringOrNull(record.status),
+    message: rawStringOrNull(record.message) ?? rawStringOrNull(record.msg),
     results: getRecordArray(record.data),
     raw: record,
   };
@@ -382,8 +382,8 @@ function normalizeDetailPayload(payload: unknown) {
   const record = asRecord(payload);
   return {
     code: getPayloadCode(record) ?? 200,
-    status: pickNullableString(record.status),
-    message: pickNullableString(record.message) ?? pickNullableString(record.msg),
+    status: rawStringOrNull(record.status),
+    message: rawStringOrNull(record.message) ?? rawStringOrNull(record.msg),
     data: record.data ?? null,
     raw: record,
   };
@@ -394,8 +394,8 @@ function normalizeCaseSearchPayload(payload: unknown) {
   const data = optionalRecord(record.data);
   return {
     code: getPayloadCode(record) ?? 200,
-    status: pickNullableString(record.status),
-    message: pickNullableString(record.message) ?? pickNullableString(record.msg),
+    status: rawStringOrNull(record.status),
+    message: rawStringOrNull(record.message) ?? rawStringOrNull(record.msg),
     total: data?.total ?? null,
     results: getRecordArray(data?.lst),
     raw: record,
@@ -407,8 +407,8 @@ function normalizeEnterprisePagePayload(payload: unknown) {
   const data = optionalRecord(record.data);
   return {
     code: getPayloadCode(record) ?? 200,
-    status: pickNullableString(record.status),
-    message: pickNullableString(record.message) ?? pickNullableString(record.msg),
+    status: rawStringOrNull(record.status),
+    message: rawStringOrNull(record.message) ?? rawStringOrNull(record.msg),
     total: data?.total ?? null,
     pageNo: data?.pageNo ?? null,
     pageSize: data?.pageSize ?? null,
@@ -422,7 +422,7 @@ function normalizeSemanticPayload(payload: unknown, resultKey: "fatiao" | "wensh
   const extra = optionalRecord(record.extra);
   return {
     code: getPayloadCode(record) ?? 201,
-    message: pickNullableString(record.msg) ?? pickNullableString(record.message),
+    message: rawStringOrNull(record.msg) ?? rawStringOrNull(record.message),
     results: getRecordArray(extra?.[resultKey]),
     raw: record,
   };
@@ -433,10 +433,10 @@ function normalizeHallucinationPayload(payload: unknown, responseRequestId: stri
   return {
     regulations: getRecordArray(record.regulations),
     cases: getRecordArray(record.cases),
-    highlightedText: pickNullableString(record.highlighted_text),
-    semanticCompareError: pickNullableString(record.semantic_compare_error),
-    chatModel: pickNullableString(record.chat_model),
-    requestId: pickNullableString(record.request_id) ?? responseRequestId,
+    highlightedText: rawStringOrNull(record.highlighted_text),
+    semanticCompareError: rawStringOrNull(record.semantic_compare_error),
+    chatModel: rawStringOrNull(record.chat_model),
+    requestId: rawStringOrNull(record.request_id) ?? responseRequestId,
     raw: record,
   };
 }
@@ -612,10 +612,6 @@ function getRecordArray(value: unknown): Array<Record<string, unknown>> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
-function pickNullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function asQueryValue(value: unknown): YuandianQueryValue {

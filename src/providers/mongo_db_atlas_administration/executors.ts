@@ -10,7 +10,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
-import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalInteger, optionalRecord, optionalString, rawStringOrNull, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import {
   createProviderFetch,
@@ -505,10 +505,10 @@ function normalizeProject(value: unknown): Record<string, unknown> {
   const record = requireObjectPayload(value);
   return {
     id: requiredPayloadString(record.id, "project id"),
-    name: nullableString(record.name),
-    orgId: nullableString(record.orgId),
-    createdAt: nullableString(record.created),
-    regionUsageRestrictions: nullableString(record.regionUsageRestrictions),
+    name: rawStringOrNull(record.name),
+    orgId: rawStringOrNull(record.orgId),
+    createdAt: rawStringOrNull(record.created),
+    regionUsageRestrictions: rawStringOrNull(record.regionUsageRestrictions),
     raw: record,
   };
 }
@@ -529,17 +529,17 @@ function normalizeCluster(value: unknown): Record<string, unknown> {
   const electableSpecs = optionalRecord(firstRegionConfig?.electableSpecs);
 
   return {
-    id: nullableString(record.id),
+    id: rawStringOrNull(record.id),
     name: requiredPayloadString(record.name, "cluster name"),
-    groupId: nullableString(record.groupId),
-    clusterType: nullableString(record.clusterType),
-    mongoDBVersion: nullableString(record.mongoDBVersion),
-    stateName: nullableString(record.stateName),
+    groupId: rawStringOrNull(record.groupId),
+    clusterType: rawStringOrNull(record.clusterType),
+    mongoDBVersion: rawStringOrNull(record.mongoDBVersion),
+    stateName: rawStringOrNull(record.stateName),
     paused: typeof record.paused === "boolean" ? record.paused : null,
-    providerName: nullableString(firstRegionConfig?.providerName ?? record.providerName),
-    backingProviderName: nullableString(firstRegionConfig?.backingProviderName),
-    instanceSizeName: nullableString(electableSpecs?.instanceSize ?? record.instanceSizeName),
-    regionName: nullableString(firstRegionConfig?.regionName ?? record.regionName),
+    providerName: rawStringOrNull(firstRegionConfig?.providerName ?? record.providerName),
+    backingProviderName: rawStringOrNull(firstRegionConfig?.backingProviderName),
+    instanceSizeName: rawStringOrNull(electableSpecs?.instanceSize ?? record.instanceSizeName),
+    regionName: rawStringOrNull(firstRegionConfig?.regionName ?? record.regionName),
     raw: record,
   };
 }
@@ -556,10 +556,6 @@ function requiredPayloadString(value: unknown, label: string): string {
     throw new ProviderRequestError(502, `MongoDB Atlas returned an invalid ${label}`);
   }
   return value;
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function readNullableInteger(value: unknown): number | null {

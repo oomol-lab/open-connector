@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
@@ -72,8 +72,8 @@ export const novuActionHandlers: ProviderActionHandlers<"novu", NovuActionHandle
 
     return {
       subscribers: Array.isArray(object.data) ? object.data : [],
-      next: nullableString(object.next),
-      previous: nullableString(object.previous),
+      next: rawStringOrNull(object.next),
+      previous: rawStringOrNull(object.previous),
       totalCount: typeof object.totalCount === "number" ? object.totalCount : 0,
       totalCountCapped: object.totalCountCapped === true,
       raw: object,
@@ -154,8 +154,8 @@ export const novuActionHandlers: ProviderActionHandlers<"novu", NovuActionHandle
       acknowledged: object.acknowledged === true,
       status: optionalString(object.status) ?? "error",
       error: Array.isArray(object.error) ? object.error.map(String) : [],
-      transactionId: nullableString(object.transactionId),
-      activityFeedLink: nullableString(object.activityFeedLink),
+      transactionId: rawStringOrNull(object.transactionId),
+      activityFeedLink: rawStringOrNull(object.activityFeedLink),
       jobData: optionalRecord(object.jobData) ?? null,
       raw: object,
     };
@@ -355,8 +355,4 @@ function readRecord(value: unknown, fieldName: string): Record<string, unknown> 
     return record;
   }
   throw new ProviderRequestError(502, `${fieldName} must be an object`);
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }

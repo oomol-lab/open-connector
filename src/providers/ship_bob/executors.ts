@@ -7,6 +7,7 @@ import {
   optionalRawString,
   optionalRecord,
   optionalString,
+  rawStringOrNull,
   requiredRecord,
 } from "../../core/cast.ts";
 import {
@@ -299,10 +300,10 @@ function normalizePagedResponse<T>(
   const record = readObject(payload, "ShipBob paged response");
   const items = Array.isArray(record.items) ? record.items : [];
   return {
-    first: nullableString(record.first),
-    last: nullableString(record.last),
-    next: nullableString(record.next),
-    prev: nullableString(record.prev),
+    first: rawStringOrNull(record.first),
+    last: rawStringOrNull(record.last),
+    next: rawStringOrNull(record.next),
+    prev: rawStringOrNull(record.prev),
     items: items.map((item) => normalizeItem(readObject(item, "ShipBob paged response item"))),
   };
 }
@@ -322,8 +323,8 @@ function normalizeChannels(payload: unknown): Array<{
 function normalizeChannel(record: Record<string, unknown>) {
   return {
     id: readInteger(record.id, "channel id"),
-    name: nullableString(record.name),
-    applicationName: nullableString(record.application_name),
+    name: rawStringOrNull(record.name),
+    applicationName: rawStringOrNull(record.application_name),
     scopes: Array.isArray(record.scopes)
       ? record.scopes.filter((scope): scope is string => typeof scope === "string")
       : [],
@@ -334,8 +335,8 @@ function normalizeChannel(record: Record<string, unknown>) {
 function normalizeInventoryQuantity(record: Record<string, unknown>) {
   return {
     inventoryId: readInteger(record.inventory_id, "inventory id"),
-    name: nullableString(record.name),
-    sku: nullableString(record.sku),
+    name: rawStringOrNull(record.name),
+    sku: rawStringOrNull(record.sku),
     totalAwaitingQuantity: nullableInteger(record.total_awaiting_quantity),
     totalBackorderedQuantity: nullableInteger(record.total_backordered_quantity),
     totalCommittedQuantity: nullableInteger(record.total_committed_quantity),
@@ -351,8 +352,8 @@ function normalizeInventoryQuantity(record: Record<string, unknown>) {
 function normalizeLocation(record: Record<string, unknown>) {
   return {
     id: readInteger(record.id, "location id"),
-    name: nullableString(record.name),
-    abbreviation: nullableString(record.abbreviation),
+    name: rawStringOrNull(record.name),
+    abbreviation: rawStringOrNull(record.abbreviation),
     isActive: optionalBooleanOrNull(record.is_active),
     accessGranted: optionalBooleanOrNull(record.access_granted),
     isReceivingEnabled: optionalBooleanOrNull(record.is_receiving_enabled),
@@ -387,10 +388,6 @@ function nullableInteger(value: unknown): number | null {
   }
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : null;
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function joinValues(value: unknown): string | undefined {

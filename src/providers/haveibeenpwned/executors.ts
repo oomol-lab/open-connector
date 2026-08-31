@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalRecord,
+  optionalString,
+  rawStringOrNull,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   isAbortLikeError,
@@ -364,7 +371,7 @@ function normalizeBreach(value: unknown, label: string): Record<string, unknown>
     IsSubscriptionFree: requireBoolean(record.IsSubscriptionFree, `${label}.IsSubscriptionFree`),
     IsStealerLog: requireBoolean(record.IsStealerLog, `${label}.IsStealerLog`),
     LogoPath: requireString(record.LogoPath, `${label}.LogoPath`),
-    Attribution: nullableString(record.Attribution),
+    Attribution: rawStringOrNull(record.Attribution),
   };
 }
 
@@ -382,8 +389,8 @@ function normalizePaste(value: unknown, label: string): Record<string, unknown> 
   return {
     Source: requireString(record.Source, `${label}.Source`),
     Id: requireString(record.Id, `${label}.Id`),
-    Title: nullableString(record.Title),
-    Date: nullableString(record.Date),
+    Title: rawStringOrNull(record.Title),
+    Date: rawStringOrNull(record.Date),
     EmailCount: requireInteger(record.EmailCount, `${label}.EmailCount`),
   };
 }
@@ -443,10 +450,6 @@ function requireStringArray(value: unknown, label: string): string[] {
     throw new ProviderRequestError(502, `${label} must be an array`);
   }
   return value.map((item, index) => requireString(item, `${label}[${index}]`));
-}
-
-function nullableString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
 }
 
 function stringifyOptionalBoolean(value: unknown): string | undefined {

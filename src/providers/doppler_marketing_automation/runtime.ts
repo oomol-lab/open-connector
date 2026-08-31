@@ -1,7 +1,13 @@
 import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DopplerMarketingAutomationActionName } from "./actions.ts";
 
-import { optionalBooleanOrNull, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  optionalBooleanOrNull,
+  optionalRecord,
+  optionalString,
+  rawStringOrNull,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -354,9 +360,9 @@ function normalizeList(record: Record<string, unknown>) {
   return {
     listId: readRequiredInteger(record.listId, "listId"),
     name: readRequiredString(record.name, "name"),
-    currentStatus: readNullableString(record.currentStatus),
+    currentStatus: rawStringOrNull(record.currentStatus),
     subscribersCount: readNullableInteger(record.subscribersCount, "subscribersCount"),
-    creationDate: readNullableString(record.creationDate),
+    creationDate: rawStringOrNull(record.creationDate),
     hasScheduledCampaigns: optionalBooleanOrNull(record.hasScheduledCampaigns),
     hasFormsAssociated: optionalBooleanOrNull(record.hasFormsAssociated),
     hasSegmentsAssociated: optionalBooleanOrNull(record.hasSegmentsAssociated),
@@ -370,13 +376,13 @@ function normalizeSubscriber(record: Record<string, unknown>) {
     email: readRequiredString(record.email, "email"),
     fields: readOptionalObjectArray(record.fields),
     belongsToLists: readOptionalStringArray(record.belongsToLists),
-    status: readNullableString(record.status),
-    unsubscriptionDate: readNullableString(record.unsubscriptionDate),
+    status: rawStringOrNull(record.status),
+    unsubscriptionDate: rawStringOrNull(record.unsubscriptionDate),
     canBeReactivated: optionalBooleanOrNull(record.canBeReactivated),
     isBeingReactivated: optionalBooleanOrNull(record.isBeingReactivated),
-    unsubscriptionType: readNullableString(record.unsubscriptionType),
-    manualUnsubscriptionReason: readNullableString(record.manualUnsubscriptionReason),
-    unsubscriptionComment: readNullableString(record.unsubscriptionComment),
+    unsubscriptionType: rawStringOrNull(record.unsubscriptionType),
+    manualUnsubscriptionReason: rawStringOrNull(record.manualUnsubscriptionReason),
+    unsubscriptionComment: rawStringOrNull(record.unsubscriptionComment),
     score: readNullableInteger(record.score, "score"),
     data: record,
   };
@@ -480,8 +486,4 @@ function readNullableInteger(value: unknown, fieldName: string) {
     return null;
   }
   return readRequiredInteger(value, fieldName);
-}
-
-function readNullableString(value: unknown) {
-  return typeof value === "string" ? value : null;
 }
