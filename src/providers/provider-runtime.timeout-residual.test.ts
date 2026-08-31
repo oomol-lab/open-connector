@@ -4,12 +4,11 @@ import { datadogActionHandlers } from "./datadog/executors.ts";
 import { gammaActionHandlers } from "./gamma/executors.ts";
 import { ProviderRequestError } from "./provider-runtime.ts";
 
-/**
- * `AbortSignal.timeout()` aborts with a `TimeoutError`, not an `AbortError`, so
- * a provider whose timeout branch only recognizes `AbortError` reports its own
- * budget expiry as a generic upstream failure. These cases pin the timeout
- * branch of the providers that used to carry such a predicate.
- */
+// `AbortSignal.timeout()` aborts with a `TimeoutError`, not an `AbortError`, so
+// a provider whose timeout branch only recognizes `AbortError` reports its own
+// budget expiry as a generic upstream failure. These cases pin the timeout
+// branch of the providers that used to carry such a predicate.
+
 function timeoutAbortError(): DOMException {
   return new DOMException("The operation was aborted due to timeout", "TimeoutError");
 }
