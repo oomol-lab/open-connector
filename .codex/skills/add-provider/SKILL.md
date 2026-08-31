@@ -121,6 +121,15 @@ Create or update `executors.ts` with `ProviderExecutors`:
 
 Provider-local runtime files are appropriate when a provider has multiple API areas or a meaningful shared protocol. Do not add local mini-frameworks, schema facades, or action adapter layers just to reduce edit size.
 
+### Error Status Mapping
+
+`toProviderExecutionError` derives the execution error code from the status a `ProviderRequestError` carries, and both `/v1` routes derive the HTTP status from that code. Pick the status the runtime can express:
+
+- An execute-phase upstream 401 or 403 is `ProviderRequestError(401, ...)` or `ProviderRequestError(403, ...)`. The runtime answers `authorization_failed` / HTTP 403, which is what tells a client to reconnect the account. Never map it to 409: the runtime has no 409 case and reports it as `invalid_input` / HTTP 400.
+- A validate-phase 401 or 403 is `ProviderRequestError(400, ...)`, so the connect form shows a field error instead of a reconnect prompt.
+- Everything else follows the two-tier convention: below 500 the runtime answers `invalid_input` / HTTP 400 unless the status is 401/403 (`authorization_failed`), 429 (`rate_limited`), 413 (payload too large), 404 (carried through `details.status`) or 402 (`insufficient_credit`); 500 and above answer `provider_error` / HTTP 500. Do not reach for 410 - the runtime cannot express it and it reads as 400.
+- The optional fourth `code` argument overrides that inference, so use it only for a documented runtime code (`runtimeErrorCodes` in `src/server/api/runtime-api.ts`). A code the routes do not know becomes HTTP 400 whatever status the error carries, which is strictly worse than passing no code at all.
+
 ## Historical Failure Modes
 
 Previous provider batches needed cleanup for these issues. Check them explicitly:
