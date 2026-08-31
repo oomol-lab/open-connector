@@ -1,12 +1,22 @@
-import type { ExecutionContext, ExecutionResult, ProviderExecutors, ResolvedCredential } from "../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ExecutionResult,
+  ProviderExecutors,
+  ResolvedCredential,
+} from "../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serializeRuntimeActionResult } from "../server/api/runtime-api.ts";
-import { executors as clinicalkeyExecutors } from "./clinicalkey/executors.ts";
+import {
+  credentialValidators as clinicalkeyValidators,
+  executors as clinicalkeyExecutors,
+} from "./clinicalkey/executors.ts";
 import { executors as deepgramExecutors } from "./deepgram/executors.ts";
+import { credentialValidators as dovetailValidators } from "./dovetail/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
-import { toProviderExecutionError } from "./provider-runtime.ts";
+import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
 import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
 import { executors as teableExecutors } from "./teable/executors.ts";
 import { assertTikHubEndpointEligible } from "./tikhub/endpoint-policy.ts";
@@ -82,17 +92,47 @@ const authFailureCases: AuthFailureCase[] = [
   { service: "zoom", executors: zoomExecutors, actionId: "zoom.list_meetings", credential: oauthCredential },
 ];
 
+interface ValidatePhaseCase {
+  service: string;
+  validators: CredentialValidators;
+  input: { apiKey: string; values: Record<string, string> };
+}
+
+/**
+ * The same mappers the execute-phase sweep edited also serve the connect form,
+ * where an upstream 401 means the key the user just typed is wrong. That arm
+ * must stay on `invalid_input` / HTTP 400 so the form marks the field instead of
+ * prompting for a reconnect that would loop back to the same form. Covers both
+ * shapes the sweep touched: a `phase === "validate"` guard clause (clinicalkey)
+ * and a ternary status (dovetail).
+ */
+const validatePhaseCases: ValidatePhaseCase[] = [
+  {
+    service: "clinicalkey",
+    validators: clinicalkeyValidators,
+    input: {
+      apiKey: "test-key",
+      values: { accountId: "account-1", requestorId: "requestor-1", customerId: "customer-1" },
+    },
+  },
+  { service: "dovetail", validators: dovetailValidators, input: { apiKey: "test-key", values: {} } },
+];
+
 function contextFor(credential: ResolvedCredential): ExecutionContext {
   return { getCredential: async () => credential };
 }
 
-function stubUnauthorizedUpstream(status: number): void {
-  vi.stubGlobal("fetch", async () => {
+function unauthorizedUpstream(status: number): typeof fetch {
+  return async () => {
     return new Response(JSON.stringify({ message: "The access token is expired." }), {
       status,
       headers: { "content-type": "application/json" },
     });
-  });
+  };
+}
+
+function stubUnauthorizedUpstream(status: number): void {
+  vi.stubGlobal("fetch", unauthorizedUpstream(status));
 }
 
 async function runExpiredCredential(testCase: AuthFailureCase, status: number): Promise<ExecutionResult> {
@@ -128,6 +168,28 @@ describe("clinicalkey execute-phase credential failures", () => {
 
     expect(result).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
     expect(httpStatusOf(result)).toBe(403);
+  });
+});
+
+describe.each(validatePhaseCases)("$service validate-phase credential failures", (testCase) => {
+  it("keeps an upstream 401 on invalid_input with HTTP 400", async () => {
+    const validateApiKey = testCase.validators.apiKey;
+    if (!validateApiKey) {
+      throw new Error(`missing apiKey validator for ${testCase.service}`);
+    }
+
+    let raised: unknown;
+    try {
+      await validateApiKey(testCase.input, { fetcher: unauthorizedUpstream(401) });
+    } catch (error) {
+      raised = error;
+    }
+
+    expect(raised).toBeInstanceOf(ProviderRequestError);
+    expect((raised as ProviderRequestError).status).toBe(400);
+    const result = toProviderExecutionError(raised, `${testCase.service} credential validation failed`);
+    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+    expect(httpStatusOf(result)).toBe(400);
   });
 });
 
